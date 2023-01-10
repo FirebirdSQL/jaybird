@@ -30,7 +30,7 @@ import java.nio.charset.Charset;
  * Definition of a Firebird encoding. This is a mapping from the Firebird encoding to a Java Charset and additional
  * information needed by Jaybird to process this encoding.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface EncodingDefinition {

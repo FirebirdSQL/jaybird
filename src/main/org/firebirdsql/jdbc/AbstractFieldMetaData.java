@@ -37,9 +37,9 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  * Base class for {@link org.firebirdsql.jdbc.FBResultSetMetaData} and
  * {@link org.firebirdsql.jdbc.FBParameterMetaData} for methods common to both implementations.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:skidder@users.sourceforge.net">Nickolay Samofatov</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Nickolay Samofatov
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFieldMetaData implements Wrapper {

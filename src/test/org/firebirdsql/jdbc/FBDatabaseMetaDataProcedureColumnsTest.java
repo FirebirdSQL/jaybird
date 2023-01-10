@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure columns related metadata.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataProcedureColumnsTest {
     

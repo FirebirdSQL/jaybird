@@ -37,7 +37,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
  * Defines the basic table structure for the test.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 abstract class FBTestGeneratedKeysBase {
 

@@ -26,7 +26,7 @@ import junit.textui.TestRunner;
 /**
  * Firebird JDBC CTS suite.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public class FirebirdSuite {
     

@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for Firebird 4 extended precision of 38 for decimal (and numeric).
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class DecimalPrecision38SupportTest {
 

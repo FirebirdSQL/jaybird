@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Shared test for statement timeout (Firebird 4).
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public abstract class AbstractStatementTimeoutTest {
 

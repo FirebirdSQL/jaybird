@@ -55,8 +55,8 @@ import static java.util.Collections.unmodifiableSet;
 /**
  * A physical connection handle to a Firebird database, providing a {@code XAResource}.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  * @version 1.0
  */
 public final class FBManagedConnection implements ExceptionListener {

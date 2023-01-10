@@ -60,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for asynchronous event notification and related features for the V10 protocol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10EventHandlingTest {

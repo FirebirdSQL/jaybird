@@ -39,7 +39,7 @@ import java.sql.SQLException;
 /**
  * Bare-bones implementation of {@link javax.sql.XADataSource}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 public class FBXADataSource extends FBAbstractCommonDataSource implements XADataSource, Referenceable {

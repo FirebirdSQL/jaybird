@@ -45,8 +45,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * DBCP.
  * </p>
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author Roman Rokytskyy
+ * @author David Jencks
  */
 public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
         implements DataSource, Serializable, Referenceable {

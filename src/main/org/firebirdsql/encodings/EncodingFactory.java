@@ -39,7 +39,7 @@ import static org.firebirdsql.gds.ISCConstants.CS_dynamic;
 /**
  * Factory for {@link EncodingDefinition} and {@link Encoding}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class EncodingFactory implements IEncodingFactory {
 

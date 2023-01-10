@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Tests for {@link TimestampDiffFunction} for the conversion specified in JDBC 4.3 Appendix D.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class TimestampDiffFunctionTest {
 

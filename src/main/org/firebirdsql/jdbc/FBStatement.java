@@ -45,8 +45,8 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 /**
  * Implementation of {@link Statement}.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
 @SuppressWarnings("RedundantThrows")
 public class FBStatement implements FirebirdStatement {

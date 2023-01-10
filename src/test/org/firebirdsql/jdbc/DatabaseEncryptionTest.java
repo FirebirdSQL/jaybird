@@ -65,7 +65,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * callback (eg IBPhoenix AES128/256 with Callback configuration), and an encryption key value of {@code TestKey}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class DatabaseEncryptionTest {
 

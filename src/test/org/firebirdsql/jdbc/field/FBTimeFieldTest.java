@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Tests for {@link FBTimeField}
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBTimeFieldTest extends BaseJUnit5TestFBField<FBTimeField, Time> {
 

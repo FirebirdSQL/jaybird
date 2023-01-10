@@ -28,7 +28,7 @@ import static org.firebirdsql.gds.ISCConstants.CS_NONE;
 /**
  * The default encoding set for Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class DefaultEncodingSet implements EncodingSet {

@@ -47,9 +47,9 @@ import static java.util.Collections.emptyList;
 /**
  * Implementation of {@link java.sql.PreparedStatement}.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 @SuppressWarnings("RedundantThrows")
 public class FBPreparedStatement extends FBStatement implements FirebirdPreparedStatement {

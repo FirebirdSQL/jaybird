@@ -26,8 +26,8 @@ import java.lang.reflect.Constructor;
 /**
  * Factory for Logger instances.
  * 
- * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Blas Rodriguez Somoza
+ * @author Mark Rotteveel
  */
 @InternalApi
 public final class LoggerFactory {

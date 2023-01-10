@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlobTest}. TODO: Consider refactoring test hierarchy
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class JnaBlobTest extends BaseTestBlob {
 

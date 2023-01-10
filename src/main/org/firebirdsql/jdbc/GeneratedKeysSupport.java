@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * Provides support for generated keys depending on the level configured and the availability of the parser.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 interface GeneratedKeysSupport {

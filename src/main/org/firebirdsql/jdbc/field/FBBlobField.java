@@ -40,8 +40,8 @@ import java.sql.Types;
 /**
  * Field implementation for blobs other than {@code BLOB SUB_TYPE TEXT}.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 class FBBlobField extends FBField implements FBCloseableField, FBFlushableField, BlobListenableField {
 

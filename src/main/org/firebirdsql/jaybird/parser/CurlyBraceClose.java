@@ -24,7 +24,7 @@ package org.firebirdsql.jaybird.parser;
  * This token shouldn't occur in Firebird syntax, but is used in JDBC escapes.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class CurlyBraceClose extends AbstractSymbolToken implements CloseToken {

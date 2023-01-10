@@ -33,7 +33,7 @@ import static java.util.Collections.emptyList;
 /**
  * Common implementation for metadata method implementations.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 abstract class AbstractMetadataMethod {

@@ -33,7 +33,7 @@ import java.sql.SQLException;
  * {@code org.firebirdsql.jdbc.processName} and {@code org.firebirdsql.jdbc.pid}
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V11ParameterConverter extends V10ParameterConverter {

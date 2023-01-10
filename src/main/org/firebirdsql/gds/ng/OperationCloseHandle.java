@@ -27,7 +27,7 @@ package org.firebirdsql.gds.ng;
 /**
  * Close handle for {@link org.firebirdsql.gds.ng.monitor.Operation} implementations.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public interface OperationCloseHandle extends AutoCloseable {

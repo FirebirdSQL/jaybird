@@ -25,7 +25,7 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.sql.SQLWarning;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class ServiceListenerDispatcher extends AbstractListenerDispatcher<ServiceListener>
         implements ServiceListener {

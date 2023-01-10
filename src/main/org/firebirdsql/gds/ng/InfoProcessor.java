@@ -34,7 +34,7 @@ import java.sql.SQLException;
  *
  * @param <T>
  *         Type of the result of the {@link #process(byte[])} method.
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface InfoProcessor<T> {
@@ -54,7 +54,7 @@ public interface InfoProcessor<T> {
     /**
      * Interface for information on a statement.
      *
-     * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+     * @author Mark Rotteveel
      * @since 3.0
      */
     interface StatementInfo {

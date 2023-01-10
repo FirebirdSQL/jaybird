@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 /**
  * Locates and installs a Firebird Embedded library from the class path to a temporary location.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class ClasspathFirebirdEmbeddedLoader {

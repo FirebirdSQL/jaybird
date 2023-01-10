@@ -32,8 +32,8 @@ import static org.firebirdsql.gds.ISCConstants.*;
 /**
  * Implements the backup and restore functionality of Firebird Services API.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 public class FBBackupManager extends FBBackupManagerBase implements BackupManager {
 

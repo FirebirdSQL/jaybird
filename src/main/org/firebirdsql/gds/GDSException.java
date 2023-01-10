@@ -29,8 +29,8 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 /**
  * A GDS-specific exception
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author David Jencks
+ * @author Roman Rokytskyy
  */
 public class GDSException extends Exception {
 

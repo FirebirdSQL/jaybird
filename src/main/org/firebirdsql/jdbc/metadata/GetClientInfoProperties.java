@@ -33,7 +33,7 @@ import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 /**
  * Provides the implementation of {@link DatabaseMetaData#getClientInfoProperties()}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class GetClientInfoProperties {

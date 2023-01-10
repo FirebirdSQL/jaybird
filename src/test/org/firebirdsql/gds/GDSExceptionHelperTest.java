@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Tests for {@link GDSExceptionHelper}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class GDSExceptionHelperTest {
 

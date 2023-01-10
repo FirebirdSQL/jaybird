@@ -23,7 +23,7 @@ import org.firebirdsql.util.InternalApi;
 /**
  * Registrar for visitors that allows runtime removal or addition of visitors.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

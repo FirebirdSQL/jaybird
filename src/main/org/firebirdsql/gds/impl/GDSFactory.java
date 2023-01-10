@@ -41,8 +41,8 @@ import java.util.Map.Entry;
  * The class {@code GDSFactory} exists to provide a way to obtain objects
  * implementing GDS and Clumplet.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
 public final class GDSFactory {
 

@@ -22,7 +22,7 @@ package org.firebirdsql.jaybird.parser;
  * Signals a block (<code>/*...*{@literal /}<code>) or line comment ({@code --...<linebreak>}, excluding
  * the linebreak) in a token stream.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class CommentToken extends AbstractToken {

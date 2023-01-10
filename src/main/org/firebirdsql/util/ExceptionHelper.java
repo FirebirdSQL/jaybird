@@ -23,7 +23,7 @@ import java.sql.SQLException;
 /**
  * Helpers for exception handling
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @InternalApi
 public final class ExceptionHelper {

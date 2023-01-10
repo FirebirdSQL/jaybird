@@ -32,7 +32,7 @@ import static java.lang.String.format;
  * the default collection.
  * </p>
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {

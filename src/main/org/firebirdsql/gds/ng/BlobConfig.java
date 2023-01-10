@@ -29,7 +29,7 @@ import org.firebirdsql.gds.BlobParameterBuffer;
 /**
  * Firebird configuration for a blob.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface BlobConfig {

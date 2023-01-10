@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,7 +23,7 @@ import java.sql.SQLFeatureNotSupportedException;
 /**
  * Tell that driver is not able to serve the request due to missing capabilities.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public class FBDriverNotCapableException extends SQLFeatureNotSupportedException {
 

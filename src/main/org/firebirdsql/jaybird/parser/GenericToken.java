@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  * etc.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class GenericToken extends AbstractToken {

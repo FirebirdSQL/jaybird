@@ -30,7 +30,7 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 /**
  * Helper class for executing DDL while ignoring certain errors.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class DdlHelper {
 

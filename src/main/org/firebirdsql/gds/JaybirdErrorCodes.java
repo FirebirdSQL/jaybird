@@ -36,7 +36,7 @@ package org.firebirdsql.gds;
  * range 337248256 - 337264639. See Firebird {@code src\common\msg_encode.h} for calculation of this range.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface JaybirdErrorCodes {

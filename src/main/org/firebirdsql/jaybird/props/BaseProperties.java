@@ -31,7 +31,7 @@ import java.util.Map;
 /**
  * Base of the properties hierarchy; provides common API for setting properties by name.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface BaseProperties {

@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Simple (and naive) extension to check for certain environment requirements.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class RunEnvironmentExtension implements BeforeAllCallback {
 

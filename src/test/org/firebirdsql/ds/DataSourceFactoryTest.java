@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests for {@link DataSourceFactory} and - indirectly - the correctness of the getReference() method of
  * {@link FBConnectionPoolDataSource}, {@link FBXADataSource}, and {@link FBSimpleDataSource}.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 class DataSourceFactoryTest {

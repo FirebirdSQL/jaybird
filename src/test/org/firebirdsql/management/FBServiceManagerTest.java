@@ -47,7 +47,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 /**
  * Tests for {@link org.firebirdsql.management.FBServiceManager}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class FBServiceManagerTest {

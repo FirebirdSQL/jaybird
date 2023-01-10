@@ -23,7 +23,7 @@ import java.util.Arrays;
 /**
  * Collection of values of fields. Usually a row or set of parameters.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class RowValue {

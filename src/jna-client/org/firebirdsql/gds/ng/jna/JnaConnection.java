@@ -41,7 +41,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  *         Type of attach properties
  * @param <C>
  *         Type of connection handle
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class JnaConnection<T extends IAttachProperties<T>, C extends JnaAttachment>

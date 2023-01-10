@@ -36,7 +36,7 @@ import org.firebirdsql.gds.ng.wire.*;
  * The {@link ProtocolDescriptor} for the Firebird version 10 protocol. This version applies to Firebird 1.x and 2.0,
  * but also works with newer Firebird versions.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class Version10Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {

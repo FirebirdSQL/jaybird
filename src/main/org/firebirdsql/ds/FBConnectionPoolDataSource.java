@@ -40,7 +40,7 @@ import java.sql.SQLException;
  * consider using a connectionpool implementation like HikariCP, c3p0 or DBCP.
  * </p>
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource implements ConnectionPoolDataSource,

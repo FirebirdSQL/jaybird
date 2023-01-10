@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -51,7 +51,7 @@ import java.util.regex.Pattern;
  *  an error from the Firebird engine if the resulting cast is invalid</li>
  * </ul>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 final class ConvertFunction implements SQLFunction {

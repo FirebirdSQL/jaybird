@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,7 +24,7 @@ package org.firebirdsql.gds.ng;
  * The <code>long</code> values returned from the <code>getLongXXXCount</code> methods should be considered as unsigned
  * </p>
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class SqlCountHolder {

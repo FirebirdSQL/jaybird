@@ -42,7 +42,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 /**
  * Fetcher implementation for server-side scrollable cursors.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class FBServerScrollFetcher implements FBFetcher {

@@ -36,7 +36,7 @@ import static org.firebirdsql.common.extension.RequireProtocolExtension.requireP
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Transaction}. This test class can
  * be sub-classed for tests running on newer protocol versions.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10TransactionTest extends org.firebirdsql.gds.ng.AbstractTransactionTest {

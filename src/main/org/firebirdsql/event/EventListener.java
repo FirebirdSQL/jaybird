@@ -41,7 +41,7 @@ package org.firebirdsql.event;
 /**
  * An interface for callbacks in response to Firebird events 
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
+ * @author Gabriel Reid
  */
 public interface EventListener {
 

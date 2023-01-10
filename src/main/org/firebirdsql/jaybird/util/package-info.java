@@ -20,7 +20,7 @@
 /**
  * Utility classes which are strictly for use within Jaybird itself.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 6
  */
 @InternalApi

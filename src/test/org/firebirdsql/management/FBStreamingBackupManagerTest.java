@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Test for {@link FBStreamingBackupManager}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBStreamingBackupManagerTest {
 

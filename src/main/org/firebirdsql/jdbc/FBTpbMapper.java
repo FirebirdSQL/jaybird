@@ -37,7 +37,7 @@ import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
  * This class is provides mapping capabilities between standard JDBC
  * transaction isolation level and Firebird Transaction Parameters Block (TPB).
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public final class FBTpbMapper implements Serializable, Cloneable {
 

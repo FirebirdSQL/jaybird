@@ -30,7 +30,7 @@ import java.io.OutputStream;
  * 3.0 "wide" arguments, and 2.5 and earlier "traditional" arguments.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public enum ArgumentType {

@@ -31,7 +31,7 @@ import java.util.*;
  * without a strong reference may be removed an no longer notified at any time.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class ExceptionListenerDispatcher implements Iterable<ExceptionListener>, ExceptionListener {

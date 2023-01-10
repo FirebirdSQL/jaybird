@@ -24,7 +24,7 @@ import java.util.Comparator;
 /**
  * Comparison utility methods for {@link CharSequence}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class CharSequenceComparison {

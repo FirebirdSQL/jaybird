@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE connector - JDBC driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -26,7 +26,7 @@ import java.sql.SQLSyntaxErrorException;
  * This exception is thrown by FBEscapedParser when it cannot parse the
  * escaped syntax.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public class FBSQLParseException extends SQLSyntaxErrorException {
 

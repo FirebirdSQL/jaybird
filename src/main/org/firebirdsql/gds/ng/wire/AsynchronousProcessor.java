@@ -30,7 +30,7 @@ import java.util.*;
 /**
  * Process asynchronous channels for notification of events.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class AsynchronousProcessor {

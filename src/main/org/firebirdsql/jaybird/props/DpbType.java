@@ -28,7 +28,7 @@ import org.firebirdsql.jaybird.props.def.ConnectionPropertyType;
  * different (current expectation: boolean connection properties that map to either a single item or a 0 / 1 value).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public enum DpbType {

@@ -35,9 +35,9 @@ import java.sql.SQLException;
 /**
  * The base Firebird Service API functionality.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Steven Jardine
+ * @author Mark Rotteveel
  */
 public interface ServiceManager extends ServiceConnectionProperties {
 

@@ -41,7 +41,7 @@ import java.sql.SQLException;
  * DBCP.
  * </p>
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  */
 @InternalApi
 public class FBDataSource extends RootCommonDataSource implements DataSource, Serializable {

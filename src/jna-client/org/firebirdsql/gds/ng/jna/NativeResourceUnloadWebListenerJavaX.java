@@ -30,7 +30,7 @@ import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceS
  * Twin of {@link NativeResourceUnloadWebListenerJakarta}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 @WebListener

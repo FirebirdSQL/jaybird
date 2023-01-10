@@ -43,7 +43,7 @@ import static org.mockito.Mockito.lenient;
 /**
  * Tests for {@link V10OutputBlob} that don't require a connection to the database.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 @ExtendWith(MockitoExtension.class)

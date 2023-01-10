@@ -23,7 +23,7 @@ import java.math.BigInteger;
 /**
  * Helper class for converting (test) output to string.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class StringHelper {
 

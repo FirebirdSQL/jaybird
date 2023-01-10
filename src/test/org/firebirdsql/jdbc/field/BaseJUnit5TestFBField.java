@@ -77,7 +77,7 @@ import static org.mockito.Mockito.when;
  *         FBField implementation under test
  * @param <O>
  *         Object type of FBField implementation under test
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @ExtendWith(MockitoExtension.class)
 abstract class BaseJUnit5TestFBField<T extends FBField, O> {

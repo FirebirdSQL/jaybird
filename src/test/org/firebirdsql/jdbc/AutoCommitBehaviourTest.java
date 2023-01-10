@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * autocommit. A lot of the autocommit behaviour is tested elsewhere.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 class AutoCommitBehaviourTest {

@@ -21,7 +21,7 @@ package org.firebirdsql.jaybird.parser;
 /**
  * Signals an opening parenthesis ({@code (}) in the token stream.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class ParenthesisOpen extends AbstractSymbolToken implements OpenToken {

@@ -31,8 +31,8 @@ import java.sql.SQLException;
 /**
  * Implements the backup and restore functionality of Firebird Services API.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
+ * @author Roman Rokytskyy
+ * @author Steven Jardine
  */
 public interface BackupManager extends ServiceManager {
 

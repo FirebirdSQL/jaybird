@@ -23,7 +23,7 @@ import java.sql.SQLException;
 /**
  * Savepoint implementation.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public final class FBSavepoint implements FirebirdSavepoint {
 

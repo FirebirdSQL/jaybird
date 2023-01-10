@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentMap;
  * connection character set.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class ConnectionEncodingFactory implements IEncodingFactory {

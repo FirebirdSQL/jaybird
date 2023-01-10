@@ -30,7 +30,7 @@ import java.sql.SQLException;
 /**
  * Class handling the initial setup of the JNA service connection.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class JnaServiceConnection  extends JnaConnection<IServiceProperties, JnaService>  {

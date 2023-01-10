@@ -36,7 +36,7 @@ import org.firebirdsql.logging.LoggerFactory;
  *
  * @param <T>
  *         response type expected ({@code Void} if no object, but {@code null} is expected)
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface DeferredResponse<T> {

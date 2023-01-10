@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Mapping of Firebird time zone ids.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public final class TimeZoneMapping {

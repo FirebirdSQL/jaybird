@@ -36,10 +36,10 @@ import java.util.*;
 /**
  * Implementation of {@link java.sql.CallableStatement}.
  * 
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Roman Rokytskyy
+ * @author Steven Jardine
+ * @author Mark Rotteveel
  */
 public class FBCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
 

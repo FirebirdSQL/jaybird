@@ -27,7 +27,7 @@ package org.firebirdsql.gds.ng.wire.auth;
 /**
  * Service provider interface for authentication plugins.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface AuthenticationPluginSpi {

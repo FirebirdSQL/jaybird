@@ -38,7 +38,7 @@ import java.util.Set;
 import static java.lang.String.format;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbStatement implements FbStatement {

@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Tests for connection properties (does not cover all properties for now)
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class ConnectionPropertiesTest {
 

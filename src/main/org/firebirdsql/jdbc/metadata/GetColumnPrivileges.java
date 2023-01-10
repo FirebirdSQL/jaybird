@@ -39,7 +39,7 @@ import static org.firebirdsql.jdbc.metadata.PrivilegeMapping.mapPrivilege;
  * may change in a future version.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class GetColumnPrivileges extends AbstractMetadataMethod {

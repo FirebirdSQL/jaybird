@@ -32,8 +32,8 @@ import static java.util.Objects.requireNonNull;
  * This implementation will automatically signal completion on {@link #close()}.
  * </p>
  *
- * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Vasiliy Yashkov
+ * @author Mark Rotteveel
  * @since 4.0
  */
 final class FbDatabaseOperation implements Operation, OperationCloseHandle {

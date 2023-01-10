@@ -31,7 +31,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbBlob implements FbBlob, TransactionListener, DatabaseListener {

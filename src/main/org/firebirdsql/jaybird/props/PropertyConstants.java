@@ -27,7 +27,7 @@ import java.sql.Connection;
 /**
  * Property constants.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Tests for {@link FBTimestampField}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBTimestampFieldTest extends BaseJUnit5TestFBField<FBTimestampField, Timestamp> {
 

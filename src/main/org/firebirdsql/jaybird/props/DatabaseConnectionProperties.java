@@ -29,7 +29,7 @@ import org.firebirdsql.jdbc.FirebirdCallableStatement;
 /**
  * Properties for database connections.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface DatabaseConnectionProperties extends AttachmentProperties {

@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 /**
  * This test case checks if DDL statements are executed correctly.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 class DDLTest {
 

@@ -72,7 +72,7 @@ import static org.mockito.Mockito.verify;
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version16.V16Statement} in the V16 protocol, reuses test for V15.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 @ExtendWith(MockitoExtension.class)

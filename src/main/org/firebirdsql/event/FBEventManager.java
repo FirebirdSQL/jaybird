@@ -51,9 +51,9 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * An {@link org.firebirdsql.event.EventManager} implementation to listen for database events.
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
+ * @author Gabriel Reid
+ * @author Mark Rotteveel
+ * @author Vasiliy Yashkov
  */
 public class FBEventManager implements EventManager {
 

@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for database metadata in dialect 1.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataDialect1Test {
 

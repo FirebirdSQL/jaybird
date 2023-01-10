@@ -53,7 +53,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  * {@link java.sql.DatabaseMetaData#getTableTypes()} and
  * {@link org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getTableTypeNames()}
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

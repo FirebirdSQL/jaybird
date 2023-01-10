@@ -36,7 +36,7 @@ import static java.util.Collections.unmodifiableMap;
  * The types of statements detected are informed by the needs of Jaybird, and may change between point releases.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

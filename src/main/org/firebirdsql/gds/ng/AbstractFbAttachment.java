@@ -35,7 +35,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Common behavior for {@link AbstractFbService} and {@link AbstractFbDatabase}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbAttachment<T extends AbstractConnection<? extends IAttachProperties<?>, ? extends FbAttachment>>

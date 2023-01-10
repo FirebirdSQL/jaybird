@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * This abstract class is subclassed by the tests for specific FbTransaction implementations.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractTransactionTest {

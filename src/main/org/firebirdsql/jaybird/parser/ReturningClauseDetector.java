@@ -36,7 +36,7 @@ import static java.util.Collections.unmodifiableSet;
  * implementation).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 class ReturningClauseDetector extends AbstractTokenVisitor {

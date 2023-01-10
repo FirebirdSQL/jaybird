@@ -28,7 +28,7 @@ import static org.firebirdsql.common.extension.RequireProtocolExtension.requireP
 /**
  * Tests for events in {@link org.firebirdsql.gds.ng.wire.version15.V15Database}, reuses test for V13.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public class V15EventHandlingTest extends V13EventHandlingTest {

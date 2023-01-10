@@ -39,8 +39,8 @@ import org.firebirdsql.jaybird.fb.constants.StandardBlobTypes;
  * </ul>
  * </p>
  *
- * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author Alejandro Alberola
+ * @author David Jencks
  * @version 1.0
  */
 @SuppressWarnings({ "unused", "DanglingJavadoc" })

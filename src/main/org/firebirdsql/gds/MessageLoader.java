@@ -31,7 +31,7 @@ import java.util.Vector;
 /**
  * Loads the messages and SQL states for Firebird/Jaybird error codes to a {@link MessageLookup}
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 final class MessageLoader {
 

@@ -31,7 +31,7 @@ package org.firebirdsql.jaybird.props;
  * (if syntactically valid).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class PropertyNames {

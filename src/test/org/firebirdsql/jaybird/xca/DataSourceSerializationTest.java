@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * TestDataSourceSerialization.java
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  */
 class DataSourceSerializationTest {
 

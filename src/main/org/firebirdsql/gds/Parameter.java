@@ -31,7 +31,7 @@ import org.firebirdsql.encodings.Encoding;
 /**
  * Interface for parameters stored in a {@link org.firebirdsql.gds.ParameterBuffer}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface Parameter {

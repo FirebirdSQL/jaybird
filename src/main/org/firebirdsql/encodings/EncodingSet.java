@@ -46,7 +46,7 @@ import java.util.List;
  * class loader that initially loads and initializes Jaybird.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface EncodingSet {

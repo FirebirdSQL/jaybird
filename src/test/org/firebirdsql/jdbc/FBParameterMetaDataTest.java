@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * This method tests correctness of {@link FBParameterMetaData} class.
  *
- * @author <a href="mailto:skidder@users.sourceforge.net">Nickolay Samofatov</a>
+ * @author Nickolay Samofatov
  * @version 1.0
  */
 class FBParameterMetaDataTest {

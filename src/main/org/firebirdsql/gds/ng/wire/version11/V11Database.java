@@ -36,7 +36,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 /**
  * {@link org.firebirdsql.gds.ng.wire.FbWireDatabase} implementation for the version 11 wire protocol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V11Database extends V10Database {

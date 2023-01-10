@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * An implementation of {@link FirebirdEmbeddedLibrary} that provides Firebird Embedded from a classpath resource.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class ClasspathFirebirdEmbeddedLibrary implements DisposableFirebirdEmbeddedLibrary {

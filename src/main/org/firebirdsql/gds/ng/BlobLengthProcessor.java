@@ -29,7 +29,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
 /**
  * Blob information processor for retrieving blob length.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class BlobLengthProcessor implements InfoProcessor<Long> {

@@ -41,7 +41,7 @@ import java.util.Collection;
  * defined in this interface.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface FbStatement extends ExceptionListenable, AutoCloseable {

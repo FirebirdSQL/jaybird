@@ -27,7 +27,7 @@ package org.firebirdsql.gds.impl.wire;
 /**
  * Constants for wire protocol operations and messages.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public interface WireProtocolConstants {
 

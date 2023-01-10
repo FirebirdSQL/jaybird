@@ -48,7 +48,7 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
 /**
  * Provides the implementation for {@link java.sql.DatabaseMetaData#getFunctionColumns(String, String, String, String)}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 @InternalApi

@@ -25,7 +25,7 @@ import java.util.ResourceBundle;
 /**
  * Class to access information from {@code org/firebirdsql/jaybird/version.properties}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class Version {
 

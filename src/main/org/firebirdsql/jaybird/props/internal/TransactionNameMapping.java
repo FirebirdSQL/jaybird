@@ -25,7 +25,7 @@ import java.sql.Connection;
 /**
  * Mapping of transaction names to JDBC transaction code and vice versa.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

@@ -31,7 +31,7 @@ import org.firebirdsql.util.InternalApi;
 /**
  * Basic connection property types supported by Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public enum ConnectionPropertyType {

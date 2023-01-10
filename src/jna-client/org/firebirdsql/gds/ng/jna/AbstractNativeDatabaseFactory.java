@@ -32,7 +32,7 @@ import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.registerNativeRes
 /**
  * Common implementation for client library and embedded database factory.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory {

@@ -35,7 +35,7 @@ import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceS
  * Allows for disposing native libraries by {@link NativeResourceTracker}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 final class FbClientResource extends NativeResourceTracker.NativeResource {

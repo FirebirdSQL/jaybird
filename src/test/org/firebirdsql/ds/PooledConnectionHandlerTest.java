@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for {@link PooledConnectionHandler} and its proxy object (obtained from {@link FBConnectionPoolDataSource}).
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class PooledConnectionHandlerTest extends FBConnectionPoolTestBase {
 

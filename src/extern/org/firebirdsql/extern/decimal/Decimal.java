@@ -32,7 +32,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Abstract base class for IEEE-754 decimals.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public abstract class Decimal<T extends Decimal<T>> {
 

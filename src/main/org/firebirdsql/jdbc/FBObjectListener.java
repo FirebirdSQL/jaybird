@@ -26,8 +26,8 @@ import java.sql.SQLException;
 /**
  * This interface defines set of listeners that will be called in different situations.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 public interface FBObjectListener {
 

@@ -24,7 +24,7 @@ import com.sun.jna.Native;
 /**
  * JNA wrapper for ISC_STATUS. Size depends on pointer size of the target platform.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class ISC_STATUS extends IntegerType {
     /** Size of an ISC_STATUS, in bytes. */

@@ -31,7 +31,7 @@ import static java.util.Collections.unmodifiableMap;
 /**
  * Abstract mutable implementation of {@link IAttachProperties}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> implements IAttachProperties<T> {

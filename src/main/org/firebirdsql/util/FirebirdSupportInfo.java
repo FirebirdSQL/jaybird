@@ -44,7 +44,7 @@ import java.sql.SQLException;
  * the <a href="https://github.com/FirebirdSQL/jaybird/issues/">Jaybird tracker</a>.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class FirebirdSupportInfo {

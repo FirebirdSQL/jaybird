@@ -30,7 +30,7 @@ import java.util.Objects;
  * This is a thin wrapper around the bytes of a {@code RDB$DB_KEY}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public final class FBRowId implements RowId {

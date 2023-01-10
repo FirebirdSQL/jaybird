@@ -29,7 +29,7 @@ import java.util.function.Consumer;
  * Dispatcher to maintain a list of listeners of type <code>TListener</code>
  *
  * @param <TListener> Listener type
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractListenerDispatcher<TListener> implements Iterable<TListener> {

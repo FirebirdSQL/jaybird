@@ -34,7 +34,7 @@ import static org.firebirdsql.gds.ISCConstants.isc_info_update_count;
 /**
  * Snapshot of the table statistics of a connection (of the table reported by {@code tableName}).
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @see FBTableStatisticsManager
  * @since 5
  */

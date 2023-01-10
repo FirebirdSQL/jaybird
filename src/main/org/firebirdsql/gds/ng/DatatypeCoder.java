@@ -40,7 +40,7 @@ import java.util.Calendar;
 /**
  * Interface defining the encoding and decoding for Firebird (numerical) data types.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface DatatypeCoder {

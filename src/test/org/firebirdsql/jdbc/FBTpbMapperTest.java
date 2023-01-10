@@ -35,8 +35,8 @@ import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 class FBTpbMapperTest {
 

@@ -29,7 +29,7 @@ import java.sql.SQLException;
 import java.util.BitSet;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class V13Statement extends V12Statement {
 

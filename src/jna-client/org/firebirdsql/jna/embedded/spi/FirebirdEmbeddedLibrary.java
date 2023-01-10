@@ -27,7 +27,7 @@ import java.nio.file.Path;
  * cleanup on exit.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface FirebirdEmbeddedLibrary {

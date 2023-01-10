@@ -32,8 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Tests for {@link FBEscapedCallParser}.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 class FBEscapedCallParserTest {
 

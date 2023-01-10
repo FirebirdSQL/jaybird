@@ -59,9 +59,9 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
  * </ul>
  * </p>
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
- * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Gabriel Reid
+ * @author Thomas Steinmaurer
+ * @author Mark Rotteveel
  */
 public class FBMaintenanceManager extends FBServiceManager implements MaintenanceManager {
 

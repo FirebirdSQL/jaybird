@@ -23,7 +23,7 @@ import java.util.Base64;
 /**
  * Helper methods for byte arrays.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 @InternalApi

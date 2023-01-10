@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * This test case checks callable statements by executing procedure through
  * {@link java.sql.CallableStatement} and {@link java.sql.PreparedStatement}.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  * @version 1.0
  */
 class FBCallableStatementTest {

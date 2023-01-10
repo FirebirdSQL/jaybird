@@ -59,7 +59,7 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptNoCryptKeyAvailable;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V13WireOperations extends V11WireOperations {

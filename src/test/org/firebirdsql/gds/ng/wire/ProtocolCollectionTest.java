@@ -38,7 +38,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class ProtocolCollectionTest {

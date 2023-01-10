@@ -35,7 +35,7 @@ import org.firebirdsql.gds.ng.wire.version11.V11ParameterConverter;
  * Adds support for {@code isc_dpb_utf8_filename} and encodes all string properties in UTF-8.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V12ParameterConverter extends V11ParameterConverter {

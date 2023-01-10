@@ -31,7 +31,7 @@ import java.nio.charset.Charset;
  * the connection character set).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface IEncodingFactory {

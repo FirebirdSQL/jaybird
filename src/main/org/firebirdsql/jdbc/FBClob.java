@@ -36,7 +36,7 @@ import java.sql.SQLNonTransientException;
  * transparently. It technically does not conform to the JDBC requirements for {@code NClob}.
  * </p>
  * 
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  * @version 1.0
  */
 public final class FBClob implements Clob, NClob {

@@ -40,7 +40,7 @@ import static java.util.Objects.requireNonNull;
  * Implementation of {@link org.firebirdsql.gds.ng.FbDatabaseFactory} for establishing connection using the
  * Firebird embedded library.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {

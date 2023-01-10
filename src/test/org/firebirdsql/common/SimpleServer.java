@@ -27,7 +27,7 @@ import java.net.Socket;
 /**
  * Simple server accepting a single connection at a time for testing purposes.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class SimpleServer implements AutoCloseable {

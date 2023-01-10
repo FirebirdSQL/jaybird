@@ -30,7 +30,7 @@ import java.util.Hashtable;
 /**
  * ObjectFactory for the DataSources in org.firebirdsql.ds.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 public class DataSourceFactory implements ObjectFactory {

@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 /**
  * Tests for {@link org.firebirdsql.gds.ng.ServerVersionInformation}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class ServerVersionInformationTest {

@@ -24,7 +24,7 @@ import org.firebirdsql.util.InternalApi;
 /**
  * Interface for reserved words checks.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

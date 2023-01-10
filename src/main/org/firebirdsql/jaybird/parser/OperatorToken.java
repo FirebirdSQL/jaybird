@@ -26,7 +26,7 @@ package org.firebirdsql.jaybird.parser;
  * those operators ({@code ! ~ ^} if they appear individually in the statement (which is a syntax error in Firebird).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class OperatorToken extends AbstractToken {

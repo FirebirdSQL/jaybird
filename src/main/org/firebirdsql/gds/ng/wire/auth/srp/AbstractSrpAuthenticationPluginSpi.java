@@ -30,7 +30,7 @@ import java.sql.SQLException;
 /**
  * Base class for SRP authentication plugin providers.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public abstract class AbstractSrpAuthenticationPluginSpi implements AuthenticationPluginSpi {

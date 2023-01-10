@@ -34,7 +34,7 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FieldDescriptorTest {
 

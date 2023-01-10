@@ -24,7 +24,7 @@ package org.firebirdsql.jaybird.parser;
  * Implementations should override {@link #visitToken(Token)} and/or {@link #complete()}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 abstract class AbstractTokenVisitor implements TokenVisitor {

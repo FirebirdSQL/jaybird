@@ -52,7 +52,7 @@ import static java.util.Collections.emptyList;
  * {@link FbStatement#withLock()} of the executing statement.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class ServerBatch implements Batch, StatementListener {

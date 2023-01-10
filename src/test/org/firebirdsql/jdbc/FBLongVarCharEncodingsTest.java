@@ -21,7 +21,7 @@ package org.firebirdsql.jdbc;
 /**
  * This test case tests encodings in text blobs.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  * @version 1.0
  */
 class FBLongVarCharEncodingsTest extends FBEncodingsTest {

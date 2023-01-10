@@ -35,7 +35,7 @@ import org.firebirdsql.logging.LoggerFactory;
 /**
  * Event handle for the JNA protocol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class JnaEventHandle extends AbstractEventHandle {

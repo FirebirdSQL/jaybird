@@ -35,7 +35,7 @@ import java.sql.SQLException;
 /**
  * Extension of {@link Connection} interface providing access to Firebird specific features.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public interface FirebirdConnection extends Connection {
 

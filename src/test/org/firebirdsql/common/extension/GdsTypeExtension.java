@@ -37,7 +37,7 @@ import static org.hamcrest.Matchers.not;
 /**
  * An extension that allows for verifying assumptions of the test (GDS) types required (or excluded) for a test class.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class GdsTypeExtension implements BeforeAllCallback {

@@ -34,7 +34,7 @@ import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class GetIndexInfo extends AbstractMetadataMethod {
 

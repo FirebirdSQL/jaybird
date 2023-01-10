@@ -21,7 +21,7 @@ package org.firebirdsql.gds.ng;
 /**
  * Mutable implementation of {@link IServiceProperties}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @see FbImmutableServiceProperties
  * @since 3.0
  */

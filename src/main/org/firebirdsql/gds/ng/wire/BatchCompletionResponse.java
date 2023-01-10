@@ -29,7 +29,7 @@ import org.firebirdsql.gds.ng.BatchCompletion;
 /**
  * Data from the {@link org.firebirdsql.gds.impl.wire.WireProtocolConstants#op_batch_cs} response.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class BatchCompletionResponse implements Response {

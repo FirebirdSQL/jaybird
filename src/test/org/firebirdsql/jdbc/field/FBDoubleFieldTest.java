@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for {@link FBDoubleField}
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBDoubleFieldTest extends BaseJUnit5TestFBField<FBDoubleField, Double> {
     

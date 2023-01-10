@@ -25,7 +25,7 @@ import org.firebirdsql.logging.LoggerFactory;
 /**
  * Dispatcher for {@link org.firebirdsql.gds.ng.wire.AsynchronousChannelListener}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class AsynchronousChannelListenerDispatcher extends AbstractListenerDispatcher<AsynchronousChannelListener>

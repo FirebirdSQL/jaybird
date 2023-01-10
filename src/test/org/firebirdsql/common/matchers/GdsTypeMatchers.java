@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.is;
 /**
  * Matchers for checking GDS types (eg for type specific assumptions).
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class GdsTypeMatchers {
 

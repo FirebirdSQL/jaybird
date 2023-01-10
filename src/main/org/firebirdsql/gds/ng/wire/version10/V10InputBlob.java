@@ -35,7 +35,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob, DatabaseListener {

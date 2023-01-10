@@ -24,7 +24,7 @@ import org.firebirdsql.util.InternalApi;
 /**
  * Field which expects a blob listener.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

@@ -37,7 +37,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class V18Statement extends V16Statement {

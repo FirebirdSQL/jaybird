@@ -61,7 +61,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Tests for {@link V18Statement} in the V18 protocol, reuses test for V16.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class V18StatementTest extends V16StatementTest {

@@ -39,7 +39,7 @@ import java.sql.SQLException;
  * See {@link FBManagerMBean} for documentation.
  * </p>
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  * @version 1.0
  */
 public class FBManager implements FBManagerMBean {

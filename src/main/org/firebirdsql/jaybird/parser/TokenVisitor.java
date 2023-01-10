@@ -26,7 +26,7 @@ import org.firebirdsql.util.InternalApi;
  * Used by {@link SqlParser} to notify the visitors of tokens.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

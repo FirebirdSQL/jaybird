@@ -37,7 +37,7 @@ import java.util.function.Function;
  * This interfaces is used in protocol 11 or higher.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface DeferredAction {

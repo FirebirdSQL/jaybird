@@ -32,7 +32,7 @@ import java.util.ServiceLoader;
 /**
  * Locates a {@link FirebirdEmbeddedLibrary} using the service provider mechanism.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class FirebirdEmbeddedLookup {

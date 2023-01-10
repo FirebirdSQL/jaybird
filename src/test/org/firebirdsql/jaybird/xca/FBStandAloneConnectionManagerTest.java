@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * Describe class <code>TestFBStandAloneConnectionManager</code> here.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  * @version 1.0
  */
 class FBStandAloneConnectionManagerTest {

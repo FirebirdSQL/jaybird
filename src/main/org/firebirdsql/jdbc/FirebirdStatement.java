@@ -34,7 +34,7 @@ import java.sql.Statement;
 /**
  * Firebird-specific extensions to the {@link Statement} interface.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public interface FirebirdStatement extends Statement {
 

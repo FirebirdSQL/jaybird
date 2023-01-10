@@ -24,7 +24,7 @@ package org.firebirdsql.jna.embedded.spi;
  * This can be used for additional cleanup on exit.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface DisposableFirebirdEmbeddedLibrary extends FirebirdEmbeddedLibrary {

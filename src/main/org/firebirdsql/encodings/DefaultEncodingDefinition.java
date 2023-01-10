@@ -32,7 +32,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Definition of a Firebird encoding. This is the default implementation of {@link EncodingDefinition}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class DefaultEncodingDefinition implements EncodingDefinition {

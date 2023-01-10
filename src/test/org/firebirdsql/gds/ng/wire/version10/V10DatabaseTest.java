@@ -57,7 +57,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Database}. This test class can
  * be sub-classed for tests running on newer protocol versions.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10DatabaseTest {

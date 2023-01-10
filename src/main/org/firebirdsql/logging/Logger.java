@@ -23,9 +23,9 @@ import static java.lang.String.format;
 /**
  * Logger is a facade to hide the logging implementation used from the rest of Jaybird.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Blas Rodriguez Somoza
+ * @author Mark Rotteveel
  */
 @SuppressWarnings("unused")
 public interface Logger {

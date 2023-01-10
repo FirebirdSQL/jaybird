@@ -49,7 +49,7 @@ import org.firebirdsql.gds.impl.GDSFactory;
  * // After end of try-with-resources, the database will be dropped
  * </pre>
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  * @version 1.0
  */
 public interface FBManagerMBean extends AutoCloseable {

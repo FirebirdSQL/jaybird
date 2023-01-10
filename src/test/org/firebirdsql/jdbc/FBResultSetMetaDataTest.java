@@ -38,8 +38,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * This method tests correctness of {@link FBResultSetMetaData} class.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 class FBResultSetMetaDataTest {
 

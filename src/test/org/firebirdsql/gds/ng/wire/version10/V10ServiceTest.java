@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for {@link V10Service}. This test class can be sub-classed for tests running on newer protocol versions.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10ServiceTest {

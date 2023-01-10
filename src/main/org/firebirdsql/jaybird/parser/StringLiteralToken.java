@@ -30,7 +30,7 @@ import static java.lang.String.format;
  * NOTE: Dialect 1 quoted identifiers are handled through {@link QuotedIdentifierToken}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class StringLiteralToken extends AbstractToken implements LiteralToken {

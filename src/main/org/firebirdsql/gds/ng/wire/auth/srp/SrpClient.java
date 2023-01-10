@@ -42,8 +42,8 @@ import java.util.Arrays;
 /**
  * SRP client handshake implementation.
  *
- * @author <a href="mailto:nakagami@gmail.com">Hajime Nakagami</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Hajime Nakagami
+ * @author Mark Rotteveel
  */
 public final class SrpClient {
     

@@ -31,7 +31,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Identifier of an encryption type + plugin.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public final class EncryptionIdentifier {

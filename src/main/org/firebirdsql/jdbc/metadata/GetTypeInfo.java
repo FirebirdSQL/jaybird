@@ -39,7 +39,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 /**
  * Provides the implementation for {@link DatabaseMetaData#getTypeInfo()}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class GetTypeInfo {

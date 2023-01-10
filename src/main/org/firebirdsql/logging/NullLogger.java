@@ -1,7 +1,5 @@
  /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,8 +21,8 @@ package org.firebirdsql.logging;
 /**
  * Implementation of {@link Logger} that doesn't do anything and reports all loglevels as disabled.
  *
- * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Blas Rodriguez Somoza
+ * @author Mark Rotteveel
  * @version 1.0
  */
 final class NullLogger implements Logger{

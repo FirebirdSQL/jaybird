@@ -33,7 +33,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
 /**
  * Common implementation for {@link GetExportedKeys}, {@link GetImportedKeys}, and {@link GetCrossReference}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 abstract class AbstractKeysMethod extends AbstractMetadataMethod {

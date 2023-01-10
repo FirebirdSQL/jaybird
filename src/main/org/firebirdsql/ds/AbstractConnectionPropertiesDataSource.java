@@ -25,7 +25,7 @@ import java.sql.SQLException;
 /**
  * Abstract implementation of {@link FirebirdConnectionProperties} to ensure subclasses can be introspected as beans.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public abstract class AbstractConnectionPropertiesDataSource extends RootCommonDataSource

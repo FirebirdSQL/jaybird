@@ -30,7 +30,7 @@ import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
 /**
  * Connection properties for a Firebird service attachment.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface IServiceProperties extends IAttachProperties<IServiceProperties>, ServiceConnectionProperties {

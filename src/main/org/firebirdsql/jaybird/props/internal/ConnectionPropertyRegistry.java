@@ -33,7 +33,7 @@ import static java.util.Collections.unmodifiableSet;
 /**
  * Registry of connection properties available to Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

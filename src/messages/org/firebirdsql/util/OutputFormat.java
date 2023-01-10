@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 /**
  * Output formats for messages.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 enum OutputFormat {
 

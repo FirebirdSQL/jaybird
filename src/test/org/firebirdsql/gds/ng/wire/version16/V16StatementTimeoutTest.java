@@ -37,7 +37,7 @@ import static org.firebirdsql.common.extension.RequireProtocolExtension.requireP
 /**
  * Tests for {@link V16Statement} timeouts in the V16 protocol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 @Unstable("Tests might spuriously fail if the connection is slow (eg for remote database tests)")

@@ -32,7 +32,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Class to hold server keys known to the client.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class KnownServerKey {

@@ -21,7 +21,7 @@ package org.firebirdsql.jaybird.parser;
 /**
  * Signals a quoted identifier (or - for dialect 1 - a string literal) in the token stream.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class QuotedIdentifierToken extends AbstractToken {

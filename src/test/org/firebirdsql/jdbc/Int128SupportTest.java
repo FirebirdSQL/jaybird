@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for Firebird 4 INT128 datatype.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class Int128SupportTest {
 

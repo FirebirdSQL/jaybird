@@ -44,8 +44,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * The Jaybird JDBC Driver implementation for the Firebird database.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
 public class FBDriver implements FirebirdDriver {
 

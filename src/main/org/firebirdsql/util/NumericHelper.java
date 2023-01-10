@@ -21,7 +21,7 @@ package org.firebirdsql.util;
 /**
  * Helper for numeric values.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2.11
  */
 @InternalApi

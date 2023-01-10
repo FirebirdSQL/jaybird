@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -29,7 +29,7 @@ import java.sql.SQLException;
 /**
  * Authentication plugin for the Firebird legacy authentication (as defined in Firebird 3).
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class LegacyAuthenticationPlugin implements AuthenticationPlugin {

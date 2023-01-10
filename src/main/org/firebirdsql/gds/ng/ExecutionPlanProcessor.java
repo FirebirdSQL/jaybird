@@ -28,7 +28,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 /**
  * InfoProcessor to retrieve the (normal) execution plan of a statement.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class ExecutionPlanProcessor implements InfoProcessor<String> {

@@ -21,7 +21,7 @@ package org.firebirdsql.jaybird.parser;
 /**
  * Signals one or more whitespace characters in a token stream.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class WhitespaceToken extends AbstractToken {

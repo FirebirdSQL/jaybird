@@ -27,7 +27,7 @@ package org.firebirdsql.gds.ng;
 /**
  * Type of fetch. Parallels P_FETCH from Firebird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public enum FetchType {

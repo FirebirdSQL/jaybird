@@ -31,7 +31,7 @@ import org.firebirdsql.util.InternalApi;
  * parentheses each have their own type, as the parser may need this to find nested contexts.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

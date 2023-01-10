@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * distinguish the current functionality. This class works by delegating the operations to the internal implementation
  * of the XAResource functionality in FBManagedConnection.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  */
 public final class FBLocalTransaction {
 

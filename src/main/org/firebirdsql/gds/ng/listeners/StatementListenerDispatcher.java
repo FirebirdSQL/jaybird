@@ -30,7 +30,7 @@ import java.sql.SQLWarning;
 /**
  * Dispatcher to maintain and notify other {@link StatementListener}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class StatementListenerDispatcher extends AbstractListenerDispatcher<StatementListener> implements StatementListener {

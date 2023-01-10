@@ -26,9 +26,9 @@ import java.io.Serializable;
  * The class {@code FBConnectionRequestInfo} holds connection-specific information such as user, password, and other
  * information.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 public final class FBConnectionRequestInfo implements Serializable {
 

@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Tests for support of the Limiting Returned Rows Escape as defined in section
  * 13.4.6 of the JDBC 4.1 specification.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class LimitEscapeTest {
 

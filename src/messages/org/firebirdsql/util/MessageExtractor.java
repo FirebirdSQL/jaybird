@@ -33,7 +33,7 @@ import static org.firebirdsql.util.Messages.unescapeSource;
  * Utility class for generating the property files containing the error codes and error messages from
  * {@code include/firebird/impl/msg}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class MessageExtractor {

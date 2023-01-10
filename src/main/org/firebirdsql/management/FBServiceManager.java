@@ -43,8 +43,8 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 /**
  * An implementation of the basic Firebird Service API functionality.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 public class FBServiceManager implements ServiceManager {
 

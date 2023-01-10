@@ -43,7 +43,7 @@ import org.firebirdsql.gds.ng.wire.version16.V16WireOperations;
  * The {@link ProtocolDescriptor} for the Firebird version 18 protocol. This version
  * applies to Firebird 5, but also works with newer Firebird versions.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class Version18Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {

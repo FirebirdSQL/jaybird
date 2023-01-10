@@ -38,7 +38,7 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_dbCryptCallbackInitError;
  *
  * @param <T> Type of attach properties
  * @param <C> Type of connection handle
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractConnection<T extends IAttachProperties<T>, C extends FbAttachment> {

@@ -31,7 +31,7 @@ import java.util.zip.DeflaterOutputStream;
 /**
  * {@code DeflaterOutputStream} with some modifications to simplify usage for Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 class FbDeflaterOutputStream extends DeflaterOutputStream implements EncryptedStreamSupport {

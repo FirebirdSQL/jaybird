@@ -28,8 +28,8 @@ import org.firebirdsql.gds.ng.FbStatement;
  * position consistent, however we cannot tell now if we are on the last record.
  * Method {@link #isLast()}throws exception now.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 final class FBUpdatableCursorFetcher extends FBStatementFetcher {
 

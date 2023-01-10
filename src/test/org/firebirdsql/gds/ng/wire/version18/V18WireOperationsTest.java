@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class V18WireOperationsTest extends V16WireOperationsTest {

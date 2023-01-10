@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -33,8 +33,8 @@ import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_options;
 /**
  * Implements the incremental backup and restore functionality of NBackup via the Firebird Services API.
  *
- * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Thomas Steinmaurer
+ * @author Mark Rotteveel
  */
 public class FBNBackupManager extends FBServiceManager implements NBackupManager {
 

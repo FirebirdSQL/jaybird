@@ -26,7 +26,7 @@ import java.util.Arrays;
  * See also {@code src\include\firebird\impl\msg_helper.h} (of Firebird 5.0)
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 enum Facility {

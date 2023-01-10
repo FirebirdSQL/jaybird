@@ -35,7 +35,7 @@ import java.sql.SQLException;
  * Supports multiple hash algorithms for the client proof.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class SrpAuthenticationPlugin implements AuthenticationPlugin {
 

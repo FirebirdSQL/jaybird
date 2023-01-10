@@ -36,7 +36,7 @@ import java.util.*;
  * RowDescriptor is an immutable, values of a row are maintained separately in a {@link RowValue}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @version 3.0
  */
 public final class RowDescriptor implements Iterable<FieldDescriptor> {

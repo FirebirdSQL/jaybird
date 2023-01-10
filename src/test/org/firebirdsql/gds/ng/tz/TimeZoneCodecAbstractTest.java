@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Common test behaviour for {@link TimeZoneCodec} implementation tests.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 abstract class TimeZoneCodecAbstractTest {
 

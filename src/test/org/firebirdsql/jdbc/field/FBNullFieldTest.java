@@ -42,7 +42,7 @@ import static org.mockito.Mockito.verify;
 /**
  * Tests for {@link FBNullField}
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @ExtendWith(MockitoExtension.class)
 class FBNullFieldTest {

@@ -39,7 +39,7 @@ import java.sql.SQLException;
  * </ul>
  * </p>
  *
- * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
+ * @author Thomas Steinmaurer
  */
 public interface TraceManager extends ServiceManager {
 

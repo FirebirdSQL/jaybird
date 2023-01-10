@@ -24,7 +24,7 @@ package org.firebirdsql.jaybird.parser;
  * Expected occurrence is in definition of array dimensions or when dereferencing an array element.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class SquareBracketClose extends AbstractSymbolToken implements CloseToken {

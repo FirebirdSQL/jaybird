@@ -35,7 +35,7 @@ import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 /**
  * Common testbase for tests using {@link FBConnectionPoolDataSource}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 abstract class FBConnectionPoolTestBase {
 

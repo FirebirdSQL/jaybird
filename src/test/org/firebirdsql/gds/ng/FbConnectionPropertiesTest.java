@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * Tests for {@link FbConnectionProperties}
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class FbConnectionPropertiesTest {

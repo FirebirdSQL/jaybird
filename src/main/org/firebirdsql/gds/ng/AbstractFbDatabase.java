@@ -44,7 +44,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  * Abstract implementation of {@link org.firebirdsql.gds.ng.FbDatabase} with behavior common to the various
  * implementations.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectionProperties, ? extends FbDatabase>>

@@ -33,8 +33,8 @@ import java.sql.SQLException;
 /**
  * An interface for registering {@link EventListener} instances to listen for database events.
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Gabriel Reid
+ * @author Mark Rotteveel
  */
 @SuppressWarnings("unused")
 public interface EventManager extends AttachmentProperties, AutoCloseable {

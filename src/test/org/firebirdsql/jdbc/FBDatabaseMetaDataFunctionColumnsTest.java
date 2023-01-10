@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Tests for {@link java.sql.DatabaseMetaData#getFunctionColumns(String, String, String, String)}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataFunctionColumnsTest {
 

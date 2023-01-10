@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests the UserManager class which uses the Services API to display, add, delete, and modify users.
  * 
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
+ * @author Steven Jardine
  */
 class FBUserManagerTest {
 

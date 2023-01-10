@@ -31,7 +31,7 @@ import java.sql.SQLException;
 /**
  * Class handling the initial setup of the JNA database connection.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class JnaDatabaseConnection extends JnaConnection<IConnectionProperties, JnaDatabase>  {

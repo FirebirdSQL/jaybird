@@ -49,8 +49,8 @@ import java.util.List;
  * </ul>
  * </p>
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
- * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
+ * @author Gabriel Reid
+ * @author Thomas Steinmaurer
  */
 public interface MaintenanceManager extends ServiceManager {
 

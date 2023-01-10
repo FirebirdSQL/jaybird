@@ -27,7 +27,7 @@ package org.firebirdsql.gds.ng.jna;
 import org.firebirdsql.gds.ng.FbAttachment;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface JnaAttachment extends FbAttachment {

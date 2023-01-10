@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Tests for support of the time and date literal escapes as defined in
  * section 13.4.2 of the JDBC 4.1 specification.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class TimeDateLiteralEscapesTest {
 

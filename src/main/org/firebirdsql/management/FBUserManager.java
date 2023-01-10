@@ -36,8 +36,8 @@ import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
 /**
  * Implements the display/add/delete/modify user functionality of the Firebird Services API.
  *
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Steven Jardine
+ * @author Mark Rotteveel
  */
 public class FBUserManager extends FBServiceManager implements UserManager {
 

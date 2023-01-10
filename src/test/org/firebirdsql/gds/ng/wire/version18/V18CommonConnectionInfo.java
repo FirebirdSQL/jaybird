@@ -27,7 +27,7 @@ import org.firebirdsql.gds.ng.wire.version16.V16CommonConnectionInfo;
 /**
  * Class to contain common connection information shared by the V18 tests.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class V18CommonConnectionInfo extends V16CommonConnectionInfo {

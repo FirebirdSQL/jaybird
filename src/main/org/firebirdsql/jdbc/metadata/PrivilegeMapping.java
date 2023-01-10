@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * Maps Firebird privilege codes (from {@code RDB$USER_PRIVILEGES.RDB$PRIVILEGE}) to a privilege name.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class PrivilegeMapping {

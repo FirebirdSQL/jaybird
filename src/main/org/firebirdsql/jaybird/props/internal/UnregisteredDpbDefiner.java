@@ -43,7 +43,7 @@ import static org.firebirdsql.jaybird.props.def.ConnectionProperty.builder;
  * the property will not get defined. These properties will be registered as type string.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 class UnregisteredDpbDefiner implements ConnectionPropertyDefinerSpi {

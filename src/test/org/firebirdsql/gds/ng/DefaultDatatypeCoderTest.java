@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * These tests do not contact a Firebird server (so they don't test the actual correctness/compatibility with Firebird).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class DefaultDatatypeCoderTest {

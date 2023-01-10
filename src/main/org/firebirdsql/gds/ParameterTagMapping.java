@@ -30,7 +30,7 @@ import org.firebirdsql.jaybird.fb.constants.SpbItems;
  * For now this only contains authentication related tags. This may be expanded in the future.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public enum ParameterTagMapping {

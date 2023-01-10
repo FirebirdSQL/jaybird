@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * Class containing static helper methods for reflective access.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 @InternalApi

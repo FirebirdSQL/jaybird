@@ -21,7 +21,7 @@ package org.firebirdsql.util;
 /**
  * Helper class for extracting and transforming messages as defined in Firebird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class Messages {

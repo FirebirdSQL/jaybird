@@ -41,7 +41,7 @@ import java.sql.SQLException;
  * Adds support for the new authentication model of the V13 protocol.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V13ParameterConverter extends V12ParameterConverter {

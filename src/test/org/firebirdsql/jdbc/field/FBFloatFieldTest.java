@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for {@link FBFloatField}
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBFloatFieldTest extends BaseJUnit5TestFBField<FBFloatField, Float> {
 

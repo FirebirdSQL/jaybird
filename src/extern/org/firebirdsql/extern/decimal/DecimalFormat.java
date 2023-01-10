@@ -33,7 +33,7 @@ import static org.firebirdsql.extern.decimal.DenselyPackedDecimalCodec.DIGITS_PE
 /**
  * Constant values for the decimal 32, 64 and 128 formats.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 enum DecimalFormat {
 

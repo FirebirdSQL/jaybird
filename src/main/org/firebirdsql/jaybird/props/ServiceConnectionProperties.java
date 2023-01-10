@@ -27,7 +27,7 @@ package org.firebirdsql.jaybird.props;
 /**
  * Properties for services.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface ServiceConnectionProperties extends AttachmentProperties {

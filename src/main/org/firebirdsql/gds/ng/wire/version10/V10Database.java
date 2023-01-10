@@ -46,7 +46,7 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 /**
  * {@link FbWireDatabase} implementation for the version 10 wire protocol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10Database extends AbstractFbWireDatabase implements FbWireDatabase {

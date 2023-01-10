@@ -27,7 +27,7 @@ package org.firebirdsql.jaybird.parser;
  * {@link WhitespaceToken}).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class NumericLiteralToken extends AbstractToken implements LiteralToken {

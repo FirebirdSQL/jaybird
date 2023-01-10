@@ -26,7 +26,7 @@ import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
 /**
  * ChaCha (ChaCha-20) encryption plugin provider
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class ChaChaEncryptionPluginSpi implements EncryptionPluginSpi {

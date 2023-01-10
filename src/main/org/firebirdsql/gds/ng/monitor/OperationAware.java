@@ -37,7 +37,7 @@ import org.firebirdsql.gds.ng.OperationMonitor;
  * <b>Note</b>: This is an experimental feature. The implementation or API may be removed or changed at any time.
  * </p>
  *
- * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
+ * @author Vasiliy Yashkov
  * @see OperationMonitor
  * @since 4.0
  */

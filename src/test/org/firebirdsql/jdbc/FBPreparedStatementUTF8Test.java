@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for {@link org.firebirdsql.jdbc.FBPreparedStatement} specifically involving UTF-8.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class FBPreparedStatementUTF8Test {

@@ -30,7 +30,7 @@ import java.sql.SQLException;
 /**
  * Wire connection instance for connecting to a database
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class WireDatabaseConnection extends WireConnection<IConnectionProperties, FbWireDatabase> {

@@ -24,7 +24,7 @@ package org.firebirdsql.extern.decimal;
 /**
  * Signum constants used in decimal-java
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class Signum {
 

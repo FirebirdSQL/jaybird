@@ -34,7 +34,7 @@ package org.firebirdsql.jna.embedded.spi;
  * This class will be loaded using {@link java.util.ServiceLoader}. Implementations must provide a no-arg constructor.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface FirebirdEmbeddedProvider {

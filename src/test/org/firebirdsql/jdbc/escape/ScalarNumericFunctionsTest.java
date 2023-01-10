@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests for support of the scalar numeric function escapes as defined in
  * appendix D.1 of the JDBC 4.1 specification.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class ScalarNumericFunctionsTest {
 

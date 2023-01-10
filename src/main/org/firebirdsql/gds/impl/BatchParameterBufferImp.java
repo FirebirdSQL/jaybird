@@ -25,7 +25,7 @@ import org.firebirdsql.jaybird.fb.constants.BatchItems;
 /**
  * Batch parameter buffer implementation.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class BatchParameterBufferImp extends ParameterBufferBase implements BatchParameterBuffer {

@@ -38,8 +38,8 @@ import java.sql.SQLException;
  * for fields declared in database as {@code BLOB SUB_TYPE 1}. This
  * implementation provides all conversion routines {@link FBStringField} has.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 public class FBLongVarCharField extends FBStringField implements FBCloseableField, FBFlushableField, BlobListenableField {
 

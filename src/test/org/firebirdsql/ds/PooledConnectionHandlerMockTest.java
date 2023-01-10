@@ -47,7 +47,7 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for {@link PooledConnectionHandler} using mocks.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @ExtendWith(MockitoExtension.class)
 class PooledConnectionHandlerMockTest {

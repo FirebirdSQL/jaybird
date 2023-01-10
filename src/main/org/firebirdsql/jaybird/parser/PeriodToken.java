@@ -24,7 +24,7 @@ package org.firebirdsql.jaybird.parser;
  * Expected occurrence is as separator between identifiers (e.g. {@code alias.column} or {@code package.function()})
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class PeriodToken extends AbstractSymbolToken {

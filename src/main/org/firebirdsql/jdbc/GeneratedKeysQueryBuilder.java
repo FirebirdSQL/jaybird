@@ -36,7 +36,7 @@ import java.util.*;
 /**
  * Builds (updates) queries to add generated keys support.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 final class GeneratedKeysQueryBuilder {

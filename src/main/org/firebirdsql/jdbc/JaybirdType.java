@@ -25,7 +25,7 @@ import java.sql.SQLType;
 /**
  * {@link SQLType} definitions specific to Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @Volatile(reason = "Defined types may receive a different type number when standardized in JDBC")
 public enum JaybirdType implements SQLType {

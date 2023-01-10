@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for {@link org.firebirdsql.jdbc.FBBlobInputStream}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class FBBlobInputStreamTest {

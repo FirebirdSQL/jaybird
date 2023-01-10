@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Test the JDBC 4.2 conversions for <code>java.time</code> (JSR 310) types.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.2
  */
 class JDBC42JavaTimeConversionsTest {

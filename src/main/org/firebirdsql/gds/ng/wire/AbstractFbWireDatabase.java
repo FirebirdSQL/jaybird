@@ -38,7 +38,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_transa
 /**
  * Abstract class for operations common to all version of the wire protocol implementation.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireDatabaseConnection>

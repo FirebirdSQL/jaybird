@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -35,7 +35,7 @@ import java.nio.charset.StandardCharsets;
  * <li>all other values are encoded to bytes using UTF-8</li>
  * </ul>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0.4
  */
 public final class StaticValueDbCryptCallbackSpi implements DbCryptCallbackSpi {

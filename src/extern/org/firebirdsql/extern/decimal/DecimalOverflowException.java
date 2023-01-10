@@ -24,7 +24,7 @@ package org.firebirdsql.extern.decimal;
 /**
  * Exception thrown to indicate a coefficient or exponent overflow or underflow.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class DecimalOverflowException extends ArithmeticException {
 

@@ -29,7 +29,7 @@ import java.util.Arrays;
  * a key component in adapting xa semantics and recovery to firebird
  * native operations and data format.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  */
 final class FBXid implements Xid {
 

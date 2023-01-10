@@ -29,8 +29,8 @@ import java.sql.SQLException;
  * The class {@code FBStandAloneConnectionManager} provides the default implementation of FirebirdConnectionManager for
  * standalone use. There is no pooling or other features.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  * @version 1.0
  */
 public final class FBStandAloneConnectionManager implements XcaConnectionManager, XcaConnectionEventListener, Serializable {

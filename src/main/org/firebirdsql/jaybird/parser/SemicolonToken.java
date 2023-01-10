@@ -24,7 +24,7 @@ package org.firebirdsql.jaybird.parser;
  * Expected occurrence is in PSQL bodies, or at the very end of a statement (for syntax flexibility).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class SemicolonToken extends AbstractSymbolToken {

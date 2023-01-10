@@ -48,7 +48,7 @@ import java.util.function.Function;
 import static java.util.Objects.requireNonNull;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbWireStatement extends AbstractFbStatement implements FbWireStatement {

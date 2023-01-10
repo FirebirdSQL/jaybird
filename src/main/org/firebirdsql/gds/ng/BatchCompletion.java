@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * Completion data from a batch execute.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class BatchCompletion {

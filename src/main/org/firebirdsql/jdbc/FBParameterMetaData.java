@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -29,8 +29,8 @@ import java.util.Map;
  * An object that can be used to get information about the types and properties for each parameter marker in a
  * <code>PreparedStatement</code> object.
  *
- * @author <a href="mailto:skidder@users.sourceforge.net">Nickolay Samofatov</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Nickolay Samofatov
+ * @author Mark Rotteveel
  * @version 1.0
  */
 @SuppressWarnings("RedundantThrows")

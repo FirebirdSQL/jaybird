@@ -29,7 +29,7 @@ import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 /**
  * Connection properties for the Firebird connection.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface IConnectionProperties extends IAttachProperties<IConnectionProperties>, DatabaseConnectionProperties {

@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * This is an integration test which uses an actual database.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 

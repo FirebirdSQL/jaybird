@@ -25,8 +25,8 @@ import java.util.*;
 /**
  * Helper class for escaped functions.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 @InternalApi
 public final class FBEscapedFunctionHelper {

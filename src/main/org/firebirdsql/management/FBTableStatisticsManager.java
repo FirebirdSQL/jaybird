@@ -53,7 +53,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * This class is not thread-safe (though its use of the underlying connection is thread-safe).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @Volatile(reason = "Experimental")

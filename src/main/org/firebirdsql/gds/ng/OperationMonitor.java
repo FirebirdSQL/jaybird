@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -27,8 +27,8 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * The statement operation monitor allows monitoring of statement execution and fetching of all statements.
  *
- * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Vasiliy Yashkov
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public final class OperationMonitor {
@@ -94,7 +94,7 @@ public final class OperationMonitor {
     /**
      * Implementation of {@link OperationAware} that does nothing (a 'null-object').
      *
-     * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+     * @author Mark Rotteveel
      * @since 4.0
      */
     private static final class NoOpOperationAware implements OperationAware {

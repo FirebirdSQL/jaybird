@@ -35,7 +35,7 @@ import static java.util.Collections.unmodifiableMap;
  * they call {@link #immutable()}(.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractImmutableAttachProperties<T extends IAttachProperties<T>> implements IAttachProperties<T> {

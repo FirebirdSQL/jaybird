@@ -26,7 +26,7 @@ import java.sql.SQLException;
  * Instances of this field cache data in auto-commit case if no transaction is
  * yet available and must be flushed before transaction is committed.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  * @version 1.0
  */
 public interface FBFlushableField {

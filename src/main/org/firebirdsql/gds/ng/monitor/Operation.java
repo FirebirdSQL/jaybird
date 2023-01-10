@@ -35,8 +35,8 @@ import java.sql.SQLException;
  * <b>Note</b>: This is an experimental feature. The implementation or API may be removed or changed at any time.
  * </p>
  *
- * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Vasiliy Yashkov
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public interface Operation {

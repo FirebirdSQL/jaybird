@@ -38,7 +38,7 @@ import static org.firebirdsql.jaybird.props.PropertyConstants.SESSION_TIME_ZONE_
 /**
  * Abstract class for behavior common to {@code ParameterConverter} implementations.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractParameterConverter<D extends AbstractConnection<IConnectionProperties, ?>, S extends AbstractConnection<IServiceProperties, ?>>

@@ -28,7 +28,7 @@ import static org.firebirdsql.common.extension.RequireProtocolExtension.requireP
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version12.V12Statement}, reuses test for V11.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V12StatementTest extends V11StatementTest {

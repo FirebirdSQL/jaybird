@@ -40,7 +40,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * FieldDescriptor is an immutable type, the value of a field is maintained separately in {@link RowValue}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @version 3.0
  */
 public final class FieldDescriptor {

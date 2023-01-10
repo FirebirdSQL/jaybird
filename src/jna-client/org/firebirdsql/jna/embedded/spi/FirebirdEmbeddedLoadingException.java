@@ -21,7 +21,7 @@ package org.firebirdsql.jna.embedded.spi;
 /**
  * Exception to signal errors when loading or identifying a Firebird Embedded library.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class FirebirdEmbeddedLoadingException extends Exception {

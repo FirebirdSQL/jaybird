@@ -41,7 +41,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
 /**
  * Provides the implementation of {@link java.sql.DatabaseMetaData#getPseudoColumns(String, String, String, String)}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public abstract class GetPseudoColumns {

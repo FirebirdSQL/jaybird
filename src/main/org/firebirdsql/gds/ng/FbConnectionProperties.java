@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 /**
  * Mutable implementation of {@link IConnectionProperties}
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @see FbImmutableConnectionProperties
  * @since 3.0
  */

@@ -38,7 +38,7 @@ import static org.firebirdsql.util.ReflectionHelper.*;
  * wrappers for every individual JDBC version.
  * </p>
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 class StatementHandler implements InvocationHandler {

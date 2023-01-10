@@ -54,8 +54,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Test for the {@link FBDatabaseMetaData} implementation of {@link java.sql.DatabaseMetaData}
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  * @version 1.0
  */
 class FBDatabaseMetaDataTest {

@@ -24,7 +24,7 @@ import java.io.OutputStream;
 /**
  * Helper methods for decoding Vax style (little endian) integers as used by Firebird from byte arrays.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class VaxEncoding {

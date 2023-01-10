@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -33,8 +33,8 @@ import java.util.*;
  * An object that can be used to get information about the types and properties of the columns in
  * a <code>ResultSet</code> object.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
 @SuppressWarnings("RedundantThrows")
 public class FBResultSetMetaData extends AbstractFieldMetaData implements FirebirdResultSetMetaData {

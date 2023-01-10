@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for "use Firebird autocommit" mode.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 class UseFirebirdAutocommitTest {

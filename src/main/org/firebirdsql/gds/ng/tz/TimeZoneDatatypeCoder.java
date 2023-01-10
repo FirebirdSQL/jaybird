@@ -42,7 +42,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * As this uses Java 8 and higher types, this is not part of datatype coder itself.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public class TimeZoneDatatypeCoder {

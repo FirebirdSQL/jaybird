@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for {@link FBShortField}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBShortFieldTest extends BaseJUnit5TestFBField<FBShortField, Short> {
 

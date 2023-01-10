@@ -30,7 +30,7 @@ import java.sql.CallableStatement;
 /**
  * Firebird extension to the {@link java.sql.CallableStatement} interface.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public interface FirebirdCallableStatement extends FirebirdPreparedStatement, CallableStatement {
 

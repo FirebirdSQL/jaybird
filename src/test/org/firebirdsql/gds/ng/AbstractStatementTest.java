@@ -58,7 +58,7 @@ import static org.junit.jupiter.api.Assumptions.*;
  * This abstract class is subclassed by the tests for specific FbStatement implementations.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractStatementTest {

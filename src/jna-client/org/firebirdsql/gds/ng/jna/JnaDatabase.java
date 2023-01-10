@@ -47,7 +47,7 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbDatabase} for native client access.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>

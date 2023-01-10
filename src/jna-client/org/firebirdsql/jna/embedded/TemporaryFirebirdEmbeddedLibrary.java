@@ -25,7 +25,7 @@ import java.nio.file.Path;
 /**
  * Information for locating a Firebird Embedded library.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class TemporaryFirebirdEmbeddedLibrary implements FirebirdEmbeddedLibrary {

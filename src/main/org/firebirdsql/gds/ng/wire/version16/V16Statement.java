@@ -45,7 +45,7 @@ import java.util.Collection;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public class V16Statement extends V13Statement {

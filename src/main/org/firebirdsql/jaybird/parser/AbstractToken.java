@@ -25,7 +25,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Common implementation of {@link Token}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 abstract class AbstractToken implements Token {

@@ -35,7 +35,7 @@ import junit.framework.*;
  * CTS test case. This is {@link junit.framework.TestCase} extension that allows
  * running CTS test cases using "appclient" vehicle as normal JUnit test cases. 
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public class CTSTestCase extends TestCase {
     

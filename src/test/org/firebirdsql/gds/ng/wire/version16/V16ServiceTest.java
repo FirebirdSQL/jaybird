@@ -28,7 +28,7 @@ import static org.firebirdsql.common.extension.RequireProtocolExtension.requireP
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Service} in the V16 protocol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public class V16ServiceTest extends V15ServiceTest {

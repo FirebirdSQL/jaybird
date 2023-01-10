@@ -42,7 +42,7 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptInvalidKey;
 /**
  * ChaCha (ChaCha-20) encryption plugin (introduced in Firebird 4.0)
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class ChaChaEncryptionPlugin implements EncryptionPlugin {

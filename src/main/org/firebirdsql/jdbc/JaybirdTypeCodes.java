@@ -30,7 +30,7 @@ import org.firebirdsql.util.Volatile;
 /**
  * Type codes specific for Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @Volatile(reason = "Defined type codes may receive a different value when standardized in JDBC")
 public final class JaybirdTypeCodes {

@@ -39,10 +39,10 @@ import java.util.regex.Pattern;
  * This loads all messages during class initialization.
  * </p>
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Roman Rokytskyy
+ * @author Blas Rodriguez Somoza
+ * @author Mark Rotteveel
  * @version 1.0
  */
 public final class GDSExceptionHelper {

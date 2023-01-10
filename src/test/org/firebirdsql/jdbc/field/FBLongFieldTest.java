@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for {@link FBLongField}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBLongFieldTest extends BaseJUnit5TestFBField<FBLongField, Long> {
 

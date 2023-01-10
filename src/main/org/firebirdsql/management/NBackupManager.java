@@ -30,8 +30,8 @@ import java.sql.SQLException;
  * Implements the incremental backup and restore functionality of NBackup
  * via the Firebird Services API.
  *
- * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Thomas Steinmaurer
+ * @author Mark Rotteveel
  */
 public interface NBackupManager extends ServiceManager {
 

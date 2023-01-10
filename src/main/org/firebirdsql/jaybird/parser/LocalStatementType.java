@@ -30,7 +30,7 @@ import org.firebirdsql.util.InternalApi;
  * The types of this enum are decided by the needs of Jaybird, and do not necessarily cover all statement types.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

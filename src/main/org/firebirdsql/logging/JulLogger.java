@@ -23,7 +23,7 @@ import java.util.logging.Level;
 /**
  * Logger using {@code java.util.logging}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 final class JulLogger implements Logger {

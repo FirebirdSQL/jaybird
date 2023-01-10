@@ -31,7 +31,7 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
  * This class can also be used to construct individual {@link FieldDescriptor} objects.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class RowDescriptorBuilder {

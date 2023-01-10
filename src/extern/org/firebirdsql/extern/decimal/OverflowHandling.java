@@ -32,7 +32,7 @@ package org.firebirdsql.extern.decimal;
  * value it can hold is {@code 9.999999e96}.
  * </p>
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public enum OverflowHandling {
 

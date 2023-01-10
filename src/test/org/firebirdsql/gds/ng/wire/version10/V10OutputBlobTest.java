@@ -54,7 +54,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * Tests from this class are also copied to {@code org.firebirdsql.gds.ng.jna.JnaBlobTest} TODO: Consider refactoring test hierarchy
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10OutputBlobTest extends BaseTestV10Blob {

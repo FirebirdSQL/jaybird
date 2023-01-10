@@ -33,7 +33,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  * InfoProcessor to retrieve the statement information associated with {@link org.firebirdsql.gds.ng.AbstractFbStatement#getStatementInfoRequestItems()}
  * and {@link org.firebirdsql.gds.ng.AbstractFbStatement#getParameterDescriptionInfoRequestItems()}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor.StatementInfo> {

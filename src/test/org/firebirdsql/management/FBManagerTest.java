@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Tests for {@link FBManager}.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  * @version 1.0
  */
 class FBManagerTest {

@@ -28,7 +28,7 @@ import java.sql.SQLException;
 /**
  * Matcher to check for ConnectionEvents
  *  
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class ConnectionEventMatcher implements ArgumentMatcher<ConnectionEvent> {
     private final PooledConnection pooled;

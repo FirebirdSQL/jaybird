@@ -35,7 +35,7 @@ import java.util.Iterator;
  * Instance of this interface represents a Parameter Buffer it is extended
  * by various parameter buffer interfaces.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @see org.firebirdsql.gds.ParameterBuffer
  * @see org.firebirdsql.gds.ServiceRequestBuffer
  * @see org.firebirdsql.gds.TransactionParameterBuffer

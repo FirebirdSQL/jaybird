@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for alternative JDBC URLs supported.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class JDBCUrlPrefixTest {
 

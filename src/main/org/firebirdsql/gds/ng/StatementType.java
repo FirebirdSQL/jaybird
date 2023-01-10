@@ -29,7 +29,7 @@ import org.firebirdsql.gds.ISCConstants;
 /**
  * Firebird statement types.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public enum StatementType {
 

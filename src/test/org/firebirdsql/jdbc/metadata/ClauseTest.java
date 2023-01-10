@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for {@link Clause}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class ClauseTest {
 

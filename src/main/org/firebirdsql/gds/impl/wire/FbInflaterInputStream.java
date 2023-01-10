@@ -31,7 +31,7 @@ import java.util.zip.InflaterInputStream;
 /**
  * {@code InflaterOutputStream} with some modifications to simplify usage for Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 class FbInflaterInputStream extends InflaterInputStream implements EncryptedStreamSupport {

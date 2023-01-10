@@ -23,7 +23,7 @@ import org.firebirdsql.util.InternalApi;
 /**
  * Thrown when the tokenizer required a character, but instead the end of input was reached.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

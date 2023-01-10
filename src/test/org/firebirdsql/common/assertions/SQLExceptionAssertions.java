@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Common assertions for SQLException.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class SQLExceptionAssertions {
 

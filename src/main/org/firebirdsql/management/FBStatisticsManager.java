@@ -58,7 +58,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
  * </ul>
  * </p>
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
+ * @author Gabriel Reid
  */
 public class FBStatisticsManager extends FBServiceManager implements StatisticsManager {
 

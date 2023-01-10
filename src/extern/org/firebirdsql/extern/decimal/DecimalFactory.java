@@ -26,7 +26,7 @@ import java.math.BigDecimal;
 /**
  * Factory for decimal values.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 interface DecimalFactory<T> {
 

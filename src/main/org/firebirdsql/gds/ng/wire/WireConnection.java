@@ -66,7 +66,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  *         Type of attach properties
  * @param <C>
  *         Type of connection handle
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class WireConnection<T extends IAttachProperties<T>, C extends FbWireAttachment>

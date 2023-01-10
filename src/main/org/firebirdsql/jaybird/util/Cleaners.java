@@ -23,7 +23,7 @@ import java.lang.ref.Cleaner;
 /**
  * Factory for {@link Cleaner} for use within Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 6
  */
 public final class Cleaners {

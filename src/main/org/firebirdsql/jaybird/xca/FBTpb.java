@@ -29,7 +29,7 @@ import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
  * Block (TPB), which contains Firebird-specific information about transaction
  * isolation.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
+ * @author David Jencks
  */
 
 public final class FBTpb implements Serializable {

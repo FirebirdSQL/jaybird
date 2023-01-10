@@ -27,7 +27,7 @@
  * Firebird Embedded locator service provider</a>.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 package org.firebirdsql.jna.embedded.spi;

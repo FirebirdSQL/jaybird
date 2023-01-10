@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 /**
  * Tests for {@link ByteArrayHelper}
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class ByteArrayHelperTest {
 

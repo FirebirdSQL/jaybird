@@ -33,7 +33,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
 /**
  * Implements the Trace/Audit API available new in Firebird 2.5
  *
- * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
+ * @author Thomas Steinmaurer
  */
 public class FBTraceManager extends FBServiceManager implements TraceManager {
 

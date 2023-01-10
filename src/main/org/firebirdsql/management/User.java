@@ -27,7 +27,7 @@ package org.firebirdsql.management;
 /**
  * A user in the Firebird Security Database.
  *
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
+ * @author Steven Jardine
  */
 public interface User {
 

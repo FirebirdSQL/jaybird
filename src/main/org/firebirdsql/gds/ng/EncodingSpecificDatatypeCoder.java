@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -44,7 +44,7 @@ import static java.util.Objects.requireNonNull;
  * Datatype coder wrapping another datatype coder and applying a specific encoding definition, while delegating other
  * methods to the wrapped datatype coder.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {

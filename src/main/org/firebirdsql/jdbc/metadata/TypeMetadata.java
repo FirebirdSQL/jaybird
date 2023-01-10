@@ -36,7 +36,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 /**
  * Helper class to determine type metadata conforming to expectations of {@link java.sql.DatabaseMetaData}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 @InternalApi

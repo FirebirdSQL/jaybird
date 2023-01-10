@@ -36,9 +36,9 @@ import java.util.function.Function;
 /**
  * Field implementation for {@code CHAR} and {@code VARCHAR}.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
 class FBStringField extends FBField implements TrimmableField {
 

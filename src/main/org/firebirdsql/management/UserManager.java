@@ -31,7 +31,7 @@ import java.util.Map;
 /**
  * The base Firebird Service API functionality.
  *
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
+ * @author Steven Jardine
  */
 public interface UserManager extends ServiceManager {
 

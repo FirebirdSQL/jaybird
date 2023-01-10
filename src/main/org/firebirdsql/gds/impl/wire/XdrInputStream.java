@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -16,6 +16,7 @@
  *
  * All rights reserved.
  */
+
 /*
  * The Original Code is the Firebird Java GDS implementation.
  *
@@ -41,9 +42,9 @@ import java.io.*;
  * This class is not thread-safe.
  * </p>
  *
- * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Alejandro Alberola
+ * @author David Jencks
+ * @author Mark Rotteveel
  * @version 1.0
  */
 public final class XdrInputStream extends FilterInputStream implements EncryptedStreamSupport {

@@ -32,7 +32,7 @@ package org.firebirdsql.jaybird.parser;
  * </dl>
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class ReservedToken extends AbstractToken {

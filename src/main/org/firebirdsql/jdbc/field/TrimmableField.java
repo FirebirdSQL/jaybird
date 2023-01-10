@@ -23,7 +23,7 @@ import org.firebirdsql.util.InternalApi;
 /**
  * Trim behaviour of {@code getString} in string fields.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi

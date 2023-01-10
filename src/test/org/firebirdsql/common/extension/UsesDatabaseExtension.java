@@ -50,7 +50,7 @@ import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
  * register the extension in a static field.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public abstract class UsesDatabaseExtension {

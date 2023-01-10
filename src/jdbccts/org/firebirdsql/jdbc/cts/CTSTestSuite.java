@@ -29,7 +29,7 @@ import com.sun.cts.harness.EETest;
  * CTS test suite. This class is analogue of {@link junit.framework.TestSuite}
  * class for CTS test cases. Portions of code were copied from TestSuite impl.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public class CTSTestSuite extends TestSuite {
 

@@ -21,7 +21,7 @@ package org.firebirdsql.logging;
 /**
  * Logger implementation that writes to the console output.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 final class ConsoleLogger implements Logger {
     

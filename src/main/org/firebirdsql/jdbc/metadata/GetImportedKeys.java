@@ -26,7 +26,7 @@ import java.sql.SQLException;
 /**
  * Provides the implementation for {@link java.sql.DatabaseMetaData#getImportedKeys(String, String, String)}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class GetImportedKeys extends AbstractKeysMethod {

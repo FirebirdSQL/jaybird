@@ -27,7 +27,7 @@ package org.firebirdsql.event;
 /**
  * An interface for retrieving information about events that have occurred 
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
+ * @author Gabriel Reid
  */
 public interface DatabaseEvent {
    

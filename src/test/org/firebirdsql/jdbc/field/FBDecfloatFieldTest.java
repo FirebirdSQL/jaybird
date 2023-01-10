@@ -37,7 +37,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBDecfloatFieldTest extends BaseJUnit5TestFBField<FBDecfloatField<?>, BigDecimal> {
 

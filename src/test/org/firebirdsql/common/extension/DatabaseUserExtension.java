@@ -38,7 +38,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
  * (i.e. Firebird 2.5 and higher).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class DatabaseUserExtension implements AfterEachCallback {

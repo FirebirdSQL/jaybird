@@ -45,7 +45,7 @@ import static org.firebirdsql.util.ReflectionHelper.getAllInterfaces;
  * wrappers for every individual JDBC version.
  * </p>
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 class PooledConnectionHandler implements InvocationHandler {

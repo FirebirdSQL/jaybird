@@ -21,7 +21,7 @@ package org.firebirdsql.jaybird.parser;
 /**
  * Signals a comma ({@code ,}) in a token stream.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class CommaToken extends AbstractSymbolToken {

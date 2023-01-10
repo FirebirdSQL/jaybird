@@ -40,7 +40,7 @@ import static org.mockito.Mockito.*;
 /**
  * Tests for {@link StatementHandler} using mocks.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @ExtendWith(MockitoExtension.class)
 class StatementHandlerMockTest {

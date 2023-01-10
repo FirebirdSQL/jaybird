@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.wire.AsynchronousChannelListener} for testing purposes
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class SimpleChannelListener implements AsynchronousChannelListener {

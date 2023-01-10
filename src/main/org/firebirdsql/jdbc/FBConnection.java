@@ -48,8 +48,8 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 /**
  * The class {@code FBConnection} is a handle to a {@link FBManagedConnection} and implements {@link Connection}.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
 @SuppressWarnings("RedundantThrows")
 public class FBConnection implements FirebirdConnection {

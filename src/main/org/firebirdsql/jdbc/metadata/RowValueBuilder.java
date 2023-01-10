@@ -37,7 +37,7 @@ import java.util.Map;
  * the value is assigned, and it allows for sparse population (ie: skipping {@code null} values).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @see org.firebirdsql.gds.ng.fields.RowValue#of(RowDescriptor, byte[][])
  */
 final class RowValueBuilder {

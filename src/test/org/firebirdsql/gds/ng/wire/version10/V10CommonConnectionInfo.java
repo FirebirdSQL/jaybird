@@ -30,7 +30,7 @@ import static org.firebirdsql.common.FBTestProperties.DB_USER;
 /**
  * Class to contain common connection information shared by the V10 tests.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10CommonConnectionInfo {

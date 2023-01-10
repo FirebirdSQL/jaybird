@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * return values larger than {@link Integer#MAX_VALUE} as that would take hours.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class LargeUpdateCountSupportTest {

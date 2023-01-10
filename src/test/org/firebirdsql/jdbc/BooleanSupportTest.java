@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests the boolean support, which is only available in Firebird 3.0 or higher.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class BooleanSupportTest {
 

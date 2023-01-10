@@ -52,7 +52,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Test for XADataSource. Behavior of XAResource (FBManagedConnection) is tested in {@code org.firebirdsql.jaybird.xca.FBXAResourceTest}.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 class FBXADataSourceTest {

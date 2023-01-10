@@ -33,7 +33,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Common properties for database and service attach.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface IAttachProperties<T extends IAttachProperties<T>> extends AttachmentProperties {

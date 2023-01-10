@@ -41,7 +41,7 @@ import static org.firebirdsql.jaybird.props.internal.TransactionNameMapping.TRAN
 /**
  * Connection property definer for the standard connection properties of Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi {

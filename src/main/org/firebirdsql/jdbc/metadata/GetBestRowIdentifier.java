@@ -53,7 +53,7 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.getDataTypeName;
  * Provides the implementation of
  * {@link java.sql.DatabaseMetaData#getBestRowIdentifier(String, String, String, int, boolean)}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class GetBestRowIdentifier extends AbstractMetadataMethod {

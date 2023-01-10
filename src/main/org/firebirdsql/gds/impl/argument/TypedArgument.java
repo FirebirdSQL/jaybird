@@ -21,7 +21,7 @@ package org.firebirdsql.gds.impl.argument;
 /**
  * Argument with an argument type.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public abstract class TypedArgument extends Argument {

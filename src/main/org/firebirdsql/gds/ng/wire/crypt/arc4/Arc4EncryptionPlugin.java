@@ -37,7 +37,7 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.*;
 /**
  * ARC4 encryption plugin (the wire encryption provided out-of-the-box in Firebird 3).
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public final class Arc4EncryptionPlugin implements EncryptionPlugin {

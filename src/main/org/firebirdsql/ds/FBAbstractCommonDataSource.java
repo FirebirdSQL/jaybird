@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Abstract class for properties and behaviour common to DataSources, XADataSources and ConnectionPoolDataSources
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 public abstract class FBAbstractCommonDataSource extends AbstractConnectionPropertiesDataSource {

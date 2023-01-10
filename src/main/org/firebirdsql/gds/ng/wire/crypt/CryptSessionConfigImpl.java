@@ -25,7 +25,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Crypt session config data for a specific plugin.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 class CryptSessionConfigImpl implements CryptSessionConfig {

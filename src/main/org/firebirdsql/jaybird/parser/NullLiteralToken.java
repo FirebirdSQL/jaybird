@@ -24,7 +24,7 @@ package org.firebirdsql.jaybird.parser;
  * The literal {@code UNKNOWN} is signalled as a {@link BooleanLiteralToken}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 final class NullLiteralToken extends AbstractToken implements LiteralToken {

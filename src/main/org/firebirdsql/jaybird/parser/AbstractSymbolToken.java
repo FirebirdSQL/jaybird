@@ -21,7 +21,7 @@ package org.firebirdsql.jaybird.parser;
 /**
  * Token that is always a single symbol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 abstract class AbstractSymbolToken implements Token {

@@ -32,7 +32,7 @@ import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_WIRE_COMPR
 /**
  * Attachment properties shared by database and service connections.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface AttachmentProperties extends BaseProperties {

@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Validator for columns of metadata result sets.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  *
  * @param <T> Enum type, implementing {@link MetaDataInfo} for metadata column information
  */

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -25,7 +25,7 @@ import org.firebirdsql.jna.fbclient.FbClientLibrary;
  * Implementation of {@link org.firebirdsql.gds.ng.FbDatabaseFactory} for establishing local connections using
  * the Firebird client library.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class FbLocalDatabaseFactory extends AbstractNativeDatabaseFactory {

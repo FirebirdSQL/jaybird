@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Abstract test class for blob related tests shared by the wire and JNA implementation.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class BaseTestBlob {

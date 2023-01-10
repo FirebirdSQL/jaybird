@@ -43,7 +43,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractWireOperations implements FbWireOperations {

@@ -35,7 +35,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 /**
  * Abstract service implementation.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbService<T extends AbstractConnection<IServiceProperties, ? extends FbService>>
