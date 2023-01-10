@@ -46,7 +46,7 @@ java {
 }
 
 ext {
-    junit_jupiter = '5.9.1'
+    junit_jupiter = '5.9.2'
     hamcrest = '2.2'
     assertj = '3.23.1'
     mockito = '4.10.0'
