@@ -178,8 +178,8 @@ jar {
 
 javadoc {
     options.author()
-    options.windowTitle = "$project.capitalizedName API"
-    options.docTitle = project.capitalizedName
+    options.windowTitle = "$project.capitalizedName ${project.'version.maven'} API"
+    options.docTitle = "$project.capitalizedName ${project.'version.maven'}"
     options.bottom = "Copyright &copy; 2001-${project.YEAR} Jaybird (Firebird JDBC) team. All rights reserved."
     def currentJavaVersion = JavaVersion.current()
     if (currentJavaVersion.isJava9Compatible()) {
