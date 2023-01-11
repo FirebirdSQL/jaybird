@@ -349,14 +349,14 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         }
 
         case Types.FLOAT: {
-            if (supportInfoFor(connection).supportsFloatBinaryPrecision()) {
+            if (connection == null || supportInfoFor(connection).supportsFloatBinaryPrecision()) {
                 return 24;
             } else {
                 return 7;
             }
         }
         case Types.DOUBLE: {
-            if (supportInfoFor(connection).supportsFloatBinaryPrecision()) {
+            if (connection == null || supportInfoFor(connection).supportsFloatBinaryPrecision()) {
                 return 53;
             } else {
                 return 15;
