@@ -19,6 +19,9 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -26,10 +29,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.List;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.gds.ISCConstants.SQL_DOUBLE;
+import static org.firebirdsql.gds.ISCConstants.SQL_FLOAT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -90,7 +97,7 @@ class FBResultSetMetaDataTest {
             assertEquals(4, metaData.getPrecision(6), "short_field must have precision 4");
         }
     }
-    
+
     @Test
     void testResultSetMetaData2() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
@@ -354,5 +361,19 @@ class FBResultSetMetaDataTest {
                 }
             }
         }
+    }
+
+    @Test
+    void getPrecision_connectionLessResultSet_shouldSucceedWithoutException_730() throws Exception {
+        var rowDescriptor = new RowDescriptorBuilder(2,
+                DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8)))
+                .at(0).simple(SQL_FLOAT, 4, "TEST", "FLOAT").addField()
+                .at(1).simple(SQL_DOUBLE, 8, "TEST", "DOUBLE").addField()
+                .toRowDescriptor();
+        var rs = new FBResultSet(rowDescriptor, List.of());
+        ResultSetMetaData rsmd = rs.getMetaData();
+
+        assertEquals(24, rsmd.getPrecision(1));
+        assertEquals(53, rsmd.getPrecision(2));
     }
 }
