@@ -88,26 +88,26 @@ public final class GetTypeInfo {
 
         //BIGINT=-5
         rows.add(row("BIGINT", Types.BIGINT, BIGINT_PRECISION, null, null, null, false, DatabaseMetaData.typeSearchable,
-                false, true, 0, SQL_INT64, 10));
+                false, false, 0, SQL_INT64, 10));
 
         //LONGVARBINARY=-4
-        rows.add(row("BLOB SUB_TYPE BINARY", Types.LONGVARBINARY, 0, "x'", "'", null, true, blobTypePred, true, true, 0,
-                SQL_BLOB, 10));
+        rows.add(row("BLOB SUB_TYPE BINARY", Types.LONGVARBINARY, 0, "x'", "'", null, true, blobTypePred, true, false,
+                0, SQL_BLOB, 10));
 
         //VARBINARY=-3
         rows.add(row("VARCHAR", Types.VARBINARY, 32765, "x'", "'", "length", true, DatabaseMetaData.typeSearchable,
-                true, true, 0, SQL_VARYING, 10));
+                true, false, 0, SQL_VARYING, 10));
 
         //BINARY=-2
         rows.add(row("CHAR", Types.BINARY, 32767, "x'", "'", "length", true, DatabaseMetaData.typeSearchable, true,
-                true, 0, SQL_TEXT, 10));
+                false, 0, SQL_TEXT, 10));
 
         //LONGVARCHAR=-1
-        rows.add(row("BLOB SUB_TYPE TEXT", Types.LONGVARCHAR, 0, "'", "'", null, true, blobTypePred, true, true, 0,
+        rows.add(row("BLOB SUB_TYPE TEXT", Types.LONGVARCHAR, 0, "'", "'", null, true, blobTypePred, true, false, 0,
                 SQL_BLOB, 10));
 
         //CHAR=1
-        rows.add(row("CHAR", Types.CHAR, 32767, "'", "'", "length", true, DatabaseMetaData.typeSearchable, true, true,
+        rows.add(row("CHAR", Types.CHAR, 32767, "'", "'", "length", true, DatabaseMetaData.typeSearchable, true, false,
                 0, SQL_TEXT, 10));
 
         // also for numeric
@@ -119,7 +119,7 @@ public final class GetTypeInfo {
         // Handle INT128 as a JDBC type NUMERIC
         if (firebirdSupportInfo.supportsInt128()) {
             rows.add(row("INT128", Types.NUMERIC, NUMERIC_INT128_PRECISION, null, null, null, false,
-                    DatabaseMetaData.typeSearchable, false, true, 0, SQL_INT128, 10));
+                    DatabaseMetaData.typeSearchable, false, false, 0, SQL_INT128, 10));
         }
 
         //DECIMAL=3
@@ -128,11 +128,11 @@ public final class GetTypeInfo {
 
         //INTEGER=4
         rows.add(row("INTEGER", Types.INTEGER, INTEGER_PRECISION, null, null, null, false,
-                DatabaseMetaData.typeSearchable, false, true, 0, SQL_LONG, 10));
+                DatabaseMetaData.typeSearchable, false, false, 0, SQL_LONG, 10));
 
         //SMALLINT=5
         rows.add(row("SMALLINT", Types.SMALLINT, SMALLINT_PRECISION, null, null, null, false,
-                DatabaseMetaData.typeSearchable, false, true, 0, SQL_SHORT, 10));
+                DatabaseMetaData.typeSearchable, false, false, 0, SQL_SHORT, 10));
 
         boolean supportsFloatBinaryPrecision = firebirdSupportInfo.supportsFloatBinaryPrecision();
 
@@ -153,44 +153,44 @@ public final class GetTypeInfo {
 
         //VARCHAR=12
         rows.add(row("VARCHAR", Types.VARCHAR, 32765, "'", "'", "length", true, DatabaseMetaData.typeSearchable, true,
-                true, 0, SQL_VARYING, 10));
+                false, 0, SQL_VARYING, 10));
 
         //BOOLEAN=16
         if (firebirdSupportInfo.supportsBoolean()) {
             rows.add(row("BOOLEAN", Types.BOOLEAN, BOOLEAN_BINARY_PRECISION, null, null, null, false,
-                    DatabaseMetaData.typePredBasic, true, true, 0, SQL_BOOLEAN, 2));
+                    DatabaseMetaData.typePredBasic, true, false, 0, SQL_BOOLEAN, 2));
         }
 
         //DATE=91
         rows.add(row("DATE", Types.DATE, DATE_PRECISION, "date'", "'", null, false, DatabaseMetaData.typeSearchable,
-                true, true, 0, SQL_TYPE_DATE, 10));
+                true, false, 0, SQL_TYPE_DATE, 10));
 
         //TIME=92
         rows.add(row("TIME", Types.TIME, TIME_PRECISION, "time'", "'", null, false, DatabaseMetaData.typeSearchable,
-                true, true, 0, SQL_TYPE_TIME, 10));
+                true, false, 0, SQL_TYPE_TIME, 10));
 
         //TIMESTAMP=93
         rows.add(row("TIMESTAMP", Types.TIMESTAMP, TIMESTAMP_PRECISION, "timestamp'", "'", null, false,
-                DatabaseMetaData.typeSearchable, true, true, 0, SQL_TIMESTAMP, 10));
+                DatabaseMetaData.typeSearchable, true, false, 0, SQL_TIMESTAMP, 10));
 
         //OTHER=1111
-        rows.add(row("ARRAY", Types.OTHER, 0, null, null, null, true, DatabaseMetaData.typePredNone, true, true, 0,
+        rows.add(row("ARRAY", Types.OTHER, 0, null, null, null, true, DatabaseMetaData.typePredNone, true, false, 0,
                 SQL_ARRAY, 10));
 
         //BLOB=2004
         // Should we split this into all negative blob types currently known in the DB?
         // Blob is potentially searchable with like, etc, acting as if it isn't.
         rows.add(row("BLOB SUB_TYPE <0", Types.BLOB, 0, null, null, null, true, DatabaseMetaData.typePredNone, true,
-                true, 0, SQL_BLOB, 10));
+                false, 0, SQL_BLOB, 10));
 
         if (firebirdSupportInfo.supportsTimeZones()) {
             //TIME_WITH_TIMEZONE=2013
             rows.add(row("TIME WITH TIME ZONE", Types.TIME_WITH_TIMEZONE, TIME_WITH_TIMEZONE_PRECISION, "time'", "'",
-                    null, false, DatabaseMetaData.typeSearchable, true, true, 0, SQL_TIME_TZ, 10));
+                    null, false, DatabaseMetaData.typeSearchable, true, false, 0, SQL_TIME_TZ, 10));
 
             //TIMESTAMP_WITH_TIMEZONE=2014
             rows.add(row("TIMESTAMP WITH TIME ZONE", Types.TIMESTAMP_WITH_TIMEZONE, TIMESTAMP_WITH_TIMEZONE_PRECISION,
-                    "timestamp'", "'", null, false, DatabaseMetaData.typeSearchable, true, true, 0, SQL_TIMESTAMP_TZ,
+                    "timestamp'", "'", null, false, DatabaseMetaData.typeSearchable, true, false, 0, SQL_TIMESTAMP_TZ,
                     10));
         }
 

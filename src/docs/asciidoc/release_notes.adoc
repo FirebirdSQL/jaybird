@@ -297,6 +297,10 @@ See also <<compatibility-changes>> for details.
 [#other-fixes-and-changes]
 === Other fixes and changes
 
+* Changed: `DatabaseMetaData.getTypeInfo()` column `FIXED_PREC_SCALE` (column 11) now returns `false` for all data types except `NUMERIC` and `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/551[jaybird#551])
++
+This was done because of the stated requirement "`__can it be a money value__`".
+Previously almost all types returned `true` (including -- for example -- `BOOLEAN` and `TIMESTAMP`, which are definitely not money types).
 * Consistent use of `BigDecimal.valueOf(double)` instead of a combination of `new BigDecimal(double)` and `BigDecimal.valueOf(double)` (https://github.com/FirebirdSQL/jaybird/issues/553[jaybird#553])
 * Removed `finalize()` methods and -- where it made sense -- replaced them with use of `Cleaner` (https://github.com/FirebirdSQL/jaybird/issues/727[jaybird#727])
 
