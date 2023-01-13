@@ -319,10 +319,9 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
                     int precision = rs.getInt("FIELD_PRECISION");
                     ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo(relationName, fieldName, precision);
 
-                    result.put(fieldInfo.fieldKey, fieldInfo);
+                    result.put(fieldInfo.fieldKey(), fieldInfo);
                 }
             }
-            params.clear();
         }
         return result;
     }
