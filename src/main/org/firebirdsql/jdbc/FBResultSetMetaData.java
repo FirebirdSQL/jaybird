@@ -280,19 +280,22 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException {
         if (connection == null) return Collections.emptyMap();
 
-        // Apparently there is a limit in the UNION
-        // It is necessary to split in several queries
-        // Although the problem reported with 93 UNION use only 70
+        // Apparently there is a limit in the UNION. It is necessary to split in several queries.  Although the problem
+        // reported with 93 UNION use only 70
         int pending = getFieldCount();
-        Map<FieldKey, ExtendedFieldInfo> result = new HashMap<>();
-        final FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
+        int start = 1;
+        var result = new HashMap<FieldKey, ExtendedFieldInfo>();
+        FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
+        var params = new ArrayList<String>();
+        var sb = new StringBuilder();
         while (pending > 0) {
-            StringBuilder sb = new StringBuilder();
+            params.clear();
+            sb.setLength(0);
 
             int maxLength = Math.min(pending, 70);
-            List<String> params = new ArrayList<>(2 * maxLength);
-            for (int i = 1; i <= maxLength; i++) {
-
+            int end = start + maxLength;
+            params.ensureCapacity(2 * maxLength);
+            for (int i = start; i < end; i++) {
                 String relationName = getFieldDescriptor(i).getOriginalTableName();
                 String fieldName = getFieldDescriptor(i).getOriginalName();
 
@@ -309,15 +312,16 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
             }
 
             pending -= maxLength;
+            start = end;
 
             if (sb.length() == 0) continue;
 
             try (ResultSet rs = metaData.doQuery(sb.toString(), params, true)) {
                 while (rs.next()) {
-                    String relationName = rs.getString("RELATION_NAME");
-                    String fieldName = rs.getString("FIELD_NAME");
+                    var relationName = rs.getString("RELATION_NAME");
+                    var fieldName = rs.getString("FIELD_NAME");
                     int precision = rs.getInt("FIELD_PRECISION");
-                    ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo(relationName, fieldName, precision);
+                    var fieldInfo = new ExtendedFieldInfo(relationName, fieldName, precision);
 
                     result.put(fieldInfo.fieldKey(), fieldInfo);
                 }

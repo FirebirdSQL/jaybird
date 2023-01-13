@@ -33,6 +33,8 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.gds.ISCConstants.SQL_DOUBLE;
@@ -375,5 +377,27 @@ class FBResultSetMetaDataTest {
 
         assertEquals(24, rsmd.getPrecision(1));
         assertEquals(53, rsmd.getPrecision(2));
+    }
+
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/731">https://github.com/FirebirdSQL/jaybird/issues/731</a>.
+     */
+    @Test
+    void extendedFieldInfo_moreThan70Columns_731() throws Exception {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            stmt.execute("create table extfieldtest (column1 numeric(2, 1))");
+
+            String columnList70 = IntStream.rangeClosed(1, 70)
+                    .mapToObj(String::valueOf)
+                    .collect(Collectors.joining(","));
+
+            try (var rs = stmt.executeQuery("select " + columnList70 + ", column1 from extfieldtest")) {
+                ResultSetMetaData rsmd = rs.getMetaData();
+
+                assertEquals(2, rsmd.getPrecision(71),
+                        "expected actual precision of 2 instead of estimated precision of 4");
+            }
+        }
     }
 }
