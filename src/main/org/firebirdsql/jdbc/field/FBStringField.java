@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.encodings.EncodingDefinition;
+import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.util.IOUtils;
@@ -366,10 +368,21 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
-        byte[] data = getDatatypeCoder().encodeString(value);
+        DatatypeCoder datatypeCoder = getDatatypeCoder();
+        EncodingDefinition encodingDefinition = datatypeCoder.getEncodingDefinition();
+        // Special rules for UTF8 (but not UNICODE_FSS), compare by codepoint count
+        if (encodingDefinition.getFirebirdCharacterSetId() == 4 /* UTF8 */ && value.length() > possibleCharLength) {
+            int codePointCount = value.codePointCount(0, value.length());
+            if (codePointCount > possibleCharLength) {
+                // NOTE: We're reporting the codepoint lengths, not the maximum size in bytes
+                throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, codePointCount,
+                        possibleCharLength);
+            }
+        }
+        byte[] data = datatypeCoder.encodeString(value);
         if (data.length > fieldDescriptor.getLength()) {
             // NOTE: This doesn't catch truncation errors for oversized strings with multibyte character sets that
-            // still fit, those are handled by the server on execute.
+            // still fit, those are handled by the server on execute. For UTF8, the earlier check should handle this.
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, data.length,
                     fieldDescriptor.getLength());
         }

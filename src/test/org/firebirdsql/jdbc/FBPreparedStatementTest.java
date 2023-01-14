@@ -66,40 +66,44 @@ class FBPreparedStatementTest {
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
-    //@formatter:off
     private static final String DROP_GENERATOR = "DROP GENERATOR test_generator";
     private static final String CREATE_GENERATOR = "CREATE GENERATOR test_generator";
 
-    private static final String CREATE_TEST_BLOB_TABLE =
-              "RECREATE TABLE test_blob ("
-            + "  ID INTEGER,"
-            + "  OBJ_DATA BLOB,"
-            + "  CLOB_DATA BLOB SUB_TYPE TEXT,"
-            + "  TS_FIELD TIMESTAMP,"
-            + "  T_FIELD TIME"
-            + ")";
+    private static final String CREATE_TEST_BLOB_TABLE = """
+            RECREATE TABLE test_blob (
+              ID INTEGER,
+              OBJ_DATA BLOB,
+              CLOB_DATA BLOB SUB_TYPE TEXT,
+              TS_FIELD TIMESTAMP,
+              T_FIELD TIME
+            )""";
 
-    private static final String CREATE_TEST_CHARS_TABLE =
-              "RECREATE TABLE TESTTAB ("
-            + "ID INTEGER, "
-            + "FIELD1 VARCHAR(10) NOT NULL PRIMARY KEY,"
-            + "FIELD2 VARCHAR(30),"
-            + "FIELD3 VARCHAR(20),"
-            + "FIELD4 FLOAT,"
-            + "FIELD5 CHAR,"
-            + "FIELD6 VARCHAR(5),"
-            + "FIELD7 CHAR(1),"
-            + "num_field numeric(9,2),"
-            + "UTFFIELD CHAR(1) CHARACTER SET UTF8,"
-            + "CHAR_OCTETS CHAR(15) CHARACTER SET OCTETS,"
-            + "VARCHAR_OCTETS VARCHAR(15) CHARACTER SET OCTETS"
-            + ")";
+    private static final String CREATE_TEST_CHARS_TABLE = """
+            RECREATE TABLE TESTTAB (
+              ID INTEGER,
+              FIELD1 VARCHAR(10) NOT NULL PRIMARY KEY,
+              FIELD2 VARCHAR(30),
+              FIELD3 VARCHAR(20),
+              FIELD4 FLOAT,
+              FIELD5 CHAR,
+              FIELD6 VARCHAR(5),
+              FIELD7 CHAR(1),
+              num_field numeric(9,2),
+              UTFFIELD CHAR(1) CHARACTER SET UTF8,
+              CHAR_OCTETS CHAR(15) CHARACTER SET OCTETS,
+              VARCHAR_OCTETS VARCHAR(15) CHARACTER SET OCTETS
+            )""";
 
-    private static final String CREATE_TEST_BIG_INTEGER_TABLE =
-              "recreate table test_big_integer ("
-            + "bigintfield bigint,"
-            + "varcharfield varchar(255)"
-            + ")";
+    private static final String CREATE_TEST_BIG_INTEGER_TABLE = """
+            recreate table test_big_integer (
+              bigintfield bigint,
+              varcharfield varchar(255)
+            )""";
+
+    private static final String CREATE_TEST_VARCHAR_5_UTF8_TABLE = """
+            recreate table test_varchar_5_utf8 (
+              varchar_field varchar(5) character set utf8
+            )""";
 
     private static final String TEST_STRING = "This is simple test string.";
     private static final String ANOTHER_TEST_STRING = "Another test string.";
@@ -108,7 +112,6 @@ class FBPreparedStatementTest {
     private static final String CREATE_TABLE = "RECREATE TABLE test ( col1 INTEGER )";
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
-    //@formatter:on
 
     private Connection con;
 
@@ -294,56 +297,6 @@ class FBPreparedStatementTest {
             rs.getLong("new_value");
 
             assertFalse(rs.next(), "should have only one row");
-        }
-    }
-
-    /**
-     * Test case to reproduce problem with the connection when "operation was
-     * cancelled" happens. Bug is fixed, however due to workaround for this
-     * problem (@see org.firebirdsql.jdbc.field.FBWorkaroundStringField) this
-     * test case is no longer relevant. In order to make it execute correctly
-     * one has to remove this workaround.
-     */
-    @Test
-    @Disabled(value="Broken due to FBWorkaroundStringField")
-    void testOpCancelled() throws Exception {
-        executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
-
-        try (PreparedStatement prep = con.prepareStatement(
-                "INSERT INTO TESTTAB (FIELD1, FIELD3, FIELD4, FIELD5 ) VALUES ( ?, ?, ?, ? )")) {
-            for (int i = 0; i < 5; i++) {
-                if (i == 0) {
-                    prep.setObject(1, "0123456789");
-                    prep.setObject(2, "01234567890123456789");
-                    prep.setObject(3, "1259.9");
-                    prep.setObject(4, "A");
-                }
-                if (i == 1) {
-                    prep.setObject(1, "0123456787");
-                    prep.setObject(2, "012345678901234567890");
-                    prep.setObject(3, "0.9");
-                    prep.setObject(4, "B");
-                }
-                if (i == 2) {
-                    prep.setObject(1, "0123456788");
-                    prep.setObject(2, "Fld3-Rec3");
-                    prep.setObject(3, "0.9");
-                    prep.setObject(4, "B");
-                }
-                if (i == 3) {
-                    prep.setObject(1, "0123456780");
-                    prep.setObject(2, "Fld3-Rec4");
-                    prep.setObject(3, "1299.5");
-                    prep.setObject(4, "Q");
-                }
-                if (i == 4) {
-                    prep.setObject(1, "0123456779");
-                    prep.setObject(2, "Fld3-Rec5");
-                    prep.setObject(3, "1844");
-                    prep.setObject(4, "Z");
-                }
-                prep.execute();
-            }
         }
     }
 
@@ -551,6 +504,43 @@ class FBPreparedStatementTest {
         try (Statement stmt = con.createStatement()) {
             stmt.execute("SELECT 1 FROM RDB$DATABASE");
         }
+    }
+
+    /**
+     * Test case for <a href="https://github.com/FirebirdSQL/jaybird/issues/396">https://github.com/FirebirdSQL/jaybird/issues/396</a>.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = { "NONE", "UTF8", "WIN1252" })
+    void testBindParameterUtf8_396(String connectionCharset) throws Exception {
+        executeCreateTable(con, CREATE_TEST_VARCHAR_5_UTF8_TABLE);
+
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("lc_ctype", connectionCharset);
+
+        try (var con = DriverManager.getConnection(getUrl(), props)) {
+            con.setAutoCommit(false);
+            try (var pstmt = con.prepareStatement("insert into test_varchar_5_utf8 (varchar_field) values (?)")) {
+                // 20 bytes, 5 codepoints (for WIN1252: 5 bytes, 5 codepoints, all '?'))
+                pstmt.setString(1, "\uD83D\uDE03".repeat(5));
+                pstmt.execute();
+
+                pstmt.clearParameters();
+
+                // 6 bytes, 6 codepoints
+                DataTruncation exceptionOnSetString = assertThrows(DataTruncation.class,
+                        // Failure to set leaves parameter uninitialized
+                        () -> pstmt.setString(1, "abcdef"),
+                        "Expected data truncation");
+                assertAll(
+                        () -> assertEquals(5, exceptionOnSetString.getTransferSize(),
+                                "expected transfer size in codepoints"),
+                        () -> assertEquals(6, exceptionOnSetString.getDataSize(), "expected data size in codepoints"));
+                SQLException exceptionOnExecute = assertThrows(SQLException.class, pstmt::execute,
+                        "expected exception on execute");
+                assertThat(exceptionOnExecute, message(startsWith("Parameter with index 1 was not set")));
+            }
+        }
+
     }
 
     /**

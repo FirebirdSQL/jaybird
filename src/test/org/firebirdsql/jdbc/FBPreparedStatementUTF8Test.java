@@ -168,8 +168,7 @@ class FBPreparedStatementUTF8Test {
                 Arguments.of("UTF8", "char_1_none", "\u00e0", instanceOf(DataTruncation.class)),
                 // TODO Might be fixed once we apply correct encoding
                 Arguments.of("UTF8", "char_1_win1252", "\u0157", getTransliterationFailedMatcher()),
-                // TODO: expect DataTruncation.class instead?
-                Arguments.of("UTF8", "char_1_utf8", "ab", getStringTruncationMatcher()));
+                Arguments.of("UTF8", "char_1_utf8", "ab", instanceOf(DataTruncation.class)));
     }
 
     /**
@@ -233,15 +232,6 @@ class FBPreparedStatementUTF8Test {
 
     private static int nextId() {
         return idGenerator.incrementAndGet();
-    }
-
-    /**
-     * @return Matcher for the Firebird string truncation error.
-     */
-    private static Matcher<SQLException> getStringTruncationMatcher() {
-        return allOf(
-                errorCodeEquals(ISCConstants.isc_string_truncation),
-                message(containsString(getFbMessage(ISCConstants.isc_string_truncation))));
     }
 
     /**

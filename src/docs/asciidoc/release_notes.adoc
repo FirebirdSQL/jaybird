@@ -297,6 +297,14 @@ See also <<compatibility-changes>> for details.
 [#other-fixes-and-changes]
 === Other fixes and changes
 
+* Improvement: Setting oversized strings on `CHAR` or `VARCHAR` parameters with character set UTF8 will now throw a `DataTruncation` exception on `setString` (and not set a value) instead of a `SQLException` with a "`string right truncation`" error on execute (https://github.com/FirebirdSQL/jaybird/issues/396[jaybird#396])
++
+With this change, the behaviour for UTF8 is now consistent with that of single-byte character sets.
+For UTF8, the `DataTruncation` reports the transfer size and data size in Unicode codepoints.
+For other multibyte character sets, the `DataTruncation` reports those sizes in bytes.
+This change is not applied to UNICODE_FSS, as Firebird 3.0 and earlier do not enforce character length limits for this character set, only byte length limits.
++
+The `setBytes` method on `CHAR` and `VARCHAR` parameters only check the byte length limit.
 * Changed: `DatabaseMetaData.getTypeInfo()` column `FIXED_PREC_SCALE` (column 11) now returns `false` for all data types except `NUMERIC` and `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/551[jaybird#551])
 +
 This was done because of the stated requirement "`__can it be a money value__`".
