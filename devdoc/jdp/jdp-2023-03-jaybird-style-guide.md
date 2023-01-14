@@ -97,3 +97,12 @@ The `var` type keyword is allowed, but only for the following cases:
 For consistency, the preference is to always use `var` for above cases when 
 writing *new* code or refactoring *existing* code. See also [jdp-2023-02](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-02-how-to-handle-new-java-features.md)
 All other cases should use an explicit type.
+
+For test code, additional cases are allowed:
+
+5. The assignment expression clearly expresses its actual type in the method
+   name of a well-known class or library (e.g. `var columnValue = ResultSet.getString(1)`
+   or `var someObjectString = object.toString()`)
+6. The assignment expression clearly expresses its actual type through a _cast_
+   (e.g. `var dbmd = (FirebirdDatabaseMetaData) connection.getMetaData()`) or
+   `unwrap` (e.g. `var fbConnection = connection.unwrap(FirebirdConnection.class)`)
