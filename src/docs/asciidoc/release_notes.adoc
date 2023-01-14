@@ -304,6 +304,7 @@ Previously almost all types returned `true` (including -- for example -- `BOOLEA
 * Consistent use of `BigDecimal.valueOf(double)` instead of a combination of `new BigDecimal(double)` and `BigDecimal.valueOf(double)` (https://github.com/FirebirdSQL/jaybird/issues/553[jaybird#553])
 * Removed `finalize()` methods and -- where it made sense -- replaced them with use of `Cleaner` (https://github.com/FirebirdSQL/jaybird/issues/727[jaybird#727])
 * Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DEICMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (https://github.com/FirebirdSQL/jaybird/issues/731[jaybird#731])
+* Optimized the query to retrieve extended field info for `ResultSetMetaData.getPrecision` to only retrieve columns of type `NUMERIC` or `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/732[jaybird#732])
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages

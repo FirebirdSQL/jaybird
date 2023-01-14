@@ -33,8 +33,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.gds.ISCConstants.SQL_DOUBLE;
@@ -386,15 +384,23 @@ class FBResultSetMetaDataTest {
     void extendedFieldInfo_moreThan70Columns_731() throws Exception {
         try (var connection = getConnectionViaDriverManager();
              var stmt = connection.createStatement()) {
-            stmt.execute("create table extfieldtest (column1 numeric(2, 1))");
 
-            String columnList70 = IntStream.rangeClosed(1, 70)
-                    .mapToObj(String::valueOf)
-                    .collect(Collectors.joining(","));
+            var createTable = new StringBuilder(28 + 71 * 22).append("create table extfieldtest (");
+            var selectStmt = new StringBuilder(25 + 71 * 9).append("select ");
+            for (int colIdx = 1; colIdx <= 70; colIdx++) {
+                createTable.append("column").append(colIdx).append(" numeric(3,1),");
+                selectStmt.append("column").append(colIdx).append(',');
+            }
+            createTable.append("column71 numeric(2,1))");
+            selectStmt.append("column71 from extfieldtest");
 
-            try (var rs = stmt.executeQuery("select " + columnList70 + ", column1 from extfieldtest")) {
+            stmt.execute(createTable.toString());
+
+            try (var rs = stmt.executeQuery(selectStmt.toString())) {
                 ResultSetMetaData rsmd = rs.getMetaData();
 
+                assertEquals(3, rsmd.getPrecision(70),
+                        "expected actual precision of 3 instead of estimated precision of 4");
                 assertEquals(2, rsmd.getPrecision(71),
                         "expected actual precision of 2 instead of estimated precision of 4");
             }

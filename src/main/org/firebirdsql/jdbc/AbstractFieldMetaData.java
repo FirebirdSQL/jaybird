@@ -412,11 +412,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             extendedInfo = getExtendedFieldInfo(connection);
         }
 
-        FieldKey key = new FieldKey(
-                getFieldDescriptor(columnIndex).getOriginalTableName(),
-                getFieldDescriptor(columnIndex).getOriginalName());
-
-        return extendedInfo.get(key);
+        return extendedInfo.get(new FieldKey(getFieldDescriptor(columnIndex)));
     }
 
     /**
@@ -448,5 +444,8 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      *         field name
      */
     protected record FieldKey(String relationName, String fieldName) {
+        public FieldKey(FieldDescriptor fieldDescriptor) {
+            this(fieldDescriptor.getOriginalTableName(), fieldDescriptor.getOriginalName());
+        }
     }
 }

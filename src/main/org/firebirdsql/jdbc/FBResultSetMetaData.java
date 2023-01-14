@@ -22,6 +22,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -259,62 +260,57 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         return getFieldClassName(column);
     }
 
-    //@formatter:off
-    private static final String GET_FIELD_INFO =
-            "SELECT "
-            + "  RF.RDB$RELATION_NAME as RELATION_NAME"
-            + ", RF.RDB$FIELD_NAME as FIELD_NAME"
-            + ", F.RDB$FIELD_PRECISION as FIELD_PRECISION"
-            + " FROM"
-            + "  RDB$RELATION_FIELDS RF "
-            + ", RDB$FIELDS F "
-            + " WHERE "
-            + "  RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME"
-            + " AND"
-            + "  RF.RDB$FIELD_NAME = ?"
-            + " AND"
-            + "  RF.RDB$RELATION_NAME = ?";
-    //@formatter:on
+    private static final String GET_FIELD_INFO = """
+            select
+              RF.RDB$RELATION_NAME as RELATION_NAME,
+              RF.RDB$FIELD_NAME as FIELD_NAME,
+              F.RDB$FIELD_PRECISION as FIELD_PRECISION
+            from RDB$RELATION_FIELDS RF inner join RDB$FIELDS F
+              on RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME
+            where RF.RDB$FIELD_NAME = ? and RF.RDB$RELATION_NAME = ?""";
+
+    // Apparently there is a limit in the UNION. It is necessary to split in several queries. Although the problem
+    // reported with 93 UNION use only 70.
+    private static final int MAX_FIELD_INFO_UNIONS = 70;
 
     @Override
     protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException {
         if (connection == null) return Collections.emptyMap();
 
-        // Apparently there is a limit in the UNION. It is necessary to split in several queries.  Although the problem
-        // reported with 93 UNION use only 70
-        int pending = getFieldCount();
-        int start = 1;
+        final int fieldCount = getFieldCount();
+        int currentColumn = 1;
         var result = new HashMap<FieldKey, ExtendedFieldInfo>();
         FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
         var params = new ArrayList<String>();
         var sb = new StringBuilder();
-        while (pending > 0) {
+        int unionCount;
+        while (currentColumn <= fieldCount) {
+            unionCount = 0;
             params.clear();
             sb.setLength(0);
 
-            int maxLength = Math.min(pending, 70);
-            int end = start + maxLength;
-            params.ensureCapacity(2 * maxLength);
-            for (int i = start; i < end; i++) {
-                String relationName = getFieldDescriptor(i).getOriginalTableName();
-                String fieldName = getFieldDescriptor(i).getOriginalName();
+            for (; currentColumn <= fieldCount && unionCount < MAX_FIELD_INFO_UNIONS; currentColumn++) {
+                FieldDescriptor fieldDescriptor = getFieldDescriptor(currentColumn);
+                if (!needsExtendedFieldInfo(fieldDescriptor)) continue;
 
-                if (relationName == null || relationName.equals("")
-                        || fieldName == null || fieldName.equals("")) continue;
+                String relationName = fieldDescriptor.getOriginalTableName();
+                String fieldName = fieldDescriptor.getOriginalName();
 
-                if (sb.length() > 0) {
-                    sb.append('\n').append("UNION ALL").append('\n');
+                if (relationName == null || relationName.isEmpty()
+                    || fieldName == null || fieldName.isEmpty()) continue;
+
+                if (unionCount > 0) {
+                    sb.append('\n').append("union all").append('\n');
                 }
                 sb.append(GET_FIELD_INFO);
 
                 params.add(fieldName);
                 params.add(relationName);
+
+                unionCount++;
             }
 
-            pending -= maxLength;
-            start = end;
-
-            if (sb.length() == 0) continue;
+            if (unionCount == 0) continue;
 
             try (ResultSet rs = metaData.doQuery(sb.toString(), params, true)) {
                 while (rs.next()) {
@@ -328,6 +324,14 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
             }
         }
         return result;
+    }
+
+    /**
+     * @return {@code true} when the field descriptor needs extended field info (currently only NUMERIC and DECIMAL)
+     */
+    private static boolean needsExtendedFieldInfo(FieldDescriptor fieldDescriptor) {
+        int jdbcType = JdbcTypeConverter.toJdbcType(fieldDescriptor);
+        return jdbcType == Types.NUMERIC || jdbcType == Types.DECIMAL;
     }
 
     /**
