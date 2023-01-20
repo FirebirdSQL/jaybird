@@ -487,5 +487,18 @@ class FBDriverTest {
             assertTrue(connection.isValid(1000));
         }
     }
+
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/494">jaybird#494</a>.
+     */
+    @Test
+    void canConnectWithEmptyRoleName_494() throws Exception {
+        Properties connectionProperties = getDefaultPropertiesForConnection();
+        connectionProperties.setProperty("roleName", "");
+
+        try (Connection connection = DriverManager.getConnection(getUrl(), connectionProperties)) {
+            assertTrue(connection.isValid(1000));
+        }
+    }
 }
 

@@ -142,4 +142,21 @@ class FBSimpleDataSourceTest {
         // not possible after creating a connection
         assertThrows(IllegalStateException.class, () -> ds.setBlobBufferSize(2048));
     }
+
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/494">jaybird#494</a>.
+     */
+    @Test
+    void canConnectWithEmptyRoleName_494() throws Exception {
+        FBSimpleDataSource ds = new FBSimpleDataSource();
+        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
+        ds.setUser(FBTestProperties.DB_USER);
+        ds.setPassword(FBTestProperties.DB_PASSWORD);
+        ds.setRoleName("");
+        ds.setType(FBTestProperties.getGdsType().toString());
+
+        try (Connection connection = ds.getConnection()) {
+            assertTrue(connection.isValid(1000));
+        }
+    }
 }
