@@ -507,7 +507,7 @@ class FBPreparedStatementTest {
     }
 
     /**
-     * Test case for <a href="https://github.com/FirebirdSQL/jaybird/issues/396">https://github.com/FirebirdSQL/jaybird/issues/396</a>.
+     * Test case for <a href="https://github.com/FirebirdSQL/jaybird/issues/396">jaybird#396</a>.
      */
     @ParameterizedTest
     @ValueSource(strings = { "NONE", "UTF8", "WIN1252" })
