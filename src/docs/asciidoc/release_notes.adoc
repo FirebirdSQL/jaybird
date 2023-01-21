@@ -288,13 +288,13 @@ The recommended replacement is to use LibreOffice and the builtin "`Firebird Ext
 [#report-actual-pid]
 === Report actual process ID (pid)
 
-The pure-java implementation will now report the actual process ID (pid) in connection property `isc_dpb_process_id`.
+The pure Java implementation will now report the actual process ID (pid) in connection property `isc_dpb_process_id`.
 The native implementation already did this.
 
-For pure-java connections, the reported process ID can be overridden using the connection property `processId` or the system property `org.firebirdsql.jdbc.pid`.
+For pure Java connections, the reported process ID can be overridden using the connection property `processId` or the system property `org.firebirdsql.jdbc.pid`.
 This feature is retained for backwards compatibility.
 
-When a `SecurityManager` is installed, the entire call-chain needs to have the `RuntimePermission("manageProcess")` to obtain the process ID in pure-java connections.
+When a `SecurityManager` is installed, the entire call-chain needs to have the `RuntimePermission("manageProcess")` to obtain the process ID in pure Java connections.
 If this permission check fails, Jaybird will silently ignore it and not set the `isc_dpb_process_id` based on the actual process ID.
 
 // TODO add major changes
@@ -345,7 +345,7 @@ It might have been a change we forgot to document, but it could just as well be 
 Jaybird 6 has dropped support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support^]).
 In general, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
 
-Possibly, wire protocol versions for Firebird 2.5 and earlier will be disabled by default to disallow connection for the pure-java protocol.
+Possibly, wire protocol versions for Firebird 2.5 and earlier will be disabled by default to disallow connection for the pure Java protocol.
 If that happens, an option will be provided to re-enable unsupported wire protocol versions.
 
 [#support-for-java-before-17-dropped]
@@ -495,7 +495,7 @@ Possible effects include:
 
 * If a close/cleanup is performed by the `Cleaner`, listeners will not get notified.
 Given it is unlikely there will not be strong reference to an object if something is still interested in its listener events, we think this is acceptable.
-* The closing of a pure-java connection is now simply a socket close handled by the cleanup action of the socket itself.
+* The closing of a pure Java connection is now simply a socket close handled by the cleanup action of the socket itself.
 Server-side this may result in delayed cleanup of a connection and its resources, and occurrences of "`connection reset by peer`" (e.g. error 10054 on Windows).
 If you see an increase of these errors, we recommend you hunt for connection leaks in your application.
 
