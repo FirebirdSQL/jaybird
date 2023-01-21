@@ -51,7 +51,7 @@ public class V11ParameterConverter extends V10ParameterConverter {
      * Adds the processName to the dpb, if available.
      *
      * @param dpb
-     *         Database parameter buffer
+     *         database parameter buffer
      */
     protected final void addProcessName(DatabaseParameterBuffer dpb) {
         if (dpb.hasArgument(DpbItems.isc_dpb_process_name)) return;
@@ -65,13 +65,23 @@ public class V11ParameterConverter extends V10ParameterConverter {
      * Adds the processId (pid) to the dpb, if available.
      *
      * @param dpb
-     *         Database parameter buffer
+     *         database parameter buffer
      */
     protected final void addProcessId(DatabaseParameterBuffer dpb) {
         if (dpb.hasArgument(DpbItems.isc_dpb_process_id)) return;
         Integer pid = JaybirdSystemProperties.getProcessId();
         if (pid != null) {
             dpb.addArgument(DpbItems.isc_dpb_process_id, pid);
+        } else {
+            try {
+                long actualPid = ProcessHandle.current().pid();
+                if ((actualPid & 0x7F_FF_FF_FFL) == actualPid) {
+                    // Firebird only supports 32-bit process ids, we limit to positive only (31-bit)
+                    dpb.addArgument(DpbItems.isc_dpb_process_id, (int) actualPid);
+                }
+            } catch (SecurityException ignored) {
+                // Disallowed by security manager
+            }
         }
     }
 

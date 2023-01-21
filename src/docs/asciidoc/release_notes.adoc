@@ -285,6 +285,18 @@ See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-
 
 The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
 
+[#report-actual-pid]
+=== Report actual process ID (pid)
+
+The pure-java implementation will now report the actual process ID (pid) in connection property `isc_dpb_process_id`.
+The native implementation already did this.
+
+For pure-java connections, the reported process ID can be overridden using the connection property `processId` or the system property `org.firebirdsql.jdbc.pid`.
+This feature is retained for backwards compatibility.
+
+When a `SecurityManager` is installed, the entire call-chain needs to have the `RuntimePermission("manageProcess")` to obtain the process ID in pure-java connections.
+If this permission check fails, Jaybird will silently ignore it and not set the `isc_dpb_process_id` based on the actual process ID.
+
 // TODO add major changes
 
 [#potentially-breaking-changes]

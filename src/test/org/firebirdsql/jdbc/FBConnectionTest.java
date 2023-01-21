@@ -79,6 +79,8 @@ class FBConnectionTest {
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
+    
+    private static final String IGNORE_PROCESS_NAME = "##IGNORE_PROCESS_NAME##";
 
     @RegisterExtension
     final DatabaseUserExtension databaseUser = DatabaseUserExtension.withDatabaseUser();
@@ -450,15 +452,38 @@ class FBConnectionTest {
     void testProcessNameThroughConnectionProperty() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test requires monitoring tables");
         final Properties props = getDefaultPropertiesForConnection();
-        final String processName = "Test process name";
+        final var processName = "Test process name";
         props.setProperty(PropertyNames.processName, processName);
 
-        try (Connection connection = DriverManager.getConnection(getUrl(), props);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(
-                     "select MON$REMOTE_PROCESS from MON$ATTACHMENTS where MON$ATTACHMENT_ID = CURRENT_CONNECTION")) {
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            assertProcessNameAndId(connection, processName, -1);
+        }
+    }
+
+    /**
+     * Asserts the process name and process id of a connection.
+     *
+     * @param connection
+     *         connection
+     * @param expectedProcessName
+     *         expected process name ({@code null} for no process name, use {@link #IGNORE_PROCESS_NAME} to ignore this
+     *         check)
+     * @param expectedProcessId
+     *         expected process id (use {@code -1} to ignore this check)
+     */
+    private void assertProcessNameAndId(Connection connection, String expectedProcessName, int expectedProcessId)
+            throws SQLException {
+        if (IGNORE_PROCESS_NAME.equals(expectedProcessName) && expectedProcessId == -1) return;
+        try (var statement = connection.createStatement();
+             var resultSet = statement.executeQuery(
+                     "select MON$REMOTE_PROCESS, MON$REMOTE_PID from MON$ATTACHMENTS where MON$ATTACHMENT_ID = CURRENT_CONNECTION")) {
             assertTrue(resultSet.next());
-            assertEquals(processName, resultSet.getString(1));
+            if (!IGNORE_PROCESS_NAME.equals(expectedProcessName)) {
+                assertEquals(expectedProcessName, resultSet.getString(1), "process name");
+            }
+            if (expectedProcessId != -1) {
+                assertEquals(expectedProcessId, resultSet.getInt(2), "process id");
+            }
         }
     }
 
@@ -470,36 +495,38 @@ class FBConnectionTest {
         final int processId = 5843;
         props.setProperty(PropertyNames.processId, String.valueOf(processId));
 
-        try (Connection connection = DriverManager.getConnection(getUrl(), props);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(
-                     "select MON$REMOTE_PID from MON$ATTACHMENTS where MON$ATTACHMENT_ID = CURRENT_CONNECTION")) {
-            assertTrue(resultSet.next());
-            assertEquals(processId, resultSet.getInt(1));
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            assertProcessNameAndId(connection, IGNORE_PROCESS_NAME, processId);
         }
     }
 
     @Test
-    void testProcessAndIdThroughConnectionPropertyTakesPrecedence() throws Exception {
+    void testUseActualProcessId() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test requires monitoring tables");
+        final Properties props = getDefaultPropertiesForConnection();
+        final long actualProcessId = ProcessHandle.current().pid();
+
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            assertProcessNameAndId(connection, IGNORE_PROCESS_NAME, (int) actualProcessId);
+        }
+    }
+
+    @Test
+    void testProcessNameAndIdThroughConnectionPropertyTakesPrecedence() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test requires monitoring tables");
         assumeThat("Test only works in pure java", GDS_TYPE, isPureJavaType());
         final Properties props = getDefaultPropertiesForConnection();
-        final String processNameThroughConnection = "Process name in connection property";
+        final var processNameThroughConnection = "Process name in connection property";
         props.setProperty(PropertyNames.processName, processNameThroughConnection);
         final int processIdThroughConnection = 513;
         props.setProperty(PropertyNames.processId, String.valueOf(processIdThroughConnection));
-        final String processNameThroughSystemProp = "Process name in system property";
+        final var processNameThroughSystemProp = "Process name in system property";
         final int processIdThroughSystemProp = 132;
         System.setProperty(JaybirdSystemProperties.PROCESS_NAME_PROP, processNameThroughSystemProp);
         System.setProperty(JaybirdSystemProperties.PROCESS_ID_PROP, String.valueOf(processIdThroughSystemProp));
 
-        try (Connection connection = DriverManager.getConnection(getUrl(), props);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(
-                     "select MON$REMOTE_PROCESS, MON$REMOTE_PID from MON$ATTACHMENTS where MON$ATTACHMENT_ID = CURRENT_CONNECTION")) {
-            assertTrue(resultSet.next());
-            assertEquals(processNameThroughConnection, resultSet.getString(1));
-            assertEquals(processIdThroughConnection, resultSet.getInt(2));
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            assertProcessNameAndId(connection, processNameThroughConnection, processIdThroughConnection);
         } finally {
             System.clearProperty("org.firebirdsql.jdbc.processName");
             System.clearProperty("org.firebirdsql.jdbc.pid");
