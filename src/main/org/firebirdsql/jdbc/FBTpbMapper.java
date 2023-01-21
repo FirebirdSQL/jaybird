@@ -224,9 +224,8 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      *         if resource cannot be loaded or contains incorrect values.
      */
     public FBTpbMapper(String mappingResource, ClassLoader cl) throws SQLException {
-        // TODO The documentation of DatabaseConnectionProperties.setTpbMapping suggests more functionality than
-        //  actually available
-        // Make sure the documented 'res:' protocol works
+        // Make sure the old documented 'res:' protocol works
+        // TODO Remove in Jaybird 7 or later?
         if (mappingResource.startsWith("res:")) {
             mappingResource = mappingResource.substring(4);
         }

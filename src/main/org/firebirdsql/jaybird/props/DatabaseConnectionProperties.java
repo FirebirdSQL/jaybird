@@ -386,7 +386,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     /**
      * Get the used TPB mapping.
      *
-     * @return path to the TPB mapping
+     * @return resource bundle name of the TPB mapping
      * @see #setTpbMapping(String)
      */
     default String getTpbMapping() {
@@ -394,17 +394,22 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     }
 
     /**
-     * Set path to the properties file with the TPB mapping. The path begins with the protocol specification followed
-     * by the path to the resource. A special protocol {@code "res:"} should be used to specify resource in the
-     * classpath.
-     * <p/>
-     * For compatibility reasons, if no protocol is specified, classpath is used by default.
-     * <p/>
-     * Properties file contains a mapping between the transaction isolation level (name of the constant in the
-     * {@link java.sql.Connection} interface and a comma-separated list of TPB parameters).
+     * Sets a <em>resource bundle</em> name with the TPB mapping.
+     * <p>
+     * For compatibility reasons, the prefix {@code "res:"} is allowed, but this works exactly the same as without a
+     * prefix. We strongly recommend not to use the {@code "res:"} prefix, future versions of Jaybird (Jaybird 7 or
+     * later) may stop supporting this.
+     * </p>
+     * <p>
+     * The resource bundle should contain a mapping between the transaction isolation level (name of the constant in
+     * the {@link java.sql.Connection} interface and a comma-separated list of TPB parameters).
+     * </p>
+     * <p>
+     * 
+     * </p>
      *
      * @param tpbMapping
-     *         path to the properties file
+     *         name of the resource bundle
      * @throws IllegalStateException
      *         May be thrown when the mapping has already been initialized (not all implementations do this)
      */
