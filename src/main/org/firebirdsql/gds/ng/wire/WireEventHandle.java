@@ -109,12 +109,11 @@ public final class WireEventHandle extends AbstractEventHandle implements Asynch
 
     @Override
     public void eventReceived(FbWireAsynchronousChannel channel, Event event) {
-        if (event.getEventId() != getLocalId()) return;
+        if (event.eventId() != getLocalId()) return;
 
         channel.removeChannelListener(this);
-        final int newCount = event.getEventCount();
         synchronized (this) {
-            internalCount = newCount;
+            internalCount = event.eventCount();
         }
         onEventOccurred();
     }

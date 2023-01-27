@@ -212,7 +212,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     public void queueEvent(EventHandle eventHandle) throws SQLException {
         if (!(eventHandle instanceof WireEventHandle wireEventHandle))
             throw new SQLNonTransientException("Invalid event handle type: " + eventHandle.getClass().getName());
-        wireEventHandle.assignNewLocalId();
+        final int localId = wireEventHandle.assignNewLocalId();
         addChannelListener(wireEventHandle);
 
         try (LockCloseable ignored = withLock()) {
@@ -223,7 +223,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
                 dbXdrOut.writeInt(auxHandle);
                 dbXdrOut.writeBuffer(wireEventHandle.toByteArray());
                 dbXdrOut.writeLong(0); // AST info
-                dbXdrOut.writeInt(wireEventHandle.getLocalId());
+                dbXdrOut.writeInt(localId);
                 dbXdrOut.flush();
             } catch (IOException e) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();

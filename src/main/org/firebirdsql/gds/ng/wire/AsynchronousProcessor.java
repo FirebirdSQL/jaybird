@@ -75,8 +75,8 @@ public final class AsynchronousProcessor {
      *         The channel to register
      */
     public void registerAsynchronousChannel(FbWireAsynchronousChannel channel) {
-        newChannels.add(channel);
         channel.addChannelListener(channelListener);
+        newChannels.add(channel);
         selector.wakeup();
     }
 
@@ -126,34 +126,18 @@ public final class AsynchronousProcessor {
                         newChannels.clear();
                     }
 
-                    if (selector.select() == 0) continue;
-
-                    handleReadableKeys(selector.selectedKeys());
-                } catch (IOException ex) {
-                    // TODO check any other necessary handling
-                    log.error("IOException in async event processing", ex);
+                    selector.select(this::handleReadable);
+                } catch (Exception ex) {
+                    log.error("Exception in async event processing", ex);
                 }
             }
             try {
                 selector.close();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 // ignore
-                log.error("IOException closing event selector", e);
+                log.error("Exception closing event selector", e);
             } finally {
                 newChannels.clear();
-            }
-        }
-
-        private void handleReadableKeys(final Set<SelectionKey> selectedKeys) {
-            synchronized (selectedKeys) {
-                Iterator<SelectionKey> selectedKeysIterator = selectedKeys.iterator();
-                while (selectedKeysIterator.hasNext()) {
-                    final SelectionKey selectionKey = selectedKeysIterator.next();
-                    selectedKeysIterator.remove();
-                    if (!selectionKey.isValid()) continue;
-
-                    handleReadable(selectionKey);
-                }
             }
         }
 
@@ -168,7 +152,7 @@ public final class AsynchronousProcessor {
 
         private void handleReadable(SelectionKey selectionKey) {
             try {
-                if (!selectionKey.isReadable()) {
+                if (!(selectionKey.isValid() && selectionKey.isReadable())) {
                     return;
                 }
                 SocketChannel socketChannel = (SocketChannel) selectionKey.channel();

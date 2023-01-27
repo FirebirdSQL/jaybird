@@ -83,6 +83,10 @@ public final class SimpleServer implements AutoCloseable {
     public void acceptConnection() throws IOException {
         if (isConnected()) throw new IllegalStateException("Already connected");
         socket = serverSocket.accept();
+        socket.setTcpNoDelay(true);
+        // This should be unnecessary, but it seems to reduce the occurrence of test failures when my machine is
+        // running with the "Power saver" power plan
+        Thread.yield();
     }
 
     /**
@@ -97,7 +101,7 @@ public final class SimpleServer implements AutoCloseable {
      * Closes the open connection and the server socket.
      */
     public void close() throws IOException {
-        try (ServerSocket ignored = serverSocket){
+        try (serverSocket){
             closeConnection();
         }
     }

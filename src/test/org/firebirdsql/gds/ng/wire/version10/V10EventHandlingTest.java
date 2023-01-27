@@ -45,14 +45,18 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.with;
 import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -79,20 +83,18 @@ public class V10EventHandlingTest {
     @Order(1)
     public static final GdsTypeExtension testType = GdsTypeExtension.excludesNativeOnly();
 
-    //@formatter:off
-    private static final String TABLE_DEF =
-            "CREATE TABLE TEST (" +
-            "     TESTVAL INTEGER NOT NULL" +
-            ")";
+    private static final String TABLE_DEF = """
+            CREATE TABLE TEST (
+              TESTVAL INTEGER NOT NULL
+            )""";
 
-    private static final String TRIGGER_DEF =
-            "CREATE TRIGGER INSERT_TRIG " +
-            "     FOR TEST AFTER INSERT " +
-            "AS BEGIN " +
-            "     POST_EVENT 'TEST_EVENT_A';" +
-            "     POST_EVENT 'TEST_EVENT_B';" +
-            "END";
-    //@formatter:on
+    private static final String TRIGGER_DEF = """
+            CREATE TRIGGER INSERT_TRIG
+              FOR TEST AFTER INSERT
+            AS BEGIN
+              POST_EVENT 'TEST_EVENT_A';
+              POST_EVENT 'TEST_EVENT_B';
+            END""";
 
     @RegisterExtension
     public static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
@@ -208,7 +210,7 @@ public class V10EventHandlingTest {
 
     @Test
     public void testAsynchronousDelivery_fullEvent() throws Exception {
-        final SimpleChannelListener listener = new SimpleChannelListener();
+        final var listener = new SimpleChannelListener();
         // Using preallocated message to spend as little time on send as possible
         byte[] eventMessage = generateXdr(out -> {
             out.writeInt(op_event);
@@ -217,38 +219,40 @@ public class V10EventHandlingTest {
             out.writeLong(0);
             out.writeInt(7);
         });
-        try (SimpleServer simpleServer = new SimpleServer()) {
+        try (var simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
             channel.addChannelListener(listener);
-            Future<?> establishChannel = executorService.submit(() -> {
+            executorService.submit(() -> {
                 try {
                     channel.connect("localhost", simpleServer.getPort(), 1);
                 } catch (SQLException e) {
-                    // suppress
+                    e.printStackTrace();
                 }
             });
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-            establishChannel.get(500, TimeUnit.MILLISECONDS);
-            assertTrue(channel.isConnected(), "Expected connected channel");
+            with().pollInterval(50, TimeUnit.MILLISECONDS)
+                    .await().atMost(500, TimeUnit.MILLISECONDS).until(channel::isConnected);
 
             OutputStream out = simpleServer.getOutputStream();
             out.write(eventMessage);
             out.flush();
 
-            Thread.sleep(500);
-
-            List<AsynchronousChannelListener.Event> receivedEvents = listener.getReceivedEvents();
-            assertEquals(1, receivedEvents.size(), "Unexpected number of events");
-            AsynchronousChannelListener.Event event = receivedEvents.get(0);
-            assertEquals(7, event.getEventId(), "Unexpected eventId");
-            assertEquals(3, event.getEventCount(), "Unexpected event count");
+            with().pollInterval(50, TimeUnit.MILLISECONDS)
+                    .await().atMost(5, TimeUnit.SECONDS)
+                    .untilAsserted(() -> {
+                        List<AsynchronousChannelListener.Event> receivedEvents = listener.getReceivedEvents();
+                        assertEquals(1, receivedEvents.size(), "Unexpected number of events");
+                        AsynchronousChannelListener.Event event = receivedEvents.get(0);
+                        assertEquals(7, event.eventId(), "Unexpected eventId");
+                        assertEquals(3, event.eventCount(), "Unexpected event count");
+                    });
         }
     }
 
     @Test
     public void testAsynchronousDelivery_partialEvent() throws Exception {
-        final SimpleChannelListener listener = new SimpleChannelListener();
+        final var listener = new SimpleChannelListener();
         // Using preallocated message parts to spend as little time on send as possible
         byte[] messagePart1 = generateXdr(out -> {
             out.writeInt(op_dummy);
@@ -260,48 +264,48 @@ public class V10EventHandlingTest {
             out.writeLong(0);
             out.writeInt(7);
         });
-        try (SimpleServer simpleServer = new SimpleServer()) {
+        try (var simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
             channel.addChannelListener(listener);
-            Future<?> establishChannel = executorService.submit(() -> {
+            executorService.submit(() -> {
                 try {
                     channel.connect("localhost", simpleServer.getPort(), 1);
                 } catch (SQLException e) {
-                    // suppress
+                    e.printStackTrace();
                 }
             });
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-            establishChannel.get(500, TimeUnit.MILLISECONDS);
-            assertTrue(channel.isConnected(), "Expected connected channel");
+            with().pollInterval(50, TimeUnit.MILLISECONDS)
+                    .await().atMost(500, TimeUnit.MILLISECONDS).until(channel::isConnected);
 
             OutputStream out = simpleServer.getOutputStream();
             out.write(messagePart1);
             // Flushing partial event to test if processing works as expected
             out.flush();
 
-            Thread.sleep(500);
-
-            List<AsynchronousChannelListener.Event> receivedEvents = listener.getReceivedEvents();
-            assertEquals(0, receivedEvents.size(), "Unexpected number of events");
+            with().pollInterval(50, TimeUnit.MILLISECONDS).pollDelay(Duration.ZERO)
+                    .await().during(500, TimeUnit.MILLISECONDS).until(listener::getReceivedEvents, empty());
 
             out.write(messagePart2);
             out.flush();
 
-            Thread.sleep(500);
-
-            receivedEvents = listener.getReceivedEvents();
-            assertEquals(1, receivedEvents.size(), "Unexpected number of events");
-            AsynchronousChannelListener.Event event = receivedEvents.get(0);
-            assertEquals(7, event.getEventId(), "Unexpected eventId");
-            assertEquals(3, event.getEventCount(), "Unexpected event count");
+            with().pollInterval(50, TimeUnit.MILLISECONDS)
+                    .await().atMost(1, TimeUnit.SECONDS)
+                    .untilAsserted(() -> {
+                        List<AsynchronousChannelListener.Event> receivedEvents = listener.getReceivedEvents();
+                        assertEquals(1, receivedEvents.size(), "Unexpected number of events");
+                        AsynchronousChannelListener.Event event = receivedEvents.get(0);
+                        assertEquals(7, event.eventId(), "Unexpected eventId");
+                        assertEquals(3, event.eventCount(), "Unexpected event count");
+                    });
         }
     }
 
     @Test
     @Unstable("Can spuriously fail on slow computers or when using power saver")
     public void testAsynchronousDelivery_largeNumberOfEvents() throws Exception {
-        final SimpleChannelListener listener = new SimpleChannelListener();
+        final var listener = new SimpleChannelListener();
         // Write a large number of events
         final int testEventCount = 1024;
         // Using preallocated message to spend as little time on send as possible
@@ -315,36 +319,37 @@ public class V10EventHandlingTest {
                 out.writeInt(7);
             }
         });
-        try (SimpleServer simpleServer = new SimpleServer()) {
+        try (var simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
             channel.addChannelListener(listener);
-            Future<?> establishChannel = executorService.submit(() -> {
+            executorService.submit(() -> {
                 try {
                     channel.connect("localhost", simpleServer.getPort(), 1);
                 } catch (SQLException e) {
-                    // suppress
+                    e.printStackTrace();
                 }
             });
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-            establishChannel.get(500, TimeUnit.MILLISECONDS);
-            assertTrue(channel.isConnected(), "Expected connected channel");
+            with().pollInterval(50, TimeUnit.MILLISECONDS)
+                    .await().atMost(500, TimeUnit.MILLISECONDS).until(channel::isConnected);
 
             OutputStream out = simpleServer.getOutputStream();
             out.write(eventMessages);
             out.flush();
 
-            // Need to sleep for thread to process all events, might still fail on slower computers
-            Thread.sleep(500);
-
-            List<AsynchronousChannelListener.Event> receivedEvents = listener.getReceivedEvents();
-            assertEquals(testEventCount, receivedEvents.size(), "Unexpected number of events");
-            AsynchronousChannelListener.Event event = receivedEvents.get(0);
-            assertEquals(7, event.getEventId(), "Unexpected eventId");
-            assertEquals(1, event.getEventCount(), "Unexpected event count");
-            AsynchronousChannelListener.Event lastEvent = receivedEvents.get(testEventCount - 1);
-            assertEquals(7, lastEvent.getEventId(), "Unexpected eventId");
-            assertEquals(testEventCount, lastEvent.getEventCount(), "Unexpected event count");
+            with().pollInterval(50, TimeUnit.MILLISECONDS)
+                    .await().atMost(1, TimeUnit.SECONDS)
+                    .untilAsserted(() -> {
+                        List<AsynchronousChannelListener.Event> receivedEvents = listener.getReceivedEvents();
+                        assertEquals(testEventCount, receivedEvents.size(), "Unexpected number of events");
+                        AsynchronousChannelListener.Event event = receivedEvents.get(0);
+                        assertEquals(7, event.eventId(), "Unexpected eventId");
+                        assertEquals(1, event.eventCount(), "Unexpected event count");
+                        AsynchronousChannelListener.Event lastEvent = receivedEvents.get(testEventCount - 1);
+                        assertEquals(7, lastEvent.eventId(), "Unexpected eventId");
+                        assertEquals(testEventCount, lastEvent.eventCount(), "Unexpected event count");
+                    });
         }
     }
 
@@ -352,7 +357,7 @@ public class V10EventHandlingTest {
     public void testQueueEvent_andNotification() throws Exception {
         db = createAndAttachDatabase();
 
-        SimpleEventHandler eventHandler = new SimpleEventHandler();
+        var eventHandler = new SimpleEventHandler();
 
         EventHandle eventHandleA = db.createEventHandle("TEST_EVENT_A", eventHandler);
         EventHandle eventHandleB = db.createEventHandle("TEST_EVENT_B", eventHandler);
@@ -360,7 +365,10 @@ public class V10EventHandlingTest {
         // Initial queue will return events immediately
         db.queueEvent(eventHandleA);
         db.queueEvent(eventHandleB);
-        Thread.sleep(50);
+
+        with().pollInterval(50, TimeUnit.MILLISECONDS)
+                .await().until(eventHandler::getReceivedEventHandles, hasSize(2));
+
         db.countEvents(eventHandleA);
         db.countEvents(eventHandleB);
 
@@ -369,8 +377,8 @@ public class V10EventHandlingTest {
         db.queueEvent(eventHandleA);
         db.queueEvent(eventHandleB);
 
-        Thread.sleep(50);
-        assertTrue(eventHandler.getReceivedEventHandles().isEmpty(), "Expected events to not have been triggered");
+        with().pollInterval(50, TimeUnit.MILLISECONDS).pollDelay(Duration.ZERO)
+                .await().during(50, TimeUnit.MILLISECONDS).until(eventHandler::getReceivedEventHandles, empty());
 
         FbTransaction transaction = getTransaction(db);
         final FbStatement statement = db.createStatement(transaction);
@@ -379,13 +387,9 @@ public class V10EventHandlingTest {
         statement.execute(RowValue.EMPTY_ROW_VALUE);
         transaction.commit();
 
-        int retry = 0;
-        while (!(eventHandler.getReceivedEventHandles().contains(eventHandleA)
-                && eventHandler.getReceivedEventHandles().contains(eventHandleB))
-                && retry++ < 10) {
-            Thread.sleep(50);
-        }
-        assertEquals(2, eventHandler.getReceivedEventHandles().size(), "Unexpected number of events received");
+        with().pollInterval(50, TimeUnit.MILLISECONDS)
+                .await().atMost(1, TimeUnit.SECONDS)
+                .until(eventHandler::getReceivedEventHandles, hasItems(eventHandleA, eventHandleB));
 
         db.countEvents(eventHandleA);
         db.countEvents(eventHandleB);
@@ -394,27 +398,27 @@ public class V10EventHandlingTest {
     }
 
     private void checkAsynchronousDisconnection(int disconnectOperation) throws Exception {
-        try (SimpleServer simpleServer = new SimpleServer()) {
+        try (var simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
-            Future<?> establishChannel = executorService.submit(() -> {
+            executorService.submit(() -> {
                 try {
                     channel.connect("localhost", simpleServer.getPort(), 1);
                 } catch (SQLException e) {
-                    // suppress
+                    e.printStackTrace();
                 }
             });
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-            establishChannel.get(500, TimeUnit.MILLISECONDS);
-            assertTrue(channel.isConnected(), "Expected connected channel");
+            with().pollInterval(50, TimeUnit.MILLISECONDS)
+                    .await().atMost(500, TimeUnit.MILLISECONDS).until(channel::isConnected);
 
-            final XdrOutputStream out = new XdrOutputStream(simpleServer.getOutputStream());
+            final var out = new XdrOutputStream(simpleServer.getOutputStream());
             out.writeInt(disconnectOperation);
             out.flush();
 
-            Thread.sleep(500);
-
-            assertFalse(channel.isConnected(), "Expected disconnected channel");
+            with().pollInterval(50, TimeUnit.MILLISECONDS)
+                    .await().atMost(1, TimeUnit.SECONDS)
+                    .until(() -> !channel.isConnected());
         }
     }
 
