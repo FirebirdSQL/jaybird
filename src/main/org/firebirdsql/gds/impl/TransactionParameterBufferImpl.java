@@ -35,11 +35,18 @@ public final class TransactionParameterBufferImpl extends ParameterBufferBase im
 
     @Override
     public TransactionParameterBuffer deepCopy() {
-        final TransactionParameterBufferImpl result = new TransactionParameterBufferImpl();
-
-        result.getArgumentsList().addAll(this.getArgumentsList());
-
+        var result = new TransactionParameterBufferImpl();
+        copyTo(result);
         return result;
+    }
+
+    @Override
+    public void copyTo(TransactionParameterBuffer destination) {
+        if (destination instanceof TransactionParameterBufferImpl tpbImpl) {
+            tpbImpl.getArgumentsList().addAll(this.getArgumentsList());
+        } else {
+            TransactionParameterBuffer.super.copyTo(destination);
+        }
     }
 
     public enum TpbMetaData implements ParameterBufferMetaData {

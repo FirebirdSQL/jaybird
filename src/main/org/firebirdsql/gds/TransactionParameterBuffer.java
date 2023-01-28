@@ -25,8 +25,7 @@
 package org.firebirdsql.gds;
 
 /**
- * Instances of this interface represent Transaction Parameter Buffer from the
- * Firebird API.
+ * Instances of this interface represent Transaction Parameter Buffer from the Firebird API.
  */
 public interface TransactionParameterBuffer extends ParameterBuffer {
 
@@ -36,4 +35,16 @@ public interface TransactionParameterBuffer extends ParameterBuffer {
      * @return deep copy of this object.
      */
     TransactionParameterBuffer deepCopy();
+
+    /**
+     * Copies the contents of this transaction parameter buffer to {@code destination}.
+     *
+     * @param destination destination transaction parameter buffer
+     * @since 6
+     */
+    default void copyTo(TransactionParameterBuffer destination) {
+        for (Parameter parameter : this) {
+            parameter.copyTo(destination, null);
+        }
+    }
 }
