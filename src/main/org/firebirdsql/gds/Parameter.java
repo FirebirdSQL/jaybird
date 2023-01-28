@@ -87,7 +87,7 @@ public interface Parameter {
      * </p>
      * <p>
      * The parameter does not need to check if it is the right type of destination buffer (if someone tries to
-     * add a TPB argument to a DPB he is free to try that).
+     * add a TPB argument to a DPB they are free to try that).
      * </p>
      *
      * @param buffer

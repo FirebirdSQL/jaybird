@@ -27,7 +27,6 @@ package org.firebirdsql.gds.impl;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jaybird.props.PropertyConstants;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;

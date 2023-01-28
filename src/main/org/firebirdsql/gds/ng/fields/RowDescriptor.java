@@ -161,8 +161,7 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof RowDescriptor)) return false;
-        RowDescriptor other = (RowDescriptor) obj;
+        if (!(obj instanceof RowDescriptor other)) return false;
         return Arrays.equals(this.fieldDescriptors, other.fieldDescriptors);
     }
 
@@ -178,9 +177,9 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
      * Creates an instance of {@code RowDescriptor} with the supplied {@link FieldDescriptor} instances.
      *
      * @param fieldDescriptors
-     *         The field descriptors (array is cloned before use)
+     *         the field descriptors (array is cloned before use)
      * @param datatypeCoder
-     *         he datatype code for the connection that uses this RowDescriptor.
+     *         the datatype code for the connection that uses this RowDescriptor.
      * @return {@code RowDescriptor} instance
      */
     public static RowDescriptor createRowDescriptor(final FieldDescriptor[] fieldDescriptors,
@@ -193,7 +192,7 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
      * Returns an empty row descriptor with the specified datatype coder.
      *
      * @param datatypeCoder
-     *         The datatype code for the connection that uses this RowDescriptor.
+     *         the datatype code for the connection that uses this RowDescriptor.
      * @return Empty row descriptor
      */
     public static RowDescriptor empty(final DatatypeCoder datatypeCoder) {
