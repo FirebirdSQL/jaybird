@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ParameterBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.util.EnumSet;
 
 /**
@@ -34,6 +35,7 @@ public final class ByteArgument extends TypedArgument {
 
     private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
             EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.ByteSpb);
+    @Serial
     private static final long serialVersionUID = 3202369601515235550L;
     
     private final byte value;
@@ -78,12 +80,8 @@ public final class ByteArgument extends TypedArgument {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ByteArgument)) {
-            return false;
-        }
-
-        final ByteArgument otherByteArgument = (ByteArgument) other;
-
+        if (this == other) return true;
+        if (!(other instanceof final ByteArgument otherByteArgument)) return false;
         return this.getType() == otherByteArgument.getType() && this.value == otherByteArgument.value;
     }
 

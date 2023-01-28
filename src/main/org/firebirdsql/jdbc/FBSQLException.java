@@ -18,10 +18,12 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.io.Serial;
 import java.sql.SQLException;
 
 public class FBSQLException extends SQLException {
 
+    @Serial
     private static final long serialVersionUID = 8157410954186424083L;
 
     public FBSQLException(Exception ex) {

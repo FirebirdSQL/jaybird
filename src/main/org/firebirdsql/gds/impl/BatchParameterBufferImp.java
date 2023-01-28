@@ -22,6 +22,8 @@ import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
 import org.firebirdsql.jaybird.fb.constants.BatchItems;
 
+import java.io.Serial;
+
 /**
  * Batch parameter buffer implementation.
  *
@@ -30,6 +32,7 @@ import org.firebirdsql.jaybird.fb.constants.BatchItems;
  */
 public final class BatchParameterBufferImp extends ParameterBufferBase implements BatchParameterBuffer {
 
+    @Serial
     private static final long serialVersionUID = -6537114932080116496L;
 
     public BatchParameterBufferImp() {

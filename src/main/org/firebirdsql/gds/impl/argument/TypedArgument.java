@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.gds.impl.argument;
 
+import java.io.Serial;
+
 /**
  * Argument with an argument type.
  *
@@ -26,6 +28,7 @@ package org.firebirdsql.gds.impl.argument;
  */
 public abstract class TypedArgument extends Argument {
 
+    @Serial
     private static final long serialVersionUID = -6422646924006860740L;
     
     final ArgumentType argumentType;

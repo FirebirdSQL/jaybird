@@ -24,6 +24,7 @@ import org.firebirdsql.gds.VaxEncoding;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.util.EnumSet;
 
 /**
@@ -34,6 +35,7 @@ public final class BigIntArgument extends TypedArgument {
 
     private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
             EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.IntSpb, ArgumentType.BigIntSpb);
+    @Serial
     private static final long serialVersionUID = -6152038317321572191L;
 
     private final long value;
@@ -83,12 +85,8 @@ public final class BigIntArgument extends TypedArgument {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof BigIntArgument)) {
-            return false;
-        }
-
-        final BigIntArgument otherBigIntArgument = (BigIntArgument) other;
-
+        if (this == other) return true;
+        if (!(other instanceof final BigIntArgument otherBigIntArgument)) return false;
         return this.getType() == otherBigIntArgument.getType() && this.value == otherBigIntArgument.value;
     }
 

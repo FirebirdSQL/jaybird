@@ -22,11 +22,14 @@ import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
 import org.firebirdsql.jaybird.fb.constants.BpbItems;
 
+import java.io.Serial;
+
 /**
  * Implementation of BlobParameterBuffer.
  */
 public class BlobParameterBufferImp extends ParameterBufferBase implements BlobParameterBuffer {
 
+    @Serial
     private static final long serialVersionUID = 6938419219898280131L;
 
     public BlobParameterBufferImp() {

@@ -30,6 +30,7 @@ import org.firebirdsql.gds.impl.wire.Xdrable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -42,6 +43,9 @@ import java.util.List;
  */
 public abstract class ParameterBufferBase implements ParameterBuffer, Serializable {
 
+    @Serial
+    private static final long serialVersionUID = 8812835147477954476L;
+    
     private final List<Argument> arguments = new ArrayList<>();
 
     private final String defaultEncodingName;

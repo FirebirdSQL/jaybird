@@ -24,6 +24,7 @@ import org.firebirdsql.gds.VaxEncoding;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.util.EnumSet;
 
 /**
@@ -33,6 +34,7 @@ public final class NumericArgument extends TypedArgument {
 
     private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
             EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.IntSpb, ArgumentType.ByteSpb);
+    @Serial
     private static final long serialVersionUID = -1575745288263119101L;
     
     private final int value;
@@ -85,12 +87,8 @@ public final class NumericArgument extends TypedArgument {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof NumericArgument)) {
-            return false;
-        }
-
-        final NumericArgument otherNumericArgument = (NumericArgument) other;
-
+        if (this == other) return true;
+        if (!(other instanceof final NumericArgument otherNumericArgument)) return false;
         return this.getType() == otherNumericArgument.getType() && this.value == otherNumericArgument.value;
     }
 

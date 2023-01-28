@@ -24,6 +24,7 @@
  */
 package org.firebirdsql.gds.impl;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -45,6 +46,7 @@ import java.util.regex.Pattern;
  */
 public final class GDSServerVersion implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -3401092369588765195L;
 
     @SuppressWarnings("unused")

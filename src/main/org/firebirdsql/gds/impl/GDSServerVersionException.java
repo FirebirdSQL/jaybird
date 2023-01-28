@@ -27,13 +27,16 @@ package org.firebirdsql.gds.impl;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
 
+import java.io.Serial;
+
 /**
  * Exception is thrown when server returns a version string in a format that
  * this driver does not understand.
  */
 public class GDSServerVersionException extends GDSException {
 
-	private static final long serialVersionUID = -7437228877120690612L;
+	@Serial
+    private static final long serialVersionUID = -7437228877120690612L;
 
 	public GDSServerVersionException(String message) {
         super(ISCConstants.isc_infinap);

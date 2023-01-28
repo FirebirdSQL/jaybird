@@ -22,6 +22,7 @@ import org.firebirdsql.gds.Parameter;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -29,6 +30,7 @@ import java.io.Serializable;
  */
 public abstract class Argument implements Parameter, Serializable {
 
+    @Serial
     private static final long serialVersionUID = -4547334570142529123L;
     
     private final int type;

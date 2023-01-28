@@ -23,12 +23,14 @@ import org.firebirdsql.gds.ParameterBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 
 /**
  * {@link Argument} implementation for items without a value.
  */
 public final class SingleItem extends TypedArgument {
 
+    @Serial
     private static final long serialVersionUID = -8732644692849743977L;
     
     public SingleItem(int item, ArgumentType argumentType) {
@@ -50,12 +52,8 @@ public final class SingleItem extends TypedArgument {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof SingleItem)) {
-            return false;
-        }
-
-        final SingleItem otherSingleItem = (SingleItem) other;
-
+        if (this == other) return true;
+        if (!(other instanceof final SingleItem otherSingleItem)) return false;
         return this.getType() == otherSingleItem.getType();
     }
 

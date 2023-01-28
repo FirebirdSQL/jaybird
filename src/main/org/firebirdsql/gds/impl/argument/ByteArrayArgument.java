@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ParameterBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.util.Arrays;
 
 /**
@@ -33,6 +34,7 @@ import java.util.Arrays;
  */
 public final class ByteArrayArgument extends TypedArgument {
 
+    @Serial
     private static final long serialVersionUID = -8636439991275911102L;
     
     private final byte[] value;
@@ -91,12 +93,8 @@ public final class ByteArrayArgument extends TypedArgument {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ByteArrayArgument)) {
-            return false;
-        }
-
-        final ByteArrayArgument otherByteArrayArgument = (ByteArrayArgument) other;
-
+        if (this == other) return true;
+        if (!(other instanceof final ByteArrayArgument otherByteArrayArgument)) return false;
         return this.getType() == otherByteArrayArgument.getType()
                 && Arrays.equals(this.value, otherByteArrayArgument.value);
     }
