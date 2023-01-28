@@ -251,7 +251,7 @@ class FBDriverTest {
     @Test
     void testTransactionConfigThroughPropertiesObject() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        // Note that for proper testing this needs to be different from the mapping in isc_tpb_mapping.properties
+        // Note that for proper testing this needs to be different from the mapping in constructor FBTpbMapper()
         props.setProperty("TRANSACTION_READ_COMMITTED",
                 "isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_nowait");
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
@@ -270,7 +270,7 @@ class FBDriverTest {
     @Test
     void testTransactionConfigThroughConnectionString() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        // Note that for proper testing this needs to be different from the mapping in isc_tpb_mapping.properties
+        // Note that for proper testing this needs to be different from the mapping in constructor FBTpbMapper()
         String jdbcUrl = getUrl() + "?TRANSACTION_READ_COMMITTED=isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_nowait";
         try (Connection connection = DriverManager.getConnection(jdbcUrl, props)) {
             FirebirdConnection fbConnection = connection.unwrap(FirebirdConnection.class);

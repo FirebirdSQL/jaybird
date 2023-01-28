@@ -127,8 +127,6 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      */
     public FBTpbMapper() {
         // TODO instance creation should be delegated to FbDatabase or another factory
-        // TODO Should use isc_tpb_mapping.properties
-
         TransactionParameterBuffer serializableTpb = new TransactionParameterBufferImpl();
         serializableTpb.addArgument(isc_tpb_write);
         serializableTpb.addArgument(isc_tpb_wait);
