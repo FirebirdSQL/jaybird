@@ -35,8 +35,7 @@ import javax.crypto.CipherInputStream;
 import java.io.*;
 
 /**
- * {@code XdrInputStream} is an input stream for reading in data that
- * is in the XDR format. An {@code XdrInputStream} instance is wrapped
+ * An input stream for reading in data that is in the XDR format. An {@code XdrInputStream} instance is wrapped
  * around an underlying {@code java.io.InputStream}.
  * <p>
  * This class is not thread-safe.
@@ -45,7 +44,6 @@ import java.io.*;
  * @author Alejandro Alberola
  * @author David Jencks
  * @author Mark Rotteveel
- * @version 1.0
  */
 public final class XdrInputStream extends FilterInputStream implements EncryptedStreamSupport {
 
@@ -56,7 +54,8 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
     /**
      * Create a new instance of {@code XdrInputStream}.
      *
-     * @param in The underlying {@code InputStream} to read from
+     * @param in
+     *         The underlying {@code InputStream} to read from
      */
     public XdrInputStream(InputStream in) {
         super(new BufferedInputStream(in, DEFAULT_BUFFER_SIZE));
@@ -68,61 +67,34 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
      *
      * @param length
      *         Length of the previously read buffer
-     * @return Actual number of bytes skipped
      * @throws IOException
-     *         IOException if an error occurs while reading from the
-     *         underlying input stream
+     *         if an error occurs while reading from the underlying input stream
      * @see XdrOutputStream#writePadding(int, int)
      */
-    public int skipPadding(int length) throws IOException {
-        int bytesToSkip = (4 - length) & 3;
-        int actual = skipFully(bytesToSkip);
-        assert actual == bytesToSkip
-                : String.format("Unexpected number of bytes skipped: %d, expected: %d", actual, bytesToSkip);
-        return actual;
+    public void skipPadding(int length) throws IOException {
+        skipNBytes((4 - length) & 3);
     }
 
     /**
-     * Skips the specified number of bytes.
-     *
-     * @param numbytes
-     *         Number of bytes to skip.
-     * @return Actual number of bytes skipped (usually {@code numbytes}, unless the underlying input stream is closed).
-     * @throws IOException
-     *         IOException if an error occurs while reading from the underlying input stream
-     */
-    public int skipFully(int numbytes) throws IOException {
-        // This is the skip from SocketInputStream, which will read all bytes unless the stream is closed.
-        // We can't rely on InputStream.skip(int), because for example CipherInputStream will simply not skip beyond
-        // its current buffer.
-        if (numbytes <= 0) {
-            return 0;
-        }
-        // TODO Switch the readNBytes in Java 9, and simplify as it's currently only used for 1 - 3 bytes.
-        int n = numbytes;
-        int buflen = Math.min(1024, n);
-        byte[] data = new byte[buflen];
-        while (n > 0) {
-            int r = read(data, 0, Math.min(buflen, n));
-            if (r < 0) {
-                break;
-            }
-            n -= r;
-        }
-        return numbytes - n;
-    }
-
-    /**
-     * Read in a byte buffer.
+     * Reads an {@code int} length from the stream, reads and returns the buffer of that length and skips the padding.
      *
      * @return The buffer that was read
-     * @throws IOException if an error occurs while reading from the
-     *         underlying input stream
+     * @throws IOException
+     *         if an error occurs while reading from the underlying input stream
      */
     public byte[] readBuffer() throws IOException {
-        int len = readInt();
-        byte[] buffer = new byte[len];
-        readFully(buffer, 0, len);
+        return readBuffer(readInt());
+    }
+
+    /**
+     * Reads and returns the buffer of {@code len} and skips the padding.
+     *
+     * @return The buffer that was read
+     * @throws IOException
+     *         if an error occurs while reading from the underlying input stream
+     */
+    public byte[] readBuffer(int len) throws IOException {
+        byte[] buffer = readRawBuffer(len);
         skipPadding(len);
         return buffer;
     }
@@ -130,10 +102,11 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
     /**
      * Read in a raw array of bytes.
      *
-     * @param len The number of bytes to read
+     * @param len
+     *         The number of bytes to read
      * @return The byte buffer that was read
-     * @throws IOException if an error occurs while reading from the
-     *         underlying input stream
+     * @throws IOException
+     *         if an error occurs while reading from the underlying input stream
      */
     public byte[] readRawBuffer(int len) throws IOException {
         byte[] buffer = new byte[len];
@@ -145,12 +118,12 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
      * Read in a {@code String}.
      *
      * @return The {@code String} that was read
-     * @throws IOException if an error occurs while reading from the
-     *         underlying input stream
+     * @throws IOException
+     *         if an error occurs while reading from the underlying input stream
      */
     public String readString(Encoding encoding) throws IOException {
-        byte[] buffer = readBuffer();
-        return encoding.decodeFromCharset(buffer);
+        return encoding.decodeFromCharset(
+                readBuffer());
     }
 
     private final byte[] readBuffer = new byte[8];
@@ -159,27 +132,28 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
      * Read in a {@code long}.
      *
      * @return The {@code long} that was read
-     * @throws IOException if an error occurs while reading from the
-     *         underlying input stream
+     * @throws IOException
+     *         if an error occurs while reading from the underlying input stream
      */
     public long readLong() throws IOException {
-        readFully(readBuffer, 0, 8);
-        return (((long) readBuffer[0] << 56) +
-                ((long) (readBuffer[1] & 0xFF) << 48) +
-                ((long) (readBuffer[2] & 0xFF) << 40) +
-                ((long) (readBuffer[3] & 0xFF) << 32) +
-                ((long) (readBuffer[4] & 0xFF) << 24) +
-                ((readBuffer[5] & 0xFF) << 16) +
-                ((readBuffer[6] & 0xFF) << 8) +
-                ((readBuffer[7] & 0xFF)));
+        byte[] buf = this.readBuffer;
+        readFully(buf, 0, 8);
+        return (buf[0] & 0xFFL) << 56 |
+               (buf[1] & 0xFFL) << 48 |
+               (buf[2] & 0xFFL) << 40 |
+               (buf[3] & 0xFFL) << 32 |
+               (buf[4] & 0xFFL) << 24 |
+               (buf[5] & 0xFF) << 16 |
+               (buf[6] & 0xFF) << 8 |
+               buf[7] & 0xFF;
     }
 
     /**
      * Read in an {@code int}.
      *
      * @return The {@code int} that was read
-     * @throws IOException if an error occurs while reading from the
-     *         underlying input stream
+     * @throws IOException
+     *         if an error occurs while reading from the underlying input stream
      */
     public int readInt() throws IOException {
         int ch1 = read();
@@ -188,22 +162,22 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
         int ch4 = read();
         if ((ch1 | ch2 | ch3 | ch4) < 0)
             throw new EOFException();
-        return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4));
+        return ch1 << 24 | ch2 << 16 | ch3 << 8 | ch4;
     }
 
     /**
      * Read in a {@code short}.
      *
      * @return The {@code short} that was read
-     * @throws IOException if an error occurs while reading from the
-     *         underlying input stream
+     * @throws IOException
+     *         if an error occurs while reading from the underlying input stream
      */
     public int readShort() throws IOException {
         int ch1 = read();
         int ch2 = read();
         if ((ch1 | ch2) < 0)
             throw new EOFException();
-        return (ch1 << 8) + (ch2);
+        return ch1 << 8 | ch2;
     }
 
     /**
@@ -211,21 +185,18 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
      * that is read is stored in {@code b}, starting from offset
      * {@code off}.
      *
-     * @param b The byte buffer to hold the data that is read
-     * @param off The offset at which to start storing data in {@code b}
-     * @param len The number of bytes to be read
-     * @throws IOException if an error occurs while reading from the
-     *         underlying input stream
+     * @param b
+     *         The byte buffer to hold the data that is read
+     * @param off
+     *         The offset at which to start storing data in {@code b}
+     * @param len
+     *         The number of bytes to be read
+     * @throws IOException
+     *         if an error occurs while reading from the underlying input stream
      */
     public void readFully(byte[] b, int off, int len) throws IOException {
-        if (len < 0)
-            throw new IndexOutOfBoundsException();
-        int n = 0;
-        while (n < len) {
-            int count = read(b, off + n, len - n);
-            if (count < 0)
-                throw new EOFException();
-            n += count;
+        if (readNBytes(b, off, len) < len) {
+            throw new EOFException();
         }
     }
 
@@ -233,7 +204,7 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
      * Wraps the underlying stream for zlib decompression.
      *
      * @throws IOException
-     *         If the underlying stream is already set up for decompression
+     *         if the underlying stream is already set up for decompression
      */
     @InternalApi
     public void enableDecompression() throws IOException {

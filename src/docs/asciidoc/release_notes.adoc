@@ -482,6 +482,9 @@ If you are confronted with such a change, let us know on https://groups.google.c
 * `AbstractFbWireStatement.close()` is now final
 * `AsynchronousChannelListener.Event` was converted to a record, so it is now final, and its getters (`getEventId()` and `getEventCount()`) have been replaced by accessor methods (`eventId()` and `eventCount()`)
 * `DbAttachInfo` was converted to a record, so its getters (`getServerName()`, `getPortNumber()` and `getAttachObjectName()`) have been replaced by accessor methods (`serverName()`, `portNumber()`, `attachObjectName()`)
+* `XdrInputStream`
+** `skipPadding` return type was changed to `void` as the return values was never used in Jaybird code
+** `skipFully` was removed, use standard Java `InputStream.skipNBytes` instead
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

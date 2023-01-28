@@ -51,9 +51,7 @@ public class V13Statement extends V12Statement {
 
         final XdrInputStream xdrIn = getXdrIn();
         final int nullBitsLen = (rowDescriptor.getCount() + 7) / 8;
-        final byte[] nullBitsBytes = xdrIn.readRawBuffer(nullBitsLen);
-        xdrIn.skipPadding(nullBitsLen);
-        final BitSet nullBits = BitSet.valueOf(nullBitsBytes);
+        final BitSet nullBits = BitSet.valueOf(xdrIn.readBuffer(nullBitsLen));
 
         for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
             final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);

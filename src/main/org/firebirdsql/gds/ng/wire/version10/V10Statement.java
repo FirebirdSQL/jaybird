@@ -494,25 +494,16 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     protected byte[] readColumnData(XdrInputStream xdrIn, int len) throws IOException {
-        byte[] buffer;
         if (len == 0) {
             // Length specified in response
-            len = xdrIn.readInt();
-            buffer = new byte[len];
-            xdrIn.readFully(buffer, 0, len);
-            xdrIn.skipPadding(len);
+            return xdrIn.readBuffer();
         } else if (len < 0) {
             // Buffer is not padded
-            buffer = new byte[-len];
-            xdrIn.readFully(buffer, 0, -len);
+            return xdrIn.readRawBuffer(-len);
         } else {
-            // len is incremented in calculateIoLength to avoid value 0 so it must be decremented
-            len--;
-            buffer = new byte[len];
-            xdrIn.readFully(buffer, 0, len);
-            xdrIn.skipPadding(len);
+            // len is incremented in calculateIoLength to avoid value 0, so it must be decremented
+            return xdrIn.readBuffer(len - 1);
         }
-        return buffer;
     }
 
     /**
