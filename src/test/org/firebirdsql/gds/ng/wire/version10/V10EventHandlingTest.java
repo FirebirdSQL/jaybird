@@ -26,7 +26,6 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -434,7 +433,7 @@ public class V10EventHandlingTest {
     }
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
+        TransactionParameterBuffer tpb = db.createTransactionParameterBuffer();
         tpb.addArgument(TpbItems.isc_tpb_read_committed);
         tpb.addArgument(TpbItems.isc_tpb_rec_version);
         tpb.addArgument(TpbItems.isc_tpb_write);

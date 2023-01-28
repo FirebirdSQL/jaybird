@@ -26,7 +26,6 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
@@ -911,7 +910,7 @@ class FBConnectionTest {
             TransactionParameterBuffer con2Original =
                     con2.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ);
 
-            TransactionParameterBufferImpl newParameters = new TransactionParameterBufferImpl();
+            TransactionParameterBuffer newParameters = con1.getFbDatabase().createTransactionParameterBuffer();
             newParameters.addArgument(isc_tpb_consistency);
             newParameters.addArgument(isc_tpb_read);
             newParameters.addArgument(isc_tpb_nowait);
