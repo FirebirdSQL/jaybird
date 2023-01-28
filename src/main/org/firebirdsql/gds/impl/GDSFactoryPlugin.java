@@ -53,12 +53,11 @@ public interface GDSFactoryPlugin {
     @InternalApi
     default String getDatabasePath(DbAttachInfo dbAttachInfo) throws SQLException {
         try {
-            int portNumber = dbAttachInfo.getPortNumber();
-            return getDatabasePath(dbAttachInfo.getServerName(),
-                    portNumber != PropertyConstants.DEFAULT_PORT ? portNumber
-                            : null, dbAttachInfo.getAttachObjectName());
+            int portNumber = dbAttachInfo.portNumber();
+            return getDatabasePath(dbAttachInfo.serverName(),
+                    portNumber != PropertyConstants.DEFAULT_PORT ? portNumber : null, dbAttachInfo.attachObjectName());
         } catch (GDSException e) {
-            throw new FBSQLException(e);
+            throw new SQLException(e);
         }
     }
     

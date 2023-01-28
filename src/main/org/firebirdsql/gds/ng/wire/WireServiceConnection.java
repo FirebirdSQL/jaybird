@@ -76,10 +76,10 @@ public class WireServiceConnection extends WireConnection<IServiceProperties, Fb
         if (initialDbAttachInfo.hasServerName()) {
             dbAttachInfo = initialDbAttachInfo;
         } else if (initialDbAttachInfo.hasAttachObjectName()) {
-            dbAttachInfo = DbAttachInfo.parseConnectString(initialDbAttachInfo.getAttachObjectName());
+            dbAttachInfo = DbAttachInfo.parseConnectString(initialDbAttachInfo.attachObjectName());
         } else {
             // fallback to localhost + service_mgr
-            return new DbAttachInfo(PropertyConstants.DEFAULT_SERVER_NAME, initialDbAttachInfo.getPortNumber(),
+            return new DbAttachInfo(PropertyConstants.DEFAULT_SERVER_NAME, initialDbAttachInfo.portNumber(),
                     PropertyConstants.DEFAULT_SERVICE_NAME);
         }
 

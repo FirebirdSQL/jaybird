@@ -43,9 +43,9 @@ class DbAttachInfoTest {
             throws Exception {
         DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString(url);
 
-        assertEquals(expectedServer, dbAttachInfo.getServerName());
-        assertEquals(expectedPort, dbAttachInfo.getPortNumber());
-        assertEquals(expectedFileName, dbAttachInfo.getAttachObjectName());
+        assertEquals(expectedServer, dbAttachInfo.serverName());
+        assertEquals(expectedPort, dbAttachInfo.portNumber());
+        assertEquals(expectedFileName, dbAttachInfo.attachObjectName());
     }
 
     @SuppressWarnings("unused")
