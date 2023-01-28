@@ -39,6 +39,7 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -288,11 +289,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
     @Override
     public boolean equals(Object other) {
         if (other == this) return true;
-
-        if (!(other instanceof FBManagedConnectionFactory)) return false;
-
-        FBManagedConnectionFactory that = (FBManagedConnectionFactory) other;
-
+        if (!(other instanceof FBManagedConnectionFactory that)) return false;
         return this.connectionProperties.equals(that.connectionProperties);
     }
 
@@ -375,10 +372,12 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
         return new FBManagedConnection(connectionRequestInfo, this);
     }
 
+    @Serial
     private void readObject(ObjectInputStream stream) throws InvalidObjectException {
         throw new InvalidObjectException("Serialization proxy required");
     }
 
+    @Serial
     private Object writeReplace() {
         return new SerializationProxy(this);
     }
@@ -606,23 +605,23 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
 
     FBConnection newConnection(FBManagedConnection mc) throws SQLException {
         Class<?> connectionClass = GDSFactory.getConnectionClass(getGDSType());
+        return connectionClass == FBConnection.class ? new FBConnection(mc) : newConnection(mc, connectionClass);
+    }
 
-        if (!FBConnection.class.isAssignableFrom(connectionClass))
-            throw new IllegalArgumentException("Specified connection class"
-                    + " does not extend " + FBConnection.class.getName()
-                    + " class");
+    private static FBConnection newConnection(FBManagedConnection mc, Class<?> connectionClass) throws SQLException {
+        if (!FBConnection.class.isAssignableFrom(connectionClass)) {
+            throw new IllegalArgumentException(
+                    "Specified connection class does not extend " + FBConnection.class.getName() + " class");
+        }
 
         try {
-            Constructor<?> constructor = connectionClass
-                    .getConstructor(FBManagedConnection.class);
-
-            return (FBConnection) constructor
-                    .newInstance(mc);
+            Constructor<?> constructor = connectionClass.getConstructor(FBManagedConnection.class);
+            return (FBConnection) constructor.newInstance(mc);
         } catch (NoSuchMethodException ex) {
             // TODO More specific exception, Jaybird error code
             throw new SQLException("Cannot instantiate connection class " + connectionClass.getName()
-                    + ", no constructor accepting " + FBManagedConnection.class
-                    + " class as single parameter was found.");
+                                   + ", no constructor accepting " + FBManagedConnection.class
+                                   + " class as single parameter was found.");
         } catch (InvocationTargetException ex) {
             final Throwable cause = ex.getCause();
             if (cause instanceof RuntimeException) {
@@ -654,6 +653,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
 
     private static class SerializationProxy implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = 1L;
 
         private final boolean shared;
@@ -668,6 +668,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
             this.fbConnectionProperties = connectionFactory.connectionProperties;
         }
 
+        @Serial
         protected Object readResolve() {
             GDSType gdsType = GDSType.getType(type);
             if (gdsType == null) {
