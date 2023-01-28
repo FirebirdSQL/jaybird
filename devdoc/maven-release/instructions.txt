@@ -2,6 +2,9 @@ Instructions for releasing Jaybird to Maven
 
 Author: Mark Rotteveel
 
+NOTE: These instructions are retained for reference. Normal releases use the "publish" mechanism through Gradle.
+See devdoc/publish.md for details.
+
 Prerequisites:
 To release artifacts to Maven you need access to the repository. To get access, add a request to:
 https://issues.sonatype.org/browse/OSSRH-3069

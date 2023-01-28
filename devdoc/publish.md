@@ -7,11 +7,12 @@ To publish to Maven use
 gradlew clean publish -PcredentialsPassphrase=<credentials password>
 ```
 
+Where `<credentials password>` is the password used to add the credentials (see
+also below).
+
+
 Publishing to Maven Central (non-SNAPSHOT releases) requires an explicit close 
 and release through <https://oss.sonatype.org/>.
-
-Where `<credentials password>` is the password used to add the credentials (see 
-also below).
 
 To be able to deploy, you need the following:
 
