@@ -79,10 +79,7 @@ public class V13WireOperations extends V11WireOperations {
                         (EncryptionPluginSpi) spiClass.getDeclaredConstructor().newInstance();
                 tempMap.put(encryptionPluginSpi.getEncryptionIdentifier(), encryptionPluginSpi);
             } catch (Exception e) {
-                if (!(spiName.equals(CHA_CHA_PLUGIN_SPI_CLASS_NAME) && e instanceof ClassNotFoundException)) {
-                    // Expected on Java 8 as this class only exists on Java 11+, so don't log it obtrusively
-                    log.infof("Could not load EncryptionPluginSpi: %s; see debug for details", spiName);
-                }
+                log.infof("Could not load EncryptionPluginSpi: %s; see debug for details", spiName);
                 log.debugfe("Could not load EncryptionPluginSpi: %s", spiName, e);
             }
         }
