@@ -185,7 +185,7 @@ public final class GDSExceptionHelper {
          * @return string representation of the message.
          */
         public String toString() {
-            final StringBuffer messageBuffer = new StringBuffer(estimateBufferCapacity());
+            final var messageBuffer = new StringBuilder(estimateBufferCapacity());
             final Matcher matcher = MESSAGE_PARAM_PATTERN.matcher(template);
             while (matcher.find()) {
                 final int paramIndex = Integer.parseInt(matcher.group(1));

@@ -208,13 +208,13 @@ class JaybirdBlobBackupProblemTest {
         ServiceRequestBuffer serviceRequestBuffer = service.createServiceRequestBuffer();
         serviceRequestBuffer.addArgument(ISCConstants.isc_info_svc_to_eof);
 
-        final StringBuilder stringBuffer = new StringBuilder();
+        final var sb = new StringBuilder();
         boolean finished = false;
         try (FileOutputStream file = new FileOutputStream(outputFilename)) {
             while (!finished) {
                 byte[] buffer = service.getServiceInfo(null, serviceRequestBuffer, 1024);
 
-                final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer);
+                final var byteArrayInputStream = new ByteArrayInputStream(buffer);
 
                 // TODO Find out why unused
                 final byte firstByte = (byte) byteArrayInputStream.read();
@@ -231,13 +231,13 @@ class JaybirdBlobBackupProblemTest {
                         final byte byteToWrite = (byte) byteArrayInputStream.read();
 
                         file.write(byteToWrite);
-                        stringBuffer.append((char) byteToWrite);
+                        sb.append((char) byteToWrite);
                     }
                 }
             }
         }
 
-        assertThat("Looks like the backup failed. See logfile " + outputFilename, stringBuffer.toString(),
+        assertThat("Looks like the backup failed. See logfile " + outputFilename, sb.toString(),
                 containsString("committing, and finishing."));
     }
 
