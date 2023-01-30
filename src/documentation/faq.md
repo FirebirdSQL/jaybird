@@ -6,60 +6,57 @@ Where do I get Jaybird?
 
 ### Maven ###
 
-<!-- TODO Hidden for now
 #### Jaybird 5 ####
 
 Jaybird 5 is in development and not yet available from Maven central:
 
-Groupid: `org.firebirdsql.jdbc`, \
-Artifactid: `jaybird`, \
-Version: `5.0.0.javaXX` (where `XX` is `8` or `11`)
+groupId: `org.firebirdsql.jdbc`, \
+artifactId: `jaybird`, \
+version: `5.0.1.javaXX` (where `XX` is `11` or `8`)
 
-For backwards compatibility, we also provide a Maven relocation artifact with
-artifact id `jaybird-XX` (with `XX` `jdk17` or `jdk18`). However, we
-recommend switching to the `jaybird` artifact.
-
-For example, for Java 8:
+For example, for Java 11:
 
 ~~~ {.xml}
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>5.0.0.java11</version>
+    <version>5.0.1.java11</version>
 </dependency>
 ~~~
 
 If you want to use Type 2 support (native, local or embedded), you need to 
-explicitly include JNA 5.5.0 as a dependency:
+explicitly include JNA 5.12.1 as a dependency:
 
 ~~~ {.xml}
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.5.0</version>
+    <version>5.12.1</version>
 </dependency>
 ~~~
--->
 
 #### Jaybird 4 ####
 
+Jaybird 4 is maintained at least until the end of 2023. However, we recommend
+upgrading to Jaybird 5.
+
 Jaybird 4 is available from Maven central:
 
-Groupid: `org.firebirdsql.jdbc`, \
-Artifactid: `jaybird`, \
-Version: `4.0.8.javaXX` (where `XX` is `7`, `8` or `11`)
+groupId: `org.firebirdsql.jdbc`, \
+artifactId: `jaybird`, \
+version: `4.0.9.javaXX` (where `XX` is `11`, `8` or `7`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
 artifact id `jaybird-XX` (with `XX` `jdk17` or `jdk18`). However, we
 recommend switching to the `jaybird` artifact.
 
-For example, for Java 8:
+For example, for Java 11:
 
 ~~~ {.xml}
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.8.java11</version>
+    <version>4.0.9.java11</version>
 </dependency>
 ~~~
 
@@ -71,7 +68,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.8.java11</version>
+    <version>4.0.9.java11</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -102,14 +99,14 @@ explicitly include JNA 5.5.0 as a dependency:
 <!-- For GitHub markdown compatibility -->
 <a name="jaybird-3.0"></a>
 
-Jaybird 3.0 is end-of-life and will receive no further updates. We recommend 
-upgrading to Jaybird 4.
+Jaybird 3 is end-of-life and will receive no further updates. We recommend 
+upgrading to Jaybird 5.
 
-Jaybird 3.0 is available from Maven central:
+Jaybird 3 is available from Maven central:
 
-Groupid: `org.firebirdsql.jdbc`,  
-Artifactid: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`),  
-Version: `3.0.12`
+groupId: `org.firebirdsql.jdbc`,  
+artifactId: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`),  
+version: `3.0.12`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id
 `jaybird`. For Jaybird 3 this relocation artifact points to `jaybird-jdk18`.
@@ -162,14 +159,14 @@ explicitly include JNA 4.4.0 as a dependency:
 #### Jaybird 2.2 ####
 
 Jaybird 2.2 is end-of-life and will receive no further updates. We recommend
-upgrading to Jaybird 4.
+upgrading to Jaybird 5.
 
 Jaybird 2.2 is available on Maven, with a separate artifact
 for each supported Java version.
 
-Groupid: `org.firebirdsql.jdbc`,  
-Artifactid: `jaybird-XX` (where `XX` is `jdk16`, `jdk17` or `jdk18`),  
-Version: `2.2.15`
+groupId: `org.firebirdsql.jdbc`,  
+artifactId: `jaybird-XX` (where `XX` is `jdk16`, `jdk17` or `jdk18`),  
+version: `2.2.15`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id
 `jaybird`. For Jaybird 2.2 this relocation artifact points to `jaybird-jdk17`.
@@ -234,22 +231,30 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
+Jaybird 5 supports Java 8, 11 and 17. Support for Java 9 and higher is
+limited to Java 8, 11, 17 and the most recent LTS version after Java 17 and
+the latest Java release. Currently, that means we support Java 8, 11, 17 and 19.
+
+Jaybird 5 is the last version to support Java 8 and 11, support will be dropped 
+with Jaybird 6, raising the minimum supported version to Java 17.
+
 Jaybird 4 supports Java 7, 8, 11 and 17. Support for Java 9 and higher is 
 limited to Java 8, 11, 17 and the most recent LTS version after Java 17 and
 the latest Java release. Currently, that means we support Java 8, 11, 17 and 19.
 
 Jaybird 4 is the last version to support Java 7, support will be dropped with
-Jaybird 5.
+Jaybird 5. Jaybird 4 is still maintained (at least until the end of 2023), but
+we recommend upgrading to Jaybird 5.
 
-Jaybird 3.0 supports Java 7 and 8 and has basic support for Java 9 and higher
+Jaybird 3 supports Java 7 and 8 and has basic support for Java 9 and higher
 using the Java 8 version of the driver. Support for Java 9 and higher is 
 limited to Java 11 and 17, but in practice Jaybird should work on all 
 Java 9+ versions (versions after Java 17 have not been tested). Jaybird 3.0.12 
-is that last release of Jaybird 3.0, and is end-of-life. We recommend upgrading 
-to Jaybird 4.
+is that last release of Jaybird 3, and is end-of-life. We recommend upgrading 
+to Jaybird 5.
 
 Jaybird 2.2 supports Java 6, 7 and 8. Jaybird 2.2.15 is that last release of
-Jaybird 2.2, and is end-of-life. We recommend upgrading to Jaybird 4.
+Jaybird 2.2, and is end-of-life. We recommend upgrading to Jaybird 5.
 
 Jaybird 2.2.4 added basic support for Java 8 (JDBC 4.2), although not all 
 JDBC 4.2 features are supported or fully implemented.
@@ -258,7 +263,7 @@ Jaybird 2.2.7 is the last version to support Java 5, support has been dropped
 with Jaybird 2.2.8.
 
 Jaybird 2.2 is the last version to support Java 6, support has been dropped with
-Jaybird 3.0.
+Jaybird 3.
 
 ### What is the Java 9 module name for Jaybird?
 
@@ -433,14 +438,14 @@ Legacy URL format:
 Type 2 driver, will connect to the database using client library (`fbclient.dll`
 on Windows, and `libfbclient.so` on Linux). Requires correct installation of the
 client library and - for Jaybird 2.2 or earlier - the Jaybird native library, 
-or - for Jaybird 3.0 - the JNA jar file.
+or - for Jaybird 3 - the JNA jar file.
 
     jdbc:firebirdsql:local:<database>
 
 Type 2 driver in local mode. Uses client library as in previous case, however
 will not use socket communication, but rather access database directly. Requires
 correct installation of the client library and - for Jaybird 2.2 or earlier - 
-the Jaybird native library, or - for Jaybird 3.0 - the JNA jar file.
+the Jaybird native library, or - for Jaybird 3 - the JNA jar file.
 
 Jaybird 4 and higher also support:
 
@@ -456,7 +461,7 @@ Similar to the Firebird client library, however `fbembed.dll` on Windows and
 `libfbembed.so` on Linux are used, falling back to `fbclient.dll`/`libfbclient.so`
 under the assumption it provides Embedded functionality. Requires correctly
 installed and configured Firebird embedded library and - for Jaybird 2.2 or
-earlier - the Jaybird native  library, or - for Jaybird 3.0 - the JNA jar file.
+earlier - the Jaybird native library, or - for Jaybird 3 - the JNA jar file.
 
 Jaybird 4 and higher also support:
 
