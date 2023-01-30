@@ -32,9 +32,9 @@ import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.util.List;
 import java.util.Properties;
 
+import static java.util.Collections.emptyList;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.gds.ISCConstants.SQL_DOUBLE;
 import static org.firebirdsql.gds.ISCConstants.SQL_FLOAT;
@@ -371,7 +371,7 @@ class FBResultSetMetaDataTest {
                 .at(0).simple(SQL_FLOAT, 4, "TEST", "FLOAT").addField()
                 .at(1).simple(SQL_DOUBLE, 8, "TEST", "DOUBLE").addField()
                 .toRowDescriptor();
-        ResultSet rs = new FBResultSet(rowDescriptor, List.of());
+        ResultSet rs = new FBResultSet(rowDescriptor, emptyList());
         ResultSetMetaData rsmd = rs.getMetaData();
 
         assertEquals(24, rsmd.getPrecision(1));
