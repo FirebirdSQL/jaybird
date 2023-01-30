@@ -18,7 +18,7 @@ The following has been changed or fixed since Jaybird 4.0.8
 - Fixed: `CallableStatement.getString` would incorrectly trim string values ([jaybird#729](https://github.com/FirebirdSQL/jaybird/issues/729))
 - Fixed: `ResultSetMetaData.getPrecision(int)` of a connectionless result set 
   could throw a `NullPointerException` if the column was of type `FLOAT` or 
-  `DOUBLE PRECISION` (https://github.com/FirebirdSQL/jaybird/issues/730[jaybird#730])
+  `DOUBLE PRECISION` ([jaybird#730](https://github.com/FirebirdSQL/jaybird/issues/730[jaybird#730))
 
 Jaybird 4.0.8
 -------------
