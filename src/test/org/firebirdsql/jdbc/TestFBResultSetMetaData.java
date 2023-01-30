@@ -24,6 +24,7 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -405,7 +406,7 @@ public class TestFBResultSetMetaData {
                 .at(0).simple(SQL_FLOAT, 4, "TEST", "FLOAT").addField()
                 .at(1).simple(SQL_DOUBLE, 8, "TEST", "DOUBLE").addField()
                 .toRowDescriptor();
-        ResultSet rs = new FBResultSet(rowDescriptor, Collections.emptyList());
+        ResultSet rs = new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
         ResultSetMetaData rsmd = rs.getMetaData();
 
         assertEquals(24, rsmd.getPrecision(1));
