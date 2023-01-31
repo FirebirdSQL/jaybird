@@ -5,6 +5,7 @@ publishing {
         // Main maven artifact
         mavenJava(MavenPublication) {
             from components.java
+            artifactId project.mavenName
             suppressPomMetadataWarningsFor 'nativeApiElements'
             suppressPomMetadataWarningsFor 'nativeRuntimeElements'
             pom {

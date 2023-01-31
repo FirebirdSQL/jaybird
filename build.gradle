@@ -23,6 +23,7 @@ apply from: 'build-properties.gradle'
 
 group = 'org.firebirdsql.jdbc'
 version = project.'version.maven'
+archivesBaseName = project.mavenName
 
 allprojects {
     tasks.withType(JavaCompile) {
@@ -105,7 +106,7 @@ processResources {
     filter ReplaceTokens, tokens: [
             'NAME'         : project.capitalizedName,
             'VERSION'      : project.'version.simple',
-            'MAVEN_NAME'   : project.name,
+            'MAVEN_NAME'   : project.mavenName,
             'VERSION_FULL' : project.'version.maven',
             'VERSION_MAJOR': project.'version.major',
             'VERSION_MINOR': project.'version.minor'
@@ -162,7 +163,7 @@ jar {
                 'Specification-Vendor': project.'specification.vendor',
                 'Implementation-Title': project.'implementation.title',
                 'Implementation-Url': project.'implementation.url',
-                'Implementation-Version': "$project.version (build: variant=$project.name tag=${project.'version.svntag'} date=${project.'build.id'})",
+                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'})",
                 'Implementation-Vendor': project.'implementation.vendor',
                 'Implementation-Vendor-Id': project.'implementation.vendor.id',
                 'Automatic-Module-Name': 'org.firebirdsql.jaybird'
