@@ -5,7 +5,7 @@ publishing {
         // Main maven artifact
         mavenJava(MavenPublication) {
             from components.java
-            artifactId 'jaybird'
+            artifactId project.mavenName
             suppressPomMetadataWarningsFor 'nativeApiElements'
             suppressPomMetadataWarningsFor 'nativeRuntimeElements'
             pom {
