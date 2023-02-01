@@ -375,13 +375,10 @@ public class FBProcedureCall implements Cloneable {
      */
     public boolean equals(Object obj) {
         if (obj == this) return true;
-        if (!(obj instanceof FBProcedureCall)) return false;
-
-        FBProcedureCall that = (FBProcedureCall) obj;
-
-        return Objects.equals(name, that.name)
-                && inputParams.equals(that.inputParams)
-                && outputParams.equals(that.outputParams);
+        if (!(obj instanceof FBProcedureCall other)) return false;
+        return Objects.equals(name, other.name)
+                && inputParams.equals(other.inputParams)
+                && outputParams.equals(other.outputParams);
     }
 
     public int hashCode() {

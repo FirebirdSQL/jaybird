@@ -138,13 +138,10 @@ public class FBProcedureParam implements Cloneable {
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
-        if (!(obj instanceof FBProcedureParam)) return false;
-
-        FBProcedureParam that = (FBProcedureParam) obj;
-
-        return this.position == that.position &&
-                this.value != null ? this.value.equals(that.value) :
-                that.value == null;
+        if (!(obj instanceof FBProcedureParam other)) return false;
+        return this.position == other.position &&
+                this.value != null ? this.value.equals(other.value) :
+                other.value == null;
     }
 
     @Override

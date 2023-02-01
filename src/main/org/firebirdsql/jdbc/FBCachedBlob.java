@@ -30,8 +30,6 @@ import java.io.*;
  */
 public final class FBCachedBlob implements FirebirdBlob {
 
-    private static final byte[] BYTES_NULL_VALUE = null;
-    private static final InputStream STREAM_NULL_VALUE = null;
     private static final byte[] FREED_MARKER = new byte[0];
     static final String BLOB_READ_ONLY = "Cached blob is read-only";
 
@@ -87,7 +85,7 @@ public final class FBCachedBlob implements FirebirdBlob {
                     SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
         checkClosed();
-        if (blobData == null) return BYTES_NULL_VALUE;
+        if (blobData == null) return null;
 
         // TODO What if pos or length are beyond blobData
         byte[] result = new byte[length];
@@ -120,7 +118,7 @@ public final class FBCachedBlob implements FirebirdBlob {
     @Override
     public InputStream getBinaryStream() throws SQLException {
         checkClosed();
-        if (blobData == null) return STREAM_NULL_VALUE;
+        if (blobData == null) return null;
 
         return new ByteArrayInputStream(blobData);
     }

@@ -25,6 +25,7 @@ import org.firebirdsql.jaybird.xca.XcaConnectionManager;
 import org.firebirdsql.util.InternalApi;
 
 import javax.sql.DataSource;
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -46,6 +47,7 @@ import java.sql.SQLException;
 @InternalApi
 public class FBDataSource extends RootCommonDataSource implements DataSource, Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1178461472062969634L;
 
     private final XcaConnectionManager cm;

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.io.Serial;
 import java.sql.SQLFeatureNotSupportedException;
 
 /**
@@ -26,6 +27,9 @@ import java.sql.SQLFeatureNotSupportedException;
  * @author Roman Rokytskyy
  */
 public class FBDriverNotCapableException extends SQLFeatureNotSupportedException {
+
+	@Serial
+	private static final long serialVersionUID = 4813885566272454052L;
 
 	/**
      * Create instance of this class for the specified reason.

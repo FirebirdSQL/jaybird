@@ -51,11 +51,6 @@ public class FBDriver implements FirebirdDriver {
 
     private static final Logger log;
 
-    /*
-     * @todo implement the default subject for the
-     * standard connection.
-     */
-
     private final Map<FBConnectionProperties, Reference<FBDataSource>> mcfToDataSourceMap =
             new ConcurrentHashMap<>();
     private final ReferenceQueue<FBDataSource> dataSourceReferenceQueue = new ReferenceQueue<>();

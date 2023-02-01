@@ -213,10 +213,10 @@ final class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean absolute(int row) throws SQLException {
-        return absolute(row, false);
+        return setRowNum(row);
     }
 
-    private boolean absolute(int row, boolean internal) throws SQLException {
+    private boolean setRowNum(int row) throws SQLException {
         checkScrollable();
 
         if (row < 0) {
@@ -250,17 +250,17 @@ final class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean first() throws SQLException {
-        return absolute(1, true);
+        return setRowNum(1);
     }
 
     @Override
     public boolean last() throws SQLException {
-        return absolute(-1, true);
+        return setRowNum(-1);
     }
 
     @Override
     public boolean relative(int row) throws SQLException {
-        return absolute(rowNum + row, true);
+        return setRowNum(rowNum + row);
     }
 
     @Override

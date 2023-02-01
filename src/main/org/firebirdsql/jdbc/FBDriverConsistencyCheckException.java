@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.io.Serial;
+
 /**
  * Internal driver consistency check failed. This exception is thrown when some
  * internal consistency check fails.
@@ -26,6 +28,8 @@ package org.firebirdsql.jdbc;
  */
 public class FBDriverConsistencyCheckException extends FBSQLException {
 
+    @Serial
+    private static final long serialVersionUID = 5310800494603767792L;
 
     /**
      * Create instance of this exception for the specified message.

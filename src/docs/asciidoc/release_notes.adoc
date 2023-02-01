@@ -488,6 +488,8 @@ If you are confronted with such a change, let us know on https://groups.google.c
 ** `skipPadding` return type was changed to `void` as the return values was never used in Jaybird code
 ** `skipFully` was removed, use standard Java `InputStream.skipNBytes` instead
 ** The no-arg constructor of `FBXAException` was removed
+** `FBResultSet.close(boolean)` was removed;
+use `close(boolean, CompletionReason)`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

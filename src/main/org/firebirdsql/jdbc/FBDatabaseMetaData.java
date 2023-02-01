@@ -29,6 +29,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
+import java.io.Serial;
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -1820,7 +1821,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static class LruPreparedStatementCache extends LinkedHashMap<String, FBPreparedStatement> {
+        @Serial
         private static final long serialVersionUID = -6600678461169652270L;
+
         private final int maxCapacity;
 
         private LruPreparedStatementCache(int maxCapacity) {

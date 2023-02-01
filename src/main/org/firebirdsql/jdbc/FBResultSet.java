@@ -395,16 +395,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public void close() throws SQLException {
-        close(true);
+        close(true, CompletionReason.OTHER);
     }
 
     @Override
     public boolean isClosed() throws SQLException {
         return closed;
-    }
-
-    void close(boolean notifyListener) throws SQLException {
-        close(notifyListener, CompletionReason.OTHER);
     }
 
     void close(boolean notifyListener, CompletionReason completionReason) throws SQLException {

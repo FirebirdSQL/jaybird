@@ -18,10 +18,15 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.io.Serial;
+
 /**
  * Exception is thrown when trying to modify the non-updatable result set.
  */
 public class FBResultSetNotUpdatableException extends FBSQLException {
+
+    @Serial
+    private static final long serialVersionUID = 675357382993364256L;
 
     /**
      * Create default instance of this class.
