@@ -18,138 +18,95 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import java.io.PrintStream;
-import java.io.PrintWriter;
+import java.io.Serial;
 
 import javax.transaction.xa.XAException;
 
 /**
- * Convenience exception that adds constructor taking message and error code
- * together. 
- * 
+ * Convenience exception that adds constructor taking message and error code together.
+ *
  * @author Roman Rokytskyy
  */
 public class FBXAException extends XAException {
 
-    public FBXAException() {
-        super();
-    }
+    @Serial
+    private static final long serialVersionUID = -1041372401682264104L;
 
     /**
-     * Create a new instance of <code>FBXAException</code> with a given 
-     * message.
+     * Create a new instance of {@code FBXAException} with a given message.
      *
-     * @param msg The string message for this exception
+     * @param msg
+     *         string message for this exception
      */
     public FBXAException(String msg) {
         super(msg);
     }
 
     /**
-     * Create a new instance of <code>FBXAException</code> based around
-     * a specific error code.
+     * Create a new instance of {@code FBXAException} based around a specific error code.
      *
-     * @param errorCode The error code for this exception
+     * @param errorCode
+     *         error code for this exception
      */
     public FBXAException(int errorCode) {
         super(errorCode);
     }
-    
+
     /**
-     * Create a new instance of <code>FBXAException</code> based around
-     * a message and specific error code.
+     * Create a new instance of {@code FBXAException} based around a message and specific error code.
      *
-     * @param msg The string message for this exception
-     * @param errorCode The error code for this exception
+     * @param msg
+     *         string message for this exception
+     * @param errorCode
+     *         error code for this exception
      */
     public FBXAException(String msg, int errorCode) {
         this(msg);
-        
         this.errorCode = errorCode;
     }
 
     private Exception reason;
-    
+
     /**
-     * Create a new instance of <code>FBXAException</code> wrapped around
-     * an underlying exception.
+     * Create a new instance of {@code FBXAException} wrapped around an underlying exception.
      *
-     * @param errorCode The error code for this exception
-     * @param reason The underlying exception
+     * @param errorCode
+     *         error code for this exception
+     * @param reason
+     *         underlying exception
      */
     public FBXAException(int errorCode, Exception reason) {
         this(errorCode);
-        
         this.reason = reason;
         initCause(reason);
     }
-    
+
     /**
-     * Create a new instance of <code>FBXAException</code> based around
-     * a message and with an underlying exception.
+     * Create a new instance of {@code FBXAException} based around a message and with an underlying exception.
      *
-     * @param msg The string message for this exception
-     * @param errorCode The error code for this exception
-     * @param reason The underlying exception
+     * @param msg
+     *         string message for this exception
+     * @param errorCode
+     *         error code for this exception
+     * @param reason
+     *         underlying exception
      */
     public FBXAException(String msg, int errorCode, Exception reason) {
         this(msg, errorCode);
-        
         this.reason = reason;
         initCause(reason);
     }
-    
+
     /**
      * Get message of this exception.
-     * 
+     *
      * @return combined message of this exception and original exception.
      */
     public String getMessage() {
         String s = super.getMessage();
-
-        if (reason == null)
-            return s;
-            
-        if (s == null)
-            return reason.getMessage();
-            
+        if (reason == null) return s;
+        if (s == null) return reason.getMessage();
         return s + "\nReason: " + reason.getMessage();
-    }
-
-
-    /** Print a stack trace for this exception to <code>STDERR</code>. */
-    public void printStackTrace() {
-        printStackTrace(System.err);
-    }
-
-    /**
-     * Print a stack trace for this exception with a 
-     * given <code>PrintStream</code>.
-     *
-     * @param s The <code>PrintStream</code> to which the stack trace will
-     *        be written
-     */
-    public void printStackTrace(PrintStream s) {
-        super.printStackTrace(s);
-        if (reason != null) {
-            s.print("at ");
-            reason.printStackTrace(s);
-        }
-    }
-
-    /**
-     * Print a stack trace for this exception with a 
-     * given <code>PrintWriter</code>.
-     *
-     * @param s The <code>PrintWriter</code> to which the stack trace will
-     *        be written
-     */
-    public void printStackTrace(PrintWriter s) {
-        super.printStackTrace(s);
-        if (reason != null) {
-            s.print("at ");
-            reason.printStackTrace(s);
-        }
     }
 
 }

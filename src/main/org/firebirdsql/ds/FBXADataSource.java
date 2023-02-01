@@ -33,6 +33,7 @@ import javax.naming.Reference;
 import javax.naming.Referenceable;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.SQLException;
 
@@ -88,6 +89,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
     private static class XAConnectionManager implements XcaConnectionManager, XcaConnectionEventListener,
             Serializable {
 
+        @Serial
         private static final long serialVersionUID = 7926533334548378200L;
 
         @Override
@@ -101,19 +103,22 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
 
         @Override
         public void connectionClosed(XcaConnectionEvent ce) {
-            try {
-                ce.getSource().destroy(ce);
-            } catch (SQLException e) {
-                LOG.warn("Exception closing unmanaged connection", e);
-            }
+            destroyConnection(ce);
         }
 
         @Override
         public void connectionErrorOccurred(XcaConnectionEvent ce) {
+            destroyConnection(ce);
+        }
+
+        private void destroyConnection(XcaConnectionEvent ce) {
+            FBManagedConnection mc = ce.getSource();
             try {
-                ce.getSource().destroy(ce);
+                mc.destroy(ce);
             } catch (SQLException e) {
                 LOG.warn("Exception closing unmanaged connection", e);
+            } finally {
+                mc.removeConnectionEventListener(this);
             }
         }
     }

@@ -40,6 +40,7 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.io.IOException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -371,10 +372,8 @@ public final class FBManagedConnection implements ExceptionListener {
             return true;
         }
 
-        // TODO Should this test for SocketException or something else, as SocketTimeoutException is also tested in the
-        //  previous check
         //noinspection RedundantIfStatement
-        if (findException(connectionEventException, SocketTimeoutException.class) != null) {
+        if (findException(connectionEventException, SocketException.class) != null) {
             return true;
         }
 

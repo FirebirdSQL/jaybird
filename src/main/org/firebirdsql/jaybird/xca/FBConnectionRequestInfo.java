@@ -20,6 +20,7 @@ package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.gds.ng.IConnectionProperties;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -32,6 +33,7 @@ import java.io.Serializable;
  */
 public final class FBConnectionRequestInfo implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 2L;
 
     private final IConnectionProperties connectionProperties;
@@ -69,13 +71,10 @@ public final class FBConnectionRequestInfo implements Serializable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        FBConnectionRequestInfo that = (FBConnectionRequestInfo) o;
-
-        return connectionProperties.equals(that.connectionProperties);
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof FBConnectionRequestInfo other)) return false;
+        return connectionProperties.equals(other.connectionProperties);
     }
 
     @Override

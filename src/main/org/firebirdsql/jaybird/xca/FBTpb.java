@@ -20,25 +20,26 @@ package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 
 /**
- * The <code>FBTpb</code> class represents the Firebird Transaction Parameter
- * Block (TPB), which contains Firebird-specific information about transaction
- * isolation.
+ * Represents the Firebird Transaction Parameter Block (TPB), which contains Firebird-specific information about
+ * transaction isolation.
  *
  * @author David Jencks
  */
-
 public final class FBTpb implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 966376319390599431L;
 
     private TransactionParameterBuffer transactionParams;
 
     /**
-     * Create a new Transaction Parameters Block instance based around a
-     * <code>FBTpbMapper</code>.
+     * Create a new Transaction Parameters Block instance based around a {@link TransactionParameterBuffer}.
      *
      * @param transactionParams
      *         instance of {@link TransactionParameterBuffer} representing transaction parameters.
@@ -47,14 +48,10 @@ public final class FBTpb implements Serializable {
         this.transactionParams = transactionParams;
     }
 
-    public boolean equals(Object other) {
-        if (other == this)
-            return true;
-
-        if (!(other instanceof FBTpb))
-            return false;
-
-        return transactionParams.equals(((FBTpb) other).transactionParams);
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (!(obj instanceof FBTpb other)) return false;
+        return transactionParams.equals(other.transactionParams);
     }
 
     public int hashCode() {
@@ -65,7 +62,7 @@ public final class FBTpb implements Serializable {
      * Set the read-only flag on this TPB.
      *
      * @param readOnly
-     *         If <code>true</code>, this TPB will be set to read-only, otherwise it will be read-write
+     *         If {@code true}, this TPB will be set to read-only, otherwise it will be read-write
      */
     public void setReadOnly(boolean readOnly) {
         transactionParams.removeArgument(isc_tpb_read);
@@ -77,7 +74,7 @@ public final class FBTpb implements Serializable {
     /**
      * Determine whether this TPB is set to read-only.
      *
-     * @return <code>true</code> if this TPB is read-only, otherwise false
+     * @return {@code true} if this TPB is read-only, otherwise {@code false}
      */
     public boolean isReadOnly() {
         return transactionParams.hasArgument(isc_tpb_read);

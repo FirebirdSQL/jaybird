@@ -22,6 +22,7 @@ import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.SQLException;
 
@@ -31,16 +32,13 @@ import java.sql.SQLException;
  *
  * @author David Jencks
  * @author Mark Rotteveel
- * @version 1.0
  */
-public final class FBStandAloneConnectionManager implements XcaConnectionManager, XcaConnectionEventListener, Serializable {
+final class FBStandAloneConnectionManager implements XcaConnectionManager, XcaConnectionEventListener, Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private static final Logger log = LoggerFactory.getLogger(FBStandAloneConnectionManager.class);
-
-    FBStandAloneConnectionManager() {
-    }
 
     @Override
     public FirebirdConnection allocateConnection(FBManagedConnectionFactory mcf, FBConnectionRequestInfo cxRequestInfo)
@@ -53,20 +51,23 @@ public final class FBStandAloneConnectionManager implements XcaConnectionManager
 
     @Override
     public void connectionClosed(XcaConnectionEvent ce) {
-        try {
-            ce.getSource().destroy(ce);
-        } catch (SQLException e) {
-            log.debug("Exception closing unmanaged connection: ", e);
-        }
+        destroyConnection(ce);
     }
 
     @Override
     public void connectionErrorOccurred(XcaConnectionEvent ce) {
         log.debug("ConnectionErrorOccurred, ", ce.getException());
+        destroyConnection(ce);
+    }
+
+    private void destroyConnection(XcaConnectionEvent ce) {
+        FBManagedConnection mc = ce.getSource();
         try {
-            ce.getSource().destroy(ce);
+            mc.destroy(ce);
         } catch (SQLException e) {
-            log.debug("further problems destroying connection: ", e);
+            log.warn("Exception closing unmanaged connection", e);
+        } finally {
+            mc.removeConnectionEventListener(this);
         }
     }
 }

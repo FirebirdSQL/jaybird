@@ -18,10 +18,15 @@
  */
 package org.firebirdsql.jaybird.xca;
 
+import java.io.Serial;
+
 /**
  * This error is thrown when message read from the RDB$TRANSACTIONS table does not represent a serialized Xid.
  */
 public class FBIncorrectXidException extends Exception {
+
+    @Serial
+    private static final long serialVersionUID = -4422195562607053359L;
 
     public FBIncorrectXidException(String reason) {
         super(reason);

@@ -24,10 +24,8 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * The class {@code FBXid} has methods for serializing xids for
- * firebird use, and reading them back into instances of itself.  It is
- * a key component in adapting xa semantics and recovery to firebird
- * native operations and data format.
+ * The class {@code FBXid} has methods for serializing xids for Firebird use, and reading them back into instances of
+ * itself. It is a key component in adapting xa semantics and recovery to Firebird native operations and data format.
  *
  * @author David Jencks
  */
@@ -48,8 +46,7 @@ final class FBXid implements Xid {
     private final byte[] globalId;
 
     /**
-     * Branch qualifier of this instance.
-     * This identifies the branch of a transaction.
+     * Branch qualifier of this instance. This identifies the branch of a transaction.
      */
     private final byte[] branchId;
 
@@ -175,9 +172,7 @@ final class FBXid implements Xid {
      */
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof Xid)) return false;
-
-        Xid other = (Xid) obj;
+        if (!(obj instanceof Xid other)) return false;
 
         boolean result = formatId == other.getFormatId();
         byte[] otherGlobalID = other.getGlobalTransactionId();

@@ -450,7 +450,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
         xidMap.put(xid, mc);
     }
 
-    void notifyEnd(FBManagedConnection mc, Xid xid) throws XAException {
+    void notifyEnd(FBManagedConnection mc, Xid xid) {
         // empty
     }
 
@@ -465,27 +465,29 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
     }
 
     void notifyCommit(FBManagedConnection mc, Xid xid, boolean onePhase) throws XAException {
-        FBManagedConnection targetMc = xidMap.get(xid);
-
-        if (targetMc == null) {
-            tryCompleteInLimboTransaction(xid, true);
-        } else {
-            targetMc.internalCommit(xid, onePhase);
+        try {
+            FBManagedConnection targetMc = xidMap.get(xid);
+            if (targetMc == null) {
+                tryCompleteInLimboTransaction(xid, true);
+            } else {
+                targetMc.internalCommit(xid, onePhase);
+            }
+        } finally {
+            forget(mc, xid);
         }
-
-        xidMap.remove(xid);
     }
 
     void notifyRollback(FBManagedConnection mc, Xid xid) throws XAException {
-        FBManagedConnection targetMc = xidMap.get(xid);
-
-        if (targetMc == null) {
-            tryCompleteInLimboTransaction(xid, false);
-        } else {
-            targetMc.internalRollback(xid);
+        try {
+            FBManagedConnection targetMc = xidMap.get(xid);
+            if (targetMc == null) {
+                tryCompleteInLimboTransaction(xid, false);
+            } else {
+                targetMc.internalRollback(xid);
+            }
+        } finally {
+            forget(mc, xid);
         }
-
-        xidMap.remove(xid);
     }
 
     public void forget(FBManagedConnection mc, Xid xid) {
