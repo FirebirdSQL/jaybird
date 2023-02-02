@@ -260,7 +260,7 @@ public final class SrpClient {
                     .toSQLException();
         }
         final String hexServerPublicKey = new String(authData, serverKeyStart, authData.length - serverKeyStart,
-                StandardCharsets.US_ASCII);
+                StandardCharsets.ISO_8859_1);
         final BigInteger serverPublicKey = new BigInteger(padHexBinary(hexServerPublicKey), 16);
 
         return clientProof(user, password, salt, serverPublicKey);

@@ -141,7 +141,7 @@ public final class ClientAuthBlock {
 
             ClumpletReader serverList = new ClumpletReader(ClumpletReader.Kind.UnTagged, serverInfo);
             if (serverList.find(TAG_KNOWN_PLUGINS)) {
-                String serverPluginNames = serverList.getString(StandardCharsets.US_ASCII);
+                String serverPluginNames = serverList.getString(StandardCharsets.ISO_8859_1);
                 serverPlugins.clear();
                 serverPlugins.addAll(splitPluginList(serverPluginNames));
             }

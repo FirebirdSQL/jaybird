@@ -443,7 +443,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 log.debug("Possible implementation problem, found TAG_PLUGIN_SPECIFIC without TAG_KEY_TYPE");
                 break;
             case TAG_KEY_TYPE: {
-                String keyType = newKeys.getString(StandardCharsets.US_ASCII);
+                String keyType = newKeys.getString(StandardCharsets.ISO_8859_1);
 
                 newKeys.moveNext();
                 if (newKeys.isEof()) {
@@ -453,14 +453,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 if (currentTag != TAG_KEY_PLUGINS) {
                     throw new SQLException("Unexpected tag type: " + currentTag);
                 }
-                String keyPlugins = newKeys.getString(StandardCharsets.US_ASCII);
+                String keyPlugins = newKeys.getString(StandardCharsets.ISO_8859_1);
 
                 Map<String, byte[]> pluginSpecificData = null;
                 while (newKeys.directNext(TAG_PLUGIN_SPECIFIC)) {
                     byte[] data = newKeys.getBytes();
                     int sepIdx = ByteArrayHelper.indexOf(data, (byte) 0);
                     if (sepIdx > 0) {
-                        String plugin = new String(data, 0, sepIdx, StandardCharsets.US_ASCII);
+                        String plugin = new String(data, 0, sepIdx, StandardCharsets.ISO_8859_1);
                         byte[] specificData = Arrays.copyOfRange(data, sepIdx + 1, data.length);
                         if (pluginSpecificData == null) {
                             pluginSpecificData = new HashMap<>();
