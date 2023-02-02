@@ -31,11 +31,9 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 3.0
  */
-class LegacyAuthenticationPlugin implements AuthenticationPlugin {
+final class LegacyAuthenticationPlugin implements AuthenticationPlugin {
 
     private static final Logger log = LoggerFactory.getLogger(LegacyAuthenticationPlugin.class);
-
-    private static final String LEGACY_PASSWORD_SALT = "9z";
 
     private byte[] clientData;
     private boolean hasServerData;
@@ -46,11 +44,11 @@ class LegacyAuthenticationPlugin implements AuthenticationPlugin {
     }
 
     @Override
-    public AuthStatus authenticate(ClientAuthBlock clientAuthBlock) throws SQLException {
+    public AuthStatus authenticate(ClientAuthBlock clientAuthBlock) {
         if (clientAuthBlock.getLogin() == null || clientAuthBlock.getPassword() == null) {
             return AuthStatus.AUTH_CONTINUE;
         }
-        clientData = UnixCrypt.fbCrypt(clientAuthBlock.getPassword());
+        clientData = LegacyHash.fbCrypt(clientAuthBlock.getPassword());
         return AuthStatus.AUTH_SUCCESS;
     }
 

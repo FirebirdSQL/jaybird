@@ -25,7 +25,7 @@ import org.firebirdsql.gds.ng.AbstractParameterConverter;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.WireServiceConnection;
-import org.firebirdsql.gds.ng.wire.auth.legacy.UnixCrypt;
+import org.firebirdsql.gds.ng.wire.auth.legacy.LegacyHash;
 
 import java.sql.SQLException;
 
@@ -46,7 +46,7 @@ public class V10ParameterConverter extends AbstractParameterConverter<WireDataba
             pb.addArgument(tagMapping.getUserNameTag(), props.getUser());
         }
         if (props.getPassword() != null) {
-            pb.addArgument(tagMapping.getEncryptedPasswordTag(), UnixCrypt.fbCrypt(props.getPassword()));
+            pb.addArgument(tagMapping.getEncryptedPasswordTag(), LegacyHash.fbCrypt(props.getPassword()));
         }
     }
 

@@ -35,7 +35,7 @@ package org.firebirdsql.gds.ng.wire.auth.legacy;
  * @author Greg Wilkins (gregw)
  * @version UnixCrypt.java,v 1.5 2004/10/11 00:28:41 gregwilkins Exp
  */
-public class UnixCrypt {
+public final class LegacyHash {
 
     //@formatter:off
     private static final byte[] Rotates = { // PC1 rotation schedule
@@ -273,7 +273,7 @@ public class UnixCrypt {
         }
     }
 
-    private UnixCrypt() {
+    private LegacyHash() {
         // no instances
     }
 

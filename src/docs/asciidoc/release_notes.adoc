@@ -490,6 +490,7 @@ If you are confronted with such a change, let us know on https://groups.google.c
 ** The no-arg constructor of `FBXAException` was removed
 ** `FBResultSet.close(boolean)` was removed;
 use `close(boolean, CompletionReason)`
+** The class `UnixCrypt` was replaced by `LegacyHash`, which only performs the password hash specific to Firebird legacy authentication
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
