@@ -44,7 +44,6 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -175,7 +174,7 @@ public class FBEventManager implements EventManager {
         if (!connected) {
             throw new IllegalStateException("Disconnect called while not connected");
         }
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder<>();
         try (LockCloseable ignored = withLock()) {
             try {
                 for (String eventName : new HashSet<>(handlerMap.keySet())) {
@@ -374,7 +373,7 @@ public class FBEventManager implements EventManager {
         if (!connected) {
             throw new IllegalStateException("Can't wait for events with disconnected EventManager");
         }
-        OneTimeEventListener listener = new OneTimeEventListener();
+        var listener = new OneTimeEventListener();
         try {
             addEventListener(eventName, listener);
             listener.await(timeout, TimeUnit.MILLISECONDS);
@@ -385,7 +384,7 @@ public class FBEventManager implements EventManager {
     }
 
     private void registerListener(String eventName) throws SQLException {
-        GdsEventHandler handler = new GdsEventHandler(eventName);
+        var handler = new GdsEventHandler(eventName);
         try (LockCloseable ignored = withLock()) {
             handlerMap.put(eventName, handler);
             handler.register();
@@ -539,90 +538,27 @@ public class FBEventManager implements EventManager {
 
         @Override
         public void run() {
-            DatabaseEvent event;
             while (running) {
                 try {
-                    event = eventQueue.poll(waitTimeout, TimeUnit.MILLISECONDS);
-                    if (event == null) continue;
-
-                    try (LockCloseable ignored = withLock()) {
-                        Set<EventListener> listenerSet = listenerMap.get(event.getEventName());
-                        if (listenerSet != null) {
-                            for (EventListener listener : listenerSet) {
-                                listener.eventOccurred(event);
-                            }
-                        }
+                    DatabaseEvent event = eventQueue.poll(waitTimeout, TimeUnit.MILLISECONDS);
+                    if (event != null) {
+                        notify(event);
                     }
                 } catch (InterruptedException ie) {
                     // Ignore interruption; continue if not explicitly stopped
                 }
             }
         }
-    }
-}
 
-final class OneTimeEventListener implements EventListener {
-
-    private int eventCount = -1;
-
-    private final Lock lock = new ReentrantLock();
-    private final Condition receivedEvent = lock.newCondition();
-
-    @Override
-    public void eventOccurred(DatabaseEvent event) {
-        lock.lock();
-        try {
-            if (eventCount == -1) {
-                eventCount = event.getEventCount();
+        private void notify(DatabaseEvent event) {
+            try (LockCloseable ignored = withLock()) {
+                Set<EventListener> listenerSet = listenerMap.get(event.getEventName());
+                if (listenerSet != null) {
+                    for (EventListener listener : listenerSet) {
+                        listener.eventOccurred(event);
+                    }
+                }
             }
-            receivedEvent.signalAll();
-        } finally {
-            lock.unlock();
         }
-    }
-
-    void await(long time, TimeUnit unit) throws InterruptedException {
-        lock.lock();
-        try {
-            // Event already received, no need to wait
-            if (eventCount != -1) return;
-            if (time == 0) {
-                receivedEvent.await();
-            } else {
-                receivedEvent.await(time, unit);
-            }
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    int getEventCount() {
-        return eventCount;
-    }
-}
-
-final class DatabaseEventImpl implements DatabaseEvent {
-
-    private final int eventCount;
-    private final String eventName;
-
-    public DatabaseEventImpl(String eventName, int eventCount) {
-        this.eventName = eventName;
-        this.eventCount = eventCount;
-    }
-
-    @Override
-    public int getEventCount() {
-        return this.eventCount;
-    }
-
-    @Override
-    public String getEventName() {
-        return this.eventName;
-    }
-
-    @Override
-    public String toString() {
-        return "DatabaseEvent['" + eventName + " * " + eventCount + "]";
     }
 }
