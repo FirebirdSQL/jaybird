@@ -47,8 +47,6 @@ public final class EncodingFactory implements IEncodingFactory {
 
     private static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
     private static final int MAX_NORMAL_CHARSET_ID = 255;
-    private static final Comparator<EncodingSet> ENCODING_SET_COMPARATOR =
-            Comparator.comparingInt(EncodingSet::getPreferenceWeight);
 
     public static final String ENCODING_NAME_NONE = "NONE";
     public static final String ENCODING_NAME_OCTETS = "OCTETS";
@@ -250,7 +248,6 @@ public final class EncodingFactory implements IEncodingFactory {
         try {
             EncodingDefinition encodingDefinition = null;
             Charset charset = null;
-            // TODO Consider returning getDefaultEncodingDefinition() if both firebirdEncodingName and javaCharsetAlias are NULL
             if (firebirdEncodingName != null) {
                 encodingDefinition = getEncodingDefinitionByFirebirdName(firebirdEncodingName);
                 if (javaCharsetAlias != null) {
@@ -266,7 +263,6 @@ public final class EncodingFactory implements IEncodingFactory {
             }
 
             if (encodingDefinition == null) {
-                // TODO Consider throwing exception if no EncodingDefinition is found
                 return null;
             } else if (!encodingDefinition.isInformationOnly()
                     && (charset == null || encodingDefinition.getJavaCharset().equals(charset))) {
@@ -283,7 +279,6 @@ public final class EncodingFactory implements IEncodingFactory {
                 encodingDefinition = getDefaultEncodingDefinition();
                 return new DefaultEncodingDefinition(ENCODING_NAME_NONE, encodingDefinition.getJavaCharset(), 1, ISCConstants.CS_NONE, false);
             }
-            // TODO Consider throwing exception if no EncodingDefinition is found
             return null;
         } catch (Exception e) {
             log.debugfe("Exception looking up encoding definition for firebirdEncodingName %s, javaCharsetAlias %s",
@@ -366,7 +361,7 @@ public final class EncodingFactory implements IEncodingFactory {
      * @see EncodingSet
      */
     private static NavigableSet<EncodingSet> loadEncodingSets() {
-        final TreeSet<EncodingSet> encodingSets = new TreeSet<>(ENCODING_SET_COMPARATOR);
+        final TreeSet<EncodingSet> encodingSets = new TreeSet<>(encodingSetComparator());
         final ServiceLoader<EncodingSet> encodingSetLoader = ServiceLoader.load(EncodingSet.class, EncodingFactory.class.getClassLoader());
         // We can't use foreach here, because the encoding sets are lazily loaded, which might trigger a ServiceConfigurationError
         Iterator<EncodingSet> encodingSetIterator = encodingSetLoader.iterator();
@@ -564,7 +559,7 @@ public final class EncodingFactory implements IEncodingFactory {
      * @return EncodingFactory instance based on the supplied encodingSets.
      */
     public static EncodingFactory createInstance(EncodingSet... encodingSets) {
-        TreeSet<EncodingSet> sortedEncodingSets = new TreeSet<>(ENCODING_SET_COMPARATOR);
+        TreeSet<EncodingSet> sortedEncodingSets = new TreeSet<>(encodingSetComparator());
         // Load the encoding sets and populate the TreeMap
         Collections.addAll(sortedEncodingSets, encodingSets);
         // Process the encoding sets in descending order
@@ -603,5 +598,9 @@ public final class EncodingFactory implements IEncodingFactory {
             potentialNames.add(alias.toLowerCase(Locale.ROOT));
         }
         return potentialNames;
+    }
+
+    private static Comparator<EncodingSet> encodingSetComparator() {
+        return Comparator.comparingInt(EncodingSet::getPreferenceWeight);
     }
 }
