@@ -24,7 +24,6 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.util.InternalApi;
@@ -47,18 +46,14 @@ public interface GDSFactoryPlugin {
 
     FbDatabaseFactory getDatabaseFactory();
 
-    String getDatabasePath(String server, Integer port, String path) throws GDSException;
+    String getDatabasePath(String server, Integer port, String path) throws SQLException;
 
     @InternalApi
     default String getDatabasePath(DbAttachInfo dbAttachInfo) throws SQLException {
-        try {
-            int portNumber = dbAttachInfo.portNumber();
-            return getDatabasePath(dbAttachInfo.serverName(),
-                    portNumber != PropertyConstants.DEFAULT_PORT ? portNumber : null, dbAttachInfo.attachObjectName());
-        } catch (GDSException e) {
-            throw new SQLException(e);
-        }
+        int portNumber = dbAttachInfo.portNumber();
+        return getDatabasePath(dbAttachInfo.serverName(),
+                portNumber != PropertyConstants.DEFAULT_PORT ? portNumber : null, dbAttachInfo.attachObjectName());
     }
     
-    String getDatabasePath(String jdbcUrl) throws GDSException;
+    String getDatabasePath(String jdbcUrl) throws SQLException;
 }

@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
@@ -77,36 +76,32 @@ public class FBDriver implements FirebirdDriver {
         }
 
         final Map<String, String> mergedProperties = mergeProperties(url, info);
-        try {
-            int qMarkIndex = url.indexOf('?');
-            if (qMarkIndex != -1) {
-                url = url.substring(0, qMarkIndex);
-            }
 
-            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
-            String databaseURL = GDSFactory.getDatabasePath(type, url);
-
-            // NOTE: occurrence of an explicit connection property may override this
-            mcf.setDatabaseName(databaseURL);
-            for (Map.Entry<String, String> entry : mergedProperties.entrySet()) {
-                try {
-                    mcf.setProperty(entry.getKey(), entry.getValue());
-                } catch (InvalidPropertyValueException e) {
-                    throw e.asSQLException();
-                }
-            }
-
-            FBTpbMapper.processMapping(mcf, mergedProperties);
-
-            mcf = mcf.canonicalize();
-
-            FBDataSource dataSource = createDataSource(mcf);
-
-            return dataSource.getConnection(mcf.getUser(), mcf.getPassword());
-
-        } catch (GDSException e) {
-            throw new FBSQLException(e);
+        int qMarkIndex = url.indexOf('?');
+        if (qMarkIndex != -1) {
+            url = url.substring(0, qMarkIndex);
         }
+
+        FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
+        String databaseURL = GDSFactory.getDatabasePath(type, url);
+
+        // NOTE: occurrence of an explicit connection property may override this
+        mcf.setDatabaseName(databaseURL);
+        for (Map.Entry<String, String> entry : mergedProperties.entrySet()) {
+            try {
+                mcf.setProperty(entry.getKey(), entry.getValue());
+            } catch (InvalidPropertyValueException e) {
+                throw e.asSQLException();
+            }
+        }
+
+        FBTpbMapper.processMapping(mcf, mergedProperties);
+
+        mcf = mcf.canonicalize();
+
+        FBDataSource dataSource = createDataSource(mcf);
+
+        return dataSource.getConnection(mcf.getUser(), mcf.getPassword());
     }
 
     private FBDataSource createDataSource(final FBManagedConnectionFactory mcf) {

@@ -24,7 +24,6 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.logging.Logger;
@@ -243,11 +242,11 @@ public final class GDSFactory {
      * @param path
      *         database name or path to the database
      * @return full connection string
-     * @throws GDSException
+     * @throws SQLException
      *         if connection string cannot be obtained.
      */
     public static String getDatabasePath(GDSType gdsType, String server, Integer port, String path)
-            throws GDSException {
+            throws SQLException {
         return getPlugin(gdsType).getDatabasePath(server, port, path);
     }
 
@@ -261,11 +260,10 @@ public final class GDSFactory {
      * @param jdbcUrl
      *         JDBC url from which the database path must be extracted.
      * @return path to the database specified in the JDBC URL.
-     * @throws GDSException
+     * @throws SQLException
      *         error when database path cannot be extracted.
      */
-    public static String getDatabasePath(GDSType gdsType, String jdbcUrl)
-            throws GDSException {
+    public static String getDatabasePath(GDSType gdsType, String jdbcUrl) throws SQLException {
         return getPlugin(gdsType).getDatabasePath(jdbcUrl);
     }
 

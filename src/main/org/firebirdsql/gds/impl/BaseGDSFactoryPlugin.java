@@ -18,8 +18,10 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jdbc.FBConnection;
+
+import java.sql.SQLException;
+import java.sql.SQLNonTransientConnectionException;
 
 /**
  * Base class for {@link GDSFactoryPlugin} implementations.
@@ -43,27 +45,27 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     @Override
-    public String getDatabasePath(String jdbcUrl) throws GDSException {
+    public String getDatabasePath(String jdbcUrl) throws SQLException {
         String[] protocols = getSupportedProtocols();
         for (String protocol : protocols) {
             if (jdbcUrl.startsWith(protocol))
                 return jdbcUrl.substring(protocol.length());
         }
 
-        throw new IllegalArgumentException("Incorrect JDBC protocol handling: " + jdbcUrl);
+        throw new SQLNonTransientConnectionException("Incorrect JDBC protocol handling: " + jdbcUrl);
     }
 
     @Override
-    public String getDatabasePath(String server, Integer port, String path) throws GDSException {
+    public String getDatabasePath(String server, Integer port, String path) throws SQLException {
         if (path == null) {
-            throw new GDSException("Database name/path is required.");
+            throw new SQLNonTransientConnectionException("Database name/path is required");
         }
 
         if (server == null) {
             return path;
         }
 
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append("//").append(server);
         if (port != null) {
             sb.append(':').append(port.intValue());

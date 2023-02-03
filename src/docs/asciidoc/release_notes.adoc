@@ -490,7 +490,14 @@ If you are confronted with such a change, let us know on https://groups.google.c
 ** The no-arg constructor of `FBXAException` was removed
 ** `FBResultSet.close(boolean)` was removed;
 use `close(boolean, CompletionReason)`
-** The class `UnixCrypt` was replaced by `LegacyHash`, which only performs the password hash specific to Firebird legacy authentication
+* `UnixCrypt` was replaced by `LegacyHash`, which only performs the password hash specific to Firebird legacy authentication
+* `GDSFactoryPlugin.getDatabasePath(String, Integer, String)` and `getDatabasePath(String)` no longer throw `GDSException`, but instead throw `SQLException`
+* `GDSFactory.getDatabasePath(...)` no longer throw `GDSException`, but instead throw `SQLException`
+* `GDSServerVersionException` no longer extends `GDSException`, but instead extends `SQLNonTransientException`
+* `GDSException` was significantly modified and deprecated for future removal.
+Most of its implementation was removed, and it now extends `SQLException`.
+Only the constructors `GDSException(int)`, `GDSException(int, Throwable)` and `GDSException(String)` were retained.
+All other constructors and methods have been removed.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
@@ -537,6 +544,10 @@ The following methods will be removed in Jaybird 7:
 
 The following classes have been deprecated and will be removed in Jaybird 7:
 
+* `GDSException` -- use `SQLException` or one of its (normal) subclasses.
+Previous versions of `GDSFactoryPlugin` declared `throws GDSException` for some methods, but now `throws SQLException`.
+To retain some semblance of backwards-compatibility, this class was retrofitted to extend `SQLException`.
+It may get removed in Jaybird 7 or later.
 
 [#removal-of-deprecated-constants-7]
 ==== Removal of deprecated constants

@@ -24,30 +24,20 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ISCConstants;
-
 import java.io.Serial;
+import java.sql.SQLNonTransientException;
 
 /**
- * Exception is thrown when server returns a version string in a format that
- * this driver does not understand.
+ * Exception is thrown when server returns a version string in a format that this driver does not understand.
  */
-public class GDSServerVersionException extends GDSException {
+public class GDSServerVersionException extends SQLNonTransientException {
 
-	@Serial
+    @Serial
     private static final long serialVersionUID = -7437228877120690612L;
 
-	public GDSServerVersionException(String message) {
-        super(ISCConstants.isc_infinap);
-        
-        GDSException messageEx = new GDSException(message);
-        GDSException expectedFormatEx = new GDSException(
-            "Expected engine version format: " + 
-            "<platform>-<type><major version>.<minor version>.<variant>.<build number>[-<revision>] <server name>");
-        
-        messageEx.setNext(expectedFormatEx);
-        setNext(messageEx);
+    public GDSServerVersionException(String message) {
+        super(message + "; Expected engine version format: " +
+              "<platform>-<type><major version>.<minor version>.<variant>.<build number>[-<revision>] <server name>");
     }
 
 }

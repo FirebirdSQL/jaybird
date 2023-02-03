@@ -18,10 +18,11 @@
  */
 package org.firebirdsql.gds.impl.jni;
 
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.jna.FbClientDatabaseFactory;
 
+import java.sql.SQLException;
+import java.sql.SQLNonTransientConnectionException;
 import java.util.Arrays;
 
 public class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
@@ -62,16 +63,16 @@ public class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     }
 
     @Override
-    public String getDatabasePath(String server, Integer port, String path) throws GDSException{
+    public String getDatabasePath(String server, Integer port, String path) throws SQLException {
         if (path == null) {
-            throw new GDSException("Database name/path is required.");
+            throw new SQLNonTransientConnectionException("Database name/path is required");
         }
 
         if (server == null) {
             return path;
         }
         
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append(server);
         if (port != null) {
             sb.append('/').append(port.intValue());
