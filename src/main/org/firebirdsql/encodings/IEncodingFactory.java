@@ -27,8 +27,8 @@ import java.nio.charset.Charset;
  * <p>
  * Note on naming convention: normally the prefix {@code I} for interfaces is avoided in Java, in this particular
  * case I decided to use it as the concrete class {@link EncodingFactory} is the actual factory and the main access for
- * encoding related information. This interface is used for connection specific factories (eg so the defaultEncoding is
- * the connection character set).
+ * encoding related information. This interface is used for connection specific factories (e.g. so the defaultEncoding
+ * is the connection character set).
  * </p>
  *
  * @author Mark Rotteveel
