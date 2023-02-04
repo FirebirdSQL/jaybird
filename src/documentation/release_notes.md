@@ -326,10 +326,10 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
 Known issues
 ============
 
--   Using a native connection with a Firebird 3 client library to a Firebird 2.5
-    or older server may be slow to connect. The workaround is to specify the
-    IPv4 address instead of the host name in the connection string, or to use a
-    Firebird 2.5 or earlier `fbclient.dll`.
+-   Using a native connection with a Firebird 3.0 or higher client library to 
+    a Firebird 2.5 or older server may be slow to connect. The workaround is to
+    specify the IPv4 address instead of the host name in the connection string, 
+    or to use a Firebird 2.5 or earlier `fbclient.dll`.
     
     This is caused by [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658)
 
