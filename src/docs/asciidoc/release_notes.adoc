@@ -325,6 +325,7 @@ Previously almost all types returned `true` (including -- for example -- `BOOLEA
 * Removed `finalize()` methods and -- where it made sense -- replaced them with use of `Cleaner` (https://github.com/FirebirdSQL/jaybird/issues/727[jaybird#727])
 * Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DEICMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (https://github.com/FirebirdSQL/jaybird/issues/731[jaybird#731])
 * Optimized the query to retrieve extended field info for `ResultSetMetaData.getPrecision` to only retrieve columns of type `NUMERIC` or `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/732[jaybird#732])
+* Added methods `List<String> getTypeAliasList()` and `List<String> getSupportedProtocolList()` to `GDSFactoryPlugin`, and deprecated `String[] getTypeAliases()` and `String[] getSupportedProtocols()` for removal in Jaybird 7 or later
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
@@ -498,6 +499,7 @@ use `close(boolean, CompletionReason)`
 Most of its implementation was removed, and it now extends `SQLException`.
 Only the constructors `GDSException(int)`, `GDSException(int, Throwable)` and `GDSException(String)` were retained.
 All other constructors and methods have been removed.
+* `WireGDSFactoryPlugin`, `NativeGDSFactoryPlugin` and `EmbeddedGDSFactoryPlugin` are now final
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
@@ -538,6 +540,11 @@ With Jaybird 7 the following breaking changes will be introduced.
 
 The following methods will be removed in Jaybird 7:
 
+* `GDSFactoryPlugin`
+** `getTypeAliases()` -- use `getTypeAliasList()`.
+It may get removed in Jaybird 7 or later.
+** `getSupportedProtocols` -- use `getSupportedProtocolList()`.
+It may get removed in Jaybird 7 or later.
 
 [#removal-of-deprecated-classes-7]
 ===== Removal of deprecated classes

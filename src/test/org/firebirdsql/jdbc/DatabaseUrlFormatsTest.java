@@ -69,8 +69,7 @@ class DatabaseUrlFormatsTest {
 
     @SuppressWarnings("unused")
     static Stream<Arguments> testConnectionWithDriverManager() {
-        final List<String> urlPrefixes = Arrays.asList(
-                GDSFactory.getPlugin(FBTestProperties.getGdsType()).getSupportedProtocols());
+        final List<String> urlPrefixes = GDSFactory.getPlugin(FBTestProperties.getGdsType()).getSupportedProtocolList();
         final List<String> urls = urlsWithoutProtocolPrefix();
 
         return urlPrefixes.stream()
@@ -95,7 +94,7 @@ class DatabaseUrlFormatsTest {
 
     @SuppressWarnings("unused")
     static Stream<Arguments> testConnectionWithEmptyUrl() {
-        return Arrays.stream(GDSFactory.getPlugin(FBTestProperties.getGdsType()).getSupportedProtocols())
+        return GDSFactory.getPlugin(FBTestProperties.getGdsType()).getSupportedProtocolList().stream()
                 .map(Arguments::of);
     }
 

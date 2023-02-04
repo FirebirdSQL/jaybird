@@ -41,15 +41,15 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
 
     @Override
     public String getDefaultProtocol() {
-        return getSupportedProtocols()[0];
+        return getSupportedProtocolList().get(0);
     }
 
     @Override
     public String getDatabasePath(String jdbcUrl) throws SQLException {
-        String[] protocols = getSupportedProtocols();
-        for (String protocol : protocols) {
-            if (jdbcUrl.startsWith(protocol))
+        for (String protocol : getSupportedProtocolList()) {
+            if (jdbcUrl.startsWith(protocol)) {
                 return jdbcUrl.substring(protocol.length());
+            }
         }
 
         throw new SQLNonTransientConnectionException("Incorrect JDBC protocol handling: " + jdbcUrl);
@@ -82,6 +82,6 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
 
     @Override
     public final boolean equals(Object obj) {
-        return obj != null && (obj == this || getClass().equals(obj.getClass()));
+        return obj != null && (obj == this || getClass() == obj.getClass());
     }
 }
