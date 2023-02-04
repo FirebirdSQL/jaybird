@@ -48,6 +48,9 @@ accepts a comma-separated list of protocol versions to enable, or `*` to enable
 all available versions. The connection property will only enable protocols, so
 supported protocol versions (e.g. 13, 15, 16, 18) cannot be disabled this way.
 
+When an unknown protocol version is listed in the property, this is silently 
+ignored, except for logging on debug-level.
+
 Future JDPs may propose the removal of unsupported protocols.
 
 An alternative workaround for connecting with unsupported protocols is to use 
