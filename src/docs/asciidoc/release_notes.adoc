@@ -492,7 +492,7 @@ This type name and these JDBC protocol prefixes should be considered deprecated 
 
 The LOCAL protocol implementation was never really a local protocol, but -- depending on `fbclient` version, its `firebird.conf` and platform -- could also establish a TCP/IP, WNET or embedded connection to the database.
 
-Establishing a local IPC connection to a database is only possible on Windows, using a Firebird 3.0 or higher `fbclient` with the `databaseName` `xnet://C:\path\to\db.fdb` or JDBC URL `jdbc:firebird:native:xnet//C:\path\to\db.fdb`.
+Establishing a local IPC connection to a database is only possible on Windows, using a Firebird 3.0 or higher `fbclient` with the `databaseName` `xnet://C:\path\to\db.fdb` or JDBC URL `jdbc:firebird:native:xnet://C:\path\to\db.fdb`.
 For earlier versions of `fbclient`, the recommended URL is `jdbc:firebird:native:C:\path\to\db.fdb`, but this will not necessarily use a local IPC connection.
 
 [#stream-blobs-default]
