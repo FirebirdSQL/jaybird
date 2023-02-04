@@ -57,7 +57,7 @@ Initial release for evaluation.
 [#known-issues]
 == Known issues
 
-* Using a native connection with a Firebird 3 client library to a Firebird 2.5 or older server may be slow to connect.
+* Using a native connection with a Firebird 3.0 or higher client library to a Firebird 2.5 or older server may be slow to connect.
 +
 Possible workarounds:
 +
