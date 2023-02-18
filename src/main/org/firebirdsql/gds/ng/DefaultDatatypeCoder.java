@@ -436,29 +436,42 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         return dt.toTimestampBytes();
     }
 
+    /**
+     * Returns {@code buf} as an array in network order.
+     * <p>
+     * If this is a big-endian coder, {@code buf} should be returned as-is.
+     * </p>
+     *
+     * @param buf byte array
+     * @return byte array in network order (or {@code buf} if this a big-endian coder)
+     */
+    protected byte[] networkOrder(byte[] buf) {
+        return buf;
+    }
+
     @Override
     public Decimal64 decodeDecimal64(byte[] data) {
-        return Decimal64.parseBytes(data);
+        return Decimal64.parseBytes(networkOrder(data));
     }
 
     @Override
     public byte[] encodeDecimal64(Decimal64 decimal64) {
-        return decimal64.toBytes();
+        return networkOrder(decimal64.toBytes());
     }
 
     @Override
     public Decimal128 decodeDecimal128(byte[] data) {
-        return Decimal128.parseBytes(data);
+        return Decimal128.parseBytes(networkOrder(data));
     }
 
     @Override
     public byte[] encodeDecimal128(Decimal128 decimal128) {
-        return decimal128.toBytes();
+        return networkOrder(decimal128.toBytes());
     }
 
     @Override
     public BigInteger decodeInt128(byte[] data) {
-        return new BigInteger(data);
+        return new BigInteger(networkOrder(data));
     }
 
     @Override
@@ -468,7 +481,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         }
         byte[] minimumBytes = bigInteger.toByteArray();
         if (minimumBytes.length == 16) {
-            return minimumBytes;
+            return networkOrder(minimumBytes);
         }
         byte[] int128Bytes = new byte[16];
         int startOfMinimum = 16 - minimumBytes.length;
@@ -477,7 +490,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
             Arrays.fill(int128Bytes, 0, startOfMinimum, (byte) -1);
         }
         System.arraycopy(minimumBytes, 0, int128Bytes, startOfMinimum, minimumBytes.length);
-        return int128Bytes;
+        return networkOrder(int128Bytes);
     }
 
     @Override
