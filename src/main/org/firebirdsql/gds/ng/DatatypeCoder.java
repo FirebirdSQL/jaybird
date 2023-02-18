@@ -782,5 +782,102 @@ public interface DatatypeCoder {
             fractions = fractionsInDay - second * FRACTIONS_PER_SECOND;
         }
 
+        /**
+         * Update the date fields from a calendar.
+         *
+         * @param c
+         *         calendar
+         */
+        void updateDate(Calendar c) {
+            year = c.get(Calendar.YEAR);
+            month = c.get(Calendar.MONTH) + 1;
+            day = c.get(Calendar.DAY_OF_MONTH);
+        }
+
+        /**
+         * Updates the date fields from a local date.
+         *
+         * @param localDate
+         *         local date
+         */
+        public void updateDate(LocalDate localDate) {
+            year = localDate.getYear();
+            month = localDate.getMonthValue();
+            day = localDate.getDayOfMonth();
+        }
+
+        /**
+         * Updates the time field from a calendar and (optional) nanoseconds component.
+         * <p>
+         * When a non-negative {@code nanos} is provided, the {@code MILLISECOND} component of {@code c} is ignored.
+         * </p>
+         *
+         * @param c
+         *         calendar
+         * @param nanos
+         *         nanosecond component (ignored if {@code < 0})
+         */
+        void updateTime(Calendar c, long nanos) {
+            hour = c.get(Calendar.HOUR_OF_DAY);
+            minute = c.get(Calendar.MINUTE);
+            second = c.get(Calendar.SECOND);
+            if (nanos < 0) {
+                fractions = c.get(Calendar.MILLISECOND) * FRACTIONS_PER_MILLISECOND;
+            } else {
+                setFractionsFromNanos(nanos);
+            }
+        }
+
+        /**
+         * Updates the time fields from a local time.
+         *
+         * @param localTime
+         *         local time
+         */
+        public void updateTime(LocalTime localTime) {
+            hour = localTime.getHour();
+            minute = localTime.getMinute();
+            second = localTime.getSecond();
+            setFractionsFromNanos(localTime.getNano());
+        }
+
+        /**
+         * Updates the date and time fields from a local datetime.
+         *
+         * @param localDateTime
+         *         local datetime
+         */
+        public void updateDateTime(LocalDateTime localDateTime) {
+            updateDate(localDateTime.toLocalDate());
+            updateTime(localDateTime.toLocalTime());
+        }
+
+        /**
+         * Converts the current date field values to a local date.
+         *
+         * @return local date
+         */
+        public LocalDate toLocalDate() {
+            return LocalDate.of(year, month, day);
+        }
+
+        /**
+         * Converts the current time field values to a local time.
+         *
+         * @return local time
+         */
+        public LocalTime toLocalTime() {
+            return LocalTime.of(hour, minute, second, getFractionsAsNanos());
+        }
+
+        /**
+         * Converts the current date and time field values to a local datetime
+         *
+         * @return local datetime
+         */
+        public LocalDateTime toLocalDateTime() {
+            return LocalDateTime.of(toLocalDate(), toLocalTime());
+        }
+
     }
 }
