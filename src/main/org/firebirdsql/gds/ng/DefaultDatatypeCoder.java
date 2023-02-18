@@ -107,7 +107,9 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public byte[] encodeShort(short value) {
-        return intToBytes(value);
+        final byte[] buf = new byte[sizeOfShort()];
+        encodeShort(value, buf, 0);
+        return buf;
     }
 
     @Override
@@ -122,7 +124,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public short decodeShort(byte[] byte_int) {
-        return (short) decodeInt(byte_int);
+        return decodeShort(byte_int, 0);
     }
 
     @Override
@@ -132,74 +134,56 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public byte[] encodeInt(int value) {
-        return intToBytes(value);
+        byte[] buf = new byte[4];
+        encodeInt(value, buf, 0);
+        return buf;
     }
 
     @Override
     public void encodeInt(int value, byte[] target, int fromIndex) {
-        target[fromIndex] = (byte) ((value >>> 24) & 0xff);
-        target[fromIndex + 1] = (byte) ((value >>> 16) & 0xff);
-        target[fromIndex + 2] = (byte) ((value >>> 8) & 0xff);
-        target[fromIndex + 3] = (byte) ((value) & 0xff);
-    }
-
-    /**
-     * Encode an <code>int</code> value as a <code>byte</code> array in network-order(big-endian) representation.
-     *
-     * @param value
-     *         The value to be encoded
-     * @return The value of <code>value</code> encoded as a
-     * <code>byte</code> array
-     */
-    protected byte[] intToBytes(int value) {
-        byte[] ret = new byte[4];
-        ret[0] = (byte) ((value >>> 24) & 0xff);
-        ret[1] = (byte) ((value >>> 16) & 0xff);
-        ret[2] = (byte) ((value >>> 8) & 0xff);
-        ret[3] = (byte) ((value) & 0xff);
-        return ret;
+        target[fromIndex] = (byte) (value >>> 24);
+        target[fromIndex + 1] = (byte) (value >>> 16);
+        target[fromIndex + 2] = (byte) (value >>> 8);
+        target[fromIndex + 3] = (byte) value;
     }
 
     @Override
     public int decodeInt(byte[] byte_int) {
-        return (((byte_int[0] & 0xFF) << 24) +
-                ((byte_int[1] & 0xFF) << 16) +
-                ((byte_int[2] & 0xFF) << 8) +
-                (byte_int[3] & 0xFF));
+        return decodeInt(byte_int, 0);
     }
 
     @Override
     public int decodeInt(byte[] bytes, int fromIndex) {
-        return (((bytes[fromIndex] & 0xFF) << 24) +
-                ((bytes[fromIndex + 1] & 0xFF) << 16) +
-                ((bytes[fromIndex + 2] & 0xFF) << 8) +
-                (bytes[fromIndex + 3] & 0xFF));
+        return (bytes[fromIndex] << 24) +
+               ((bytes[fromIndex + 1] & 0xFF) << 16) +
+               ((bytes[fromIndex + 2] & 0xFF) << 8) +
+               (bytes[fromIndex + 3] & 0xFF);
     }
 
     @Override
     public byte[] encodeLong(long value) {
-        byte[] ret = new byte[8];
-        ret[0] = (byte) (value >>> 56 & 0xFF);
-        ret[1] = (byte) (value >>> 48 & 0xFF);
-        ret[2] = (byte) (value >>> 40 & 0xFF);
-        ret[3] = (byte) (value >>> 32 & 0xFF);
-        ret[4] = (byte) (value >>> 24 & 0xFF);
-        ret[5] = (byte) (value >>> 16 & 0xFF);
-        ret[6] = (byte) (value >>> 8 & 0xFF);
-        ret[7] = (byte) (value & 0xFF);
-        return ret;
+        final byte[] buf = new byte[8];
+        buf[0] = (byte) (value >>> 56);
+        buf[1] = (byte) (value >>> 48);
+        buf[2] = (byte) (value >>> 40);
+        buf[3] = (byte) (value >>> 32);
+        buf[4] = (byte) (value >>> 24);
+        buf[5] = (byte) (value >>> 16);
+        buf[6] = (byte) (value >>> 8);
+        buf[7] = (byte) value;
+        return buf;
     }
 
     @Override
     public long decodeLong(byte[] byte_int) {
-        return ((((long) (byte_int[0] & 0xFF)) << 56) +
-                (((long) (byte_int[1] & 0xFF)) << 48) +
-                (((long) (byte_int[2] & 0xFF)) << 40) +
-                (((long) (byte_int[3] & 0xFF)) << 32) +
-                (((long) (byte_int[4] & 0xFF)) << 24) +
-                (((long) (byte_int[5] & 0xFF)) << 16) +
-                (((long) (byte_int[6] & 0xFF)) << 8) +
-                ((long) (byte_int[7] & 0xFF)));
+        return ((long) (byte_int[0]) << 56) +
+               ((byte_int[1] & 0xFFL) << 48) +
+               ((byte_int[2] & 0xFFL) << 40) +
+               ((byte_int[3] & 0xFFL) << 32) +
+               ((byte_int[4] & 0xFFL) << 24) +
+               ((byte_int[5] & 0xFFL) << 16) +
+               ((byte_int[6] & 0xFFL) << 8) +
+               (byte_int[7] & 0xFFL);
     }
 
     @Override

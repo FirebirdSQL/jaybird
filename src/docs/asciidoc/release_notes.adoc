@@ -500,6 +500,8 @@ Most of its implementation was removed, and it now extends `SQLException`.
 Only the constructors `GDSException(int)`, `GDSException(int, Throwable)` and `GDSException(String)` were retained.
 All other constructors and methods have been removed.
 * `WireGDSFactoryPlugin`, `NativeGDSFactoryPlugin` and `EmbeddedGDSFactoryPlugin` are now final
+* `DefaultDatatypeCoder.intToBytes(int)` was removed;
+use `encodeInt(int)`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

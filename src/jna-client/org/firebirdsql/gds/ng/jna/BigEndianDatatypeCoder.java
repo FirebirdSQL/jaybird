@@ -60,30 +60,15 @@ public final class BigEndianDatatypeCoder extends DefaultDatatypeCoder {
     }
 
     @Override
-    public byte[] encodeShort(short value) {
-        byte[] ret = new byte[2];
-        ret[0] = (byte) ((value >>> 8) & 0xff);
-        ret[1] = (byte) (value & 0xff);
-        return ret;
-    }
-
-    @Override
     public void encodeShort(int value, byte[] target, int fromIndex) {
-        target[fromIndex] = (byte) ((value >>> 8) & 0xff);
-        target[fromIndex + 1] = (byte) (value & 0xff);
-    }
-
-    @Override
-    public short decodeShort(byte[] byte_int) {
-        return (short) ((
-                (byte_int[0] & 0xFF) << 8) +
-                (byte_int[1] & 0xFF));
+        target[fromIndex] = (byte) (value >>> 8);
+        target[fromIndex + 1] = (byte) value;
     }
 
     @Override
     public short decodeShort(byte[] bytes, int fromIndex) {
-        return (short) ((
-                (bytes[fromIndex] & 0xFF) << 8) +
-                (bytes[fromIndex + 1] & 0xFF));
+        return (short)
+                ((bytes[fromIndex] << 8) +
+                 (bytes[fromIndex + 1] & 0xFF));
     }
 }
