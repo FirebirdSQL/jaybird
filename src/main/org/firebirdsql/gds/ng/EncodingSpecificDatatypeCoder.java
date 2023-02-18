@@ -45,7 +45,7 @@ import static java.util.Objects.requireNonNull;
  * methods to the wrapped datatype coder.
  *
  * @author Mark Rotteveel
- * @since 4.0
+ * @since 4
  */
 public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
 
@@ -56,8 +56,10 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     /**
      * Creates an encoding datatype coder.
      *
-     * @param parentCoder Parent datatype coder
-     * @param encodingDefinition Encoding definition to apply for string conversions
+     * @param parentCoder
+     *         parent datatype coder
+     * @param encodingDefinition
+     *         encoding definition to apply for string conversions
      */
     EncodingSpecificDatatypeCoder(DatatypeCoder parentCoder, EncodingDefinition encodingDefinition) {
         this.parentCoder = requireNonNull(parentCoder, "parentCoder");
@@ -66,23 +68,23 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeString(String value) {
-        return encoding.encodeToCharset(value);
+    public byte[] encodeString(String val) {
+        return encoding.encodeToCharset(val);
     }
 
     @Override
-    public Writer createWriter(OutputStream outputStream) {
-        return encoding.createWriter(outputStream);
+    public Writer createWriter(OutputStream out) {
+        return encoding.createWriter(out);
     }
 
     @Override
-    public String decodeString(byte[] value) {
-        return encoding.decodeFromCharset(value);
+    public String decodeString(byte[] buf) {
+        return encoding.decodeFromCharset(buf);
     }
 
     @Override
-    public Reader createReader(InputStream inputStream) {
-        return encoding.createReader(inputStream);
+    public Reader createReader(InputStream in) {
+        return encoding.createReader(in);
     }
 
     @Override
@@ -119,11 +121,11 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
         if (o instanceof EncodingSpecificDatatypeCoder) {
             EncodingSpecificDatatypeCoder other = (EncodingSpecificDatatypeCoder) o;
             return encodingDefinition.equals(other.encodingDefinition)
-                    && parentCoder.getClass() == other.parentCoder.getClass();
+                   && parentCoder.getClass() == other.parentCoder.getClass();
         } else {
             DatatypeCoder other = (DatatypeCoder) o;
             return encodingDefinition.equals(other.getEncodingDefinition())
-                    && parentCoder.getClass() == other.getClass();
+                   && parentCoder.getClass() == other.getClass();
         }
     }
 
@@ -140,238 +142,238 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeShort(short value) {
-        return parentCoder.encodeShort(value);
+    public byte[] encodeShort(short val) {
+        return parentCoder.encodeShort(val);
     }
 
     @Override
-    public byte[] encodeShort(int value) {
-        return parentCoder.encodeShort(value);
+    public byte[] encodeShort(int val) {
+        return parentCoder.encodeShort(val);
     }
 
     @Override
-    public void encodeShort(int value, byte[] target, int fromIndex) {
-        parentCoder.encodeShort(value, target, fromIndex);
+    public void encodeShort(int val, byte[] buf, int off) {
+        parentCoder.encodeShort(val, buf, off);
     }
 
     @Override
-    public short decodeShort(byte[] byte_int) {
-        return parentCoder.decodeShort(byte_int);
+    public short decodeShort(byte[] buf) {
+        return parentCoder.decodeShort(buf);
     }
 
     @Override
-    public short decodeShort(byte[] bytes, int fromIndex) {
-        return parentCoder.decodeShort(bytes, fromIndex);
+    public short decodeShort(byte[] buf, int off) {
+        return parentCoder.decodeShort(buf, off);
     }
 
     @Override
-    public byte[] encodeInt(int value) {
-        return parentCoder.encodeInt(value);
+    public byte[] encodeInt(int val) {
+        return parentCoder.encodeInt(val);
     }
 
     @Override
-    public void encodeInt(int value, byte[] target, int fromIndex) {
-        parentCoder.encodeInt(value, target, fromIndex);
+    public void encodeInt(int val, byte[] buf, int off) {
+        parentCoder.encodeInt(val, buf, off);
     }
 
     @Override
-    public int decodeInt(byte[] byte_int) {
-        return parentCoder.decodeInt(byte_int);
+    public int decodeInt(byte[] buf) {
+        return parentCoder.decodeInt(buf);
     }
 
     @Override
-    public int decodeInt(byte[] bytes, int fromIndex) {
-        return parentCoder.decodeInt(bytes, fromIndex);
+    public int decodeInt(byte[] buf, int off) {
+        return parentCoder.decodeInt(buf, off);
     }
 
     @Override
-    public byte[] encodeLong(long value) {
-        return parentCoder.encodeLong(value);
+    public byte[] encodeLong(long val) {
+        return parentCoder.encodeLong(val);
     }
 
     @Override
-    public long decodeLong(byte[] byte_int) {
-        return parentCoder.decodeLong(byte_int);
+    public long decodeLong(byte[] buf) {
+        return parentCoder.decodeLong(buf);
     }
 
     @Override
-    public byte[] encodeFloat(float value) {
-        return parentCoder.encodeFloat(value);
+    public byte[] encodeFloat(float val) {
+        return parentCoder.encodeFloat(val);
     }
 
     @Override
-    public float decodeFloat(byte[] byte_int) {
-        return parentCoder.decodeFloat(byte_int);
+    public float decodeFloat(byte[] buf) {
+        return parentCoder.decodeFloat(buf);
     }
 
     @Override
-    public byte[] encodeDouble(double value) {
-        return parentCoder.encodeDouble(value);
+    public byte[] encodeDouble(double val) {
+        return parentCoder.encodeDouble(val);
     }
 
     @Override
-    public double decodeDouble(byte[] byte_int) {
-        return parentCoder.decodeDouble(byte_int);
+    public double decodeDouble(byte[] buf) {
+        return parentCoder.decodeDouble(buf);
     }
 
     @Override
-    public Timestamp encodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone) {
-        return parentCoder.encodeTimestamp(value, cal, invertTimeZone);
+    public Timestamp encodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone) {
+        return parentCoder.encodeTimestamp(val, c, invertTimeZone);
     }
 
     @Override
-    public byte[] encodeTimestampRaw(RawDateTimeStruct raw) {
-        return parentCoder.encodeTimestampRaw(raw);
+    public byte[] encodeTimestampRaw(RawDateTimeStruct val) {
+        return parentCoder.encodeTimestampRaw(val);
     }
 
     @Override
-    public byte[] encodeTimestampCalendar(Timestamp value, Calendar c) {
-        return parentCoder.encodeTimestampCalendar(value, c);
+    public byte[] encodeTimestampCalendar(Timestamp val, Calendar c) {
+        return parentCoder.encodeTimestampCalendar(val, c);
     }
 
     @Override
-    public Timestamp decodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone) {
-        return parentCoder.decodeTimestamp(value, cal, invertTimeZone);
+    public Timestamp decodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone) {
+        return parentCoder.decodeTimestamp(val, c, invertTimeZone);
     }
 
     @Override
-    public RawDateTimeStruct decodeTimestampRaw(byte[] byte_long) {
-        return parentCoder.decodeTimestampRaw(byte_long);
+    public RawDateTimeStruct decodeTimestampRaw(byte[] buf) {
+        return parentCoder.decodeTimestampRaw(buf);
     }
 
     @Override
-    public Timestamp decodeTimestampCalendar(byte[] byte_long, Calendar c) {
-        return parentCoder.decodeTimestampCalendar(byte_long, c);
+    public Timestamp decodeTimestampCalendar(byte[] buf, Calendar c) {
+        return parentCoder.decodeTimestampCalendar(buf, c);
     }
 
     @Override
-    public Time encodeTime(Time d, Calendar cal, boolean invertTimeZone) {
-        return parentCoder.encodeTime(d, cal, invertTimeZone);
+    public Time encodeTime(Time val, Calendar c, boolean invertTimeZone) {
+        return parentCoder.encodeTime(val, c, invertTimeZone);
     }
 
     @Override
-    public byte[] encodeTimeRaw(RawDateTimeStruct raw) {
-        return parentCoder.encodeTimeRaw(raw);
+    public byte[] encodeTimeRaw(RawDateTimeStruct val) {
+        return parentCoder.encodeTimeRaw(val);
     }
 
     @Override
-    public byte[] encodeTimeCalendar(Time d, Calendar c) {
-        return parentCoder.encodeTimeCalendar(d, c);
+    public byte[] encodeTimeCalendar(Time val, Calendar c) {
+        return parentCoder.encodeTimeCalendar(val, c);
     }
 
     @Override
-    public Time decodeTime(Time d, Calendar cal, boolean invertTimeZone) {
-        return parentCoder.decodeTime(d, cal, invertTimeZone);
+    public Time decodeTime(Time val, Calendar c, boolean invertTimeZone) {
+        return parentCoder.decodeTime(val, c, invertTimeZone);
     }
 
     @Override
-    public RawDateTimeStruct decodeTimeRaw(byte[] int_byte) {
-        return parentCoder.decodeTimeRaw(int_byte);
+    public RawDateTimeStruct decodeTimeRaw(byte[] buf) {
+        return parentCoder.decodeTimeRaw(buf);
     }
 
     @Override
-    public Time decodeTimeCalendar(byte[] int_byte, Calendar c) {
-        return parentCoder.decodeTimeCalendar(int_byte, c);
+    public Time decodeTimeCalendar(byte[] buf, Calendar c) {
+        return parentCoder.decodeTimeCalendar(buf, c);
     }
 
     @Override
-    public Date encodeDate(Date d, Calendar cal) {
-        return parentCoder.encodeDate(d, cal);
+    public Date encodeDate(Date val, Calendar c) {
+        return parentCoder.encodeDate(val, c);
     }
 
     @Override
-    public byte[] encodeDateRaw(RawDateTimeStruct raw) {
-        return parentCoder.encodeDateRaw(raw);
+    public byte[] encodeDateRaw(RawDateTimeStruct val) {
+        return parentCoder.encodeDateRaw(val);
     }
 
     @Override
-    public byte[] encodeDateCalendar(Date d, Calendar c) {
-        return parentCoder.encodeDateCalendar(d, c);
+    public byte[] encodeDateCalendar(Date val, Calendar c) {
+        return parentCoder.encodeDateCalendar(val, c);
     }
 
     @Override
-    public Date decodeDate(Date d, Calendar cal) {
-        return parentCoder.decodeDate(d, cal);
+    public Date decodeDate(Date val, Calendar c) {
+        return parentCoder.decodeDate(val, c);
     }
 
     @Override
-    public RawDateTimeStruct decodeDateRaw(byte[] byte_int) {
-        return parentCoder.decodeDateRaw(byte_int);
+    public RawDateTimeStruct decodeDateRaw(byte[] buf) {
+        return parentCoder.decodeDateRaw(buf);
     }
 
     @Override
-    public Date decodeDateCalendar(byte[] byte_int, Calendar c) {
-        return parentCoder.decodeDateCalendar(byte_int, c);
+    public Date decodeDateCalendar(byte[] buf, Calendar c) {
+        return parentCoder.decodeDateCalendar(buf, c);
     }
 
     @Override
-    public boolean decodeBoolean(byte[] data) {
-        return parentCoder.decodeBoolean(data);
+    public boolean decodeBoolean(byte[] buf) {
+        return parentCoder.decodeBoolean(buf);
     }
 
     @Override
-    public byte[] encodeBoolean(boolean value) {
-        return parentCoder.encodeBoolean(value);
+    public byte[] encodeBoolean(boolean val) {
+        return parentCoder.encodeBoolean(val);
     }
 
     @Override
-    public LocalTime decodeLocalTime(byte[] data) {
-        return parentCoder.decodeLocalTime(data);
+    public LocalTime decodeLocalTime(byte[] buf) {
+        return parentCoder.decodeLocalTime(buf);
     }
 
     @Override
-    public byte[] encodeLocalTime(LocalTime value) {
-        return parentCoder.encodeLocalTime(value);
+    public byte[] encodeLocalTime(LocalTime val) {
+        return parentCoder.encodeLocalTime(val);
     }
 
     @Override
-    public LocalDate decodeLocalDate(byte[] data) {
-        return parentCoder.decodeLocalDate(data);
+    public LocalDate decodeLocalDate(byte[] buf) {
+        return parentCoder.decodeLocalDate(buf);
     }
 
     @Override
-    public byte[] encodeLocalDate(LocalDate value) {
-        return parentCoder.encodeLocalDate(value);
+    public byte[] encodeLocalDate(LocalDate val) {
+        return parentCoder.encodeLocalDate(val);
     }
 
     @Override
-    public LocalDateTime decodeLocalDateTime(byte[] data) {
-        return parentCoder.decodeLocalDateTime(data);
+    public LocalDateTime decodeLocalDateTime(byte[] buf) {
+        return parentCoder.decodeLocalDateTime(buf);
     }
 
     @Override
-    public byte[] encodeLocalDateTime(LocalDateTime value) {
-        return parentCoder.encodeLocalDateTime(value);
+    public byte[] encodeLocalDateTime(LocalDateTime val) {
+        return parentCoder.encodeLocalDateTime(val);
     }
 
     @Override
-    public Decimal64 decodeDecimal64(byte[] data) {
-        return parentCoder.decodeDecimal64(data);
+    public Decimal64 decodeDecimal64(byte[] buf) {
+        return parentCoder.decodeDecimal64(buf);
     }
 
     @Override
-    public byte[] encodeDecimal64(Decimal64 decimal64) {
-        return parentCoder.encodeDecimal64(decimal64);
+    public byte[] encodeDecimal64(Decimal64 val) {
+        return parentCoder.encodeDecimal64(val);
     }
 
     @Override
-    public Decimal128 decodeDecimal128(byte[] data) {
-        return parentCoder.decodeDecimal128(data);
+    public Decimal128 decodeDecimal128(byte[] buf) {
+        return parentCoder.decodeDecimal128(buf);
     }
 
     @Override
-    public byte[] encodeDecimal128(Decimal128 decimal128) {
-        return parentCoder.encodeDecimal128(decimal128);
+    public byte[] encodeDecimal128(Decimal128 val) {
+        return parentCoder.encodeDecimal128(val);
     }
 
     @Override
-    public BigInteger decodeInt128(byte[] data) {
-        return parentCoder.decodeInt128(data);
+    public BigInteger decodeInt128(byte[] buf) {
+        return parentCoder.decodeInt128(buf);
     }
 
     @Override
-    public byte[] encodeInt128(BigInteger bigInteger) {
-        return parentCoder.encodeInt128(bigInteger);
+    public byte[] encodeInt128(BigInteger val) {
+        return parentCoder.encodeInt128(val);
     }
 
     @Override

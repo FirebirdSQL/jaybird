@@ -41,7 +41,7 @@ import java.util.Calendar;
  * Interface defining the encoding and decoding for Firebird (numerical) data types.
  *
  * @author Mark Rotteveel
- * @since 3.0
+ * @since 3
  */
 public interface DatatypeCoder {
 
@@ -55,502 +55,563 @@ public interface DatatypeCoder {
     /**
      * The size of an encoded short in this data type coder.
      *
-     * @return The size of an encoded short (either {@code 2} or {@code 4} bytes)
-     * @since 4.0
+     * @return size of an encoded short (either {@code 2} or {@code 4} bytes)
+     * @since 4
      */
     int sizeOfShort();
 
     /**
-     * Encode a {@code short} value as a {@code byte} array.
+     * Encode a short value as a byte array of length {@link #sizeOfShort()}.
      *
-     * @param value The value to be encoded
-     * @return The value of {@code value} encoded as a {@code byte} array
-     * @see #encodeShort(int)
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeShort(short value);
+    byte[] encodeShort(short val);
 
     /**
-     * Encode a {@code short} value as a {@code byte} array.
+     * Encode a short value as a byte array of length {@link #sizeOfShort()}.
      *
-     * @param value The value to be encoded
-     * @return The value of {@code value} encoded as a {@code byte} array
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeShort(int value);
+    byte[] encodeShort(int val);
 
     /**
-     * Encode a {@code short} value into the {@code target} byte array starting at index {@code fromIndex}.
+     * Encode a short value into {@code buf} starting at offset {@code off} for {@link #sizeOfShort()} bytes.
+     * <p>
+     * NOTE: Implementations using 4 bytes to encode a short may choose to encode {@code val} (an int) as-is (which
+     * means the most significant two bytes can have a value other than 0x0000 or 0xFFFF, and a value of 0xFFFF (65_535)
+     * may be encoded as 0x0000_FFFF, and not as 0xFFFF_FFFF (-1). This behaviour may change at any time. For
+     * consistent behaviour, explicitly cast to short when calling this method.
+     * </p>
      *
-     * @param value
-     *         The value to be encoded
-     * @param target
-     *         Target byte array of sufficient size (warning: this may be datatype coder specific)
-     * @param fromIndex
-     *         Index to start writing
-     * @since 4.0
+     * @param val
+     *         value to be encoded
+     * @param buf
+     *         byte array of sufficient size (warning: this is datatype coder specific, see {@link #sizeOfShort()})
+     * @param off
+     *         offset to start encoding
+     * @since 4
      */
-    void encodeShort(int value, byte[] target, int fromIndex);
+    void encodeShort(int val, byte[] buf, int off);
 
     /**
-     * Decode a {@code byte} array into a {@code short} value.
+     * Decode a short value from {@code buf} from the first {@link #sizeOfShort()} bytes.
      *
-     * @param byte_int The {@code byte} array to be decoded
-     * @return The {@code short} value of the decoded {@code byte} array
+     * @param buf
+     *         byte array of sufficient size (warning: this is datatype coder specific, see {@link #sizeOfShort()})
+     * @return short value from {@code buf}
      */
-    short decodeShort(byte[] byte_int);
+    short decodeShort(byte[] buf);
 
     /**
-     * Decode from a {@code byte} array to a {@code short} value.
+     * Decode a short value from {@code buf} starting at offset {@code off} for {@link #sizeOfShort()} bytes.
      *
-     * @param bytes
-     *         The {@code byte} array to be decoded
-     * @param fromIndex
-     *         The index to start reading
-     * @return The {@code short} value of the decoded {@code byte} array
-     * @since 4.0
+     * @param buf
+     *         byte array of sufficient size (warning: this is datatype coder specific, see {@link #sizeOfShort()})
+     * @param off
+     *         offset to start decoding
+     * @return short value from {@code buf}
+     * @since 4
      */
-    short decodeShort(byte[] bytes, int fromIndex);
+    short decodeShort(byte[] buf, int off);
 
     /**
-     * Encode an {@code int} value as a {@code byte} array.
+     * Encode an int value as a byte array of 4 bytes.
      *
-     * @param value The value to be encoded
-     * @return The value of {@code value} encoded as a {@code byte} array
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeInt(int value);
+    byte[] encodeInt(int val);
 
     /**
-     * Encode an {@code int} value into the {@code target} byte array starting at index {@code fromIndex}.
+     * Encode an int value into {@code buf} starting at index {@code off} for 4 bytes.
      *
-     * @param value
-     *         The value to be encoded
-     * @param target
-     *         Target byte array of sufficient size
-     * @param fromIndex
-     *         Index to start writing
-     * @since 4.0
+     * @param val
+     *         value to be encoded
+     * @param buf
+     *         byte array of sufficient size
+     * @param off
+     *         offset to start encoding
+     * @since 4
      */
-    void encodeInt(int value, byte[] target, int fromIndex);
+    void encodeInt(int val, byte[] buf, int off);
 
     /**
-     * Decode a {@code byte} array into an {@code int} value.
+     * Decode an int value from {@code buf} from the first 4 bytes.
      *
-     * @param byte_int The {@code byte} array to be decoded
-     * @return The {@code int} value of the decoded {@code byte} array
+     * @param buf
+     *         byte array of sufficient size
+     * @return int value decoded from {@code buf}
      */
-    int decodeInt(byte[] byte_int);
+    int decodeInt(byte[] buf);
 
     /**
-     * Decode a {@code byte} array to an {@code int} value.
+     * Decode an int value from {@code buf} starting at offset {@code off} for 4 bytes.
      *
-     * @param bytes
-     *         The {@code byte} array to be decoded
-     * @param fromIndex
-     *         The index to start reading
-     * @return The {@code int} value of the decoded {@code byte} array
-     * @since 4.0
+     * @param buf
+     *         byte array of sufficient size
+     * @param off
+     *         offset to start decoding
+     * @return int value decoded from {@code buf}
+     * @since 4
      */
-    int decodeInt(byte[] bytes, int fromIndex);
+    int decodeInt(byte[] buf, int off);
 
     /**
-     * Encode a {@code long} value as a {@code byte} array.
+     * Encode a long value as a byte array of 8 bytes.
      *
-     * @param value The value to be encoded
-     * @return The value of {@code value} encoded as a {@code byte} array
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeLong(long value);
+    byte[] encodeLong(long val);
 
     /**
-     * Decode a {@code byte} array into a {@code long} value.
+     * Decode a long value from {@code buf} from the first 8 bytes.
      *
-     * @param byte_int The {@code byte} array to be decoded
-     * @return The {@code long} value of the decoded {@code byte} array
+     * @param buf
+     *         byte array of sufficient size
+     * @return long value decoded from {@code buf}
      */
-    long decodeLong(byte[] byte_int);
+    long decodeLong(byte[] buf);
 
     /**
-     * Encode a {@code float} value as a {@code byte} array.
+     * Encode a float value as a byte array of 4 bytes.
      *
-     * @param value The value to be encoded
-     * @return The value of {@code value} encoded as a {@code byte} array
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeFloat(float value);
+    byte[] encodeFloat(float val);
 
     /**
-     * Decode a {@code byte} array into a {@code float} value.
+     * Decode a float value from {@code buf} from the first 4 bytes.
      *
-     * @param byte_int The {@code byte} array to be decoded
-     * @return The {@code float} value of the decoded {@code byte} array
+     * @param buf
+     *         byte array of sufficient size
+     * @return float value decoded from {@code buf}
      */
-    float decodeFloat(byte[] byte_int);
+    float decodeFloat(byte[] buf);
 
     /**
-     * Encode a {@code double} value as a {@code byte} array.
+     * Encode a double value as a byte array of 8 bytes.
      *
-     * @param value The value to be encoded
-     * @return The value of {@code value} encoded as a {@code byte} array
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeDouble(double value);
+    byte[] encodeDouble(double val);
 
     /**
-     * Decode a {@code byte} array into a {@code double} value.
+     * Decode a double value from {@code buf} from the first 8 bytes.
      *
-     * @param byte_int The {@code byte} array to be decoded
-     * @return The {@code double} value of the decoded {@code byte} array
+     * @param buf
+     *         byte array of sufficient size
+     * @return double value decoded from {@code buf}
      */
-    double decodeDouble(byte[] byte_int);
+    double decodeDouble(byte[] buf);
 
     /**
-     * Encode a {@code String} value into a {@code byte} array using the encoding of this datatype coder.
+     * Encode a {@code String} value as a byte array using the encoding of this datatype coder.
      *
-     * @param value The {@code String} to be encoded
-     * @return The value of {@code value} as a {@code byte} array
-     * @since 4.0
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
+     * @since 4
      */
-    byte[] encodeString(String value);
+    byte[] encodeString(String val);
 
     /**
      * Creates a writer wrapping an input stream.
      *
-     * @param outputStream
-     *         Input stream
-     * @return Writer applying the encoding of this datatype when writing
-     * @since 4.0
+     * @param out
+     *         output stream
+     * @return writer applying the encoding of this datatype when writing
+     * @since 4
      */
-    Writer createWriter(OutputStream outputStream);
+    Writer createWriter(OutputStream out);
 
     /**
-     * Decode an encoded {@code byte} array into a {@code String} using the encoding of this datatype coder.
+     * Decode a {@code String} from {@code buf} using the encoding of this datatype coder.
      *
-     * @param value The value to be decoded
-     * @return The decoded {@code String}
-     * @since 4.0
+     * @param buf
+     *         byte array to be decoded
+     * @return {@code String} decoded from {@code buf}
+     * @since 4
      */
-    String decodeString(byte[] value);
+    String decodeString(byte[] buf);
 
     /**
      * Creates a reader wrapping an input stream.
      *
-     * @param inputStream
-     *         Input stream
-     * @return Reader applying the encoding of this datatype coder when reading
-     * @since 4.0
+     * @param in
+     *         input stream
+     * @return reader applying the encoding of this datatype coder when reading
+     * @since 4
      */
-    Reader createReader(InputStream inputStream);
+    Reader createReader(InputStream in);
 
     /**
      * Encode a {@code Timestamp} using a given {@code Calendar}.
      *
-     * @param value The {@code Timestamp} to be encoded
-     * @param cal The {@code Calendar} to be used for encoding,
-     *        may be {@code null}
-     * @param invertTimeZone If {@code true}, the timezone offset value
-     *        will be subtracted from the encoded value, otherwise it will
-     *        be added
-     * @return The encoded {@code Timestamp}
+     * @param val
+     *         value to be encoded
+     * @param c
+     *         calendar to use for encoding, may be {@code null}
+     * @param invertTimeZone
+     *         if {@code true}, the timezone offset value will be subtracted from the encoded value, otherwise it will
+     *         be added
+     * @return encoded {@code Timestamp}
      */
-    Timestamp encodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone);
+    Timestamp encodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone);
 
     /**
-     * Encode the date and time portions of a raw date time struct into a {@code byte} array.
+     * Encode the date and time portions of a raw date time struct as a byte array of 8 bytes.
      *
-     * @param raw The {@code RawDateTimeStruct} to be encoded
-     * @return The array of {@code byte}s representing the date and time of the given {@code RawDateTimeStruct}
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeTimestampRaw(RawDateTimeStruct raw);
+    byte[] encodeTimestampRaw(RawDateTimeStruct val);
 
     /**
-     * Encode a {@code Timestamp} as a {@code byte} array.
+     * Encode a {@code Timestamp} as a byte array of 8 bytes.
      *
-     * @param value The {@code Timestamp} to be encoded
-     * @param c Calendar to use for time zone calculation
-     * @return The array of {@code byte}s that represents the given {@code Timestamp} value
+     * @param val
+     *         value to be encoded
+     * @param c
+     *         calendar to use for time zone calculation
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeTimestampCalendar(Timestamp value, Calendar c);
+    byte[] encodeTimestampCalendar(Timestamp val, Calendar c);
 
     /**
      * Decode a {@code Timestamp} value using a given {@code Calendar}.
      *
-     * @param value The {@code Timestamp} to be decoded
-     * @param cal The {@code Calendar} to be used in decoding,
-     *        may be {@code null}
-     * @param invertTimeZone If {@code true}, the timezone offset value
-     *        will be subtracted from the decoded value, otherwise it will
-     *        be added
-     * @return The encoded {@code Timestamp}
+     * @param val
+     *         value to be decoded
+     * @param c
+     *         calendar to use in decoding, may be {@code null}
+     * @param invertTimeZone
+     *         if {@code true}, the timezone offset value will be subtracted from the decoded value, otherwise it will
+     *         be added
+     * @return encoded {@code Timestamp}
      */
-    Timestamp decodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone);
+    Timestamp decodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone);
 
     /**
-     * Decode an 8-byte {@code byte} array into a raw date time struct.
+     * Decode the date and time portions of a raw date time struct from {@code buf} from the first 8 bytes.
      *
-     * @param byte_long The {@code byte} array to be decoded
-     * @return A {@link RawDateTimeStruct}.
+     * @param buf
+     *         byte array of sufficient size
+     * @return {@code RawDateTimeStruct} decoded from {@code buf}
      */
-    RawDateTimeStruct decodeTimestampRaw(byte[] byte_long);
+    RawDateTimeStruct decodeTimestampRaw(byte[] buf);
 
     /**
-     * Decode an 8-byte {@code byte} array into a {@code Timestamp}.
+     * Decode a {@code Timestamp} from {@code buf} from the first 8 bytes.
      *
-     * @param byte_long The {@code byte} array to be decoded
-     * @param c Calendar to use for time zone calculation
-     * @return A {@code Timestamp} value from the decoded bytes
+     * @param buf
+     *         byte array of sufficient size
+     * @param c
+     *         calendar to use for time zone calculation
+     * @return {@code Timestamp} decoded from {@code buf}
      */
-    Timestamp decodeTimestampCalendar(byte[] byte_long, Calendar c);
+    Timestamp decodeTimestampCalendar(byte[] buf, Calendar c);
 
     /**
      * Encode a given {@code Time} value using a given {@code Calendar}.
      *
-     * @param d The {@code Time} to be encoded
-     * @param cal The {@code Calendar} to be used in the encoding, may be {@code null}
-     * @return The encoded {@code Time}
+     * @param val
+     *         value to be encoded
+     * @param c
+     *         calendar to use in the encoding, may be {@code null}
+     * @return encoded {@code Time}
      */
-    java.sql.Time encodeTime(Time d, Calendar cal, boolean invertTimeZone);
+    Time encodeTime(Time val, Calendar c, boolean invertTimeZone);
 
     /**
-     * Encode the time portion of a raw date time struct into a {@code byte} array.
+     * Encode the time portion of a raw date time struct as a byte array of 4 bytes.
      *
-     * @param raw The {@code RawDateTimeStruct} to be encoded
-     * @return The array of {@code byte}s representing the time of the given {@code RawDateTimeStruct}
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeTimeRaw(RawDateTimeStruct raw);
+    byte[] encodeTimeRaw(RawDateTimeStruct val);
 
     /**
-     * Encode a {@code Time} value into a {@code byte} array.
+     * Encode a {@code Time} value as a byte array of 4 bytes.
      *
-     * @param d The {@code Time} to be encoded
-     * @param c Calendar to use for time zone calculation
-     * @return The array of {@code byte}s representing the given {@code Time}
+     * @param val
+     *         value to be encoded
+     * @param c
+     *         calendar to use for time zone calculation
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeTimeCalendar(Time d, Calendar c);
+    byte[] encodeTimeCalendar(Time val, Calendar c);
 
     /**
      * Decode a {@code Time} value using a given {@code Calendar}.
      *
-     * @param d The {@code Time} to be decoded
-     * @param cal The {@code Calendar} to be used in the decoding, may be {@code null}
-     * @return The decoded {@code Time}
+     * @param val
+     *         value to be decoded
+     * @param c
+     *         calendar to used in the decoding, may be {@code null}
+     * @return decoded {@code Time}
      */
-    Time decodeTime(Time d, Calendar cal, boolean invertTimeZone);
+    Time decodeTime(Time val, Calendar c, boolean invertTimeZone);
 
     /**
-     * Decode a {@code byte} array into a raw date time struct.
+     * Decode the time portion of a raw date time struct from {@code buf} from the first 4 bytes.
      *
-     * @param int_byte The {@code byte} array to be decoded
-     * @return The {@link RawDateTimeStruct}
+     * @param buf
+     *         byte array of sufficient size
+     * @return {@code RawDateTimeStruct} decoded from {@code buf}
      */
-    RawDateTimeStruct decodeTimeRaw(byte[] int_byte);
+    RawDateTimeStruct decodeTimeRaw(byte[] buf);
 
     /**
-     * Decode a {@code byte} array into a {@code Time} value.
+     * Decode a {@code Time} value from {@code buf} from the first 4 bytes.
      *
-     * @param int_byte The {@code byte} array to be decoded
-     * @param c Calendar to use for time zone calculation
-     * @return The decoded {@code Time}
+     * @param buf
+     *         byte array of sufficient size
+     * @param c
+     *         calendar to use for time zone calculation
+     * @return {@code Time} decoded from {@code buf}
      */
-    Time decodeTimeCalendar(byte[] int_byte, Calendar c);
+    Time decodeTimeCalendar(byte[] buf, Calendar c);
 
     /**
      * Encode a given {@code Date} value using a given {@code Calendar}.
      *
-     * @param d The {@code Date} to be encoded
-     * @param cal The {@code Calendar} to be used in the encoding, may be {@code null}
-     * @return The encoded {@code Date}
+     * @param val
+     *         value to be encoded
+     * @param c
+     *         calendar to use in the encoding, may be {@code null}
+     * @return encoded {@code Date}
      */
-    Date encodeDate(Date d, Calendar cal);
+    Date encodeDate(Date val, Calendar c);
 
     /**
-     * Encode the date portion of a raw date time struct into a {@code byte} array.
+     * Encode the date portion of a raw date time struct as a byte array of 4 bytes.
      *
-     * @param raw The {@code RawDateTimeStruct} to be encoded
-     * @return The array of {@code byte}s representing the date of the given {@code RawDateTimeStruct}
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeDateRaw(RawDateTimeStruct raw);
+    byte[] encodeDateRaw(RawDateTimeStruct val);
 
     /**
-     * Encode a {@code Date} value into a {@code byte} array.
+     * Encode a {@code Date} value as a {@code byte} array of 4 bytes.
      *
-     * @param d The {@code Date} to be encoded
-     * @param c Calendar to use for time zone calculation
-     * @return The array of {@code byte}s representing the given {@code Date}
+     * @param val
+     *         value to be encoded
+     * @param c
+     *         calendar to use for time zone calculation
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeDateCalendar(Date d, Calendar c);
+    byte[] encodeDateCalendar(Date val, Calendar c);
 
     /**
      * Decode a {@code Date} value using a given {@code Calendar}.
      *
-     * @param d The {@code Date} to be decoded
-     * @param cal The {@code Calendar} to be used in the decoding, may be {@code null}
-     * @return The decoded {@code Date}
+     * @param val
+     *         value to be decoded
+     * @param c
+     *         calendar to use in the decoding, may be {@code null}
+     * @return decoded {@code Date}
      */
-    Date decodeDate(Date d, Calendar cal);
+    Date decodeDate(Date val, Calendar c);
 
     /**
-     * Decode a {@code byte} array into a raw date time struct.
+     * Decode the date portion of a raw date time struct from {@code buf} from the first 4 bytes.
      *
-     * @param byte_int The {@code byte} array to be decoded
-     * @return The {@link RawDateTimeStruct}
+     * @param buf
+     *         byte array of sufficient size
+     * @return {@code RawDateTimeStruct} decoded from {@code buf}
      */
-    RawDateTimeStruct decodeDateRaw(byte[] byte_int);
+    RawDateTimeStruct decodeDateRaw(byte[] buf);
 
     /**
-     * Decode a {@code byte} array into a {@code Date} value.
+     * Decode a {@code Date} value from {@code buf} from the first 4 bytes.
      *
-     * @param byte_int The {@code byte} array to be decoded
-     * @param c Calendar to use for time zone calculation
-     * @return The decoded {@code Date}
+     * @param buf
+     *         byte array of sufficient size
+     * @param c
+     *         calendar to use for time zone calculation
+     * @return {@code Date} decoded from {@code buf}
      */
-    Date decodeDateCalendar(byte[] byte_int, Calendar c);
+    Date decodeDateCalendar(byte[] buf, Calendar c);
 
     /**
-     * Decode boolean from supplied data.
+     * Decode a boolean from {@code buf} from the first byte.
      *
-     * @param data (expected) 1 bytes
+     * @param buf
+     *         (expected) 1 bytes
      * @return {@code false} when 0, {@code true} for all other values
      */
-    boolean decodeBoolean(byte[] data);
+    boolean decodeBoolean(byte[] buf);
 
     /**
-     * Encodes boolean to 1 byte data.
+     * Encodes boolean as a byte array of 1 byte.
      *
-     * @param value Boolean value to encode
+     * @param val
+     *         value to encode
      * @return {@code true} as 1, {@code false} as 0.
      */
-    byte[] encodeBoolean(boolean value);
+    byte[] encodeBoolean(boolean val);
 
     /**
-     * Decode LocalTime from supplied data.
+     * Decode {@code java.time.LocalTime} from {@code buf} from the first 4 bytes.
      *
-     * @param data (expected) 4 bytes
-     * @return LocalTime value
+     * @param buf
+     *         (expected) 4 bytes
+     * @return {@code LocalTime} decoded from {@code buf}
      * @since 5
      */
-    LocalTime decodeLocalTime(byte[] data);
+    LocalTime decodeLocalTime(byte[] buf);
 
     /**
-     * Encodes a java.time.LocalTime to time bytes.
+     * Encode a {@code java.time.LocalTime} as a byte array of 4 bytes.
      *
-     * @param value LocalTime value to encode
-     * @return Byte array for time
+     * @param val
+     *         value to encode
+     * @return {@code val} encoded as a byte array
      * @since 5
      */
-    byte[] encodeLocalTime(LocalTime value);
+    byte[] encodeLocalTime(LocalTime val);
 
     /**
-     * Decode LocalDate from supplied data.
+     * Decode {@code java.time.LocalDate} from {@code buf} from the first 4 bytes.
      *
-     * @param data (expected) 4 bytes
-     * @return LocalDate value
+     * @param buf
+     *         (expected) 4 bytes
+     * @return {@code LocalDate} decoded from {@code buf}
      * @since 5
      */
-    LocalDate decodeLocalDate(byte[] data);
+    LocalDate decodeLocalDate(byte[] buf);
 
     /**
-     * Encodes a java.time.LocalDate to date bytes.
+     * Encode a {@code java.time.LocalDate} as a byte array of 4 bytes.
      *
-     * @param value LocalDate to encode
-     * @return Byte array for date
+     * @param val
+     *         value to encode
+     * @return {@code val} encoded as a byte array
      * @since 5
      */
-    byte[] encodeLocalDate(LocalDate value);
+    byte[] encodeLocalDate(LocalDate val);
 
     /**
-     * Decode LocalDateTime from supplied data.
+     * Decode {@code java.time.LocalDateTime} from {@code buf} from the first 8 bytes.
      *
-     * @param data (expected) 8 bytes
-     * @return LocalDateTime value
+     * @param buf
+     *         (expected) 8 bytes
+     * @return {@code LocalDateTime} decoded from {@code buf}
      * @since 5
      */
-    LocalDateTime decodeLocalDateTime(byte[] data);
+    LocalDateTime decodeLocalDateTime(byte[] buf);
 
     /**
-     * Encodes a java.time.LocalDateTime to timestamp bytes.
+     * Encode a {@code java.time.LocalDateTime} as a byte array of 8 bytes.
      *
-     * @param value LocalDateTime to encode
-     * @return Byte array for date
+     * @param val
+     *         value to encode
+     * @return {@code val} encoded as a byte array
      * @since 5
      */
-    byte[] encodeLocalDateTime(LocalDateTime value);
+    byte[] encodeLocalDateTime(LocalDateTime val);
 
     /**
-     * Decodes a decimal64 from byte array.
+     * Decodes a decimal64 from a byte array of 8 bytes.
      *
-     * @param data Data to decode (expected 8 bytes)
-     * @return Decimal64 value
+     * @param buf
+     *         data to decode (expects exactly 8 bytes)
+     * @return Decimal64 decoded from {@code buf}
      */
-    Decimal64 decodeDecimal64(byte[] data);
+    Decimal64 decodeDecimal64(byte[] buf);
 
     /**
-     * Encodes a decimal64 to a byte array.
+     * Encodes a decimal64 as a byte array of 8 bytes.
      *
-     * @param decimal64 The decimal64 value to be encoded
-     * @return Byte array for decimal64 value
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeDecimal64(Decimal64 decimal64);
+    byte[] encodeDecimal64(Decimal64 val);
 
     /**
-     * Decodes a decimal128 from byte array.
+     * Decodes a decimal128 from a byte array of 16 bytes.
      *
-     * @param data Data to decode (expected 16 bytes)
-     * @return Decimal128 value
+     * @param buf
+     *         data to decode (expects exactly 16 bytes)
+     * @return Decimal128 decoded from {@code buf}
      */
-    Decimal128 decodeDecimal128(byte[] data);
+    Decimal128 decodeDecimal128(byte[] buf);
 
     /**
-     * Encodes a decimal128 to a byte array.
+     * Encodes a decimal128 as a byte array of 16 bytes.
      *
-     * @param decimal128 The decimal128 value to be encoded
-     * @return Byte array for decimal128 value
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeDecimal128(Decimal128 decimal128);
+    byte[] encodeDecimal128(Decimal128 val);
 
     /**
-     * Decodes a BigInteger from byte array.
+     * Decodes a BigInteger from a byte array of 16 bytes (int128 format).
      *
-     * @param data Data to decode (expected 16 bytes)
-     * @return BigInteger value
+     * @param buf
+     *         data to decode (expects exactly 16 bytes)
+     * @return BigInteger decoded from {@code buf}
      */
-    BigInteger decodeInt128(byte[] data);
+    BigInteger decodeInt128(byte[] buf);
 
     /**
-     * Encodes a BigInteger to a 16-byte byte array.
+     * Encodes a BigInteger as a byte array of 16 bytes (int128 format).
      * <p>
-     * The implementation expects to be passed a value that fits in 16 bytes. If a larger value is passed, and
+     * The implementation expects to be passed a value that fits in 16 bytes. If a larger value is passed, an
      * {@code IllegalArgumentException} is thrown.
      * </p>
      *
-     * @param bigInteger The BigInteger value to be encoded
-     * @return Byte array for bigInteger value
+     * @param val
+     *         value to be encoded
+     * @return {@code val} encoded as a byte array
      */
-    byte[] encodeInt128(BigInteger bigInteger);
+    byte[] encodeInt128(BigInteger val);
 
     /**
-     * @return The encoding factory.
+     * @return encoding factory.
      */
     IEncodingFactory getEncodingFactory();
 
     /**
-     * @return The encoding definition used by this datatype coder for string conversions.
+     * @return encoding definition used by this datatype coder for string conversions.
      */
     EncodingDefinition getEncodingDefinition();
 
     /**
-     * @return The encoding used by this datatype coder for string conversions.
+     * @return encoding used by this datatype coder for string conversions.
      */
     Encoding getEncoding();
 
     /**
      * Return a derived datatype coder that applies the supplied encoding definition for string conversions.
      *
-     * @param encodingDefinition Encoding definition
-     * @return Derived datatype coder (this instance, if encoding definition is the same)
-     * @since 4.0
+     * @param encodingDefinition
+     *         encoding definition
+     * @return derived datatype coder (this instance, if encoding definition is the same)
+     * @since 4
      */
     DatatypeCoder forEncodingDefinition(EncodingDefinition encodingDefinition);
 
     /**
      * Unwrap this datatype coder to its parent (or itself).
      *
-     * @return Return the parent of this datatype code, or itself if it has no parent.
+     * @return parent of this datatype code, or itself if it has no parent.
      * @since 4.0
      */
     DatatypeCoder unwrap();
@@ -558,14 +619,15 @@ public interface DatatypeCoder {
     /**
      * {@inheritDoc}
      * <p>
-     * Equality: same basic type (ie: wire protocol/JNA type + endianness) and same encoding definition.
+     * Equality: same basic type (i.e.: wire protocol/JNA type + endianness) and same encoding definition.
      * </p>
      * <p>
      * This does not need to take into account the encoding factory, as usage should be limited to datatype coders
      * derived from the same connection.
      * </p>
      *
-     * @param other Object to compare to
+     * @param other
+     *         object to compare to
      * @return {@code true} if other is an equivalent datatype coder.
      */
     @Override
@@ -603,11 +665,15 @@ public interface DatatypeCoder {
         /**
          * Initializes a raw date/time value from encoded time and/or date integers.
          *
-         * @param encodedDate Encoded date (Modified Julian Date)
-         * @param hasDate If date should be decoded (set {@code false} for a time-only value)
-         * @param encodedTime Encoded time (fractions in day)
-         * @param hasTime If time should be decoded (set {@code false} for a date-only value)
-         * @since 4.0
+         * @param encodedDate
+         *         encoded date (Modified Julian Date)
+         * @param hasDate
+         *         if date should be decoded (set {@code false} for a time-only value)
+         * @param encodedTime
+         *         encoded time (fractions in day)
+         * @param hasTime
+         *         if time should be decoded (set {@code false} for a date-only value)
+         * @since 4
          */
         public RawDateTimeStruct(int encodedDate, boolean hasDate, int encodedTime, boolean hasTime) {
             if (hasDate) {
@@ -635,8 +701,9 @@ public interface DatatypeCoder {
         /**
          * Sets the sub-second fraction (100 microseconds) from a nanosecond value.
          *
-         * @param nanos Sub-second nanoseconds
-         * @since 4.0
+         * @param nanos
+         *         Sub-second nanoseconds
+         * @since 4
          */
         public void setFractionsFromNanos(long nanos) {
             fractions = (int) ((nanos / NANOSECONDS_PER_FRACTION) % FRACTIONS_PER_SECOND);
@@ -700,9 +767,9 @@ public interface DatatypeCoder {
          */
         public int getEncodedTime() {
             return hour * FRACTIONS_PER_HOUR
-                    + minute * FRACTIONS_PER_MINUTE
-                    + second * FRACTIONS_PER_SECOND
-                    + fractions;
+                   + minute * FRACTIONS_PER_MINUTE
+                   + second * FRACTIONS_PER_SECOND
+                   + fractions;
         }
 
         private void decodeTime(int encodedTime) {

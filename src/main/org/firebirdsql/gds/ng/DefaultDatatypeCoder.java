@@ -59,7 +59,7 @@ import static java.util.Objects.requireNonNull;
  * </p>
  *
  * @author Mark Rotteveel
- * @since 3.0
+ * @since 3
  */
 public class DefaultDatatypeCoder implements DatatypeCoder {
 
@@ -80,8 +80,9 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     /**
      * Returns an instance of {@code DefaultDatatypeCoder} for an encoding factory.
      *
-     * @param encodingFactory Encoding factory
-     * @return Datatype coder, this might be a cached instance
+     * @param encodingFactory
+     *         encoding factory
+     * @return datatype coder, this might be a cached instance
      */
     public static DefaultDatatypeCoder forEncodingFactory(IEncodingFactory encodingFactory) {
         return encodingFactory.getOrCreateDatatypeCoder(DefaultDatatypeCoder.class);
@@ -93,7 +94,8 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
      * In almost all cases, it is better to use {@link #forEncodingFactory(IEncodingFactory)}.
      * </p>
      *
-     * @param encodingFactory Encoding factory
+     * @param encodingFactory
+     *         encoding factory
      */
     public DefaultDatatypeCoder(IEncodingFactory encodingFactory) {
         this.encodingFactory = requireNonNull(encodingFactory, "encodingFactory");
@@ -106,134 +108,134 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeShort(short value) {
+    public byte[] encodeShort(short val) {
         final byte[] buf = new byte[sizeOfShort()];
-        encodeShort(value, buf, 0);
+        encodeShort(val, buf, 0);
         return buf;
     }
 
     @Override
-    public byte[] encodeShort(int value) {
-        return encodeShort((short) value);
+    public byte[] encodeShort(int val) {
+        return encodeShort((short) val);
     }
 
     @Override
-    public void encodeShort(int value, byte[] target, int fromIndex) {
-        encodeInt(value, target, fromIndex);
+    public void encodeShort(int val, byte[] buf, int off) {
+        encodeInt(val, buf, off);
     }
 
     @Override
-    public short decodeShort(byte[] byte_int) {
-        return decodeShort(byte_int, 0);
+    public short decodeShort(byte[] buf) {
+        return decodeShort(buf, 0);
     }
 
     @Override
-    public short decodeShort(byte[] bytes, int fromIndex) {
-        return (short) decodeInt(bytes, fromIndex);
+    public short decodeShort(byte[] buf, int off) {
+        return (short) decodeInt(buf, off);
     }
 
     @Override
-    public byte[] encodeInt(int value) {
+    public byte[] encodeInt(int val) {
         byte[] buf = new byte[4];
-        encodeInt(value, buf, 0);
+        encodeInt(val, buf, 0);
         return buf;
     }
 
     @Override
-    public void encodeInt(int value, byte[] target, int fromIndex) {
-        target[fromIndex] = (byte) (value >>> 24);
-        target[fromIndex + 1] = (byte) (value >>> 16);
-        target[fromIndex + 2] = (byte) (value >>> 8);
-        target[fromIndex + 3] = (byte) value;
+    public void encodeInt(int val, byte[] buf, int off) {
+        buf[off] = (byte) (val >>> 24);
+        buf[off + 1] = (byte) (val >>> 16);
+        buf[off + 2] = (byte) (val >>> 8);
+        buf[off + 3] = (byte) val;
     }
 
     @Override
-    public int decodeInt(byte[] byte_int) {
-        return decodeInt(byte_int, 0);
+    public int decodeInt(byte[] buf) {
+        return decodeInt(buf, 0);
     }
 
     @Override
-    public int decodeInt(byte[] bytes, int fromIndex) {
-        return (bytes[fromIndex] << 24) +
-               ((bytes[fromIndex + 1] & 0xFF) << 16) +
-               ((bytes[fromIndex + 2] & 0xFF) << 8) +
-               (bytes[fromIndex + 3] & 0xFF);
+    public int decodeInt(byte[] buf, int off) {
+        return (buf[off] << 24) +
+               ((buf[off + 1] & 0xFF) << 16) +
+               ((buf[off + 2] & 0xFF) << 8) +
+               (buf[off + 3] & 0xFF);
     }
 
     @Override
-    public byte[] encodeLong(long value) {
+    public byte[] encodeLong(long val) {
         final byte[] buf = new byte[8];
-        buf[0] = (byte) (value >>> 56);
-        buf[1] = (byte) (value >>> 48);
-        buf[2] = (byte) (value >>> 40);
-        buf[3] = (byte) (value >>> 32);
-        buf[4] = (byte) (value >>> 24);
-        buf[5] = (byte) (value >>> 16);
-        buf[6] = (byte) (value >>> 8);
-        buf[7] = (byte) value;
+        buf[0] = (byte) (val >>> 56);
+        buf[1] = (byte) (val >>> 48);
+        buf[2] = (byte) (val >>> 40);
+        buf[3] = (byte) (val >>> 32);
+        buf[4] = (byte) (val >>> 24);
+        buf[5] = (byte) (val >>> 16);
+        buf[6] = (byte) (val >>> 8);
+        buf[7] = (byte) val;
         return buf;
     }
 
     @Override
-    public long decodeLong(byte[] byte_int) {
-        return ((long) (byte_int[0]) << 56) +
-               ((byte_int[1] & 0xFFL) << 48) +
-               ((byte_int[2] & 0xFFL) << 40) +
-               ((byte_int[3] & 0xFFL) << 32) +
-               ((byte_int[4] & 0xFFL) << 24) +
-               ((byte_int[5] & 0xFFL) << 16) +
-               ((byte_int[6] & 0xFFL) << 8) +
-               (byte_int[7] & 0xFFL);
+    public long decodeLong(byte[] buf) {
+        return ((long) (buf[0]) << 56) +
+               ((buf[1] & 0xFFL) << 48) +
+               ((buf[2] & 0xFFL) << 40) +
+               ((buf[3] & 0xFFL) << 32) +
+               ((buf[4] & 0xFFL) << 24) +
+               ((buf[5] & 0xFFL) << 16) +
+               ((buf[6] & 0xFFL) << 8) +
+               (buf[7] & 0xFFL);
     }
 
     @Override
-    public byte[] encodeFloat(float value) {
-        return encodeInt(Float.floatToIntBits(value));
+    public byte[] encodeFloat(float val) {
+        return encodeInt(Float.floatToIntBits(val));
     }
 
     @Override
-    public float decodeFloat(byte[] byte_int) {
-        return Float.intBitsToFloat(decodeInt(byte_int));
+    public float decodeFloat(byte[] buf) {
+        return Float.intBitsToFloat(decodeInt(buf));
     }
 
     @Override
-    public byte[] encodeDouble(double value) {
-        return encodeLong(Double.doubleToLongBits(value));
+    public byte[] encodeDouble(double val) {
+        return encodeLong(Double.doubleToLongBits(val));
     }
 
     @Override
-    public double decodeDouble(byte[] byte_int) {
-        return Double.longBitsToDouble(decodeLong(byte_int));
+    public double decodeDouble(byte[] buf) {
+        return Double.longBitsToDouble(decodeLong(buf));
     }
 
     @Override
-    public final byte[] encodeString(String value) {
-        return encoding.encodeToCharset(value);
+    public final byte[] encodeString(String val) {
+        return encoding.encodeToCharset(val);
     }
 
     @Override
-    public final Writer createWriter(OutputStream outputStream) {
-        return encoding.createWriter(outputStream);
+    public final Writer createWriter(OutputStream out) {
+        return encoding.createWriter(out);
     }
 
     @Override
-    public final String decodeString(byte[] value) {
-        return encoding.decodeFromCharset(value);
+    public final String decodeString(byte[] buf) {
+        return encoding.decodeFromCharset(buf);
     }
 
     @Override
-    public final Reader createReader(InputStream inputStream) {
-        return encoding.createReader(inputStream);
+    public final Reader createReader(InputStream in) {
+        return encoding.createReader(in);
     }
 
     // times,dates...
 
     @Override
-    public Timestamp encodeTimestamp(java.sql.Timestamp value, Calendar cal, boolean invertTimeZone) {
-        if (cal == null) {
-            return value;
+    public Timestamp encodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone) {
+        if (c == null) {
+            return val;
         } else {
-            long time = value.getTime() + calculateOffset(cal, invertTimeZone);
+            long time = val.getTime() + calculateOffset(c, invertTimeZone);
 
             return new Timestamp(time);
         }
@@ -241,16 +243,16 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     private int calculateOffset(Calendar cal, boolean invertTimeZone) {
         return (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() -
-                Calendar.getInstance().getTimeZone().getRawOffset());
+                                            Calendar.getInstance().getTimeZone().getRawOffset());
     }
 
     @Override
-    public byte[] encodeTimestampRaw(RawDateTimeStruct raw) {
-        return new datetime(raw).toTimestampBytes();
+    public byte[] encodeTimestampRaw(RawDateTimeStruct val) {
+        return new datetime(val).toTimestampBytes();
     }
 
     @Override
-    public byte[] encodeTimestampCalendar(Timestamp value, Calendar c) {
+    public byte[] encodeTimestampCalendar(Timestamp val, Calendar c) {
 
         /* note, we cannot simply pass millis to the database, because
          * Firebird stores timestamp in format (citing Ann W. Harrison):
@@ -259,164 +261,164 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
          * the number of days since 17 Nov 1858 and one representing number
          * of 100 nano-seconds since midnight" (NOTE: It is actually 100 microseconds!)
          */
-        datetime d = new datetime(value, c);
+        datetime d = new datetime(val, c);
         return d.toTimestampBytes();
     }
 
     @Override
-    public java.sql.Timestamp decodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone) {
-        if (cal == null) {
-            return value;
+    public Timestamp decodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone) {
+        if (c == null) {
+            return val;
         } else {
-            long time = value.getTime() - calculateOffset(cal, invertTimeZone);
+            long time = val.getTime() - calculateOffset(c, invertTimeZone);
 
             return new Timestamp(time);
         }
     }
 
     @Override
-    public RawDateTimeStruct decodeTimestampRaw(byte[] byte_long) {
-        datetime d = fromLongBytes(byte_long);
+    public RawDateTimeStruct decodeTimestampRaw(byte[] buf) {
+        datetime d = fromLongBytes(buf);
         return d.getRaw();
     }
 
     @Override
-    public Timestamp decodeTimestampCalendar(byte[] byte_long, Calendar c) {
-        datetime d = fromLongBytes(byte_long);
+    public Timestamp decodeTimestampCalendar(byte[] buf, Calendar c) {
+        datetime d = fromLongBytes(buf);
         return d.toTimestamp(c);
     }
 
     @Override
-    public java.sql.Time encodeTime(Time d, Calendar cal, boolean invertTimeZone) {
-        if (cal == null) {
-            return d;
+    public Time encodeTime(Time val, Calendar c, boolean invertTimeZone) {
+        if (c == null) {
+            return val;
         } else {
-            long time = d.getTime() + calculateOffset(cal, invertTimeZone);
+            long time = val.getTime() + calculateOffset(c, invertTimeZone);
 
             return new Time(time);
         }
     }
 
     @Override
-    public byte[] encodeTimeRaw(RawDateTimeStruct raw) {
-        return new datetime(raw).toTimeBytes();
+    public byte[] encodeTimeRaw(RawDateTimeStruct val) {
+        return new datetime(val).toTimeBytes();
     }
 
     @Override
-    public byte[] encodeTimeCalendar(Time d, Calendar c) {
-        datetime dt = new datetime(d, c);
+    public byte[] encodeTimeCalendar(Time val, Calendar c) {
+        datetime dt = new datetime(val, c);
         return dt.toTimeBytes();
     }
 
     @Override
-    public java.sql.Time decodeTime(java.sql.Time d, Calendar cal, boolean invertTimeZone) {
-        if (cal == null) {
-            return d;
+    public Time decodeTime(Time val, Calendar c, boolean invertTimeZone) {
+        if (c == null) {
+            return val;
         } else {
-            long time = d.getTime() - calculateOffset(cal, invertTimeZone);
+            long time = val.getTime() - calculateOffset(c, invertTimeZone);
 
             return new Time(time);
         }
     }
 
     @Override
-    public RawDateTimeStruct decodeTimeRaw(byte[] int_byte) {
-        datetime d = new datetime(null, int_byte);
+    public RawDateTimeStruct decodeTimeRaw(byte[] buf) {
+        datetime d = new datetime(null, buf);
         return d.getRaw();
     }
 
     @Override
-    public Time decodeTimeCalendar(byte[] int_byte, Calendar c) {
-        datetime dt = new datetime(null, int_byte);
+    public Time decodeTimeCalendar(byte[] buf, Calendar c) {
+        datetime dt = new datetime(null, buf);
         return dt.toTime(c);
     }
 
     @Override
-    public Date encodeDate(java.sql.Date d, Calendar cal) {
-        if (cal == null) {
-            return (d);
+    public Date encodeDate(Date val, Calendar c) {
+        if (c == null) {
+            return (val);
         } else {
-            cal.setTime(d);
-            return new Date(cal.getTime().getTime());
+            c.setTime(val);
+            return new Date(c.getTime().getTime());
         }
     }
 
     @Override
-    public byte[] encodeDateRaw(RawDateTimeStruct raw) {
-        return new datetime(raw).toDateBytes();
+    public byte[] encodeDateRaw(RawDateTimeStruct val) {
+        return new datetime(val).toDateBytes();
     }
 
     @Override
-    public byte[] encodeDateCalendar(Date d, Calendar c) {
-        datetime dt = new datetime(d, c);
+    public byte[] encodeDateCalendar(Date val, Calendar c) {
+        datetime dt = new datetime(val, c);
         return dt.toDateBytes();
     }
 
     @Override
-    public java.sql.Date decodeDate(Date d, Calendar cal) {
-        if (cal == null || d == null) {
-            return d;
+    public Date decodeDate(Date val, Calendar c) {
+        if (c == null || val == null) {
+            return val;
         } else {
-            cal.setTime(d);
-            return new Date(cal.getTime().getTime());
+            c.setTime(val);
+            return new Date(c.getTime().getTime());
         }
     }
 
     @Override
-    public RawDateTimeStruct decodeDateRaw(byte[] byte_int) {
-        datetime d = new datetime(byte_int, null);
+    public RawDateTimeStruct decodeDateRaw(byte[] buf) {
+        datetime d = new datetime(buf, null);
         return d.getRaw();
     }
 
     @Override
-    public Date decodeDateCalendar(byte[] byte_int, Calendar c) {
-        datetime dt = new datetime(byte_int, null);
+    public Date decodeDateCalendar(byte[] buf, Calendar c) {
+        datetime dt = new datetime(buf, null);
         return dt.toDate(c);
     }
 
     @Override
-    public boolean decodeBoolean(byte[] data) {
-        return data[0] != 0;
+    public boolean decodeBoolean(byte[] buf) {
+        return buf[0] != 0;
     }
 
     @Override
-    public byte[] encodeBoolean(boolean value) {
-        return new byte[] { (byte) (value ? 1 : 0) };
+    public byte[] encodeBoolean(boolean val) {
+        return new byte[] { (byte) (val ? 1 : 0) };
     }
 
     @Override
-    public LocalTime decodeLocalTime(byte[] data) {
-        datetime dt = new datetime(null, data);
+    public LocalTime decodeLocalTime(byte[] buf) {
+        datetime dt = new datetime(null, buf);
         return dt.toLocalTime();
     }
 
     @Override
-    public byte[] encodeLocalTime(LocalTime value) {
-        datetime dt = new datetime(null, value);
+    public byte[] encodeLocalTime(LocalTime val) {
+        datetime dt = new datetime(null, val);
         return dt.toTimeBytes();
     }
 
     @Override
-    public LocalDate decodeLocalDate(byte[] data) {
-        datetime dt = new datetime(data, null);
+    public LocalDate decodeLocalDate(byte[] buf) {
+        datetime dt = new datetime(buf, null);
         return dt.toLocalDate();
     }
 
     @Override
-    public byte[] encodeLocalDate(LocalDate value) {
-        datetime dt = new datetime(value, null);
+    public byte[] encodeLocalDate(LocalDate val) {
+        datetime dt = new datetime(val, null);
         return dt.toDateBytes();
     }
 
     @Override
-    public LocalDateTime decodeLocalDateTime(byte[] data) {
-        datetime dt = fromLongBytes(data);
+    public LocalDateTime decodeLocalDateTime(byte[] buf) {
+        datetime dt = fromLongBytes(buf);
         return dt.toLocalDateTime();
     }
 
     @Override
-    public byte[] encodeLocalDateTime(LocalDateTime value) {
-        datetime dt = new datetime(value);
+    public byte[] encodeLocalDateTime(LocalDateTime val) {
+        datetime dt = new datetime(val);
         return dt.toTimestampBytes();
     }
 
@@ -426,7 +428,8 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
      * If this is a big-endian coder, {@code buf} should be returned as-is.
      * </p>
      *
-     * @param buf byte array
+     * @param buf
+     *         byte array
      * @return byte array in network order (or {@code buf} if this a big-endian coder)
      */
     protected byte[] networkOrder(byte[] buf) {
@@ -434,42 +437,42 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Decimal64 decodeDecimal64(byte[] data) {
-        return Decimal64.parseBytes(networkOrder(data));
+    public Decimal64 decodeDecimal64(byte[] buf) {
+        return Decimal64.parseBytes(networkOrder(buf));
     }
 
     @Override
-    public byte[] encodeDecimal64(Decimal64 decimal64) {
-        return networkOrder(decimal64.toBytes());
+    public byte[] encodeDecimal64(Decimal64 val) {
+        return networkOrder(val.toBytes());
     }
 
     @Override
-    public Decimal128 decodeDecimal128(byte[] data) {
-        return Decimal128.parseBytes(networkOrder(data));
+    public Decimal128 decodeDecimal128(byte[] buf) {
+        return Decimal128.parseBytes(networkOrder(buf));
     }
 
     @Override
-    public byte[] encodeDecimal128(Decimal128 decimal128) {
-        return networkOrder(decimal128.toBytes());
+    public byte[] encodeDecimal128(Decimal128 val) {
+        return networkOrder(val.toBytes());
     }
 
     @Override
-    public BigInteger decodeInt128(byte[] data) {
-        return new BigInteger(networkOrder(data));
+    public BigInteger decodeInt128(byte[] buf) {
+        return new BigInteger(networkOrder(buf));
     }
 
     @Override
-    public byte[] encodeInt128(BigInteger bigInteger) {
-        if (bigInteger.bitLength() > 127) {
+    public byte[] encodeInt128(BigInteger val) {
+        if (val.bitLength() > 127) {
             throw new IllegalArgumentException("Received BigInteger value requires more than 16 bytes storage");
         }
-        byte[] minimumBytes = bigInteger.toByteArray();
+        byte[] minimumBytes = val.toByteArray();
         if (minimumBytes.length == 16) {
             return networkOrder(minimumBytes);
         }
         byte[] int128Bytes = new byte[16];
         int startOfMinimum = 16 - minimumBytes.length;
-        if (bigInteger.signum() == -1) {
+        if (val.signum() == -1) {
             // extend sign
             Arrays.fill(int128Bytes, 0, startOfMinimum, (byte) -1);
         }
@@ -542,9 +545,9 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
             if (cacheMaintenanceCount % LOG_CACHE_MAINTENANCE_WARNING == 1 && logger.isWarnEnabled()) {
                 logger.warn("Cleared encoding specific datatype coder cache (current reset count: "
-                        + cacheMaintenanceCount + "). Consider setting system property "
-                        + JaybirdSystemProperties.DATATYPE_CODER_CACHE_SIZE
-                        + " to a value higher than the current maximum size of " + DATATYPE_CODER_CACHE_SIZE);
+                            + cacheMaintenanceCount + "). Consider setting system property "
+                            + JaybirdSystemProperties.DATATYPE_CODER_CACHE_SIZE
+                            + " to a value higher than the current maximum size of " + DATATYPE_CODER_CACHE_SIZE);
             }
         }
     }
@@ -561,10 +564,10 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         if (o instanceof EncodingSpecificDatatypeCoder) {
             // TODO This isn't correct, maybe should be unwrap().getClass() == other.unwrap().getClass()?
             return getEncodingDefinition().equals(other.getEncodingDefinition())
-                    && getClass() == other.unwrap().getClass();
+                   && getClass() == other.unwrap().getClass();
         } else {
             return getEncodingDefinition().equals(other.getEncodingDefinition())
-                    && getClass() == other.getClass();
+                   && getClass() == other.getClass();
         }
     }
 
