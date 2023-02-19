@@ -411,7 +411,7 @@ public class V10EventHandlingTest {
             with().pollInterval(50, TimeUnit.MILLISECONDS)
                     .await().atMost(500, TimeUnit.MILLISECONDS).until(channel::isConnected);
 
-            final var out = new XdrOutputStream(simpleServer.getOutputStream());
+            final var out = new XdrOutputStream(simpleServer.getOutputStream(), 8);
             out.writeInt(disconnectOperation);
             out.flush();
 
@@ -443,8 +443,8 @@ public class V10EventHandlingTest {
 
     private byte[] generateXdr(ThrowableConsumer<XdrOutputStream> generator) {
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            XdrOutputStream xdrOut = new XdrOutputStream(baos);
+            var baos = new ByteArrayOutputStream();
+            var xdrOut = new XdrOutputStream(baos, 128);
             generator.accept(xdrOut);
             xdrOut.flush();
             return baos.toByteArray();

@@ -488,8 +488,9 @@ If you are confronted with such a change, let us know on https://groups.google.c
 * `XdrInputStream`
 ** `skipPadding` return type was changed to `void` as the return values was never used in Jaybird code
 ** `skipFully` was removed, use standard Java `InputStream.skipNBytes` instead
-** The no-arg constructor of `FBXAException` was removed
-** `FBResultSet.close(boolean)` was removed;
+** `readShort` was removed as it was unused
+* The no-arg constructor of `FBXAException` was removed
+* `FBResultSet.close(boolean)` was removed;
 use `close(boolean, CompletionReason)`
 * `UnixCrypt` was replaced by `LegacyHash`, which only performs the password hash specific to Firebird legacy authentication
 * `GDSFactoryPlugin.getDatabasePath(String, Integer, String)` and `getDatabasePath(String)` no longer throw `GDSException`, but instead throw `SQLException`
