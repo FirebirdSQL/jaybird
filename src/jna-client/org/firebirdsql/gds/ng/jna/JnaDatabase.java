@@ -265,7 +265,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     protected byte[] getTransactionIdBuffer(long transactionId) {
         // Note: This uses an atypical encoding (as this is actually a TPB without a type)
-        if (transactionId <= 0xffffffffL) {
+        if ((transactionId & 0x7FFF_FFFFL) == transactionId) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream(4);
             try {
                 VaxEncoding.encodeVaxIntegerWithoutLength(bos, (int) transactionId);

@@ -51,7 +51,7 @@ public class V13Database extends V12Database {
     protected byte[] getTransactionIdBuffer(long transactionId) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream(8);
         try {
-            VaxEncoding.encodeVaxLongWithoutLength(bos, (int) transactionId);
+            VaxEncoding.encodeVaxLongWithoutLength(bos, transactionId);
         } catch (IOException e) {
             // ignored: won't happen with a ByteArrayOutputStream
         }

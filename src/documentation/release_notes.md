@@ -9,7 +9,8 @@ Jaybird 4.0.10
 
 The following has been changed or fixed since Jaybird 4.0.9
 
-- ...
+- Fixed: Reconnect transaction with a transaction id exceeding 0x7FFF_FFFF did
+  not work ([jaybird#734](https://github.com/FirebirdSQL/jaybird/issues/734))
 
 Jaybird 4.0.9
 -------------
