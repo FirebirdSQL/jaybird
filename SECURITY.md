@@ -14,6 +14,8 @@ The following versions of Jaybird are actively maintained and supported.
 
 (:heavy_exclamation_mark: = under development, not yet supported)
 
+NOTE: The [version of SECURITY.md on the master branch](https://github.com/FirebirdSQL/jaybird/blob/master/SECURITY.md) is leading.
+
 ## Reporting a Vulnerability
 
 Security vulnerabilities can be reported at https://github.com/FirebirdSQL/jaybird/issues,
