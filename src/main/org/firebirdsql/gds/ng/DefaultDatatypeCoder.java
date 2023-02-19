@@ -412,12 +412,14 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     /**
      * Returns {@code buf} as an array in network byte order.
      * <p>
-     * If this is a big-endian coder, {@code buf} should be returned as-is.
+     * If this is a big-endian coder, {@code buf} should be returned as-is. Otherwise, a new array <em>must</em> be
+     * returned with the bytes reversed, as the operation must be repeatable on the same original byte array.
      * </p>
      *
      * @param buf
      *         byte array
-     * @return byte array in network byte order (or {@code buf} if this a big-endian coder)
+     * @return new byte array in network byte order (or {@code buf} if this a big-endian coder, so the array is already
+     * network byte order)
      */
     protected byte[] networkOrder(final byte[] buf) {
         return buf;
