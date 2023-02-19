@@ -21,6 +21,7 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.BlobParameterBufferImp;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -326,6 +327,28 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     @Override
     public final RowDescriptor emptyRowDescriptor() {
         return emptyRowDescriptor;
+    }
+
+    /**
+     * Encodes the transactionId for use in {@code isc_reconnect_transaction}/{@code op_reconnect}.
+     *
+     * @param transactionId
+     *         transaction id
+     * @return byte array (4 bytes for max 31-bit transaction id, 8 bytes for larger transaction id)
+     */
+    protected byte[] getTransactionIdBuffer(long transactionId) {
+        // Note: This uses an atypical encoding (as this is actually a TPB without a type)
+        byte[] buf;
+        if ((transactionId & 0x7FFF_FFFFL) == transactionId) {
+            buf = new byte[4];
+            VaxEncoding.encodeVaxIntegerWithoutLength(buf, 0, (int) transactionId);
+        } else {
+            // assume this is FB 3, because FB 2.5 and lower only have 31 bits tx ids; might fail if this path is
+            // triggered on FB 2.5 and lower
+            buf = new byte[8];
+            VaxEncoding.encodeVaxLongWithoutLength(buf, 0, transactionId);
+        }
+        return buf;
     }
 
     private class DatabaseInformationProcessor implements InfoProcessor<FbDatabase> {

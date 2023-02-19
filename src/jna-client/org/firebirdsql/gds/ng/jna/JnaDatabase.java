@@ -30,8 +30,6 @@ import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.lang.ref.Cleaner;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
@@ -269,28 +267,6 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
-        }
-    }
-
-    protected byte[] getTransactionIdBuffer(long transactionId) {
-        // Note: This uses an atypical encoding (as this is actually a TPB without a type)
-        if (transactionId <= 0xffffffffL) {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream(4);
-            try {
-                VaxEncoding.encodeVaxIntegerWithoutLength(bos, (int) transactionId);
-            } catch (IOException e) {
-                // ignored: won't happen with a ByteArrayOutputStream
-            }
-            return bos.toByteArray();
-        } else {
-            // assuming this is FB 3, because FB 2.5 and lower only have 31 bits tx ids; might fail if this path is triggered on FB 2.5 and lower
-            ByteArrayOutputStream bos = new ByteArrayOutputStream(8);
-            try {
-                VaxEncoding.encodeVaxLongWithoutLength(bos, transactionId);
-            } catch (IOException e) {
-                // ignored: won't happen with a ByteArrayOutputStream
-            }
-            return bos.toByteArray();
         }
     }
 
