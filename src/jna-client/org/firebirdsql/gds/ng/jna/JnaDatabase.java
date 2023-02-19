@@ -265,24 +265,24 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     protected byte[] getTransactionIdBuffer(long transactionId) {
         // Note: This uses an atypical encoding (as this is actually a TPB without a type)
+        ByteArrayOutputStream bos;
         if ((transactionId & 0x7FFF_FFFFL) == transactionId) {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream(4);
+            bos = new ByteArrayOutputStream(4);
             try {
                 VaxEncoding.encodeVaxIntegerWithoutLength(bos, (int) transactionId);
             } catch (IOException e) {
                 // ignored: won't happen with a ByteArrayOutputStream
             }
-            return bos.toByteArray();
         } else {
             // assuming this is FB 3, because FB 2.5 and lower only have 31 bits tx ids; might fail if this path is triggered on FB 2.5 and lower
-            ByteArrayOutputStream bos = new ByteArrayOutputStream(8);
+            bos = new ByteArrayOutputStream(8);
             try {
                 VaxEncoding.encodeVaxLongWithoutLength(bos, transactionId);
             } catch (IOException e) {
                 // ignored: won't happen with a ByteArrayOutputStream
             }
-            return bos.toByteArray();
         }
+        return bos.toByteArray();
     }
 
     @Override
