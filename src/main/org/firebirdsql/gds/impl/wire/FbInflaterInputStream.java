@@ -22,7 +22,6 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.Inflater;
@@ -46,7 +45,7 @@ class FbInflaterInputStream extends InflaterInputStream implements EncryptedStre
      * @param in Input stream
      */
     public FbInflaterInputStream(InputStream in) {
-        super(in, new Inflater());
+        super(in, new Inflater(), 8192);
     }
 
     @Override
@@ -54,6 +53,7 @@ class FbInflaterInputStream extends InflaterInputStream implements EncryptedStre
         try {
             super.close();
         } finally {
+            buf = new byte[1];
             if (log.isTraceEnabled()) {
                 log.tracef("FbInflaterInputStream: Compressed bytes: %d to uncompressed bytes: %d",
                         inf.getBytesRead(), inf.getBytesWritten());
@@ -67,7 +67,7 @@ class FbInflaterInputStream extends InflaterInputStream implements EncryptedStre
         if (encrypted) {
             throw new IOException("Input stream already encrypted");
         }
-        in = new CipherInputStream(in, cipher);
+        in = new FbCipherInputStream(in, cipher);
         encrypted = true;
     }
 }

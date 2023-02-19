@@ -31,7 +31,6 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.util.InternalApi;
 
 import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
 import java.io.*;
 
 /**
@@ -222,7 +221,7 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
         if (currentStream instanceof EncryptedStreamSupport) {
             ((EncryptedStreamSupport) currentStream).setCipher(cipher);
         } else {
-            in = new CipherInputStream(currentStream, cipher);
+            in = new FbCipherInputStream(currentStream, cipher);
         }
         encrypted = true;
     }

@@ -46,7 +46,7 @@ class FbDeflaterOutputStream extends DeflaterOutputStream implements EncryptedSt
      * @param out Output stream
      */
     public FbDeflaterOutputStream(OutputStream out) {
-        super(out, new Deflater(), true);
+        super(out, new Deflater(), 8192, true);
     }
 
     @Override
@@ -54,6 +54,7 @@ class FbDeflaterOutputStream extends DeflaterOutputStream implements EncryptedSt
         try {
             super.close();
         } finally {
+            buf = new byte[1];
             if (log.isTraceEnabled()) {
                 log.tracef("FbDeflaterOutputStream: Uncompressed bytes: %d to compressed bytes: %d",
                         def.getBytesRead(), def.getBytesWritten());
