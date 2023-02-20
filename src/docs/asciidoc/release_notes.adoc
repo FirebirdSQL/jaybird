@@ -452,7 +452,7 @@ The recommended replacement is to use LibreOffice and the builtin "`Firebird Ext
 
 The following packages have been removed in Jaybird 6 without deprecation:
 
-
+* `FbLocalDatabaseFactory` -- unused since removal of LOCAL protocol implementation in Jaybird 5.
 
 [#removal-of-methods-without-deprecation]
 ==== Removal of methods without deprecation
