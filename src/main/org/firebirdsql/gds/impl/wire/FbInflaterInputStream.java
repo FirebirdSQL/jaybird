@@ -40,9 +40,10 @@ class FbInflaterInputStream extends InflaterInputStream implements EncryptedStre
     private boolean encrypted;
 
     /**
-     * Creates a {@code DeflaterOutputStream} with {@code syncFlush = true}.
+     * Creates a {@code InflaterInputStream}.
      *
-     * @param in Input stream
+     * @param in
+     *         Input stream
      */
     public FbInflaterInputStream(InputStream in) {
         super(in, new Inflater(), 8192);
