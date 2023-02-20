@@ -341,7 +341,7 @@ Setting this value higher than `socketBufferSize` is unlikely to have any benefi
 
 `org.firebirdsql.wire.outputBufferSize`::
 Buffer size in bytes for writing data.
-Has a minimum size of 1024 and a default value of 32768.
+Has a minimum size of 1024 and a default value of 32767.
 +
 [CAUTION]
 ====
