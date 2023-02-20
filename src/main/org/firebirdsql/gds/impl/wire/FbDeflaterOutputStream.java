@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.impl.wire;
 
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -37,16 +38,18 @@ import java.util.zip.DeflaterOutputStream;
 class FbDeflaterOutputStream extends DeflaterOutputStream implements EncryptedStreamSupport {
 
     private static final Logger log = LoggerFactory.getLogger(FbDeflaterOutputStream.class);
+    private static final int BUF_SIZE = Math.max(512, JaybirdSystemProperties.getWireDeflateBufferSize(8192));
 
     private boolean encrypted;
 
     /**
      * Creates a {@code DeflaterOutputStream} with {@code syncFlush = true}.
      *
-     * @param out Output stream
+     * @param out
+     *         Output stream
      */
     public FbDeflaterOutputStream(OutputStream out) {
-        super(out, new Deflater(), 8192, true);
+        super(out, new Deflater(), BUF_SIZE, true);
     }
 
     @Override

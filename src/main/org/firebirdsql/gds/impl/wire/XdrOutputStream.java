@@ -28,6 +28,7 @@ package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.util.InternalApi;
 
@@ -51,7 +52,7 @@ import java.util.Arrays;
  */
 public final class XdrOutputStream extends BufferedOutputStream implements EncryptedStreamSupport {
 
-    private static final int BUF_SIZE = 32767;
+    private static final int BUF_SIZE = Math.max(1024, JaybirdSystemProperties.getWireOutputBufferSize(32767));
 
     public static final int SPACE_BYTE = 0x20;
     public static final int NULL_BYTE = 0x0;

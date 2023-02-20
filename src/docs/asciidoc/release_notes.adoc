@@ -297,6 +297,84 @@ This feature is retained for backwards compatibility.
 When a `SecurityManager` is installed, the entire call-chain needs to have the `RuntimePermission("manageProcess")` to obtain the process ID in pure Java connections.
 If this permission check fails, Jaybird will silently ignore it and not set the `isc_dpb_process_id` based on the actual process ID.
 
+[#wire-buffer-sizes]
+=== Configurable buffer sizes for the wire protocol
+
+The sizes of a number of buffers used in the wire protocol were increased from 512 bytes to 8192 bytes.
+This specifically concerns:
+
+* wire compression -- deflate (compression)
+* wire compression -- inflate (decompression)
+* wire encryption -- decrypt
++
+There is no such buffer for the reverse (encryption), as this is already handled by the general output buffer.
+
+This change might not be desirable in all situations (e.g. it increases the total amount of memory per connection), or there can be reasons to further increase these buffers.
+To address this, we have added _system properties_ to configure a number of buffers which were previously not configurable:
+
+`org.firebirdsql.wire.deflateBufferSize`::
+Buffer size in bytes for deflate (compression).
+Has a minimum size of 512 and a default value of 8192.
+
+`org.firebirdsql.wire.inflateBufferSize`::
+Buffer size in bytes for inflate (decompression).
+Has a minimum size of 512 and a default value of 8192.
+
+`org.firebirdsql.wire.decryptBufferSize`::
+Buffer size in bytes for decryption.
+Has a minimum size of 512 and a default value 8192.
++
+[NOTE]
+====
+As the decryption input buffer determines the size of the decryption output buffer, the actual allocation is up to twice the specified value.
+====
+
+`org.firebirdsql.wire.inputBufferSize`::
+Buffer size in bytes for reading data from the socket.
+Has a minimum size of 1024 and a default value of 16384.
++
+[CAUTION]
+====
+This property should not be confused with the socket buffer size (configurable with the `socketBufferSize` _connection property_).
+Setting this value higher than `socketBufferSize` is unlikely to have any benefits.
+====
+
+`org.firebirdsql.wire.outputBufferSize`::
+Buffer size in bytes for writing data.
+Has a minimum size of 1024 and a default value of 32768.
++
+[CAUTION]
+====
+This property should not be confused with the socket buffer size (configurable with the `socketBufferSize` _connection property_).
+Contrary to the input buffer size, setting it higher than `socketBufferSize` might have performance benefits.
+====
+
+These properties need to be set before Jaybird is loaded and used (e.g. on the commandline with `-D<propertyName>=<propertyValue`).
+
+[NOTE]
+====
+The minimum sizes and default values should be considered an implementation detail and might change in a future major version.
+
+The "`deflate`" and "`inflate`" buffers are only used when wire compression is enabled.
+The "`decrypt`" buffer is only applied when wire encryption is used (the default with Firebird 3.0 and higher).
+====
+
+The order of buffers for input is as follows:
+
+[subs="normal"]
+----
+Jaybird <= [inflate <=] [decrypt <=] input <= socket
+----
+
+The order of buffers for output is as follows:
+
+[subs="normal"]
+----
+Jaybird => output [=> deflate] => socket
+----
+
+A future version may introduce connection properties to control this per connection.
+
 // TODO add major changes
 
 [#potentially-breaking-changes]

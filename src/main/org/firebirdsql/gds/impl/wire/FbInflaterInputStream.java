@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.impl.wire;
 
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -36,6 +37,7 @@ import java.util.zip.InflaterInputStream;
 class FbInflaterInputStream extends InflaterInputStream implements EncryptedStreamSupport {
 
     private static final Logger log = LoggerFactory.getLogger(FbInflaterInputStream.class);
+    private static final int BUF_SIZE = Math.max(512, JaybirdSystemProperties.getWireInflateBufferSize(8192));
 
     private boolean encrypted;
 
@@ -46,7 +48,7 @@ class FbInflaterInputStream extends InflaterInputStream implements EncryptedStre
      *         Input stream
      */
     public FbInflaterInputStream(InputStream in) {
-        super(in, new Inflater(), 8192);
+        super(in, new Inflater(), BUF_SIZE);
     }
 
     @Override

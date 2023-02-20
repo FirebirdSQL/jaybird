@@ -1,4 +1,24 @@
+/*
+ * Firebird Open Source JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.gds.impl.wire;
+
+import org.firebirdsql.gds.JaybirdSystemProperties;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -13,6 +33,8 @@ import java.io.InputStream;
  */
 final class FbCipherInputStream extends FilterInputStream {
 
+    private static final int BUF_SIZE = Math.max(512, JaybirdSystemProperties.getWireDecryptBufferSize(8192));
+
     private final Cipher cipher;
     private byte[] inBuf;
     private byte[] outBuf = null;
@@ -24,7 +46,7 @@ final class FbCipherInputStream extends FilterInputStream {
     public FbCipherInputStream(InputStream is, Cipher c) {
         super(is);
         cipher = c;
-        inBuf = new byte[8192];
+        inBuf = new byte[BUF_SIZE];
     }
 
     private void ensureCapacity(int inLen) {

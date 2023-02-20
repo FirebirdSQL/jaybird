@@ -28,6 +28,7 @@
 package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.util.InternalApi;
 
 import javax.crypto.Cipher;
@@ -46,7 +47,7 @@ import java.io.*;
  */
 public final class XdrInputStream extends FilterInputStream implements EncryptedStreamSupport {
 
-    private static final int DEFAULT_BUFFER_SIZE = 16384;
+    private static final int BUF_SIZE = Math.max(1024, JaybirdSystemProperties.getWireInputBufferSize(16384));
     private boolean compressed;
     private boolean encrypted;
 
@@ -57,7 +58,7 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
      *         underlying {@code InputStream} to read from
      */
     public XdrInputStream(InputStream in) {
-        this(in, DEFAULT_BUFFER_SIZE);
+        this(in, BUF_SIZE);
     }
 
     /**
