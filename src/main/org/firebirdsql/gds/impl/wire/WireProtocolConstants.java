@@ -233,6 +233,11 @@ public interface WireProtocolConstants {
         - supports op_fetch_scroll */
     int PROTOCOL_VERSION18 = (FB_PROTOCOL_FLAG | 18);
 
+    // Firebird 3.0.0
+    int MINIMUM_SUPPORTED_PROTOCOL_VERSION = PROTOCOL_VERSION13;
+    // Firebird 5.0.0
+    int MAXIMUM_SUPPORTED_PROTOCOL_VERSION = PROTOCOL_VERSION18;
+
     /* Architectures */
     int arch_generic = 1; /* Generic -- always use canonical forms */
 

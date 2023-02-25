@@ -59,6 +59,7 @@ public final class PropertyNames {
     public static final String dbCryptConfig = "dbCryptConfig";
     public static final String authPlugins = "authPlugins";
     public static final String wireCompression = "wireCompression";
+    public static final String enableProtocol = "enableProtocol";
 
     // database connection
     public static final String sqlDialect = "sqlDialect";

@@ -28,13 +28,22 @@ import org.firebirdsql.gds.ng.wire.version15.Version15Descriptor;
 import org.firebirdsql.gds.ng.wire.version16.Version16Descriptor;
 import org.firebirdsql.gds.ng.wire.version18.Version18Descriptor;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableList;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -44,20 +53,36 @@ import static org.junit.jupiter.api.Assertions.*;
 class ProtocolCollectionTest {
 
     /**
-     * Tests if the default collection contains the expected classes.
+     * Tests if the available collection contains the expected classes.
      * <p>
-     * As the default collection depends on the content of the classpath, this
-     * test is not a statement that these classes are the ones loaded in actual
-     * usage.
+     * As the available collection depends on the content of the classpath, this test is not a statement that these
+     * classes are the ones loaded in actual usage.
      * </p>
      */
     @Test
-    void testGetDefaultCollection() {
-        assertProtocolCollection(ProtocolCollection.getDefaultCollection(),
+    void testGetAvailableProtocols() {
+        assertProtocolCollection(ProtocolCollection.getAvailableProtocols(),
                 Arrays.asList(
                         Version10Descriptor.class,
                         Version11Descriptor.class,
                         Version12Descriptor.class,
+                        Version13Descriptor.class,
+                        Version15Descriptor.class,
+                        Version16Descriptor.class,
+                        Version18Descriptor.class));
+    }
+
+    /**
+     * Tests if the supported collection contains the expected classes.
+     * <p>
+     * As the supported collection depends on the content of the classpath, this test is not a statement that these
+     * classes are the ones loaded in actual usage.
+     * </p>
+     */
+    @Test
+    void testGetSupportedProtocols() {
+        assertProtocolCollection(ProtocolCollection.getSupportedProtocols(),
+                Arrays.asList(
                         Version13Descriptor.class,
                         Version15Descriptor.class,
                         Version16Descriptor.class,
@@ -129,6 +154,62 @@ class ProtocolCollectionTest {
         ProtocolCollection collection = ProtocolCollection.create(descriptor);
 
         assertNull(collection.getProtocolDescriptor(-1), "Unexpected ProtocolDescriptor returned");
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    void testGetProtocol_default(String enableProtocol) {
+        ProtocolCollection collection = ProtocolCollection.getProtocols(enableProtocol);
+
+        // NOTE: This is an implementation detail that it returns the same instance
+        assertSame(ProtocolCollection.getSupportedProtocols(), collection, "expected only supported protocols");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "*", " * " })
+    void testGetProtocol_all(String allValue) {
+        ProtocolCollection collection = ProtocolCollection.getProtocols(allValue);
+
+        // NOTE: This is an implementation detail that it returns the same instance
+        assertSame(ProtocolCollection.getAvailableProtocols(), collection, "expected available protocols");
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testGetProtocol(String enableProtocol, List<Class<? extends ProtocolDescriptor>> expected) {
+        ProtocolCollection collection = ProtocolCollection.getProtocols(enableProtocol);
+
+        assertProtocolCollection(collection, expected);
+    }
+
+    public static Stream<Arguments> testGetProtocol() {
+        List<Class<? extends ProtocolDescriptor>> supported = new ArrayList<>();
+        for (ProtocolDescriptor descriptor : ProtocolCollection.getSupportedProtocols()) {
+            supported.add(descriptor.getClass());
+        }
+        supported = unmodifiableList(supported);
+
+        return Stream.of(
+                Arguments.of("10", concat(supported, Version10Descriptor.class)),
+                Arguments.of("notAVersion", supported),
+                Arguments.of("10,notAVersion, 12",
+                        concat(supported, Version10Descriptor.class, Version12Descriptor.class)),
+                // * only represent all protocols when used on its own
+                Arguments.of("11,*", concat(supported, Version11Descriptor.class)),
+                // spaces allowed
+                Arguments.of(" 10, 11, 12 ", concat(supported,
+                        Version10Descriptor.class, Version11Descriptor.class, Version12Descriptor.class))
+        );
+    }
+
+    @SafeVarargs
+    private static List<Class<? extends ProtocolDescriptor>> concat(
+            List<Class<? extends ProtocolDescriptor>> baseList,
+            Class<? extends ProtocolDescriptor>... additionalClasses) {
+        List<Class<? extends ProtocolDescriptor>> newList = new ArrayList<>(baseList.size() + additionalClasses.length);
+        newList.addAll(baseList);
+        Collections.addAll(newList, additionalClasses);
+        return unmodifiableList(newList);
     }
 
     private void assertProtocolCollection(ProtocolCollection collection,

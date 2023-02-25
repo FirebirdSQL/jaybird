@@ -932,13 +932,32 @@ class FBConnectionTest {
     @Test
     void testErrorWhenNoCredentials() {
         assumeThat("Embedded does not use authentication", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
-        try (Connection ignored = DriverManager.getConnection(getUrl())) {
+        String url = ENABLE_PROTOCOL == null ? getUrl() : getUrl() + "?enableProtocol=" + ENABLE_PROTOCOL;
+        try (Connection ignored = DriverManager.getConnection(url)) {
             fail("expected exception when connecting without user name and password");
         } catch (SQLException e) {
             assertThat(e, allOf(
                     errorCodeEquals(ISCConstants.isc_login),
                     fbMessageStartsWith(ISCConstants.isc_login)));
         }
+    }
+
+    @Test
+    void errorConnectingToUnsupportedVersion() {
+        assumeFalse(getDefaultSupportInfo().isSupportedVersion(), "test can only work on unsupported version");
+        assumeThat("restricted protocol support only in the pure Java protocol",
+                FBTestProperties.GDS_TYPE, isPureJavaType());
+        Properties props = getDefaultPropertiesForConnection();
+        props.remove("enableProtocol");
+
+        try (var ignored = DriverManager.getConnection(getUrl(), props)) {
+            fail("expected exception when connecting to unsupported version");
+        } catch (SQLException e) {
+            assertThat(e, allOf(
+                    errorCodeEquals(ISCConstants.isc_connect_reject),
+                    fbMessageStartsWith(ISCConstants.isc_connect_reject)));
+        }
+
     }
 
 }

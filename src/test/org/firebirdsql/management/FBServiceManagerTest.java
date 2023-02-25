@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
+import static org.firebirdsql.common.FBTestProperties.ENABLE_PROTOCOL;
 import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
@@ -63,6 +64,7 @@ class FBServiceManagerTest {
         fbServiceManager.setServiceName(serviceName);
         fbServiceManager.setUser(FBTestProperties.DB_USER);
         fbServiceManager.setPassword(FBTestProperties.DB_PASSWORD);
+        fbServiceManager.setEnableProtocol(ENABLE_PROTOCOL);
 
         final GDSServerVersion serverVersion = fbServiceManager.getServerVersion();
 

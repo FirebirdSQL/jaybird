@@ -21,7 +21,6 @@ package org.firebirdsql.ds;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jaybird.xca.XidImpl;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
@@ -66,19 +65,9 @@ class FBXADataSourceTest {
 
     @BeforeEach
     void setUp() {
-        FBXADataSource newDs = new FBXADataSource();
-        newDs.setType(getProperty("test.gds_type", null));
-        if (getGdsType() == GDSType.getType("PURE_JAVA")
-                || getGdsType() == GDSType.getType("NATIVE")) {
-            newDs.setServerName(DB_SERVER_URL);
-            newDs.setPortNumber(DB_SERVER_PORT);
-        }
-        newDs.setDatabaseName(getDatabasePath());
-        newDs.setUser(DB_USER);
-        newDs.setPassword(DB_PASSWORD);
-        newDs.setEncoding(DB_LC_CTYPE);
-
-        ds = newDs;
+        ds = new FBXADataSource();
+        ds.setType(getProperty("test.gds_type", null));
+        configureDefaultDbProperties(ds);
     }
 
     @AfterEach

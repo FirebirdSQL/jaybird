@@ -52,7 +52,7 @@ public interface EncodingSet {
     /**
      * Preference weight defines the loading order.
      * <p>
-     * An {@code EncodingSet| with a higher number is processed before a lower number. The default preference weight
+     * An {@code EncodingSet} with a higher number is processed before a lower number. The default preference weight
      * used by {@link DefaultEncodingSet} in Jaybird is {@code 0}. This means that if you want to override any default
      * definition, you need a higher number, if you just want to specify additional mappings, you need to specify a
      * lower number.

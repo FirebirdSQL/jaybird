@@ -54,6 +54,7 @@ public class FBManager implements FBManagerMBean {
     private String userName;
     private String password;
     private String roleName;
+    private String enableProtocol;
     private int dialect = ISCConstants.SQL_DIALECT_CURRENT;
     private int pageSize = -1;
     private String defaultCharacterSet;
@@ -201,6 +202,16 @@ public class FBManager implements FBManagerMBean {
     @Override
     public void setRoleName(String roleName) {
         this.roleName = roleName;
+    }
+
+    @Override
+    public void setEnableProtocol(String enableProtocol) {
+        this.enableProtocol = enableProtocol;
+    }
+
+    @Override
+    public String getEnableProtocol() {
+        return enableProtocol;
     }
 
     @Override
@@ -369,6 +380,7 @@ public class FBManager implements FBManagerMBean {
         connectionProperties.setRoleName(roleName);
         connectionProperties.setServerName(getServer());
         connectionProperties.setPortNumber(getPort());
+        connectionProperties.setEnableProtocol(getEnableProtocol());
         return connectionProperties;
     }
 

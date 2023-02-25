@@ -71,10 +71,7 @@ class FBUserManagerTest {
     void testUsers() throws Exception {
         // Initialize the UserManager.
         UserManager userManager = new FBUserManager(getGdsType());
-        userManager.setServerName(DB_SERVER_URL);
-        userManager.setPortNumber(DB_SERVER_PORT);
-        userManager.setUser(DB_USER);
-        userManager.setPassword(DB_PASSWORD);
+        configureDefaultServiceProperties(userManager);
 
         // Add a user.
         User user1 = new FBUser();

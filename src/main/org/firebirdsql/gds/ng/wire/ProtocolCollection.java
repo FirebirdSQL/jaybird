@@ -18,18 +18,23 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.FB_PROTOCOL_FLAG;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.MAXIMUM_SUPPORTED_PROTOCOL_VERSION;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.MINIMUM_SUPPORTED_PROTOCOL_VERSION;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.PROTOCOL_VERSION10;
 
 /**
  * Collection of protocols for a connect request.
  * <p>
- * In general use {@link ProtocolCollection#getDefaultCollection()} to retrieve
- * the default collection.
+ * In general, {@link #getProtocols(String)} should be used with the {@code enableProtocol} connection property value.
  * </p>
  * 
  * @author Mark Rotteveel
@@ -40,11 +45,12 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
     private static final Logger log = LoggerFactory.getLogger(ProtocolCollection.class);
 
     private final Map<Integer, ProtocolDescriptor> descriptorMap;
-    private static final ProtocolCollection DEFAULT_COLLECTION;
+    private static final ProtocolCollection AVAILABLE_PROTOCOLS;
+    private static final ProtocolCollection SUPPORTED_PROTOCOLS;
 
     static {
         // Load protocol implementation information
-        final Set<ProtocolDescriptor> supportedProtocols = new HashSet<>();
+        final Set<ProtocolDescriptor> availableProtocols = new HashSet<>();
         final Collection<ClassLoader> classLoaders = classLoadersForLoading();
         for (ClassLoader classLoader : classLoaders) {
             final ServiceLoader<ProtocolDescriptor> descriptors =
@@ -57,7 +63,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                     while (descriptorIterator.hasNext()) {
                         try {
                             ProtocolDescriptor protocol = descriptorIterator.next();
-                            supportedProtocols.add(protocol);
+                            availableProtocols.add(protocol);
                         } catch (Exception | ServiceConfigurationError e) {
                             log.errorDebug("Could not load protocol descriptor (skipping)", e);
                         }
@@ -70,12 +76,16 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
             }
         }
 
-        if (supportedProtocols.isEmpty()) {
+        if (availableProtocols.isEmpty()) {
             for (ClassLoader classLoader : classLoaders) {
-                supportedProtocols.addAll(loadProtocolsFallback(classLoader));
+                availableProtocols.addAll(loadProtocolsFallback(classLoader));
             }
         }
-        DEFAULT_COLLECTION = create(supportedProtocols.toArray(new ProtocolDescriptor[0]));
+        AVAILABLE_PROTOCOLS = create(availableProtocols.toArray(new ProtocolDescriptor[0]));
+        SUPPORTED_PROTOCOLS = create(availableProtocols.stream()
+                .filter(p -> MINIMUM_SUPPORTED_PROTOCOL_VERSION <= p.getVersion()
+                             && p.getVersion() <= MAXIMUM_SUPPORTED_PROTOCOL_VERSION)
+                .toArray(ProtocolDescriptor[]::new));
     }
 
     /**
@@ -178,6 +188,14 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
     }
 
     /**
+     * @return stream of the protocol descriptors held by this protocol collection
+     * @since 6
+     */
+    public Stream<ProtocolDescriptor> stream() {
+        return descriptorMap.values().stream();
+    }
+
+    /**
      * Creates a ProtocolCollection with the specified ProtocolDescriptors.
      * <p>
      * If <code>descriptors</code> contains multiple implementations with the
@@ -203,27 +221,90 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
     }
 
     /**
-     * Returns the default ProtocolCollection.
+     * Returns the supported ProtocolCollection.
      * <p>
-     * The default ProtocolCollection is created when this class is loaded by
-     * the classloader.
+     * The supported ProtocolCollection is created when this class is loaded by the classloader.
      * </p>
      * <p>
-     * This implementation uses the {@link ServiceLoader} to load the default
-     * collection based on all {@link ProtocolDescriptor} implementations found
-     * using all the
-     * <code>/META-INF/services/org.firebirdsql.gds.ng.wire.ProtocolDescriptor</code>
-     * in the classpath. If multiple implementations with the same value for
-     * {@link ProtocolDescriptor#getVersion()} are found, then the first
-     * implementation with the highest value for
-     * {@link ProtocolDescriptor#getWeight()} will be loaded into the default
-     * collection.
+     * The returned collection is a subset of {@link #getAvailableProtocols()}, retaining only the supported protocol
+     * versions.
      * </p>
      * 
-     * @return The default ProtocolCollection
+     * @return supported ProtocolCollection
      * @see ProtocolCollection#create(ProtocolDescriptor...)
+     * @since 6
      */
-    public static ProtocolCollection getDefaultCollection() {
-        return DEFAULT_COLLECTION;
+    public static ProtocolCollection getSupportedProtocols() {
+        return SUPPORTED_PROTOCOLS;
+    }
+
+    /**
+     * Returns the available ProtocolCollection.
+     * <p>
+     * The available ProtocolCollection is created when this class is loaded by the classloader.
+     * </p>
+     * <p>
+     * This implementation uses the {@link ServiceLoader} to load the collection based on all {@link ProtocolDescriptor}
+     * implementations found using all the
+     * {@code /META-INF/services/org.firebirdsql.gds.ng.wire.ProtocolDescriptor} in the classpath. If multiple
+     * implementations with the same value for {@link ProtocolDescriptor#getVersion()} are found, then the first
+     * implementation with the highest value for {@link ProtocolDescriptor#getWeight()} will be loaded into the default
+     * collection.
+     * </p>
+     *
+     * @return available ProtocolCollection
+     * @see ProtocolCollection#create(ProtocolDescriptor...)
+     * @since 6
+     */
+    public static ProtocolCollection getAvailableProtocols() {
+        return AVAILABLE_PROTOCOLS;
+    }
+
+    /**
+     * Returns the protocol collection consisting of the supported protocol versions and the additional protocol
+     * versions defined by the {@code enableProtocol} connection string property.
+     *
+     * @param enableProtocol
+     *         enable protocol connection property value, see {@link AttachmentProperties#getEnableProtocol()}.
+     * @return supported protocols and the <em>available</em> additional protocols listed in {@code enableProtocol}
+     * @since 6
+     */
+    public static ProtocolCollection getProtocols(String enableProtocol) {
+        if (enableProtocol == null) return getSupportedProtocols();
+        return switch (enableProtocol.trim()) {
+            case "" -> getSupportedProtocols();
+            case "*" -> getAvailableProtocols();
+            default -> getProtocols0(enableProtocol);
+        };
+    }
+
+    private static ProtocolCollection getProtocols0(String enableProtocol) {
+        return create(
+                Stream.concat(
+                                SUPPORTED_PROTOCOLS.stream(),
+                                Arrays.stream(enableProtocol.split(","))
+                                        .map(ProtocolCollection::tryParseInt)
+                                        .filter(Objects::nonNull)
+                                        .mapToInt(Integer::intValue)
+                                        .distinct()
+                                        .mapToObj(ProtocolCollection::tryGetProtocolDescriptorUnmaskedAndMasked)
+                                        .filter(Objects::nonNull))
+                        .toArray(ProtocolDescriptor[]::new));
+    }
+
+    private static ProtocolDescriptor tryGetProtocolDescriptorUnmaskedAndMasked(int version) {
+        ProtocolDescriptor descriptor = AVAILABLE_PROTOCOLS.getProtocolDescriptor(version);
+        if (descriptor == null && (version & FB_PROTOCOL_FLAG) != FB_PROTOCOL_FLAG && version != PROTOCOL_VERSION10) {
+            descriptor = AVAILABLE_PROTOCOLS.getProtocolDescriptor(FB_PROTOCOL_FLAG | version);
+        }
+        return descriptor;
+    }
+
+    private static Integer tryParseInt(String s) {
+        try {
+            return Integer.valueOf(s.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

@@ -683,6 +683,17 @@ See also https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3[Jayb
 
 Make sure you check the other settings mentioned in that article, otherwise you'll get the next error.
 
+[#cause-unsupported-protocol]
+==== Cause: unsupported protocol version
+
+Since Jaybird 6, protocol versions of unsupported Firebird versions are no longer tried by default with pure Java connections.
+Connecting to unsupported Firebird versions with the pure Java protocol can result in this error.
+
+There are two options to address this:
+
+. Specify connection property `enableProtocol` with a list of unsupported protocol versions to try in addition to the supported protocol versions, or `"*"` to try all available protocol versions (e.g. `enableProtocol=12` or `enableProtocol=*`).
+. Use a native connection instead of a pure Java connection.
+
 [#error-occurred-during-login-please-check-server-firebird-log-for-details-335545106]
 === Error occurred during login, please check server firebird.log for details (335545106)
 

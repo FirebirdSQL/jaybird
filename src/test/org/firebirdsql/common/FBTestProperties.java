@@ -26,6 +26,9 @@ import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
+import org.firebirdsql.jaybird.props.AttachmentProperties;
+import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
+import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
@@ -38,6 +41,8 @@ import java.io.File;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
+
+import static org.firebirdsql.util.StringUtils.trimToNull;
 
 /**
  * Helper class for test properties (database user, password, paths etc)
@@ -84,6 +89,7 @@ public final class FBTestProperties {
     public static final String GDS_TYPE = getProperty("test.gds_type", "PURE_JAVA");
     public static final boolean USE_FIREBIRD_AUTOCOMMIT =
             Boolean.parseBoolean(getProperty("test.use_firebird_autocommit", "false"));
+    public static final String ENABLE_PROTOCOL = trimToNull(getProperty("test.enableProtocol", "*"));
 
     public static String getDatabasePath() {
         return getDatabasePath(DB_NAME);
@@ -124,28 +130,43 @@ public final class FBTestProperties {
         if (USE_FIREBIRD_AUTOCOMMIT) {
             returnValue.setProperty("useFirebirdAutocommit", "true");
         }
+        if (ENABLE_PROTOCOL != null) {
+            returnValue.setProperty("enableProtocol", ENABLE_PROTOCOL);
+        }
 
         return returnValue;
     }
 
     public static FbConnectionProperties getDefaultFbConnectionProperties() {
         FbConnectionProperties connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding(DB_LC_CTYPE);
+        configureDefaultDbProperties(connectionInfo);
         return connectionInfo;
     }
 
     public static FbServiceProperties getDefaultServiceProperties() {
         FbServiceProperties connectionInfo = new FbServiceProperties();
-        connectionInfo.setServerName(DB_SERVER_URL);
-        connectionInfo.setPortNumber(DB_SERVER_PORT);
+        configureDefaultServiceProperties(connectionInfo);
+        return connectionInfo;
+    }
+
+    public static void configureDefaultDbProperties(DatabaseConnectionProperties connectionInfo) {
+        configureDefaultAttachmentProperties(connectionInfo);
+        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
+    }
+
+    public static void configureDefaultServiceProperties(ServiceConnectionProperties connectionInfo) {
+        configureDefaultAttachmentProperties(connectionInfo);
+    }
+
+    public static void configureDefaultAttachmentProperties(AttachmentProperties connectionInfo) {
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+            connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
+            connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
+        }
         connectionInfo.setUser(DB_USER);
         connectionInfo.setPassword(DB_PASSWORD);
-        return connectionInfo;
+        connectionInfo.setEncoding(DB_LC_CTYPE);
+        connectionInfo.setEnableProtocol(ENABLE_PROTOCOL);
     }
 
     /**
@@ -168,10 +189,7 @@ public final class FBTestProperties {
      * @param serviceManager Service manager to configure
      */
     public static <T extends ServiceManager> T configureServiceManager(T serviceManager) {
-        serviceManager.setServerName(DB_SERVER_URL);
-        serviceManager.setPortNumber(DB_SERVER_PORT);
-        serviceManager.setUser(DB_USER);
-        serviceManager.setPassword(DB_PASSWORD);
+        configureDefaultAttachmentProperties(serviceManager);
         return serviceManager;
     }
 
@@ -196,13 +214,8 @@ public final class FBTestProperties {
             if (firebirdSupportInfo == null) {
                 final GDSType gdsType = getGdsType();
                 final FBServiceManager fbServiceManager = new FBServiceManager(gdsType);
-                if (gdsType == GDSType.getType("PURE_JAVA")
-                        || gdsType == GDSType.getType("NATIVE")) {
-                    fbServiceManager.setServerName(DB_SERVER_URL);
-                    fbServiceManager.setPortNumber(DB_SERVER_PORT);
-                }
-                fbServiceManager.setUser(FBTestProperties.DB_USER);
-                fbServiceManager.setPassword(FBTestProperties.DB_PASSWORD);
+                configureDefaultServiceProperties(fbServiceManager);
+                fbServiceManager.setEnableProtocol("*");
                 firebirdSupportInfo = FirebirdSupportInfo.supportInfoFor(fbServiceManager.getServerVersion());
             }
             return firebirdSupportInfo;
@@ -236,8 +249,7 @@ public final class FBTestProperties {
 
     // FACTORY METHODS
     //
-    // These methods should be used where possible so as to create the objects
-    // bound to the appropriate GDS implementation.
+    // These methods should be used where possible, to create the objects bound to the appropriate GDS implementation.
 
     public static FbDatabaseFactory getFbDatabaseFactory() {
         return GDSFactory.getDatabaseFactoryForType(getGdsType());
@@ -253,16 +265,14 @@ public final class FBTestProperties {
 
     public static FBManagedConnectionFactory createDefaultMcf(boolean shared) {
         FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(shared);
-        mcf.setDatabaseName(DB_DATASOURCE_URL);
-        mcf.setUser(DB_USER);
-        mcf.setPassword(DB_PASSWORD);
-        mcf.setEncoding(DB_LC_CTYPE);
-
+        configureDefaultDbProperties(mcf);
         return mcf;
     }
 
     public static FBManager createFBManager() {
-        return new FBManager(getGdsType());
+        FBManager fbManager = new FBManager(getGdsType());
+        fbManager.setEnableProtocol(ENABLE_PROTOCOL);
+        return fbManager;
     }
 
     public static FirebirdConnection getConnectionViaDriverManager() throws SQLException {
@@ -277,6 +287,7 @@ public final class FBTestProperties {
             fbManager.setServer(DB_SERVER_URL);
             fbManager.setPort(DB_SERVER_PORT);
         }
+        fbManager.setEnableProtocol(ENABLE_PROTOCOL);
         fbManager.start();
         fbManager.setForceCreate(true);
         // disable force write for minor increase in test throughput

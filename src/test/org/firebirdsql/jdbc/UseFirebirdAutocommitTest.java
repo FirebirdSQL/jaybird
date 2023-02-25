@@ -56,6 +56,9 @@ class UseFirebirdAutocommitTest {
     })
     void checkFirebirdAutocommitValue(String properties, boolean expectedUseFirebirdAutocommit) throws SQLException {
         String url = FBTestProperties.getUrl() + properties;
+        if (FBTestProperties.ENABLE_PROTOCOL != null) {
+            url += "&enableProtocol=" + FBTestProperties.ENABLE_PROTOCOL;
+        }
         try (FBConnection connection = (FBConnection) DriverManager.getConnection(url, FBTestProperties.DB_USER,
                 FBTestProperties.DB_PASSWORD)) {
             FBManagedConnectionFactory managedConnectionFactory = connection

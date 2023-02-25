@@ -21,7 +21,6 @@ package org.firebirdsql.management;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.jdbc.FBConnection;
@@ -74,13 +73,7 @@ class FBMaintenanceManagerTest {
     @BeforeEach
     void setUp() {
         maintenanceManager = new FBMaintenanceManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            maintenanceManager.setServerName(DB_SERVER_URL);
-            maintenanceManager.setPortNumber(DB_SERVER_PORT);
-        }
-
-        maintenanceManager.setUser(DB_USER);
-        maintenanceManager.setPassword(DB_PASSWORD);
+        configureDefaultServiceProperties(maintenanceManager);
         maintenanceManager.setDatabase(getDatabasePath());
         maintenanceManager.setLogger(System.out);
     }

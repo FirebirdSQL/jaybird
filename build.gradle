@@ -199,6 +199,7 @@ test {
             'test.use_firebird_autocommit': project.'test.use.firebird.autocommit',
             'jdk.net.useFastTcpLoopback': project.findProperty('jdk.net.useFastTcpLoopback') ?: 'false',
             'test.db_on_docker': project.findProperty('test.dbondocker') ?: 'false',
+            'test.enableProtocol': project.'test.enableProtocol'
     )
     if (project.hasProperty('test.jna.library.path')) {
         systemProperty 'jna.library.path', project.'test.jna.library.path'

@@ -317,8 +317,14 @@ public class FBServiceManager implements ServiceManager {
         }
         FbConnectionProperties connectionProperties = new FbConnectionProperties();
         createDatabaseAttachInfo().copyTo(connectionProperties);
+        // TODO Consider if it makes sense to copy all service properties (or at least the AttachmentProperties part)
+        //  into connection properties with some form of bulk copy
         connectionProperties.setUser(serviceProperties.getUser());
         connectionProperties.setPassword(serviceProperties.getPassword());
+        connectionProperties.setRoleName(serviceProperties.getRoleName());
+        connectionProperties.setEnableProtocol(serviceProperties.getEnableProtocol());
+        connectionProperties.setAuthPlugins(serviceProperties.getAuthPlugins());
+        connectionProperties.setWireCrypt(serviceProperties.getWireCrypt());
         FbDatabase fbDatabase = dbFactory.connect(connectionProperties);
         fbDatabase.attach();
         return fbDatabase;

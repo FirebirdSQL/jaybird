@@ -74,6 +74,7 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 // NOTE: Intentionally not mapped to DPB/SPB item, that is handled during authentication
                 builder(authPlugins).aliases("auth_plugin_list", "isc_dpb_auth_plugin_list"),
                 builder(wireCompression).type(BOOLEAN).aliases("wire_compression"),
+                builder(enableProtocol),
 
                 // Database properties
                 builder(charSet).aliases("charset", "localEncoding", "local_encoding"),

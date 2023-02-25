@@ -237,6 +237,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
+    public String getEnableProtocol() {
+        return FirebirdConnectionProperties.super.getEnableProtocol();
+    }
+
+    @Override
+    public void setEnableProtocol(String enableProtocol) {
+        FirebirdConnectionProperties.super.setEnableProtocol(enableProtocol);
+    }
+
+    @Override
     public int getSqlDialect() {
         return FirebirdConnectionProperties.super.getSqlDialect();
     }

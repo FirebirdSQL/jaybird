@@ -386,6 +386,63 @@ When the `createFor(Connection)` method has been used, this can be configured th
 
 This detection depends on actual activity, like an event posting a new count, or a new event registration.
 
+[#unsupported-protocol]
+=== Pure Java will no connect to unsupported Firebird version by default
+
+The pure Java protocol will by default no longer try the wire protocol versions of unsupported Firebird versions.
+This means that -- by default -- only protocol version 13 -- 18 are tried (if there is an implementation of such version).
+Attempts to connect to Firebird 2.5 or earlier will result in error _"`connection rejected by remote interface`"_ (`335544421` or `isc_connect_reject`).
+
+As a workaround, the connection property `enableProtocol` can enable unsupported protocols, assuming a suitable protocol implementation is available on the classpath.
+
+This connection property can have the following values:
+
+* A comma-separated list of additional protocol versions to try (e.g. `"11,12"`).
+The listed versions are tried in addition to the supported protocol versions.
+Non-integer values or unknown protocol versions are silently ignored.
++
+It is possible to use the "`masked`" protocol version (e.g. `"32780"` for protocol version 12).
+However, we recommend using the unmasked version (e.g. `"12"` for protocol version 12).
+* `"*"` -- enable all available protocol versions
+* `null` or empty string (`++""++`) -- default behaviour, only use supported protocols
+
+[WARNING]
+====
+Given these protocol versions and their Firebird version are not supported, there is no guarantee that the driver will function correctly when an unsupported protocol is enabled this way.
+Especially things like database metadata could use features that are not supported by older Firebird versions.
+We recommend upgrading your Firebird version, or downgrading to a Jaybird version which still supports your Firebird version.
+
+For maximum compatibility, it is recommended to either use `"*"`, or to make sure to include the maximum protocol version of your Firebird version.
+
+Unsupported protocol versions may be removed in future releases of Jaybird.
+====
+
+.Firebird versions and protocol versions
+[cols="1,1",options="header",]
+|===
+|Firebird version
+|Maximum protocol
+
+|1.0 -- 2.0
+|10
+
+|2.1
+|11
+
+|2.5
+|12
+
+|3.0
+|15footnote:[since Firebird 3.0.2, version 13 for 3.0.0 and 3.0.1]footnote:[Jaybird has no protocol 14 implementation]
+
+|4.0
+|16footnote:[Jaybird no protocol 17 implementation]
+
+|5.0
+|18
+
+|===
+
 // TODO add major changes
 
 [#potentially-breaking-changes]
@@ -435,8 +492,14 @@ It might have been a change we forgot to document, but it could just as well be 
 Jaybird 6 has dropped support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support^]).
 In general, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
 
-Possibly, wire protocol versions for Firebird 2.5 and earlier will be disabled by default to disallow connection for the pure Java protocol.
-If that happens, an option will be provided to re-enable unsupported wire protocol versions.
+[[unsupported-protocols-disabled]]
+=== Unsupported protocol version disabled by default
+
+The wire protocol versions for Firebird 2.5 and earlier are disabled by default to disallow connection for the pure Java protocol.
+Attempts to connect to Firebird 2.5 or earlier will result in error _"`connection rejected by remote interface`"_ (`335544421` or `isc_connect_reject`).
+You can use connection property `enableProtocol=*` or -- for example -- `enableProtocol=10,11,12` to re-enable these protocols, or use the native protocol to connect instead.
+
+See also <<unsupported-protocol>>.
 
 [#support-for-java-before-17-dropped]
 === Support for Java versions before Java 17 dropped

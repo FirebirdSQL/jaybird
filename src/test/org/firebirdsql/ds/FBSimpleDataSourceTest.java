@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
+import static org.firebirdsql.common.FBTestProperties.configureDefaultDbProperties;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
@@ -53,10 +54,7 @@ class FBSimpleDataSourceTest {
     @Test
     void testJavaCharSetIsDefaultCharSet() {
         FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        setDefaultConfig(ds);
         ds.setCharSet(System.getProperty("file.encoding"));
         try (Connection con = ds.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM RDB$DATABASE");
@@ -71,10 +69,7 @@ class FBSimpleDataSourceTest {
     void defaultDisableWireCompression() throws Exception {
         assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
         FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        setDefaultConfig(ds);
 
         try (Connection connection = ds.getConnection()) {
             assertTrue(connection.isValid(0));
@@ -89,10 +84,7 @@ class FBSimpleDataSourceTest {
         assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
         assumeTrue(getDefaultSupportInfo().supportsWireCompression(), "Test requires wire compression");
         FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        setDefaultConfig(ds);
 
         ds.setWireCompression(true);
 
@@ -107,10 +99,7 @@ class FBSimpleDataSourceTest {
     @Test
     void canChangeConfigAfterConnectionCreation() throws Exception {
         FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        setDefaultConfig(ds);
 
         // possible before connecting
         ds.setBlobBufferSize(1024);
@@ -127,10 +116,7 @@ class FBSimpleDataSourceTest {
     void cannotChangeConfigAfterConnectionCreation_usingSharedMCF() throws Exception {
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
         FBSimpleDataSource ds = new FBSimpleDataSource(mcf);
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        setDefaultConfig(ds);
 
         // possible before connecting
         ds.setBlobBufferSize(1024);
@@ -149,14 +135,16 @@ class FBSimpleDataSourceTest {
     @Test
     void canConnectWithEmptyRoleName_494() throws Exception {
         FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
+        setDefaultConfig(ds);
         ds.setRoleName("");
-        ds.setType(FBTestProperties.getGdsType().toString());
 
         try (Connection connection = ds.getConnection()) {
             assertTrue(connection.isValid(1000));
         }
+    }
+
+    private static void setDefaultConfig(FBSimpleDataSource ds) {
+        configureDefaultDbProperties(ds);
+        ds.setType(FBTestProperties.getGdsType().toString());
     }
 }

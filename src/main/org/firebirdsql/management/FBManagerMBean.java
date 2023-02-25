@@ -19,6 +19,7 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.jaybird.props.AttachmentProperties;
 
 /**
  * API for {@link FBManager}, for creating and dropping databases.
@@ -189,6 +190,21 @@ public interface FBManagerMBean extends AutoCloseable {
      *         SQL role to use.
      */
     void setRoleName(String roleName);
+
+    /**
+     * @return enable protocol value (see also {@link AttachmentProperties#getEnableProtocol()}.
+     * @since 6
+     */
+    String getEnableProtocol();
+
+    /**
+     * Sets the enable protocol value.
+     *
+     * @param enableProtocol
+     *         enable protocol value
+     * @since 6
+     */
+    void setEnableProtocol(String enableProtocol);
 
     /**
      * Set the database dialect to use when creating a new database.

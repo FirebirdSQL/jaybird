@@ -44,6 +44,7 @@ import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
 import static org.firebirdsql.common.FBTestProperties.DB_USER;
+import static org.firebirdsql.common.FBTestProperties.ENABLE_PROTOCOL;
 import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
 import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
@@ -62,6 +63,9 @@ class DatabaseUrlFormatsTest {
     @ParameterizedTest
     @MethodSource
     void testConnectionWithDriverManager(String url) throws Exception {
+        if (ENABLE_PROTOCOL != null) {
+            url += (url.contains("?") ? '&' : "?") + "enableProtocol=" + ENABLE_PROTOCOL;
+        }
         try (Connection connection = DriverManager.getConnection(url, DB_USER, FBTestProperties.DB_PASSWORD)) {
             assertTrue(connection.isValid(1000));
         }
@@ -105,6 +109,7 @@ class DatabaseUrlFormatsTest {
         FBSimpleDataSource dataSource = new FBSimpleDataSource(FBTestProperties.getGdsType());
         dataSource.setUser(DB_USER);
         dataSource.setPassword(DB_PASSWORD);
+        dataSource.setEnableProtocol(ENABLE_PROTOCOL);
         dataSource.setServerName(serverName);
         if (portNumber != null) dataSource.setPortNumber(portNumber);
         dataSource.setDatabaseName(databaseName);
