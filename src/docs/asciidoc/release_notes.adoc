@@ -375,6 +375,17 @@ Jaybird => output [=> deflate] => socket
 
 A future version may introduce connection properties to control this per connection.
 
+[#event-manager-broken-connection]
+=== Broken connection detection for event manager
+
+The event manager now attempts to detect if the underlying database connection is broken.
+Once a broken connection is detected, the event manager will attempt to close or forcibly disconnect itself and report itself as not _connected_.
+
+For proper detection of some types of network problems in a timely manner, it may be necessary to configure the `soTimeout` of the event manager _before_ connecting.
+When the `createFor(Connection)` method has been used, this can be configured through the `soTimeout` connection property, or -- for pure Java connections only -- the `setNetworkTimeout` method of the `Connection` object.
+
+This detection depends on actual activity, like an event posting a new count, or a new event registration.
+
 // TODO add major changes
 
 [#potentially-breaking-changes]

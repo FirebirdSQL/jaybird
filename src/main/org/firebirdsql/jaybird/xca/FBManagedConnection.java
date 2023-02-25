@@ -40,8 +40,6 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.io.IOException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
@@ -130,7 +128,7 @@ public final class FBManagedConnection implements ExceptionListener {
     public void errorOccurred(Object source, SQLException ex) {
         log.trace(ex.getMessage());
 
-        if (!FatalGDSErrorHelper.isFatal(ex)) {
+        if (!FatalErrorHelper.isFatal(ex)) {
             return;
         }
         XcaConnectionEvent event = new XcaConnectionEvent(this, XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED,
@@ -358,43 +356,7 @@ public final class FBManagedConnection implements ExceptionListener {
             return false;
         }
 
-        Exception connectionEventException = connectionEvent.getException();
-        if (connectionEventException == null) {
-            return false;
-        }
-
-        SQLException firstSqlException = findException(connectionEventException, SQLException.class);
-        if (firstSqlException != null && isBrokenConnectionErrorCode(firstSqlException.getErrorCode())) {
-            return true;
-        }
-
-        if (findException(connectionEventException, SocketTimeoutException.class) != null) {
-            return true;
-        }
-
-        //noinspection RedundantIfStatement
-        if (findException(connectionEventException, SocketException.class) != null) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private boolean isBrokenConnectionErrorCode(int iscCode) {
-        return iscCode == ISCConstants.isc_network_error
-                || iscCode == ISCConstants.isc_net_read_err
-                || iscCode == ISCConstants.isc_net_write_err;
-    }
-
-    private <T extends Exception> T findException(Exception root, Class<T> exceptionType) {
-        Throwable current = root;
-        while (current != null) {
-            if (exceptionType.isInstance(current)) {
-                return exceptionType.cast(current);
-            }
-            current = current.getCause();
-        }
-        return null;
+        return FatalErrorHelper.isBrokenConnection(connectionEvent.getException());
     }
 
     /**

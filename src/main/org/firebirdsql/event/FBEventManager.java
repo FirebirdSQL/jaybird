@@ -30,9 +30,10 @@ import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
+import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jaybird.xca.FatalErrorHelper;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -71,6 +72,7 @@ public class FBEventManager implements EventManager {
     private EventDispatcher eventDispatcher;
     private Thread dispatchThread;
     private volatile long waitTimeout = 1000;
+    private final DbListener dbListener = new DbListener();
 
     @SuppressWarnings("UnusedDeclaration")
     public FBEventManager() {
@@ -93,26 +95,10 @@ public class FBEventManager implements EventManager {
         this.fbDatabase = connection.unwrap(FirebirdConnection.class).getFbDatabase();
         gdsType = null;
         connectionProperties = fbDatabase.getConnectionProperties().asImmutable();
+        eventManagerBehaviour = new ManagedEventManagerBehaviour();
         // NOTE In this implementation, we don't take into account pooled connections that might be closed while
         //  the FbDatabase instance remains in use. This means that at the moment, it is possible that the event manager
         //  can remain in use for longer than the Connection.
-        fbDatabase.addDatabaseListener(new DatabaseListener() {
-            @Override
-            public void detaching(FbDatabase database) {
-                try {
-                    if (!isConnected()) return;
-                    try {
-                        disconnect();
-                    } catch (SQLException e) {
-                        log.error("Exception on disconnect of event manager on connection detaching.", e);
-                    }
-                } finally {
-                    database.removeDatabaseListener(this);
-                    fbDatabase = null;
-                }
-            }
-        });
-        eventManagerBehaviour = new ManagedEventManagerBehaviour();
     }
 
     /**
@@ -180,10 +166,12 @@ public class FBEventManager implements EventManager {
                 for (String eventName : new HashSet<>(handlerMap.keySet())) {
                     try {
                         unregisterListener(eventName);
-                    } catch (SQLException e) {
-                        chain.append(e);
                     } catch (Exception e) {
-                        chain.append(new SQLException(e));
+                        chain.append(e instanceof SQLException sqle ? sqle : new SQLException(e));
+                        if (FatalErrorHelper.isBrokenConnection(e)) {
+                            // It makes no sense to continue
+                            break;
+                        }
                     }
                 }
             } finally {
@@ -197,22 +185,30 @@ public class FBEventManager implements EventManager {
                 connected = false;
             }
         } finally {
-            EventDispatcher eventDispatcher = this.eventDispatcher;
-            if (eventDispatcher != null) {
-                eventDispatcher.stop();
-                dispatchThread.interrupt();
-                // join the thread and wait until it dies
-                try {
-                    dispatchThread.join();
-                } catch (InterruptedException ex) {
-                    chain.append(new FBSQLException(ex));
-                } finally {
-                    this.eventDispatcher = null;
-                    dispatchThread = null;
-                }
+            try {
+                terminateDispatcher();
+            } catch (SQLException e) {
+                chain.append(e);
             }
         }
         if (chain.hasException()) throw chain.getException();
+    }
+
+    private void terminateDispatcher() throws SQLException {
+        EventDispatcher eventDispatcher = this.eventDispatcher;
+        if (eventDispatcher != null) {
+            eventDispatcher.stop();
+            dispatchThread.interrupt();
+            // join the thread and wait until it dies
+            try {
+                dispatchThread.join();
+            } catch (InterruptedException ex) {
+               throw new SQLException(ex);
+            } finally {
+                this.eventDispatcher = null;
+                dispatchThread = null;
+            }
+        }
     }
 
     @Override
@@ -437,9 +433,35 @@ public class FBEventManager implements EventManager {
         return connectionProperties.connectionPropertyValues();
     }
 
-    private interface EventManagerBehaviour {
+    private void addDbListeners(FbDatabase database) {
+        if (database == null) return;
+        database.addDatabaseListener(dbListener);
+        database.addExceptionListener(dbListener);
+    }
+
+    private void removeDbListeners(FbDatabase database) {
+        if (database == null) return;
+        database.removeExceptionListener(dbListener);
+        database.removeDatabaseListener(dbListener);
+    }
+
+    /**
+     * Returns the current {@link FbDatabase} instance.
+     * <p>
+     * This method is intended for use by tests only.
+     * </p>
+     *
+     * @return underlying {@link FbDatabase}
+     */
+    FbDatabase getFbDatabase() {
+        return fbDatabase;
+    }
+
+    private sealed interface EventManagerBehaviour {
         void connectDatabase() throws SQLException;
         void disconnectDatabase() throws SQLException;
+        void handleDetaching(FbDatabase database);
+        void handleErrorOccurred(Object source, SQLException exception);
     }
 
     /**
@@ -451,12 +473,52 @@ public class FBEventManager implements EventManager {
         public void connectDatabase() throws SQLException {
             FbDatabaseFactory databaseFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
             fbDatabase = databaseFactory.connect(connectionProperties);
+            addDbListeners(fbDatabase);
             fbDatabase.attach();
         }
 
         @Override
         public void disconnectDatabase() throws SQLException {
+            removeDbListeners(fbDatabase);
             fbDatabase.close();
+        }
+
+        @Override
+        public void handleDetaching(FbDatabase database) {
+            try (LockCloseable ignored = withLock()) {
+                listenerMap.clear();
+                handlerMap.clear();
+                connected = false;
+            }
+        }
+
+        @Override
+        public void handleErrorOccurred(Object source, SQLException exception) {
+            FbDatabase fbDatabase = FBEventManager.this.fbDatabase;
+            if (fbDatabase == null || !fbDatabase.isAttached()) return;
+
+            if (FatalErrorHelper.isBrokenConnection(exception)) {
+                try {
+                    fbDatabase.forceClose();
+                } catch (SQLException e) {
+                    log.debug("Ignored exception force closing exception", e);
+                } finally {
+                    listenerMap.clear();
+                    handlerMap.clear();
+                    connected = false;
+                    try {
+                        terminateDispatcher();
+                    } catch (SQLException e) {
+                        log.debug("Ignored exception terminating dispatcher", e);
+                    }
+                }
+            } else if (FatalErrorHelper.isFatal(exception)) {
+                try {
+                    disconnect();
+                } catch (SQLException e) {
+                    log.debug("Ignored exception during disconnect", e);
+                }
+            }
         }
     }
 
@@ -468,15 +530,55 @@ public class FBEventManager implements EventManager {
         @Override
         public void connectDatabase() throws SQLException {
             // using existing connection
-            if (fbDatabase == null) {
+            if (fbDatabase == null || !fbDatabase.isAttached()) {
+                fbDatabase = null;
                 // fbDatabase has already detached
                 throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer).toSQLException();
             }
+            addDbListeners(fbDatabase);
         }
 
         @Override
         public void disconnectDatabase() {
             // fbDatabase will be closed where it was opened
+        }
+
+        @Override
+        public void handleDetaching(FbDatabase database) {
+            try {
+                if (!isConnected()) return;
+                disconnect();
+            } catch (SQLException e) {
+                log.error("Exception on disconnect of event manager on connection detaching.", e);
+            }
+        }
+
+        @Override
+        public void handleErrorOccurred(Object source, SQLException exception) {
+            // do nothing, should be handled by the handling in FBManagedConnection
+        }
+    }
+
+    private final class DbListener implements DatabaseListener, ExceptionListener {
+
+        @Override
+        public void detaching(FbDatabase database) {
+            removeDbListeners(database);
+            try {
+                eventManagerBehaviour.handleDetaching(database);
+            } finally {
+                fbDatabase = null;
+                try {
+                    terminateDispatcher();
+                } catch (SQLException e) {
+                    log.debug("Ignored exception terminating dispatcher", e);
+                }
+            }
+        }
+
+        @Override
+        public void errorOccurred(Object source, SQLException ex) {
+            eventManagerBehaviour.handleErrorOccurred(source, ex);
         }
     }
 

@@ -20,39 +20,120 @@ package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.gds.ISCConstants;
 
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.sql.SQLException;
 import java.util.Arrays;
 
 /**
- * Helper class for the exception handling in XCA framework. JCA specification
- * required resource adapter to report an error if it is certain that no other
+ * Helper class for the exception handling in XCA framework. The JCA specification
+ * required a resource adapter to report an error if it is certain that no other
  * operations can be executed over that particular managed connection.
  * <p>
  * In case of Firebird, few errors belong to the so-called "fatal errors", after
- * which client application cannot continue its job. For example, when socket
- * connection to the server is broken, any subsequent operation will fail. XCA
+ * which client application cannot continue its job. For example, when a socket
+ * connection to the server is broken, any subsequent operation will fail. The XCA
  * container should remove the connection from the pool in order to allow process
  * to recover (when Firebird server is restarted).
  * </p>
+ * <p>
+ * NOTE: Although these methods are intended for use within XCA, they can be used for other parts of Jaybird which have
+ * similar needs for connection error evaluation.
+ * </p>
  *
  * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
-final class FatalGDSErrorHelper {
+public final class FatalErrorHelper {
 
-    private FatalGDSErrorHelper() {
+    private FatalErrorHelper() {
         // no instances
     }
 
     /**
      * Check whether the specified exception is fatal from the XCA point of view.
      *
-     * @param ex
+     * @param exception
      *         exception to check.
      * @return {@code true} if the exception that happened is fatal
      */
-    static boolean isFatal(SQLException ex) {
-        int errorCode = ex.getErrorCode();
+    public static boolean isFatal(SQLException exception) {
+        return exception != null && isFatal(exception.getErrorCode());
+    }
+
+    /**
+     * Checks whether {@code errorCode} is fatal from the XCA point of view.
+     *
+     * @param errorCode
+     *         ISC error code
+     * @return {@code true} if the error code is (considered) fatal
+     */
+    private static boolean isFatal(int errorCode) {
         return Arrays.binarySearch(FATAL_ERRORS, errorCode) >= 0;
+    }
+
+    /**
+     * Checks whether {@code errorCode} indicates a broken connection. The broken error codes are a subset of the fatal
+     * error codes, and generally mean that attempts to send network IO will not work.
+     *
+     * @param errorCode
+     *         ISC error code
+     * @return {@code true} if the error code is signals a (possibly) broken connection
+     */
+    private static boolean isBrokenConnectionErrorCode(int errorCode) {
+        return errorCode == ISCConstants.isc_network_error
+               || errorCode == ISCConstants.isc_net_read_err
+               || errorCode == ISCConstants.isc_net_write_err;
+    }
+
+    /**
+     * Checks whether {@code exception} indicates a broken connection. There is overlap with
+     * {@link #isFatal(SQLException)}, but neither is a subset of the other.
+     * <p>
+     * Specifically, this method will check if the first {@code SQLException} in the cause-chain of {@code exception}
+     * (including {@code exception} itself) has a "broken connection error code" (a proper subset of "fatal error
+     * codes"), or otherwise of there is a {@code SocketTimeoutException} or {@code SocketException} in the cause-chain.
+     * </p>
+     * <p>
+     * NOTE: Exact checks done by this method may be revised in any point release, and above documentation should be
+     * considered illustrative, and not prescriptive.
+     * </p>
+     *
+     * @param exception
+     *         exception to check
+     * @return {@code true} if the error code is signals a (possibly) broken connection
+     */
+    public static boolean isBrokenConnection(Exception exception) {
+        if (exception == null) {
+            return false;
+        }
+
+        SQLException firstSqlException = findException(exception, SQLException.class);
+        if (firstSqlException != null && isBrokenConnectionErrorCode(firstSqlException.getErrorCode())) {
+            return true;
+        }
+
+        if (findException(exception, SocketTimeoutException.class) != null) {
+            return true;
+        }
+
+        //noinspection RedundantIfStatement
+        if (findException(exception, SocketException.class) != null) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static <T extends Exception> T findException(Exception root, Class<T> exceptionType) {
+        Throwable current = root;
+        while (current != null) {
+            if (exceptionType.isInstance(current)) {
+                return exceptionType.cast(current);
+            }
+            current = current.getCause();
+        }
+        return null;
     }
 
     /**
@@ -65,6 +146,7 @@ final class FatalGDSErrorHelper {
      * </p>
      */
     private static final int[] FATAL_ERRORS = new int[] {
+// @formatter:off
             ISCConstants.isc_network_error,
             ISCConstants.isc_net_read_err,
             ISCConstants.isc_net_write_err,
@@ -82,8 +164,8 @@ final class FatalGDSErrorHelper {
 //        ISCConstants.isc_port_len,    //user sent buffer too short or long for data
 //                                      //expected.  Should never occur
 //        
-            ISCConstants.isc_req_sync,    //client asked for data when server expected
-            //data or vice versa. Should never happen
+            ISCConstants.isc_req_sync,  //client asked for data when server expected
+                                        //data or vice versa. Should never happen
 //        
 //        ISCConstants.isc_req_wrong_db,//In a multi-database application, a prepared
 //                                      //request has been opened against the wrong
@@ -137,6 +219,7 @@ final class FatalGDSErrorHelper {
 //        ISCConstants.isc_bad_protocol,
 //        ISCConstants.isc_file_in_use
     };
+// @formatter:on
 
     static {
         Arrays.sort(FATAL_ERRORS);

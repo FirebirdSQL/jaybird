@@ -20,15 +20,25 @@ package org.firebirdsql.event;
 
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.AbstractFbAttachment;
+import org.firebirdsql.gds.ng.AbstractFbDatabase;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.util.Unstable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.ExecutorService;
@@ -345,6 +355,48 @@ class FBEventManagerTest {
             SQLException exception = assertThrows(SQLException.class, eventManager::connect);
             assertThat(exception, errorCodeEquals(JaybirdErrorCodes.jb_notConnectedToServer));
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "BrokenSQLException", "FatalSQLException", "SocketException", "SocketTimeoutException" })
+    void testDefaultEventManagerDisconnectOnFatalException(String exceptionType) throws Exception {
+        setupDefaultEventManager();
+        AbstractFbDatabase<?> db = (AbstractFbDatabase<?>) ((FBEventManager) eventManager).getFbDatabase();
+        Field eldField = AbstractFbAttachment.class.getDeclaredField("exceptionListenerDispatcher");
+        eldField.setAccessible(true);
+        ExceptionListenerDispatcher eld = (ExceptionListenerDispatcher) eldField.get(db);
+
+        SQLException exception = switch (exceptionType) {
+            case "BrokenSQLException" -> new SQLException("broken", "00000", ISCConstants.isc_net_write_err);
+            case "FatalSQLException" -> new SQLException("fatal not broken", "00000", ISCConstants.isc_req_sync);
+            case "SocketException" -> new SQLException(new SocketException());
+            case "SocketTimeoutException" -> new SQLException(new SocketTimeoutException());
+            default -> throw new IllegalArgumentException("Unexpected exceptionType: " + exceptionType);
+        };
+
+        assertTrue(eventManager.isConnected(), "expected connected event manager");
+
+        eld.errorOccurred(exception);
+
+        assertFalse(eventManager.isConnected(), "expected disconnected event manager");
+    }
+
+    /**
+     * Tests if a default event manager is reported as closed when the underlying {@link FbDatabase} detaches.
+     * <p>
+     * NOTE: This is an unexpected scenario, as the db is owned and controlled by the default event manager behaviour.
+     * </p>
+     */
+    @Test
+    void testDefaultEventManagerDisconnectionOnDbClose() throws Exception {
+        setupDefaultEventManager();
+        FbDatabase db = ((FBEventManager) eventManager).getFbDatabase();
+
+        assertTrue(eventManager.isConnected(), "expected connected event manager");
+
+        db.close();
+
+        assertFalse(eventManager.isConnected(), "expected disconnected event manager");
     }
 
     private class EventWait implements Runnable {
