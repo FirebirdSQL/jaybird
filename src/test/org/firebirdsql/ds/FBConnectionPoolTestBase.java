@@ -20,7 +20,6 @@ package org.firebirdsql.ds;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.PooledConnection;
@@ -29,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.configureDefaultDbProperties;
-import static org.firebirdsql.common.FBTestProperties.getProperty;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 
 /**
@@ -43,14 +41,7 @@ abstract class FBConnectionPoolTestBase {
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     private final List<PooledConnection> connections = new ArrayList<>();
-    protected FBConnectionPoolDataSource ds;
-
-    @BeforeEach
-    void setUp() {
-        ds = new FBConnectionPoolDataSource();
-        configureDefaultDbProperties(ds);
-        ds.setType(getProperty("test.gds_type", null));
-    }
+    protected final FBConnectionPoolDataSource ds = configureDefaultDbProperties(new FBConnectionPoolDataSource());
 
     @AfterEach
     void tearDown() {

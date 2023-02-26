@@ -25,7 +25,6 @@ import org.firebirdsql.jaybird.xca.XidImpl;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -61,14 +60,7 @@ class FBXADataSourceTest {
 
     private final List<XAConnection> connections = new ArrayList<>();
 
-    private FBXADataSource ds;
-
-    @BeforeEach
-    void setUp() {
-        ds = new FBXADataSource();
-        ds.setType(getProperty("test.gds_type", null));
-        configureDefaultDbProperties(ds);
-    }
+    private final FBXADataSource ds = configureDefaultDbProperties(new FBXADataSource());
 
     @AfterEach
     void tearDown() {

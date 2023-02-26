@@ -501,6 +501,7 @@ class FBConnectionTest {
 
     @Test
     void testUseActualProcessId() throws Exception {
+        assumeThat("embedded does not report process id", GDS_TYPE, not(isEmbeddedType()));
         assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test requires monitoring tables");
         final Properties props = getDefaultPropertiesForConnection();
         final long actualProcessId = ProcessHandle.current().pid();

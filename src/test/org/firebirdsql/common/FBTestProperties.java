@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.common;
 
+import org.firebirdsql.event.FBEventManager;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
@@ -42,6 +43,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
 
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.util.StringUtils.trimToNull;
 
 /**
@@ -85,7 +87,6 @@ public final class FBTestProperties {
     public static final int DB_SERVER_PORT = Integer.parseInt(getProperty("test.db.port", "3050"));
     public static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
     public static final boolean DB_ON_DOCKER = Boolean.parseBoolean(getProperty("test.db_on_docker", "false"));
-    public static final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
     public static final String GDS_TYPE = getProperty("test.gds_type", "PURE_JAVA");
     public static final boolean USE_FIREBIRD_AUTOCOMMIT =
             Boolean.parseBoolean(getProperty("test.use_firebird_autocommit", "false"));
@@ -96,10 +97,11 @@ public final class FBTestProperties {
     }
 
     public static String getDatabasePath(String name) {
-        if (!("127.0.0.1".equals(DB_SERVER_URL) || "localhost".equals(DB_SERVER_URL)) || DB_ON_DOCKER)
+        if (!isEmbeddedType().matches(GDS_TYPE) &&
+            (!("127.0.0.1".equals(DB_SERVER_URL) || "localhost".equals(DB_SERVER_URL)) || DB_ON_DOCKER)) {
             return DB_PATH + "/" + name;
-        else
-            return new File(DB_PATH, name).getAbsolutePath();
+        }
+        return new File(DB_PATH, name).getAbsolutePath();
     }
 
     /**
@@ -138,35 +140,36 @@ public final class FBTestProperties {
     }
 
     public static FbConnectionProperties getDefaultFbConnectionProperties() {
-        FbConnectionProperties connectionInfo = new FbConnectionProperties();
-        configureDefaultDbProperties(connectionInfo);
-        return connectionInfo;
+        return configureDefaultDbProperties(new FbConnectionProperties());
     }
 
     public static FbServiceProperties getDefaultServiceProperties() {
-        FbServiceProperties connectionInfo = new FbServiceProperties();
-        configureDefaultServiceProperties(connectionInfo);
-        return connectionInfo;
+        return configureDefaultServiceProperties(new FbServiceProperties());
     }
 
-    public static void configureDefaultDbProperties(DatabaseConnectionProperties connectionInfo) {
-        configureDefaultAttachmentProperties(connectionInfo);
+    public static <T extends DatabaseConnectionProperties> T configureDefaultDbProperties(T connectionInfo) {
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
+        return configureDefaultAttachmentProperties(connectionInfo);
     }
 
-    public static void configureDefaultServiceProperties(ServiceConnectionProperties connectionInfo) {
-        configureDefaultAttachmentProperties(connectionInfo);
+    public static <T extends ServiceConnectionProperties> T configureDefaultServiceProperties(T connectionInfo) {
+        return configureDefaultAttachmentProperties(connectionInfo);
     }
 
-    public static void configureDefaultAttachmentProperties(AttachmentProperties connectionInfo) {
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+    public static <T extends AttachmentProperties> T configureDefaultAttachmentProperties(T connectionInfo) {
+        if (getGdsType() != GDSType.getType("EMBEDDED")) {
             connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
             connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
+        }
+        // FBServiceManager and FBEventManager don't allow setting type after construction
+        if (!(connectionInfo instanceof FBServiceManager || connectionInfo instanceof FBEventManager)) {
+            connectionInfo.setType(GDS_TYPE);
         }
         connectionInfo.setUser(DB_USER);
         connectionInfo.setPassword(DB_PASSWORD);
         connectionInfo.setEncoding(DB_LC_CTYPE);
         connectionInfo.setEnableProtocol(ENABLE_PROTOCOL);
+        return connectionInfo;
     }
 
     /**
@@ -212,9 +215,8 @@ public final class FBTestProperties {
     public static FirebirdSupportInfo getDefaultSupportInfo() {
         try {
             if (firebirdSupportInfo == null) {
-                final GDSType gdsType = getGdsType();
-                final FBServiceManager fbServiceManager = new FBServiceManager(gdsType);
-                configureDefaultServiceProperties(fbServiceManager);
+                GDSType gdsType = getGdsType();
+                FBServiceManager fbServiceManager = configureDefaultServiceProperties(new FBServiceManager(gdsType));
                 fbServiceManager.setEnableProtocol("*");
                 firebirdSupportInfo = FirebirdSupportInfo.supportInfoFor(fbServiceManager.getServerVersion());
             }
@@ -240,7 +242,7 @@ public final class FBTestProperties {
      * @return JDBC URL (without parameters) for this testrun
      */
     public static String getUrl(String dbPath) {
-        if ("EMBEDDED".equalsIgnoreCase(GDS_TYPE)) {
+        if (isEmbeddedType().matches(GDS_TYPE)) {
             return getProtocolPrefix() + dbPath;
         } else {
             return getProtocolPrefix() + DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + dbPath;
@@ -264,9 +266,7 @@ public final class FBTestProperties {
     }
 
     public static FBManagedConnectionFactory createDefaultMcf(boolean shared) {
-        FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(shared);
-        configureDefaultDbProperties(mcf);
-        return mcf;
+        return configureDefaultDbProperties(createFBManagedConnectionFactory(shared));
     }
 
     public static FBManager createFBManager() {

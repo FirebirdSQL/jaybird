@@ -72,8 +72,7 @@ class FBMaintenanceManagerTest {
 
     @BeforeEach
     void setUp() {
-        maintenanceManager = new FBMaintenanceManager(getGdsType());
-        configureDefaultServiceProperties(maintenanceManager);
+        maintenanceManager = configureDefaultServiceProperties(new FBMaintenanceManager(getGdsType()));
         maintenanceManager.setDatabase(getDatabasePath());
         maintenanceManager.setLogger(System.out);
     }

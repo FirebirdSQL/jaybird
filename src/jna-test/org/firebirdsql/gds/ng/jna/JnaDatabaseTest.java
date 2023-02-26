@@ -22,7 +22,6 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
@@ -44,7 +43,6 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.oneOf;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -250,9 +248,7 @@ class JnaDatabaseTest {
     @Test
     void testCancelOperation_abortSupported() throws Exception {
         // TODO Investigate why this doesn't work.
-        assumeThat("Test doesn't work with embedded protocol",
-                FBTestProperties.GDS_TYPE,
-                not(oneOf(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME)));
+        assumeThat("Test doesn't work with embedded protocol", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
 
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);

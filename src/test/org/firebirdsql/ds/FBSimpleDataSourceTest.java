@@ -53,8 +53,7 @@ class FBSimpleDataSourceTest {
      */
     @Test
     void testJavaCharSetIsDefaultCharSet() {
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        setDefaultConfig(ds);
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
         ds.setCharSet(System.getProperty("file.encoding"));
         try (Connection con = ds.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM RDB$DATABASE");
@@ -68,8 +67,7 @@ class FBSimpleDataSourceTest {
     @Test
     void defaultDisableWireCompression() throws Exception {
         assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        setDefaultConfig(ds);
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
 
         try (Connection connection = ds.getConnection()) {
             assertTrue(connection.isValid(0));
@@ -83,8 +81,7 @@ class FBSimpleDataSourceTest {
     void enableWireCompression() throws Exception {
         assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
         assumeTrue(getDefaultSupportInfo().supportsWireCompression(), "Test requires wire compression");
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        setDefaultConfig(ds);
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
 
         ds.setWireCompression(true);
 
@@ -98,8 +95,7 @@ class FBSimpleDataSourceTest {
 
     @Test
     void canChangeConfigAfterConnectionCreation() throws Exception {
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        setDefaultConfig(ds);
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
 
         // possible before connecting
         ds.setBlobBufferSize(1024);
@@ -115,8 +111,7 @@ class FBSimpleDataSourceTest {
     @Test
     void cannotChangeConfigAfterConnectionCreation_usingSharedMCF() throws Exception {
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
-        FBSimpleDataSource ds = new FBSimpleDataSource(mcf);
-        setDefaultConfig(ds);
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource(mcf));
 
         // possible before connecting
         ds.setBlobBufferSize(1024);
@@ -134,8 +129,7 @@ class FBSimpleDataSourceTest {
      */
     @Test
     void canConnectWithEmptyRoleName_494() throws Exception {
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        setDefaultConfig(ds);
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
         ds.setRoleName("");
 
         try (Connection connection = ds.getConnection()) {
@@ -143,8 +137,4 @@ class FBSimpleDataSourceTest {
         }
     }
 
-    private static void setDefaultConfig(FBSimpleDataSource ds) {
-        configureDefaultDbProperties(ds);
-        ds.setType(FBTestProperties.getGdsType().toString());
-    }
 }

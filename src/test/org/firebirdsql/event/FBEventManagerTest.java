@@ -89,8 +89,7 @@ class FBEventManagerTest {
     private static final int LONG_DELAY = 1000;
 
     private void setupDefaultEventManager() throws SQLException {
-        eventManager = new FBEventManager(getGdsType());
-        configureDefaultAttachmentProperties(eventManager);
+        eventManager = configureDefaultAttachmentProperties(new FBEventManager(getGdsType()));
 
         // have to resolve relative path to the absolute one
         eventManager.setDatabaseName(new File(getDatabasePath()).getAbsolutePath());

@@ -61,8 +61,7 @@ class FBStreamingBackupManagerTest {
 
     @BeforeEach
     void setUp() {
-        backupManager = new FBStreamingBackupManager(getGdsType());
-        configureDefaultServiceProperties(backupManager);
+        backupManager = configureDefaultServiceProperties(new FBStreamingBackupManager(getGdsType()));
         backupManager.setDatabase(getDatabasePath());
         backupManager.setLogger(System.out);
         backupManager.setVerbose(true);

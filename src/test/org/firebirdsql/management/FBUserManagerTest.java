@@ -70,8 +70,7 @@ class FBUserManagerTest {
     @Test
     void testUsers() throws Exception {
         // Initialize the UserManager.
-        UserManager userManager = new FBUserManager(getGdsType());
-        configureDefaultServiceProperties(userManager);
+        UserManager userManager = configureDefaultServiceProperties(new FBUserManager(getGdsType()));
 
         // Add a user.
         User user1 = new FBUser();

@@ -76,8 +76,6 @@ class ConnectionPropertiesTest {
     }
 
     private FBSimpleDataSource createDataSource() {
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        configureDefaultDbProperties(ds);
-        return ds;
+        return configureDefaultDbProperties(new FBSimpleDataSource());
     }
 }

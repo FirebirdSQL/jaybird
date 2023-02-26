@@ -26,7 +26,6 @@ import org.firebirdsql.common.matchers.SQLExceptionMatchers;
 import org.firebirdsql.ds.FBConnectionPoolDataSource;
 import org.firebirdsql.ds.FBSimpleDataSource;
 import org.firebirdsql.ds.FBXADataSource;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.management.FBMaintenanceManager;
 import org.firebirdsql.management.FBStatisticsManager;
 import org.firebirdsql.management.MaintenanceManager;
@@ -42,6 +41,7 @@ import java.sql.*;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -154,11 +154,9 @@ class DatabaseEncryptionTest {
 
     @Test
     void testFBSimpleDataSource() throws Exception {
-        final FBSimpleDataSource ds = new FBSimpleDataSource();
+        final FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
+        ds.setServerName(null);
         ds.setDatabaseName(getUrlWithoutProtocol(CRYPTTEST_DB));
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.GDS_TYPE);
         ds.setDbCryptConfig("base64:" + BASE64_ENCRYPTION_KEY);
         try (Connection connection = ds.getConnection();
              Statement stmt = connection.createStatement();
@@ -170,15 +168,8 @@ class DatabaseEncryptionTest {
 
     @Test
     void testFBConnectionPoolDataSource() throws Exception {
-        final FBConnectionPoolDataSource ds = new FBConnectionPoolDataSource();
+        final FBConnectionPoolDataSource ds = configureDefaultDbProperties(new FBConnectionPoolDataSource());
         ds.setDatabaseName(CRYPTTEST_DB);
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            ds.setServerName(FBTestProperties.DB_SERVER_URL);
-            ds.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        }
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.GDS_TYPE);
         ds.setDbCryptConfig("base64:" + BASE64_ENCRYPTION_KEY);
         final PooledConnection pooledConnection = ds.getPooledConnection();
         try (Connection connection = pooledConnection.getConnection();
@@ -193,15 +184,8 @@ class DatabaseEncryptionTest {
 
     @Test
     void testFBXADataSource() throws Exception {
-        final FBXADataSource ds = new FBXADataSource();
+        final FBXADataSource ds = configureDefaultDbProperties(new FBXADataSource());
         ds.setDatabaseName(CRYPTTEST_DB);
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            ds.setServerName(FBTestProperties.DB_SERVER_URL);
-            ds.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        }
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.GDS_TYPE);
         ds.setDbCryptConfig("base64:" + BASE64_ENCRYPTION_KEY);
         final XAConnection xaConnection = ds.getXAConnection();
         try (Connection connection = xaConnection.getConnection();
@@ -217,13 +201,7 @@ class DatabaseEncryptionTest {
     @Test
     @Disabled("Requires global KeyHolderPlugin configuration")
     void testServiceManagerConnection_gstatException() {
-        FBStatisticsManager statManager = new FBStatisticsManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            statManager.setServerName(DB_SERVER_URL);
-            statManager.setPortNumber(DB_SERVER_PORT);
-        }
-        statManager.setUser(DB_USER);
-        statManager.setPassword(DB_PASSWORD);
+        FBStatisticsManager statManager = configureServiceManager(new FBStatisticsManager(getGdsType()));
         statManager.setDatabase(CRYPTTEST_DB);
         statManager.setDbCryptConfig(ENCRYPTION_KEY);
 
@@ -239,13 +217,7 @@ class DatabaseEncryptionTest {
     @Test
     @Disabled("Requires global KeyHolderPlugin configuration")
     void testDatabaseValidation() throws Exception {
-        FBMaintenanceManager maintenanceManager = new FBMaintenanceManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            maintenanceManager.setServerName(DB_SERVER_URL);
-            maintenanceManager.setPortNumber(DB_SERVER_PORT);
-        }
-        maintenanceManager.setUser(DB_USER);
-        maintenanceManager.setPassword(DB_PASSWORD);
+        FBMaintenanceManager maintenanceManager = configureServiceManager(new FBMaintenanceManager(getGdsType()));
         maintenanceManager.setDatabase(CRYPTTEST_DB);
         maintenanceManager.setDbCryptConfig(ENCRYPTION_KEY);
 
@@ -257,12 +229,12 @@ class DatabaseEncryptionTest {
        assumeTrue(getDefaultSupportInfo().supportsProtocol(15),
                "Protocol version 15 is required for encrypted security database with callback, but not supported");
        String url = FBTestProperties.getUrl(CRYPTSEC_DB);
-       System.out.println(url);
        Properties props = new Properties();
        props.setProperty("user", "SYSDBA");
        props.setProperty("password", CRYPTSEC_SYSDBA_PW);
        props.setProperty("dbCryptConfig", ENCRYPTION_KEY);
        props.setProperty("lc_ctype", "NONE");
+       props.setProperty("enableProtocol", ENABLE_PROTOCOL);
        try (Connection connection = DriverManager.getConnection(url, props);
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery("select * from rdb$database")) {
@@ -273,7 +245,7 @@ class DatabaseEncryptionTest {
 
     @SuppressWarnings("SameParameterValue")
     private static String getUrlWithoutProtocol(String dbPath) {
-        if ("EMBEDDED".equalsIgnoreCase(FBTestProperties.GDS_TYPE)) {
+        if (isEmbeddedType().matches(FBTestProperties.GDS_TYPE)) {
             return dbPath;
         } else {
             return FBTestProperties.DB_SERVER_URL + "/" + FBTestProperties.DB_SERVER_PORT + ":" + dbPath;

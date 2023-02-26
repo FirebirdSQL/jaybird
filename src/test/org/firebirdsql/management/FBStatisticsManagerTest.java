@@ -55,8 +55,7 @@ class FBStatisticsManagerTest {
     @BeforeEach
     void setUp() {
         loggingStream = new ByteArrayOutputStream();
-        statManager = new FBStatisticsManager(getGdsType());
-        configureDefaultServiceProperties(statManager);
+        statManager = configureDefaultServiceProperties(new FBStatisticsManager(getGdsType()));
         statManager.setDatabase(getDatabasePath());
         statManager.setLogger(loggingStream);
     }
