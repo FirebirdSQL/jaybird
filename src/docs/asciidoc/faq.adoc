@@ -262,10 +262,9 @@ Future versions of Jaybird may specify an explicit version, or be released under
 [discrete]
 === Jaybird 5
 
-Jaybird 5 supports Java 8, 11 and 17.
+Jaybird 5 supports Java 8, 11, 17 and 20.
 Support for Java 9 and higher is limited to Java 11, 17 and the most recent LTS version after Java 17 and
 the latest Java release.
-Currently, that means we support Java 8, 11, 17 and 19.
 
 Jaybird 5 is the last version to support Java 8 and 11, support will be dropped with Jaybird 6, raising the minimum supported version to Java 17.
 
@@ -280,10 +279,9 @@ See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-
 [discrete]
 === Jaybird 4
 
-Jaybird 4 supports Java 7, 8, 11 and 17.
+Jaybird 4 supports Java 7, 8, 11, 17 and 20.
 Support for Java 9 and higher is limited to Java 11, 17 and the most recent LTS version after Java 17 and
 the latest Java release.
-Currently, that means we support Java 7, 8, 11, 17 and 19.
 
 Jaybird 4 is the last version to support Java 7, support will be dropped with Jaybird 5.
 Jaybird 4 is still maintained (at least until the end of 2023), but we recommend upgrading to Jaybird 5.
@@ -293,8 +291,8 @@ Jaybird 4 is still maintained (at least until the end of 2023), but we recommend
 === Jaybird 3
 
 Jaybird 3 supports Java 7 and 8 and has basic support for Java 9 and higher using the Java 8 version of the driver.
-Support for Java 9 and higher is limited to the latest LTS and current latest release, but in practice Jaybird should work on all Java 9+ versions.
-Jaybird 3.0.12 is that last release of Jaybird 3, and is end-of-life.
+Support for Java 9 and higher is limited to Java 11 and 17, but in practice Jaybird should work on all Java 9+ versions upto Java 17 (versions after Java 17 have not been tested).
+Jaybird 3.0.12 is the last release of Jaybird 3, and is end-of-life.
 We recommend upgrading to Jaybird 5.
 
 [#java-jaybird-2-2]

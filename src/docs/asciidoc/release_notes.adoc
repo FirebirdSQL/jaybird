@@ -88,7 +88,7 @@ Jaybird 6 supports Java 17 and higher (JDBC 4.3).
 Support for earlier Java versions has been dropped.
 
 Given the limited support period for Java 9 and higher versions, we limit support to Java 17 and the most recent LTS version after Java 17 and the latest Java release.
-Currently, that means we support Java 17 and 19.
+Currently, that means we support Java 17 and 20.
 
 [NOTE]
 ====
