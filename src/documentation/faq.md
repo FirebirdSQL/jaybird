@@ -231,16 +231,16 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
-Jaybird 5 supports Java 8, 11 and 17. Support for Java 9 and higher is
+Jaybird 5 supports Java 8, 11, 17 and 20. Support for Java 9 and higher is
 limited to Java 8, 11, 17 and the most recent LTS version after Java 17 and
-the latest Java release. Currently, that means we support Java 8, 11, 17 and 19.
+the latest Java release.
 
 Jaybird 5 is the last version to support Java 8 and 11, support will be dropped 
 with Jaybird 6, raising the minimum supported version to Java 17.
 
-Jaybird 4 supports Java 7, 8, 11 and 17. Support for Java 9 and higher is 
-limited to Java 8, 11, 17 and the most recent LTS version after Java 17 and
-the latest Java release. Currently, that means we support Java 8, 11, 17 and 19.
+Jaybird 4 supports Java 7, 8, 11, 17 and 20. Support for Java 9 and higher is 
+limited to Java 11, 17 and the most recent LTS version after Java 17 and
+the latest Java release.
 
 Jaybird 4 is the last version to support Java 7, support will be dropped with
 Jaybird 5. Jaybird 4 is still maintained (at least until the end of 2023), but
@@ -248,10 +248,10 @@ we recommend upgrading to Jaybird 5.
 
 Jaybird 3 supports Java 7 and 8 and has basic support for Java 9 and higher
 using the Java 8 version of the driver. Support for Java 9 and higher is 
-limited to Java 11 and 17, but in practice Jaybird should work on all 
-Java 9+ versions (versions after Java 17 have not been tested). Jaybird 3.0.12 
-is that last release of Jaybird 3, and is end-of-life. We recommend upgrading 
-to Jaybird 5.
+limited to Java 11 and 17, but in practice Jaybird should work on all Java 9+ 
+versions upto Java 17 (versions after Java 17 have not been tested). 
+Jaybird 3.0.12 is the last release of Jaybird 3, and is end-of-life. We 
+recommend upgrading to Jaybird 5.
 
 Jaybird 2.2 supports Java 6, 7 and 8. Jaybird 2.2.15 is that last release of
 Jaybird 2.2, and is end-of-life. We recommend upgrading to Jaybird 5.
