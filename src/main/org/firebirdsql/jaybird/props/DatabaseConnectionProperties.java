@@ -564,7 +564,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      *         will set server-side maximum
      */
     default void setServerBatchBufferSize(int serverBatchBufferSize) {
-        setIntProperty(PropertyNames.serverBatchBufferSize, PropertyConstants.DEFAULT_SERVER_BATCH_BUFFER_SIZE);
+        setIntProperty(PropertyNames.serverBatchBufferSize, serverBatchBufferSize);
     }
 
     // TODO parallelWorkers may eventually need to go to AttachmentProperties,
