@@ -86,7 +86,8 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * <li>relative/path/to/your.fdb &mdash; not recommended</li>
      * </ul>
      *
-     * @param databaseName database name
+     * @param databaseName
+     *         database name
      */
     default void setDatabaseName(String databaseName) {
         setProperty(PropertyNames.databaseName, databaseName);
@@ -405,7 +406,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * the {@link java.sql.Connection} interface and a comma-separated list of TPB parameters).
      * </p>
      * <p>
-     * 
+     *
      * </p>
      *
      * @param tpbMapping
@@ -543,8 +544,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * </p>
      *
      * @param useServerBatch
-     *         {@code true}, use server-side batch support if possible, {@code false} always use emulated
-     *         batch
+     *         {@code true}, use server-side batch support if possible, {@code false} always use emulated batch
      */
     default void setUseServerBatch(boolean useServerBatch) {
         setBooleanProperty(PropertyNames.useServerBatch, useServerBatch);
@@ -570,6 +570,32 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      */
     default void setServerBatchBufferSize(int serverBatchBufferSize) {
         setIntProperty(PropertyNames.serverBatchBufferSize, PropertyConstants.DEFAULT_SERVER_BATCH_BUFFER_SIZE);
+    }
+
+    // TODO parallelWorkers may eventually need to go to AttachmentProperties,
+    //  see comment in https://github.com/FirebirdSQL/jaybird/issues/737
+
+    /**
+     * @return number of parallel workers
+     * @since 5.0.2
+     */
+    default int getParallelWorkers() {
+        return getIntProperty(PropertyNames.parallelWorkers, PropertyConstants.DEFAULT_PARALLEL_WORKERS);
+    }
+
+    /**
+     * Sets the number of parallel workers of the connection.
+     * <p>
+     * Requires Firebird 5.0 or higher, and a Firebird server configured with {@code MaxParallelWorkers} higher than
+     * specified by {@code parallelWorkers}.
+     * </p>
+     *
+     * @param parallelWorkers
+     *         number of parallel workers
+     * @since 5.0.2
+     */
+    default void setParallelWorkers(int parallelWorkers) {
+        setIntProperty(PropertyNames.parallelWorkers, parallelWorkers);
     }
 
 }

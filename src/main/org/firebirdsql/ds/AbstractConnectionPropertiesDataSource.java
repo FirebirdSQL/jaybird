@@ -436,6 +436,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setServerBatchBufferSize(serverBatchBufferSize);
     }
 
+    @Override
+    public int getParallelWorkers() {
+        return FirebirdConnectionProperties.super.getParallelWorkers();
+    }
+
+    @Override
+    public void setParallelWorkers(int parallelWorkers) {
+        FirebirdConnectionProperties.super.setParallelWorkers(parallelWorkers);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated
     @Override

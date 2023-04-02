@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.ConfigHelper;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.DatabaseUserExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
@@ -57,14 +58,13 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEqua
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.firebirdsql.gds.ISCConstants.fb_info_wire_crypt;
+import static org.firebirdsql.gds.ISCConstants.isc_bad_dpb_content;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.ISCConstants.isc_net_read_err;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
-import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.equalToIgnoringCase;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
 
@@ -958,7 +958,30 @@ class FBConnectionTest {
                     errorCodeEquals(ISCConstants.isc_connect_reject),
                     fbMessageStartsWith(ISCConstants.isc_connect_reject)));
         }
+    }
 
+    @Test
+    void specifyParallelWorkers() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsParallelWorkers(), "test requires support for parallel workers");
+        final int maxParallelWorkers;
+        try (var connection = getConnectionViaDriverManager()) {
+            String maxParallelWorkersString = ConfigHelper.getConfigValue(connection, "MaxParallelWorkers");
+            maxParallelWorkers = maxParallelWorkersString != null ? Integer.parseInt(maxParallelWorkersString) : 1;
+        }
+
+        Properties props = getDefaultPropertiesForConnection();
+        String parallelWorkersValue = String.valueOf(maxParallelWorkers + 1);
+        props.setProperty(PropertyNames.parallelWorkers, parallelWorkersValue);
+
+        // There currently is no way to check the actual value, so relying on the fact that specifying a value higher
+        // than the maximum results in a connection error
+        try (var ignored = DriverManager.getConnection(getUrl(), props)) {
+            fail("expected connection to fail due to exceeding maximum setting");
+        } catch (SQLException e) {
+            assertThat(e, allOf(
+                    errorCodeEquals(isc_bad_dpb_content),
+                    message(containsString("Wrong parallel workers value " + parallelWorkersValue))));
+        }
     }
 
 }

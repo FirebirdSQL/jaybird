@@ -80,6 +80,8 @@ public final class PropertyNames {
     public static final String scrollableCursor = "scrollableCursor";
     public static final String useServerBatch = "useServerBatch";
     public static final String serverBatchBufferSize = "serverBatchBufferSize";
+    // TODO May eventually need to go to "attachment", see comment in https://github.com/FirebirdSQL/jaybird/issues/737
+    public static final String parallelWorkers = "parallelWorkers";
 
     // service connection
     public static final String expectedDb = "expectedDb";
