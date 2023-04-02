@@ -106,6 +106,9 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder(scrollableCursor).choices(SCROLLABLE_CURSOR_EMULATED, SCROLLABLE_CURSOR_SERVER),
                 builder(useServerBatch).type(BOOLEAN),
                 builder(serverBatchBufferSize).type(INT),
+                // TODO May eventually need to go to "attachment", see comment in https://github.com/FirebirdSQL/jaybird/issues/737
+                builder(parallelWorkers).type(INT).aliases("parallel_workers", "isc_dpb_parallel_workers")
+                        .dpbItem(isc_dpb_parallel_workers),
                 // TODO Property should be considered deprecated, remove in Jaybird 6 or later
                 builder("timestampUsesLocalTimezone").type(BOOLEAN).aliases("timestamp_uses_local_timezone"),
 
@@ -151,8 +154,6 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder("ext_call_depth").type(INT).aliases("isc_dpb_ext_call_depth").dpbItem(isc_dpb_ext_call_depth),
                 builder("clear_map").type(BOOLEAN).aliases("isc_dpb_clear_map").dpbItem(isc_dpb_clear_map)
                         .pbType(DpbType.BYTE),
-                builder("parallel_workers").type(INT).aliases("isc_dpb_parallel_workers")
-                        .dpbItem(isc_dpb_parallel_workers),
                 builder("worker_attach").type(BOOLEAN).aliases("isc_dpb_worker_attach").dpbItem(isc_dpb_worker_attach)
 
                 // NOTE: Properties not defined elsewhere will be defined through UnregisteredDpbDefiner as type string

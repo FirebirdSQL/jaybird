@@ -567,4 +567,30 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
         setIntProperty(PropertyNames.serverBatchBufferSize, PropertyConstants.DEFAULT_SERVER_BATCH_BUFFER_SIZE);
     }
 
+    // TODO parallelWorkers may eventually need to go to AttachmentProperties,
+    //  see comment in https://github.com/FirebirdSQL/jaybird/issues/737
+
+    /**
+     * @return number of parallel workers
+     * @since 5.0.2
+     */
+    default int getParallelWorkers() {
+        return getIntProperty(PropertyNames.parallelWorkers, PropertyConstants.DEFAULT_PARALLEL_WORKERS);
+    }
+
+    /**
+     * Sets the number of parallel workers of the connection.
+     * <p>
+     * Requires Firebird 5.0 or higher, and a Firebird server configured with {@code MaxParallelWorkers} higher than
+     * specified by {@code parallelWorkers}.
+     * </p>
+     *
+     * @param parallelWorkers
+     *         number of parallel workers
+     * @since 5.0.2
+     */
+    default void setParallelWorkers(int parallelWorkers) {
+        setIntProperty(PropertyNames.parallelWorkers, parallelWorkers);
+    }
+
 }

@@ -654,6 +654,20 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when this Firebird version supports parallel workers
+     */
+    public boolean supportsParallelWorkers(){
+        return isVersionEqualOrAbove(5, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version has the {@code RDB$CONFIG} table
+     */
+    public boolean supportsRDB$CONFIG() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
      * @return {@code true} if the default ODS of this Firebird version has column {@code RDB$PROCEDURE_TYPE}
      */
     public boolean hasProcedureTypeColumn() {
