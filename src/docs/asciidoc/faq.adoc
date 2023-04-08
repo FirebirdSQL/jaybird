@@ -621,9 +621,15 @@ With Jaybird 3.0.2 or higher, it is better to just not set system property  `org
 [#how-can-i-enable-the-windows-tcp-loopback-fast-path-introduced-in-firebird-3-0-2]
 == How can I enable the Windows "TCP Loopback Fast Path" introduced in Firebird 3.0.2?
 
-CAUTION: Microsoft has deprecated the `SIO_LOOPBACK_FAST_PATH` and recommends not to use it.
+[CAUTION]
+====
+Microsoft has deprecated the `SIO_LOOPBACK_FAST_PATH` and recommends not to use it.
 
-Firebird 3.0.2 adds support for "`TCP Loopback Fast Path`" (`SIO_LOOPBACK_FAST_PATH` socket option).
+Support was removed in Firebird 5.0.
+====
+
+Firebird 3.0.2 adds support for "`TCP Loopback Fast Path`" (`SIO_LOOPBACK_FAST_PATH` socket option);
+support was removed in Firebird 5.0.
 This is available in Windows 8 / Windows Server 2012 and higher.
 This feature enables performance optimizations when connecting through localhost (127.0.0.1 / ::1).
 It requires support on both client and server side.
