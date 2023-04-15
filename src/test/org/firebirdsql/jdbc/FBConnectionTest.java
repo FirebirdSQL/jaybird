@@ -919,7 +919,7 @@ class FBConnectionTest {
     void specifyParallelWorkers() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsParallelWorkers(), "test requires support for parallel workers");
         final int maxParallelWorkers;
-        try (Connection connection = getConnectionViaDriverManager()) {
+        try (var connection = getConnectionViaDriverManager()) {
             String maxParallelWorkersString = ConfigHelper.getConfigValue(connection, "MaxParallelWorkers");
             maxParallelWorkers = maxParallelWorkersString != null ? Integer.parseInt(maxParallelWorkersString) : 1;
         }
@@ -929,13 +929,14 @@ class FBConnectionTest {
         props.setProperty(PropertyNames.parallelWorkers, parallelWorkersValue);
 
         // There currently is no way to check the actual value, so relying on the fact that specifying a value higher
-        // than the maximum results in a connection error
-        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-            fail("expected connection to fail due to exceeding maximum setting");
-        } catch (SQLException e) {
-            assertThat(e, allOf(
-                    errorCodeEquals(isc_bad_dpb_content),
-                    message(containsString("Wrong parallel workers value " + parallelWorkersValue))));
+        // than the maximum results in a warning
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            SQLWarning warning = connection.getWarnings();
+            assertNotNull(warning, "expected a warning");
+            assertThat(warning, allOf(
+                    errorCodeEquals(335545286),
+                    fbMessageStartsWith(335545286,
+                            parallelWorkersValue, String.valueOf(maxParallelWorkers))));
         }
     }
 
