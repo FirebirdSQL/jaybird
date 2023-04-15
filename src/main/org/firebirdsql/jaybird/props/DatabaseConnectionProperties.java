@@ -576,11 +576,11 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     //  see comment in https://github.com/FirebirdSQL/jaybird/issues/737
 
     /**
-     * @return number of parallel workers
+     * @return number of parallel workers, {@code -1} means no value was set (or it was explicitly set to {@code -1})
      * @since 5.0.2
      */
     default int getParallelWorkers() {
-        return getIntProperty(PropertyNames.parallelWorkers, PropertyConstants.DEFAULT_PARALLEL_WORKERS);
+        return getIntProperty(PropertyNames.parallelWorkers, PropertyConstants.PARALLEL_WORKERS_NOT_SET);
     }
 
     /**

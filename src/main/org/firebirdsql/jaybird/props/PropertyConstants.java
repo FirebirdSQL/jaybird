@@ -55,7 +55,6 @@ public final class PropertyConstants {
     public static final int DEFAULT_PAGE_CACHE_SIZE = 0;
     static final boolean DEFAULT_USE_SERVER_BATCH = true;
     public static final int DEFAULT_SERVER_BATCH_BUFFER_SIZE = 0;
-    static final int DEFAULT_PARALLEL_WORKERS = 1;
     static final boolean DEFAULT_TIMESTAMP_USES_LOCAL = false;
 
     public static final int DEFAULT_TRANSACTION_ISOLATION_VALUE = Connection.TRANSACTION_READ_COMMITTED;
@@ -67,6 +66,7 @@ public final class PropertyConstants {
 
     public static final int TIMEOUT_NOT_SET = -1;
     public static final int BUFFER_SIZE_NOT_SET = -1;
+    static final int PARALLEL_WORKERS_NOT_SET = -1;
 
     public static final String SESSION_TIME_ZONE_SERVER = "server";
 
