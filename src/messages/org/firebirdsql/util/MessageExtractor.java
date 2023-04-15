@@ -96,24 +96,26 @@ public class MessageExtractor {
     }
 
     private enum MessageFormat {
-        FB_IMPL_MSG("^FB_IMPL_MSG\\(([^,]+), (\\d+), [^,]+, -?\\d+, \"([^\"]{2})\", \"([^\"]{3})\", \"(.*?)\"\\)$",
-                1, 2, 3, 4, 5),
-        FB_IMPL_MSG_SYMBOL("^FB_IMPL_MSG_SYMBOL\\(([^,]+), (\\d+), [^,]+, \"(.*?)\"\\)$", 1, 2, -1, -1, 3),
-        FB_IMPL_MSG_NO_SYMBOL("^FB_IMPL_MSG_NO_SYMBOL\\(([^,]+), (\\d+), \"(.*?)\"\\)$", 1, 2, -1, -1, 3);
+        FB_IMPL_MSG("^FB_IMPL_MSG\\(([^,]+), (\\d+), ([^,]+), -?\\d+, \"([^\"]{2})\", \"([^\"]{3})\", \"(.*?)\"\\)$",
+                1, 2, 3, 4, 5, 6),
+        FB_IMPL_MSG_SYMBOL("^FB_IMPL_MSG_SYMBOL\\(([^,]+), (\\d+), ([^,]+), \"(.*?)\"\\)$", 1, 2, 3, -1, -1, 4),
+        FB_IMPL_MSG_NO_SYMBOL("^FB_IMPL_MSG_NO_SYMBOL\\(([^,]+), (\\d+), \"(.*?)\"\\)$", 1, 2, -1, -1, -1, 3);
 
         private final String prefix = name() + "(";
         private final Pattern messagePattern;
         private final int facilityGroup;
         private final int numberGroup;
+        private final int symbolGroup;
         private final int sqlStateClassGroup;
         private final int sqlStateSubclassGroup;
         private final int messageGroup;
 
-        MessageFormat(String pattern, int facilityGroup, int numberGroup, int sqlStateClassGroup,
+        MessageFormat(String pattern, int facilityGroup, int numberGroup, int symbolGroup, int sqlStateClassGroup,
                 int sqlStateSubclassGroup, int messageGroup) {
             messagePattern = Pattern.compile(pattern);
             this.facilityGroup = facilityGroup;
             this.numberGroup = numberGroup;
+            this.symbolGroup = symbolGroup;
             this.sqlStateClassGroup = sqlStateClassGroup;
             this.sqlStateSubclassGroup = sqlStateSubclassGroup;
             this.messageGroup = messageGroup;
@@ -140,6 +142,10 @@ public class MessageExtractor {
                 String sqlState = Messages.toSqlState(
                         matcher.group(sqlStateClassGroup), matcher.group(sqlStateSubclassGroup));
                 messageStore.addSqlState(facility, number, sqlState);
+            }
+            if (symbolGroup != -1) {
+                String symbolName = matcher.group(symbolGroup);
+                messageStore.addSymbol(facility, number, symbolName);
             }
         }
     }

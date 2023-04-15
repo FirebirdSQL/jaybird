@@ -35,11 +35,13 @@ class SingleFileStore extends MessageStore {
 
     private final Map<Integer, String> messages = new TreeMap<>();
     private final Map<Integer, String> sqlStates = new TreeMap<>();
+    private final SymbolStore symbolStore = new SymbolStore();
 
     @Override
     void reset() {
         messages.clear();
         sqlStates.clear();
+        symbolStore.reset();
     }
 
     @Override
@@ -53,8 +55,14 @@ class SingleFileStore extends MessageStore {
     }
 
     @Override
+    void addSymbol(Facility facility, int number, String symbolName) {
+        symbolStore.addSymbol(facility, number, symbolName);
+    }
+
+    @Override
     void save() throws IOException {
         store(messages, Path.of("isc_error_msg.properties"));
         store(sqlStates, Path.of("isc_error_sqlstates.properties"));
+        symbolStore.save();
     }
 }

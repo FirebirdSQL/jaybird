@@ -43,6 +43,7 @@ class PerFacilityStore extends MessageStore {
             new HashMap<>((int) (FACILITY_SIZE / 0.75f));
     private final Map<Facility, Map<Integer, String>> sqlStatesPerFacility =
             new HashMap<>((int) (FACILITY_SIZE / 0.75f));
+    private final SymbolStore symbolStore = new SymbolStore();
 
     @Override
     void reset() {
@@ -60,6 +61,11 @@ class PerFacilityStore extends MessageStore {
         add(sqlStatesPerFacility, facility, number, sqlState);
     }
 
+    @Override
+    void addSymbol(Facility facility, int number, String symbolName) {
+        symbolStore.addSymbol(facility, number, symbolName);
+    }
+
     private static void add(
             Map<Facility, Map<Integer, String>> facilityMap, Facility facility, int number, String data) {
         Map<Integer, String> facilityData = facilityMap.computeIfAbsent(facility, k -> new TreeMap<>());
@@ -70,6 +76,7 @@ class PerFacilityStore extends MessageStore {
     void save() throws IOException {
         save(messagesPerFacility, code -> format("error_messages_%d.properties", code));
         save(sqlStatesPerFacility, code -> format("sql_states_%d.properties", code));
+        symbolStore.save();
     }
 
     private void save(Map<Facility, Map<Integer, String>> facilityMap,

@@ -93,6 +93,18 @@ abstract class MessageStore {
     }
 
     /**
+     * Adds a symbol name (constant) for an error code.
+     *
+     * @param facility
+     *         facility
+     * @param number
+     *         error number within the facility
+     * @param symbolName
+     *         symbol name without the {@code isc_} prefix, i.e. as listed in the msg header files
+     */
+    abstract void addSymbol(Facility facility, int number, String symbolName);
+
+    /**
      * Saves the messages to disk.
      *
      * @throws IOException

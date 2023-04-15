@@ -716,6 +716,10 @@ It may get removed in Jaybird 7 or later.
 
 The following constants have been deprecated and will be removed in Jaybird 7:
 
+* `ISCConstants`
+** `isc_isc_sql_dialect_conflict_num` (was already deprecated, now for removal);
+use `isc_sql_dialect_conflict_num`
+** `isc_err_max` -- there is no replacement
 
 [#compatibility-notes]
 == Compatibility notes
