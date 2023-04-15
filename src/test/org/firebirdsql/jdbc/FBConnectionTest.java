@@ -58,7 +58,6 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEqua
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.firebirdsql.gds.ISCConstants.fb_info_wire_crypt;
-import static org.firebirdsql.gds.ISCConstants.isc_bad_dpb_content;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.ISCConstants.isc_net_read_err;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
@@ -974,13 +973,14 @@ class FBConnectionTest {
         props.setProperty(PropertyNames.parallelWorkers, parallelWorkersValue);
 
         // There currently is no way to check the actual value, so relying on the fact that specifying a value higher
-        // than the maximum results in a connection error
-        try (var ignored = DriverManager.getConnection(getUrl(), props)) {
-            fail("expected connection to fail due to exceeding maximum setting");
-        } catch (SQLException e) {
-            assertThat(e, allOf(
-                    errorCodeEquals(isc_bad_dpb_content),
-                    message(containsString("Wrong parallel workers value " + parallelWorkersValue))));
+        // than the maximum results in a warning
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            SQLWarning warning = connection.getWarnings();
+            assertNotNull(warning, "expected a warning");
+            assertThat(warning, allOf(
+                    errorCodeEquals(ISCConstants.isc_bad_par_workers),
+                    fbMessageStartsWith(ISCConstants.isc_bad_par_workers,
+                            parallelWorkersValue, String.valueOf(maxParallelWorkers))));
         }
     }
 
