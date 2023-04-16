@@ -59,7 +59,6 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEqua
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.firebirdsql.gds.ISCConstants.fb_info_wire_crypt;
-import static org.firebirdsql.gds.ISCConstants.isc_bad_dpb_content;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.ISCConstants.isc_net_read_err;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
@@ -920,8 +919,7 @@ class FBConnectionTest {
         assumeTrue(getDefaultSupportInfo().supportsParallelWorkers(), "test requires support for parallel workers");
         final int maxParallelWorkers;
         try (Connection connection = getConnectionViaDriverManager()) {
-            String maxParallelWorkersString = ConfigHelper.getConfigValue(connection, "MaxParallelWorkers");
-            maxParallelWorkers = maxParallelWorkersString != null ? Integer.parseInt(maxParallelWorkersString) : 1;
+            maxParallelWorkers = ConfigHelper.getIntConfigValue(connection, "MaxParallelWorkers").orElse(1);
         }
 
         Properties props = getDefaultPropertiesForConnection();

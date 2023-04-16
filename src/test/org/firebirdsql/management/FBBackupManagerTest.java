@@ -324,8 +324,7 @@ class FBBackupManagerTest {
         usesDatabase.createDefaultDatabase();
         final int maxParallelWorkers;
         try (Connection connection = getConnectionViaDriverManager()) {
-            String maxParallelWorkersString = ConfigHelper.getConfigValue(connection, "MaxParallelWorkers");
-            maxParallelWorkers = maxParallelWorkersString != null ? Integer.parseInt(maxParallelWorkersString) : 1;
+            maxParallelWorkers = ConfigHelper.getIntConfigValue(connection, "MaxParallelWorkers").orElse(1);
         }
 
         // set 1 higher to trigger warning
