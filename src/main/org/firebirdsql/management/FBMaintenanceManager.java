@@ -431,8 +431,12 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
     }
 
     /**
-     * Get a mostly-empty repair-operation request buffer that can be
-     * filled as needed.
+     * Bitmap of repair options which support parallel workers.
+     */
+    private static final int PARALLEL_REPAIR_OPTIONS = isc_spb_rpr_sweep_db;
+
+    /**
+     * Get a mostly-empty repair-operation request buffer that can be filled as needed.
      *
      * @param service
      *         Service handle
@@ -440,6 +444,10 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
      *         The options bitmask for the request buffer
      */
     private ServiceRequestBuffer createRepairSRB(FbService service, int options) {
-        return createRequestBuffer(service, isc_action_svc_repair, options);
+        ServiceRequestBuffer srb = createRequestBuffer(service, isc_action_svc_repair, options);
+        if ((options & PARALLEL_REPAIR_OPTIONS) != 0 && getParallelWorkers() > 0) {
+            srb.addArgument(isc_spb_rpr_par_workers, getParallelWorkers());
+        }
+        return srb;
     }
 }

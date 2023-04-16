@@ -84,6 +84,11 @@ class FBMaintenanceManagerTest {
     void setUp() {
         maintenanceManager = configureDefaultServiceProperties(new FBMaintenanceManager(getGdsType()));
         maintenanceManager.setDatabase(getDatabasePath());
+        if (getDefaultSupportInfo().supportsParallelWorkers()) {
+            // NOTE: 1) There is no way to verify if we're actually setting it;
+            // 2) the actual usage of the configured value is determined per option
+            maintenanceManager.setParallelWorkers(2);
+        }
         maintenanceManager.setLogger(System.out);
     }
 
