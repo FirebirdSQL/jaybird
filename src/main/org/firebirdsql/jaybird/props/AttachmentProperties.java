@@ -405,4 +405,31 @@ public interface AttachmentProperties extends BaseProperties {
         setBooleanProperty(PropertyNames.wireCompression, wireCompression);
     }
 
+    /**
+     * @return number of parallel workers, {@code -1} means no value was set (or it was explicitly set to {@code -1})
+     * @since 5.0.2
+     */
+    default int getParallelWorkers() {
+        return getIntProperty(PropertyNames.parallelWorkers, PropertyConstants.PARALLEL_WORKERS_NOT_SET);
+    }
+
+    /**
+     * Sets the number of parallel workers of the connection.
+     * <p>
+     * Requires Firebird 5.0 or higher, and a Firebird server configured with {@code MaxParallelWorkers} higher than
+     * specified by {@code parallelWorkers}.
+     * </p>
+     * <p>
+     * NOTE: For service attachments, this property controls behaviour only for specific operations, and requires
+     * Jaybird to explicitly set the parallel workers for that operation.
+     * </p>
+     *
+     * @param parallelWorkers
+     *         number of parallel workers
+     * @since 5.0.2
+     */
+    default void setParallelWorkers(int parallelWorkers) {
+        setIntProperty(PropertyNames.parallelWorkers, parallelWorkers);
+    }
+
 }

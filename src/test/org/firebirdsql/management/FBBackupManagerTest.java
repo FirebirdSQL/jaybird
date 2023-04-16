@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.ConfigHelper;
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -46,6 +48,7 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEqua
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -275,7 +278,7 @@ class FBBackupManagerTest {
     }
 
     /*
-     The following tests require a custom security database configured for the alias test_with_custom_sec_db, where
+     The following test requires a custom security database configured for the alias test_with_custom_sec_db, where
      the custom security database was initialized with:
      create user sysdba password 'masterkey' using plugin srp;
      create user custom_sec password 'custom_sec' grant admin role using plugin srp;
@@ -313,6 +316,37 @@ class FBBackupManagerTest {
 
         backupManager.setRestoreReplace(true);
         backupManager.restoreDatabase();
+    }
+
+    @Test
+    void testBackupRestore_parallel() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsParallelWorkers(), "test requires support for parallel workers");
+        usesDatabase.createDefaultDatabase();
+        final int maxParallelWorkers;
+        try (Connection connection = getConnectionViaDriverManager()) {
+            String maxParallelWorkersString = ConfigHelper.getConfigValue(connection, "MaxParallelWorkers");
+            maxParallelWorkers = maxParallelWorkersString != null ? Integer.parseInt(maxParallelWorkersString) : 1;
+        }
+
+        // set 1 higher to trigger warning
+        backupManager.setParallelWorkers(maxParallelWorkers + 1);
+
+        backupManager.setVerbose(true);
+        backupManager.backupDatabase();
+
+        // Use of parallel workers with backup is currently not assertable as the warning does not appear in the output
+
+        ByteArrayOutputStream loggingStream = new ByteArrayOutputStream(1024);
+        backupManager.setLogger(loggingStream);
+
+        backupManager.setRestoreReplace(true);
+        backupManager.restoreDatabase();
+
+        String logOutput = loggingStream.toString();
+        assertThat(logOutput, containsString(
+                format("gbak: WARNING:Wrong parallel workers value %d, valid range are from 1 to %d",
+                        maxParallelWorkers + 1, maxParallelWorkers)));
+        System.out.println(logOutput);
     }
 
     private static boolean isLocalHost(String hostName) {

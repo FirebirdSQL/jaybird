@@ -509,6 +509,11 @@ public interface ISCConstants {
     int isc_spb_bkp_length             =  7;
     int isc_spb_bkp_skip_data          =  8;
     int isc_spb_bkp_stat               =  15;
+    int isc_spb_bkp_keyholder          =  16;
+    int isc_spb_bkp_keyname            =  17;
+    int isc_spb_bkp_crypt              =  18;
+    int isc_spb_bkp_include_data       =  19;
+    int isc_spb_bkp_parallel_workers   =  21;
     int isc_spb_bkp_ignore_checksums   =  0x01;
     int isc_spb_bkp_ignore_limbo       =  0x02;
     int isc_spb_bkp_metadata_only      =  0x04;
@@ -518,6 +523,8 @@ public interface ISCConstants {
     int isc_spb_bkp_convert            =  0x40;
     int isc_spb_bkp_expand             =  0x80;
     int isc_spb_bkp_no_triggers        =  0x8000;
+    int isc_spb_bkp_zip	               =  0x010000;
+    int isc_spb_bkp_direct_io          =  0x020000;
 
     /********************************************
      * Parameters for isc_action_svc_properties *
@@ -613,12 +620,19 @@ public interface ISCConstants {
      *****************************************/
 
     int isc_spb_res_skip_data		=   isc_spb_bkp_skip_data;
+    int isc_spb_res_include_data    =   isc_spb_bkp_include_data;
     int isc_spb_res_buffers			=	9;
     int isc_spb_res_page_size		=	10;
     int isc_spb_res_length			=	11;
     int isc_spb_res_access_mode		=	12;
     int isc_spb_res_fix_fss_data	=	13;
-    int isc_spb_res_fix_fss_metadata=	14;
+    int isc_spb_res_fix_fss_metadata =  14;
+    int isc_spb_res_keyholder       =   isc_spb_bkp_keyholder;
+    int isc_spb_res_keyname         =   isc_spb_bkp_keyname;
+    int isc_spb_res_crypt           =   isc_spb_bkp_crypt;
+    int isc_spb_res_stat            =   isc_spb_bkp_stat;
+    int isc_spb_res_parallel_workers =  isc_spb_bkp_parallel_workers;
+    int isc_spb_res_metadata_only   =   isc_spb_bkp_metadata_only;
     int isc_spb_res_deactivate_idx	=	0x0100;
     int isc_spb_res_no_shadow		=	0x0200;
     int isc_spb_res_no_validity		=	0x0400;
@@ -626,6 +640,8 @@ public interface ISCConstants {
     int isc_spb_res_replace			=	0x1000;
     int isc_spb_res_create			=	0x2000;
     int isc_spb_res_use_all_space	=	0x4000;
+    int isc_spb_res_direct_io       =   isc_spb_bkp_direct_io;
+    int isc_spb_res_replica_mode    =   20;
 
     /*****************************************
      * Parameters for isc_action_svc_validate *
