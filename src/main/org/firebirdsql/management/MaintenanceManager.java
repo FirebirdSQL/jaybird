@@ -474,4 +474,17 @@ public interface MaintenanceManager extends ServiceManager {
      *         if a database access error occurs or the given transaction ID is not valid
      */
     void rollbackTransaction(long transactionId) throws SQLException;
+
+    /**
+     * Perform minor ODS upgrade.
+     * <p>
+     * Requires Firebird 5.0 or higher.
+     * </p>
+     *
+     * @throws SQLException
+     *         if a database access error occurs
+     * @since 5.0.2
+     */
+    void upgradeOds() throws SQLException;
+
 }

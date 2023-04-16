@@ -573,7 +573,7 @@ public interface ISCConstants {
 
     int isc_spb_rpr_commit_trans	=	15;
     int isc_spb_rpr_rollback_trans	=	34;
-    int isc_spb_rpr_recover_two_phase=	17;
+    int isc_spb_rpr_recover_two_phase = 17;
     int isc_spb_tra_id				=   18;
     int isc_spb_single_tra_id		=   19;
     int isc_spb_multi_tra_id		=	20;
@@ -593,8 +593,9 @@ public interface ISCConstants {
     int isc_spb_single_tra_id_64	=	47;
     int isc_spb_multi_tra_id_64		=	48;
     int isc_spb_rpr_commit_trans_64	=	49;
-    int isc_spb_rpr_rollback_trans_64		=50;
-    int isc_spb_rpr_recover_two_phase_64	=51;
+    int isc_spb_rpr_rollback_trans_64 = 50;
+    int isc_spb_rpr_recover_two_phase_64 = 51;
+    int isc_spb_rpr_par_workers     =   52;
 
     int isc_spb_rpr_validate_db		=	0x01;
     int isc_spb_rpr_sweep_db		=	0x02;
@@ -605,6 +606,7 @@ public interface ISCConstants {
     int isc_spb_rpr_kill_shadows	=	0x40;
     int isc_spb_rpr_full			=	0x80;
     int isc_spb_rpr_icu				= 0x0800;
+    int isc_spb_rpr_upgrade_db      = 0x1000;
 
     /*****************************************
      * Parameters for isc_action_svc_restore *

@@ -668,6 +668,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} if the gfix/service repair option upgrade ODS is supported
+     */
+    public boolean supportsUpgradeOds() {
+        return isVersionEqualOrAbove(5, 0);
+    }
+
+    /**
      * @return {@code true} if the default ODS of this Firebird version has column {@code RDB$PROCEDURE_TYPE}
      */
     public boolean hasProcedureTypeColumn() {

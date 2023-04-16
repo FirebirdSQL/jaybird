@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.extension.RunEnvironmentExtension.EnvironmentRequirement;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
@@ -25,15 +26,24 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.FirebirdDatabaseMetaData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
+import org.opentest4j.TestAbortedException;
 
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
@@ -44,6 +54,7 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEqua
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.oneOf;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -517,4 +528,57 @@ class FBMaintenanceManagerTest {
             }
         }
     }
+
+    // NOTE: this test only confirms that the repair option can be run, given we can't (easily) create databases with
+    // a previous ODS, we can't test if it is really run, see next test for an environment-specific test
+    @Test
+    void testUpgradeOds() {
+        assumeTrue(getDefaultSupportInfo().supportsUpgradeOds(), "test requires upgrade ODS support");
+        assertDoesNotThrow(() -> maintenanceManager.upgradeOds());
+    }
+
+    /**
+     * Test upgrade ODS, with a specific Firebird 4.0 database file.
+     * <p>
+     * This test is machine specific (or at least, environment-specific), as it requires a Firebird database with
+     * the path {@code E:\DB\FB4\FB4TESTDATABASE.FDB}.
+     * </p>
+     */
+    @Test
+    void testUpgradeOds_machineSpecific(@TempDir Path tempDir) throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsUpgradeOds(), "test requires upgrade ODS support");
+        assumeTrue(EnvironmentRequirement.DB_LOCAL_FS.isMet(), "Requires DB on local file system");
+        // In the future, this may need to declare an upper version limit, or select DB based on the actual version
+        Path fb4DbPath;
+        try {
+            fb4DbPath = Paths.get("E:/DB/FB4/FB4TESTDATABASE.FDB");
+        } catch (InvalidPathException e) {
+            throw new TestAbortedException("Database path is invalid on this system", e);
+        }
+        assumeTrue(Files.exists(fb4DbPath), "Expected database does not exist");
+
+        Path testDb = tempDir.resolve("tempdb.fdb").toAbsolutePath();
+        Files.copy(fb4DbPath, testDb);
+        maintenanceManager.setDatabase(testDb.toString());
+        String jdbcUrl = getUrl(testDb.toString());
+        Properties props = getDefaultPropertiesForConnection();
+
+        // Verify ODS before upgrade
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, props)) {
+            FirebirdDatabaseMetaData dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+            assertEquals(13, dbmd.getOdsMajorVersion(), "ODS major before upgrade");
+            assertEquals(0, dbmd.getOdsMinorVersion(), "ODS minor before upgrade");
+        }
+
+        maintenanceManager.upgradeOds();
+
+        // Verify ODS after upgrade
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, props)) {
+            FirebirdDatabaseMetaData dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+            assertEquals(13, dbmd.getOdsMajorVersion(), "ODS major after upgrade");
+            // NOTE: applies to Firebird 5.0.0, may need to be made dynamic
+            assertEquals(1, dbmd.getOdsMinorVersion(), "ODS minor after upgrade");
+        }
+    }
+
 }
