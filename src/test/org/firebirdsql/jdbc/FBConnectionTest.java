@@ -964,8 +964,7 @@ class FBConnectionTest {
         assumeTrue(getDefaultSupportInfo().supportsParallelWorkers(), "test requires support for parallel workers");
         final int maxParallelWorkers;
         try (var connection = getConnectionViaDriverManager()) {
-            String maxParallelWorkersString = ConfigHelper.getConfigValue(connection, "MaxParallelWorkers");
-            maxParallelWorkers = maxParallelWorkersString != null ? Integer.parseInt(maxParallelWorkersString) : 1;
+            maxParallelWorkers = ConfigHelper.getIntConfigValue(connection, "MaxParallelWorkers").orElse(1);
         }
 
         Properties props = getDefaultPropertiesForConnection();

@@ -22,6 +22,7 @@ import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.OptionalInt;
 
 /**
  * Helper to retrieve option configuration information from a Firebird server.
@@ -66,6 +67,30 @@ public final class ConfigHelper {
             }
             return null;
         }
+    }
+
+    /**
+     * Retrieves the value of configuration option {@code configOption} from the {@code RDB$CONFIG} table as an optional
+     * int.
+     *
+     * @param connection
+     *         connection
+     * @param configOption
+     *         configuration option name
+     * @return value of {@code configOption} if an int, or {@code empty} if it does not exist or had a blank value
+     * @throws SQLException
+     *         for errors executing the query
+     * @throws NumberFormatException
+     *         if {@code configOption} has a value, but cannot be parsed to {@code int}
+     * @throws UnsupportedOperationException
+     *         when {@code connection} does not support {@code RDB$CONFIG} (i.e. Firebird 3.0 or earlier)
+     */
+    public static OptionalInt getIntConfigValue(Connection connection, String configOption) throws SQLException {
+        String configValue = getConfigValue(connection, configOption);
+        if (configValue == null || configValue.isEmpty()) {
+            return OptionalInt.empty();
+        }
+        return OptionalInt.of(Integer.parseInt(configValue.trim()));
     }
 
 }
