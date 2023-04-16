@@ -35,6 +35,7 @@ The following has been changed or fixed since Jaybird 5.0.1:
 * New feature: add connection property `parallelWorkers` to set Firebird 5.0 `isc_dpb_parallel_workers` (https://github.com/FirebirdSQL/jaybird/issues/737[jaybird#737])
 * New feature: add `MaintenanceManager.upgradeOds()` for the Firebird 5.0 gfix/service repair action to perform a minor ODS upgrade of a database (https://github.com/FirebirdSQL/jaybird/issues/738[jaybird#738])
 * New feature: add parallel workers support for `BackupManager` (https://github.com/FirebirdSQL/jaybird/issues/739[jaybird#739])
+* New feature: add parallel workers support for _sweep_ in `MaintenanceManager` (https://github.com/FirebirdSQL/jaybird/issues/740[jaybird#740])
 * Fixed: `DatabaseConnectionProperties.setServerBatchBufferSize(int)` ignored provided value and always set default (`0`, or "`use server-side maximum`") (https://github.com/FirebirdSQL/jaybird/issues/741[jaybird#741])
 +
 This bug did not affect connection property `serverBatchBufferSize` set through the JDBC URL or provided in a `Properties` object to `DriverManager`, it only affected the property set through implementations of `DatabaseConnectionProperties` (e.g. data sources from `org.firebirdsql.ds`).
