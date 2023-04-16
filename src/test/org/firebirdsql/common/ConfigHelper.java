@@ -24,6 +24,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.OptionalInt;
 
+import static org.firebirdsql.util.StringUtils.trimToNull;
+
 /**
  * Helper to retrieve option configuration information from a Firebird server.
  * <p>
@@ -86,11 +88,11 @@ public final class ConfigHelper {
      *         when {@code connection} does not support {@code RDB$CONFIG} (i.e. Firebird 3.0 or earlier)
      */
     public static OptionalInt getIntConfigValue(Connection connection, String configOption) throws SQLException {
-        String configValue = getConfigValue(connection, configOption);
-        if (configValue == null || configValue.isEmpty()) {
+        String configValue = trimToNull(getConfigValue(connection, configOption));
+        if (configValue == null) {
             return OptionalInt.empty();
         }
-        return OptionalInt.of(Integer.parseInt(configValue.trim()));
+        return OptionalInt.of(Integer.parseInt(configValue));
     }
 
 }
