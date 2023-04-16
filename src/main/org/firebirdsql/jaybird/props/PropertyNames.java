@@ -60,6 +60,7 @@ public final class PropertyNames {
     public static final String authPlugins = "authPlugins";
     public static final String wireCompression = "wireCompression";
     public static final String enableProtocol = "enableProtocol";
+    public static final String parallelWorkers = "parallelWorkers";
 
     // database connection
     public static final String sqlDialect = "sqlDialect";
@@ -80,8 +81,6 @@ public final class PropertyNames {
     public static final String scrollableCursor = "scrollableCursor";
     public static final String useServerBatch = "useServerBatch";
     public static final String serverBatchBufferSize = "serverBatchBufferSize";
-    // TODO May eventually need to go to "attachment", see comment in https://github.com/FirebirdSQL/jaybird/issues/737
-    public static final String parallelWorkers = "parallelWorkers";
 
     // service connection
     public static final String expectedDb = "expectedDb";
@@ -89,7 +88,7 @@ public final class PropertyNames {
     /**
      * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)
      */
-    @Deprecated
+    @Deprecated(since = "5", forRemoval = true)
     public static final String timestampUsesLocalTimezone = "timestampUsesLocalTimezone";
 
     private PropertyNames() {

@@ -61,9 +61,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
 
         public boolean equals(Object obj) {
             if (obj == this) return true;
-            if (!(obj instanceof PathSizeStruct)) return false;
-
-            PathSizeStruct that = (PathSizeStruct) obj;
+            if (!(obj instanceof PathSizeStruct that)) return false;
 
             return this.path.equals(that.path);
         }
@@ -170,6 +168,10 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
 
         if (verboseBackup()) {
             backupSPB.addArgument(SpbItems.isc_spb_verbose);
+        }
+
+        if (getParallelWorkers() > 0) {
+            backupSPB.addArgument(isc_spb_bkp_parallel_workers, getParallelWorkers());
         }
 
         backupSPB.addArgument(SpbItems.isc_spb_options, options);
@@ -288,6 +290,10 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
 
         if (verbose) {
             restoreSPB.addArgument(SpbItems.isc_spb_verbose);
+        }
+
+        if (getParallelWorkers() > 0) {
+            restoreSPB.addArgument(isc_spb_res_parallel_workers, getParallelWorkers());
         }
 
         if ((options & RESTORE_CREATE) != RESTORE_CREATE

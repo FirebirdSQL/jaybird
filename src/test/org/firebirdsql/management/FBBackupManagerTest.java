@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.ConfigHelper;
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
@@ -33,6 +34,8 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -46,6 +49,7 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEqua
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -271,7 +275,7 @@ class FBBackupManagerTest {
     }
 
     /*
-     The following tests require a custom security database configured for the alias test_with_custom_sec_db, where
+     The following test requires a custom security database configured for the alias test_with_custom_sec_db, where
      the custom security database was initialized with:
      create user sysdba password 'masterkey' using plugin srp;
      create user custom_sec password 'custom_sec' grant admin role using plugin srp;
@@ -297,7 +301,7 @@ class FBBackupManagerTest {
             assumeTrue(false, "Test requires custom security database for alias test_with_custom_sec_db with admin user custom_sec: " + e);
         }
         usesDatabase.addDatabase("test_with_custom_sec_db");
-        
+
         backupManager.clearRestorePaths();
         backupManager.setDatabase("test_with_custom_sec_db");
         backupManager.setUser("custom_sec");
@@ -311,10 +315,41 @@ class FBBackupManagerTest {
         backupManager.restoreDatabase();
     }
 
+    @Test
+    void testBackupRestore_parallel() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsParallelWorkers(), "test requires support for parallel workers");
+        usesDatabase.createDefaultDatabase();
+        final int maxParallelWorkers;
+        try (var connection = getConnectionViaDriverManager()) {
+            String maxParallelWorkersString = ConfigHelper.getConfigValue(connection, "MaxParallelWorkers");
+            maxParallelWorkers = maxParallelWorkersString != null ? Integer.parseInt(maxParallelWorkersString) : 1;
+        }
+
+        // set 1 higher to trigger warning
+        backupManager.setParallelWorkers(maxParallelWorkers + 1);
+
+        backupManager.setVerbose(true);
+        backupManager.backupDatabase();
+
+        // Use of parallel workers with backup is currently not assertable as the warning does not appear in the output
+
+        var loggingStream = new ByteArrayOutputStream(1024);
+        backupManager.setLogger(loggingStream);
+
+        backupManager.setRestoreReplace(true);
+        backupManager.restoreDatabase();
+
+        var logOutput = loggingStream.toString(StandardCharsets.ISO_8859_1);
+        assertThat(logOutput, containsString(
+                "gbak: WARNING:Wrong parallel workers value %d, valid range are from 1 to %d"
+                        .formatted(maxParallelWorkers + 1, maxParallelWorkers)));
+        System.out.println(logOutput);
+    }
+
     private static boolean isLocalHost(String hostName) {
         return "localhost".equalsIgnoreCase(hostName)
-                || "::1".equals(hostName)
-                // Ignoring other 127.* possibilities
-                || "127.0.0.1".equals(hostName);
+               || "::1".equals(hostName)
+               // Ignoring other 127.* possibilities
+               || "127.0.0.1".equals(hostName);
     }
 }
