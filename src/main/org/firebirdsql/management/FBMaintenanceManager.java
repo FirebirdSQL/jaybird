@@ -362,6 +362,11 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         }
     }
 
+    @Override
+    public void upgradeOds() throws SQLException {
+        executeRepairOperation(isc_spb_rpr_upgrade_db);
+    }
+
     // ----------- Private implementation methods --------------------
 
     /**

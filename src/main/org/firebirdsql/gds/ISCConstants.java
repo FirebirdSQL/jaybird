@@ -209,6 +209,11 @@ public interface ISCConstants {
     int isc_spb_bkp_length             =  7;
     int isc_spb_bkp_skip_data          =  8;
     int isc_spb_bkp_stat               =  15;
+    int isc_spb_bkp_keyholder          =  16;
+    int isc_spb_bkp_keyname            =  17;
+    int isc_spb_bkp_crypt              =  18;
+    int isc_spb_bkp_include_data       =  19;
+    int isc_spb_bkp_parallel_workers   =  21;
     int isc_spb_bkp_ignore_checksums   =  0x01;
     int isc_spb_bkp_ignore_limbo       =  0x02;
     int isc_spb_bkp_metadata_only      =  0x04;
@@ -218,6 +223,8 @@ public interface ISCConstants {
     int isc_spb_bkp_convert            =  0x40;
     int isc_spb_bkp_expand             =  0x80;
     int isc_spb_bkp_no_triggers        =  0x8000;
+    int isc_spb_bkp_zip	               =  0x010000;
+    int isc_spb_bkp_direct_io          =  0x020000;
 
     /********************************************
      * Parameters for isc_action_svc_properties *
@@ -234,13 +241,20 @@ public interface ISCConstants {
     int isc_spb_prp_set_sql_dialect		  = 14;
     int isc_spb_prp_activate			  = 0x0100;
     int isc_spb_prp_db_online			  = 0x0200;
-
+    int isc_spb_prp_nolinger              = 0x0400;
     // New shutdown/online modes - New with Firebird 2.5
     int isc_spb_prp_force_shutdown        = 41;
     int isc_spb_prp_attachments_shutdown  = 42;
     int isc_spb_prp_transactions_shutdown = 43;
     int isc_spb_prp_shutdown_mode         = 44;
     int isc_spb_prp_online_mode           = 45;
+    int isc_spb_prp_replica_mode          = 46;
+
+    /********************************************
+     * Parameters for isc_spb_prp_shutdown_mode *
+     *            and isc_spb_prp_online_mode   *
+     ********************************************/
+    
     int isc_spb_prp_sm_normal             = 0;
     int isc_spb_prp_sm_multi              = 1;
     int isc_spb_prp_sm_single             = 2;
@@ -267,13 +281,21 @@ public interface ISCConstants {
     int isc_spb_prp_am_readonly		=39;
     int isc_spb_prp_am_readwrite	=40;
 
+    /*******************************************
+     * Parameters for isc_spb_prp_replica_mode *
+     *******************************************/
+
+    int isc_spb_prp_rm_none = 0;
+    int isc_spb_prp_rm_readonly = 1;
+    int isc_spb_prp_rm_readwrite = 2;
+
     /*****************************************
      * Parameters for isc_action_svc_repair  *
      *****************************************/
 
     int isc_spb_rpr_commit_trans	=	15;
     int isc_spb_rpr_rollback_trans	=	34;
-    int isc_spb_rpr_recover_two_phase=	17;
+    int isc_spb_rpr_recover_two_phase = 17;
     int isc_spb_tra_id				=   18;
     int isc_spb_single_tra_id		=   19;
     int isc_spb_multi_tra_id		=	20;
@@ -293,8 +315,9 @@ public interface ISCConstants {
     int isc_spb_single_tra_id_64	=	47;
     int isc_spb_multi_tra_id_64		=	48;
     int isc_spb_rpr_commit_trans_64	=	49;
-    int isc_spb_rpr_rollback_trans_64		=50;
-    int isc_spb_rpr_recover_two_phase_64	=51;
+    int isc_spb_rpr_rollback_trans_64 = 50;
+    int isc_spb_rpr_recover_two_phase_64 = 51;
+    int isc_spb_rpr_par_workers     =   52;
 
     int isc_spb_rpr_validate_db		=	0x01;
     int isc_spb_rpr_sweep_db		=	0x02;
@@ -305,18 +328,26 @@ public interface ISCConstants {
     int isc_spb_rpr_kill_shadows	=	0x40;
     int isc_spb_rpr_full			=	0x80;
     int isc_spb_rpr_icu				= 0x0800;
+    int isc_spb_rpr_upgrade_db      = 0x1000;
 
     /*****************************************
      * Parameters for isc_action_svc_restore *
      *****************************************/
 
     int isc_spb_res_skip_data		=   isc_spb_bkp_skip_data;
+    int isc_spb_res_include_data    =   isc_spb_bkp_include_data;
     int isc_spb_res_buffers			=	9;
     int isc_spb_res_page_size		=	10;
     int isc_spb_res_length			=	11;
     int isc_spb_res_access_mode		=	12;
     int isc_spb_res_fix_fss_data	=	13;
-    int isc_spb_res_fix_fss_metadata=	14;
+    int isc_spb_res_fix_fss_metadata =  14;
+    int isc_spb_res_keyholder       =   isc_spb_bkp_keyholder;
+    int isc_spb_res_keyname         =   isc_spb_bkp_keyname;
+    int isc_spb_res_crypt           =   isc_spb_bkp_crypt;
+    int isc_spb_res_stat            =   isc_spb_bkp_stat;
+    int isc_spb_res_parallel_workers =  isc_spb_bkp_parallel_workers;
+    int isc_spb_res_metadata_only   =   isc_spb_bkp_metadata_only;
     int isc_spb_res_deactivate_idx	=	0x0100;
     int isc_spb_res_no_shadow		=	0x0200;
     int isc_spb_res_no_validity		=	0x0400;
@@ -324,6 +355,8 @@ public interface ISCConstants {
     int isc_spb_res_replace			=	0x1000;
     int isc_spb_res_create			=	0x2000;
     int isc_spb_res_use_all_space	=	0x4000;
+    int isc_spb_res_direct_io       =   isc_spb_bkp_direct_io;
+    int isc_spb_res_replica_mode    =   20;
 
     /*****************************************
      * Parameters for isc_action_svc_validate *
@@ -343,6 +376,14 @@ public interface ISCConstants {
     int isc_spb_res_am_readwrite	=	isc_spb_prp_am_readwrite;
 
     /*******************************************
+     * Parameters for isc_spb_res_replica_mode *
+     *******************************************/
+
+     int isc_spb_res_rm_none = isc_spb_prp_rm_none;
+     int isc_spb_res_rm_readonly = isc_spb_prp_rm_readonly;
+     int isc_spb_res_rm_readwrite = isc_spb_prp_rm_readwrite;
+
+    /*******************************************
      * Parameters for isc_info_svc_svr_db_info *
      *******************************************/
 
@@ -357,7 +398,7 @@ public interface ISCConstants {
     int isc_spb_sts_db_log		=	0x02;
     int isc_spb_sts_hdr_pages	=	0x04;
     int isc_spb_sts_idx_pages	=	0x08;
-    int isc_spb_sts_sys_relations=	0x10;
+    int isc_spb_sts_sys_relations = 0x10;
     int isc_spb_sts_record_versions = 0x20;
     int isc_spb_sts_table       =   0x40;
     int isc_spb_sts_nocreation  =   0x80;
