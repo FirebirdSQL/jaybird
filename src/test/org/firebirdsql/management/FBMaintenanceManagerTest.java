@@ -93,11 +93,13 @@ class FBMaintenanceManagerTest {
         maintenanceManager.setUser(DB_USER);
         maintenanceManager.setPassword(DB_PASSWORD);
         maintenanceManager.setDatabase(getDatabasePath());
-        if (getDefaultSupportInfo().supportsParallelWorkers()) {
-            // NOTE: 1) There is no way to verify if we're actually setting it;
-            // 2) the actual usage of the configured value is determined per option
-            maintenanceManager.setParallelWorkers(2);
-        }
+        /* NOTE:
+         1) Setting parallel workers unconditionally, but actual support was introduced in Firebird 5.0;
+         2) There is no way to verify if we're actually setting it (we're more testing that the implementation doesn't
+            set it for options or versions which don't support it, than testing if it gets set);
+         3) The actual usage of the configured value is determined per option
+        */
+        maintenanceManager.setParallelWorkers(2);
         maintenanceManager.setLogger(System.out);
     }
 
@@ -584,6 +586,13 @@ class FBMaintenanceManagerTest {
             // NOTE: applies to Firebird 5.0.0, may need to be made dynamic
             assertEquals(1, dbmd.getOdsMinorVersion(), "ODS minor after upgrade");
         }
+    }
+
+    // NOTE: this test only confirms that the repair option can be run
+    @Test
+    void testFixIcu() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsFixIcu(), "test requires fix ICU support");
+        maintenanceManager.fixIcu();
     }
 
 }

@@ -487,4 +487,16 @@ public interface MaintenanceManager extends ServiceManager {
      */
     void upgradeOds() throws SQLException;
 
+    /**
+     * Update or rebuild ICU-dependent collations and indexes when ICU version changed.
+     * <p>
+     * Requires Firebird 3.0 or higher.
+     * </p>
+     *
+     * @throws SQLException
+     *         if a database access error occurs
+     * @since 5.0.2
+     */
+    void fixIcu() throws SQLException;
+
 }

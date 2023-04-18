@@ -367,6 +367,11 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         executeRepairOperation(isc_spb_rpr_upgrade_db);
     }
 
+    @Override
+    public void fixIcu() throws SQLException {
+        executeRepairOperation(isc_spb_rpr_icu);
+    }
+
     // ----------- Private implementation methods --------------------
 
     /**
@@ -431,11 +436,6 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
     }
 
     /**
-     * Bitmap of repair options which support parallel workers.
-     */
-    private static final int PARALLEL_REPAIR_OPTIONS = isc_spb_rpr_sweep_db;
-
-    /**
      * Get a mostly-empty repair-operation request buffer that can be
      * filled as needed.
      *
@@ -446,9 +446,24 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
      */
     private ServiceRequestBuffer createRepairSRB(FbService service, int options) {
         ServiceRequestBuffer srb = createRequestBuffer(service, isc_action_svc_repair, options);
-        if ((options & PARALLEL_REPAIR_OPTIONS) != 0 && getParallelWorkers() > 0) {
+        if (getParallelWorkers() > 0 && (options & getParallelRepairOptions(service)) != 0) {
             srb.addArgument(isc_spb_rpr_par_workers, getParallelWorkers());
         }
         return srb;
     }
+
+    /**
+     * Bitmask of repair options which support parallel workers.
+     *
+     * @param service service attachment, to determine supported options
+     * @return bitmask of repair options
+     */
+    private int getParallelRepairOptions(FbService service) {
+        if (service.getServerVersion().isEqualOrAbove(5, 0)) {
+            return isc_spb_rpr_sweep_db | isc_spb_rpr_icu;
+        } else {
+            return 0;
+        }
+    }
+
 }

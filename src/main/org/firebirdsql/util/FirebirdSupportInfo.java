@@ -656,7 +656,7 @@ public final class FirebirdSupportInfo {
     /**
      * @return {@code true} when this Firebird version supports parallel workers
      */
-    public boolean supportsParallelWorkers(){
+    public boolean supportsParallelWorkers() {
         return isVersionEqualOrAbove(5, 0);
     }
 
@@ -672,6 +672,13 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsUpgradeOds() {
         return isVersionEqualOrAbove(5, 0);
+    }
+
+    /**
+     * @return {@code true} if the gfix/service repair option icu (fix ICU) is supported
+     */
+    public boolean supportsFixIcu() {
+        return isVersionEqualOrAbove(3, 0);
     }
 
     /**
