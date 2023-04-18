@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
  * Implements the common functionality between regular and streaming backup/restore
@@ -170,7 +171,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
             backupSPB.addArgument(SpbItems.isc_spb_verbose);
         }
 
-        if (getParallelWorkers() > 0) {
+        if (getParallelWorkers() > 0 && supportInfoFor(service).supportsParallelWorkers())  {
             backupSPB.addArgument(isc_spb_bkp_parallel_workers, getParallelWorkers());
         }
 
@@ -292,7 +293,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
             restoreSPB.addArgument(SpbItems.isc_spb_verbose);
         }
 
-        if (getParallelWorkers() > 0) {
+        if (getParallelWorkers() > 0 && supportInfoFor(service).supportsParallelWorkers())  {
             restoreSPB.addArgument(isc_spb_res_parallel_workers, getParallelWorkers());
         }
 

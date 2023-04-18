@@ -63,6 +63,12 @@ class FBStreamingBackupManagerTest {
     void setUp() {
         backupManager = configureDefaultServiceProperties(new FBStreamingBackupManager(getGdsType()));
         backupManager.setDatabase(getDatabasePath());
+        /* NOTE:
+         1) Setting parallel workers unconditionally, but actual support was introduced in Firebird 5.0;
+         2) It is only possible to verify for restore if it was set (if a too high value was used), we're more testing
+            that the implementation doesn't set it for versions which don't support it, than testing if it gets set
+        */
+        backupManager.setParallelWorkers(2);
         backupManager.setLogger(System.out);
         backupManager.setVerbose(true);
     }
