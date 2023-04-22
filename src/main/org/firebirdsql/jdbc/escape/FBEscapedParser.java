@@ -347,17 +347,14 @@ public final class FBEscapedParser {
     }
 
     /**
-     * Convert the {@code "{limit &lt;rows&gt; [offset &lt;rows_offset&gt;]}"} call into the corresponding rows clause
-     * for Firebird.
+     * Convert the {@code "{limit <rows> [offset <rows_offset>]}"} call into the corresponding rows clause for Firebird.
      * <p>
-     * NOTE: We assume that the {limit ...} escape occurs in the right place to
-     * work for a
-     * <code><a href="http://www.firebirdsql.org/file/documentation/reference_manuals/reference_material/html/langrefupd25-select.html#langrefupd25-select-rows">ROWS</a></code>
+     * NOTE: We assume that the {limit ...} escape occurs in the right place to work for a
+     * <a href="https://www.firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref40/fblangref40-dml.html#fblangref40-dml-select-rows">{@code ROWS}</a>
      * clause in Firebird.
      * </p>
      * <p>
-     * This implementation supports a parameter for the value of &lt;rows&gt;,
-     * but not for &lt;rows_offset&gt;.
+     * This implementation supports a parameter for the value of &lt;rows&gt;, but not for &lt;rows_offset&gt;.
      * </p>
      *
      * @param limitClause
