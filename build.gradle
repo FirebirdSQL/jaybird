@@ -25,13 +25,11 @@ group = 'org.firebirdsql.jdbc'
 version = project.'version.maven'
 archivesBaseName = project.mavenName
 
-allprojects {
-    tasks.withType(JavaCompile) {
-        options.encoding = 'UTF-8'
-    }
-    tasks.withType(Test) {
-        systemProperty 'file.encoding', 'UTF-8'
-    }
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+tasks.withType(Test).configureEach {
+    systemProperty 'file.encoding', 'UTF-8'
 }
 
 repositories {
@@ -64,9 +62,7 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-params:$junit_jupiter"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_jupiter"
 
-    testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
-    testImplementation "org.hamcrest:hamcrest-library:$hamcrest"
-    testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
+    testImplementation "org.hamcrest:hamcrest:$hamcrest"
     testImplementation "org.assertj:assertj-core:$assertj"
 
     testImplementation "org.mockito:mockito-core:$mockito"
@@ -128,7 +124,7 @@ asciidoctorj {
             'docinfodir': file('src/docs/theme/jaybird-html/docinfo')
 }
 
-task dist(type: Zip) {
+tasks.register('dist', Zip) {
     dependsOn assemble, asciidoctor
     destinationDirectory = file("$buildDir/dist")
 
