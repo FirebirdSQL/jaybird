@@ -23,7 +23,7 @@ system properties, and the configuration of the underlying logging library (e.g.
 Since Java 9, the `java.util.logging` package is part of the module 
 `java.logging`. In the `java.base` module, Java provides a basic logging facade
 through `System.getLogger(String)` (e.a.), and the `System.Logger` interface and
-`System.LoggerFinder` class, also called the Java Platform Logging API ([JEP-264](https://openjdk.org/jeps/264).
+`System.LoggerFinder` class, also called the Java Platform Logging API ([JEP-264](https://openjdk.org/jeps/264)).
 By default, it uses `j.u.l`, if the `java.logging` module is on the module path,
 or otherwise directly to `System.err`, but custom implementations can be used.
 For example, Log4j provides a dependency `org.apache.logging.log4j:log4j-jpl`
