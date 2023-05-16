@@ -21,9 +21,9 @@ package org.firebirdsql.management;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.InfoProcessor;
+import org.firebirdsql.gds.ng.InfoTruncatedException;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.Volatile;
 
@@ -59,8 +59,15 @@ import static org.firebirdsql.gds.ISCConstants.*;
 @Volatile(reason = "Experimental")
 public final class FBTableStatisticsManager implements AutoCloseable {
 
+    private static final int MAX_RETRIES = 3;
+
     private Map<Integer, String> tableMapping = new HashMap<>();
     private FirebirdConnection connection;
+    /**
+     * Table slack is a number which is used to pad the table count used for calculating the buffer size in an attempt
+     * to prevent or fix truncation of the info request. It is incremented when a truncation is handled.
+     */
+    private int tableSlack;
 
     private FBTableStatisticsManager(FirebirdConnection connection) throws SQLException {
         if (connection.isClosed()) {
@@ -91,13 +98,44 @@ public final class FBTableStatisticsManager implements AutoCloseable {
      * </p>
      *
      * @return map from table name to table statistics
+     * @throws InfoTruncatedException
+     *         if a truncated response is received, after retrying 3 times (total: 4 attempts) while increasing
+     *         the buffer size; it is possible that subsequent calls to this method may recover (as that will increase
+     *         the buffer size even more)
      * @throws SQLException
      *         if the connection is closed, or if obtaining the statistics failed due to a database access error
      */
     public Map<String, TableStatistics> getTableStatistics() throws SQLException {
         checkClosed();
         FbDatabase db = connection.getFbDatabase();
-        return db.getDatabaseInfo(getInfoItems(), bufferSize(tableMapping.size()), new TableStatisticsProcessor());
+        InfoTruncatedException lastTruncation;
+        TableStatisticsProcessor tableStatisticsProcessor = new TableStatisticsProcessor();
+        int attempt = 0;
+        do {
+            try {
+                return db.getDatabaseInfo(getInfoItems(), bufferSize(getTableCount()), tableStatisticsProcessor);
+            } catch (InfoTruncatedException e) {
+                /* Occurrence of truncation should be rare. It could occur if all tables have all statistics items, and
+                   new tables are added after the last updateMapping() call or statistics were previously requested by
+                   a different instance and this instance was created after tables have been dropped.
+                   Here, tableSlack is incremented to account for tables removed, while updateTableMapping() is called
+                   to account for new tables. */
+                tableSlack++;
+                updateTableMapping();
+                lastTruncation = e;
+            }
+        } while (attempt++ < MAX_RETRIES);
+        throw lastTruncation;
+    }
+
+    /**
+     * @return the actual table count (so excluding {@link #tableSlack}).
+     */
+    private int getTableCount() throws SQLException {
+        int size = tableMapping.size();
+        if (size != 0) return size;
+        updateTableMapping();
+        return tableMapping.size();
     }
 
     /**
@@ -136,23 +174,9 @@ public final class FBTableStatisticsManager implements AutoCloseable {
         }
     }
 
-    private String getTableName(Integer tableId) throws SQLException {
-        String tableName = tableMapping.get(tableId);
-        if (tableName == null) {
-            // mapping empty or out of date (e.g. new table created since the last update)
-            updateTableMapping();
-            tableName = tableMapping.get(tableId);
-            if (tableName == null) {
-                // fallback
-                tableName = "UNKNOWN_TABLE_ID_" + tableId;
-            }
-        }
-        return tableName;
-    }
-
-    private static int bufferSize(int maxTables) {
+    private int bufferSize(int maxTables) {
         // NOTE: In the current implementation in Firebird, the limit is actually 1 + 8 * (3 + 65535)
-        long size = 1 + 8 * (3 + 6 * (long) maxTables);
+        long size = 1 + 8 * (3 + 6 * (long) (maxTables + tableSlack));
         if (size <= 0) {
             return Integer.MAX_VALUE;
         }
@@ -172,9 +196,19 @@ public final class FBTableStatisticsManager implements AutoCloseable {
         };
     }
 
+    /**
+     * Info processor to retrieve table statistics.
+     * <p>
+     * This is a stateful object and not thread-safe. It should not be shared, and not be reused or only reused in
+     * a small scope. For example, in the current implementation, it is shared for the retry attempts within
+     * {@link #getTableStatistics()}, and this is OK because doing so prevents unnecessary calls to
+     * {@link #updateTableMapping()} from this processor.
+     * </p>
+     */
     private final class TableStatisticsProcessor implements InfoProcessor<Map<String, TableStatistics>> {
 
         private final Map<String, TableStatistics.TableStatisticsBuilder> statisticsBuilders = new HashMap<>();
+        private boolean allowTableMappingUpdate = true;
 
         @Override
         public Map<String, TableStatistics> process(byte[] infoResponse) throws SQLException {
@@ -186,11 +220,8 @@ public final class FBTableStatisticsManager implements AutoCloseable {
                     switch (infoItem) {
                     case isc_info_end:
                         break decodeLoop;
-                    case isc_info_truncated: {
-                        Logger logger = LoggerFactory.getLogger(TableStatisticsProcessor.class);
-                        logger.debug("Received truncation processing table statistics, this is likely an implementation bug");
-                        break decodeLoop;
-                    }
+                    case isc_info_truncated:
+                        throw new InfoTruncatedException("Received isc_info_truncated, and this processor cannot recover automatically", infoResponse.length);
                     case isc_info_read_seq_count:
                     case isc_info_read_idx_count:
                     case isc_info_insert_count:
@@ -233,6 +264,25 @@ public final class FBTableStatisticsManager implements AutoCloseable {
                 idx += 4;
                 getBuilder(tableId).addStatistic(statistic, value);
             }
+        }
+
+        private String getTableName(Integer tableId) throws SQLException {
+            String tableName = tableMapping.get(tableId);
+            if (tableName == null) {
+                // mapping empty or out of date (e.g. new table created since the last update)
+                if (allowTableMappingUpdate) {
+                    updateTableMapping();
+                    // Ensure that if we have multiple tables missing, we don't repeatedly update the table mapping, as
+                    // that wouldn't result in new information.
+                    allowTableMappingUpdate = false;
+                    tableName = tableMapping.get(tableId);
+                }
+                if (tableName == null) {
+                    // fallback
+                    tableName = "UNKNOWN_TABLE_ID_" + tableId;
+                }
+            }
+            return tableName;
         }
 
         private TableStatistics.TableStatisticsBuilder getBuilder(int tableId) throws SQLException {
