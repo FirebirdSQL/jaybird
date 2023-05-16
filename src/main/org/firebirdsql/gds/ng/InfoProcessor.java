@@ -29,11 +29,10 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import java.sql.SQLException;
 
 /**
- * Functional interface to process an information buffer (responses to p_info_*
- * requests) returning an object of type T.
+ * Functional interface to process an information buffer (responses to p_info_* requests) returning an object of type T.
  *
  * @param <T>
- *         Type of the result of the {@link #process(byte[])} method.
+ *         type of the result of the {@link #process(byte[])} method.
  * @author Mark Rotteveel
  * @since 3.0
  */
@@ -44,10 +43,11 @@ public interface InfoProcessor<T> {
      *
      * @param infoResponse
      *         byte array containing the server response to an info-request.
-     * @return Processed response of type T (usually - but not required - a
-     *         newly created object).
+     * @return Processed response of type T (usually - but not required - a newly created object).
+     * @throws InfoTruncatedException
+     *         (optional) if {@code infoResponse} is truncated and this processor could not recover by itself
      * @throws SQLException
-     *         For errors during the infoResponse.
+     *         for errors during processing the infoResponse.
      */
     T process(byte[] infoResponse) throws SQLException;
 
