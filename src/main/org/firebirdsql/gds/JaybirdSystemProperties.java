@@ -34,9 +34,6 @@ public final class JaybirdSystemProperties {
 
     // do not include 'sensitive' properties, and only include Jaybird specific properties
 
-    public static final String FORCE_CONSOLE_LOGGER_PROP = JDBC_PREFIX + "forceConsoleLogger";
-    public static final String DISABLE_LOGGING_PROP = JDBC_PREFIX + "disableLogging";
-    public static final String LOGGER_IMPLEMENTATION_PROP = JDBC_PREFIX + "loggerImplementation";
     public static final String SYNC_WRAP_NATIVE_LIBRARY_PROP = COMMON_PREFIX + "jna.syncWrapNativeLibrary";
     public static final String PROCESS_ID_PROP = JDBC_PREFIX + "pid";
     public static final String PROCESS_NAME_PROP = JDBC_PREFIX + "processName";
@@ -52,18 +49,6 @@ public final class JaybirdSystemProperties {
 
     private JaybirdSystemProperties() {
         // no instances
-    }
-
-    public static boolean isForceConsoleLogger() {
-        return getBooleanSystemPropertyPrivileged(FORCE_CONSOLE_LOGGER_PROP);
-    }
-
-    public static boolean isDisableLogging() {
-        return getBooleanSystemPropertyPrivileged(DISABLE_LOGGING_PROP);
-    }
-
-    public static String getLoggerImplementation() {
-        return getSystemPropertyPrivileged(LOGGER_IMPLEMENTATION_PROP);
     }
 
     public static boolean isSyncWrapNativeLibrary() {

@@ -27,8 +27,6 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.ByteArrayHelper;
 
 import java.io.IOException;
@@ -42,6 +40,9 @@ import java.sql.SQLNonTransientException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.TRACE;
 import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -54,7 +55,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
-    private static final Logger log = LoggerFactory.getLogger(V10AsynchronousChannel.class);
+    private static final System.Logger log = System.getLogger(V10AsynchronousChannel.class.getName());
 
     /*
      * Expecting:
@@ -168,11 +169,11 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     public void processEventData() {
         eventBuffer.flip();
         try {
-            if (log.isDebugEnabled()) {
+            if (log.isLoggable(TRACE)) {
                 if (eventBuffer.hasArray()) {
-                    log.debug(eventBuffer + ": " + ByteArrayHelper.toHexString(eventBuffer.array()).substring(0, 2 * eventBuffer.limit()));
+                    log.log(TRACE, eventBuffer + ": " + ByteArrayHelper.toHexString(eventBuffer.array()).substring(0, 2 * eventBuffer.limit()));
                 } else {
-                    log.debug(eventBuffer.toString());
+                    log.log(TRACE, eventBuffer.toString());
                 }
             }
             bufferProcessing:
@@ -188,23 +189,23 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
                     break bufferProcessing;
                 case op_event:
                     if (!processSingleEvent()) {
-                        log.debug("Could not process entire event, resetting position for next channel read");
+                        log.log(DEBUG, "Could not process entire event, resetting position for next channel read");
                         // Restoring position so we reprocess the event if the rest of the data has been received
                         eventBuffer.reset();
                         break bufferProcessing;
                     }
                     break;
                 default:
-                    log.errorf("Unexpected event operation received: %d, position %d, limit %d", operation,
+                    log.log(ERROR, "Unexpected event operation received: {0}, position {1}, limit {2}", operation,
                             eventBuffer.position(), eventBuffer.limit());
                     break;
                 }
             }
             eventBuffer.compact();
         } catch (SQLException e) {
-            log.fatal("SQLException processing event data", e);
+            log.log(ERROR, "SQLException processing event data", e);
         } catch (Exception e) {
-            log.fatal("Unexpected exception processing events", e);
+            log.log(ERROR, "Unexpected exception processing events", e);
         }
     }
 
@@ -217,7 +218,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
         try (LockCloseable ignored = withLock()) {
             try {
-                log.debugf("Queue event: %s", wireEventHandle);
+                log.log(TRACE, "Queue event: {0}", wireEventHandle);
                 final XdrOutputStream dbXdrOut = database.getXdrStreamAccess().getXdrOut();
                 dbXdrOut.writeInt(op_que_events);
                 dbXdrOut.writeInt(auxHandle);
@@ -295,9 +296,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             eventBuffer.getLong(); // AST info (ignore)
             int eventId = eventBuffer.getInt();
 
-            if (log.isDebugEnabled()) {
-                log.debugf("Received event id %d, eventCount %d", eventId, eventCount);
-            }
+            log.log(TRACE, "Received event id {0}, eventCount {1}", eventId, eventCount);
 
             channelListenerDispatcher.eventReceived(this, new AsynchronousChannelListener.Event(eventId, eventCount));
 
@@ -315,7 +314,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             try {
                 close();
             } catch (Exception ex) {
-                log.error("Exception closing asynchronous channel in response to a FbDatabase detached event", ex);
+                log.log(ERROR, "Exception closing asynchronous channel in response to a FbDatabase detached event", ex);
             }
         }
     }

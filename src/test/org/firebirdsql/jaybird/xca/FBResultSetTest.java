@@ -20,8 +20,6 @@ package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.FBConnection;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -36,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FBResultSetTest {
 
-    private final Logger log = LoggerFactory.getLogger(FBResultSetTest.class);
+    private final System.Logger log = System.getLogger(FBResultSetTest.class.getName());
 
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
@@ -68,7 +66,7 @@ class FBResultSetTest {
             assertTrue(s.execute("select C1, C2 from T1"), "execute returned false for select statement");
             ResultSet rs = s.getResultSet();
             while (rs.next()) {
-                log.info("C1: " + rs.getShort(1) + " C2: " + rs.getShort(2));
+                log.log(System.Logger.Level.DEBUG, "C1: {0} C2: {1}", rs.getShort(1), rs.getShort(2));
             }
             rs.close();
             xa.end(xid, XAResource.TMSUCCESS);
@@ -113,7 +111,9 @@ class FBResultSetTest {
                     "execute returned false for select statement");
             ResultSet rs = s.getResultSet();
             while (rs.next()) {
-                log.info("C1: " + rs.getInt(1)
+                // NOTE, using concatenation, so the result set is accessed even if it isn't logged
+                log.log(System.Logger.Level.DEBUG,
+                        "C1: " + rs.getInt(1)
                         + " C2: " + rs.getShort(2)
                         + " C3: " + rs.getLong(3)
                         + " C4: " + rs.getFloat(4)
@@ -122,16 +122,15 @@ class FBResultSetTest {
                         + " C7: " + rs.getString(7)
                         + " C8: " + rs.getTime(8)
                         + " C9: " + rs.getDate(9)
-                        + " C10: " + rs.getTimestamp(10)
-                );
-                log.info("C1: " + rs.getInt("C1")
+                        + " C10: " + rs.getTimestamp(10));
+                log.log(System.Logger.Level.DEBUG,
+                        "C1: " + rs.getInt("C1")
                         + " C2: " + rs.getShort("C2")
                         + " C3: " + rs.getLong("C3")
                         + " C4: " + rs.getFloat("C4")
                         + " C5: " + rs.getDouble("C5")
                         + " C6: " + rs.getString("C6")
-                        + " C7: " + rs.getString("C7")
-                );
+                        + " C7: " + rs.getString("C7"));
             }
             rs.close();
             xa.end(xid, XAResource.TMSUCCESS);
@@ -190,7 +189,9 @@ class FBResultSetTest {
             p.setInt(1, 1);
             ResultSet rs = p.executeQuery();
             while (rs.next()) {
-                log.info("C1: " + rs.getInt(1)
+                // NOTE, using concatenation, so the result set is accessed even if it isn't logged
+                log.log(System.Logger.Level.DEBUG,
+                        "C1: " + rs.getInt(1)
                         + " C2: " + rs.getShort(2)
                         + " C3: " + rs.getLong(3)
                         + " C4: " + rs.getFloat(4)
@@ -198,34 +199,35 @@ class FBResultSetTest {
                         + " C6: " + rs.getString(6)
                         + " C7: " + rs.getString(7)
                 );
-                log.info("C1: " + rs.getInt("C1")
+                log.log(System.Logger.Level.DEBUG,
+                        "C1: " + rs.getInt("C1")
                         + " C2: " + rs.getShort("C2")
                         + " C3: " + rs.getLong("C3")
                         + " C4: " + rs.getFloat("C4")
                         + " C5: " + rs.getDouble("C5")
                         + " C6: " + rs.getString("C6")
-                        + " C7: " + rs.getString("C7")
-                );
+                        + " C7: " + rs.getString("C7"));
             }
             p.setInt(1, 2);
             rs = p.executeQuery();
             while (rs.next()) {
-                log.info("C1: " + rs.getInt(1)
+                // NOTE, using concatenation, so the result set is accessed even if it isn't logged
+                log.log(System.Logger.Level.DEBUG,
+                        "C1: " + rs.getInt(1)
                         + " C2: " + rs.getShort(2)
                         + " C3: " + rs.getLong(3)
                         + " C4: " + rs.getFloat(4)
                         + " C5: " + rs.getDouble(5)
                         + " C6: " + rs.getString(6)
-                        + " C7: " + rs.getString(7)
-                );
-                log.info("C1: " + rs.getInt("C1")
+                        + " C7: " + rs.getString(7));
+                log.log(System.Logger.Level.DEBUG,
+                        "C1: " + rs.getInt("C1")
                         + " C2: " + rs.getShort("C2")
                         + " C3: " + rs.getLong("C3")
                         + " C4: " + rs.getFloat("C4")
                         + " C5: " + rs.getDouble("C5")
                         + " C6: " + rs.getString("C6")
-                        + " C7: " + rs.getString("C7")
-                );
+                        + " C7: " + rs.getString("C7"));
             }
             p.close();
             t.commit();
@@ -279,22 +281,23 @@ class FBResultSetTest {
             p.setInt(1, 1);
             ResultSet rs = p.executeQuery();
             while (rs.next()) {
-                log.info("C1: " + rs.getInt(1)
+                // NOTE, using concatenation, so the result set is accessed even if it isn't logged
+                log.log(System.Logger.Level.DEBUG,
+                        "C1: " + rs.getInt(1)
                         + " C2: " + rs.getShort(2)
                         + " C3: " + rs.getLong(3)
                         + " C4: " + rs.getFloat(4)
                         + " C5: " + rs.getDouble(5)
                         + " C6: " + rs.getString(6)
-                        + " C7: " + rs.getString(7)
-                );
-                log.info("C1: " + rs.getInt("C1")
+                        + " C7: " + rs.getString(7));
+                log.log(System.Logger.Level.DEBUG,
+                        "C1: " + rs.getInt("C1")
                         + " C2: " + rs.getShort("C2")
                         + " C3: " + rs.getLong("C3")
                         + " C4: " + rs.getFloat("C4")
                         + " C5: " + rs.getDouble("C5")
                         + " C6: " + rs.getString("C6")
-                        + " C7: " + rs.getString("C7")
-                );
+                        + " C7: " + rs.getString("C7"));
             }
             t.commit();
             //does prepared statement persist across transactions?
@@ -302,22 +305,23 @@ class FBResultSetTest {
             p.setInt(1, 2);
             rs = p.executeQuery();
             while (rs.next()) {
-                log.info("C1: " + rs.getInt(1)
+                // NOTE, using concatenation, so the result set is accessed even if it isn't logged
+                log.log(System.Logger.Level.DEBUG,
+                        "C1: " + rs.getInt(1)
                         + " C2: " + rs.getShort(2)
                         + " C3: " + rs.getLong(3)
                         + " C4: " + rs.getFloat(4)
                         + " C5: " + rs.getDouble(5)
                         + " C6: " + rs.getString(6)
-                        + " C7: " + rs.getString(7)
-                );
-                log.info("C1: " + rs.getInt("C1")
+                        + " C7: " + rs.getString(7));
+                log.log(System.Logger.Level.DEBUG,
+                        "C1: " + rs.getInt("C1")
                         + " C2: " + rs.getShort("C2")
                         + " C3: " + rs.getLong("C3")
                         + " C4: " + rs.getFloat("C4")
                         + " C5: " + rs.getDouble("C5")
                         + " C6: " + rs.getString("C6")
-                        + " C7: " + rs.getString("C7")
-                );
+                        + " C7: " + rs.getString("C7"));
             }
             p.close();
             t.commit();
@@ -354,7 +358,7 @@ class FBResultSetTest {
             assertTrue(p.execute(), "execute returned false for select statement");
             ResultSet rs = p.getResultSet();
             while (rs.next()) {
-                log.info("count: " + rs.getInt(1));
+                log.log(System.Logger.Level.DEBUG, "count: {0}", rs.getInt(1));
             }
             p.close();
             t.commit();

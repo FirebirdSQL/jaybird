@@ -30,8 +30,6 @@ import org.firebirdsql.gds.ng.SimpleEventHandler;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -55,8 +53,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @since 3.0
  */
 class JnaEventsTest {
-
-    private final Logger log = LoggerFactory.getLogger(JnaEventsTest.class);
 
     @RegisterExtension
     @Order(1)
@@ -87,13 +83,9 @@ class JnaEventsTest {
     private JnaDatabase db;
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         if (db != null && db.isAttached()) {
-            try {
-                db.close();
-            } catch (SQLException ex) {
-                log.debug("Exception on detach", ex);
-            }
+            db.close();
         }
     }
 

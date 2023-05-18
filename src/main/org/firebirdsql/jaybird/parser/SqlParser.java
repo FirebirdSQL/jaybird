@@ -26,10 +26,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static java.lang.String.format;
+import static java.lang.System.Logger.Level.TRACE;
 
 /**
  * Simple visiting SQL parser.
@@ -42,7 +41,7 @@ import static java.lang.String.format;
 @InternalApi
 public final class SqlParser implements VisitorRegistrar {
 
-    private static final Logger log = Logger.getLogger(SqlParser.class.getName());
+    private static final System.Logger log = System.getLogger(SqlParser.class.getName());
 
     private final Set<TokenVisitor> visitors = new CopyOnWriteArraySet<>();
 
@@ -141,7 +140,9 @@ public final class SqlParser implements VisitorRegistrar {
             try {
                 visitor.visitToken(token, this);
             } catch (Exception e) {
-                log.log(Level.WARNING, format("Ignored exception notifying visitor %s of token %s", visitor, token), e);
+                if (log.isLoggable(TRACE)) {
+                    log.log(TRACE, format("Ignored exception notifying visitor %s of token %s", visitor, token), e);
+                }
             }
         }
     }
@@ -151,7 +152,9 @@ public final class SqlParser implements VisitorRegistrar {
             try {
                 visitor.complete(this);
             } catch (Exception e) {
-                log.log(Level.WARNING, format("Ignored exception notifying visitor %s of completion", visitor), e);
+                if (log.isLoggable(TRACE)) {
+                    log.log(TRACE, format("Ignored exception notifying visitor %s of completion", visitor), e);
+                }
             }
         }
     }

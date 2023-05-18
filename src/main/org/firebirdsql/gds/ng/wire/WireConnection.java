@@ -36,8 +36,6 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.ByteArrayHelper;
 
 import java.io.ByteArrayOutputStream;
@@ -57,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
@@ -74,7 +73,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
     // TODO Check if methods currently throwing IOException should throw SQLException instead
 
-    private static final Logger log = LoggerFactory.getLogger(WireConnection.class);
+    private static final System.Logger log = System.getLogger(WireConnection.class.getName());
     private static final String REJECTION_POSSIBLE_REASON =
             "The server and client could not agree on connection options. A possible reasons is attempting to connect "
             + "to an unsupported Firebird version. See the documentation of connection property 'enableProtocol' for "
@@ -383,14 +382,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                         throw new FbExceptionBuilder().exception(ISCConstants.isc_connect_reject)
                                 .messageParameter(REJECTION_POSSIBLE_REASON).toSQLException();
                     }
-                    log.debugf("Reached end of identify without error or connection, last operation: %d", operation);
+                    log.log(DEBUG, "Reached end of identify without error or connection, last operation: {0}", operation);
                     // If we reach here, authentication failed (or never authenticated for lack of username and password)
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toSQLException();
                 } finally {
                     try {
                         close();
                     } catch (Exception ex) {
-                        log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
+                        log.log(DEBUG, "Ignoring exception on disconnect in connect phase of protocol", ex);
                     }
                 }
             }
@@ -449,7 +448,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 break;
             case TAG_PLUGIN_SPECIFIC:
                 // Nothing to do (yet)
-                log.debug("Possible implementation problem, found TAG_PLUGIN_SPECIFIC without TAG_KEY_TYPE");
+                log.log(DEBUG, "Possible implementation problem, found TAG_PLUGIN_SPECIFIC without TAG_KEY_TYPE");
                 break;
             case TAG_KEY_TYPE: {
                 String keyType = newKeys.getString(StandardCharsets.ISO_8859_1);
@@ -482,7 +481,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 break;
             }
             default:
-                log.debugf("Ignored unexpected tag type: %d", currentTag);
+                log.log(DEBUG, "Ignored unexpected tag type: {0}", currentTag);
                 break;
             }
         }
@@ -575,7 +574,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         try {
             return getSystemPropertyPrivileged("user.name");
         } catch (SecurityException ex) {
-            log.debug("Unable to retrieve user.name property", ex);
+            log.log(DEBUG, "Unable to retrieve user.name property", ex);
             return "jaybird";
         }
     }

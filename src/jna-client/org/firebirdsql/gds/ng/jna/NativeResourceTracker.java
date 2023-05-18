@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.gds.JaybirdSystemProperties;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.lang.ref.Cleaner;
 import java.lang.ref.Reference;
@@ -109,8 +108,8 @@ public final class NativeResourceTracker {
                 try {
                     if (resource != null) resource.dispose();
                 } catch (Throwable e) {
-                    LoggerFactory.getLogger(NativeResourceTracker.class)
-                            .errorfe("Error disposing resource %s", resource, e);
+                    System.getLogger(NativeResourceTracker.class.getName())
+                            .log(System.Logger.Level.ERROR, "Error disposing resource " + resource, e);
                 }
             }
             registeredNativeResources.clear();
@@ -120,8 +119,8 @@ public final class NativeResourceTracker {
                 try {
                     resource.dispose();
                 } catch (Throwable e) {
-                    LoggerFactory.getLogger(NativeResourceTracker.class)
-                            .errorfe("Error disposing resource %s", resource, e);
+                    System.getLogger(NativeResourceTracker.class.getName())
+                            .log(System.Logger.Level.ERROR, "Error disposing resource " + resource, e);
                 }
             }
             strongRegisteredNativeResources.clear();
@@ -136,9 +135,9 @@ public final class NativeResourceTracker {
             } catch (IllegalStateException e) {
                 // ignore
             } catch (SecurityException e) {
-                LoggerFactory.getLogger(NativeResourceTracker.class)
-                        .warn("Could not remove NativeLibraryTracker shutdown hook, this may possibly lead to a memory "
-                                + "leak until JVM exit", e);
+                System.getLogger(NativeResourceTracker.class.getName()).log(System.Logger.Level.WARNING,
+                        "Could not remove NativeLibraryTracker shutdown hook, this may possibly lead to a memory leak "
+                        + "until JVM exit", e);
             }
         }
     }
@@ -166,10 +165,9 @@ public final class NativeResourceTracker {
             } catch (IllegalStateException e) {
                 // ignore
             } catch (SecurityException e) {
-                LoggerFactory.getLogger(NativeResourceTracker.class)
-                        .warn("Could not register NativeLibraryTracker shutdown hook, this may result in errors or "
-                                + "crashes on exit when Firebird Embedded is used and connections have not been "
-                                + "properly closed", e);
+                System.getLogger(NativeResourceTracker.class.getName()).log(System.Logger.Level.WARNING,
+                        "Could not register NativeLibraryTracker shutdown hook, this may result in errors or crashes "
+                        + "on exit when Firebird Embedded is used and connections have not been properly closed", e);
             }
         }
     }

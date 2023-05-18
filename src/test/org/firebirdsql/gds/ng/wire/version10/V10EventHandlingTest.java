@@ -31,8 +31,6 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.Unstable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -102,7 +100,6 @@ public class V10EventHandlingTest {
 
     private static ExecutorService executorService;
     
-    protected final Logger log = LoggerFactory.getLogger(getClass());
     private final V10CommonConnectionInfo commonConnectionInfo = commonConnectionInfo();
     private AbstractFbWireDatabase db;
 
@@ -143,11 +140,7 @@ public class V10EventHandlingTest {
     @AfterEach
     public final void tearDown() throws Exception {
         if (db != null && db.isAttached()) {
-            try {
-                db.close();
-            } catch (SQLException ex) {
-                log.debug("Exception on detach", ex);
-            }
+            db.close();
         }
     }
 

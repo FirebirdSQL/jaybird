@@ -20,8 +20,6 @@ package org.firebirdsql.gds.ng.wire.auth.legacy;
 
 import org.firebirdsql.gds.ng.wire.auth.AuthenticationPlugin;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 
@@ -32,8 +30,6 @@ import java.sql.SQLException;
  * @since 3.0
  */
 final class LegacyAuthenticationPlugin implements AuthenticationPlugin {
-
-    private static final Logger log = LoggerFactory.getLogger(LegacyAuthenticationPlugin.class);
 
     private byte[] clientData;
     private boolean hasServerData;
@@ -59,7 +55,6 @@ final class LegacyAuthenticationPlugin implements AuthenticationPlugin {
 
     @Override
     public void setServerData(byte[] serverData) {
-        log.debug("Ignoring server data, plugin doesn't use it");
         hasServerData = serverData != null && serverData.length > 0;
     }
 

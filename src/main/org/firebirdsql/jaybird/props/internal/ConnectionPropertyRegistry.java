@@ -20,13 +20,12 @@ package org.firebirdsql.jaybird.props.internal;
 
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.InternalApi;
 
 import java.util.*;
 import java.util.stream.Stream;
 
+import static java.lang.System.Logger.Level.WARNING;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 
@@ -130,14 +129,14 @@ public final class ConnectionPropertyRegistry {
                 try {
                     customDefiners.add(iterator.next());
                 } catch (RuntimeException | ServiceConfigurationError e) {
-                    LoggerFactory.getLogger(ConnectionPropertyRegistry.class)
-                            .warn("Could not load a custom ConnectionPropertyDefinerSpi", e);
+                    System.getLogger(ConnectionPropertyRegistry.class.getName()).log(WARNING,
+                            "Could not load a custom ConnectionPropertyDefinerSpi", e);
                 }
             }
             return customDefiners.stream();
         } catch (RuntimeException | ServiceConfigurationError e) {
-            LoggerFactory.getLogger(ConnectionPropertyRegistry.class)
-                    .warn("Could not load any custom ConnectionPropertyDefinerSpi", e);
+            System.getLogger(ConnectionPropertyRegistry.class.getName()).log(WARNING,
+                    "Could not load any custom ConnectionPropertyDefinerSpi", e);
             return Stream.empty();
         }
     }
@@ -145,7 +144,7 @@ public final class ConnectionPropertyRegistry {
     // default access for test purposes
     static final class ConnectionPropertiesBuilder {
 
-        private final Logger log = LoggerFactory.getLogger(ConnectionPropertiesBuilder.class);
+        private final System.Logger log = System.getLogger(ConnectionPropertiesBuilder.class.getName());
 
         private final Map<String, ConnectionProperty> connectionPropertiesMap = new HashMap<>();
         private final Set<Integer> dpbItems = new HashSet<>();
@@ -207,8 +206,8 @@ public final class ConnectionPropertyRegistry {
             HashSet<String> duplicateAliases = new HashSet<>(property.aliases());
             duplicateAliases.add(property.name());
             duplicateAliases.retainAll(connectionPropertiesMap.keySet());
-            log.warnf("Failed to register connection property, one or more of its aliases were already "
-                    + "defined; duplicate alias(es): %s, connection property: %s", duplicateAliases, property);
+            log.log(WARNING, "Failed to register connection property, one or more of its aliases were already defined; "
+                           + "duplicate alias(es): {0}, connection property: {1}", duplicateAliases, property);
             notifyNotRegistered(definer, property);
         }
 
@@ -224,8 +223,8 @@ public final class ConnectionPropertyRegistry {
                 ConnectionPropertyDefinerSpi definer, String type) {
             assert (!(definer instanceof StandardConnectionPropertyDefiner))
                     : "standard properties should not have duplicate " + type + " items: " + property.name();
-            log.warnf("Failed to register connection property, its %s item was already defined; connection property: %s",
-                    type, property);
+            log.log(WARNING, "Failed to register connection property, its {0} item was already defined; connection "
+                             + "property: {1}", type, property);
             notifyNotRegistered(definer, property);
         }
 
@@ -234,8 +233,8 @@ public final class ConnectionPropertyRegistry {
                 definer.notRegistered(connectionProperty);
             } catch (Exception e) {
                 // Intentionally not catching Throwable here to allow errors to escape
-                log.warnfe("Exception received notifying definer.notRegistered(%s) at %s",
-                        connectionProperty, definer, e);
+                log.log(WARNING, "Exception received notifying definer.notRegistered(%s) at %s"
+                        .formatted(connectionProperty, definer), e);
             }
         }
     }

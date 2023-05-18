@@ -20,7 +20,6 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.InternalApi;
 
 import java.util.HashMap;
@@ -130,8 +129,8 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
         try {
             propertyUpdateListener.afterUpdate(property, value);
         } catch (Exception e) {
-            LoggerFactory.getLogger(this.getClass())
-                    .warn("Ignored exception calling propertyUpdateListener.afterUpdate", e);
+            System.getLogger(getClass().getName()).log(System.Logger.Level.WARNING,
+                    "Ignored exception calling propertyUpdateListener.afterUpdate", e);
         }
     }
 
@@ -195,9 +194,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AbstractAttachProperties)) return false;
-
-        AbstractAttachProperties<?> that = (AbstractAttachProperties<?>) o;
+        if (!(o instanceof AbstractAttachProperties<?> that)) return false;
 
         return propertyValues.equals(that.propertyValues);
     }

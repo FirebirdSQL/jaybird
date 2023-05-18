@@ -26,8 +26,6 @@ import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jaybird.fb.constants.BatchItems;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.Primitives;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
@@ -43,6 +41,7 @@ import java.util.Deque;
 import java.util.List;
 
 import static java.lang.String.format;
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.util.Collections.emptyList;
 
 /**
@@ -57,7 +56,7 @@ import static java.util.Collections.emptyList;
  */
 final class ServerBatch implements Batch, StatementListener {
 
-    private static final Logger log = LoggerFactory.getLogger(ServerBatch.class);
+    private static final System.Logger log = System.getLogger(ServerBatch.class.getName());
 
     private volatile BatchState state = BatchState.INITIAL;
     private final FbBatchConfig batchConfig;
@@ -94,7 +93,7 @@ final class ServerBatch implements Batch, StatementListener {
                     clearBatch();
                 } catch (SQLException e) {
                     // path when state is INITIAL should not result in SQLException
-                    log.debug("Unexpected exception clearing batch, this might indicate a bug in Jaybird", e);
+                    log.log(DEBUG, "Unexpected exception clearing batch, this might indicate a bug in Jaybird", e);
                 }
             }
             break;

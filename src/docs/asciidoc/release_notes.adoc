@@ -443,6 +443,21 @@ Unsupported protocol versions may be removed in future releases of Jaybird.
 
 |===
 
+[#logging]
+=== Logging facade removed
+
+The package `org.firebirdsql.logging` has been removed.
+The logging facade from this package has been replaced with the Java Platform Logging API (https://openjdk.org/jeps/264[JEP 264^]).
+
+The Java Platform Logging API by default logs to `java.util.logging`, but it is possible to plugin different logging platforms.
+For example, Log4j provides the `log4j-jpl` dependency which will replace the default binding to `java.util.logging` with one to Log4j.
+
+With this change, Jaybird no longer provides an option to specify a custom logger implementation, so the system property `org.firebirdsql.jdbc.loggerImplementation` is no longer supported.
+If you need a custom logger, you will need to implement `java.lang.System.Logger` and `java.lang.System.LogFinder` and provide the necessary service loader definition (see the Java documentation for details).
+
+The system properties `org.firebirdsql.jdbc.forceConsoleLogger` and `org.firebirdsql.jdbc.disableLogging` are also no longer supported.
+Equivalent behaviour is achieved by configuring the active logging library
+
 // TODO add major changes
 
 [#potentially-breaking-changes]
@@ -526,7 +541,8 @@ The recommended replacement is to use LibreOffice and the builtin "`Firebird Ext
 
 The following packages have been removed in Jaybird 6 without deprecation:
 
-* `FbLocalDatabaseFactory` -- unused since removal of LOCAL protocol implementation in Jaybird 5.
+* `org.firebirdsql.logging`;
+there is no replacement
 
 [#removal-of-methods-without-deprecation]
 ==== Removal of methods without deprecation
@@ -535,12 +551,20 @@ The following methods have been removed in Jaybird 6 without deprecation:
 
 * `FBConnection.prepareMetaDataStatement(String, int,int)`;
 use `prepareStatement(String, int, int, int, boolean, boolean)`
+* `JaybirdSystemProperties`
+** `isForceConsoleLogger()`;
+there is no replacement
+** `isDisableLogging()`;
+there is no replacement
+** `getLoggerImplementation()`;
+there is no replacement
 
 [#removal-of-classes-without-deprecation]
 ==== Removal of classes without deprecation
 
 The following classes have been removed in Jaybird 6 without deprecation:
 
+* `FbLocalDatabaseFactory` -- unused since removal of LOCAL protocol implementation in Jaybird 5.
 
 The following classes are no longer accessible in Jaybird 6:
 
@@ -550,6 +574,14 @@ The following classes are no longer accessible in Jaybird 6:
 ==== Removal of constants without deprecation
 
 The following constants have been removed in Jaybird 6 without deprecation:
+
+* `JaybirdSystemProperties`
+** `FORCE_CONSOLE_LOGGER_PROP`;
+there is no replacement
+** `DISABLE_LOGGING_PROP`;
+there is no replacement
+** `LOGGER_IMPLEMENTATION_PROP`;
+there is no replacement
 
 [#removal-of-deprecated-classes-packages-and-methods]
 === Removal of deprecated classes, packages and methods

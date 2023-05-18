@@ -26,8 +26,6 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.InternalApi;
 
 import java.io.Serial;
@@ -45,7 +43,7 @@ import java.util.Map.Entry;
  */
 public final class GDSFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(GDSFactory.class);
+    private static final System.Logger log = System.getLogger(GDSFactory.class.getName());
 
     /**
      * Class for string comparison in the descendant order. This effectively
@@ -79,11 +77,13 @@ public final class GDSFactory {
                 loadPluginsFromClassLoader(classLoader);
             }
         } catch (Exception ex) {
-            log.errorDebug("Can't register plugins", ex);
+            log.log(System.Logger.Level.ERROR, "Can't register plugins; see debug level for stacktrace");
+            log.log(System.Logger.Level.DEBUG, "Can't register plugins", ex);
         }
 
         if (jdbcUrlToPluginMap.isEmpty()) {
-            log.warn("No plugins loaded from META-INF/services, falling back to fixed registration of default plugins");
+            log.log(System.Logger.Level.WARNING,
+                    "No plugins loaded from META-INF/services, falling back to fixed registration of default plugins");
             for (ClassLoader classLoader : classLoaders) {
                 loadPluginsFallback(classLoader);
             }
@@ -133,12 +133,14 @@ public final class GDSFactory {
                         GDSFactoryPlugin plugin = pluginIterator.next();
                         registerPlugin(plugin);
                     } catch (Exception | ServiceConfigurationError e) {
-                        log.errorDebug("Can't register plugin (skipping)", e);
+                        log.log(System.Logger.Level.ERROR,
+                                "Can't register plugin (skipping); see debug level for stacktrace");
+                        log.log(System.Logger.Level.DEBUG, "Can't register plugin (skipping)", e);
                     }
                 }
                 break;
             } catch (ServiceConfigurationError e) {
-                log.error("Error finding next GDSFactoryPlugin", e);
+                log.log(System.Logger.Level.ERROR, "Error finding next GDSFactoryPlugin", e);
                 retry++;
             }
         }
@@ -170,7 +172,10 @@ public final class GDSFactory {
             GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.getDeclaredConstructor().newInstance();
             registerPlugin(plugin);
         } catch (Exception ex) {
-            log.errorDebug("Can't register plugin " + className, ex);
+            log.log(System.Logger.Level.ERROR, "Can't register plugin {0}; see debug level for stacktrace", className);
+            if (log.isLoggable(System.Logger.Level.DEBUG)) {
+                log.log(System.Logger.Level.DEBUG, "Can't register plugin " + className, ex);
+            }
         }
     }
 

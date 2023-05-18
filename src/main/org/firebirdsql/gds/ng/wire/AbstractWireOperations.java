@@ -31,8 +31,6 @@ import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -48,7 +46,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public abstract class AbstractWireOperations implements FbWireOperations {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractWireOperations.class);
+    private static final System.Logger log = System.getLogger(AbstractWireOperations.class.getName());
 
     private final WireConnection<?, ?> connection;
     private final WarningMessageCallback defaultWarningMessageCallback;
@@ -108,53 +106,36 @@ public abstract class AbstractWireOperations implements FbWireOperations {
      * @see FbWireOperations#readStatusVector()
      */
     protected final SQLException readStatusVector(XdrInputStream xdrIn) throws SQLException {
-        final boolean debug = log.isDebugEnabled();
         final FbExceptionBuilder builder = new FbExceptionBuilder();
         try {
             while (true) {
                 int arg = xdrIn.readInt();
-                int errorCode;
                 switch (arg) {
-                case isc_arg_gds:
-                    errorCode = xdrIn.readInt();
-                    if (debug) log.debugf("readStatusVector arg:isc_arg_gds int: %d", errorCode);
+                case isc_arg_gds, isc_arg_warning -> {
+                    int errorCode = xdrIn.readInt();
                     if (errorCode != 0) {
-                        builder.exception(errorCode);
+                        if (arg == isc_arg_gds) {
+                            builder.exception(errorCode);
+                        } else {
+                            builder.warning(errorCode);
+                        }
                     }
-                    break;
-                case isc_arg_warning:
-                    errorCode = xdrIn.readInt();
-                    if (debug) log.debugf("readStatusVector arg:isc_arg_warning int: %d", errorCode);
-                    if (errorCode != 0) {
-                        builder.warning(errorCode);
-                    }
-                    break;
-                case isc_arg_interpreted:
-                case isc_arg_string:
+                }
+                case isc_arg_interpreted, isc_arg_string, isc_arg_sql_state -> {
                     String stringValue = xdrIn.readString(getEncoding());
-                    log.debugf("readStatusVector string: %s", stringValue);
-                    builder.messageParameter(stringValue);
-                    break;
-                case isc_arg_sql_state:
-                    String sqlState = xdrIn.readString(getEncoding());
-                    log.debugf("readStatusVector sqlstate: %s", sqlState);
-                    builder.sqlState(sqlState);
-                    break;
-                case isc_arg_number:
-                    int intValue = xdrIn.readInt();
-                    if (debug) log.debugf("readStatusVector arg:isc_arg_number int: %d", intValue);
-                    builder.messageParameter(intValue);
-                    break;
-                case isc_arg_end:
+                    if (arg == isc_arg_sql_state) {
+                        builder.sqlState(stringValue);
+                    } else {
+                        builder.messageParameter(stringValue);
+                    }
+                }
+                case isc_arg_end -> {
                     if (builder.isEmpty()) {
                         return null;
                     }
                     return builder.toFlatSQLException();
-                default:
-                    int e = xdrIn.readInt();
-                    if (debug) log.debugf("readStatusVector arg: %d int: %d", arg, e);
-                    builder.messageParameter(e);
-                    break;
+                }
+                default -> builder.messageParameter(xdrIn.readInt());
                 }
             }
         } catch (IOException ioe) {
@@ -202,21 +183,18 @@ public abstract class AbstractWireOperations implements FbWireOperations {
      */
     protected final Response processOperation(int operation) throws SQLException, IOException {
         final XdrInputStream xdrIn = getXdrIn();
-        switch (operation) {
-        case op_response:
-            return new GenericResponse(xdrIn.readInt(), xdrIn.readLong(), xdrIn.readBuffer(), readStatusVector());
-        case op_fetch_response:
-            return new FetchResponse(xdrIn.readInt(), xdrIn.readInt());
-        case op_sql_response:
-            return new SqlResponse(xdrIn.readInt());
-        case op_batch_cs:
-            return readBatchCompletionResponse(xdrIn);
-        default:
-            throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_unexpectedOperationCode)
-                    .messageParameter(operation)
-                    .messageParameter("processOperation")
-                    .toSQLException();
-        }
+        return switch (operation) {
+            case op_response ->
+                    new GenericResponse(xdrIn.readInt(), xdrIn.readLong(), xdrIn.readBuffer(), readStatusVector());
+            case op_fetch_response -> new FetchResponse(xdrIn.readInt(), xdrIn.readInt());
+            case op_sql_response -> new SqlResponse(xdrIn.readInt());
+            case op_batch_cs -> readBatchCompletionResponse(xdrIn);
+            default ->
+                    throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_unexpectedOperationCode)
+                            .messageParameter(operation)
+                            .messageParameter("processOperation")
+                            .toSQLException();
+        };
     }
 
     /**
@@ -245,8 +223,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
      *         For errors returned from the server.
      */
     public final void processResponse(Response response) throws SQLException {
-        if (response instanceof GenericResponse) {
-            GenericResponse genericResponse = (GenericResponse) response;
+        if (response instanceof GenericResponse genericResponse) {
             SQLException exception = genericResponse.getException();
             if (exception != null && !(exception instanceof SQLWarning)) {
                 throw exception;
@@ -265,8 +242,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         if (warningCallback == null) {
             warningCallback = defaultWarningMessageCallback;
         }
-        if (response instanceof GenericResponse) {
-            GenericResponse genericResponse = (GenericResponse) response;
+        if (response instanceof GenericResponse genericResponse) {
             SQLException exception = genericResponse.getException();
             if (exception instanceof SQLWarning) {
                 warningCallback.processWarning((SQLWarning) exception);
@@ -299,7 +275,8 @@ public abstract class AbstractWireOperations implements FbWireOperations {
             } catch (Exception e) {
                 warningCallback.processWarning(new SQLWarning(e));
                 // ignoring exceptions
-                log.warnDebug("Exception in consumePackets", e);
+                log.log(System.Logger.Level.WARNING, "Exception in consumePackets; see debug level for stacktrace");
+                log.log(System.Logger.Level.DEBUG, "Exception in consumePackets", e);
             }
         }
     }

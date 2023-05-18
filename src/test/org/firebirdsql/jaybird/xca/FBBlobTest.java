@@ -20,8 +20,6 @@ package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.FBConnection;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -41,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class FBBlobTest {
 
-    private final Logger log = LoggerFactory.getLogger(FBBlobTest.class);
+    private final System.Logger log = System.getLogger(FBBlobTest.class.getName());
 
     private static final int BLOB_LENGTH = 40960 * 10;
 
@@ -72,14 +70,14 @@ class FBBlobTest {
         p.setInt(1, 1);
         ResultSet rs = p.executeQuery();
         while (rs.next()) {
-            log.info("C1: " + rs.getInt(1));
+            log.log(System.Logger.Level.DEBUG, "C1: {0}", rs.getInt(1));
             Blob blobRead = rs.getBlob(2);
             InputStream is = blobRead.getBinaryStream();
             int count = 0;
             while (is.read() != -1) {
                 count++;
             }
-            log.info("C2 count: " + count);
+            log.log(System.Logger.Level.DEBUG, "C2 count: {0}", count);
             assertEquals(BLOB_LENGTH, count,
                     "retrieved wrong length blob: expecting " + BLOB_LENGTH + ", retrieved: " + count);
         }

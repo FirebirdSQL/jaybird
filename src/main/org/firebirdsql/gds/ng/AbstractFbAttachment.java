@@ -24,8 +24,6 @@ import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSServerVersionException;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -41,7 +39,7 @@ import static java.util.Objects.requireNonNull;
 public abstract class AbstractFbAttachment<T extends AbstractConnection<? extends IAttachProperties<?>, ? extends FbAttachment>>
         implements FbAttachment {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbAttachment.class);
+    private static final System.Logger log = System.getLogger(AbstractFbAttachment.class.getName());
 
     private volatile boolean attached;
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
@@ -94,8 +92,9 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
         try {
             serverVersion = GDSServerVersion.parseRawVersion(versionStrings);
         } catch (GDSServerVersionException e) {
-            log.errorfe("Received unsupported server version \"%s\", replacing with dummy invalid version",
-                    Arrays.toString(versionStrings), e);
+            log.log(System.Logger.Level.ERROR,
+                    () -> "Received unsupported server version \"%s\", replacing with dummy invalid version"
+                            .formatted(Arrays.toString(versionStrings)), e);
             serverVersion = GDSServerVersion.INVALID_VERSION;
         }
         serverVersionInformation = ServerVersionInformation.getForVersion(serverVersion);
@@ -176,7 +175,7 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
             close();
         } catch (Exception ex) {
             // ignore, but log
-            log.debug("Exception on safely detach", ex);
+            log.log(System.Logger.Level.DEBUG, "Exception on safely detach", ex);
         }
     }
 }

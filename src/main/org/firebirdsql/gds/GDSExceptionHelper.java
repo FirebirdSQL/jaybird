@@ -25,8 +25,6 @@
 package org.firebirdsql.gds;
 
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,8 +45,6 @@ import java.util.regex.Pattern;
  */
 public final class GDSExceptionHelper {
 
-    private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class);
-
     private static final Pattern MESSAGE_PARAM_PATTERN = Pattern.compile("\\{(\\d+)}");
     private static final MessageLookup MESSAGE_LOOKUP;
 
@@ -59,7 +55,8 @@ public final class GDSExceptionHelper {
         try {
             MESSAGE_LOOKUP = MessageLoader.loadErrorMessages();
         } catch (Exception ex) {
-            log.error("Exception in init of GDSExceptionHelper, unable to load error information", ex);
+            System.getLogger(GDSExceptionHelper.class.getName()).log(System.Logger.Level.ERROR,
+                    "Exception in init of GDSExceptionHelper, unable to load error information", ex);
             throw new ExceptionInInitializerError(ex);
         }
     }

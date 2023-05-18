@@ -26,7 +26,6 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.TimeZone;
@@ -252,9 +251,10 @@ public final class GDSHelper {
         }
         TimeZone timeZone = TimeZone.getTimeZone(sessionTimeZoneName);
         if ("GMT".equals(timeZone.getID()) && !"GMT".equalsIgnoreCase(sessionTimeZoneName)) {
-            LoggerFactory.getLogger(getClass()).warnf("TimeZone fallback to GMT from %s; possible cause: value of "
-                    + "sessionTimeZone unknown in Java. Time and Timestamp values may yield unexpected values. "
-                    + "Consider setting a different value for sessionTimeZone.", sessionTimeZoneName);
+            System.getLogger(getClass().getName()).log(System.Logger.Level.WARNING,
+                    "TimeZone fallback to GMT from {0}; possible cause: value of sessionTimeZone unknown in Java. Time "
+                    + "and Timestamp values may yield unexpected values. Consider setting a different value for "
+                    + "sessionTimeZone", sessionTimeZoneName);
         }
         return sessionTimeZone = timeZone;
     }

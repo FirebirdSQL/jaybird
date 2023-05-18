@@ -27,13 +27,14 @@ import org.firebirdsql.jna.embedded.spi.DisposableFirebirdEmbeddedLibrary;
 import org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedLibrary;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.lang.ref.Cleaner;
 import java.nio.file.Path;
 import java.util.*;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.INFO;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -45,7 +46,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(FbEmbeddedDatabaseFactory.class);
+    private static final System.Logger log = System.getLogger(FbEmbeddedDatabaseFactory.class.getName());
     // Note Firebird 3 embedded is fbclient + engine12
     private static final List<String> LIBRARIES_TO_TRY = List.of("fbembed", "fbclient");
     private static final FbEmbeddedDatabaseFactory INSTANCE = new FbEmbeddedDatabaseFactory();
@@ -75,15 +76,15 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
                 }
             } catch (RuntimeException | UnsatisfiedLinkError e) {
                 throwables.add(e);
-                log.debugfe("Attempt to load %s failed", libraryName, e);
+                log.log(DEBUG, () -> "Attempt to load %s failed".formatted(libraryName), e);
                 // continue with next
             }
         }
         assert throwables.size() == librariesToTry.size();
-        if (log.isErrorEnabled()) {
-            log.errorf("Could not load any of the libraries in %s:", librariesToTry);
+        if (log.isLoggable(ERROR)) {
+            log.log(ERROR, "Could not load any of the libraries in {0}:", librariesToTry);
             for (int idx = 0; idx < librariesToTry.size(); idx++) {
-                log.errorfe("Loading %s failed", librariesToTry.get(idx), throwables.get(idx));
+                log.log(ERROR, "Loading %s failed".formatted(librariesToTry.get(idx)), throwables.get(idx));
             }
         }
         throw new NativeLibraryLoadException("Could not load any of " + librariesToTry + "; linking first exception",
@@ -94,7 +95,7 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
         Optional<FirebirdEmbeddedLibrary> optionalFbEmbeddedInstance = FirebirdEmbeddedLookup.findFirebirdEmbedded();
         if (optionalFbEmbeddedInstance.isPresent()) {
             FirebirdEmbeddedLibrary firebirdEmbeddedLibrary = optionalFbEmbeddedInstance.get();
-            log.infof("Found Firebird Embedded %s on classpath", firebirdEmbeddedLibrary.getVersion());
+            log.log(INFO, "Found Firebird Embedded {0} on classpath", firebirdEmbeddedLibrary.getVersion());
             if (firebirdEmbeddedLibrary instanceof DisposableFirebirdEmbeddedLibrary) {
                 NativeResourceTracker.strongRegisterNativeResource(new FirebirdEmbeddedLibraryNativeResource(
                         (DisposableFirebirdEmbeddedLibrary) firebirdEmbeddedLibrary));

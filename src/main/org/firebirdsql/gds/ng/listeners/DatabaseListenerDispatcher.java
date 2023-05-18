@@ -19,8 +19,6 @@
 package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLWarning;
 
@@ -33,7 +31,7 @@ import java.sql.SQLWarning;
 public final class DatabaseListenerDispatcher extends AbstractListenerDispatcher<DatabaseListener>
         implements DatabaseListener {
 
-    private static final Logger log = LoggerFactory.getLogger(DatabaseListenerDispatcher.class);
+    private static final System.Logger log = System.getLogger(DatabaseListenerDispatcher.class.getName());
 
     @Override
     public void detaching(FbDatabase database) {
@@ -52,6 +50,6 @@ public final class DatabaseListenerDispatcher extends AbstractListenerDispatcher
 
     @Override
     protected void logError(String message, Throwable throwable) {
-        log.error(message, throwable);
+        log.log(System.Logger.Level.ERROR, message, throwable);
     }
 }

@@ -30,8 +30,6 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.*;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import javax.sql.DataSource;
 import javax.transaction.xa.XAException;
@@ -390,9 +388,10 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
      */
     public FBManagedConnectionFactory canonicalize() {
         if (!shared) {
-            Logger logger = LoggerFactory.getLogger(FBManagedConnectionFactory.class);
-            if (logger.isDebugEnabled()) {
-                logger.debug("canonicalize called on MCF with shared=false", new RuntimeException("trace exception"));
+            var logger = System.getLogger(FBManagedConnectionFactory.class.getName());
+            if (logger.isLoggable(System.Logger.Level.DEBUG)) {
+                logger.log(System.Logger.Level.DEBUG, "canonicalize called on MCF with shared=false",
+                        new RuntimeException("trace exception"));
             }
         }
         final FBManagedConnectionFactory mcf = internalCanonicalize();

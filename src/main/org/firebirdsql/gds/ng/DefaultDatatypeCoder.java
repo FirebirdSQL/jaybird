@@ -24,8 +24,6 @@ import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.extern.decimal.Decimal64;
 import org.firebirdsql.gds.JaybirdSystemProperties;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -63,7 +61,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class DefaultDatatypeCoder implements DatatypeCoder {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultDatatypeCoder.class);
+    private static final System.Logger logger = System.getLogger(DefaultDatatypeCoder.class.getName());
     private static final int DEFAULT_DATATYPE_CODER_CACHE_SIZE = 10;
     private static final int DATATYPE_CODER_CACHE_SIZE = Math.max(1,
             JaybirdSystemProperties.getDatatypeCoderCacheSize(DEFAULT_DATATYPE_CODER_CACHE_SIZE));
@@ -532,11 +530,12 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
                 cacheMaintenanceLock.unlock();
             }
 
-            if (cacheMaintenanceCount % LOG_CACHE_MAINTENANCE_WARNING == 1 && logger.isWarnEnabled()) {
-                logger.warn("Cleared encoding specific datatype coder cache (current reset count: "
-                            + cacheMaintenanceCount + "). Consider setting system property "
-                            + JaybirdSystemProperties.DATATYPE_CODER_CACHE_SIZE
-                            + " to a value higher than the current maximum size of " + DATATYPE_CODER_CACHE_SIZE);
+            if (cacheMaintenanceCount % LOG_CACHE_MAINTENANCE_WARNING == 1) {
+                logger.log(System.Logger.Level.WARNING,
+                        "Cleared encoding specific datatype coder cache (current reset count: {0}). "
+                        + "Consider setting system property " + JaybirdSystemProperties.DATATYPE_CODER_CACHE_SIZE
+                        + " to a value higher than the current maximum size of {1}",
+                        cacheMaintenanceCount, DATATYPE_CODER_CACHE_SIZE);
             }
         }
     }

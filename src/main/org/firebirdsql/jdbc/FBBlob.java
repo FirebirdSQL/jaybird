@@ -35,8 +35,6 @@ import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.InternalApi;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
@@ -63,7 +61,7 @@ import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_type;
  */
 public final class FBBlob implements FirebirdBlob, TransactionListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(FBBlob.class);
+    private static final System.Logger logger = System.getLogger(FBBlob.class.getName());
 
     private boolean isNew;
     private long blobId;
@@ -674,7 +672,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
             try (LockCloseable ignored = withLock()) {
                 free();
             } catch (SQLException e) {
-                logger.error("Error calling free on blob during transaction end", e);
+                logger.log(System.Logger.Level.ERROR, "Error calling free on blob during transaction end", e);
             }
             break;
         default:

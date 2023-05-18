@@ -24,11 +24,12 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.TRACE;
 
 /**
  * @author Mark Rotteveel
@@ -36,7 +37,7 @@ import java.sql.SQLWarning;
  */
 public abstract class AbstractFbBlob implements FbBlob, TransactionListener, DatabaseListener {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbBlob.class);
+    private static final System.Logger log = System.getLogger(AbstractFbBlob.class.getName());
 
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final BlobParameterBuffer blobParameterBuffer;
@@ -203,7 +204,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             try {
                 close();
             } catch (SQLException e) {
-                log.error("Exception while closing blob during transaction end", e);
+                log.log(ERROR, "Exception while closing blob during transaction end", e);
             }
             break;
         case COMMITTED:
@@ -229,11 +230,11 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         }
         try (LockCloseable ignored = withLock()) {
             if (open) {
-                log.debugf("blob with blobId %d still open on database detach", getBlobId());
+                log.log(TRACE, "blob with blobId {0} still open on database detach", getBlobId());
                 try {
                     close();
                 } catch (SQLException e) {
-                    log.error("Blob close in detaching event failed", e);
+                    log.log(ERROR, "Blob close in detaching event failed", e);
                 }
             }
         }

@@ -21,8 +21,6 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,7 +58,6 @@ public abstract class AbstractTransactionTest {
     public static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
             CREATE_KEY_VALUE_TABLE);
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
     protected final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     protected FbDatabase db;
@@ -81,11 +78,7 @@ public abstract class AbstractTransactionTest {
     @AfterEach
     public final void tearDown() throws Exception {
         if (db != null) {
-            try {
-                db.close();
-            } catch (SQLException ex) {
-                log.debug("Exception on detach", ex);
-            }
+            db.close();
         }
     }
 

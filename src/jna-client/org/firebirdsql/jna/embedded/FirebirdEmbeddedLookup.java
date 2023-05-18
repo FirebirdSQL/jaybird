@@ -21,13 +21,13 @@ package org.firebirdsql.jna.embedded;
 import com.sun.jna.Platform;
 import org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedLibrary;
 import org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedProvider;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
+
+import static java.lang.System.Logger.Level.ERROR;
 
 /**
  * Locates a {@link FirebirdEmbeddedLibrary} using the service provider mechanism.
@@ -37,7 +37,7 @@ import java.util.ServiceLoader;
  */
 public class FirebirdEmbeddedLookup {
 
-    private static final Logger log = LoggerFactory.getLogger(FirebirdEmbeddedLookup.class);
+    private static final System.Logger log = System.getLogger(FirebirdEmbeddedLookup.class.getName());
 
     /**
      * Tries to find a Firebird Embedded library service provider for the current platform and install it.
@@ -60,11 +60,12 @@ public class FirebirdEmbeddedLookup {
                         return Optional.of(provider.getFirebirdEmbeddedLibrary());
                     }
                 } catch (Exception | ServiceConfigurationError e) {
-                    log.errorDebug("Can't load FirebirdEmbeddedProvider (skipping)", e);
+                    log.log(ERROR, "Can't load FirebirdEmbeddedProvider (skipping); see debug level for stacktrace");
+                    log.log(System.Logger.Level.DEBUG, "Can't load FirebirdEmbeddedProvider (skipping)", e);
                 }
             }
         } catch (ServiceConfigurationError | RuntimeException e) {
-            log.error("Unable to install Firebird Embedded using ServiceLoader", e);
+            log.log(ERROR, "Unable to install Firebird Embedded using ServiceLoader", e);
         }
         return Optional.empty();
     }

@@ -25,8 +25,6 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jaybird.props.InvalidPropertyValueException;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -48,19 +46,17 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class FBDriver implements FirebirdDriver {
 
-    private static final Logger log;
-
     private final Map<FBConnectionProperties, Reference<FBDataSource>> mcfToDataSourceMap =
             new ConcurrentHashMap<>();
     private final ReferenceQueue<FBDataSource> dataSourceReferenceQueue = new ReferenceQueue<>();
     private final Object createDataSourceLock = new Object();
 
     static {
-        log = LoggerFactory.getLogger(FBDriver.class);
         try {
             DriverManager.registerDriver(new FBDriver());
         } catch (Exception ex) {
-            log.error("Could not register with driver manager", ex);
+            System.getLogger(FBDriver.class.getName())
+                    .log(System.Logger.Level.ERROR, "Could not register with driver manager", ex);
         }
     }
 

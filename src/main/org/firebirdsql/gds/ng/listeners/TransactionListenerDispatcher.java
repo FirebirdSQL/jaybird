@@ -20,8 +20,6 @@ package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Dispatcher to maintain and notify other {@link TransactionListener}.
@@ -32,7 +30,7 @@ import org.firebirdsql.logging.LoggerFactory;
 public final class TransactionListenerDispatcher extends AbstractListenerDispatcher<TransactionListener>
         implements TransactionListener {
 
-    private static final Logger log = LoggerFactory.getLogger(TransactionListenerDispatcher.class);
+    private static final System.Logger log = System.getLogger(TransactionListenerDispatcher.class.getName());
 
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
@@ -43,6 +41,6 @@ public final class TransactionListenerDispatcher extends AbstractListenerDispatc
 
     @Override
     protected void logError(String message, Throwable throwable) {
-        log.error(message, throwable);
+        log.log(System.Logger.Level.ERROR, message, throwable);
     }
 }

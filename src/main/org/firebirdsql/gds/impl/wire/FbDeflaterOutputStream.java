@@ -19,8 +19,6 @@
 package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.gds.JaybirdSystemProperties;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
@@ -28,6 +26,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
+
+import static java.lang.System.Logger.Level.TRACE;
 
 /**
  * {@code DeflaterOutputStream} with some modifications to simplify usage for Jaybird.
@@ -37,7 +37,7 @@ import java.util.zip.DeflaterOutputStream;
  */
 class FbDeflaterOutputStream extends DeflaterOutputStream implements EncryptedStreamSupport {
 
-    private static final Logger log = LoggerFactory.getLogger(FbDeflaterOutputStream.class);
+    private static final System.Logger log = System.getLogger(FbDeflaterOutputStream.class.getName());
     private static final int BUF_SIZE = Math.max(512, JaybirdSystemProperties.getWireDeflateBufferSize(8192));
 
     private boolean encrypted;
@@ -58,8 +58,8 @@ class FbDeflaterOutputStream extends DeflaterOutputStream implements EncryptedSt
             super.close();
         } finally {
             buf = new byte[1];
-            if (log.isTraceEnabled()) {
-                log.tracef("FbDeflaterOutputStream: Uncompressed bytes: %d to compressed bytes: %d",
+            if (log.isLoggable(TRACE)) {
+                log.log(TRACE, "FbDeflaterOutputStream: Uncompressed bytes: {0} to compressed bytes: {1}",
                         def.getBytesRead(), def.getBytesWritten());
             }
             def.end();

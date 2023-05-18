@@ -25,8 +25,6 @@ import org.firebirdsql.jaybird.xca.*;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import javax.naming.NamingException;
 import javax.naming.Reference;
@@ -47,7 +45,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
 
     // TODO Implement in terms of FBManagedConnectionFactory
 
-    private static final Logger LOG = LoggerFactory.getLogger(FBXADataSource.class);
+    private static final System.Logger LOG = System.getLogger(FBXADataSource.class.getName());
 
     private volatile FBDataSource internalDs;
 
@@ -116,7 +114,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
             try {
                 mc.destroy(ce);
             } catch (SQLException e) {
-                LOG.warn("Exception closing unmanaged connection", e);
+                LOG.log(System.Logger.Level.WARNING, "Ignored exception closing unmanaged connection", e);
             } finally {
                 mc.removeConnectionEventListener(this);
             }

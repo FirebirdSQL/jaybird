@@ -155,4 +155,16 @@ public abstract class AbstractFbTransaction implements FbTransaction {
     protected FbDatabase getDatabase() {
         return database;
     }
+
+    protected final void logUnexpectedState(TransactionState expectedState, System.Logger log) {
+        final TransactionState transactionState = getState();
+        if (transactionState != expectedState && log.isLoggable(System.Logger.Level.WARNING)) {
+            String message = "Expected state: " + expectedState + ", but state was: " + transactionState;
+            log.log(System.Logger.Level.WARNING, message + "; see debug level for stacktrace");
+            if (log.isLoggable(System.Logger.Level.DEBUG)) {
+                log.log(System.Logger.Level.DEBUG, message,
+                        new RuntimeException("State " + expectedState + " unexpectedly not reached"));
+            }
+        }
+    }
 }

@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.jaybird;
 
-import org.firebirdsql.logging.LoggerFactory;
-
 import java.util.ResourceBundle;
 
 /**
@@ -47,8 +45,8 @@ public final class Version {
             jaybirdMinorVersion = tryParseInt(resourceBundle.getString("jaybird.version.minor"));
         } catch (Exception e) {
             // Intentionally not logging stacktrace
-            LoggerFactory.getLogger(Version.class)
-                    .errorf("org.firebirdsql.jaybird.Version: Unable to load version information: %s", e);
+            System.getLogger(Version.class.getName()).log(System.Logger.Level.ERROR,
+                    "org.firebirdsql.jaybird.Version: Unable to load version information: {0}", (Object) e);
             // Resource bundle missing, or key missing
             jaybirdSimpleVersion = "version unknown";
             jaybirdDisplayVersion = "Jaybird (version unknown)";
@@ -70,9 +68,8 @@ public final class Version {
             return Integer.parseInt(stringValue);
         } catch (NumberFormatException e) {
             // Intentionally not logging stacktrace
-            LoggerFactory.getLogger(Version.class)
-                    .errorf("org.firebirdsql.jaybird.Version: Unable to parse number %s; defaulting to 0: %s",
-                            stringValue, e);
+            System.getLogger(Version.class.getName()).log(System.Logger.Level.ERROR,
+                    "org.firebirdsql.jaybird.Version: Unable to parse number {0}; defaulting to 0: {1}", stringValue, e);
             return 0;
         }
     }

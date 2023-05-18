@@ -23,8 +23,6 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -39,7 +37,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public class V10Transaction extends AbstractFbTransaction implements FbWireTransaction {
 
-    private static final Logger log = LoggerFactory.getLogger(V10Transaction.class);
+    private static final System.Logger log = System.getLogger(V10Transaction.class.getName());
 
     private final int handle;
 
@@ -86,15 +84,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.COMMITTED && log.isWarnEnabled()) {
-                String message = "Commit not completed, state was " + transactionState;
-                if (log.isDebugEnabled()) {
-                    log.warnDebug(message, new RuntimeException("Commit not completed"));
-                } else {
-                    log.warn(message + "; see debug level for stacktrace");
-                }
-            }
+            logUnexpectedState(TransactionState.COMMITTED, log);
         }
     }
 
@@ -108,15 +98,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.ROLLED_BACK && log.isWarnEnabled()) {
-                String message = "Rollback not completed, state was " + transactionState;
-                if (log.isDebugEnabled()) {
-                    log.warnDebug(message, new RuntimeException("Rollback not completed"));
-                } else {
-                    log.warn(message + "; see debug level for stacktrace");
-                }
-            }
+            logUnexpectedState(TransactionState.ROLLED_BACK, log);
         }
     }
 
@@ -166,15 +148,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.PREPARED && log.isWarnEnabled()) {
-                String message = "Prepare not completed, state was " + transactionState;
-                if (log.isDebugEnabled()) {
-                    log.warnDebug(message, new RuntimeException("Prepare not completed"));
-                } else {
-                    log.warn(message + "; see debug level for stacktrace");
-                }
-            }
+            logUnexpectedState(TransactionState.PREPARED, log);
         }
     }
 

@@ -24,13 +24,12 @@ import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.ByteOrder;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 
+import static java.lang.System.Logger.Level.WARNING;
 import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -47,7 +46,6 @@ import static org.firebirdsql.gds.ISCConstants.*;
 public abstract class JnaConnection<T extends IAttachProperties<T>, C extends JnaAttachment>
         extends AbstractConnection<T, C> {
 
-    private static final Logger log = LoggerFactory.getLogger(JnaConnection.class);
     private static final boolean bigEndian = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
 
     private final FbClientLibrary clientLibrary;
@@ -96,66 +94,59 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
         if (warningMessageCallback == null) {
             throw new NullPointerException("warningMessageCallback is null");
         }
-        boolean debug = log.isDebugEnabled();
         final FbExceptionBuilder builder = new FbExceptionBuilder();
         int vectorIndex = 0;
         processingLoop:
         while (vectorIndex < statusVector.length) {
             int arg = statusVector[vectorIndex++].intValue();
-            int errorCode;
             switch (arg) {
             case isc_arg_gds:
-                errorCode = statusVector[vectorIndex++].intValue();
-                if (debug) log.debugf("readStatusVector arg:isc_arg_gds int: %d", errorCode);
+            case isc_arg_warning: {
+                int errorCode = statusVector[vectorIndex++].intValue();
                 if (errorCode != 0) {
-                    builder.exception(errorCode);
+                    if (arg == isc_arg_gds) {
+                        builder.exception(errorCode);
+                    } else {
+                        builder.warning(errorCode);
+                    }
                 }
                 break;
-            case isc_arg_warning:
-                errorCode = statusVector[vectorIndex++].intValue();
-                if (debug) log.debugf("readStatusVector arg:isc_arg_warning int: %d", errorCode);
-                if (errorCode != 0) {
-                    builder.warning(errorCode);
-                }
-                break;
+            }
             case isc_arg_interpreted:
             case isc_arg_string:
-            case isc_arg_sql_state:
+            case isc_arg_sql_state: {
                 long stringPointerAddress = statusVector[vectorIndex++].longValue();
                 if (stringPointerAddress == 0L) {
-                    log.warn("Received NULL pointer address for isc_arg_interpreted, isc_arg_string or isc_arg_sql_state");
+                    System.getLogger(getClass().getName()).log(WARNING,
+                            "Received NULL pointer address for isc_arg_interpreted, isc_arg_string or isc_arg_sql_state");
                     break processingLoop;
                 }
-                Pointer stringPointer = new Pointer(stringPointerAddress);
+                var stringPointer = new Pointer(stringPointerAddress);
                 String stringValue = stringPointer.getString(0, getEncodingDefinition().getJavaEncodingName());
-                if (arg != isc_arg_sql_state) {
-                    log.debugf("readStatusVector string: %s", stringValue);
-                    builder.messageParameter(stringValue);
-                } else {
-                    log.debugf("readStatusVector sqlstate: %s", stringValue);
+                if (arg == isc_arg_sql_state) {
                     builder.sqlState(stringValue);
+                } else {
+                    builder.messageParameter(stringValue);
                 }
                 break;
-            case isc_arg_cstring:
+            }
+            case isc_arg_cstring: {
                 int stringLength = statusVector[vectorIndex++].intValue();
                 long cStringPointerAddress = statusVector[vectorIndex++].longValue();
-                Pointer cStringPointer = new Pointer(cStringPointerAddress);
+                var cStringPointer = new Pointer(cStringPointerAddress);
                 byte[] stringData = cStringPointer.getByteArray(0, stringLength);
                 String cStringValue = getEncoding().decodeFromCharset(stringData);
                 builder.messageParameter(cStringValue);
                 break;
-            case isc_arg_number:
-                int intValue = statusVector[vectorIndex++].intValue();
-                if (debug) log.debugf("readStatusVector arg:isc_arg_number int: %d", intValue);
-                builder.messageParameter(intValue);
-                break;
+            }
             case isc_arg_end:
                 break processingLoop;
-            default:
+            case isc_arg_number:
+            default: {
                 int e = statusVector[vectorIndex++].intValue();
-                if (debug) log.debugf("readStatusVector arg: %d int: %d", arg, e);
                 builder.messageParameter(e);
                 break;
+            }
             }
         }
 

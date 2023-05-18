@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.management;
 
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.Volatile;
 
 import static java.util.Objects.requireNonNull;
@@ -166,35 +165,17 @@ public final class TableStatistics {
 
         void addStatistic(int statistic, long value) {
             switch (statistic) {
-            case isc_info_read_seq_count:
-                readSeqCount = value;
-                break;
-            case isc_info_read_idx_count:
-                readIdxCount = value;
-                break;
-            case isc_info_insert_count:
-                insertCount = value;
-                break;
-            case isc_info_update_count:
-                updateCount = value;
-                break;
-            case isc_info_delete_count:
-                deleteCount = value;
-                break;
-            case isc_info_backout_count:
-                backoutCount = value;
-                break;
-            case isc_info_purge_count:
-                purgeCount = value;
-                break;
-            case isc_info_expunge_count:
-                expungeCount = value;
-                break;
-            default:
-                LoggerFactory.getLogger(TableStatisticsBuilder.class)
-                        .debugf("Unexpected information item %d with value %d, this is likely an implementation bug.",
-                                statistic, value);
-                break;
+            case isc_info_read_seq_count -> readSeqCount = value;
+            case isc_info_read_idx_count -> readIdxCount = value;
+            case isc_info_insert_count -> insertCount = value;
+            case isc_info_update_count -> updateCount = value;
+            case isc_info_delete_count -> deleteCount = value;
+            case isc_info_backout_count -> backoutCount = value;
+            case isc_info_purge_count -> purgeCount = value;
+            case isc_info_expunge_count -> expungeCount = value;
+            default -> System.getLogger(TableStatisticsBuilder.class.getName()).log(System.Logger.Level.DEBUG,
+                    "Unexpected information item {0} with value {1}, this is likely an implementation bug.",
+                    statistic, value);
             }
         }
 

@@ -19,8 +19,6 @@
 package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -38,7 +36,7 @@ final class FBStandAloneConnectionManager implements XcaConnectionManager, XcaCo
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = LoggerFactory.getLogger(FBStandAloneConnectionManager.class);
+    private static final System.Logger log = System.getLogger(FBStandAloneConnectionManager.class.getName());
 
     @Override
     public FirebirdConnection allocateConnection(FBManagedConnectionFactory mcf, FBConnectionRequestInfo cxRequestInfo)
@@ -56,7 +54,7 @@ final class FBStandAloneConnectionManager implements XcaConnectionManager, XcaCo
 
     @Override
     public void connectionErrorOccurred(XcaConnectionEvent ce) {
-        log.debug("ConnectionErrorOccurred, ", ce.getException());
+        log.log(System.Logger.Level.TRACE, "ConnectionErrorOccurred", ce.getException());
         destroyConnection(ce);
     }
 
@@ -65,7 +63,7 @@ final class FBStandAloneConnectionManager implements XcaConnectionManager, XcaCo
         try {
             mc.destroy(ce);
         } catch (SQLException e) {
-            log.warn("Exception closing unmanaged connection", e);
+            log.log(System.Logger.Level.WARNING, "Exception closing unmanaged connection", e);
         } finally {
             mc.removeConnectionEventListener(this);
         }

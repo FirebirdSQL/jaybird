@@ -26,8 +26,6 @@ import org.firebirdsql.jaybird.parser.LocalStatementType;
 import org.firebirdsql.jaybird.parser.FirebirdReservedWords;
 import org.firebirdsql.jaybird.parser.SqlParser;
 import org.firebirdsql.jaybird.parser.StatementIdentification;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -43,7 +41,7 @@ final class GeneratedKeysQueryBuilder {
 
     // TODO Add caching for column info
 
-    private static final Logger logger = LoggerFactory.getLogger(GeneratedKeysQueryBuilder.class);
+    private static final System.Logger logger = System.getLogger(GeneratedKeysQueryBuilder.class.getName());
     private static final Map<LocalStatementType, GeneratedKeysSupport.QueryType> statementTypeToQueryType;
     static {
         Map<LocalStatementType, GeneratedKeysSupport.QueryType> temp = new EnumMap<>(LocalStatementType.class);
@@ -110,7 +108,9 @@ final class GeneratedKeysQueryBuilder {
                     .parse();
             return new GeneratedKeysQueryBuilder(statementText, detector.toStatementIdentification(), supportedQueryTypes);
         } catch (RuntimeException e) {
-            logger.debugfe("Exception parsing query: %s", statementText, e);
+            if (logger.isLoggable(System.Logger.Level.DEBUG)) {
+                logger.log(System.Logger.Level.DEBUG, "Exception parsing query: " + statementText, e);
+            }
             return new GeneratedKeysQueryBuilder(statementText);
         }
     }

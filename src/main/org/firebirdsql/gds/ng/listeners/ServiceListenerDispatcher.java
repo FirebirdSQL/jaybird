@@ -19,8 +19,6 @@
 package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbService;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLWarning;
 
@@ -30,7 +28,7 @@ import java.sql.SQLWarning;
 public final class ServiceListenerDispatcher extends AbstractListenerDispatcher<ServiceListener>
         implements ServiceListener {
 
-    private static final Logger log = LoggerFactory.getLogger(ServiceListenerDispatcher.class);
+    private static final System.Logger log = System.getLogger(ServiceListenerDispatcher.class.getName());
 
     @Override
     public void detaching(FbService service) {
@@ -49,6 +47,6 @@ public final class ServiceListenerDispatcher extends AbstractListenerDispatcher<
 
     @Override
     protected void logError(String message, Throwable throwable) {
-        log.error(message, throwable);
+        log.log(System.Logger.Level.ERROR, message, throwable);
     }
 }

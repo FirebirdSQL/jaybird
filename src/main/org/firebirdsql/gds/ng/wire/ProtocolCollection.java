@@ -19,13 +19,10 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.jaybird.props.AttachmentProperties;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.FB_PROTOCOL_FLAG;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.MAXIMUM_SUPPORTED_PROTOCOL_VERSION;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.MINIMUM_SUPPORTED_PROTOCOL_VERSION;
@@ -41,8 +38,6 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.PROTOCOL_VERSI
  * @since 3.0
  */
 public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
-
-    private static final Logger log = LoggerFactory.getLogger(ProtocolCollection.class);
 
     private final Map<Integer, ProtocolDescriptor> descriptorMap;
     private static final ProtocolCollection AVAILABLE_PROTOCOLS;
@@ -65,12 +60,16 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                             ProtocolDescriptor protocol = descriptorIterator.next();
                             availableProtocols.add(protocol);
                         } catch (Exception | ServiceConfigurationError e) {
-                            log.errorDebug("Could not load protocol descriptor (skipping)", e);
+                            var log = System.getLogger(ProtocolCollection.class.getName());
+                            log.log(System.Logger.Level.ERROR,
+                                    "Could not load protocol descriptor (skipping); see debug level for stacktrace");
+                            log.log(System.Logger.Level.DEBUG, "Could not load protocol descriptor (skipping)", e);
                         }
                     }
                     break;
                 } catch (ServiceConfigurationError e) {
-                    log.error("Error finding next ProtocolDescriptor", e);
+                    System.getLogger(ProtocolCollection.class.getName())
+                            .log(System.Logger.Level.ERROR, "Error finding next ProtocolDescriptor", e);
                     retry++;
                 }
             }
@@ -137,7 +136,12 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                 ProtocolDescriptor protocol = (ProtocolDescriptor) clazz.getDeclaredConstructor().newInstance();
                 protocols.add(protocol);
             } catch (Exception e) {
-                log.warnDebug(format("Unable to load protocol %s in loadProtocolsFallback; skipping", className), e);
+                var log = System.getLogger(ProtocolCollection.class.getName());
+                if (log.isLoggable(System.Logger.Level.WARNING)) {
+                    String message = "Unable to load protocol " + className + " in loadProtocolsFallback; skipping";
+                    log.log(System.Logger.Level.WARNING, message + "; see debug level for stacktrace");
+                    log.log(System.Logger.Level.DEBUG, message, e);
+                }
             }
         }
         return protocols;

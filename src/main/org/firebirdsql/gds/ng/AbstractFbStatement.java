@@ -25,8 +25,6 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.*;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -36,6 +34,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 import static java.lang.String.format;
+import static java.lang.System.Logger.Level.DEBUG;
 
 /**
  * @author Mark Rotteveel
@@ -50,7 +49,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      */
     private static final Set<StatementState> RESET_TO_PREPARED = Collections.unmodifiableSet(
             EnumSet.of(StatementState.EXECUTING, StatementState.CURSOR_OPEN));
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbStatement.class);
+    private static final System.Logger log = System.getLogger(AbstractFbStatement.class.getName());
 
     // NOTE: BEFORE_FIRST is also used for statements that don't produce rows
     private static final int BEFORE_FIRST = -1;
@@ -258,9 +257,9 @@ public abstract class AbstractFbStatement implements FbStatement {
         try (LockCloseable ignored = withLock()) {
             final StatementState currentState = state;
             if (currentState == newState || currentState == StatementState.CLOSED) return;
-            if (log.isDebugEnabled() && !currentState.isValidTransition(newState)) {
-                log.debugfe("Forced statement transition is invalid; state %s only allows next states %s, forced to set %s",
-                                currentState, currentState.validTransitionSet(), newState,
+            if (!currentState.isValidTransition(newState) && log.isLoggable(DEBUG)) {
+                log.log(DEBUG, "Forced statement transition is invalid; state %s only allows next states %s, forced to set %s"
+                                .formatted(currentState, currentState.validTransitionSet(), newState),
                         new IllegalStateException("debugging stacktrace"));
             }
             state = newState;
@@ -854,7 +853,7 @@ public abstract class AbstractFbStatement implements FbStatement {
                 try {
                     closeCursor();
                 } catch (SQLException e) {
-                    log.error("Unable to close cursor after statement timeout", e);
+                    log.log(System.Logger.Level.ERROR, "Unable to close cursor after statement timeout", e);
                 }
                 break;
             }

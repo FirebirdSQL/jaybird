@@ -18,15 +18,16 @@
  */
 package org.firebirdsql.gds;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
+
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.WARNING;
 
 /**
  * Loads the messages and SQL states for Firebird/Jaybird error codes to a {@link MessageLookup}
@@ -40,7 +41,7 @@ final class MessageLoader {
     private static final String FIREBIRD_SQLSTATES = "isc_error_sqlstates";
     private static final String JAYBIRD_SQLSTATES = "org/firebirdsql/jaybird_error_sqlstates";
 
-    private final Logger log = LoggerFactory.getLogger(MessageLoader.class);
+    private final System.Logger log = System.getLogger(MessageLoader.class.getName());
     // Implementation note, using Vector here as they can be sized and then populated by index
     private final List<Vector<String>> facilityMessages;
     private final List<Vector<String>> facilityStates;
@@ -100,10 +101,10 @@ final class MessageLoader {
             if (in != null) {
                 properties.load(in);
             } else {
-                log.warnf("Unable to load resource; resource %s is not found", resource);
+                log.log(WARNING, "Unable to load resource; resource {0} is not found", resource);
             }
         } catch (IOException ioex) {
-            log.errorfe("Unable to load resource %s", resource, ioex);
+            log.log(ERROR, "Unable to load resource " + resource, ioex);
             throw ioex;
         }
         return properties;
@@ -119,7 +120,10 @@ final class MessageLoader {
 
                 resourceType.store(errorCode, value, this);
             } catch (NumberFormatException e) {
-                log.warnDebug("Key " + key + " is not a number; ignored", e);
+                log.log(WARNING, "Key {0} is not a number; ignored; see debug level for stacktrace", key);
+                if (log.isLoggable(DEBUG)) {
+                    log.log(DEBUG, "Key " + key + " is not a number; ignored", e);
+                }
             }
         }
     }
@@ -137,7 +141,7 @@ final class MessageLoader {
 
     private void storeValue(int errorCode, String value, Vector<String> facilityVector) {
         if (facilityVector == null) {
-            log.warnf("Invalid error code %d, no valid facility; skipping", errorCode);
+            log.log(WARNING, "Invalid error code {0}, no valid facility; skipping", errorCode);
             return;
         }
         final int code = MessageLookup.getCode(errorCode);

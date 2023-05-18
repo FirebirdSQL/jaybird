@@ -29,8 +29,6 @@ import org.firebirdsql.gds.ng.AbstractEventHandle;
 import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Event handle for the JNA protocol.
@@ -40,7 +38,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public final class JnaEventHandle extends AbstractEventHandle {
 
-    private static final Logger log = LoggerFactory.getLogger(JnaEventHandle.class);
+    private static final System.Logger log = System.getLogger(JnaEventHandle.class.getName());
 
     private final Memory eventNameMemory;
     private final IntByReference eventId = new IntByReference(0);
@@ -122,12 +120,12 @@ public final class JnaEventHandle extends AbstractEventHandle {
      */
     @SuppressWarnings("unused")
     public void debugMemoryDump() {
-        if (!log.isDebugEnabled()) return;
+        if (!log.isLoggable(System.Logger.Level.DEBUG)) return;
         if (size == -1) {
-            log.debug("Event handle not allocated");
+            log.log(System.Logger.Level.DEBUG, "Event handle not allocated");
         }
         synchronized (JnaEventHandle.class) {
-            log.debugf("%s: Event Buffer: %s, Result Buffer: %s", getEventName(),
+            log.log(System.Logger.Level.DEBUG, "{0}: Event Buffer: {1}, Result Buffer: {2}", getEventName(),
                     getEventBuffer().getValue().dump(0, size), getResultBuffer().getValue().dump(0, size));
         }
     }

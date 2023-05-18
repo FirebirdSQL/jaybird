@@ -26,10 +26,11 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import static java.lang.System.Logger.Level.DEBUG;
 
 /**
  * Interface for processing deferred responses from the server.
@@ -62,7 +63,7 @@ public interface DeferredAction {
     default void onException(Exception exception) {
         // Default expectation: this only happens if the connection is no longer available.
         // We ignore the exception and assume the next operation by the caller will fail as well.
-        LoggerFactory.getLogger(getClass()).debug("Exception in processDeferredActions", exception);
+        System.getLogger(getClass().getName()).log(DEBUG, "Exception in processDeferredActions", exception);
     }
 
     /**

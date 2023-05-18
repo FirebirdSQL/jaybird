@@ -30,8 +30,6 @@ import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -49,8 +47,6 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * @since 3.0
  */
 public class V10Database extends AbstractFbWireDatabase implements FbWireDatabase {
-
-    private static final Logger log = LoggerFactory.getLogger(V10Database.class);
 
     private BlrCalculator blrCalculator;
 
@@ -260,7 +256,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 try {
                     closeConnection();
                 } catch (IOException e) {
-                    log.debug("Ignored exception on connection close in dropDatabase()", e);
+                    System.getLogger(getClass().getName()).log(System.Logger.Level.DEBUG,
+                            "Ignored exception on connection close in dropDatabase()", e);
                 }
             }
         } catch (SQLException ex) {

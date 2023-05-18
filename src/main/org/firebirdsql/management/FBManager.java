@@ -25,8 +25,6 @@ import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.IConnectionProperties;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 
@@ -45,7 +43,7 @@ import java.sql.SQLException;
 public class FBManager implements FBManagerMBean {
 
     private static final int DEFAULT_PORT = 3050;
-    private static final Logger log = LoggerFactory.getLogger(FBManager.class);
+    private static final System.Logger log = System.getLogger(FBManager.class.getName());
 
     private FbDatabaseFactory dbFactory;
     private String host = "localhost";
@@ -98,7 +96,7 @@ public class FBManager implements FBManagerMBean {
     public synchronized void stop() throws Exception {
         try {
             if (STOPPED.equals(state)) {
-                log.warn("FBManager already stopped.");
+                log.log(System.Logger.Level.WARNING, "FBManager already stopped");
                 return;
             }
             String fileName = getFileName();
@@ -332,7 +330,7 @@ public class FBManager implements FBManagerMBean {
                 db.createDatabase();
             }
         } catch (Exception e) {
-            log.error("Exception creating database", e);
+            log.log(System.Logger.Level.ERROR, "Exception creating database", e);
             throw e;
         }
     }
@@ -353,7 +351,7 @@ public class FBManager implements FBManagerMBean {
             db.attach();
             db.dropDatabase();
         } catch (Exception e) {
-            log.error("Exception dropping database", e);
+            log.log(System.Logger.Level.ERROR, "Exception dropping database", e);
             throw e;
         }
     }

@@ -34,8 +34,6 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -199,7 +197,7 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
 
     private static final class DatabaseTransactionInfoProcessor implements InfoProcessor<DatabaseTransactionInfo> {
 
-        private static final Logger log = LoggerFactory.getLogger(DatabaseTransactionInfoProcessor.class);
+        private static final System.Logger log = System.getLogger(DatabaseTransactionInfoProcessor.class.getName());
 
         @Override
         public DatabaseTransactionInfo process(byte[] info) throws SQLException {
@@ -214,8 +212,9 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
                 final byte infoItem = info[idx];
                 idx++;
                 if (infoItem == isc_info_truncated) {
-                    log.warnf("Transaction information response was truncated at index %d. Info block size: %d. "
-                            + "This could indicate a bug in the implementation.", idx, info.length);
+                    log.log(System.Logger.Level.WARNING,
+                            "Transaction info response was truncated at index {0}. Response size: {1}; this could "
+                            + "indicate a bug in the implementation", idx, info.length);
                     break;
                 }
 
@@ -246,7 +245,7 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
                     break;
                     
                 default:
-                    log.warnf("Unknown or unexpected info item: %d", infoItem);
+                    log.log(System.Logger.Level.WARNING, "Unknown or unexpected info item: {0}", infoItem);
                     break;
                 }
             }

@@ -27,8 +27,6 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.lang.ref.Cleaner;
 import java.nio.ByteBuffer;
@@ -42,7 +40,7 @@ import java.sql.SQLException;
  */
 public class JnaTransaction extends AbstractFbTransaction {
 
-    private static final Logger log = LoggerFactory.getLogger(JnaTransaction.class);
+    private static final System.Logger log = System.getLogger(JnaTransaction.class.getName());
 
     private final IntByReference handle;
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
@@ -95,15 +93,7 @@ public class JnaTransaction extends AbstractFbTransaction {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.COMMITTED && log.isWarnEnabled()) {
-                String message = "Commit not completed, state was " + transactionState;
-                if (log.isDebugEnabled()) {
-                    log.warnDebug(message, new RuntimeException("Commit not completed"));
-                } else {
-                    log.warn(message + "; see debug level for stacktrace");
-                }
-            }
+            logUnexpectedState(TransactionState.COMMITTED, log);
         }
     }
 
@@ -121,15 +111,7 @@ public class JnaTransaction extends AbstractFbTransaction {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.ROLLED_BACK && log.isWarnEnabled()) {
-                String message = "Rollback not completed, state was " + transactionState;
-                if (log.isDebugEnabled()) {
-                    log.warnDebug(message, new RuntimeException("Rollback not completed"));
-                } else {
-                    log.warn(message + "; see debug level for stacktrace");
-                }
-            }
+            logUnexpectedState(TransactionState.ROLLED_BACK, log);
         }
     }
 
@@ -152,15 +134,7 @@ public class JnaTransaction extends AbstractFbTransaction {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.PREPARED && log.isWarnEnabled()) {
-                String message = "Prepare not completed, state was " + transactionState;
-                if (log.isDebugEnabled()) {
-                    log.warnDebug(message, new RuntimeException("Prepare not completed"));
-                } else {
-                    log.warn(message + "; see debug level for stacktrace");
-                }
-            }
+            logUnexpectedState(TransactionState.PREPARED, log);
         }
     }
 

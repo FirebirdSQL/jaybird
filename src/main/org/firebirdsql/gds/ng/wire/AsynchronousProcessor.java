@@ -18,14 +18,14 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.sql.SQLException;
 import java.util.*;
+
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.TRACE;
 
 /**
  * Process asynchronous channels for notification of events.
@@ -35,7 +35,7 @@ import java.util.*;
  */
 public final class AsynchronousProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(AsynchronousProcessor.class);
+    private static final System.Logger log = System.getLogger(AsynchronousProcessor.class.getName());
 
     /**
      * Initialize on demand holder
@@ -128,14 +128,14 @@ public final class AsynchronousProcessor {
 
                     selector.select(this::handleReadable);
                 } catch (Exception ex) {
-                    log.error("Exception in async event processing", ex);
+                    log.log(ERROR, "Exception in async event processing", ex);
                 }
             }
             try {
                 selector.close();
             } catch (Exception e) {
                 // ignore
-                log.error("Exception closing event selector", e);
+                log.log(ERROR, "Exception closing event selector", e);
             } finally {
                 newChannels.clear();
             }
@@ -167,23 +167,22 @@ public final class AsynchronousProcessor {
                         channel.close();
                     } catch (SQLException e) {
                         // ignore
-                        log.error("SQLException closing event channel", e);
+                        log.log(ERROR, "SQLException closing event channel", e);
                     }
                 }
             } catch (AsynchronousCloseException e) {
                 // Channel closed
-                log.debug("AsynchronousCloseException reading from event channel; cancelling key", e);
+                log.log(TRACE, "AsynchronousCloseException reading from event channel; cancelling key", e);
                 selectionKey.cancel();
             } catch (CancelledKeyException e) {
                 // ignore; key cancelled as part of close
             } catch (Exception e) {
-                log.errorfe("%s reading from event channel; attempting to close async channel",
-                        e.getClass().getName(), e);
+                log.log(ERROR, "Exception reading from event channel; attempting to close async channel", e);
                 FbWireAsynchronousChannel channel = (FbWireAsynchronousChannel) selectionKey.attachment();
                 try {
                     channel.close();
                 } catch (Exception e1) {
-                    log.error("Attempt to close async channel failed", e1);
+                    log.log(ERROR, "Attempt to close async channel failed", e1);
                 }
             }
         }
@@ -196,7 +195,7 @@ public final class AsynchronousProcessor {
     private static class LogUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
         @Override
         public void uncaughtException(Thread t, Throwable e) {
-            log.errorfe("Jaybird asynchronous processing terminated. Uncaught exception on %s", t.getName(), e);
+            log.log(ERROR, "Jaybird asynchronous processing terminated. Uncaught exception on " + t.getName(), e);
         }
     }
 }

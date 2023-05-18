@@ -40,8 +40,6 @@ import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.ExceptionHelper;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
@@ -53,6 +51,11 @@ import java.util.Map;
 import java.util.Objects;
 
 import static java.lang.String.format;
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.INFO;
+import static java.lang.System.Logger.Level.TRACE;
+import static java.lang.System.Logger.Level.WARNING;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptNoCryptKeyAvailable;
@@ -64,7 +67,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public class V13WireOperations extends V11WireOperations {
 
-    private static final Logger log = LoggerFactory.getLogger(V13WireOperations.class);
+    private static final System.Logger log = System.getLogger(V13WireOperations.class.getName());
     private static final String ARC4_PLUGIN_SPI_CLASS_NAME =
             "org.firebirdsql.gds.ng.wire.crypt.arc4.Arc4EncryptionPluginSpi";
     public static final String CHA_CHA_PLUGIN_SPI_CLASS_NAME =
@@ -79,8 +82,11 @@ public class V13WireOperations extends V11WireOperations {
                         (EncryptionPluginSpi) spiClass.getDeclaredConstructor().newInstance();
                 tempMap.put(encryptionPluginSpi.getEncryptionIdentifier(), encryptionPluginSpi);
             } catch (Exception e) {
-                log.infof("Could not load EncryptionPluginSpi: %s; see debug for details", spiName);
-                log.debugfe("Could not load EncryptionPluginSpi: %s", spiName, e);
+                if (log.isLoggable(INFO)) {
+                    String message = "Could not load EncryptionPluginSpi: " + spiName;
+                    log.log(INFO, message + "; see debug for details");
+                    log.log(DEBUG, message, e);
+                }
             }
         }
         SUPPORTED_ENCRYPTION_PLUGINS = tempMap.isEmpty() ? emptyMap() : unmodifiableMap(tempMap);
@@ -91,8 +97,7 @@ public class V13WireOperations extends V11WireOperations {
     }
 
     @Override
-    public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket,
-            DbCryptCallback dbCryptCallback,
+    public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback,
             FbWireOperations.ProcessAttachCallback processAttachCallback) throws SQLException, IOException {
         assert acceptPacket == null || acceptPacket.operation == op_cond_accept
                 : "Unexpected operation in AcceptPacket";
@@ -100,7 +105,6 @@ public class V13WireOperations extends V11WireOperations {
         final XdrOutputStream xdrOut = getXdrOut();
         final ClientAuthBlock clientAuthBlock = getClientAuthBlock();
         final Encoding encoding = getEncoding();
-        final boolean debug = log.isDebugEnabled();
         while (true) {
             String pluginName;
             byte[] data;
@@ -108,31 +112,30 @@ public class V13WireOperations extends V11WireOperations {
                 data = acceptPacket.p_acpt_data;
                 pluginName = acceptPacket.p_acpt_plugin;
                 addServerKeys(acceptPacket.p_acpt_keys);
-                if (debug) log.debugf("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
-                        data.length, pluginName != null ? pluginName.length() : null, pluginName);
                 // TODO handle compression
                 acceptPacket = null;
             } else {
                 int operation = readNextOperation();
                 switch (operation) {
-                case op_trusted_auth:
+                case op_trusted_auth -> {
                     xdrIn.readBuffer(); // p_trau_data
                     throw new FbExceptionBuilder()
                             .nonTransientConnectionException(JaybirdErrorCodes.jb_receiveTrustedAuth_NotSupported)
                             .toSQLException();
-                case op_cont_auth:
+                }
+                case op_cont_auth -> {
                     data = xdrIn.readBuffer(); // p_data
                     pluginName = xdrIn.readString(encoding); //p_name
                     xdrIn.readBuffer(); // p_list (ignore?)
                     addServerKeys(xdrIn.readBuffer()); // p_keys
-                    if (debug) log.debugf("authReceiveResponse: cont_auth data=%d pluginName=%d '%s'",
-                            data.length, pluginName.length(), pluginName);
-                    break;
-                case op_crypt_key_callback:
-                    log.debugf("Handling db crypt callback using plugin %s", dbCryptCallback.getDbCryptCallbackName());
+                }
+                case op_crypt_key_callback -> {
+                    log.log(TRACE, "Handling db crypt callback using plugin {0}",
+                            dbCryptCallback.getDbCryptCallbackName());
                     handleCryptKeyCallback(dbCryptCallback);
                     continue;
-                case op_cond_accept:
+                }
+                case op_cond_accept -> {
                     // Note this is the equivalent of handling the acceptPacket != null above
                     xdrIn.readInt(); // p_acpt_version
                     xdrIn.readInt(); // p_acpt_architecture
@@ -141,12 +144,9 @@ public class V13WireOperations extends V11WireOperations {
                     pluginName = xdrIn.readString(encoding); // p_acpt_plugin
                     xdrIn.readInt(); // p_acpt_authenticated
                     addServerKeys(xdrIn.readBuffer()); //p_acpt_keys
-                    if (debug) log.debugf("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
-                            data.length, pluginName.length(), pluginName);
-                    // TODO handle compression
-                    break;
-
-                case op_response:
+                }
+                // TODO handle compression
+                case op_response -> {
                     GenericResponse response = (GenericResponse) readOperationResponse(operation, null);
                     boolean wasAuthComplete = clientAuthBlock.isAuthComplete();
                     clientAuthBlock.setAuthComplete(true);
@@ -159,8 +159,8 @@ public class V13WireOperations extends V11WireOperations {
                         tryKnownServerKeys();
                     }
                     return;
-                default:
-                    throw new SQLException(format("Unsupported operation code: %d", operation));
+                }
+                default -> throw new SQLException(format("Unsupported operation code: %d", operation));
                 }
             }
 
@@ -180,7 +180,7 @@ public class V13WireOperations extends V11WireOperations {
             }
 
             clientAuthBlock.setServerData(data);
-            log.debugf("receiveResponse: authenticate(%s)", clientAuthBlock.getCurrentPluginName());
+            log.log(TRACE, "receiveResponse: authenticate({0})", clientAuthBlock.getCurrentPluginName());
             clientAuthBlock.authenticate();
 
             xdrOut.writeInt(op_cont_auth);
@@ -232,7 +232,7 @@ public class V13WireOperations extends V11WireOperations {
                     clearServerKeys();
 
                     initializedEncryption = true;
-                    log.debugf("Wire encryption established with %s", encryptionIdentifier);
+                    log.log(TRACE, "Wire encryption established with {0}", encryptionIdentifier);
                     break;
                 } else {
                     chainBuilder.append(encryptionInitInfo.getException());
@@ -254,17 +254,17 @@ public class V13WireOperations extends V11WireOperations {
 
         if (chainBuilder.hasException()) {
             SQLException current = chainBuilder.getException();
-            if (log.isWarnEnabled()) {
-                log.warn(initializedEncryption
+            if (log.isLoggable(WARNING)) {
+                log.log(WARNING, initializedEncryption
                         ? "Wire encryption established, but some plugins failed; see other loglines for details"
                         : "No wire encryption established because of errors");
-                log.warnf("Encryption plugin failed; see debug level for stacktraces:\n%s",
+                log.log(WARNING, "Encryption plugin failed; see debug level for stacktraces:\n{0}",
                         ExceptionHelper.collectAllMessages(current));
-            }
-            if (log.isDebugEnabled()) {
-                do {
-                    log.debug("Encryption plugin failed", current);
-                } while ((current = current.getNextException()) != null);
+                if (log.isLoggable(DEBUG)) {
+                    do {
+                        log.log(DEBUG, "Encryption plugin failed", current);
+                    } while ((current = current.getNextException()) != null);
+                }
             }
         }
     }
@@ -293,7 +293,7 @@ public class V13WireOperations extends V11WireOperations {
         try {
             clientPluginResponse = dbCryptCallback.handleCallback(serverPluginData);
         } catch (Exception e) {
-            log.error("Error during database encryption callback, using default empty response", e);
+            log.log(ERROR, "Error during database encryption callback, using default empty response", e);
             clientPluginResponse = DbCryptData.EMPTY_DATA;
         }
         writeCryptKeyCallback(clientPluginResponse);

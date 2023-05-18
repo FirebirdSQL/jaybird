@@ -18,15 +18,12 @@
  */
 package org.firebirdsql.encodings;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.Objects;
 
-import static java.lang.String.format;
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -37,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  */
 public final class DefaultEncodingDefinition implements EncodingDefinition {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultEncodingDefinition.class);
+    private static final System.Logger logger = System.getLogger(DefaultEncodingDefinition.class.getName());
 
     /**
      * Marker object to indicate the encoding field of an instance hasn't been initialized yet
@@ -163,12 +160,12 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
     @Override
     public String toString() {
         return "[" +
-                "firebirdEncodingName='" + getFirebirdEncodingName() + "'," +
-                "javaEncodingName='" + getJavaEncodingName() + "'," +
-                "maxBytesPerChar=" + getMaxBytesPerChar() + "," +
-                "firebirdOnly=" + isFirebirdOnly() + "," +
-                "firebirdCharacterSetId=" + getFirebirdCharacterSetId() +
-                "]";
+               "firebirdEncodingName='" + getFirebirdEncodingName() + "'," +
+               "javaEncodingName='" + getJavaEncodingName() + "'," +
+               "maxBytesPerChar=" + getMaxBytesPerChar() + "," +
+               "firebirdOnly=" + isFirebirdOnly() + "," +
+               "firebirdCharacterSetId=" + getFirebirdCharacterSetId() +
+               "]";
     }
 
     @Override
@@ -177,10 +174,10 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
         if (o == null || getClass() != o.getClass()) return false;
         DefaultEncodingDefinition that = (DefaultEncodingDefinition) o;
         return maxBytesPerChar == that.maxBytesPerChar
-                && firebirdCharacterSetId == that.firebirdCharacterSetId
-                && firebirdOnly == that.firebirdOnly
-                && Objects.equals(charsetName, that.charsetName)
-                && firebirdEncodingName.equals(that.firebirdEncodingName);
+               && firebirdCharacterSetId == that.firebirdCharacterSetId
+               && firebirdOnly == that.firebirdOnly
+               && Objects.equals(charsetName, that.charsetName)
+               && firebirdEncodingName.equals(that.firebirdEncodingName);
     }
 
     @Override
@@ -196,10 +193,11 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
         } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
             // Prevent further attempts
             encoding = null;
-            logger.warnDebug(
-                    format("charsetName=\"%s\" specified for Firebird encoding \"%s\" is an illegal or unsupported "
-                            + "character set name, handling as information-only", charsetName, firebirdEncodingName),
-                    e);
+            logger.log(System.Logger.Level.WARNING,
+                    "charsetName=\"{0}\" specified for Firebird encoding \"{1}\" is an illegal or unsupported "
+                    + "character set name, handling as information-only; see debug level for stacktrace",
+                    charsetName, firebirdEncodingName);
+            logger.log(DEBUG, "Exception for illegal or unsupported character set name", e);
         }
     }
 

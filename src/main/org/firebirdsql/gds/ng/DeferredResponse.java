@@ -24,8 +24,6 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.logging.LoggerFactory;
-
 /**
  * Interface for receiving deferred/async responses.
  * <p>
@@ -67,7 +65,8 @@ public interface DeferredResponse<T> {
     default void onException(Exception exception) {
         // Default expectation: this only happen if the connection is no longer available.
         // We ignore the exception and assume the next operation by the caller will fail as well.
-        LoggerFactory.getLogger(getClass()).debug("Exception in processDeferredActions", exception);
+        System.getLogger(getClass().getName())
+                .log(System.Logger.Level.DEBUG, "Exception in processDeferredActions", exception);
     }
 
 }

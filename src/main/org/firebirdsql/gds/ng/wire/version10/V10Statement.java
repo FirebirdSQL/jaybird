@@ -25,8 +25,6 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -49,7 +47,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     private static final int NULL_INDICATOR_NOT_NULL = 0;
     private static final int NULL_INDICATOR_NULL = -1;
 
-    private static final Logger log = LoggerFactory.getLogger(V10Statement.class);
+    private static final System.Logger log = System.getLogger(V10Statement.class.getName());
 
     /**
      * Creates a new instance of V10Statement for the specified database.
@@ -286,7 +284,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                                 expectedResponseCount = 0;
                                 SQLWarning sqlWarning = new SQLWarning(
                                         "Expected an SqlResponse, instead received a " + response.getClass().getName());
-                                log.warnDebug("Unexpected response", sqlWarning);
+                                log.log(System.Logger.Level.WARNING, "Unexpected response; see debug level for stacktrace");
+                                log.log(System.Logger.Level.DEBUG, "Unexpected response", sqlWarning);
                                 statementWarningCallback.processWarning(sqlWarning);
                             }
                             setAfterLast();
@@ -448,7 +447,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 // Exit loop
                 break;
             } else {
-                log.debugf("Received unexpected fetch response %s, ignored", fetchResponse);
+                log.log(System.Logger.Level.DEBUG, "Received unexpected fetch response {0}, ignored", fetchResponse);
                 break;
             }
         }

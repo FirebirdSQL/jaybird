@@ -21,8 +21,6 @@ package org.firebirdsql.gds.ng.jna;
 import com.sun.jna.NativeLibrary;
 import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.lang.ref.Cleaner;
 import java.lang.reflect.Proxy;
@@ -80,7 +78,8 @@ final class FbClientResource extends NativeResourceTracker.NativeResource {
         try {
             disposeImpl();
         } catch (Throwable e) {
-            LoggerFactory.getLogger(FbClientResource.class).errorfe("Error disposing of %s", local, e);
+            System.getLogger(FbClientResource.class.getName())
+                    .log(System.Logger.Level.ERROR, "Error disposing of " + local, e);
         }
     }
 
@@ -100,20 +99,20 @@ final class FbClientResource extends NativeResourceTracker.NativeResource {
     private record DisposeAction(FbClientLibrary library) implements Runnable {
         @SuppressWarnings("deprecation")
         public void run() {
-            Logger log = LoggerFactory.getLogger(FbClientResource.class);
+            System.Logger log = System.getLogger(FbClientResource.class.getName());
             try {
-                log.debugf("Calling fb_shutdown on %s", library);
+                log.log(System.Logger.Level.TRACE, "Calling fb_shutdown on %s", library);
                 library.fb_shutdown(0, 1);
             } finally {
                 FbClientFeatureAccessHandler handler =
                         (FbClientFeatureAccessHandler) Proxy.getInvocationHandler(library);
                 NativeLibrary nativeLibrary = handler.getNativeLibrary();
-                log.debugf("Disposing JNA native library %s", nativeLibrary);
+                log.log(System.Logger.Level.TRACE, "Disposing JNA native library {0}", nativeLibrary);
                 try {
                     // Retaining use of dispose for backwards compatibility with older JNA versions for now
                     nativeLibrary.dispose();
                 } catch (Throwable e) {
-                    log.errorfe("Error disposing of %s", nativeLibrary, e);
+                    log.log(System.Logger.Level.ERROR, "Error disposing of " + nativeLibrary, e);
                 }
             }
         }

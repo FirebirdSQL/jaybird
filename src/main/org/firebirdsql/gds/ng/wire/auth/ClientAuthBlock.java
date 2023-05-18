@@ -25,8 +25,6 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,6 +33,10 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.TRACE;
+import static java.lang.System.Logger.Level.WARNING;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_AUTH_PLUGINS;
 
@@ -50,7 +52,7 @@ import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_AUTH_PLUGI
  */
 public final class ClientAuthBlock {
 
-    private static final Logger log = LoggerFactory.getLogger(ClientAuthBlock.class);
+    private static final System.Logger log = System.getLogger(ClientAuthBlock.class.getName());
 
     private static final Pattern AUTH_PLUGIN_LIST_SPLIT = Pattern.compile("[ \t,;]+");
     private static final Map<String, AuthenticationPluginSpi> PLUGIN_MAPPING = getAvailableAuthenticationPlugins();
@@ -115,16 +117,14 @@ public final class ClientAuthBlock {
         while (providerIterator.hasNext()) {
             AuthenticationPluginSpi provider = providerIterator.next();
             AuthenticationPlugin plugin = provider.createPlugin();
-            log.debugf("Trying authentication plugin %s", plugin);
+            log.log(TRACE, "Trying authentication plugin {0}", plugin);
             try {
                 switch (plugin.authenticate(this)) {
-                case AUTH_SUCCESS:
-                case AUTH_MORE_DATA:
+                case AUTH_SUCCESS, AUTH_MORE_DATA -> {
                     currentPlugin = plugin;
                     return;
-                case AUTH_CONTINUE:
-                    providerIterator.remove();
-                    break;
+                }
+                case AUTH_CONTINUE -> providerIterator.remove();
                 }
             } catch (SQLException ex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_login).cause(ex).toSQLException();
@@ -171,7 +171,7 @@ public final class ClientAuthBlock {
     public void setServerData(byte[] serverData) {
         if (currentPlugin == null) {
             // TODO Check if this is valid to ignore
-            log.debug("Received server data without current plugin");
+            log.log(DEBUG, "Received server data without current plugin");
         } else {
             currentPlugin.setServerData(serverData);
         }
@@ -275,25 +275,23 @@ public final class ClientAuthBlock {
             } else {
                 plugin = provider.createPlugin();
             }
-            log.debugf("Trying authentication plugin %s", plugin);
+            log.log(TRACE, "Trying authentication plugin {0}", plugin);
             try {
                 switch (plugin.authenticate(this)) {
-                case AUTH_SUCCESS:
-                case AUTH_MORE_DATA:
-                    log.debugf("Trying authentication plugin %s is OK", plugin);
+                case AUTH_SUCCESS, AUTH_MORE_DATA -> {
+                    log.log(TRACE, "Trying authentication plugin {0} is OK", plugin);
                     currentPlugin = plugin;
                     cleanParameterBuffer(pb);
                     extractDataToParameterBuffer(pb);
                     return;
-                case AUTH_CONTINUE:
-                    providerIterator.remove();
-                    break;
+                }
+                case AUTH_CONTINUE -> providerIterator.remove();
                 }
             } catch (SQLException ex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_login).cause(ex).toSQLException();
             }
 
-            log.debugf("try next plugin, %s skipped", plugin);
+            log.log(TRACE, "try next plugin, {0} skipped", plugin);
         }
     }
 
@@ -376,12 +374,10 @@ public final class ClientAuthBlock {
             }
             pb.addArgument(tagMapping.getAuthPluginListTag(), getPluginNames());
             firstTime = false;
-            log.debug("first time - added plugName & pluginList");
+            log.log(TRACE, "first time - added plugName & pluginList");
         }
         pb.addArgument(tagMapping.getSpecificAuthDataTag(), clientData);
-        if (log.isDebugEnabled()) {
-            log.debugf("Added %d bytes of spec data with tag isc_dpb_specific_auth_data", clientData.length);
-        }
+        log.log(TRACE, "Added {0} bytes of spec data with tag isc_dpb_specific_auth_data", clientData.length);
     }
 
     private void cleanParameterBuffer(ConnectionParameterBuffer pb) {
@@ -399,7 +395,7 @@ public final class ClientAuthBlock {
             if (pluginSpi != null) {
                 pluginProviders.add(pluginSpi);
             } else {
-                log.warnf("No authentication plugin available with name %s", pluginName);
+                log.log(WARNING, "No authentication plugin available with name {0}", pluginName);
             }
         }
 
@@ -432,7 +428,7 @@ public final class ClientAuthBlock {
             if (!pluginMapping.containsKey(pluginName)) {
                 pluginMapping.put(pluginName, pluginSpi);
             } else {
-                log.warnf("Authentication plugin provider for %s already registered. Skipping %s", pluginName,
+                log.log(WARNING, "Authentication plugin provider for {0} already registered. Skipping {1}", pluginName,
                         pluginSpi.getClass().getName());
             }
         }
@@ -454,12 +450,13 @@ public final class ClientAuthBlock {
                             AuthenticationPluginSpi plugin = pluginIterator.next();
                             pluginList.add(plugin);
                         } catch (Exception | ServiceConfigurationError e) {
-                            log.warnDebug("Can't register plugin", e);
+                            log.log(WARNING, "Can't register plugin; see debug level for stacktrace");
+                            log.log(DEBUG, "Can't register plugin", e);
                         }
                     }
                     break;
                 } catch (ServiceConfigurationError e) {
-                    log.error("Error finding next AuthenticationPluginSpi", e);
+                    log.log(ERROR, "Error finding next AuthenticationPluginSpi", e);
                     retry++;
                 }
             }
@@ -467,10 +464,11 @@ public final class ClientAuthBlock {
             if (!pluginList.isEmpty()) {
                 return pluginList;
             } else {
-                log.warn("No authentication plugins loaded through service loader, falling back to default list");
+                log.log(WARNING, "No authentication plugins loaded through service loader, falling back to default list");
             }
         } catch (Exception e) {
-            log.warnDebug("Unable to load authentication plugins through ServiceLoader, using fallback list", e);
+            log.log(WARNING, "Unable to load authentication plugins through ServiceLoader, using fallback list; see debug level for stacktrace");
+            log.log(DEBUG, "Unable to load authentication plugins through ServiceLoader, using fallback list", e);
         }
         return loadFallbackPluginProviders(ClientAuthBlock.class.getClassLoader());
     }
@@ -491,7 +489,11 @@ public final class ClientAuthBlock {
                         (AuthenticationPluginSpi) clazz.getDeclaredConstructor().newInstance();
                 fallbackPluginProviders.add(provider);
             } catch (ReflectiveOperationException e) {
-                log.warnDebug("Could not load plugin provider " + providerName, e);
+                if (log.isLoggable(WARNING)) {
+                    String message = "Could not load plugin provider " + providerName;
+                    log.log(WARNING, message + "; see debug level for stacktrace");
+                    log.log(DEBUG, message, e);
+                }
             }
         }
         return fallbackPluginProviders;

@@ -18,9 +18,6 @@
  */
 package org.firebirdsql.gds.ng.listeners;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-
 import java.sql.SQLException;
 import java.util.*;
 
@@ -36,7 +33,7 @@ import java.util.*;
  */
 public final class ExceptionListenerDispatcher implements Iterable<ExceptionListener>, ExceptionListener {
 
-    private static final Logger log = LoggerFactory.getLogger(ExceptionListenerDispatcher.class);
+    private static final System.Logger log = System.getLogger(ExceptionListenerDispatcher.class.getName());
 
     private static final Object PRESENT = new Object();
     private final Map<ExceptionListener, Object> listeners = Collections.synchronizedMap(new WeakHashMap<>());
@@ -56,7 +53,7 @@ public final class ExceptionListenerDispatcher implements Iterable<ExceptionList
             try {
                 listener.errorOccurred(source, exception);
             } catch (Exception e) {
-                log.errorfe("Error on notify errorOccurred to listener %s", listener, e);
+                log.log(System.Logger.Level.ERROR, "Error on notify errorOccurred to listener " + listener, e);
             }
         }
     }

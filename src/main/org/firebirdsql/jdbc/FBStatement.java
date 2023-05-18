@@ -29,7 +29,6 @@ import org.firebirdsql.jaybird.parser.SqlParser;
 import org.firebirdsql.jaybird.parser.StatementDetector;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.Primitives;
 
 import java.sql.*;
@@ -39,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import static java.lang.String.format;
+import static java.lang.System.Logger.Level.TRACE;
 import static java.util.Collections.emptyList;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
@@ -51,7 +51,7 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 @SuppressWarnings("RedundantThrows")
 public class FBStatement implements FirebirdStatement {
 
-    private static final org.firebirdsql.logging.Logger log = LoggerFactory.getLogger(FBStatement.class);
+    private static final System.Logger log = System.getLogger(FBStatement.class.getName());
 
     private static final AtomicInteger STATEMENT_ID_GENERATOR = new AtomicInteger();
 
@@ -1216,11 +1216,8 @@ public class FBStatement implements FirebirdStatement {
 
     @Override
     public final boolean equals(Object other) {
-        if (!(other instanceof FirebirdStatement)) {
-            return false;
-        }
+        if (!(other instanceof FirebirdStatement otherStmt)) return false;
 
-        FirebirdStatement otherStmt = (FirebirdStatement) other;
         return this.localStatementId == otherStmt.getLocalStatementId();
     }
 
@@ -1352,7 +1349,7 @@ public class FBStatement implements FirebirdStatement {
 
         private boolean isUnexpectedSender(FbStatement sender) {
             if (sender != fbStatement) {
-                log.debugf("Received statement listener update from unrelated statement [%s]", sender);
+                log.log(TRACE, "Received statement listener update from unrelated statement [{0}]", sender);
                 sender.removeStatementListener(this);
                 return true;
             }

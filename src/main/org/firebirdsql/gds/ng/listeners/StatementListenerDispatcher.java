@@ -22,8 +22,6 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLWarning;
 
@@ -35,7 +33,7 @@ import java.sql.SQLWarning;
  */
 public final class StatementListenerDispatcher extends AbstractListenerDispatcher<StatementListener> implements StatementListener {
 
-    private static final Logger log = LoggerFactory.getLogger(StatementListenerDispatcher.class);
+    private static final System.Logger log = System.getLogger(StatementListenerDispatcher.class.getName());
 
     @Override
     public void receivedRow(FbStatement sender, RowValue rowValue) {
@@ -76,6 +74,6 @@ public final class StatementListenerDispatcher extends AbstractListenerDispatche
 
     @Override
     protected void logError(String message, Throwable throwable) {
-        log.error(message, throwable);
+        log.log(System.Logger.Level.ERROR, message, throwable);
     }
 }

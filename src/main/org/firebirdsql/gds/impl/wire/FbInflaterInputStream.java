@@ -19,14 +19,14 @@
 package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.gds.JaybirdSystemProperties;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import javax.crypto.Cipher;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
+
+import static java.lang.System.Logger.Level.TRACE;
 
 /**
  * {@code InflaterOutputStream} with some modifications to simplify usage for Jaybird.
@@ -36,7 +36,7 @@ import java.util.zip.InflaterInputStream;
  */
 class FbInflaterInputStream extends InflaterInputStream implements EncryptedStreamSupport {
 
-    private static final Logger log = LoggerFactory.getLogger(FbInflaterInputStream.class);
+    private static final System.Logger log = System.getLogger(FbInflaterInputStream.class.getName());
     private static final int BUF_SIZE = Math.max(512, JaybirdSystemProperties.getWireInflateBufferSize(8192));
 
     private boolean encrypted;
@@ -57,8 +57,8 @@ class FbInflaterInputStream extends InflaterInputStream implements EncryptedStre
             super.close();
         } finally {
             buf = new byte[1];
-            if (log.isTraceEnabled()) {
-                log.tracef("FbInflaterInputStream: Compressed bytes: %d to uncompressed bytes: %d",
+            if (log.isLoggable(TRACE)) {
+                log.log(TRACE, "FbInflaterInputStream: Compressed bytes: {0} to uncompressed bytes: {1}",
                         inf.getBytesRead(), inf.getBytesWritten());
             }
             inf.end();

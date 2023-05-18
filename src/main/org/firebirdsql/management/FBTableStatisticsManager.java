@@ -24,7 +24,6 @@ import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.gds.ng.InfoTruncatedException;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.Volatile;
 
 import java.sql.Connection;
@@ -235,9 +234,8 @@ public final class FBTableStatisticsManager implements AutoCloseable {
                         processStatistics(infoItem, infoResponse, idx, idx += length);
                         break;
                     default:
-                        LoggerFactory.getLogger(TableStatisticsProcessor.class)
-                                .debugf("Received unexpected info item %d, this is likely an implementation bug.",
-                                        infoItem);
+                        System.getLogger(TableStatisticsProcessor.class.getName()).log(System.Logger.Level.DEBUG,
+                                "Received unexpected info item {0}, this is likely an implementation bug", infoItem);
                         break decodeLoop;
                     }
                 }

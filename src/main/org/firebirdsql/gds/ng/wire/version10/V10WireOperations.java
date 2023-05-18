@@ -22,8 +22,6 @@ import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -35,15 +33,14 @@ import java.sql.SQLWarning;
  */
 public class V10WireOperations extends AbstractWireOperations {
 
-    private static final Logger log = LoggerFactory.getLogger(V10WireOperations.class);
+    private static final System.Logger log = System.getLogger(V10WireOperations.class.getName());
 
     public V10WireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback) {
         super(connection, defaultWarningMessageCallback);
     }
 
     @Override
-    public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket,
-            DbCryptCallback dbCryptCallback,
+    public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback,
             ProcessAttachCallback processAttachCallback) throws IOException, SQLException {
         assert acceptPacket == null : "Should not be called with non-null acceptPacket in V12 or earlier";
         GenericResponse response = readGenericResponse(null);
@@ -54,7 +51,7 @@ public class V10WireOperations extends AbstractWireOperations {
         if (getAttachProperties().getWireCryptAsEnum() == WireCrypt.REQUIRED) {
             String message = "wireCrypt=REQUIRED, but wire protocol version does not support encryption, "
                     + "encryption requirement dropped";
-            log.warn(message);
+            log.log(System.Logger.Level.WARNING, message);
             getDefaultWarningMessageCallback().processWarning(new SQLWarning(message));
         }
     }

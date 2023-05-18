@@ -22,8 +22,6 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.wire.auth.AuthenticationPlugin;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -39,8 +37,6 @@ import static org.firebirdsql.util.ByteArrayHelper.toHexString;
  * @author Mark Rotteveel
  */
 class SrpAuthenticationPlugin implements AuthenticationPlugin {
-
-    private static final Logger log = LoggerFactory.getLogger(SrpAuthenticationPlugin.class);
 
     private final String pluginName;
     private final String clientProofHashAlgorithm;
@@ -70,7 +66,6 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
     @Override
     public AuthStatus authenticate(ClientAuthBlock clientAuthBlock) throws SQLException {
         if (srpClient == null) {
-            log.debugf("SRP phase 1, user: %s", clientAuthBlock.getLogin());
             if (clientAuthBlock.getLogin() == null || clientAuthBlock.getPassword() == null) {
                 return AuthStatus.AUTH_CONTINUE;
             }
@@ -83,7 +78,6 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
                     .toSQLException();
         }
 
-        log.debug("SRP phase 2");
         clientData = toHexString(
                 srpClient.clientProof(clientAuthBlock.getNormalizedLogin(), clientAuthBlock.getPassword(), serverData))
                 .getBytes(StandardCharsets.ISO_8859_1);

@@ -20,8 +20,6 @@ package org.firebirdsql.jna.embedded.classpath;
 
 import org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedLoadingException;
 import org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedProvider;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +30,11 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.stream.Stream;
 
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.INFO;
+import static java.lang.System.Logger.Level.TRACE;
+import static java.lang.System.Logger.Level.WARNING;
+
 /**
  * Locates and installs a Firebird Embedded library from the class path to a temporary location.
  *
@@ -40,7 +43,7 @@ import java.util.stream.Stream;
  */
 final class ClasspathFirebirdEmbeddedLoader {
 
-    private static final Logger log = LoggerFactory.getLogger(ClasspathFirebirdEmbeddedLoader.class);
+    private static final System.Logger log = System.getLogger(ClasspathFirebirdEmbeddedLoader.class.getName());
     private static final int LOAD_BUFFER_SIZE = 8192;
     private static final String TEMP_FOLDER_PREFIX = "firebird-embedded";
     private static final String DELETION_MARKER_SUFFIX = ".jaybird_x";
@@ -98,7 +101,8 @@ final class ClasspathFirebirdEmbeddedLoader {
      */
     void install() throws FirebirdEmbeddedLoadingException {
         try {
-            log.infof("Extracting Firebird Embedded %s to %s", firebirdEmbeddedProvider.getVersion(), targetDirectory);
+            log.log(INFO, "Extracting Firebird Embedded {0} to {1}", firebirdEmbeddedProvider.getVersion(),
+                    targetDirectory);
             for (String resourceName : classpathFirebirdEmbeddedResource.getResourceList()) {
                 copyResourceToTargetDirectory(resourceName);
             }
@@ -113,7 +117,8 @@ final class ClasspathFirebirdEmbeddedLoader {
                         .forEach(File::deleteOnExit);
             } catch (IOException e) {
                 // Only log warning, and allow usage
-                log.warnfe("Firebird Embedded files in %s could not be marked for deletion", targetDirectory, e);
+                log.log(WARNING, "Firebird Embedded files in %s could not be marked for deletion"
+                        .formatted(targetDirectory), e);
             }
         }
     }
@@ -137,7 +142,7 @@ final class ClasspathFirebirdEmbeddedLoader {
             Files.createDirectories(fileParent);
         }
 
-        log.debugf("Saving %s to %s", resourceName,  targetFile);
+        log.log(TRACE, "Saving {0} to {1}", resourceName,  targetFile);
         try (InputStream inputStream = firebirdEmbeddedProvider.getClass().getResourceAsStream(resourceName)) {
             if (inputStream == null) {
                 throw new FirebirdEmbeddedLoadingException(
@@ -199,20 +204,20 @@ final class ClasspathFirebirdEmbeddedLoader {
         try {
             allDeleted = deletePath(pathToDelete);
         } catch (IOException e) {
-            log.errorfe("Error deleting Firebird Embedded temporary files in %s", pathToDelete, e);
+            log.log(ERROR, "Error deleting Firebird Embedded temporary files in " + pathToDelete, e);
             allDeleted = false;
         }
 
         if (!allDeleted) {
-            log.infof("Could not fully delete %s, creating deletion marker for cleanup on next run", pathToDelete);
+            log.log(INFO, "Could not fully delete {0}, creating deletion marker for cleanup on next run", pathToDelete);
             String deletionMarkerName = pathToDelete.getFileName().toString() + DELETION_MARKER_SUFFIX;
             Path deletionMarkerPath = pathToDelete.resolveSibling(deletionMarkerName);
             if (!Files.exists(deletionMarkerPath)) {
                 try {
                     Files.createFile(deletionMarkerPath);
                 } catch (IOException e) {
-                    log.errorfe("Could not create deletion marker for %s manual cleanup will be necessary",
-                            pathToDelete, e);
+                    log.log(ERROR, "Could not create deletion marker for %s manual cleanup will be necessary"
+                            .formatted(pathToDelete), e);
                 }
             }
         }
@@ -228,7 +233,7 @@ final class ClasspathFirebirdEmbeddedLoader {
      *         if an I/O exception is thrown when accessing the starting file
      */
     private static boolean deletePath(Path pathToDelete) throws IOException {
-        log.infof("Attempting to delete Firebird Embedded temporary files in %s", pathToDelete);
+        log.log(INFO, "Attempting to delete Firebird Embedded temporary files in {0}", pathToDelete);
         if (!Files.exists(pathToDelete)) return true;
         try (Stream<Path> filesToDelete = Files.walk(pathToDelete)) {
             return filesToDelete
@@ -254,7 +259,7 @@ final class ClasspathFirebirdEmbeddedLoader {
                         .forEach(ClasspathFirebirdEmbeddedLoader::handleDeletionMarker);
             }
         } catch (IOException e) {
-            log.error("Could not cleanup old Firebird Embedded temporary files", e);
+            log.log(ERROR, "Could not cleanup old Firebird Embedded temporary files", e);
         }
     }
 
@@ -278,20 +283,20 @@ final class ClasspathFirebirdEmbeddedLoader {
      *         Path of the deletion marker
      */
     private static void handleDeletionMarker(Path deletionMarkerPath) {
-        log.debugf("Handling deletion marker %s", deletionMarkerPath);
+        log.log(TRACE, "Handling deletion marker {0}", deletionMarkerPath);
         String deletionMarkerName = deletionMarkerPath.getFileName().toString();
         String tempFolderName = deletionMarkerName.substring(0, deletionMarkerName.lastIndexOf(DELETION_MARKER_SUFFIX));
         Path tempFolder = deletionMarkerPath.resolveSibling(tempFolderName);
         try {
             if (deletePath(tempFolder)) {
                 if (!deletionMarkerPath.toFile().delete()) {
-                    log.debugf("Could not delete deletion marker %s", deletionMarkerPath);
+                    log.log(TRACE, "Could not delete deletion marker {0}", deletionMarkerPath);
                 }
             } else {
-                log.debugf("Could not fully delete %s", tempFolder);
+                log.log(TRACE, "Could not fully delete {0}", tempFolder);
             }
         } catch (IOException e) {
-            log.error("Error deleting old Firebird Embedded temporary folder", e);
+            log.log(ERROR, "Error deleting old Firebird Embedded temporary folder", e);
         }
     }
 

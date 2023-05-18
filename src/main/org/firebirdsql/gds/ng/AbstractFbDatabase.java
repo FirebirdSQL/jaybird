@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.BlobParameterBufferImp;
@@ -28,12 +27,9 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -51,7 +47,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectionProperties, ? extends FbDatabase>>
         extends AbstractFbAttachment<T> implements FbDatabase, TransactionListener {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbDatabase.class);
+    private static final System.Logger log = System.getLogger(AbstractFbDatabase.class.getName());
 
     /**
      * Info-request block for database information.
@@ -181,7 +177,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                 // In the case of wire protocol we could ignore this and simply close, but that would be
                 // inconsistent with fbclient
                 throw new FbExceptionBuilder()
-                        .exception(ISCConstants.isc_open_trans)
+                        .exception(isc_open_trans)
                         .messageParameter(activeTransactionCount)
                         .toSQLException();
             }
@@ -359,46 +355,27 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                         .messageParameter("database")
                         .toSQLException();
             }
-            final boolean debug = log.isDebugEnabled();
-            if (debug) {
-                log.debugf("DatabaseInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",
-                        iscVaxInteger2(info, 0), info[0], info[1]);
-            }
-            int value;
-            int len;
             int i = 0;
-            while (info[i] != ISCConstants.isc_info_end) {
-                switch (info[i++]) {
-                case ISCConstants.isc_info_db_sql_dialect:
-                    len = iscVaxInteger2(info, i);
+            while (info[i] != isc_info_end) {
+                int arg = info[i++];
+                switch (arg) {
+                case isc_info_db_sql_dialect, isc_info_ods_version, isc_info_ods_minor_version -> {
+                    int len = iscVaxInteger2(info, i);
                     i += 2;
-                    value = iscVaxInteger(info, i, len);
+                    int value = iscVaxInteger(info, i, len);
                     i += len;
-                    setDatabaseDialect((short) value);
-                    if (debug) log.debugf("isc_info_db_sql_dialect: %d", value);
-                    break;
-                case ISCConstants.isc_info_ods_version:
-                    len = iscVaxInteger2(info, i);
+                    switch (arg) {
+                    case isc_info_db_sql_dialect -> setDatabaseDialect((short) value);
+                    case isc_info_ods_version -> setOdsMajor(value);
+                    case isc_info_ods_minor_version -> setOdsMinor(value);
+                    }
+                }
+                case isc_info_firebird_version -> {
+                    int len = iscVaxInteger2(info, i);
                     i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    setOdsMajor(value);
-                    if (debug) log.debugf("isc_info_ods_version: %d", value);
-                    break;
-                case ISCConstants.isc_info_ods_minor_version:
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    setOdsMinor(value);
-                    if (debug) log.debugf("isc_info_ods_minor_version: %d", value);
-                    break;
-                case ISCConstants.isc_info_firebird_version: {
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    final int expectedIndex = i + len;
-                    final int versionCount = info[i++] & 0xFF;
-                    final String[] versionParts = new String[versionCount];
+                    int expectedIndex = i + len;
+                    int versionCount = info[i++] & 0xFF;
+                    String[] versionParts = new String[versionCount];
                     for (int versionIndex = 0; versionIndex < versionCount; versionIndex++) {
                         int versionLength = info[i++] & 0xFF;
                         versionParts[versionIndex] = new String(info, i, versionLength, StandardCharsets.UTF_8);
@@ -406,14 +383,12 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                     }
                     assert i == expectedIndex : "Parsing version information lead to wrong index";
                     setServerVersion(versionParts);
-                    if (debug) log.debugf("isc_info_firebird_version: %s", Arrays.toString(versionParts));
-                    break;
                 }
-                case ISCConstants.isc_info_truncated:
-                    log.debug("isc_info_truncated");
+                case isc_info_truncated -> {
+                    log.log(System.Logger.Level.DEBUG, "Received isc_info_truncated");
                     return AbstractFbDatabase.this;
-                default:
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();
+                }
+                default -> throw new FbExceptionBuilder().exception(isc_infunk).toSQLException();
                 }
             }
             return AbstractFbDatabase.this;

@@ -32,8 +32,6 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.ByteArrayHelper;
 
 import javax.transaction.xa.XAException;
@@ -49,6 +47,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.TRACE;
+import static java.lang.System.Logger.Level.WARNING;
 import static java.util.Collections.unmodifiableSet;
 
 /**
@@ -60,10 +62,12 @@ import static java.util.Collections.unmodifiableSet;
  */
 public final class FBManagedConnection implements ExceptionListener {
 
-    public static final String ERROR_NO_CHARSET = "Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding). "
-            + "Please specify a connection character set (eg property charSet=utf-8) or consult the Jaybird documentation for more information.";
+    public static final String ERROR_NO_CHARSET =
+            "Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or "
+            + "localEncoding). Please specify a connection character set (eg property charSet=utf-8) or consult the "
+            + "Jaybird documentation for more information.";
 
-    private static final Logger log = LoggerFactory.getLogger(FBManagedConnection.class);
+    private static final System.Logger log = System.getLogger(FBManagedConnection.class.getName());
 
     private final FBManagedConnectionFactory mcf;
 
@@ -126,13 +130,12 @@ public final class FBManagedConnection implements ExceptionListener {
 
     @Override
     public void errorOccurred(Object source, SQLException ex) {
-        log.trace(ex.getMessage());
+        log.log(TRACE, "Error occurred", ex);
 
         if (!FatalErrorHelper.isFatal(ex)) {
             return;
         }
-        XcaConnectionEvent event = new XcaConnectionEvent(this, XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED,
-                ex);
+        var event = new XcaConnectionEvent(this, XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED, ex);
 
         notify(connectionErrorOccurredNotifier, event);
     }
@@ -271,7 +274,7 @@ public final class FBManagedConnection implements ExceptionListener {
                 connection.setManagedConnection(null);
                 connection.close();
             } catch (SQLException sqlex) {
-                log.debug("Exception ignored during forced disassociation", sqlex);
+                log.log(DEBUG, "Exception ignored during forced disassociation", sqlex);
             }
         }
     }
@@ -292,16 +295,16 @@ public final class FBManagedConnection implements ExceptionListener {
         FBConnection previous = connectionHandleUpdater.getAndSet(this, c);
         if (previous != null) {
             previous.setManagedConnection(null);
-            if (log.isDebugEnabled()) {
+            if (log.isLoggable(DEBUG)) {
                 // This would indicate a concurrent getConnection call on this managed connection
-                log.debug("A connection was already associated with the managed connection",
+                log.log(DEBUG, "A connection was already associated with the managed connection",
                         new RuntimeException("debug call trace"));
             }
             try {
                 previous.setManagedConnection(null);
                 previous.close();
             } catch (SQLException e) {
-                log.debug("Error forcing previous connection to close", e);
+                log.log(DEBUG, "Error forcing previous connection to close", e);
             }
         }
         final SQLWarning warnings = unnotifiedWarningsUpdater.getAndSet(this, null);
@@ -367,7 +370,7 @@ public final class FBManagedConnection implements ExceptionListener {
      * @return XAResource instance
      */
     public XAResource getXAResource() {
-        log.debug("XAResource requested from FBManagedConnection");
+        log.log(TRACE, "XAResource requested from FBManagedConnection");
         try (LockCloseable ignored = withLock()) {
             if (xaResource == null) {
                 xaResource = new FbMcXaResource();
@@ -406,7 +409,7 @@ public final class FBManagedConnection implements ExceptionListener {
      *         if an error occurs
      */
     void internalCommit(Xid xid, boolean onePhase) throws XAException {
-        log.tracef("Commit called: %s", xid);
+        log.log(TRACE, "Commit called: {0}", xid);
         FbTransaction committingTr = xidMap.get(xid);
 
         // check that prepare has NOT been called when onePhase = true
@@ -434,10 +437,10 @@ public final class FBManagedConnection implements ExceptionListener {
                 try {
                     committingTr.rollback();
                 } catch (SQLException ge2) {
-                    log.debug("Exception rolling back failed tx: ", ge2);
+                    log.log(DEBUG, "Exception rolling back failed tx: ", ge2);
                 }
             } else {
-                log.warn("Unable to rollback failed tx, connection closed or lost");
+                log.log(WARNING, "Unable to rollback failed tx, connection closed or lost");
             }
             throw new FBXAException(ge.getMessage(), XAException.XAER_RMERR, ge);
         } finally {
@@ -484,7 +487,7 @@ public final class FBManagedConnection implements ExceptionListener {
      *         if an error occurs
      */
     void internalEnd(Xid xid, int flags) throws XAException {
-        log.debugf("End called: %s", xid);
+        log.log(TRACE, "End called: {0}", xid);
         FbTransaction endingTr = xidMap.get(xid);
 
         if (endingTr == null) {
@@ -563,15 +566,19 @@ public final class FBManagedConnection implements ExceptionListener {
                         break;
                     }
                 } catch (FBIncorrectXidException ex) {
-                    log.warnDebug(
-                            "incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId, ex);
+                    if (log.isLoggable(WARNING)) {
+                        String message =
+                                "incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId;
+                        log.log(WARNING, message + "; see debug level for stacktrace", ex);
+                        log.log(DEBUG, message, ex);
+                    }
                 }
             }
 
             stmtHandle2.close();
             trHandle2.commit();
         } catch (SQLException ex) {
-            log.debug("can't perform query to fetch xids", ex);
+            log.log(DEBUG, "can't perform query to fetch xids", ex);
             throw new FBXAException(XAException.XAER_RMFAIL, ex);
         }
 
@@ -612,7 +619,7 @@ public final class FBManagedConnection implements ExceptionListener {
     }
 
     int internalPrepare(Xid xid) throws FBXAException {
-        log.tracef("prepare called: %s", xid);
+        log.log(TRACE, "prepare called: {0}", xid);
         FbTransaction committingTr = xidMap.get(xid);
         if (committingTr == null) {
             throw new FBXAException("Prepare called with unknown transaction", XAException.XAER_NOTA);
@@ -636,15 +643,15 @@ public final class FBManagedConnection implements ExceptionListener {
                 if (gdsHelper != null) {
                     committingTr.rollback();
                 } else {
-                    log.warn("Unable to rollback failed tx, connection closed or lost");
+                    log.log(WARNING, "Unable to rollback failed tx, connection closed or lost");
                 }
             } catch (SQLException ge2) {
-                log.debug("Exception rolling back failed tx: ", ge2);
+                log.log(DEBUG, "Exception rolling back failed tx", ge2);
             } finally {
                 xidMap.remove(xid);
             }
 
-            log.warn("error in prepare", ge);
+            log.log(WARNING, "error in prepare", ge);
             throw new FBXAException(XAException.XAER_RMERR, ge);
         }
 
@@ -720,8 +727,11 @@ public final class FBManagedConnection implements ExceptionListener {
         try {
             return new FBXid(xidData, txId);
         } catch (FBIncorrectXidException e) {
-            log.warnf("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=%d: %s",
-                    txId, ByteArrayHelper.toHexString(xidData));
+            if (log.isLoggable(WARNING)) {
+                log.log(WARNING,
+                        "ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID={0}: {1}",
+                        txId, ByteArrayHelper.toHexString(xidData));
+            }
         }
         return null;
     }
@@ -859,7 +869,7 @@ public final class FBManagedConnection implements ExceptionListener {
     }
 
     void internalRollback(Xid xid) throws XAException {
-        log.tracef("rollback called: %s", xid);
+        log.log(TRACE, "rollback called: {0}", xid);
         FbTransaction committingTr = xidMap.get(xid);
         if (committingTr == null) {
             throw new FBXAException("Rollback called with unknown transaction: " + xid);
@@ -876,7 +886,7 @@ public final class FBManagedConnection implements ExceptionListener {
                 preparedXid.remove(xid);
             }
         } catch (SQLException ge) {
-            log.debug("Exception in rollback", ge);
+            log.log(DEBUG, "Exception in rollback", ge);
             throw new FBXAException(ge.getMessage(), XAException.XAER_RMERR, ge);
         }
     }
@@ -955,7 +965,7 @@ public final class FBManagedConnection implements ExceptionListener {
      * @see #start(Xid, int)
      */
     public void internalStart(Xid id, int flags) throws XAException, SQLException {
-        log.tracef("start called: %s", id);
+        log.log(TRACE, "start called: {0}", id);
 
         if (getGDSHelper().getCurrentTransaction() != null)
             throw new FBXAException("Transaction already started", XAException.XAER_PROTO);
@@ -973,8 +983,8 @@ public final class FBManagedConnection implements ExceptionListener {
      */
     public void close(FBConnection c) {
         c.setManagedConnection(null);
-        if (!connectionHandleUpdater.compareAndSet(this, c, null) && log.isDebugEnabled()) {
-            log.debug("Call of close for connection not currently associated with this managed connection",
+        if (!connectionHandleUpdater.compareAndSet(this, c, null) && log.isLoggable(DEBUG)) {
+            log.log(DEBUG, "Call of close for connection not currently associated with this managed connection",
                     new RuntimeException("debug call trace"));
         }
         XcaConnectionEvent ce = new XcaConnectionEvent(this, XcaConnectionEvent.EventType.CONNECTION_CLOSED);
@@ -1178,7 +1188,7 @@ public final class FBManagedConnection implements ExceptionListener {
             }
             return defaultConnectionEncoding;
         } catch (Exception e) {
-            log.error("Exception obtaining default connection encoding", e);
+            log.log(ERROR, "Exception obtaining default connection encoding", e);
         }
         return "NONE";
     }

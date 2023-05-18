@@ -19,8 +19,6 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.listeners.AbstractListenerDispatcher;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Dispatcher for {@link org.firebirdsql.gds.ng.wire.AsynchronousChannelListener}.
@@ -31,7 +29,7 @@ import org.firebirdsql.logging.LoggerFactory;
 public class AsynchronousChannelListenerDispatcher extends AbstractListenerDispatcher<AsynchronousChannelListener>
         implements AsynchronousChannelListener {
 
-    private static final Logger log = LoggerFactory.getLogger(AsynchronousChannelListenerDispatcher.class);
+    private static final System.Logger log = System.getLogger(AsynchronousChannelListenerDispatcher.class.getName());
 
     @Override
     public void channelClosing(FbWireAsynchronousChannel channel) {
@@ -45,6 +43,6 @@ public class AsynchronousChannelListenerDispatcher extends AbstractListenerDispa
 
     @Override
     protected void logError(String message, Throwable throwable) {
-        log.error(message, throwable);
+        log.log(System.Logger.Level.ERROR, message, throwable);
     }
 }

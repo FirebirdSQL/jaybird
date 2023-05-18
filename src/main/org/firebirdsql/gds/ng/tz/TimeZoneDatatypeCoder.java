@@ -23,7 +23,6 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DatatypeCoder.RawDateTimeStruct;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.time.*;
@@ -315,7 +314,8 @@ public class TimeZoneDatatypeCoder {
 
     private static TimeZoneDatatypeCoder createdCachedInstance(DatatypeCoder rootCoder) {
         if (instanceCache.size() > MAX_CACHED) {
-            LoggerFactory.getLogger(TimeZoneDatatypeCoder.class).info("Clearing TimeZoneDatatypeCoder.instanceCache");
+            System.getLogger(TimeZoneDatatypeCoder.class.getName())
+                    .log(System.Logger.Level.INFO, "Clearing TimeZoneDatatypeCoder.instanceCache");
             instanceCache.clear();
         }
         TimeZoneDatatypeCoder value = new TimeZoneDatatypeCoder(rootCoder);

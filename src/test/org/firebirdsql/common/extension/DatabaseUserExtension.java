@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.common.extension;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -43,7 +41,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
  */
 public class DatabaseUserExtension implements AfterEachCallback {
 
-    private static final Logger log = LoggerFactory.getLogger(DatabaseUserExtension.class);
+    private static final System.Logger log = System.getLogger(DatabaseUserExtension.class.getName());
 
     private final List<User> createdUsers = new ArrayList<>();
 
@@ -113,7 +111,7 @@ public class DatabaseUserExtension implements AfterEachCallback {
                 connection.commit();
             }
         } catch (SQLException e) {
-            log.error("Can't drop users", e);
+            log.log(System.Logger.Level.ERROR, "Can't drop users", e);
         }
     }
 
@@ -125,7 +123,7 @@ public class DatabaseUserExtension implements AfterEachCallback {
             }
             statement.execute(dropUserSql.toString());
         } catch (SQLException e) {
-            log.errorfe("Unable to drop user %s", user, e);
+            log.log(System.Logger.Level.ERROR, "Unable to drop user " + user, e);
         }
     }
 

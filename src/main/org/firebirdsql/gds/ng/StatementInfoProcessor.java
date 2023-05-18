@@ -21,8 +21,6 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 
@@ -38,7 +36,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  */
 public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor.StatementInfo> {
 
-    private static final Logger log = LoggerFactory.getLogger(StatementInfoProcessor.class);
+    private static final System.Logger log = System.getLogger(StatementInfoProcessor.class.getName());
 
     private final AbstractFbStatement statement;
     private final FbDatabase database;
@@ -80,7 +78,7 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
                 break;
 
             default:
-                log.debugf("Unexpected item type %d", info.currentItem);
+                log.log(System.Logger.Level.DEBUG, "Unexpected item type %d", info.currentItem);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_dsql_sqlda_err).toSQLException();
             }
         }
@@ -224,7 +222,7 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
                 return;
 
             default:
-                log.debugf("Unexpected item type %d", info.currentItem);
+                log.log(System.Logger.Level.DEBUG, "Unexpected item type %d", info.currentItem);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_dsql_sqlda_err).toSQLException();
             }
         }

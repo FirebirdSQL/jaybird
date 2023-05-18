@@ -20,7 +20,6 @@ package org.firebirdsql.ds;
 
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBConnectionProperties;
-import org.firebirdsql.logging.LoggerFactory;
 
 import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
@@ -124,7 +123,8 @@ public class DataSourceFactory implements ObjectFactory {
             var in = new ObjectInputStream(new ByteArrayInputStream(data));
             return in.readObject();
         } catch (IOException | ClassNotFoundException ex) {
-            LoggerFactory.getLogger(DataSourceFactory.class).warn("Could not deserialize object, returning null", ex);
+            System.getLogger(DataSourceFactory.class.getName())
+                    .log(System.Logger.Level.WARNING, "Could not deserialize object, returning null", ex);
             return null;
         }
     }

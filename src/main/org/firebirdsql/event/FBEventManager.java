@@ -35,8 +35,6 @@ import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.xca.FatalErrorHelper;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.sql.Connection;
@@ -48,6 +46,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.WARNING;
+
 /**
  * An {@link org.firebirdsql.event.EventManager} implementation to listen for database events.
  *
@@ -57,7 +59,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class FBEventManager implements EventManager {
 
-    private static final Logger log = LoggerFactory.getLogger(FBEventManager.class);
+    private static final System.Logger log = System.getLogger(FBEventManager.class.getName());
 
     private final Lock lock = new ReentrantLock();
     private final LockCloseable unlock = lock::unlock;
@@ -501,7 +503,7 @@ public class FBEventManager implements EventManager {
                 try {
                     fbDatabase.forceClose();
                 } catch (SQLException e) {
-                    log.debug("Ignored exception force closing exception", e);
+                    log.log(DEBUG, "Ignored exception force closing exception", e);
                 } finally {
                     listenerMap.clear();
                     handlerMap.clear();
@@ -509,14 +511,14 @@ public class FBEventManager implements EventManager {
                     try {
                         terminateDispatcher();
                     } catch (SQLException e) {
-                        log.debug("Ignored exception terminating dispatcher", e);
+                        log.log(DEBUG, "Ignored exception terminating dispatcher", e);
                     }
                 }
             } else if (FatalErrorHelper.isFatal(exception)) {
                 try {
                     disconnect();
                 } catch (SQLException e) {
-                    log.debug("Ignored exception during disconnect", e);
+                    log.log(DEBUG, "Ignored exception during disconnect", e);
                 }
             }
         }
@@ -549,7 +551,7 @@ public class FBEventManager implements EventManager {
                 if (!isConnected()) return;
                 disconnect();
             } catch (SQLException e) {
-                log.error("Exception on disconnect of event manager on connection detaching.", e);
+                log.log(ERROR, "Exception on disconnect of event manager on connection detaching", e);
             }
         }
 
@@ -571,7 +573,7 @@ public class FBEventManager implements EventManager {
                 try {
                     terminateDispatcher();
                 } catch (SQLException e) {
-                    log.debug("Ignored exception terminating dispatcher", e);
+                    log.log(DEBUG, "Ignored exception terminating dispatcher", e);
                 }
             }
         }
@@ -613,7 +615,8 @@ public class FBEventManager implements EventManager {
             try {
                 fbDatabase.countEvents(eventHandle);
             } catch (SQLException e) {
-                log.warnDebug("Exception processing event counts", e);
+                log.log(WARNING, "Exception processing event counts; see debug level for stacktrace");
+                log.log(DEBUG, "Exception processing event counts", e);
             }
 
             if (initialized && !cancelled) {
@@ -625,7 +628,8 @@ public class FBEventManager implements EventManager {
             try {
                 register();
             } catch (SQLException e) {
-                log.warnDebug("Exception registering for event", e);
+                log.log(WARNING, "Exception registering for event; see debug level for stacktrace");
+                log.log(DEBUG, "Exception registering for event", e);
             }
         }
     }

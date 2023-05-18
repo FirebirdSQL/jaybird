@@ -25,8 +25,6 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.io.Serial;
@@ -36,6 +34,8 @@ import java.security.PrivilegedAction;
 import java.sql.*;
 import java.util.*;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.WARNING;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
@@ -48,7 +48,7 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 @SuppressWarnings("RedundantThrows")
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
-    private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class);
+    private final static System.Logger log = System.getLogger(FBDatabaseMetaData.class.getName());
 
     private final GDSHelper gdsHelper;
     private final FBConnection connection;
@@ -76,7 +76,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     try {
                         stmt.close();
                     } catch (Exception e) {
-                        log.warnDebug("error closing cached statements in DatabaseMetaData.close", e);
+                        log.log(WARNING, "error closing cached statements in DatabaseMetaData.close; see debug level for stacktrace");
+                        log.log(DEBUG, "error closing cached statements in DatabaseMetaData.close", e);
                     }
                 }
             } finally {
@@ -1840,7 +1841,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 FBPreparedStatement statement = eldest.getValue();
                 statement.close();
             } catch (Exception e) {
-                log.debug("Closing eldest cached metadata statement yielded an exception; ignored", e);
+                log.log(DEBUG, "Closing eldest cached metadata statement yielded an exception; ignored", e);
             }
             return true;
         }

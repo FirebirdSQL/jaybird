@@ -31,8 +31,6 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.sql.*;
@@ -45,6 +43,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.TRACE;
+import static java.lang.System.Logger.Level.WARNING;
+
 /**
  * The class {@code FBConnection} is a handle to a {@link FBManagedConnection} and implements {@link Connection}.
  *
@@ -54,7 +56,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 @SuppressWarnings("RedundantThrows")
 public class FBConnection implements FirebirdConnection {
 
-    private static final Logger log = LoggerFactory.getLogger(FBConnection.class);
+    private static final System.Logger log = System.getLogger(FBConnection.class.getName());
 
     private static final String GET_CLIENT_INFO_SQL = """
             SELECT
@@ -152,7 +154,7 @@ public class FBConnection implements FirebirdConnection {
                 // the constructor: Do not log warning
                 return;
             }
-            log.warnf("Specified statement was not created by this connection: %s", stmt);
+            log.log(WARNING, "Specified statement was not created by this connection: {0}", stmt);
         }
     }
 
@@ -425,8 +427,8 @@ public class FBConnection implements FirebirdConnection {
      */
     @Override
     public void close() throws SQLException {
-        if (log.isTraceEnabled()) {
-            log.trace("Connection closed requested at", new RuntimeException("Connection close logging"));
+        if (log.isLoggable(TRACE)) {
+            log.log(TRACE, "Connection closed requested at", new RuntimeException("Connection close logging"));
         }
         SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
         try (LockCloseable ignored = withLock()) {
@@ -489,7 +491,7 @@ public class FBConnection implements FirebirdConnection {
         try {
             return timeout != 0 ? isValidFuture.get(timeout, TimeUnit.SECONDS) : isValidFuture.get();
         } catch (ExecutionException e) {
-            log.debug("isValidImpl produced an exception", e);
+            log.log(DEBUG, "isValidImpl produced an exception", e);
             return false;
         } catch (InterruptedException e) {
             isValidFuture.cancel(true);
@@ -524,14 +526,14 @@ public class FBConnection implements FirebirdConnection {
                 db.getDatabaseInfo(new byte[] { ISCConstants.isc_info_ods_version, ISCConstants.isc_info_end }, 10);
                 return true;
             } catch (SQLException ex) {
-                log.debug("Exception while checking connection validity", ex);
+                log.log(DEBUG, "Exception while checking connection validity", ex);
                 return false;
             } finally {
                 if (networkTimeoutChanged) {
                     try {
                         getFbDatabase().setNetworkTimeout(originalNetworkTimeout);
                     } catch (SQLException e) {
-                        log.debug("Exception while resetting connection network timeout", e);
+                        log.log(DEBUG, "Exception while resetting connection network timeout", e);
                         // We're interpreting this as an indication the connection is no longer valid
                         //noinspection ReturnInsideFinallyBlock
                         return false;

@@ -19,8 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -33,8 +31,6 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 class ReconnectTest {
 
     // TODO It is unclear what this class actually tests (there is no reconnect involved)
-
-    private final Logger log = LoggerFactory.getLogger(ReconnectTest.class);
 
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
@@ -68,14 +64,11 @@ class ReconnectTest {
             } catch (SQLException e) {
                 // Workaround for the well-known "object in use" error
                 // (see release notes of Firebird 1.5)
-                log.info("Retrying after reconnecting ...", e);
                 boolean oldAutoCommit = con.getAutoCommit();
                 con.close();
                 openConnection();
                 if (con.getAutoCommit() != oldAutoCommit)
                     con.setAutoCommit(oldAutoCommit);
-                log.info("reexecuting sql-statement on new connection:");
-                log.info(sql);
                 execute(sql);
                 // Here the program hangs (see socketRead), and
                 // pressing ctrl-break I get the following output:
@@ -135,8 +128,6 @@ class ReconnectTest {
     }
 
     private void dropTestTables() throws SQLException {
-        if (log != null)
-            log.info("Dropping test tables ...");
         if (!con.getAutoCommit())
             con.setAutoCommit(true);
         for (int i = TABLE_COUNT; i > 0; i--) {
@@ -147,7 +138,6 @@ class ReconnectTest {
     }
 
     private void createTestTables() throws SQLException {
-        log.info("Creating test tables ...");
         if (!con.getAutoCommit())
             con.setAutoCommit(true);
 
@@ -156,12 +146,14 @@ class ReconnectTest {
             StringBuilder sql = new StringBuilder(100);
             sql.append("CREATE TABLE ");
             sql.append(table);
-            sql.append(" (\n" +
-                    "ID INTEGER NOT NULL,\n" +
-                    "NR INTEGER NOT NULL,\n" +
-                    "X1 VARCHAR(50),\n" +
-                    "X2 VARCHAR(50),\n" +
-                    "X3 VARCHAR(50),\n");
+            sql.append("""
+                     (
+                    ID INTEGER NOT NULL,
+                    NR INTEGER NOT NULL,
+                    X1 VARCHAR(50),
+                    X2 VARCHAR(50),
+                    X3 VARCHAR(50),
+                    """);
             if (i > 1) {
                 sql.append("ID_");
                 sql.append(getTableName(i - 1));
@@ -184,7 +176,6 @@ class ReconnectTest {
     }
 
     private void alterForeignKeys(boolean cascade) throws SQLException {
-        log.info("Altering foreign keys ...");
         if (!con.getAutoCommit())
             con.setAutoCommit(true);
         // add FOREIGN KEY's
@@ -207,7 +198,6 @@ class ReconnectTest {
     private void populateTestTables(int rowCount) throws SQLException {
         if (con.getAutoCommit())
             con.setAutoCommit(false);
-        log.info("Populating test tables ...");
         ThreadLocalRandom random = ThreadLocalRandom.current();
         for (int i = 1; i <= TABLE_COUNT; i++) {
             StringBuilder sql = new StringBuilder(100);
@@ -244,16 +234,16 @@ class ReconnectTest {
         ResultSetMetaData md = rs.getMetaData();
         int cols = md.getColumnCount();
         if (print) {
-            log.info(title);
-            log.info("-------------------------------------------------------------------------------");
+            System.out.println(title);
+            System.out.println("-------------------------------------------------------------------------------");
             StringBuilder sb = new StringBuilder();
             for (int i = 1; i <= cols; i++) {
                 if (i > 1)
                     sb.append('\t');
                 sb.append(md.getColumnLabel(i));
             }
-            log.info(sb.toString());
-            log.info("-------------------------------------------------------------------------------");
+            System.out.println(sb);
+            System.out.println("-------------------------------------------------------------------------------");
         }
         while (rs.next()) {
             StringBuilder sb = new StringBuilder();
@@ -265,13 +255,12 @@ class ReconnectTest {
                 sb.append(value);
 
             }
-            log.info(sb.toString());
+            System.out.println(sb);
         }
         rs.close();
     }
 
     private void readMetaData() throws SQLException {
-        log.info("Reading meta data ...");
         DatabaseMetaData md = con.getMetaData();
         for (int i = 1; i <= TABLE_COUNT; i++) {
             String tableName = getTableName(i);
