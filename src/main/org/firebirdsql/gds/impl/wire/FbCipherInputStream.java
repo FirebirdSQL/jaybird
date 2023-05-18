@@ -118,12 +118,12 @@ final class FbCipherInputStream extends FilterInputStream {
 
     @Override
     public long skip(long n) {
-        n = Math.min(outLim - outPos, n);
-        if (n < 0) {
+        int toSkip = (int) Math.min(outLim - outPos, n);
+        if (toSkip < 0) {
             return 0;
         }
-        outPos += n;
-        return n;
+        outPos += toSkip;
+        return toSkip;
     }
 
     @Override
