@@ -41,7 +41,7 @@ public class V16WireOperations extends V15WireOperations {
     }
 
     protected BatchCompletionResponse readBatchCompletionResponse(XdrInputStream xdrIn) throws SQLException, IOException {
-        xdrIn.readInt(); // p_batch_statement (ignored)
+        xdrIn.skipNBytes(4); // skip int: p_batch_statement
         int elementCount = xdrIn.readInt(); // p_batch_reccount
         int updateCountsCount = xdrIn.readInt(); // p_batch_updates
         int detailedErrorsCount = xdrIn.readInt(); // p_batch_vectors

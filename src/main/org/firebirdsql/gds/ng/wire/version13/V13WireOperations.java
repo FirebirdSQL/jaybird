@@ -118,7 +118,7 @@ public class V13WireOperations extends V11WireOperations {
                 int operation = readNextOperation();
                 switch (operation) {
                 case op_trusted_auth -> {
-                    xdrIn.readBuffer(); // p_trau_data
+                    xdrIn.skipNBytes(4); // skip int: p_trau_data
                     throw new FbExceptionBuilder()
                             .nonTransientConnectionException(JaybirdErrorCodes.jb_receiveTrustedAuth_NotSupported)
                             .toSQLException();
@@ -126,7 +126,7 @@ public class V13WireOperations extends V11WireOperations {
                 case op_cont_auth -> {
                     data = xdrIn.readBuffer(); // p_data
                     pluginName = xdrIn.readString(encoding); //p_name
-                    xdrIn.readBuffer(); // p_list (ignore?)
+                    xdrIn.skipBuffer(); // skip: p_list (ignore?)
                     addServerKeys(xdrIn.readBuffer()); // p_keys
                 }
                 case op_crypt_key_callback -> {
@@ -137,12 +137,10 @@ public class V13WireOperations extends V11WireOperations {
                 }
                 case op_cond_accept -> {
                     // Note this is the equivalent of handling the acceptPacket != null above
-                    xdrIn.readInt(); // p_acpt_version
-                    xdrIn.readInt(); // p_acpt_architecture
-                    xdrIn.readInt(); // p_acpt_type
+                    xdrIn.skipNBytes(3 * 4); // skip 3 ints: p_acpt_version, p_acpt_architecture, p_acpt_type
                     data = xdrIn.readBuffer(); // p_acpt_data
                     pluginName = xdrIn.readString(encoding); // p_acpt_plugin
-                    xdrIn.readInt(); // p_acpt_authenticated
+                    xdrIn.skipNBytes(4); // skip int: p_acpt_authenticated
                     addServerKeys(xdrIn.readBuffer()); //p_acpt_keys
                 }
                 // TODO handle compression

@@ -108,9 +108,25 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
      *         if an error occurs while reading from the underlying input stream
      */
     public byte[] readBuffer(int len) throws IOException {
+        if (len == 0) return new byte[0];
         byte[] buffer = readRawBuffer(len);
         skipPadding(len);
         return buffer;
+    }
+
+    /**
+     * Skips a buffer, by reading an {@code int} length from the stream, and then skipping that length plus the padding.
+     *
+     * @throws IOException
+     *         if an error occurs while reading from the underlying input stream
+     */
+    public void skipBuffer() throws IOException {
+        // buffer length
+        int len = readInt();
+        if (len > 0) {
+            // skip buffer + padding
+            skipNBytes(len + ((4 - len) & 3));
+        }
     }
 
     /**
