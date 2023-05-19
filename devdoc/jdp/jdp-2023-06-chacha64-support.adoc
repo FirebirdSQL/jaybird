@@ -23,7 +23,7 @@ ChaCha with 64-bit counter (and 64-bit nonce) is another variant of ChaCha.
 Java includes a cipher _ChaCha20_ (since Java 11), which provides the RFC 7539 specified ChaCha variant (with 32-bit counter).
 Java itself does not provide an implementation which supports the 64-bit nonce and 64-bit counter variant.
 
-Bounce Castle seems to support the 64-bit counter variant of ChaCha (not yet verified).
+Bouncy Castle seems to support the 64-bit counter variant of ChaCha (not yet verified).
 
 As a project, we like to minimize dependencies of the driver.
 
@@ -36,7 +36,7 @@ The implementation will use the Bouncy Castle library.
 
 [NOTE]
 ====
-This decision assumes that Bounce Castle indeed supports ChaCha with 64-bit counter.
+This decision assumes that Bouncy Castle indeed supports ChaCha with 64-bit counter.
 
 This will be verified by implementing and testing this.
 If this assumption is wrong, this JDP will likely be abandoned, or we need to look for a library which does provide ChaCha with 64-bit counter mode.
