@@ -33,7 +33,6 @@ import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
-import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.junit.jupiter.api.Test;
@@ -706,8 +705,7 @@ class FBConnectionTest {
         assumeTrue(getDefaultSupportInfo().supportsWireEncryption(),
                 "Test for Firebird versions with wire encryption support");
         assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(4, 0), "Requires fb_info_wire_crypt support");
-        String expectedCryptPlugin = System.getProperty("java.specification.version").equals("1.8")
-                || Version.JAYBIRD_DISPLAY_VERSION.endsWith(".java8") ? "Arc4" : "ChaCha";
+        String expectedCryptPlugin = "ChaCha";
         if (isOtherNativeType().matches(GDS_TYPE) && getDefaultSupportInfo().isVersionEqualOrAbove(4, 0, 1)) {
             expectedCryptPlugin = "ChaCha64";
         }
