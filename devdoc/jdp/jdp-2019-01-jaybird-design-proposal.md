@@ -3,6 +3,7 @@
 ## Status
 
 - Published
+- Updated: 2023-05-19
 
 ## Type
 
@@ -57,19 +58,23 @@ For example
 
     jdp-2019-01: Jaybird Design Proposal
 
-The document should be in Markdown format, and stored in `devdoc/jdp` with a
-filename consisting of the JDP number, followed by the lowercased, dash 
-separated descriptive title:
+The document should be in Asciidoc format (see also below) and stored in
+`devdoc/jdp` with a filename consisting of the JDP number, followed by the
+lowercase, dash separated descriptive title:
 
-    jdp-yyyy-nn-descriptive-title.md
+    jdp-yyyy-nn-descriptive-title.adoc
     
 For example
 
-    jdp-2019-01-jaybird-design-proposal.md
+    jdp-2019-01-jaybird-design-proposal.adoc
 
 A JDP should consist of the following sections. The sections _Status_ and _Type_
 are required. The other sections should be considered the preferred structure. 
 Feel free to use a different structure if it makes more sense for a document.
+
+JDPs before _jdp-2023-06_ were specified in Markdown, not Asciidoc. They may be
+converted to Asciidoc if and when needed (e.g. large scale changes, or just when
+we feel like it), or remain in Markdown.
 
 #### Status
 
@@ -83,6 +88,11 @@ The status of the document. Possible values:
 - Proposed for: (proposed Jaybird version to implement this) 
 - Deferred indefinitely : not implemented nor proposed for a version; likely
 the feature described will never be implemented
+- Updated: (date) -- the last date a previously published document was updated
+
+  This should be used only for textual corrections (i.e. typo fixes), for 
+  (minor) changes which do not affect anything for application versions released
+  after the original publish date, or for living documents.
 
 The status section should also reference the JDP(s) it updates or replaces:
 
