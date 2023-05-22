@@ -24,17 +24,17 @@ import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
 
 /**
- * ChaCha (ChaCha-20) encryption plugin provider
+ * ChaCha (ChaCha-20) encryption plugin provider.
  *
  * @author Mark Rotteveel
  * @since 5
  */
-public class ChaChaEncryptionPluginSpi implements EncryptionPluginSpi {
+public final class ChaChaEncryptionPluginSpi implements EncryptionPluginSpi {
 
     static final EncryptionIdentifier CHA_CHA_ID = new EncryptionIdentifier("Symmetric", "ChaCha");
 
     @Override
-    public EncryptionIdentifier getEncryptionIdentifier() {
+    public EncryptionIdentifier encryptionIdentifier() {
         return CHA_CHA_ID;
     }
 

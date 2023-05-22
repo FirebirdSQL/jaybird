@@ -38,7 +38,7 @@ public interface EncryptionPluginSpi {
     /**
      * @return Encryption identifier
      */
-    EncryptionIdentifier getEncryptionIdentifier();
+    EncryptionIdentifier encryptionIdentifier();
 
     /**
      * Creates the encryption plugin for the provided crypt session config.

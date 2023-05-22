@@ -16,30 +16,45 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.crypt.arc4;
+package org.firebirdsql.jaybird.chacha64;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
 
+import java.security.Provider;
+import java.security.Security;
+
+import static java.util.Objects.requireNonNullElseGet;
+
 /**
- * ARC4 encryption plugin provider.
+ * ChaCha64 (ChaCha with 64-bit counter) encryption plugin provider.
  *
  * @author Mark Rotteveel
- * @since 4.0
+ * @since 6
  */
-public final class Arc4EncryptionPluginSpi implements EncryptionPluginSpi {
+public class ChaCha64EncryptionPluginSpi implements EncryptionPluginSpi {
 
-    static final EncryptionIdentifier ARC4_ID = new EncryptionIdentifier("Symmetric", "Arc4");
+    static final EncryptionIdentifier CHA_CHA_64_ID = new EncryptionIdentifier("Symmetric", "ChaCha64");
+    // Use registered Bouncy Castle if possible, otherwise use our own unregistered instance
+    private final Provider provider = requireNonNullElseGet(
+            Security.getProvider("BC"), ChaCha64EncryptionPluginSpi::createProvider);
 
     @Override
     public EncryptionIdentifier encryptionIdentifier() {
-        return ARC4_ID;
+        return CHA_CHA_64_ID;
     }
 
     @Override
     public EncryptionPlugin createEncryptionPlugin(CryptSessionConfig cryptSessionConfig) {
-        return new Arc4EncryptionPlugin(cryptSessionConfig);
+        return new ChaCha64EncryptionPlugin(cryptSessionConfig, provider);
     }
+
+    private static Provider createProvider() {
+        // TODO Maybe create a reduced provider which only provides Bouncy Castle's ChaCha implementation?
+        return new BouncyCastleProvider();
+    }
+
 }

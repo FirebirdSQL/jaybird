@@ -2,8 +2,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 6
+* Published: 2023-05-20
+* Implemented in: Jaybird 6
 
 == Type
 
@@ -23,7 +23,7 @@ ChaCha with 64-bit counter (and 64-bit nonce) is another variant of ChaCha.
 Java includes a cipher _ChaCha20_ (since Java 11), which provides the RFC 7539 specified ChaCha variant (with 32-bit counter).
 Java itself does not provide an implementation which supports the 64-bit nonce and 64-bit counter variant.
 
-Bouncy Castle seems to support the 64-bit counter variant of ChaCha (not yet verified).
+Bouncy Castle has support for the 64-bit counter variant of ChaCha.
 
 As a project, we like to minimize dependencies of the driver.
 
@@ -34,13 +34,8 @@ The wire protocol plugin encryption support in Jaybird is not complete, and curr
 Jaybird will add support for "`ChaCha64`" wire protocol encryption using a separate artifact, `org.firebirdsql.jdbc:chacha64-plugin`, as part of the Jaybird source tree (so not a separate repository).
 The implementation will use the Bouncy Castle library.
 
-[NOTE]
-====
-This decision assumes that Bouncy Castle indeed supports ChaCha with 64-bit counter.
-
-This will be verified by implementing and testing this.
-If this assumption is wrong, this JDP will likely be abandoned, or we need to look for a library which does provide ChaCha with 64-bit counter mode.
-====
+The plugin JAR will use automatic module name `org.firebirdsql.jaybird.chacha64` in preparation for future modularization.
+Using digits at the end of module names is discouraged, but the alternatives (e.g. `...chachasixfour`) are too ugly, so we'll stick with it.
 
 Selective enabling of encryption plugins (e.g. through a connection property) is *not* part of this JDP.
 
@@ -51,5 +46,9 @@ Support will only be available when the `org.firebirdsql.jdbc:chacha64-plugin` a
 
 Wire protocol encryption plugin support in Jaybird needs to be completed so plugins can be loaded using the service loader mechanism, with a fallback to the plugins included in the core _jaybird_ artifact.
 
-We're not sure if we can keep the Jaybird sources in the top-level Gradle module when there is also a submodule for _chacha64-plugin_.
-It may be necessary to move the sources within the Jaybird repository to a submodule to accommodate this.
+The plugin JAR will be included in the distribution zip, together with its sources and javadoc JARs.
+Given the javadoc of the plugin is not that interesting, the unpacked javadoc of the plugin will not be included in the `docs` directory.
+
+The main Jaybird tests will -- by default -- depend on the `chacha64-plugin` module.
+This can be disabled by passing `-Ptest.chacha64=disabled` to Gradle, so test will only find "`Arc4`" and "`ChaCha`".
+Excluding the `chacha64-plugin` from the test classpath this way will cause tests to fail when they explicitly expect use of "`ChaCha64`" (i.e. `FBConnectionTest#expectedWireCryptPluginApplied()`).

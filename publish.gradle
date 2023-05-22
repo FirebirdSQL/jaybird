@@ -3,7 +3,7 @@ import org.apache.tools.ant.filters.*
 publishing {
     publications {
         // Main maven artifact
-        mavenJava(MavenPublication) {
+        jaybird(MavenPublication) {
             from components.java
             artifactId project.mavenName
             suppressPomMetadataWarningsFor 'nativeApiElements'
@@ -171,16 +171,18 @@ publishing {
     }
 }
 
-tasks.withType(PublishToMavenRepository).each {
-    it.doFirst {
-        if (findProperty('ossrhUsername') == null || findProperty('ossrhPassword') == null) {
-            throw new RuntimeException('No credentials for publishing, make sure to specify the properties ' +
-                    'credentialsPassphrase, or ossrhUsername and ossrhPassword. See devdoc/publish.md for details.')
+allprojects {
+    tasks.withType(PublishToMavenRepository).each {
+        it.doFirst {
+            if (findProperty('ossrhUsername') == null || findProperty('ossrhPassword') == null) {
+                throw new RuntimeException('No credentials for publishing, make sure to specify the properties ' +
+                        'credentialsPassphrase, or ossrhUsername and ossrhPassword. See devdoc/publish.md for details.')
+            }
         }
     }
 }
 
 signing {
     required { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
-    sign publishing.publications.mavenJava
+    sign publishing.publications.jaybird
 }

@@ -38,7 +38,7 @@ public interface EncryptionPlugin {
     /**
      * @return Encryption identifier
      */
-    EncryptionIdentifier getEncryptionIdentifier();
+    EncryptionIdentifier encryptionIdentifier();
 
     /**
      * Initializes the encryption for incoming and outgoing communication.

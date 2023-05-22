@@ -23,7 +23,6 @@ import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionInitInfo;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
@@ -51,51 +50,43 @@ public final class Arc4EncryptionPlugin implements EncryptionPlugin {
     }
 
     @Override
-    public EncryptionIdentifier getEncryptionIdentifier() {
+    public EncryptionIdentifier encryptionIdentifier() {
         return Arc4EncryptionPluginSpi.ARC4_ID;
     }
 
     @Override
     public EncryptionInitInfo initializeEncryption() {
-        SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
-        Cipher encryptionCipher = createEncryptionCipher(chainBuilder);
-        Cipher decryptionCipher = createDecryptionCipher(chainBuilder);
-
-        if (chainBuilder.hasException()) {
-            return EncryptionInitInfo.failure(getEncryptionIdentifier(), chainBuilder.getException());
-        }
-        return EncryptionInitInfo.success(getEncryptionIdentifier(), encryptionCipher, decryptionCipher);
-    }
-
-    private Cipher createEncryptionCipher(SQLExceptionChainBuilder<SQLException> chainBuilder) {
-        return createCipher(Cipher.ENCRYPT_MODE, cryptSessionConfig.getEncryptKey(), chainBuilder);
-    }
-
-    private Cipher createDecryptionCipher(SQLExceptionChainBuilder<SQLException> chainBuilder) {
-        return createCipher(Cipher.DECRYPT_MODE, cryptSessionConfig.getDecryptKey(), chainBuilder);
-    }
-
-    private Cipher createCipher(int mode, byte[] key, SQLExceptionChainBuilder<SQLException> chainBuilder) {
         try {
-            return createCipher(mode, key);
+            return EncryptionInitInfo.success(
+                    encryptionIdentifier(), createEncryptionCipher(), createDecryptionCipher());
         } catch (SQLException e) {
-            chainBuilder.append(e);
-            return null;
+            return EncryptionInitInfo.failure(encryptionIdentifier(), e);
         }
+    }
+
+    private Cipher createEncryptionCipher() throws SQLException {
+        return createCipher(Cipher.ENCRYPT_MODE, cryptSessionConfig.encryptKey());
+    }
+
+    private Cipher createDecryptionCipher() throws SQLException {
+        return createCipher(Cipher.DECRYPT_MODE, cryptSessionConfig.decryptKey());
     }
 
     private Cipher createCipher(int mode, byte[] key) throws SQLException {
         try {
-            Cipher rc4Cipher = Cipher.getInstance(ARCFOUR_CIPHER_NAME);
-            SecretKeySpec rc4Key = new SecretKeySpec(key, ARCFOUR_CIPHER_NAME);
-            rc4Cipher.init(mode, rc4Key);
+            var rc4Cipher = Cipher.getInstance(ARCFOUR_CIPHER_NAME);
+            rc4Cipher.init(mode, new SecretKeySpec(key, ARCFOUR_CIPHER_NAME));
             return rc4Cipher;
         } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
             throw new FbExceptionBuilder().nonTransientException(jb_cryptAlgorithmNotAvailable)
-                    .messageParameter(getEncryptionIdentifier().toString()).cause(e).toSQLException();
+                    .messageParameter(encryptionIdentifier())
+                    .cause(e)
+                    .toSQLException();
         } catch (InvalidKeyException e) {
             throw new FbExceptionBuilder().nonTransientException(jb_cryptInvalidKey)
-                    .messageParameter(getEncryptionIdentifier().toString()).cause(e).toSQLException();
+                    .messageParameter(encryptionIdentifier())
+                    .cause(e)
+                    .toSQLException();
         }
     }
 }

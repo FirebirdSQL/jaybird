@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.jaybird.props.AttachmentProperties;
+import org.firebirdsql.jaybird.util.PluginLoader;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -45,106 +46,20 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
 
     static {
         // Load protocol implementation information
-        final Set<ProtocolDescriptor> availableProtocols = new HashSet<>();
-        final Collection<ClassLoader> classLoaders = classLoadersForLoading();
-        for (ClassLoader classLoader : classLoaders) {
-            final ServiceLoader<ProtocolDescriptor> descriptors =
-                    ServiceLoader.load(ProtocolDescriptor.class, classLoader);
-            // We can't use foreach here, because the descriptors are lazily loaded, which might trigger a ServiceConfigurationError
-            Iterator<ProtocolDescriptor> descriptorIterator = descriptors.iterator();
-            int retry = 0;
-            while (retry < 2) {
-                try {
-                    while (descriptorIterator.hasNext()) {
-                        try {
-                            ProtocolDescriptor protocol = descriptorIterator.next();
-                            availableProtocols.add(protocol);
-                        } catch (Exception | ServiceConfigurationError e) {
-                            var log = System.getLogger(ProtocolCollection.class.getName());
-                            log.log(System.Logger.Level.ERROR,
-                                    "Could not load protocol descriptor (skipping); see debug level for stacktrace");
-                            log.log(System.Logger.Level.DEBUG, "Could not load protocol descriptor (skipping)", e);
-                        }
-                    }
-                    break;
-                } catch (ServiceConfigurationError e) {
-                    System.getLogger(ProtocolCollection.class.getName())
-                            .log(System.Logger.Level.ERROR, "Error finding next ProtocolDescriptor", e);
-                    retry++;
-                }
-            }
-        }
-
-        if (availableProtocols.isEmpty()) {
-            for (ClassLoader classLoader : classLoaders) {
-                availableProtocols.addAll(loadProtocolsFallback(classLoader));
-            }
-        }
-        AVAILABLE_PROTOCOLS = create(availableProtocols.toArray(new ProtocolDescriptor[0]));
-        SUPPORTED_PROTOCOLS = create(availableProtocols.stream()
-                .filter(p -> MINIMUM_SUPPORTED_PROTOCOL_VERSION <= p.getVersion()
-                             && p.getVersion() <= MAXIMUM_SUPPORTED_PROTOCOL_VERSION)
-                .toArray(ProtocolDescriptor[]::new));
-    }
-
-    /**
-     * List of class loaders to use for loading the {@link ProtocolDescriptor} implementations.
-     *
-     * @return Collection of {@link ClassLoader} instances
-     */
-    private static List<ClassLoader> classLoadersForLoading() {
-        final List<ClassLoader> classLoaders = new ArrayList<>(2);
-        final ClassLoader classLoader = ProtocolDescriptor.class.getClassLoader();
-        if (classLoader != null) {
-            classLoaders.add(classLoader);
-        } else {
-            classLoaders.add(ClassLoader.getSystemClassLoader());
-        }
-
-        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-        if (contextClassLoader != null && !classLoaders.contains(contextClassLoader)) {
-            classLoaders.add(contextClassLoader);
-        }
-        return classLoaders;
-    }
-
-    /**
-     * Loads the protocols from a hardcoded list of class names.
-     * <p>
-     * This method is intended as a fallback in case the plugins could not be discovered from the
-     * {@code META-INF/services/org.firebirdsql.gds.ng.wire.ProtocolDescriptor} file(s). See also
-     * <a href="http://tracker.firebirdsql.org/browse/JDBC-325">issue JDBC-325</a>
-     * </p>
-     *
-     * @param classLoader Class loader to use for loading
-     * @return List of protocol descriptors
-     */
-    private static List<ProtocolDescriptor> loadProtocolsFallback(ClassLoader classLoader) {
-        String[] protocolClasses = {
+        Collection<ProtocolDescriptor> availableProtocols = PluginLoader.findPlugins(ProtocolDescriptor.class, List.of(
                 "org.firebirdsql.gds.ng.wire.version10.Version10Descriptor",
                 "org.firebirdsql.gds.ng.wire.version11.Version11Descriptor",
                 "org.firebirdsql.gds.ng.wire.version12.Version12Descriptor",
                 "org.firebirdsql.gds.ng.wire.version13.Version13Descriptor",
                 "org.firebirdsql.gds.ng.wire.version15.Version15Descriptor",
                 "org.firebirdsql.gds.ng.wire.version16.Version16Descriptor",
-                "org.firebirdsql.gds.ng.wire.version18.Version18Descriptor",
-        };
-        final List<ProtocolDescriptor> protocols = new ArrayList<>(protocolClasses.length);
-        for (String className : protocolClasses) {
-            try {
-                Class<?> clazz = classLoader.loadClass(className);
-                ProtocolDescriptor protocol = (ProtocolDescriptor) clazz.getDeclaredConstructor().newInstance();
-                protocols.add(protocol);
-            } catch (Exception e) {
-                var log = System.getLogger(ProtocolCollection.class.getName());
-                if (log.isLoggable(System.Logger.Level.WARNING)) {
-                    String message = "Unable to load protocol " + className + " in loadProtocolsFallback; skipping";
-                    log.log(System.Logger.Level.WARNING, message + "; see debug level for stacktrace");
-                    log.log(System.Logger.Level.DEBUG, message, e);
-                }
-            }
-        }
-        return protocols;
+                "org.firebirdsql.gds.ng.wire.version18.Version18Descriptor"));
+
+        AVAILABLE_PROTOCOLS = create(availableProtocols);
+        SUPPORTED_PROTOCOLS = create(availableProtocols.stream()
+                .filter(p -> MINIMUM_SUPPORTED_PROTOCOL_VERSION <= p.getVersion()
+                             && p.getVersion() <= MAXIMUM_SUPPORTED_PROTOCOL_VERSION)
+                .toList());
     }
 
     private ProtocolCollection(Map<Integer, ProtocolDescriptor> protocolDescriptors) {
@@ -184,7 +99,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
      * @return Protocol version numbers
      */
     public List<Integer> getProtocolVersions() {
-        List<Integer> versions = new ArrayList<>();
+        List<Integer> versions = new ArrayList<>(getProtocolCount());
         for (ProtocolDescriptor descriptor : this) {
             versions.add(descriptor.getVersion());
         }
@@ -202,11 +117,9 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
     /**
      * Creates a ProtocolCollection with the specified ProtocolDescriptors.
      * <p>
-     * If <code>descriptors</code> contains multiple implementations with the
-     * same value for {@link ProtocolDescriptor#getVersion()}, then the first
-     * implementation with the highest value for
-     * {@link ProtocolDescriptor#getWeight()} will be loaded into the
-     * collection.
+     * If {@code descriptors} contains multiple implementations with the same value for
+     * {@link ProtocolDescriptor#getVersion()}, then the first implementation with the highest value for
+     * {@link ProtocolDescriptor#getWeight()} will be loaded into the collection.
      * </p>
      * 
      * @param descriptors
@@ -214,6 +127,10 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
      * @return ProtocolCollection
      */
     public static ProtocolCollection create(ProtocolDescriptor... descriptors) {
+        return create(Arrays.asList(descriptors));
+    }
+
+    private static ProtocolCollection create(Collection<ProtocolDescriptor> descriptors) {
         Map<Integer, ProtocolDescriptor> descriptorMap = new HashMap<>();
         for (ProtocolDescriptor descriptor : descriptors) {
             ProtocolDescriptor existingDescriptor = descriptorMap.get(descriptor.getVersion());
@@ -293,7 +210,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                                         .distinct()
                                         .mapToObj(ProtocolCollection::tryGetProtocolDescriptorUnmaskedAndMasked)
                                         .filter(Objects::nonNull))
-                        .toArray(ProtocolDescriptor[]::new));
+                        .toList());
     }
 
     private static ProtocolDescriptor tryGetProtocolDescriptorUnmaskedAndMasked(int version) {

@@ -28,39 +28,15 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 5
  */
-class CryptSessionConfigImpl implements CryptSessionConfig {
+record CryptSessionConfigImpl(
+        EncryptionIdentifier encryptionIdentifier, byte[] encryptKey, byte[] decryptKey, byte[] specificData)
+        implements CryptSessionConfig {
 
-    private final EncryptionIdentifier encryptionIdentifier;
-    private byte[] encryptKey;
-    private byte[] decryptKey;
-    private byte[] specificData;
-
-    CryptSessionConfigImpl(
-            EncryptionIdentifier encryptionIdentifier, byte[] encryptKey, byte[] decryptKey, byte[] specificData) {
-        this.encryptionIdentifier = requireNonNull(encryptionIdentifier, "encryptionIdentifier");
-        this.encryptKey = requireNonNull(encryptKey, "encryptKey").clone();
-        this.decryptKey = requireNonNull(decryptKey, "decryptKey").clone();
-        this.specificData = specificData != null ? specificData.clone() : null;
-    }
-
-    @Override
-    public EncryptionIdentifier getEncryptionIdentifier() {
-        return encryptionIdentifier;
-    }
-
-    @Override
-    public byte[] getEncryptKey() {
-        return encryptKey;
-    }
-
-    @Override
-    public byte[] getDecryptKey() {
-        return decryptKey;
-    }
-
-    @Override
-    public byte[] getSpecificData() {
-        return specificData;
+    CryptSessionConfigImpl {
+        requireNonNull(encryptionIdentifier, "encryptionIdentifier");
+        encryptKey = requireNonNull(encryptKey, "encryptKey").clone();
+        decryptKey = requireNonNull(decryptKey, "decryptKey").clone();
+        specificData = specificData != null ? specificData.clone() : null;
     }
 
     @Override
@@ -68,7 +44,6 @@ class CryptSessionConfigImpl implements CryptSessionConfig {
         Arrays.fill(encryptKey, (byte) 0);
         Arrays.fill(decryptKey, (byte) 0);
         if (specificData != null) Arrays.fill(specificData, (byte) 0);
-        encryptKey = decryptKey = specificData = null;
     }
 
 }

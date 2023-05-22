@@ -8,6 +8,8 @@
 :toc: left
 :icons: font
 :sectnums:
+:bc-version: 1.73
+:jna-version: 5.12.1
 
 ifeval::["{version_tag}" != ""]
 [WARNING]
@@ -133,7 +135,7 @@ artifactId: `jaybird`, +
 version: `{version_wo_target}`
 
 ifeval::["{version_tag}" == "-SNAPSHOT"]
-NOTE: SNAPSHOT releases are only available from the Sonatype snapshot  repository, https://oss.sonatype.org/content/repositories/snapshots
+NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://oss.sonatype.org/content/repositories/snapshots
 endif::[]
 
 For example:
@@ -147,14 +149,25 @@ For example:
 </dependency>
 ----
 
+To enable the "`ChaCha64`" wire encryption support, also add:
+
+[source,xml,subs="verbatim,attributes"]
+----
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>chacha64-plugin</artifactId>
+    <version>{version_example}</version>
+</dependency>
+----
+
 If you want to use Type 2 support (native or embedded), you need to explicitly include JNA 5.12.1 as a dependency:
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.12.1</version>
+    <version>{jna-version}</version>
 </dependency>
 ----
 
@@ -170,7 +183,9 @@ You can download the latest versions from https://www.firebirdsql.org/en/jdbc-dr
 
 At minimum Jaybird 6 requires `jaybird-{version_wo_target}.jar`.
 
-For native or embedded support, you will need to include `jna-5.12.1.jar` on your classpath.
+For "`ChaCha64`" support, also add `chacha64-plugin.jar` and `bcprov-jdk18on-{bc-version}.jar`.
+
+For native or embedded support, you will need to include `jna-{jna-version}.jar` on your classpath.
 See also <<type-2-native-and-embedded-driver>>.
 
 [#upgrading-from-jaybird-5-to-jaybird-6]
@@ -200,12 +215,12 @@ For more detailed instructions, see also the information on Maven in <<getting-j
 
 If you use native or embedded, make sure to update your JNA dependency to version 5.12.1 (Jaybird 6 requires at least JNA 5.12).
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.12.1</version>
+    <version>{jna-version}</version>
 </dependency>
 ----
 
@@ -216,6 +231,9 @@ If you manage your dependencies manually, you need to do the following:
 
 . Replace the Jaybird 5 library with the Jaybird 6 version
 ** `jaybird-5.0.x.<java>.jar` with `jaybird-{version_wo_target}.jar`
+. To enable "`ChaCha64`" wire encryption support add the following JARs to the classpath
+** `chacha64-plugin-{version_wo_target}.jar`
+** `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip
 
 [#gotchas]
 === Gotcha's
@@ -265,7 +283,7 @@ Most of the JDBC 4.3 features have been implemented (in as far as they are suppo
 
 Given the limited support period for Java 17 and higher versions, not all Java releases are supported, see <<supported-java-versions>> for details.
 
-For compatibility with Java 9 modules, Jaybird defines the automatic module name `org.firebirdsql.jaybird`.
+For compatibility with Java 9 modules, Jaybird defines the automatic module name `org.firebirdsql.jaybird`, and the `chacha64-plugin` uses `org.firebirdsql.jaybird.chacha64`.
 This guarantees a stable module name for Jaybird, and allows for future modularization of Jaybird.
 
 [#firebird-support]
@@ -387,7 +405,7 @@ When the `createFor(Connection)` method has been used, this can be configured th
 This detection depends on actual activity, like an event posting a new count, or a new event registration.
 
 [#unsupported-protocol]
-=== Pure Java will no connect to unsupported Firebird version by default
+=== Pure Java will not connect to unsupported Firebird version by default
 
 The pure Java protocol will by default no longer try the wire protocol versions of unsupported Firebird versions.
 This means that -- by default -- only protocol version 13 -- 18 are tried (if there is an implementation of such version).
@@ -457,6 +475,32 @@ If you need a custom logger, you will need to implement `java.lang.System.Logger
 
 The system properties `org.firebirdsql.jdbc.forceConsoleLogger` and `org.firebirdsql.jdbc.disableLogging` are also no longer supported.
 Equivalent behaviour is achieved by configuring the active logging library
+
+[#chacha64]
+=== Support for ChaCha64 wire encryption
+
+Support for the "`ChaCha64`" wire encryption -- introduced in Firebird 4.0.1 -- was added for the `PURE_JAVA` protocol.
+Given this requires a dependency on the Bouncy Castle provider (`bcprov-jdk18on`), the plugin is made available as a separate artifact: `org.firebirdsql.jdbc:chacha64-plugin` on Maven or `chacha64-plugin-{version_wo_target}.jar` in the distribution zip.
+
+When deploying manually, please make sure to also include the `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip on the class path.
+
+.Limitations of ChaCha lead to introduction of ChaCha64
+[sidebar]
+****
+The "`ChaCha`" wire encryption introduced in Firebird 4.0 and Jaybird 5 uses a 96-bit nonce and 32-bit counter.
+This 32-bit counter limits the amount of data you can transfer to a maximum of 256GiB.
+As the Firebird wire protocol doesn't support "`re-keying`" the encryption plugin, this means the connection breaks if 256GiB has been sent or received.
+This breaking is done to prevent key re-use, which could make the data stream vulnerable to certain types of cryptological analysis.
+
+To address this, Firebird 4.0.1 added the "`ChaCha64`" wire encryption, which uses a 64-bit nonce and 64-bit counter.
+****
+
+As part of this change, Jaybird is now capable of loading `EncryptionPluginSpi` instances using the service loader mechanism.
+The API of `EncryptionPluginSpi` and `EncryptionPlugin` and other classes and interfaces in package `org.firebirdsql.gds.ng.wire.crypt` should still be considered unstable and internal API, so use it at your own risk to implement your own plugins.
+If you want to use it for implementing your own encryption plugins, let us know on https://groups.google.com/g/firebird-java[firebird-java^].
+We can then look at stabilizing the API and considering it formally a public API.
+
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-06-chacha64-support.adoc[jdp-2023-06: ChaCha64 Support^]
 
 // TODO add major changes
 
@@ -687,6 +731,20 @@ All other constructors and methods have been removed.
 * `WireGDSFactoryPlugin`, `NativeGDSFactoryPlugin` and `EmbeddedGDSFactoryPlugin` are now final
 * `DefaultDatatypeCoder.intToBytes(int)` was removed;
 use `encodeInt(int)`
+* `ChaChaEncryptionPlugin` and `ChaChaEncryptionPluginSpi` are now final
+* `CryptSessionConfig`, the JavaBeans-style accessors have been replaced with record-style accessors:
+** `getEncryptionIdentifier()` -> `encryptionIdentifier()`
+** `getEncryptKey()` -> `encryptKey()`
+** `getDecryptKey()` -> `decryptKey()`
+** `getSpecificData()` -> `specificData()`
+* `EncryptionIdentifier`, some JavaBeans-style accessors have been replaced with record-style accessors:
+** `getType()` -> `type()`
+** `getPluginName()` -> `pluginName()`
+* `KnownServerKey.PluginSpecificData`, the JavaBeans-style accessors have been replaced with record-style accessors:
+** `getEncryptionIdentifier()` -> `encryptionIdentifier()`
+** `getSpecificData()` -> `specificData()`
+* `EncryptionPlugin` and `EncryptionPluginSpi`, the JavaBeans-style accessor has been replaced with a record-style accessor:
+** `getEncryptionIdentifier()` -> `encryptionIdentifier()`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
@@ -760,16 +818,16 @@ use `isc_sql_dialect_conflict_num`
 === Type 2 (native) and embedded driver
 
 Jaybird uses JNA to access the client library.
-If you want to use the Type 2 driver, or Firebird embedded, then you need to include `jna-5.12.1.jar` on the classpath.
+If you want to use the Type 2 driver, or Firebird embedded, then you need to include `jna-{jna-version}.jar` on the classpath.
 
 When using Maven, you need to specify the dependency on JNA yourself, as we don't depend on it by default (it is specified as an optional dependency):
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.12.1</artifactId>
+    <version>{jna-version}</artifactId>
 </dependency>
 ----
 

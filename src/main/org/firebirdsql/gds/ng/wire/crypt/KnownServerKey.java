@@ -73,27 +73,16 @@ public final class KnownServerKey {
     /**
      * Class to hold plugin specific data.
      *
+     * @param encryptionIdentifier
+     *         encryption identifier
+     * @param specificData
+     *         plugin specific data (can be {@code null})
      * @since 5
      */
-    public static final class PluginSpecificData {
+    public record PluginSpecificData(EncryptionIdentifier encryptionIdentifier, byte[] specificData) {
 
-        private final EncryptionIdentifier encryptionIdentifier;
-        private final byte[] specificData;
-
-        private PluginSpecificData(EncryptionIdentifier encryptionIdentifier, byte[] specificData) {
-            this.encryptionIdentifier = requireNonNull(encryptionIdentifier, "encryptionIdentifier");
-            this.specificData = specificData;
-        }
-
-        public EncryptionIdentifier getEncryptionIdentifier() {
-            return encryptionIdentifier;
-        }
-
-        /**
-         * @return plugin specific data (can be {@code null})
-         */
-        public byte[] getSpecificData() {
-            return specificData;
+        public PluginSpecificData {
+            requireNonNull(encryptionIdentifier, "encryptionIdentifier");
         }
 
     }

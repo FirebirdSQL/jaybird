@@ -1,1 +1,38 @@
 rootProject.name = 'jaybird'
+include 'chacha64-plugin'
+
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+
+    versionCatalogs {
+        libs {
+            library('jna', 'net.java.dev.jna', 'jna').version('5.12.1')
+            library('javax.servlet-api', 'javax.servlet', 'javax.servlet-api').version('4.0.1')
+            library('jakarta.servlet-api', 'jakarta.servlet', 'jakarta.servlet-api').version('5.0.0')
+            library('bcprov-jdk18on', 'org.bouncycastle', 'bcprov-jdk18on').version('1.73')
+
+            bundle('servlet-api', ['javax.servlet-api', 'jakarta.servlet-api'])
+        }
+
+        testLibs {
+            version('junit', '5.9.3')
+            version('mockito', '5.3.1')
+
+            library('junit-bom', 'org.junit', 'junit-bom').versionRef('junit')
+            library('junit-jupiter', 'org.junit.jupiter', 'junit-jupiter').withoutVersion()
+            library('hamcrest', 'org.hamcrest', 'hamcrest').version('2.2')
+            library('assertj-core', 'org.assertj', 'assertj-core').version('3.23.1')
+            library('mockito-bom', 'org.mockito', 'mockito-bom').versionRef('mockito')
+            library('mockito-core', 'org.mockito', 'mockito-core').withoutVersion()
+            library('mockito-junit-jupiter', 'org.mockito', 'mockito-junit-jupiter').withoutVersion()
+            library('awaitility', 'org.awaitility', 'awaitility').version('4.2.0')
+
+            bundle('junit', ['junit-jupiter'])
+            bundle('hamcrest', ['hamcrest'])
+            bundle('mockito', ['mockito-core', 'mockito-junit-jupiter'])
+        }
+    }
+}
+

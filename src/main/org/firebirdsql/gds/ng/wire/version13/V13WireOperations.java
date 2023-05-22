@@ -37,6 +37,7 @@ import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionInitInfo;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
+import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginRegistry;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
@@ -45,19 +46,13 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import static java.lang.String.format;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.ERROR;
-import static java.lang.System.Logger.Level.INFO;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableMap;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptNoCryptKeyAvailable;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
@@ -68,29 +63,6 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 public class V13WireOperations extends V11WireOperations {
 
     private static final System.Logger log = System.getLogger(V13WireOperations.class.getName());
-    private static final String ARC4_PLUGIN_SPI_CLASS_NAME =
-            "org.firebirdsql.gds.ng.wire.crypt.arc4.Arc4EncryptionPluginSpi";
-    public static final String CHA_CHA_PLUGIN_SPI_CLASS_NAME =
-            "org.firebirdsql.gds.ng.wire.crypt.chacha.ChaChaEncryptionPluginSpi";
-    private static final Map<EncryptionIdentifier, EncryptionPluginSpi> SUPPORTED_ENCRYPTION_PLUGINS;
-    static {
-        Map<EncryptionIdentifier, EncryptionPluginSpi> tempMap = new HashMap<>();
-        for (String spiName : Arrays.asList(ARC4_PLUGIN_SPI_CLASS_NAME, CHA_CHA_PLUGIN_SPI_CLASS_NAME)) {
-            try {
-                Class<?> spiClass = Class.forName(spiName);
-                EncryptionPluginSpi encryptionPluginSpi =
-                        (EncryptionPluginSpi) spiClass.getDeclaredConstructor().newInstance();
-                tempMap.put(encryptionPluginSpi.getEncryptionIdentifier(), encryptionPluginSpi);
-            } catch (Exception e) {
-                if (log.isLoggable(INFO)) {
-                    String message = "Could not load EncryptionPluginSpi: " + spiName;
-                    log.log(INFO, message + "; see debug for details");
-                    log.log(DEBUG, message, e);
-                }
-            }
-        }
-        SUPPORTED_ENCRYPTION_PLUGINS = tempMap.isEmpty() ? emptyMap() : unmodifiableMap(tempMap);
-    }
 
     public V13WireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback) {
         super(connection, defaultWarningMessageCallback);
@@ -215,13 +187,15 @@ public class V13WireOperations extends V11WireOperations {
         SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
 
         for (KnownServerKey.PluginSpecificData pluginSpecificData : getPluginSpecificData()) {
-            EncryptionIdentifier encryptionIdentifier = pluginSpecificData.getEncryptionIdentifier();
-            EncryptionPluginSpi currentEncryptionSpi = SUPPORTED_ENCRYPTION_PLUGINS.get(encryptionIdentifier);
+            EncryptionIdentifier encryptionIdentifier = pluginSpecificData.encryptionIdentifier();
+            EncryptionPluginSpi currentEncryptionSpi =
+                    EncryptionPluginRegistry.getEncryptionPluginSpi(encryptionIdentifier);
             if (currentEncryptionSpi == null) {
+                log.log(TRACE, "No wire encryption plugin available for {0}", encryptionIdentifier);
                 continue;
             }
             try (CryptSessionConfig cryptSessionConfig =
-                         getCryptSessionConfig(encryptionIdentifier, pluginSpecificData.getSpecificData())) {
+                         getCryptSessionConfig(encryptionIdentifier, pluginSpecificData.specificData())) {
                 EncryptionPlugin encryptionPlugin = currentEncryptionSpi.createEncryptionPlugin(cryptSessionConfig);
                 EncryptionInitInfo encryptionInitInfo = encryptionPlugin.initializeEncryption();
                 if (encryptionInitInfo.isSuccess()) {
@@ -274,8 +248,8 @@ public class V13WireOperations extends V11WireOperations {
         final EncryptionIdentifier encryptionIdentifier = encryptionInitInfo.getEncryptionIdentifier();
 
         xdrOut.writeInt(op_crypt);
-        xdrOut.writeString(encryptionIdentifier.getPluginName(), encoding);
-        xdrOut.writeString(encryptionIdentifier.getType(), encoding);
+        xdrOut.writeString(encryptionIdentifier.pluginName(), encoding);
+        xdrOut.writeString(encryptionIdentifier.type(), encoding);
         xdrOut.flush();
 
         xdrIn.setCipher(encryptionInitInfo.getDecryptionCipher());

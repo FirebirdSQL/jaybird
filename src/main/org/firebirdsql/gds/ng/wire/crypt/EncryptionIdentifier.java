@@ -45,6 +45,7 @@ public final class EncryptionIdentifier {
     public EncryptionIdentifier(String type, String pluginName) {
         this.type = requireNonNull(type, "type");
         this.pluginName = requireNonNull(pluginName, "pluginName");
+        // The performance impact of precalculating the hash is significant enough to not convert this to a record
         hashCode = Objects.hash(type, pluginName);
     }
 
@@ -56,7 +57,7 @@ public final class EncryptionIdentifier {
      *
      * @return Encryption type
      */
-    public String getType() {
+    public String type() {
         return type;
     }
 
@@ -68,7 +69,7 @@ public final class EncryptionIdentifier {
      *
      * @return Name of the plugin
      */
-    public String getPluginName() {
+    public String pluginName() {
         return pluginName;
     }
 
@@ -78,12 +79,9 @@ public final class EncryptionIdentifier {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof EncryptionIdentifier)) {
-            return false;
-        }
-        EncryptionIdentifier other = (EncryptionIdentifier) o;
-        return this == other
-                || (this.type.equals(other.type) && this.pluginName.equals(other.pluginName));
+        if (this == o) return true;
+        if (!(o instanceof EncryptionIdentifier other)) return false;
+        return this.type.equals(other.type) && this.pluginName.equals(other.pluginName);
     }
 
     @Override

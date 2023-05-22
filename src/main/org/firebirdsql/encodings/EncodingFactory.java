@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.jna.BigEndianDatatypeCoder;
 import org.firebirdsql.gds.ng.jna.LittleEndianDatatypeCoder;
+import org.firebirdsql.jaybird.util.PluginLoader;
 
 import java.lang.reflect.Constructor;
 import java.nio.charset.Charset;
@@ -33,7 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.System.Logger.Level.DEBUG;
-import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.WARNING;
 import static org.firebirdsql.gds.ISCConstants.CS_dynamic;
 
@@ -363,29 +363,9 @@ public final class EncodingFactory implements IEncodingFactory {
      * @see EncodingSet
      */
     private static NavigableSet<EncodingSet> loadEncodingSets() {
-        final TreeSet<EncodingSet> encodingSets = new TreeSet<>(encodingSetComparator());
-        final ServiceLoader<EncodingSet> encodingSetLoader = ServiceLoader.load(EncodingSet.class, EncodingFactory.class.getClassLoader());
-        // We can't use foreach here, because the encoding sets are lazily loaded, which might trigger a ServiceConfigurationError
-        Iterator<EncodingSet> encodingSetIterator = encodingSetLoader.iterator();
-        // Load the encoding sets and populate the TreeMap
-        int retry = 0;
-        while (retry < 2) {
-            try {
-                while (encodingSetIterator.hasNext()) {
-                    try {
-                        EncodingSet encodingSet = encodingSetIterator.next();
-                        encodingSets.add(encodingSet);
-                    } catch (Exception | ServiceConfigurationError e) {
-                        log.log(ERROR, "Could not load encoding set (skipping); see debug level for stacktrace");
-                        log.log(DEBUG, "Could not load encoding set (skipping)", e);
-                    }
-                }
-                break;
-            } catch (ServiceConfigurationError e) {
-                log.log(ERROR, "Error finding next EncodingSet", e);
-                retry++;
-            }
-        }
+        final var encodingSets = new TreeSet<>(encodingSetComparator());
+        encodingSets.addAll(
+                PluginLoader.findPlugins(EncodingSet.class, List.of(), PluginLoader.ClassSource.PLUGIN_CLASS_LOADER));
         return encodingSets;
     }
 

@@ -24,8 +24,10 @@
  */
 package org.firebirdsql.gds.impl;
 
+import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
+import org.firebirdsql.jaybird.util.PluginLoader;
 import org.firebirdsql.util.InternalApi;
 
 import java.io.Serial;
@@ -42,8 +44,6 @@ import java.util.Map.Entry;
  * @author Mark Rotteveel
  */
 public final class GDSFactory {
-
-    private static final System.Logger log = System.getLogger(GDSFactory.class.getName());
 
     /**
      * Class for string comparison in the descendant order. This effectively
@@ -69,114 +69,21 @@ public final class GDSFactory {
     private static GDSType defaultType;
 
     static {
-        // register first all plugins that belong to the same class loader
-        // in which this class is loaded
-        final List<ClassLoader> classLoaders = classLoadersForLoading();
-        try {
-            for (ClassLoader classLoader : classLoaders) {
-                loadPluginsFromClassLoader(classLoader);
-            }
-        } catch (Exception ex) {
-            log.log(System.Logger.Level.ERROR, "Can't register plugins; see debug level for stacktrace");
-            log.log(System.Logger.Level.DEBUG, "Can't register plugins", ex);
-        }
+        PluginLoader.findPlugins(GDSFactoryPlugin.class, List.of(
+                "org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin",
+                "org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin",
+                "org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin"))
+                .forEach(GDSFactory::registerPlugin);
 
-        if (jdbcUrlToPluginMap.isEmpty()) {
-            log.log(System.Logger.Level.WARNING,
-                    "No plugins loaded from META-INF/services, falling back to fixed registration of default plugins");
-            for (ClassLoader classLoader : classLoaders) {
-                loadPluginsFallback(classLoader);
-            }
+        GDSType pureJavaType = GDSType.getType(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME);
+        if (pureJavaType != null && defaultType != pureJavaType && typeToPluginMap.containsKey(pureJavaType)) {
+            // ensure defaultType is PURE_JAVA if that plugin was registered
+            defaultType = pureJavaType;
         }
     }
 
     private GDSFactory() {
         // no instances
-    }
-
-    /**
-     * List of class loaders to use for loading the {@link GDSFactoryPlugin} implementations.
-     *
-     * @return Collection of {@link ClassLoader} instances
-     */
-    private static List<ClassLoader> classLoadersForLoading() {
-        final var classLoaders = new ArrayList<ClassLoader>(2);
-        final ClassLoader classLoader = GDSFactoryPlugin.class.getClassLoader();
-        if (classLoader != null) {
-            classLoaders.add(classLoader);
-        } else {
-            classLoaders.add(ClassLoader.getSystemClassLoader());
-        }
-
-        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-        if (contextClassLoader != null && !classLoaders.contains(contextClassLoader)) {
-            classLoaders.add(contextClassLoader);
-        }
-        return classLoaders;
-    }
-
-    /**
-     * Load all existing plugins from the specified class loader.
-     *
-     * @param classLoader
-     *         instance of {@link ClassLoader}.
-     */
-    private static void loadPluginsFromClassLoader(ClassLoader classLoader) {
-        ServiceLoader<GDSFactoryPlugin> pluginLoader = ServiceLoader.load(GDSFactoryPlugin.class, classLoader);
-        // We can't use foreach here, because the plugins are lazily loaded, which might trigger a ServiceConfigurationError
-        Iterator<GDSFactoryPlugin> pluginIterator = pluginLoader.iterator();
-        int retry = 0;
-        while (retry < 2) {
-            try {
-                while (pluginIterator.hasNext()) {
-                    try {
-                        GDSFactoryPlugin plugin = pluginIterator.next();
-                        registerPlugin(plugin);
-                    } catch (Exception | ServiceConfigurationError e) {
-                        log.log(System.Logger.Level.ERROR,
-                                "Can't register plugin (skipping); see debug level for stacktrace");
-                        log.log(System.Logger.Level.DEBUG, "Can't register plugin (skipping)", e);
-                    }
-                }
-                break;
-            } catch (ServiceConfigurationError e) {
-                log.log(System.Logger.Level.ERROR, "Error finding next GDSFactoryPlugin", e);
-                retry++;
-            }
-        }
-    }
-
-    /**
-     * Loads the plugins from a hardcoded list of class names.
-     * <p>
-     * This method is intended as a fallback in case the plugins could not be discovered from the
-     * {@code META-INF/services/org.firebirdsql.gds.impl.GDSFactoryPlugin} file(s). See also
-     * <a href="https://github.com/FirebirdSQL/jaybird/issues/371">jaybird#371 (JDBC-325)</a>
-     * </p>
-     */
-    private static void loadPluginsFallback(final ClassLoader classLoader) {
-        var pluginClasses = new String[] {
-                "org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin"
-        };
-        for (String className : pluginClasses) {
-            loadPlugin(className, classLoader);
-        }
-    }
-
-    private static void loadPlugin(String className, ClassLoader classLoader) {
-        try {
-            Class<?> clazz = classLoader.loadClass(className);
-            GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.getDeclaredConstructor().newInstance();
-            registerPlugin(plugin);
-        } catch (Exception ex) {
-            log.log(System.Logger.Level.ERROR, "Can't register plugin {0}; see debug level for stacktrace", className);
-            if (log.isLoggable(System.Logger.Level.DEBUG)) {
-                log.log(System.Logger.Level.DEBUG, "Can't register plugin " + className, ex);
-            }
-        }
     }
 
     /**
@@ -196,7 +103,7 @@ public final class GDSFactory {
         GDSType type = GDSType.registerType(plugin.getTypeName());
         typeToPluginMap.put(type, plugin);
 
-        // set the default type
+        // set the default type (see also the static initializer which ensures PURE_JAVA will be default if available)
         if (defaultType == null) defaultType = type;
 
         // register aliases

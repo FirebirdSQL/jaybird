@@ -1,0 +1,126 @@
+plugins {
+    id 'java-library'
+    id 'nu.studer.credentials' version '3.0'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group = 'org.firebirdsql.jdbc'
+version = project.'version.maven'
+
+dependencies {
+    // NOTE: ':' represents the root module, which contains the main Jaybird driver
+    api project(':')
+    implementation libs.bcprov.jdk18on
+
+    // Use JUnit Jupiter API for testing.
+    testImplementation platform(testLibs.junit.bom)
+    testImplementation testLibs.bundles.junit
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes(
+                'Created-By': "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+                'Implementation-Title': 'Jaybird ChaCha64 wire encryption',
+                'Implementation-Url': project.'implementation.url',
+                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'})",
+                'Implementation-Vendor': project.'implementation.vendor',
+                'Implementation-Vendor-Id': project.'implementation.vendor.id',
+                'Automatic-Module-Name': 'org.firebirdsql.jaybird.chacha64'
+        )
+    }
+}
+
+javadoc {
+    options.author()
+    options.windowTitle = "$project.capitalizedName ChaCha64 ${project.'version.maven'} "
+    options.docTitle = "$project.capitalizedName ChaCha64 ${project.'version.maven'}"
+    options.bottom = "Copyright &copy; 2023-${project.YEAR} Jaybird (Firebird JDBC) team. All rights reserved."
+    def currentJavaVersion = JavaVersion.current()
+    options.addBooleanOption('html5', true)
+    options.addBooleanOption('Xdoclint:none', true)
+}
+
+publishing {
+    publications {
+        // chacha-64 maven artifact
+        chacha64(MavenPublication) {
+            from components.java
+            suppressPomMetadataWarningsFor 'nativeApiElements'
+            suppressPomMetadataWarningsFor 'nativeRuntimeElements'
+            pom {
+                name = 'ChaCha64 plugin for Jaybird'
+                packaging = 'jar'
+                description = 'ChaCha64 plugin for Jaybird JDBC Driver'
+                url = 'https://www.firebirdsql.org/en/devel-jdbc-driver/'
+                inceptionYear = '2023'
+
+                developers {
+                    developer {
+                        id = 'mrotteveel'
+                        name = 'Mark Rotteveel'
+                        email = 'mark@lawinegevaar.nl'
+                        roles = ['Administrator', 'Developer']
+                    }
+                }
+
+                mailingLists {
+                    mailingList {
+                        name = 'firebird-java'
+                        subscribe = 'firebird-java+subscribe@googlegroups.com'
+                        unsubscribe = 'firebird-java+unsubscribe@googlegroups.com'
+                        post = 'firebird-java@googlegroups.com'
+                        archive = 'https://groups.google.com/g/firebird-java'
+                        otherArchives = ['http://fb-list-archive.s3-website-eu-west-1.amazonaws.com/firebird-java/index.html']
+                    }
+                }
+
+                licenses {
+                    license {
+                        name = 'GNU Lesser General Public License'
+                        url = 'https://www.gnu.org/copyleft/lesser.html'
+                        distribution = 'repo'
+                        comments = 'The ChaCha 64 plugin for Jaybird JDBC driver is distributed free of charge under ' +
+                                'the GNU Lesser General Public License (LGPL). Text of the license can be obtained ' +
+                                'from https://www.gnu.org/copyleft/lesser.html'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:https://github.com/FirebirdSQL/jaybird.git'
+                    developerConnection = 'scm:git:https://github.com/FirebirdSQL/jaybird.git'
+                    url = 'https://github.com/FirebirdSQL/jaybird'
+                }
+
+                issueManagement {
+                    system = 'GitHub'
+                    url = 'https://github.com/FirebirdSQL/jaybird/issues/'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = project.isReleaseVersion.get() ? project.releaseRepository : project.snapshotRepository
+            credentials {
+                username = findProperty('ossrhUsername') ?: null
+                password = findProperty('ossrhPassword') ?: null
+            }
+        }
+    }
+}
+
+signing {
+    required { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
+    sign publishing.publications.chacha64
+}

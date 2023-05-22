@@ -461,6 +461,10 @@ public final class FirebirdSupportInfo {
         return isVersionEqualOrAbove(4);
     }
 
+    public boolean supportsWireCryptChaCha64() {
+        return isVersionEqualOrAbove(4, 0, 1);
+    }
+
     /**
      * @return {@code true} when zlib wire compression is supported
      */

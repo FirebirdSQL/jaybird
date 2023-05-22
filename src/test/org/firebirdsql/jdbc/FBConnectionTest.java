@@ -705,10 +705,7 @@ class FBConnectionTest {
         assumeTrue(getDefaultSupportInfo().supportsWireEncryption(),
                 "Test for Firebird versions with wire encryption support");
         assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(4, 0), "Requires fb_info_wire_crypt support");
-        String expectedCryptPlugin = "ChaCha";
-        if (isOtherNativeType().matches(GDS_TYPE) && getDefaultSupportInfo().isVersionEqualOrAbove(4, 0, 1)) {
-            expectedCryptPlugin = "ChaCha64";
-        }
+        String expectedCryptPlugin = getDefaultSupportInfo().supportsWireCryptChaCha64() ? "ChaCha64" : "ChaCha";
 
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("wireCrypt", "REQUIRED");

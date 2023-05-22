@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.crypt.chacha;
+package org.firebirdsql.jaybird.chacha64;
 
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
@@ -26,12 +26,13 @@ import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.ChaCha20ParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
 import java.sql.SQLException;
 import java.util.Arrays;
 
@@ -39,29 +40,31 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptAlgorithmNotAvailabl
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptInvalidKey;
 
 /**
- * ChaCha (ChaCha-20) encryption plugin (introduced in Firebird 4.0).
+ * ChaCha64 (ChaCha with 64-bit counter) encryption plugin (introduced in Firebird 4.0.1).
  *
  * @author Mark Rotteveel
- * @since 5
+ * @since 6
  */
-public final class ChaChaEncryptionPlugin implements EncryptionPlugin {
+public class ChaCha64EncryptionPlugin implements EncryptionPlugin {
 
-    private static final String CHA_CHA_20_CIPHER_NAME = "ChaCha20";
+    private static final String CHA_CHA_CIPHER_NAME = "ChaCha";
 
     private final CryptSessionConfig cryptSessionConfig;
+    private final Provider provider;
 
-    ChaChaEncryptionPlugin(CryptSessionConfig cryptSessionConfig) {
+    ChaCha64EncryptionPlugin(CryptSessionConfig cryptSessionConfig, Provider provider) {
         this.cryptSessionConfig = cryptSessionConfig;
+        this.provider = provider;
     }
 
     @Override
     public EncryptionIdentifier encryptionIdentifier() {
-        return ChaChaEncryptionPluginSpi.CHA_CHA_ID;
+        return ChaCha64EncryptionPluginSpi.CHA_CHA_64_ID;
     }
 
     @Override
     public EncryptionInitInfo initializeEncryption() {
-        try (var iv = new ChaChaIV()) {
+        try (var iv = new ChaCha64IV()) {
             return EncryptionInitInfo.success(
                     encryptionIdentifier(), createEncryptionCipher(iv), createDecryptionCipher(iv));
         } catch (SQLException e) {
@@ -69,11 +72,11 @@ public final class ChaChaEncryptionPlugin implements EncryptionPlugin {
         }
     }
 
-    private Cipher createEncryptionCipher(ChaChaIV iv) throws SQLException {
+    private Cipher createEncryptionCipher(ChaCha64IV iv) throws SQLException {
         return createCipher(Cipher.ENCRYPT_MODE, iv, toChaChaKey(cryptSessionConfig.encryptKey()));
     }
 
-    private Cipher createDecryptionCipher(ChaChaIV iv) throws SQLException {
+    private Cipher createDecryptionCipher(ChaCha64IV iv) throws SQLException {
         return createCipher(Cipher.DECRYPT_MODE, iv, toChaChaKey(cryptSessionConfig.decryptKey()));
     }
 
@@ -95,10 +98,10 @@ public final class ChaChaEncryptionPlugin implements EncryptionPlugin {
         }
     }
 
-    private Cipher createCipher(int mode, ChaChaIV iv, byte[] key) throws SQLException {
+    private Cipher createCipher(int mode, ChaCha64IV iv, byte[] key) throws SQLException {
         try {
-            var chaChaCipher = Cipher.getInstance(CHA_CHA_20_CIPHER_NAME);
-            chaChaCipher.init(mode, new SecretKeySpec(key, CHA_CHA_20_CIPHER_NAME), iv.toParameterSpec());
+            var chaChaCipher = Cipher.getInstance(CHA_CHA_CIPHER_NAME, provider);
+            chaChaCipher.init(mode, new SecretKeySpec(key, CHA_CHA_CIPHER_NAME), iv.toParameterSpec());
             return chaChaCipher;
         } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
             throw new FbExceptionBuilder().nonTransientException(jb_cryptAlgorithmNotAvailable)
@@ -115,34 +118,29 @@ public final class ChaChaEncryptionPlugin implements EncryptionPlugin {
         }
     }
 
-    private class ChaChaIV implements AutoCloseable {
+    private class ChaCha64IV implements AutoCloseable {
 
         private final byte[] nonce;
-        private int counter;
 
-        ChaChaIV() throws SQLException {
+        ChaCha64IV() throws SQLException {
             byte[] iv = cryptSessionConfig.specificData();
-            if (iv == null || !(iv.length == 12 || iv.length == 16)) {
+            if (iv == null || iv.length != 8) {
                 throw new FbExceptionBuilder().nonTransientException(jb_cryptInvalidKey)
                         .messageParameter(encryptionIdentifier())
-                        .messageParameter("Wrong IV length, needs 12 or 16 bytes")
+                        .messageParameter("Wrong IV length, needs 8 bytes")
                         .toSQLException();
             }
 
-            nonce = Arrays.copyOf(iv, 12);
-            if (iv.length == 16) {
-                counter = (iv[12] << 24) + (iv[13] << 16) + (iv[14] << 8) + iv[15];
-            }
+            nonce = iv.clone();
         }
 
-        ChaCha20ParameterSpec toParameterSpec() {
-            return new ChaCha20ParameterSpec(nonce, counter);
+        IvParameterSpec toParameterSpec() {
+            return new IvParameterSpec(nonce);
         }
 
         @Override
         public void close() {
             Arrays.fill(nonce, (byte) 0);
-            counter = -1;
         }
     }
 

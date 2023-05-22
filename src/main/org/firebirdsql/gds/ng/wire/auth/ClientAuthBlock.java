@@ -34,7 +34,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static java.lang.System.Logger.Level.DEBUG;
-import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -55,7 +54,6 @@ public final class ClientAuthBlock {
     private static final System.Logger log = System.getLogger(ClientAuthBlock.class.getName());
 
     private static final Pattern AUTH_PLUGIN_LIST_SPLIT = Pattern.compile("[ \t,;]+");
-    private static final Map<String, AuthenticationPluginSpi> PLUGIN_MAPPING = getAvailableAuthenticationPlugins();
 
     private final IAttachProperties<?> attachProperties;
     private List<AuthenticationPluginSpi> pluginProviders;
@@ -391,7 +389,7 @@ public final class ClientAuthBlock {
         List<String> requestedPluginNames = getRequestedPluginNames();
         List<AuthenticationPluginSpi> pluginProviders = new ArrayList<>(requestedPluginNames.size());
         for (String pluginName : requestedPluginNames) {
-            AuthenticationPluginSpi pluginSpi = PLUGIN_MAPPING.get(pluginName);
+            AuthenticationPluginSpi pluginSpi = AuthenticationPluginRegistry.getAuthenticationPluginSpi(pluginName);
             if (pluginSpi != null) {
                 pluginProviders.add(pluginSpi);
             } else {
@@ -419,83 +417,4 @@ public final class ClientAuthBlock {
         return Arrays.asList(AUTH_PLUGIN_LIST_SPLIT.split(pluginList));
     }
 
-    // TODO Move plugin loading to separate class?
-
-    private static Map<String, AuthenticationPluginSpi> getAvailableAuthenticationPlugins() {
-        Map<String, AuthenticationPluginSpi> pluginMapping = new HashMap<>();
-        for (AuthenticationPluginSpi pluginSpi : getAvailableAuthenticationPluginSpis()) {
-            String pluginName = pluginSpi.getPluginName();
-            if (!pluginMapping.containsKey(pluginName)) {
-                pluginMapping.put(pluginName, pluginSpi);
-            } else {
-                log.log(WARNING, "Authentication plugin provider for {0} already registered. Skipping {1}", pluginName,
-                        pluginSpi.getClass().getName());
-            }
-        }
-        return Collections.unmodifiableMap(pluginMapping);
-    }
-
-    private static List<AuthenticationPluginSpi> getAvailableAuthenticationPluginSpis() {
-        try {
-            ServiceLoader<AuthenticationPluginSpi> pluginLoader =
-                    ServiceLoader.load(AuthenticationPluginSpi.class, ClientAuthBlock.class.getClassLoader());
-            List<AuthenticationPluginSpi> pluginList = new ArrayList<>();
-            // We can't use foreach here, because the plugins are lazily loaded, which might trigger a ServiceConfigurationError
-            Iterator<AuthenticationPluginSpi> pluginIterator = pluginLoader.iterator();
-            int retry = 0;
-            while (retry < 2) {
-                try {
-                    while (pluginIterator.hasNext()) {
-                        try {
-                            AuthenticationPluginSpi plugin = pluginIterator.next();
-                            pluginList.add(plugin);
-                        } catch (Exception | ServiceConfigurationError e) {
-                            log.log(WARNING, "Can't register plugin; see debug level for stacktrace");
-                            log.log(DEBUG, "Can't register plugin", e);
-                        }
-                    }
-                    break;
-                } catch (ServiceConfigurationError e) {
-                    log.log(ERROR, "Error finding next AuthenticationPluginSpi", e);
-                    retry++;
-                }
-            }
-
-            if (!pluginList.isEmpty()) {
-                return pluginList;
-            } else {
-                log.log(WARNING, "No authentication plugins loaded through service loader, falling back to default list");
-            }
-        } catch (Exception e) {
-            log.log(WARNING, "Unable to load authentication plugins through ServiceLoader, using fallback list; see debug level for stacktrace");
-            log.log(DEBUG, "Unable to load authentication plugins through ServiceLoader, using fallback list", e);
-        }
-        return loadFallbackPluginProviders(ClientAuthBlock.class.getClassLoader());
-    }
-
-    private static List<AuthenticationPluginSpi> loadFallbackPluginProviders(ClassLoader classLoader) {
-        List<AuthenticationPluginSpi> fallbackPluginProviders = new ArrayList<>(6);
-        for (String providerName : new String[] {
-                "org.firebirdsql.gds.ng.wire.auth.legacy.LegacyAuthenticationPluginSpi",
-                "org.firebirdsql.gds.ng.wire.auth.srp.SrpAuthenticationPluginSpi",
-                "org.firebirdsql.gds.ng.wire.auth.srp.Srp224AuthenticationPluginSpi",
-                "org.firebirdsql.gds.ng.wire.auth.srp.Srp256AuthenticationPluginSpi",
-                "org.firebirdsql.gds.ng.wire.auth.srp.Srp384AuthenticationPluginSpi",
-                "org.firebirdsql.gds.ng.wire.auth.srp.Srp512AuthenticationPluginSpi",
-        }) {
-            try {
-                Class<?> clazz = Class.forName(providerName, true, classLoader);
-                AuthenticationPluginSpi provider =
-                        (AuthenticationPluginSpi) clazz.getDeclaredConstructor().newInstance();
-                fallbackPluginProviders.add(provider);
-            } catch (ReflectiveOperationException e) {
-                if (log.isLoggable(WARNING)) {
-                    String message = "Could not load plugin provider " + providerName;
-                    log.log(WARNING, message + "; see debug level for stacktrace");
-                    log.log(DEBUG, message, e);
-                }
-            }
-        }
-        return fallbackPluginProviders;
-    }
 }
