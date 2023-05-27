@@ -70,11 +70,15 @@ public final class GDSExceptionHelper {
      *
      * @param code
      *         Firebird error code
-     * @return instance of <code>GDSExceptionHelper.GDSMessage</code> class where you can set desired parameters.
+     * @return instance of {@code GDSExceptionHelper.GDSMessage} class where you can set desired parameters.
      */
     public static GDSMessage getMessage(int code) {
-        final String message = MESSAGE_LOOKUP.getErrorMessage(code);
-        return new GDSMessage(message != null ? message : "No message for code " + code + " found.");
+        return new GDSMessage(getMessageText(code), code != ISCConstants.isc_formatted_exception);
+    }
+
+    private static String getMessageText(int code) {
+        String message = MESSAGE_LOOKUP.getErrorMessage(code);
+        return message != null ? message : "No message for code " + code + " found.";
     }
 
     /**
@@ -95,7 +99,7 @@ public final class GDSExceptionHelper {
      *         Firebird error code
      * @param defaultSQLState
      *         The default SQLState to return
-     * @return SQL state for the Firebird error code, or <code>defaultSQLState</code> if nothing found.
+     * @return SQL state for the Firebird error code, or {@code defaultSQLState} if nothing found.
      */
     public static String getSQLState(int code, String defaultSQLState) {
         final String sqlState = MESSAGE_LOOKUP.getSqlState(code);
@@ -112,13 +116,25 @@ public final class GDSExceptionHelper {
         private final String template;
         private final String[] params;
         private final List<String> extraParameters = new ArrayList<>();
+        private final boolean includeExtraParameters;
 
         /**
          * Constructs an instance of GDSMessage for the specified template.
          */
         public GDSMessage(String template) {
+            this(template, true);
+        }
+
+        /**
+         * Constructs an instance of GDSMessage for the specified template.
+         *
+         * @param includeExtraParameters
+         *         {@code true} append extra parameters to the end of the message, {@code false} ignore extra parameters
+         */
+        private GDSMessage(String template, boolean includeExtraParameters) {
             this.template = template;
             params = new String[getParamCountInternal(template)];
+            this.includeExtraParameters = includeExtraParameters;
         }
 
         /**
@@ -192,9 +208,11 @@ public final class GDSExceptionHelper {
                 messageBuffer.append(parameterValue != null ? parameterValue : "(null)");
             }
             matcher.appendTail(messageBuffer);
-            // Include extra parameters at the end of the message
-            for (String extraParameter : extraParameters) {
-                messageBuffer.append("; ").append(extraParameter);
+            if (includeExtraParameters) {
+                // Include extra parameters at the end of the message
+                for (String extraParameter : extraParameters) {
+                    messageBuffer.append("; ").append(extraParameter);
+                }
             }
 
             return messageBuffer.toString();

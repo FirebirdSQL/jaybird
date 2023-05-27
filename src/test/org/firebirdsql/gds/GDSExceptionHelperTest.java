@@ -97,4 +97,14 @@ class GDSExceptionHelperTest {
 
         assertEquals("Context variable 'Parameter 1' is not found in namespace 'Parameter 2'", message.toString());
     }
+
+    @Test
+    void extraParametersOfFormattedExceptionIgnored() {
+        /* Formatted exception are already formatted on the server, but the server also sends the format parameters to
+           the client. The normal rendering includes extra parameters in the message, but here it doesn't make sense */
+        var message = GDSExceptionHelper.getMessage(ISCConstants.isc_formatted_exception);
+        message.setParameters(List.of("Already formatted exception", "original parameter 1", "original parameter 2"));
+
+        assertEquals("Already formatted exception", message.toString());
+    }
 }

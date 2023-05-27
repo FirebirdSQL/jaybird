@@ -828,7 +828,7 @@ class FBStatementTest {
 
         try (Statement stmt = con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class, () ->
-                    //@formatter:off
+                            //@formatter:off
                     stmt.execute(
                         "EXECUTE BLOCK AS " +
                         "BEGIN " +
@@ -912,9 +912,9 @@ class FBStatementTest {
     void verifySingletonStatementWithException() throws Exception {
         // @formatting:off
         executeDDL(con, "create procedure singleton_error returns (intresult int) as "
-                + "begin "
-                + "  execute statement 'select cast(''x'' as integer) from rdb$database' into intresult;"
-                + "end");
+                        + "begin "
+                        + "  execute statement 'select cast(''x'' as integer) from rdb$database' into intresult;"
+                        + "end");
         // @formatting:on
         try (Statement stmt = con.createStatement()) {
             assertThrows(SQLException.class, () -> stmt.execute("execute procedure singleton_error"));
@@ -1093,6 +1093,29 @@ class FBStatementTest {
             assertAll(
                     () -> assertEquals("A    ", rs.getObject(1), "Unexpected trim by getObject"),
                     () -> assertEquals("A    ", rs.getString(1), "Unexpected trim by getString"));
+        }
+    }
+
+    /**
+     * Tests rendering of PSQL exception with parameters ({@code isc_formatted_exception}).
+     * <p>
+     * Companion to {@code GDSExceptionHelperTest#extraParametersOfFormattedExceptionIgnored()}
+     * </p>
+     */
+    @Test
+    void psqlExceptionWithParametersRendering() throws Exception {
+        try (var stmt = con.createStatement()) {
+            stmt.execute("create exception ex_param 'something wrong in @1'");
+            SQLException sqle = assertThrows(SQLException.class, () -> stmt.execute("""
+                     execute block as
+                     begin
+                        exception ex_param using('PARAMETER_1');
+                     end
+                     """));
+            assertThat(sqle, message(allOf(
+                    startsWith("exception 1; EX_PARAM; something wrong in PARAMETER_1"),
+                    // The exception parameter value should not be repeated after the formatted message
+                    not(containsString("something wrong in PARAMETER_1; PARAMETER_1")))));
         }
     }
 
