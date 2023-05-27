@@ -11,7 +11,7 @@ version = project.'version.maven'
 dependencies {
     // NOTE: ':' represents the root module, which contains the main Jaybird driver
     api project(':')
-    implementation libs.jna
+    api libs.jna
 
     compileOnly libs.bundles.servlet.api
 
