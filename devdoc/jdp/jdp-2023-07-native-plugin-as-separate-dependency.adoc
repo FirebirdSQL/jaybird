@@ -1,0 +1,31 @@
+= jdp-2023-07: Native Plugin as Separate Dependency
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+The default and -- as far as we are aware -- most common use of Jaybird is as a pure Java (Type 4) JDBC driver.
+Jaybird also provides a native (Type 2) protocol which allows use of `fbclient.dll`/`libfbclient.so` as the connection layer to a remote Firebird server, or to a Firebird Embedded instance.
+
+== Decision
+
+The native protocols (`NATIVE` and `EMBEDDED`) are split off to a separate dependency, `jaybird-native`.
+The plugin JAR will use automatic module name `org.firebirdsql.jna` in preparation for future modularization.
+
+== Consequences
+
+The main Jaybird dependency -- `org.firebirdsql.jdbc:jaybird` -- will *only* provide the pure Java protocol.
+Support for native and embedded will only be available if the `org.firebirdsql.jdbc:jaybird-native` artifact is on the classpath.
+
+The plugin JAR will be included in the distribution zip, together with its sources and javadoc JARs.
+Given the javadoc of the plugin is not that interesting, the unpacked javadoc of the plugin will not be included in the `docs` directory.
+
+Given the structure of tests and the test infrastructure, the main Jaybird tests will depend on the `jaybird-native` module, and most -- if not all -- tests for the `jaybird-native` plugin will remain in the main module.
+This might be something to change in the future, e.g. by introducing a common module for tests.
