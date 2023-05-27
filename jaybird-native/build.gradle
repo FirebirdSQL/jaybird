@@ -1,0 +1,225 @@
+plugins {
+    id 'java-library'
+    id 'nu.studer.credentials' version '3.0'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group = 'org.firebirdsql.jdbc'
+version = project.'version.maven'
+
+dependencies {
+    // NOTE: ':' represents the root module, which contains the main Jaybird driver
+    api project(':')
+    implementation libs.jna
+
+    compileOnly libs.bundles.servlet.api
+
+    // Use JUnit Jupiter API for testing.
+    testImplementation platform(testLibs.junit.bom)
+    testImplementation testLibs.bundles.junit
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes(
+                'Created-By': "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+                'Implementation-Title': 'Jaybird Native GDS Factory Plugin',
+                'Implementation-Url': project.'implementation.url',
+                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'})",
+                'Implementation-Vendor': project.'implementation.vendor',
+                'Implementation-Vendor-Id': project.'implementation.vendor.id',
+                'Automatic-Module-Name': 'org.firebirdsql.jna'
+        )
+    }
+}
+
+javadoc {
+    options.author()
+    options.windowTitle = "$project.capitalizedName Native GDS Factory Plugin ${project.'version.maven'} "
+    options.docTitle = "$project.capitalizedName Native GDS Factory Plugin ${project.'version.maven'}"
+    options.bottom = "Copyright &copy; 2001-${project.YEAR} Jaybird (Firebird JDBC) team. All rights reserved."
+    def currentJavaVersion = JavaVersion.current()
+    options.addBooleanOption('html5', true)
+    options.addBooleanOption('Xdoclint:none', true)
+}
+
+publishing {
+    publications {
+        // jaybird-native maven artifact
+        jaybirdNative(MavenPublication) {
+            from components.java
+            suppressPomMetadataWarningsFor 'nativeApiElements'
+            suppressPomMetadataWarningsFor 'nativeRuntimeElements'
+            pom {
+                name = 'Jaybird Native GDS Factory Plugin'
+                packaging = 'jar'
+                description = 'Native GDS Factory Plugin for Jaybird JDBC Driver'
+                url = 'https://www.firebirdsql.org/en/devel-jdbc-driver/'
+                inceptionYear = '2001'
+
+                developers {
+                    developer {
+                        id = 'mrotteveel'
+                        name = 'Mark Rotteveel'
+                        email = 'mark@lawinegevaar.nl'
+                        roles = ['Administrator', 'Developer']
+                    }
+                    developer {
+                        id = 'rrokytskyy'
+                        name = 'Roman Rokytskyy'
+                        roles = ['Developer']
+                    }
+                    developer {
+                        id = 'd_jencks'
+                        name = 'David Jencks'
+                        roles = ['Developer']
+                    }
+                    developer {
+                        id = 'brodsom'
+                        name = 'Blas Rodriguez Somoza'
+                        roles = ['Developer']
+                    }
+                    developer {
+                        id = 'gab_reid'
+                        name = 'Gabriel Reid'
+                        roles = ['Developer']
+                    }
+                    developer {
+                        id = 'ryanbaldwin'
+                        name = 'Ryan Baldwin'
+                        roles = ['Developer']
+                    }
+                    developer {
+                        id = 'sjardine'
+                        name = 'Steven Jardine'
+                        roles = ['Developer']
+                    }
+                    developer {
+                        id = 'alberola'
+                        name = 'Alejandro Alberola Arias'
+                        roles = ['Developer']
+                    }
+                    developer {
+                        id = 'rfincher'
+                        name = 'Rick Fincher'
+                        roles = ['Developer']
+                    }
+                    developer {
+                        id = 'skywalker'
+                        name = 'Mark ODonohue'
+                        roles = ['Developer']
+                    }
+                    developer {
+                        id = 'skidder'
+                        name = 'Nikolay Samofatov'
+                        roles = ['Developer']
+                    }
+                    developer {
+                        id = 'lorban'
+                        name = 'Ludovic Orban'
+                        roles = ['Developer']
+                    }
+                    developer {
+                        id = 'tsteinmaurer'
+                        name = 'Thomas Steinmaurer'
+                        roles = ['Developer']
+                    }
+                }
+
+                contributors {
+                    contributor {
+                        name = 'Smyatkin-Maxim'
+                        url = 'https://github.com/Smyatkin-Maxim'
+                    }
+                    contributor {
+                        name = 'Hajime Nakagami'
+                        url = 'https://github.com/nakagami'
+                    }
+                    contributor {
+                        name = 'Vjacheslav Borisov'
+                        url = 'https://github.com/slavb18'
+                    }
+                    contributor {
+                        name = 'Ivan Arabadzhiev'
+                        url = 'https://github.com/ls4f'
+                    }
+                    contributor {
+                        name = 'Artyom Smirnov'
+                        url = 'https://github.com/artyom-smirnov'
+                    }
+                    contributor {
+                        name = 'Vasiliy Yashkov'
+                        url = 'https://github.com/vasiliy-yashkov'
+                    }
+                    contributor {
+                        name = 'Julien Nabet'
+                        url = 'https://github.com/serval2412'
+                    }
+                }
+
+                mailingLists {
+                    mailingList {
+                        name = 'firebird-java'
+                        subscribe = 'firebird-java+subscribe@googlegroups.com'
+                        unsubscribe = 'firebird-java+unsubscribe@googlegroups.com'
+                        post = 'firebird-java@googlegroups.com'
+                        archive = 'https://groups.google.com/g/firebird-java'
+                        otherArchives = ['http://fb-list-archive.s3-website-eu-west-1.amazonaws.com/firebird-java/index.html']
+                    }
+                }
+
+                licenses {
+                    license {
+                        name = 'GNU Lesser General Public License'
+                        url = 'https://www.gnu.org/copyleft/lesser.html'
+                        distribution = 'repo'
+                        comments = 'The Jaybird JDBC driver is distributed free of charge under the ' +
+                                'GNU Lesser General Public License (LGPL). Text of the license can be ' +
+                                'obtained from https://www.gnu.org/copyleft/lesser.html'
+                    }
+                    license {
+                        name = 'Modified BSD (3-clause) License'
+                        url = 'https://opensource.org/licenses/BSD-3-Clause'
+                        distribution = 'repo'
+                        comments = 'The extension interfaces of Jaybird are defined under a modified BSD license'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:https://github.com/FirebirdSQL/jaybird.git'
+                    developerConnection = 'scm:git:https://github.com/FirebirdSQL/jaybird.git'
+                    url = 'https://github.com/FirebirdSQL/jaybird'
+                }
+
+                issueManagement {
+                    system = 'GitHub'
+                    url = 'https://github.com/FirebirdSQL/jaybird/issues/'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = project.isReleaseVersion.get() ? project.releaseRepository : project.snapshotRepository
+            credentials {
+                username = findProperty('ossrhUsername') ?: null
+                password = findProperty('ossrhPassword') ?: null
+            }
+        }
+    }
+}
+
+signing {
+    required { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
+    sign publishing.publications.jaybirdNative
+}

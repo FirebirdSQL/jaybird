@@ -69,10 +69,7 @@ public final class GDSFactory {
     private static GDSType defaultType;
 
     static {
-        PluginLoader.findPlugins(GDSFactoryPlugin.class, List.of(
-                "org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin"))
+        PluginLoader.findPlugins(GDSFactoryPlugin.class, List.of("org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin"))
                 .forEach(GDSFactory::registerPlugin);
 
         GDSType pureJavaType = GDSType.getType(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME);

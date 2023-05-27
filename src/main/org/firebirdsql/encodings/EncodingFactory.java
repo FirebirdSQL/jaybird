@@ -21,8 +21,6 @@ package org.firebirdsql.encodings;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
-import org.firebirdsql.gds.ng.jna.BigEndianDatatypeCoder;
-import org.firebirdsql.gds.ng.jna.LittleEndianDatatypeCoder;
 import org.firebirdsql.jaybird.util.PluginLoader;
 
 import java.lang.reflect.Constructor;
@@ -332,10 +330,6 @@ public final class EncodingFactory implements IEncodingFactory {
         // Avoid reflection if we can:
         if (datatypeCoderClass == DefaultDatatypeCoder.class) {
             return (T) new DefaultDatatypeCoder(encodingFactory);
-        } else if (datatypeCoderClass == LittleEndianDatatypeCoder.class) {
-            return (T) new LittleEndianDatatypeCoder(encodingFactory);
-        } else if (datatypeCoderClass == BigEndianDatatypeCoder.class) {
-            return (T) new BigEndianDatatypeCoder(encodingFactory);
         } else {
             try {
                 Constructor<T> datatypeCoderConstructor = datatypeCoderClass.getConstructor(IEncodingFactory.class);

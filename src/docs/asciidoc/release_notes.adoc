@@ -160,14 +160,14 @@ To enable the "`ChaCha64`" wire encryption support, also add:
 </dependency>
 ----
 
-If you want to use Type 2 support (native or embedded), you need to explicitly include JNA 5.12.1 as a dependency:
+If you want to use Type 2 support (native or embedded), you need to explicitly add `jaybird-native` as a dependency:
 
 [source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
-    <groupId>net.java.dev.jna</groupId>
-    <artifactId>jna</artifactId>
-    <version>{jna-version}</version>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-native</artifactId>
+    <version>{version_example}</version>
 </dependency>
 ----
 
@@ -213,7 +213,18 @@ When your Jaybird dependency defines the exclusion for `javax.resource:connector
 
 For more detailed instructions, see also the information on Maven in <<getting-jaybird-6>>.
 
-If you use native or embedded, make sure to update your JNA dependency to version 5.12.1 (Jaybird 6 requires at least JNA 5.12).
+If you use native or embedded, you now need to explicitly add `jaybird-native` as a dependency:
+
+[source,xml,subs="verbatim,attributes"]
+----
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-native</artifactId>
+    <version>{version_example}</version>
+</dependency>
+----
+
+If you use native or embedded, make sure to update your JNA dependency to version {jna-version}, or remove it altogether as the dependencies will be pulled in through the `jaybird-native` artifact.
 
 [source,xml,subs="verbatim,attributes"]
 ----
@@ -231,6 +242,9 @@ If you manage your dependencies manually, you need to do the following:
 
 . Replace the Jaybird 5 library with the Jaybird 6 version
 ** `jaybird-5.0.x.<java>.jar` with `jaybird-{version_wo_target}.jar`
+. If you use the NATIVE or EMBEDDED protocols, add the following JARs to the classpath
+** `jaybird-native-{version_wo_target}.jar`
+** `jna-{jna-version}.jar` (if you have an older version of JNA, replace it)
 . To enable "`ChaCha64`" wire encryption support add the following JARs to the classpath
 ** `chacha64-plugin-{version_wo_target}.jar`
 ** `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip
@@ -294,10 +308,19 @@ See also <<support-for-firebird-25-dropped>>.
 
 Jaybird 6 supports Firebird version 3.0, 4.0, and provides tentative support for Firebird 5.0.
 
+[#native-plugin]
+=== NATIVE and EMBEDDED support moved to separate artifact
+
+The NATIVE (JDBC URL prefix `++jdbc:firebird[sql]:native:++`) and EMBEDDED (JDBC URL prefix `++jdbc:firebird[sql]:embedded:++`) protocol implementations have been moved to a separate artifact, `org.firebirdsql.jdbc:jaybird-native`.
+
+If you use native or embedded connections using Jaybird, you will need to explicitly add the appropriate Maven dependency (or `jaybird-native-{version_wo_target}.jar` and `jna-{jna-version}.jar`) to your classpath.
+
+See also <<getting-jaybird-6>>.
+
 [#ooremote-removed]
 === OOREMOTE (OpenOffice/LibreOffice driver) removed
 
-The OOREMOTE protocol (JDBC URL prefix `jdbc:firebird:oo` and `jdbc:firebirdsql:oo`) has been removed in Jaybird 6.
+The OOREMOTE protocol (JDBC URL prefix `++jdbc:firebird[sql]:oo:++`) has been removed in Jaybird 6.
 
 See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal^].
 
@@ -327,7 +350,7 @@ This specifically concerns:
 +
 There is no such buffer for the reverse (encryption), as this is already handled by the general output buffer.
 
-This change might not be desirable in all situations (e.g. it increases the total amount of memory per connection), or there can be reasons to further increase these buffers.
+This change might not be desirable in all situations as it increases the total amount of memory per connection, or there can be reasons to further increase these buffers.
 To address this, we have added _system properties_ to configure a number of buffers which were previously not configurable:
 
 `org.firebirdsql.wire.deflateBufferSize`::
@@ -568,10 +591,18 @@ You will need to upgrade to Java 17 or higher, or remain on Jaybird 5.
 
 Jaybird 5 will serve as a form of "`long-term support`" for Java 8 and 11, with maintenance releases at least until the release of Jaybird 7.
 
+[#support-native-embedded]
+=== Native and embedded require extra artifact
+
+The main `jaybird` artifact no longer provides native and embedded support.
+Add the `jaybird-native` artifact if you use native or embedded (JDBC URL prefix `++jdbc:firebird[sql]:native:++` or `++jdbc:firebird[sql]:embedded:++`).
+
+See also <<native-plugin>>.
+
 [#support-ooremote-dropped]
 === Support for jdbc:firebirdsql:oo: (OpenOffice/LibreOffice driver) dropped
 
-The OOREMOTE protocol (JDBC URL prefix `jdbc:firebird:oo` and `jdbc:firebirdsql:oo`) has been removed in Jaybird 6.
+The OOREMOTE protocol (JDBC URL prefix `++jdbc:firebird[sql]:oo:++`) has been removed in Jaybird 6.
 
 The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
 
@@ -817,17 +848,18 @@ use `isc_sql_dialect_conflict_num`
 [#type-2-native-and-embedded-driver]
 === Type 2 (native) and embedded driver
 
-Jaybird uses JNA to access the client library.
-If you want to use the Type 2 driver, or Firebird embedded, then you need to include `jna-{jna-version}.jar` on the classpath.
+Since Jaybird 6, the native and embedded part of the driver has been moved to a separate artifact, `jaybird-native`.
+The Jaybird Native GDS Factory plugin uses JNA to access the client library.
+If you want to use the Type 2 driver, or Firebird embedded, then you need to include `jaybird-native-{version_example}` and `jna-{jna-version}.jar` on the classpath.
 
-When using Maven, you need to specify the dependency on JNA yourself, as we don't depend on it by default (it is specified as an optional dependency):
+When using Maven, you need to specify the dependency on `jaybird-native`:
 
 [source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
-    <groupId>net.java.dev.jna</groupId>
-    <artifactId>jna</artifactId>
-    <version>{jna-version}</artifactId>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-native</artifactId>
+    <version>{version_example}</version>
 </dependency>
 ----
 
@@ -845,4 +877,4 @@ Be aware that this dependency does not support `embedded`.
 </dependency>
 ----
 
-In the future we will move the Type 2 support to a separate library and provide JNA-compatible jars that provide the embedded libraries of a specific Firebird version.
+In the future we may provide JARs with the embedded libraries of a specific Firebird version.

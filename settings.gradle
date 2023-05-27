@@ -35,4 +35,5 @@ dependencyResolutionManagement {
         }
     }
 }
+include 'jaybird-native'
 
