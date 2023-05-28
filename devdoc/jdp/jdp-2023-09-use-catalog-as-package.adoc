@@ -63,19 +63,19 @@ As mentioned earlier, we think it is more likely that Firebird will introduce _s
 
 When `useCatalogAsPackage` is enabled, `DatabaseMetaData` will exhibit the following behaviour:
 
-* `getCatalogs()` list packages, with package names in `TABLE_CAT`.
+* `getCatalogs()` lists packages, with package names in `TABLE_CAT`.
 * `getFunctions`, `getFunctionColumns`, `getProcedures`, and `getProcedureColumns` include information on procedures and functions in packages
 ** Normal (non-packaged) procedures and functions report their catalog as empty string instead of `null` (because of the following rule)
 ** If `catalog` is ``""`` (empty string), only normal stored procedures and stored functions are reported.
 ** If `catalog` is `null`, only both packaged and normal stored procedures and stored functions are reported.
 ** If `catalog` is not `null` and not an empty string, these metadata methods will only return procedures, functions, or their columns of the specified package (exact match, case-sensitive, not a `LIKE` pattern)
-* `getCatalogSeparator()` will return `"."` (string with period).
-* `getCatalogTerm` will return `"PACKAGE"`.
-* `isCatalogAtStart()` will return `true`.
-* `getMaxCatalogNameLength()` will return 31 or 63 depending on the max identifier length of the database.
-* `supportsCatalogsInDataManipulation()` will return `true` (i.e. access selectable stored procedures and functions).
-* `supportsCatalogsInProcedureCalls()` will return `true`.
-* The other `supportsCatalogsIn__type__()` methods will return `false`.
-* Other metadata methods with a `catalog` parameter will continue to ignore it, just like they do when `useCatalogAsPackage` is disabled.
+* `getCatalogSeparator()` returns `"."` (string with period).
+* `getCatalogTerm` returns `"PACKAGE"`.
+* `isCatalogAtStart()` returns `true`.
+* `getMaxCatalogNameLength()` returns 31 or 63 depending on the max identifier length of the database.
+* `supportsCatalogsInDataManipulation()` returns `true` (i.e. access selectable stored procedures and functions).
+* `supportsCatalogsInProcedureCalls()` returns `true`.
+* The other `supportsCatalogsIn__type__()` methods continue to return `false`.
+* Other metadata methods with a `catalog` parameter continue to ignore it, just like they do when `useCatalogAsPackage` is disabled.
 
 The `useCatalogAsPackage` connection property does not result in any other behaviour.
