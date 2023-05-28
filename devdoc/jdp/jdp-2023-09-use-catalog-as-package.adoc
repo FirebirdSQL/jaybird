@@ -67,7 +67,7 @@ When `useCatalogAsPackage` is enabled, `DatabaseMetaData` will exhibit the follo
 * `getFunctions`, `getFunctionColumns`, `getProcedures`, and `getProcedureColumns` include information on procedures and functions in packages
 ** Normal (non-packaged) procedures and functions report their catalog as empty string instead of `null` (because of the following rule)
 ** If `catalog` is ``""`` (empty string), only normal stored procedures and stored functions are reported.
-** If `catalog` is `null`, only both packaged and normal stored procedures and stored functions are reported.
+** If `catalog` is `null`, both packaged and normal stored procedures and stored functions are reported.
 ** If `catalog` is not `null` and not an empty string, these metadata methods will only return procedures, functions, or their columns of the specified package (exact match, case-sensitive, not a `LIKE` pattern)
 * `getCatalogSeparator()` returns `"."` (string with period).
 * `getCatalogTerm` returns `"PACKAGE"`.
