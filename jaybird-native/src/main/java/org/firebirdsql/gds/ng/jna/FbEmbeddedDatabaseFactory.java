@@ -44,12 +44,21 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 3.0
  */
-public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
+public final class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
 
     private static final System.Logger log = System.getLogger(FbEmbeddedDatabaseFactory.class.getName());
-    // Note Firebird 3 embedded is fbclient + engine12
-    private static final List<String> LIBRARIES_TO_TRY = List.of("fbembed", "fbclient");
+    // Note Firebird 3+ embedded is fbclient + engineNN (e.g. engine12 for Firebird 3.0 / ODS 12)
+    private static final List<String> LIBRARIES_TO_TRY =
+            List.of("fbembed", FbClientDatabaseFactory.LIBRARY_NAME_FBCLIENT);
     private static final FbEmbeddedDatabaseFactory INSTANCE = new FbEmbeddedDatabaseFactory();
+
+    private FbEmbeddedDatabaseFactory() {
+        // only through getInstance()
+    }
+
+    public static FbEmbeddedDatabaseFactory getInstance() {
+        return INSTANCE;
+    }
 
     @Override
     protected <T extends IAttachProperties<T>> T filterProperties(T attachProperties) {
@@ -59,8 +68,9 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
         return attachPropertiesCopy;
     }
 
-    public static FbEmbeddedDatabaseFactory getInstance() {
-        return INSTANCE;
+    @Override
+    protected Collection<String> defaultLibraryNames() {
+        return LIBRARIES_TO_TRY;
     }
 
     @Override

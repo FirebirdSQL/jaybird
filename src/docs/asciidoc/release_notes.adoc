@@ -527,6 +527,26 @@ We can then look at stabilizing the API and considering it formally a public API
 
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-06-chacha64-support.adoc[jdp-2023-06: ChaCha64 Support^]
 
+[#native-library-path]
+=== Connection Property to Specify Native Library Path
+
+A connection property `nativeLibraryPath` was added to specify the _directory_ where `fbclient` (for native connections), or `fbembed` or `fbclient` (for embedded connections) can be loaded.
+If a file path is used instead of a directory path, the parent directory will be used for the search path.
+In other words, it is not possible to use it load a differently named library.
+
+[CAUTION]
+====
+This property comes with a very important caveat: it only works for the first native or embedded connection (to a database or service) made within a JVM.
+Once any library is loaded, that library is used for all subsequent native and embedded connections.
+====
+
+This property is only exposed as a JDBC property.
+For data sources, it needs to be set with `setProperty(String, String)` or `setNonStandardProperty(String)`.
+
+The primary use case for this property is for situations where configuring the system property `jna.library.path` is not easy to do (e.g. in third-party applications).
+
+For embedded connections, if there is a valid `FirebirdEmbeddedProvider` on the classpath, it will be used instead of the location specified by `nativeLibraryPath`.
+
 // TODO add major changes
 
 [#potentially-breaking-changes]
@@ -763,6 +783,9 @@ Most of its implementation was removed, and it now extends `SQLException`.
 Only the constructors `GDSException(int)`, `GDSException(int, Throwable)` and `GDSException(String)` were retained.
 All other constructors and methods have been removed.
 * `WireGDSFactoryPlugin`, `NativeGDSFactoryPlugin` and `EmbeddedGDSFactoryPlugin` are now final
+* `FbEmbeddedDatabaseFactory` is now final
+* `FbClientDatabaseFactory` and `FbEmbeddedDatabaseFactory` now have a private constructor;
+use their static `getInstance()` method to obtain an instance
 * `DefaultDatatypeCoder.intToBytes(int)` was removed;
 use `encodeInt(int)`
 * `ChaChaEncryptionPlugin` and `ChaChaEncryptionPluginSpi` are now final

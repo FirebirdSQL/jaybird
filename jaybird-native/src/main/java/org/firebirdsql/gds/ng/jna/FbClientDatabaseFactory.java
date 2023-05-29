@@ -23,6 +23,9 @@ import com.sun.jna.Platform;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbDatabaseFactory} for establishing connection using the
  * Firebird native client library.
@@ -36,6 +39,11 @@ import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 public final class FbClientDatabaseFactory extends AbstractNativeDatabaseFactory {
 
     private static final FbClientDatabaseFactory INSTANCE = new FbClientDatabaseFactory();
+    static final String LIBRARY_NAME_FBCLIENT = "fbclient";
+
+    private FbClientDatabaseFactory() {
+        // only through getInstance()
+    }
 
     public static FbClientDatabaseFactory getInstance() {
         return INSTANCE;
@@ -45,13 +53,18 @@ public final class FbClientDatabaseFactory extends AbstractNativeDatabaseFactory
     protected FbClientLibrary createClientLibrary() {
         try {
             if (Platform.isWindows()) {
-                return Native.load("fbclient", WinFbClientLibrary.class);
+                return Native.load(LIBRARY_NAME_FBCLIENT, WinFbClientLibrary.class);
             } else {
-                return Native.load("fbclient", FbClientLibrary.class);
+                return Native.load(LIBRARY_NAME_FBCLIENT, FbClientLibrary.class);
             }
         } catch (RuntimeException | UnsatisfiedLinkError e) {
             throw new NativeLibraryLoadException("Could not load fbclient", e);
         }
+    }
+
+    @Override
+    protected Collection<String> defaultLibraryNames() {
+        return List.of(LIBRARY_NAME_FBCLIENT);
     }
 
 }

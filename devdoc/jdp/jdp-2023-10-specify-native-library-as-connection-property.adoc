@@ -2,12 +2,12 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 6
+* Published: 2023-05-29
+* Implemented in: Jaybird 6
 
 == Context
 
-When using native or embedded connections with Jaybird (JDBC URL prefixes `++jdbc:firebird[sql]:{native|embedded}:++`), Jaybird needs to load the native client library, `fbclient.dll`, `libfbclient.so`, `fbembed.dll` or `libfbembed.so`.
+When using native or embedded connections with Jaybird (JDBC URL prefixes `++jdbc:firebird[sql]:{native|embedded}:++`), Jaybird needs to load the native client library, `fbclient.dll`, `libfbclient.so`, `fbembed.dll` or `libfbembed.so` (as library names `fbclient` and `fbembed`).
 
 To load this library, it uses (not necessarily in this order):
 

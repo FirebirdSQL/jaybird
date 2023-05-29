@@ -18,15 +18,22 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import com.sun.jna.NativeLibrary;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static java.lang.System.Logger.Level.TRACE;
 import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.registerNativeResource;
 
 /**
@@ -42,6 +49,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
 
     @Override
     public JnaDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
+        configureSearchPath(connectionProperties);
         try {
             final JnaDatabaseConnection jnaDatabaseConnection = new JnaDatabaseConnection(getClientLibrary(),
                     filterProperties(connectionProperties));
@@ -56,6 +64,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
 
     @Override
     public JnaService serviceConnect(IServiceProperties serviceProperties) throws SQLException {
+        configureSearchPath(serviceProperties);
         try {
             final JnaServiceConnection jnaServiceConnection = new JnaServiceConnection(getClientLibrary(),
                     filterProperties(serviceProperties));
@@ -160,6 +169,54 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
      */
     protected <T extends IAttachProperties<T>> T filterProperties(T attachProperties) {
         return attachProperties;
+    }
+
+    /**
+     * @return the default library names loaded by this factory
+     */
+    protected abstract Collection<String> defaultLibraryNames();
+
+    private void configureSearchPath(IAttachProperties<?> connectionProperties) {
+        // library already loaded (will check again under read lock below)
+        if (resource != null) return;
+        // NOTE: Although this configuration happens per native database factory, in practice the first one used "wins"
+        String nativeLibraryPath = connectionProperties.getProperty(PropertyNames.nativeLibraryPath);
+        if (nativeLibraryPath == null || nativeLibraryPath.isBlank()) return;
+        String pathForJna = resolvePathForJna(nativeLibraryPath);
+        if (pathForJna == null) return;
+
+        Lock readLock = rwLock.readLock();
+        readLock.lock();
+        try {
+            if (resource != null) return;
+            for (String library : defaultLibraryNames()) {
+                NativeLibrary.addSearchPath(library, pathForJna);
+            }
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    private String resolvePathForJna(String nativeLibraryPath) {
+        var log = System.getLogger(getClass().getName());
+        try {
+            Path actualPath = Path.of(nativeLibraryPath).toAbsolutePath();
+            if (Files.isRegularFile(actualPath)) {
+                actualPath = actualPath.getParent();
+                log.log(TRACE, "nativeLibraryPath ''{0}'' was a file, using parent ''{1}''", nativeLibraryPath,
+                        actualPath);
+            }
+            if (!Files.isDirectory(actualPath)) {
+                log.log(TRACE, "nativeLibraryPath ''{0}'' does not resolve to an existing directory ({1})",
+                        nativeLibraryPath, actualPath);
+                return null;
+            }
+            log.log(TRACE, "resolved nativeLibraryPath ''{0}'' to path ''{1}''", nativeLibraryPath, actualPath);
+            return actualPath.toString();
+        } catch (InvalidPathException e) {
+            log.log(TRACE, "nativeLibraryPath ''{0}'' is not a valid path: {1}", nativeLibraryPath, e);
+            return null;
+        }
     }
 
 }
