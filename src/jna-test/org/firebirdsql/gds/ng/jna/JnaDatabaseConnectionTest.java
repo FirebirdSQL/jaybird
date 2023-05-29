@@ -23,7 +23,6 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
