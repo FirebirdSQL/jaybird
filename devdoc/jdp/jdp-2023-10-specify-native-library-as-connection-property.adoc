@@ -1,0 +1,47 @@
+= jdp-2023-10: Specify Native Library as Connection Property
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+
+== Context
+
+When using native or embedded connections with Jaybird (JDBC URL prefixes `++jdbc:firebird[sql]:{native|embedded}:++`), Jaybird needs to load the native client library, `fbclient.dll`, `libfbclient.so`, `fbembed.dll` or `libfbembed.so`.
+
+To load this library, it uses (not necessarily in this order):
+
+* the system property `jna.library.path`,
+* the `FirebirdEmbeddedProvider` (for embedded connections),
+* the JNA classpath loader (which locates libraries on the classpath and extracts them to a temporary location),
+* the application directory,
+* the `PATH` (on Windows),
+* the `LD_LIBRARY_PATH` (on Linux)
+
+The first library to be loaded is used for all native and embedded connections.
+As such, it is not possible to configure this _per connection_.
+
+Unfortunately, it is not always obvious or easy to configure this, especially not when using Jaybird in a third-party application.
+
+== Decision
+
+Although it will not work as a _per connection_ property, we'll add a connection property `nativeLibraryPath`, which will take a single directory containing the library.
+If a file is specified instead of a directory, Jaybird will use the directory containing the file.
+The property is only used for the first native or embedded connection established, or more precisely, it will not have any effect once a library has been loaded.
+
+The property will be defined as a JDBC property only, and will not be added as a property on data sources.
+For use on data sources, it will need to be set using `setProperty(String, String)` or `setNonStandardProperty(String)`.
+
+=== Rejected alternatives
+
+The following solutions were considered by rejected
+
+* Giving the connection property an obscure name like `iknowwhatimdoing01`
++
+Using an explicit and clear name is preferred for understandability, even if it might give the wrong impression.
+
+== Consequences
+
+If `nativeLibraryPath` is specified for the first (and only the first) native or embedded connection (as indicated by the client resource of the database factory being `null`), and it contains a valid, _existing_ directory or file path, it (or in the case of a file, its parent directory) will be added to the JNA search path using `com.sun.jna.NativeLibrary.addSearchPath` for the library name(s) loaded by the specific `AbstractNativeDatabaseFactory`.
+
+NOTE: Although this will be done per database factory, globally the first library loaded still "`wins`".
