@@ -21,7 +21,6 @@ package org.firebirdsql.gds.ng.jna;
 import com.sun.jna.NativeLibrary;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
 import java.nio.file.Files;
@@ -180,7 +179,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
         // library already loaded (will check again under read lock below)
         if (resource != null) return;
         // NOTE: Although this configuration happens per native database factory, in practice the first one used "wins"
-        String nativeLibraryPath = connectionProperties.getProperty(PropertyNames.nativeLibraryPath);
+        String nativeLibraryPath = connectionProperties.getProperty(NativePropertyNames.nativeLibraryPath);
         if (nativeLibraryPath == null || nativeLibraryPath.isBlank()) return;
         String pathForJna = resolvePathForJna(nativeLibraryPath);
         if (pathForJna == null) return;

@@ -76,6 +76,15 @@ class ConnectionPropertyRegistryTest {
     }
 
     @Test
+    void verifyPropertiesOfJaybirdNative() {
+        var connectionPropertyRegistry = ConnectionPropertyRegistry.getInstance();
+
+        // Tests a property registered by NativeConnectionPropertyDefiner in jaybird-native
+        assertThat(connectionPropertyRegistry.getRegisteredNames())
+                .contains("nativeLibraryPath");
+    }
+
+    @Test
     void getByName_returnsKnownProperty() {
         Map<String, ConnectionProperty> props = new HashMap<>();
         ConnectionProperty connectionProperty = connectionProperty();

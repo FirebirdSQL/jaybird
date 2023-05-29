@@ -103,7 +103,7 @@ class JnaDatabaseConnectionTest {
 
     @SuppressWarnings("EmptyTryBlock")
     private File getActualLibraryFile(File libraryFile) {
-        connectionInfo.setProperty(PropertyNames.nativeLibraryPath, libraryFile.toString());
+        connectionInfo.setProperty(NativePropertyNames.nativeLibraryPath, libraryFile.toString());
         // Connect will fail, but should initialize the library
         try (var ignored = factory.connect(connectionInfo)) {
             //ignored
