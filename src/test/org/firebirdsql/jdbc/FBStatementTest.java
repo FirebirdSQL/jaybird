@@ -1104,6 +1104,8 @@ class FBStatementTest {
      */
     @Test
     void psqlExceptionWithParametersRendering() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsParameterizedExceptions(),
+                "test requires parameterized exception support");
         try (var stmt = con.createStatement()) {
             stmt.execute("create exception ex_param 'something wrong in @1'");
             SQLException sqle = assertThrows(SQLException.class, () -> stmt.execute("""
