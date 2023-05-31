@@ -23,7 +23,7 @@ import junit.framework.TestSuite;
 /**
  * Prepared statement CTS test suite.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public class PreparedStatementSuite extends FirebirdSuite {
 

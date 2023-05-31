@@ -21,7 +21,7 @@ package org.firebirdsql.gds.ng;
 /**
  * Cursor flags.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public enum CursorFlag {

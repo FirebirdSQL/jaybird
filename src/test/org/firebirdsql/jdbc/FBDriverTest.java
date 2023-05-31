@@ -58,8 +58,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Test suite for the FBDriver class implementation.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 class FBDriverTest {
 
@@ -251,7 +251,7 @@ class FBDriverTest {
     @Test
     void testTransactionConfigThroughPropertiesObject() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        // Note that for proper testing this needs to be different from the mapping in isc_tpb_mapping.properties
+        // Note that for proper testing this needs to be different from the mapping in constructor FBTpbMapper()
         props.setProperty("TRANSACTION_READ_COMMITTED",
                 "isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_nowait");
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
@@ -270,7 +270,7 @@ class FBDriverTest {
     @Test
     void testTransactionConfigThroughConnectionString() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        // Note that for proper testing this needs to be different from the mapping in isc_tpb_mapping.properties
+        // Note that for proper testing this needs to be different from the mapping in constructor FBTpbMapper()
         String jdbcUrl = getUrl() + "?TRANSACTION_READ_COMMITTED=isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_nowait";
         try (Connection connection = DriverManager.getConnection(jdbcUrl, props)) {
             FirebirdConnection fbConnection = connection.unwrap(FirebirdConnection.class);
@@ -482,6 +482,19 @@ class FBDriverTest {
         connectionProperties.setProperty("user", username);
         connectionProperties.setProperty("password", password);
         connectionProperties.setProperty("authPlugins", "Srp256");
+
+        try (Connection connection = DriverManager.getConnection(getUrl(), connectionProperties)) {
+            assertTrue(connection.isValid(1000));
+        }
+    }
+
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/494">jaybird#494</a>.
+     */
+    @Test
+    void canConnectWithEmptyRoleName_494() throws Exception {
+        Properties connectionProperties = getDefaultPropertiesForConnection();
+        connectionProperties.setProperty("roleName", "");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), connectionProperties)) {
             assertTrue(connection.isValid(1000));

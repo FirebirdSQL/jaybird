@@ -30,7 +30,7 @@ package org.firebirdsql.gds.ng.wire.crypt;
  * NOTE: This plugin is currently only internal to Jaybird, consider the API as unstable.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public interface EncryptionPlugin {
@@ -38,7 +38,7 @@ public interface EncryptionPlugin {
     /**
      * @return Encryption identifier
      */
-    EncryptionIdentifier getEncryptionIdentifier();
+    EncryptionIdentifier encryptionIdentifier();
 
     /**
      * Initializes the encryption for incoming and outgoing communication.

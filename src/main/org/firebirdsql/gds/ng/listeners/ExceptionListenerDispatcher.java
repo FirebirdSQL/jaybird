@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,9 +18,6 @@
  */
 package org.firebirdsql.gds.ng.listeners;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-
 import java.sql.SQLException;
 import java.util.*;
 
@@ -31,16 +28,15 @@ import java.util.*;
  * without a strong reference may be removed an no longer notified at any time.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class ExceptionListenerDispatcher implements Iterable<ExceptionListener>, ExceptionListener {
 
-    private static final Logger log = LoggerFactory.getLogger(ExceptionListenerDispatcher.class);
+    private static final System.Logger log = System.getLogger(ExceptionListenerDispatcher.class.getName());
 
     private static final Object PRESENT = new Object();
-    private final Map<ExceptionListener, Object> listeners =
-            Collections.synchronizedMap(new WeakHashMap<ExceptionListener, Object>());
+    private final Map<ExceptionListener, Object> listeners = Collections.synchronizedMap(new WeakHashMap<>());
     private final Object source;
     private volatile boolean shutdown = false;
 
@@ -57,7 +53,7 @@ public final class ExceptionListenerDispatcher implements Iterable<ExceptionList
             try {
                 listener.errorOccurred(source, exception);
             } catch (Exception e) {
-                log.error("Error on notify errorOccurred to listener " + listener, e);
+                log.log(System.Logger.Level.ERROR, "Error on notify errorOccurred to listener " + listener, e);
             }
         }
     }
@@ -110,7 +106,7 @@ public final class ExceptionListenerDispatcher implements Iterable<ExceptionList
     }
 
     /**
-     * @return <code>true</code> when this dispatcher has been shut down.
+     * @return {@code true} when this dispatcher has been shut down.
      */
     public boolean isShutdown() {
         return shutdown;

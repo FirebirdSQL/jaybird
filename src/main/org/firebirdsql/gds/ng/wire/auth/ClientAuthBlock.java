@@ -25,8 +25,6 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,6 +33,9 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.TRACE;
+import static java.lang.System.Logger.Level.WARNING;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_AUTH_PLUGINS;
 
@@ -45,15 +46,14 @@ import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_AUTH_PLUGI
  * Firebird implementation, this uses the same (or very similar) terms and structure (if it makes sense).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class ClientAuthBlock {
 
-    private static final Logger log = LoggerFactory.getLogger(ClientAuthBlock.class);
+    private static final System.Logger log = System.getLogger(ClientAuthBlock.class.getName());
 
     private static final Pattern AUTH_PLUGIN_LIST_SPLIT = Pattern.compile("[ \t,;]+");
-    private static final Map<String, AuthenticationPluginSpi> PLUGIN_MAPPING = getAvailableAuthenticationPlugins();
 
     private final IAttachProperties<?> attachProperties;
     private List<AuthenticationPluginSpi> pluginProviders;
@@ -115,16 +115,14 @@ public final class ClientAuthBlock {
         while (providerIterator.hasNext()) {
             AuthenticationPluginSpi provider = providerIterator.next();
             AuthenticationPlugin plugin = provider.createPlugin();
-            log.debug("Trying authentication plugin " + plugin);
+            log.log(TRACE, "Trying authentication plugin {0}", plugin);
             try {
                 switch (plugin.authenticate(this)) {
-                case AUTH_SUCCESS:
-                case AUTH_MORE_DATA:
+                case AUTH_SUCCESS, AUTH_MORE_DATA -> {
                     currentPlugin = plugin;
                     return;
-                case AUTH_CONTINUE:
-                    providerIterator.remove();
-                    break;
+                }
+                case AUTH_CONTINUE -> providerIterator.remove();
                 }
             } catch (SQLException ex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_login).cause(ex).toSQLException();
@@ -141,7 +139,7 @@ public final class ClientAuthBlock {
 
             ClumpletReader serverList = new ClumpletReader(ClumpletReader.Kind.UnTagged, serverInfo);
             if (serverList.find(TAG_KNOWN_PLUGINS)) {
-                String serverPluginNames = serverList.getString(StandardCharsets.US_ASCII);
+                String serverPluginNames = serverList.getString(StandardCharsets.ISO_8859_1);
                 serverPlugins.clear();
                 serverPlugins.addAll(splitPluginList(serverPluginNames));
             }
@@ -171,7 +169,7 @@ public final class ClientAuthBlock {
     public void setServerData(byte[] serverData) {
         if (currentPlugin == null) {
             // TODO Check if this is valid to ignore
-            log.debug("Received server data without current plugin");
+            log.log(DEBUG, "Received server data without current plugin");
         } else {
             currentPlugin.setServerData(serverData);
         }
@@ -275,25 +273,23 @@ public final class ClientAuthBlock {
             } else {
                 plugin = provider.createPlugin();
             }
-            log.debug("Trying authentication plugin " + plugin);
+            log.log(TRACE, "Trying authentication plugin {0}", plugin);
             try {
                 switch (plugin.authenticate(this)) {
-                case AUTH_SUCCESS:
-                case AUTH_MORE_DATA:
-                    log.debug("Trying authentication plugin " + plugin + " is OK");
+                case AUTH_SUCCESS, AUTH_MORE_DATA -> {
+                    log.log(TRACE, "Trying authentication plugin {0} is OK", plugin);
                     currentPlugin = plugin;
                     cleanParameterBuffer(pb);
                     extractDataToParameterBuffer(pb);
                     return;
-                case AUTH_CONTINUE:
-                    providerIterator.remove();
-                    break;
+                }
+                case AUTH_CONTINUE -> providerIterator.remove();
                 }
             } catch (SQLException ex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_login).cause(ex).toSQLException();
             }
 
-            log.debug(String.format("try next plugin, %s skipped", plugin));
+            log.log(TRACE, "try next plugin, {0} skipped", plugin);
         }
     }
 
@@ -301,7 +297,7 @@ public final class ClientAuthBlock {
      * TODO Need to handle this differently
      * @return {@code true} if the encryption is supported
      * @throws SQLException
-     *         If it is impossible to determine if encryption is supported (eg there is no current auth plugin)
+     *         If it is impossible to determine if encryption is supported (e.g. there is no current auth plugin)
      */
     public boolean supportsEncryption() throws SQLException {
         if (currentPlugin == null) {
@@ -323,7 +319,7 @@ public final class ClientAuthBlock {
     }
 
     /**
-     * Normalizes a login by uppercasing unquoted user names, or stripping and unescaping (double) quoted user names.
+     * Normalizes a login by uppercasing unquoted usernames, or stripping and unescaping (double) quoted user names.
      *
      * @param login Login to process
      * @return Normalized login
@@ -376,10 +372,10 @@ public final class ClientAuthBlock {
             }
             pb.addArgument(tagMapping.getAuthPluginListTag(), getPluginNames());
             firstTime = false;
-            log.debug("first time - added plugName & pluginList");
+            log.log(TRACE, "first time - added plugName & pluginList");
         }
         pb.addArgument(tagMapping.getSpecificAuthDataTag(), clientData);
-        log.debug(String.format("Added %d bytes of spec data with tag isc_dpb_specific_auth_data", clientData.length));
+        log.log(TRACE, "Added {0} bytes of spec data with tag isc_dpb_specific_auth_data", clientData.length);
     }
 
     private void cleanParameterBuffer(ConnectionParameterBuffer pb) {
@@ -393,11 +389,11 @@ public final class ClientAuthBlock {
         List<String> requestedPluginNames = getRequestedPluginNames();
         List<AuthenticationPluginSpi> pluginProviders = new ArrayList<>(requestedPluginNames.size());
         for (String pluginName : requestedPluginNames) {
-            AuthenticationPluginSpi pluginSpi = PLUGIN_MAPPING.get(pluginName);
+            AuthenticationPluginSpi pluginSpi = AuthenticationPluginRegistry.getAuthenticationPluginSpi(pluginName);
             if (pluginSpi != null) {
                 pluginProviders.add(pluginSpi);
             } else {
-                log.warn("No authentication plugin available with name " + pluginName);
+                log.log(WARNING, "No authentication plugin available with name {0}", pluginName);
             }
         }
 
@@ -421,80 +417,4 @@ public final class ClientAuthBlock {
         return Arrays.asList(AUTH_PLUGIN_LIST_SPLIT.split(pluginList));
     }
 
-    // TODO Move plugin loading to separate class?
-
-    private static Map<String, AuthenticationPluginSpi> getAvailableAuthenticationPlugins() {
-        Map<String, AuthenticationPluginSpi> pluginMapping = new HashMap<>();
-        for (AuthenticationPluginSpi pluginSpi : getAvailableAuthenticationPluginSpis()) {
-            String pluginName = pluginSpi.getPluginName();
-            if (pluginMapping.containsKey(pluginName)) {
-                log.warn("Authentication plugin provider for " + pluginName + " already registered. Skipping "
-                        + pluginSpi.getClass().getName());
-                continue;
-            }
-            pluginMapping.put(pluginName, pluginSpi);
-        }
-        return Collections.unmodifiableMap(pluginMapping);
-    }
-
-    private static List<AuthenticationPluginSpi> getAvailableAuthenticationPluginSpis() {
-        try {
-            ServiceLoader<AuthenticationPluginSpi> pluginLoader =
-                    ServiceLoader.load(AuthenticationPluginSpi.class, ClientAuthBlock.class.getClassLoader());
-            List<AuthenticationPluginSpi> pluginList = new ArrayList<>();
-            // We can't use foreach here, because the plugins are lazily loaded, which might trigger a ServiceConfigurationError
-            Iterator<AuthenticationPluginSpi> pluginIterator = pluginLoader.iterator();
-            int retry = 0;
-            while (retry < 2) {
-                try {
-                    while (pluginIterator.hasNext()) {
-                        try {
-                            AuthenticationPluginSpi plugin = pluginIterator.next();
-                            pluginList.add(plugin);
-                        } catch (Exception | ServiceConfigurationError e) {
-                            log.warn("Can't register plugin, see debug level for more information (skipping): " + e);
-                            log.debug("Failed to load plugin with exception", e);
-                        }
-                    }
-                    break;
-                } catch (ServiceConfigurationError e) {
-                    log.error("Error finding next AuthenticationPluginSpi", e);
-                    retry++;
-                }
-            }
-
-            if (!pluginList.isEmpty()) {
-                return pluginList;
-            } else {
-                log.warn("No authentication plugins loaded through service loader, falling back to default list");
-            }
-        } catch (Exception e) {
-            log.warnDebug("Unable to load authentication plugins through ServiceLoader, using fallback list", e);
-        }
-        return loadFallbackPluginProviders(ClientAuthBlock.class.getClassLoader());
-    }
-
-    private static List<AuthenticationPluginSpi> loadFallbackPluginProviders(ClassLoader classLoader) {
-        List<AuthenticationPluginSpi> fallbackPluginProviders = new ArrayList<>(6);
-        for (String providerName : new String[] {
-                "org.firebirdsql.gds.ng.wire.auth.legacy.LegacyAuthenticationPluginSpi",
-                "org.firebirdsql.gds.ng.wire.auth.srp.SrpAuthenticationPluginSpi",
-                "org.firebirdsql.gds.ng.wire.auth.srp.Srp224AuthenticationPluginSpi",
-                "org.firebirdsql.gds.ng.wire.auth.srp.Srp256AuthenticationPluginSpi",
-                "org.firebirdsql.gds.ng.wire.auth.srp.Srp384AuthenticationPluginSpi",
-                "org.firebirdsql.gds.ng.wire.auth.srp.Srp512AuthenticationPluginSpi",
-        }) {
-            try {
-                Class<?> clazz = Class.forName(providerName, true, classLoader);
-                AuthenticationPluginSpi provider =
-                        (AuthenticationPluginSpi) clazz.getDeclaredConstructor().newInstance();
-                fallbackPluginProviders.add(provider);
-            } catch (ReflectiveOperationException e) {
-                log.warn("Could not load plugin provider (see debug level for details) " + providerName + ", reason: "
-                        + e);
-                log.debug("Failed to load plugin provider " + providerName + " with exception", e);
-            }
-        }
-        return fallbackPluginProviders;
-    }
 }

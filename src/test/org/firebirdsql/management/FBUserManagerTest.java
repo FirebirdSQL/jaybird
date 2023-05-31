@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests the UserManager class which uses the Services API to display, add, delete, and modify users.
  * 
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
+ * @author Steven Jardine
  */
 class FBUserManagerTest {
 
@@ -70,11 +70,7 @@ class FBUserManagerTest {
     @Test
     void testUsers() throws Exception {
         // Initialize the UserManager.
-        UserManager userManager = new FBUserManager(getGdsType());
-        userManager.setServerName(DB_SERVER_URL);
-        userManager.setPortNumber(DB_SERVER_PORT);
-        userManager.setUser(DB_USER);
-        userManager.setPassword(DB_PASSWORD);
+        UserManager userManager = configureDefaultServiceProperties(new FBUserManager(getGdsType()));
 
         // Add a user.
         User user1 = new FBUser();

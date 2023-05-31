@@ -37,13 +37,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues.isc_bpb_type_stream;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_type;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Abstract test class for blob related tests shared by the wire and JNA implementation.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class BaseTestBlob {
@@ -235,17 +236,13 @@ public abstract class BaseTestBlob {
      */
     @SuppressWarnings("SameParameterValue")
     protected void populateBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
-        Connection con = getConnectionViaDriverManager();
-        CallableStatement cstmt = null;
-        try {
-            cstmt = con.prepareCall(EXECUTE_FILL_BINARY_BLOB);
+        try (Connection con = getConnectionViaDriverManager();
+             CallableStatement cstmt = con.prepareCall(EXECUTE_FILL_BINARY_BLOB)) {
             cstmt.setInt(1, id);
             cstmt.setBytes(2, baseContent);
             cstmt.setInt(3, requiredSize);
 
             cstmt.execute();
-        } finally {
-            closeQuietly(cstmt, con);
         }
     }
 
@@ -266,7 +263,7 @@ public abstract class BaseTestBlob {
                 statement.addStatementListener(listener);
 
                 final BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
-                blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);
+                blobParameterBuffer.addArgument(isc_bpb_type, isc_bpb_type_stream);
                 final FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
                 blob.open();
                 int bytesWritten = 0;

@@ -29,11 +29,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Validator for columns of metadata result sets.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  *
  * @param <T> Enum type, implementing {@link MetaDataInfo} for metadata column information
  */
 class MetaDataValidator<T extends Enum<T> & MetaDataValidator.MetaDataInfo> {
+
+    static final Object IGNORE_DURING_VALIDATION = new Object();
 
     private final T mdi;
 
@@ -85,6 +87,7 @@ class MetaDataValidator<T extends Enum<T> & MetaDataValidator.MetaDataInfo> {
     }
 
     private void assertObjectColumnValue(ResultSet rs, Object expectedValue) throws SQLException {
+        if (expectedValue == IGNORE_DURING_VALIDATION) return;
         Object value = rs.getObject(mdi.name());
         assertEquals(expectedValue, value, () -> format("Unexpected value for %s", mdi));
     }

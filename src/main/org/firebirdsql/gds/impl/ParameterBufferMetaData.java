@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,7 +24,7 @@ import org.firebirdsql.gds.impl.argument.ArgumentType;
 /**
  * Additional metadata for parameter buffer behavior.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface ParameterBufferMetaData {
@@ -92,5 +92,18 @@ public interface ParameterBufferMetaData {
      * @return Argument type (never {@code null})
      */
     ArgumentType getSingleArgumentType(int tag);
-    
+
+    /**
+     * Gets the byte argument type for the supplied tag.
+     * <p>
+     * When the tag is not known (or unsupported for string arguments), then the default should be returned.
+     * </p>
+     *
+     * @param tag Tag (item type)
+     * @return Argument type (never {@code null})
+     */
+    default ArgumentType getByteArgumentType(int tag) {
+        return getIntegerArgumentType(tag);
+    }
+
 }

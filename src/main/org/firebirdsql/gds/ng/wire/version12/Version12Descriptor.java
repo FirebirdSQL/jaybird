@@ -38,7 +38,7 @@ import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
  * The {@link org.firebirdsql.gds.ng.wire.ProtocolDescriptor} for the Firebird version 12 protocol. This version
  * applies to Firebird 2.5, but also works with newer Firebird versions.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class Version12Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {

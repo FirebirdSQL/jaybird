@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Tests for support of the {@code LIKE} escape character escape as defined
  * in section 13.4.5 of the JDBC 4.1 specification.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class LikeEscapeTest {
 
@@ -63,8 +63,9 @@ class LikeEscapeTest {
             for (int idx = 0; idx < TEST_DATA.length; idx++) {
                 pstmt.setInt(1, idx + 1);
                 pstmt.setString(2, TEST_DATA[idx]);
-                pstmt.execute();
+                pstmt.addBatch();
             }
+            pstmt.executeBatch();
         }
         con.commit();
     }

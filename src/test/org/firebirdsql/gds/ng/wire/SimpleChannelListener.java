@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -27,13 +25,13 @@ import java.util.List;
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.wire.AsynchronousChannelListener} for testing purposes
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
-public class SimpleChannelListener implements AsynchronousChannelListener {
+public final class SimpleChannelListener implements AsynchronousChannelListener {
 
     private volatile boolean receivedChannelClosing;
-    private final List<Event> receivedEvents = Collections.synchronizedList(new ArrayList<Event>());
+    private final List<Event> receivedEvents = Collections.synchronizedList(new ArrayList<>());
 
     @Override
     public void channelClosing(FbWireAsynchronousChannel channel) {
@@ -51,7 +49,7 @@ public class SimpleChannelListener implements AsynchronousChannelListener {
 
     public List<Event> getReceivedEvents() {
         synchronized (receivedEvents) {
-            return new ArrayList<Event>(receivedEvents);
+            return new ArrayList<>(receivedEvents);
         }
     }
 }

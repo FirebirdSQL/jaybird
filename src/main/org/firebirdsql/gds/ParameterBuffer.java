@@ -35,7 +35,7 @@ import java.util.Iterator;
  * Instance of this interface represents a Parameter Buffer it is extended
  * by various parameter buffer interfaces.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @see org.firebirdsql.gds.ParameterBuffer
  * @see org.firebirdsql.gds.ServiceRequestBuffer
  * @see org.firebirdsql.gds.TransactionParameterBuffer
@@ -78,6 +78,16 @@ public interface ParameterBuffer extends Iterable<Parameter> {
      *         encoding to use for conversion to bytes
      */
     void addArgument(int argumentType, String value, Encoding encoding);
+
+    /**
+     * Add a byte argument.
+     *
+     * @param argumentType
+     *         type of argument.
+     * @param value
+     *         byte value to add.
+     */
+    void addArgument(int argumentType, byte value);
 
     /**
      * Add integer argument.

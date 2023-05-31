@@ -49,8 +49,8 @@ import java.util.List;
  * </ul>
  * </p>
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
- * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
+ * @author Gabriel Reid
+ * @author Thomas Steinmaurer
  */
 public interface MaintenanceManager extends ServiceManager {
 
@@ -474,4 +474,29 @@ public interface MaintenanceManager extends ServiceManager {
      *         if a database access error occurs or the given transaction ID is not valid
      */
     void rollbackTransaction(long transactionId) throws SQLException;
+
+    /**
+     * Perform minor ODS upgrade.
+     * <p>
+     * Requires Firebird 5.0 or higher.
+     * </p>
+     *
+     * @throws SQLException
+     *         if a database access error occurs
+     * @since 5.0.2
+     */
+    void upgradeOds() throws SQLException;
+
+    /**
+     * Update or rebuild ICU-dependent collations and indexes when ICU version changed.
+     * <p>
+     * Requires Firebird 3.0 or higher.
+     * </p>
+     *
+     * @throws SQLException
+     *         if a database access error occurs
+     * @since 5.0.2
+     */
+    void fixIcu() throws SQLException;
+
 }

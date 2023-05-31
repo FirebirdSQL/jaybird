@@ -13,7 +13,7 @@
 
 Java 7 has been end-of-public updates since April 2015. A lot of modern testing
 libraries like JUnit 5 and related libraries, require a minimum of Java 8. In
-addition some of our testing libraries require bytecode manipulation libraries
+addition, some of our testing libraries require bytecode manipulation libraries
 that, for testing on Java 11 and higher, require versions that no longer work on
 Java 7.
 

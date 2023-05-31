@@ -20,18 +20,20 @@ package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.gds.ng.IConnectionProperties;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
  * The class {@code FBConnectionRequestInfo} holds connection-specific information such as user, password, and other
  * information.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
-public class FBConnectionRequestInfo implements Serializable {
+public final class FBConnectionRequestInfo implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 2L;
 
     private final IConnectionProperties connectionProperties;
@@ -69,13 +71,10 @@ public class FBConnectionRequestInfo implements Serializable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        FBConnectionRequestInfo that = (FBConnectionRequestInfo) o;
-
-        return connectionProperties.equals(that.connectionProperties);
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof FBConnectionRequestInfo other)) return false;
+        return connectionProperties.equals(other.connectionProperties);
     }
 
     @Override

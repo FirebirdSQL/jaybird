@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,10 +18,12 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
+import org.firebirdsql.jdbc.FBObjectListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,30 +35,44 @@ import java.sql.SQLException;
 
 /**
  * This is Blob-based implementation of {@link FBStringField}. It should be used
- * for fields declared in database as <code>BLOB SUB_TYPE 1</code>. This 
+ * for fields declared in database as {@code BLOB SUB_TYPE 1}. This
  * implementation provides all conversion routines {@link FBStringField} has.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
-public class FBLongVarCharField extends FBStringField implements FBCloseableField, FBFlushableField {
+public class FBLongVarCharField extends FBStringField implements FBCloseableField, FBFlushableField, BlobListenableField {
 
-    // TODO Reduce duplication with FBBlobField
+    // TODO Reduce duplication with FBBlobField, maybe make it wrap an FBBlobField?
 
     private static final int BUFF_SIZE = 4096;
     
     private FBBlob blob;
     private boolean blobExplicitNull;
 
-    // Rather then hold cached data in the XSQLDAVar we will hold it in here.
+    // Rather than hold cached data in the XSQLDAVar we will hold it in here.
     private long length;
     private byte[] bytes;
     private InputStream binaryStream;
     private Reader characterStream;
+    private FBObjectListener.BlobListener blobListener = FBObjectListener.NoActionBlobListener.instance();
+    final FBBlob.Config blobConfig;
 
-    FBLongVarCharField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
-            throws SQLException {
+    FBLongVarCharField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType,
+            GDSHelper gdsHelper) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
+        this.gdsHelper = gdsHelper;
+        // NOTE: If gdsHelper is really null, it will fail at a later point when attempting to open the blob
+        // It should only be null for certain types of tests
+        blobConfig = gdsHelper != null
+                ? FBBlob.createConfig(fieldDescriptor, gdsHelper.getConnectionProperties())
+                : FBBlob.createConfig(fieldDescriptor.getSubType(), PropertyConstants.DEFAULT_STREAM_BLOBS,
+                        PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE, fieldDescriptor.getDatatypeCoder());
+    }
+
+    @Override
+    public void setBlobListener(FBObjectListener.BlobListener blobListener) {
+        this.blobListener = blobListener;
     }
 
     @Override
@@ -74,6 +90,7 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
             binaryStream = null;
             characterStream = null;
             length = 0;
+            blobListener = null;
         }
     }
 
@@ -82,7 +99,7 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
         if (blob != null) return blob;
         if (isNull()) return null;
 
-        blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(getFieldData()));
+        blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(getFieldData()), blobListener, blobConfig);
         return blob;
     }
 
@@ -139,7 +156,7 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
     }
 
     @Override
-    public void setCachedObject(FBFlushableField.CachedObject cachedObject) throws SQLException {
+    public void setCachedObject(FBFlushableField.CachedObject cachedObject) {
         // setNull() to reset field to empty state
         setNull();
         bytes = cachedObject.bytes;
@@ -154,26 +171,58 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
         byte[] data = getBytes();
         if (data == null) return null;
         
-        return getDatatypeCoder().decodeString(data);
+        return applyTrimTrailing(getDatatypeCoder().decodeString(data));
     }
 
     @Override
     public void setBlob(FBBlob blob) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
-        setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
-        this.blob = blob;
-        blobExplicitNull = false;
+        if (blob != null) {
+            setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
+            this.blob = blob;
+            blobExplicitNull = false;
+        }
+    }
+
+    @Override
+    public void setBlob(Blob blob) throws SQLException {
+        if (blob == null) {
+            setNull();
+        } else if (blob instanceof FBBlob) {
+            setBlob((FBBlob) blob);
+        } else {
+            FBBlob fbb = createBlob();
+            fbb.copyStream(blob.getBinaryStream());
+            setBlob(fbb);
+        }
+    }
+
+    @Override
+    FBBlob createBlob() {
+        return new FBBlob(gdsHelper, blobListener, blobConfig);
     }
 
     @Override
     public void setClob(FBClob clob) throws SQLException {
-    	FBBlob blob = clob.getWrappedBlob();
-    	setBlob(blob);
+        setBlob(clob != null ? clob.getWrappedBlob() : null);
     }
 
     @Override
-    protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
+    public void setClob(Clob clob) throws SQLException {
+        if (clob == null) {
+            setNull();
+        } else if (clob instanceof FBClob) {
+            setClob((FBClob) clob);
+        } else {
+            FBClob fbc = createClob();
+            fbc.copyCharacterStream(clob.getCharacterStream());
+            setClob(fbc);
+        }
+    }
+
+    @Override
+    protected void setCharacterStreamInternal(Reader in, long length) {
         // setNull() to reset field to empty state
         setNull();
         if (in != null) {
@@ -204,7 +253,7 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
     }
 
     @Override
-    protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
+    protected void setBinaryStreamInternal(InputStream in, long length) {
         // setNull() to reset field to empty state
         setNull();
         if (in != null) {
@@ -250,23 +299,21 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
     }
     
     private void copyBinaryStream(InputStream in, long length) throws SQLException {
-        FBBlob blob =  new FBBlob(gdsHelper);
+        FBBlob blob = createBlob();
         blob.copyStream(in, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         blobExplicitNull = false;
     }
 
     private void copyCharacterStream(Reader in, long length) throws SQLException {
-        FBBlob blob =  new FBBlob(gdsHelper);
-        // TODO Push this down into FBBlob?
-        Encoding encoding = getDatatypeCoder().getEncoding();
-        blob.copyCharacterStream(in, length, encoding);
-        setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
+        FBClob clob =  createClob();
+        clob.copyCharacterStream(in, length);
+        setFieldData(getDatatypeCoder().encodeLong(clob.getWrappedBlob().getBlobId()));
         blobExplicitNull = false;
     }
     
     private void copyBytes(byte[] bytes, int length) throws SQLException {
-        FBBlob blob = new FBBlob(gdsHelper);
+        FBBlob blob = createBlob();
         blob.copyBytes(bytes, 0, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         blobExplicitNull = false;

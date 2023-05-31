@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * This implementation is immutable and always serializable at runtime.
  *
  * @author Rickard Oberg (rickard.oberg@telkel.com)
- * @author <a href="mailto:osh@sparre.dk">Ole Husgaard</a>
+ * @author Ole Husgaard
  */
 public class XidImpl implements Xid, Serializable {
 
@@ -84,7 +84,7 @@ public class XidImpl implements Xid, Serializable {
     /**
      * Return a new unique transaction id to use on this host.
      */
-    private static synchronized int getNextId() {
+    private static int getNextId() {
         return nextId.getAndIncrement();
     }
 

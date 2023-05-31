@@ -21,7 +21,7 @@ package org.firebirdsql.gds.ng;
 /**
  * Direction of fetch.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public enum FetchDirection {

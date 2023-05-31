@@ -24,7 +24,6 @@
  */
 package org.firebirdsql.management;
 
-import java.io.IOException;
 import java.sql.SQLException;
 
 /**
@@ -40,7 +39,7 @@ import java.sql.SQLException;
  * </ul>
  * </p>
  *
- * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
+ * @author Thomas Steinmaurer
  */
 public interface TraceManager extends ServiceManager {
 
@@ -52,7 +51,6 @@ public interface TraceManager extends ServiceManager {
      * @param configuration
      *         The trace configuration. For an example, look into fbtrace.conf in the root directory of your Firebird
      *         installation
-     * @throws SQLException
      */
     void startTraceSession(String traceSessionName, String configuration) throws SQLException;
 
@@ -61,7 +59,6 @@ public interface TraceManager extends ServiceManager {
      *
      * @param traceSessionId
      *         The trace session ID
-     * @throws SQLException
      */
     void stopTraceSession(int traceSessionId) throws SQLException;
 
@@ -70,7 +67,6 @@ public interface TraceManager extends ServiceManager {
      *
      * @param traceSessionId
      *         The trace session ID
-     * @throws SQLException
      */
     void suspendTraceSession(int traceSessionId) throws SQLException;
 
@@ -79,14 +75,11 @@ public interface TraceManager extends ServiceManager {
      *
      * @param traceSessionId
      *         The trace session ID
-     * @throws SQLException
      */
     void resumeTraceSession(int traceSessionId) throws SQLException;
 
     /**
      * List all currently registered trace sessions
-     *
-     * @throws SQLException
      */
     void listTraceSessions() throws SQLException;
 
@@ -101,7 +94,7 @@ public interface TraceManager extends ServiceManager {
      *
      * @param sessionName
      *         Name of the session
-     * @return Id of the session or null otherwise
+     * @return ID of the session or null otherwise
      */
     Integer getSessionId(String sessionName);
 

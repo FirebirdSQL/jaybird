@@ -30,8 +30,8 @@ import java.sql.SQLException;
  * Implements the incremental backup and restore functionality of NBackup
  * via the Firebird Services API.
  *
- * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Thomas Steinmaurer
+ * @author Mark Rotteveel
  */
 public interface NBackupManager extends ServiceManager {
 
@@ -104,7 +104,7 @@ public interface NBackupManager extends ServiceManager {
     /**
      * Perform the nbackup fixup operation.
      * <p>
-     * A fixup will switch the database backup to 'normal' state without merging the delta, so this is a potentially
+     * A fixup will switch a locked database to 'normal' state without merging the delta, so this is a potentially
      * destructive action. The normal use-case of this option is to unlock a copy of a database file where the source
      * database file was locked with {@code nbackup -L} or {@code ALTER DATABASE BEGIN BACKUP}.
      * </p>
@@ -114,6 +114,7 @@ public interface NBackupManager extends ServiceManager {
      *
      * @throws SQLException
      *         if a database error occurs during the fixup
+     * @since 5
      */
     void fixupDatabase() throws SQLException;
 
@@ -166,6 +167,56 @@ public interface NBackupManager extends ServiceManager {
      *
      * @param preserveSequence
      *         {@code true} to enable preserve sequence
+     * @since 5
      */
     void setPreserveSequence(boolean preserveSequence);
+
+    /**
+     * Enables clean history on backup.
+     * <p>
+     * The backup will fail if {@link #setKeepDays(int)} or {@link #setKeepRows(int)} has not been called.
+     * </p>
+     *
+     * @param cleanHistory
+     *         {@code true} to enable clean history
+     * @since 4.0.7
+     */
+    void setCleanHistory(boolean cleanHistory);
+
+    /**
+     * Sets the number of days of backup history to keep.
+     * <p>
+     * Server-side, this option is mutually exclusive with {@link #setKeepRows(int)}, this is not enforced by the Java
+     * code.
+     * </p>
+     * <p>
+     * This option only has effect when {@code setCleanHistory(true)} has been called.
+     * </p>
+     *
+     * @param days
+     *         number of days to keep history when cleaning, or {@code -1} to clear current value
+     * @see #setCleanHistory(boolean)
+     * @see #setKeepRows(int)
+     * @since 4.0.7
+     */
+    void setKeepDays(int days);
+
+    /**
+     * Sets the number of rows of backup history to keep (this includes the row created by the backup).
+     * <p>
+     * Server-side, this option is mutually exclusive with {@link #setKeepDays(int)}, this is not enforced by the Java
+     * code.
+     * </p>
+     * <p>
+     * This option only has effect when {@code setCleanHistory(true)} has been called.
+     * </p>
+     *
+     * @param rows
+     *         number of rows to keep history when cleaning, or {@code -1} to clear current value
+     * @see #setCleanHistory(boolean)
+     * @see #setKeepDays(int)
+     * @since 4.0.7
+     */
+    void setKeepRows(int rows);
+    
 }

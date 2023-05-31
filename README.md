@@ -1,7 +1,6 @@
 # Jaybird
 Jaybird is a JDBC driver suite to connect to Firebird database servers.
 
-[![Build Status](https://github.com/FirebirdSQL/jaybird/actions/workflows/build-only.yml/badge.svg?branch=master)](https://github.com/FirebirdSQL/jaybird/actions?query=branch%3Amaster+workflow%3Abuild-only)
 [![Build Status](https://github.com/FirebirdSQL/jaybird/actions/workflows/run-tests.yml/badge.svg?branch=master)](https://github.com/FirebirdSQL/jaybird/actions?query=branch%3Amaster+workflow%3Arun-tests)
 [![MavenCentral](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql.jdbc/jaybird/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql.jdbc/jaybird/)
 
@@ -14,10 +13,11 @@ For bugs or improvement, go to our [Issue tracker](https://github.com/FirebirdSQ
 ## Resources
 
 - [Downloads](https://www.firebirdsql.org/en/jdbc-driver/)
+- [Jaybird JDBC Driver Java Programmer’s Manual](https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html)
 - [Issue tracker](https://github.com/FirebirdSQL/jaybird/issues/)
 - [Wiki](https://github.com/FirebirdSQL/jaybird/wiki)
-- [FAQ](src/docs/faq.md)
-- [Release notes](src/docs/release_notes.md)
+- [FAQ](src/docs/asciidoc/faq.adoc)
+- [Release notes](src/docs/asciidoc/release_notes.adoc)
 - [How to contribute](CONTRIBUTING.md)
 
 ## License

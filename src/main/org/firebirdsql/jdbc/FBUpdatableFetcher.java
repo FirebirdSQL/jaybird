@@ -43,7 +43,7 @@ import static java.util.Collections.emptyMap;
  *
  * @since 5
  */
-class FBUpdatableFetcher implements FBFetcher {
+final class FBUpdatableFetcher implements FBFetcher {
 
     private final FBFetcher fetcher;
     private final RowValue deletedRowMarker;

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -31,7 +31,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  * a SQL {@code LIKE}, or a SQL {@code STARTING WITH}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 @InternalApi
@@ -110,6 +110,16 @@ public final class MetadataPattern {
         }
 
         return parsePattern(metadataPattern);
+    }
+
+    /**
+     * Creates a {@code MetadataPattern} explicit for an <em>equals</em> ({@code =}) condition.
+     *
+     * @param value value for equals condition
+     * @return MetadataPattern of type {@code SQL_EQUALS}
+     */
+    static MetadataPattern equalsCondition(String value) {
+        return new MetadataPattern(ConditionType.SQL_EQUALS, value);
     }
 
     /**

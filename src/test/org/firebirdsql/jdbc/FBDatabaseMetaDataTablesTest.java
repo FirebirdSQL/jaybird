@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Tests for {@link FBDatabaseMetaData} for table related metadata.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataTablesTest {
 
@@ -598,6 +598,7 @@ class FBDatabaseMetaDataTablesTest {
         defaults.put(TableMetaData.SELF_REFERENCING_COL_NAME, null);
         defaults.put(TableMetaData.REF_GENERATION, null);
         defaults.put(TableMetaData.OWNER_NAME, "SYSDBA");
+        defaults.put(TableMetaData.JB_RELATION_ID, MetaDataValidator.IGNORE_DURING_VALIDATION);
 
         DEFAULT_COLUMN_VALUES = Collections.unmodifiableMap(defaults);
     }
@@ -620,7 +621,8 @@ class FBDatabaseMetaDataTablesTest {
         TYPE_NAME(8, String.class),
         SELF_REFERENCING_COL_NAME(9, String.class),
         REF_GENERATION(10, String.class),
-        OWNER_NAME(11, String.class)
+        OWNER_NAME(11, String.class),
+        JB_RELATION_ID(12, Short.class),
         ;
 
         private final int position;

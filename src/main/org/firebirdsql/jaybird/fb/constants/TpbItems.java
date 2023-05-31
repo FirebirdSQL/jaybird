@@ -25,9 +25,9 @@
 package org.firebirdsql.jaybird.fb.constants;
 
 /**
- * Constants for TPB items.
+ * Constants for TPB (transaction parameter buffer) items.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @SuppressWarnings("unused")

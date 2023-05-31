@@ -27,10 +27,14 @@ import org.firebirdsql.jdbc.FBDataSource;
 
 import javax.naming.*;
 import javax.sql.DataSource;
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * This is a simple implementation of {@link DataSource} interface. Connections
@@ -41,17 +45,19 @@ import java.util.Map;
  * DBCP.
  * </p>
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author Roman Rokytskyy
+ * @author David Jencks
  */
 public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
         implements DataSource, Serializable, Referenceable {
 
+    @Serial
     private static final long serialVersionUID = 3156578540634970427L;
     static final String REF_DESCRIPTION = "description";
     static final String REF_MCF = "mcf";
 
     protected final FBManagedConnectionFactory mcf;
+    private final ReadWriteLock dsLock = new ReentrantReadWriteLock();
     protected transient FBDataSource ds;
 
     protected String description;
@@ -82,30 +88,6 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
      */
     FBSimpleDataSource(FBManagedConnectionFactory mcf) {
         this.mcf = mcf;
-    }
-
-    /**
-     * Get buffer length for the BLOB fields.
-     *
-     * @return length of BLOB buffer.
-     * @deprecated Use {@link #getBlobBufferSize()}; will be removed in Jaybird 6
-     */
-    @Deprecated
-    public Integer getBlobBufferLength() {
-        return getBlobBufferSize();
-    }
-
-    /**
-     * Set BLOB buffer length. This value influences the performance when
-     * working with BLOB fields.
-     *
-     * @param length
-     *         new length of the BLOB buffer.
-     * @deprecated Use {@link #setBlobBufferSize(int)}; will be removed in Jaybird 6
-     */
-    @Deprecated
-    public void setBlobBufferLength(Integer length) {
-        setBlobBufferSize(length);
     }
 
     @Override
@@ -183,7 +165,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
      * Get JDBC connection with the specified credentials.
      *
      * @param username
-     *         user name for the connection.
+     *         username for the connection.
      * @param password
      *         password for the connection.
      * @return new JDBC connection.
@@ -222,18 +204,30 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
      * @throws SQLException
      *         if something went wrong.
      */
-    protected synchronized DataSource getDataSource() throws SQLException {
-        if (ds != null) {
-            return ds;
+    protected DataSource getDataSource() throws SQLException {
+        Lock readLock = dsLock.readLock();
+        readLock.lock();
+        try {
+            if (ds != null) {
+                return ds;
+            }
+        } finally {
+            readLock.unlock();
         }
+        Lock writeLock = dsLock.writeLock();
+        writeLock.lock();
+        try {
+            if (ds != null) {
+                return ds;
+            }
 
-        if (mcf.getDatabaseName() == null || "".equals(mcf.getDatabaseName().trim())) {
-            throw new SQLException("Database was not specified. Cannot provide connections.");
+            if (mcf.getDatabaseName() == null || "".equals(mcf.getDatabaseName().trim())) {
+                throw new SQLException("Database was not specified. Cannot provide connections.");
+            }
+            return ds = (FBDataSource) mcf.createConnectionFactory();
+        } finally {
+            writeLock.unlock();
         }
-
-        ds = (FBDataSource) mcf.createConnectionFactory();
-
-        return ds;
     }
 
     // JDBC 4.0

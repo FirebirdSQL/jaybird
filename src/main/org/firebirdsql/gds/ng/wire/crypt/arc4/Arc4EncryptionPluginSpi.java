@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -26,7 +26,7 @@ import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
 /**
  * ARC4 encryption plugin provider.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public final class Arc4EncryptionPluginSpi implements EncryptionPluginSpi {
@@ -34,7 +34,7 @@ public final class Arc4EncryptionPluginSpi implements EncryptionPluginSpi {
     static final EncryptionIdentifier ARC4_ID = new EncryptionIdentifier("Symmetric", "Arc4");
 
     @Override
-    public EncryptionIdentifier getEncryptionIdentifier() {
+    public EncryptionIdentifier encryptionIdentifier() {
         return ARC4_ID;
     }
 

@@ -38,7 +38,7 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptNoCryptKeyAvailable;
  * This class is not thread-safe.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class FbExceptionBuilder {
 
@@ -164,11 +164,25 @@ public final class FbExceptionBuilder {
      * Adds an integer message parameter for the exception message.
      *
      * @param parameter
-     *         Message parameter
+     *         message parameter
      * @return this FbExceptionBuilder
      */
     public FbExceptionBuilder messageParameter(int parameter) {
         return messageParameter(Integer.toString(parameter));
+    }
+
+    /**
+     * Adds two integer message parameters for the exception message.
+     *
+     * @param param1
+     *         message parameter
+     * @param param2
+     *         message parameter
+     * @return this FbExceptionBuilder
+     * @since 5
+     */
+    public FbExceptionBuilder messageParameter(int param1, int param2) {
+        return messageParameter(Integer.toString(param1), Integer.toString(param2));
     }
 
     /**
@@ -181,6 +195,65 @@ public final class FbExceptionBuilder {
     public FbExceptionBuilder messageParameter(String parameter) {
         checkExceptionInformation();
         current.addMessageParameter(parameter);
+        return this;
+    }
+
+    /**
+     * Adds two string message parameters for the exception message.
+     *
+     * @param param1
+     *         message parameter
+     * @param param2
+     *         message parameter
+     * @return this FbExceptionBuilder
+     * @since 5
+     */
+    public FbExceptionBuilder messageParameter(String param1, String param2) {
+        checkExceptionInformation();
+        current.addMessageParameter(param1);
+        current.addMessageParameter(param2);
+        return this;
+    }
+
+    /**
+     * Adds an object message parameter for the exception message (applying {@code String.valueOf(parameter)}).
+     *
+     * @param parameter
+     *         message parameter
+     * @return this FbExceptionBuilder
+     * @since 5
+     */
+    public FbExceptionBuilder messageParameter(Object parameter) {
+        return messageParameter(String.valueOf(parameter));
+    }
+
+    /**
+     * Adds two object message parameters for the exception message (applying {@code String.valueOf(parameter)}).
+     *
+     * @param param1
+     *         message parameter
+     * @param param2
+     *         message parameter
+     * @return this FbExceptionBuilder
+     * @since 5
+     */
+    public FbExceptionBuilder messageParameter(Object param1, Object param2) {
+        return messageParameter(String.valueOf(param1), String.valueOf(param2));
+    }
+
+    /**
+     * Adds object message parameters for the exception message (applying {@code String.valueOf(parameter)}).
+     *
+     * @param params
+     *         message parameters
+     * @return this FbExceptionBuilder
+     * @since 5
+     */
+    public FbExceptionBuilder messageParameter(Object... params) {
+        checkExceptionInformation();
+        for (int idx = 0; idx < params.length; idx++) {
+            current.addMessageParameter(String.valueOf(params[idx]));
+        }
         return this;
     }
 
@@ -239,20 +312,13 @@ public final class FbExceptionBuilder {
     }
 
     /**
-     * Array of uninteresting error codes.
-     */
-    private static final Integer[] UNINTERESTING_ERROR_CODES_ARR =
-            { 0, isc_dsql_error, isc_dsql_line_col_error, isc_dsql_unknown_pos, isc_sqlerr, isc_dsql_command_err,
-                    isc_arith_except, isc_cancelled };
-
-    /**
-     * Set of uninteresting error codes derived from {@link #UNINTERESTING_ERROR_CODES_ARR}.
+     * Set of uninteresting error codes.
      * <p>
      * This is used by {@link #toFlatSQLException()} to find a more suitable error code.
      * </p>
      */
-    private static final Set<Integer> UNINTERESTING_ERROR_CODES =
-            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(UNINTERESTING_ERROR_CODES_ARR)));
+    private static final Set<Integer> UNINTERESTING_ERROR_CODES = Set.of(0, isc_dsql_error, isc_dsql_line_col_error,
+            isc_dsql_unknown_pos, isc_sqlerr, isc_dsql_command_err, isc_arith_except, isc_cancelled);
 
     /**
      * SQLState success is linked to some informational error message, we consider those 'not interesting' either.
@@ -399,12 +465,10 @@ public final class FbExceptionBuilder {
      *
      * @param type Requested exception type
      * @param errorCode Error code
-     * @return Upgrade exception type (eg {@code (EXCEPTION, isc_login)} will upgrade to {@code NON_TRANSIENT})
+     * @return Upgrade exception type (e.g. {@code (EXCEPTION, isc_login)} will upgrade to {@code NON_TRANSIENT})
      */
     private static Type upgradeType(final Type type, final int errorCode) {
         switch (type) {
-        case WARNING:
-            return type;
         case EXCEPTION:
             if (Arrays.binarySearch(NON_TRANSIENT_CODES, errorCode) >= 0) {
                 return Type.NON_TRANSIENT;
@@ -413,6 +477,7 @@ public final class FbExceptionBuilder {
                 return Type.TIMEOUT;
             }
             return type;
+        case WARNING:
         default:
             return type;
         }
@@ -445,7 +510,7 @@ public final class FbExceptionBuilder {
         }
 
         /**
-         * Overrides the SQL state. By default the SQL state is decided by the errorCode.
+         * Overrides the SQL state. By default, the SQL state is decided by the errorCode.
          *
          * @param sqlState
          *         New SQL state value
@@ -563,7 +628,7 @@ public final class FbExceptionBuilder {
             }
         },
         /**
-         * Force builder to create exception of {@link java.sql.SQLTimeoutException} or subclass
+         * Force builder to create an exception of {@link java.sql.SQLTimeoutException} or subclass
          */
         // TODO Specific default sqlstate for timeout?
         TIMEOUT(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {

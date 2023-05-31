@@ -31,8 +31,6 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.sql.*;
@@ -45,25 +43,31 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.TRACE;
+import static java.lang.System.Logger.Level.WARNING;
+
 /**
  * The class {@code FBConnection} is a handle to a {@link FBManagedConnection} and implements {@link Connection}.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
 @SuppressWarnings("RedundantThrows")
 public class FBConnection implements FirebirdConnection {
 
-    private static final Logger log = LoggerFactory.getLogger(FBConnection.class);
+    private static final System.Logger log = System.getLogger(FBConnection.class.getName());
 
-    private static final String GET_CLIENT_INFO_SQL = "SELECT "
-            + "    rdb$get_context('USER_SESSION', ?) session_context "
-            + "  , rdb$get_context('USER_TRANSACTION', ?) tx_context "
-            + "FROM rdb$database";
+    private static final String GET_CLIENT_INFO_SQL = """
+            SELECT
+              rdb$get_context('USER_SESSION', ?) session_context,
+              rdb$get_context('USER_TRANSACTION', ?) tx_context
+            FROM rdb$database""";
 
-    private static final String SET_CLIENT_INFO_SQL = "SELECT "
-            + "  rdb$set_context('USER_SESSION', ?, ?) session_context "
-            + "FROM rdb$database";
+    private static final String SET_CLIENT_INFO_SQL = """
+            SELECT
+              rdb$set_context('USER_SESSION', ?, ?) session_context
+            FROM rdb$database""";
 
     private static final String PERMISSION_SET_NETWORK_TIMEOUT = "setNetworkTimeout";
 
@@ -86,8 +90,7 @@ public class FBConnection implements FirebirdConnection {
     private GeneratedKeysSupport generatedKeysSupport;
 
     /**
-     * Create a new AbstractConnection instance based on a
-     * {@link FBManagedConnection}.
+     * Create a new FBConnection instance based on a {@link FBManagedConnection}.
      *
      * @param mc
      *         A FBManagedConnection around which this connection is based
@@ -151,7 +154,7 @@ public class FBConnection implements FirebirdConnection {
                 // the constructor: Do not log warning
                 return;
             }
-            log.warn("Specified statement was not created by this connection: " + stmt);
+            log.log(WARNING, "Specified statement was not created by this connection: {0}", stmt);
         }
     }
 
@@ -297,14 +300,23 @@ public class FBConnection implements FirebirdConnection {
     public Blob createBlob() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            return new FBBlob(getGDSHelper(), txCoordinator);
+            return createBlob(FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY, connectionProperties(),
+                    getFbDatabase().getDatatypeCoder()));
         }
+    }
+
+    private FBBlob createBlob(FBBlob.Config blobConfig) throws SQLException {
+        return new FBBlob(getGDSHelper(), txCoordinator, blobConfig);
     }
 
     @Override
     public Clob createClob() throws SQLException {
-        FBBlob blob = (FBBlob) createBlob();
-        return new FBClob(blob);
+        try (LockCloseable ignored = withLock()) {
+            checkValidity();
+            FBBlob blob = createBlob(FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_TEXT, connectionProperties(),
+                    getFbDatabase().getDatatypeCoder()));
+            return new FBClob(blob);
+        }
     }
 
     @Override
@@ -415,8 +427,8 @@ public class FBConnection implements FirebirdConnection {
      */
     @Override
     public void close() throws SQLException {
-        if (log.isTraceEnabled()) {
-            log.trace("Connection closed requested at", new RuntimeException("Connection close logging"));
+        if (log.isLoggable(TRACE)) {
+            log.log(TRACE, "Connection closed requested at", new RuntimeException("Connection close logging"));
         }
         SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
         try (LockCloseable ignored = withLock()) {
@@ -479,7 +491,7 @@ public class FBConnection implements FirebirdConnection {
         try {
             return timeout != 0 ? isValidFuture.get(timeout, TimeUnit.SECONDS) : isValidFuture.get();
         } catch (ExecutionException e) {
-            log.debug("isValidImpl produced an exception", e);
+            log.log(DEBUG, "isValidImpl produced an exception", e);
             return false;
         } catch (InterruptedException e) {
             isValidFuture.cancel(true);
@@ -514,14 +526,14 @@ public class FBConnection implements FirebirdConnection {
                 db.getDatabaseInfo(new byte[] { ISCConstants.isc_info_ods_version, ISCConstants.isc_info_end }, 10);
                 return true;
             } catch (SQLException ex) {
-                log.debug("Exception while checking connection validity", ex);
+                log.log(DEBUG, "Exception while checking connection validity", ex);
                 return false;
             } finally {
                 if (networkTimeoutChanged) {
                     try {
                         getFbDatabase().setNetworkTimeout(originalNetworkTimeout);
                     } catch (SQLException e) {
-                        log.debug("Exception while resetting connection network timeout", e);
+                        log.log(DEBUG, "Exception while resetting connection network timeout", e);
                         // We're interpreting this as an indication the connection is no longer valid
                         //noinspection ReturnInsideFinallyBlock
                         return false;
@@ -691,12 +703,6 @@ public class FBConnection implements FirebirdConnection {
         return prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability, false, false);
     }
 
-    // TODO Why unused? Remove?
-    protected PreparedStatement prepareMetaDataStatement(String sql, int resultSetType, int resultSetConcurrency)
-            throws SQLException {
-        return prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability, true, false);
-    }
-
     @Override
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
         try (LockCloseable ignored = withLock()) {
@@ -752,18 +758,7 @@ public class FBConnection implements FirebirdConnection {
             int resultSetHoldability, boolean metaData, boolean generatedKeys) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT
-                    && resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
-                addWarning(FbExceptionBuilder
-                        .forWarning(JaybirdErrorCodes.jb_resultSetTypeUpgradeReasonHoldability)
-                        .toSQLException(SQLWarning.class));
-                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-            } else if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) {
-                addWarning(FbExceptionBuilder
-                        .forWarning(JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive)
-                        .toSQLException(SQLWarning.class));
-                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-            }
+            resultSetType = verifyResultSetType(resultSetType, resultSetHoldability);
 
             checkHoldability(resultSetType, resultSetHoldability);
 
@@ -781,6 +776,23 @@ public class FBConnection implements FirebirdConnection {
         }
     }
 
+    private int verifyResultSetType(int resultSetType, int resultSetHoldability) {
+        if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT
+            && resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
+            addWarning(FbExceptionBuilder
+                    .forWarning(JaybirdErrorCodes.jb_resultSetTypeUpgradeReasonHoldability)
+                    .toSQLException(SQLWarning.class));
+            return ResultSet.TYPE_SCROLL_INSENSITIVE;
+        } else if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) {
+            addWarning(FbExceptionBuilder
+                    .forWarning(JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive)
+                    .toSQLException(SQLWarning.class));
+            return ResultSet.TYPE_SCROLL_INSENSITIVE;
+        } else {
+            return resultSetType;
+        }
+    }
+
     @Override
     public CallableStatement prepareCall(String sql,
             int resultSetType, int resultSetConcurrency) throws SQLException {
@@ -792,18 +804,7 @@ public class FBConnection implements FirebirdConnection {
             int resultSetHoldability) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT
-                    && resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
-                addWarning(FbExceptionBuilder
-                        .forWarning(JaybirdErrorCodes.jb_resultSetTypeUpgradeReasonHoldability)
-                        .toSQLException(SQLWarning.class));
-                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-            } else if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) {
-                addWarning(FbExceptionBuilder
-                        .forWarning(JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive)
-                        .toSQLException(SQLWarning.class));
-                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-            }
+            resultSetType = verifyResultSetType(resultSetType, resultSetHoldability);
 
             if (resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) {
                 addWarning(FbExceptionBuilder
@@ -836,7 +837,7 @@ public class FBConnection implements FirebirdConnection {
         throw new FBDriverNotCapableException();
     }
 
-    private Set<String> clientInfoPropNames = new HashSet<>();
+    private final Set<String> clientInfoPropNames = new HashSet<>();
 
     private static final AtomicIntegerFieldUpdater<FBConnection> SAVEPOINT_COUNTER_UPDATE =
             AtomicIntegerFieldUpdater.newUpdater(FBConnection.class, "savepointCounter");
@@ -931,7 +932,7 @@ public class FBConnection implements FirebirdConnection {
             }
 
             // TODO The error message and actual condition do not match
-            if (!(savepoint instanceof FBSavepoint)) {
+            if (!(savepoint instanceof FBSavepoint fbSavepoint)) {
                 throw new SQLException("Specified savepoint was not obtained from this connection.");
             }
 
@@ -939,8 +940,6 @@ public class FBConnection implements FirebirdConnection {
                 throw new SQLException("Connection enlisted in distributed transaction",
                         SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
             }
-
-            FBSavepoint fbSavepoint = (FBSavepoint) savepoint;
 
             if (!fbSavepoint.isValid()) {
                 throw new SQLException("Savepoint is no longer valid.");
@@ -962,11 +961,9 @@ public class FBConnection implements FirebirdConnection {
             }
 
             // TODO The error message and actual condition do not match
-            if (!(savepoint instanceof FBSavepoint)) {
+            if (!(savepoint instanceof FBSavepoint fbSavepoint)) {
                 throw new SQLException("Specified savepoint was not obtained from this connection.");
             }
-
-            FBSavepoint fbSavepoint = (FBSavepoint) savepoint;
 
             if (!fbSavepoint.isValid()) {
                 throw new SQLException("Savepoint is no longer valid.");
@@ -1049,11 +1046,6 @@ public class FBConnection implements FirebirdConnection {
      */
     public boolean inTransaction() throws SQLException {
         return getGDSHelper().inTransaction();
-    }
-
-    @Override
-    public String getIscEncoding() throws SQLException {
-        return getGDSHelper().getIscEncoding();
     }
 
     public void addWarning(SQLWarning warning) {
@@ -1143,19 +1135,18 @@ public class FBConnection implements FirebirdConnection {
         stmt.setString(2, name);
 
         try (ResultSet rs = stmt.executeQuery()) {
-            if (!rs.next())
+            if (!rs.next()) {
                 return null;
+            }
 
             String sessionContext = rs.getString(1);
             String transactionContext = rs.getString(2);
 
-            if (transactionContext != null)
+            if (transactionContext != null) {
                 return transactionContext;
-            else if (sessionContext != null)
+            } else {
                 return sessionContext;
-            else
-                return null;
-
+            }
         }
 
     }

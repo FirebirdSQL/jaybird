@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,44 +19,30 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.listeners.AbstractListenerDispatcher;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Dispatcher for {@link org.firebirdsql.gds.ng.wire.AsynchronousChannelListener}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class AsynchronousChannelListenerDispatcher extends AbstractListenerDispatcher<AsynchronousChannelListener>
         implements AsynchronousChannelListener {
 
-    private static final Logger log = LoggerFactory.getLogger(AsynchronousChannelListenerDispatcher.class);
+    private static final System.Logger log = System.getLogger(AsynchronousChannelListenerDispatcher.class.getName());
 
     @Override
     public void channelClosing(FbWireAsynchronousChannel channel) {
-        for (AsynchronousChannelListener listener : this) {
-            try {
-                listener.channelClosing(channel);
-            } catch (Exception ex) {
-                log.error("Error on notify channelClosing to listener " + listener, ex);
-            }
-        }
+        notify(listener -> listener.channelClosing(channel), "channelClosing");
     }
 
     @Override
     public void eventReceived(FbWireAsynchronousChannel channel, Event event) {
-        for (AsynchronousChannelListener listener : this) {
-            try {
-                listener.eventReceived(channel, event);
-            } catch (Exception ex) {
-                log.error("Error on notify eventReceived to listener " + listener, ex);
-            }
-        }
+        notify(listener -> listener.eventReceived(channel, event), "eventReceived");
     }
 
     @Override
     protected void logError(String message, Throwable throwable) {
-        log.error(message, throwable);
+        log.log(System.Logger.Level.ERROR, message, throwable);
     }
 }

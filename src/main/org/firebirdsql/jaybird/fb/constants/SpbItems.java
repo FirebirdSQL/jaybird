@@ -25,11 +25,12 @@
 package org.firebirdsql.jaybird.fb.constants;
 
 /**
- * Constants for SPB items.
+ * Constants for SPB (service parameter buffer) items.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
+@SuppressWarnings("unused")
 public final class SpbItems {
 
     public static final int isc_spb_user_name = DpbItems.isc_dpb_user_name;

@@ -36,10 +36,10 @@ import java.util.*;
 /**
  * Implementation of {@link java.sql.CallableStatement}.
  * 
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Roman Rokytskyy
+ * @author Steven Jardine
+ * @author Mark Rotteveel
  */
 public class FBCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
 
@@ -152,7 +152,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                     SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE);
         }
 
-        results.add(getLargeUpdateCount());
+        results.add(getLargeUpdateCountMinZero());
     }
 
     @Override
@@ -188,7 +188,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     /**
      * We allow multiple calls to this method without re-preparing the statement.
-     * This is an workaround to the issue that the statement is actually prepared
+     * This is a workaround to the issue that the statement is actually prepared
      * only after all OUT parameters are registered.
      */
     @Override
@@ -283,7 +283,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                     setRequiredTypes();
                 }
 
-                return getUpdateCount();
+                return getUpdateCountMinZero();
             } finally {
                 notifyStatementCompleted();
             }
@@ -319,10 +319,18 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         final boolean hasResultSet = super.internalExecute(sendOutParams);
         if (hasResultSet && isSingletonResult) {
             // Safeguarding first row so it will work even if the result set from getResultSet is manipulated
-            singletonRs = new FBResultSet(fbStatement.getRowDescriptor(), connection,
-                    new ArrayList<>(specialResult), true);
+            singletonRs = new FBResultSet(fbStatement.getRowDescriptor(), connection, new ArrayList<>(specialResult),
+                    null, true, false);
         }
         return hasResultSet;
+    }
+
+    @Override
+    protected FBResultSet createSpecialResultSet(FBObjectListener.ResultSetListener resultSetListener)
+            throws SQLException {
+        // retrieveBlobs is false, as they were already retrieved when initializing singletonRs in internalExecute
+        return new FBResultSet(fbStatement.getRowDescriptor(), connection, new ArrayList<>(specialResult),
+                resultSetListener, false, false);
     }
 
     private void setField(FBField field, WrapperWithLong value) throws SQLException {

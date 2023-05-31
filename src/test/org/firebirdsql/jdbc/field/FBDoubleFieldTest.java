@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for {@link FBDoubleField}
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBDoubleFieldTest extends BaseJUnit5TestFBField<FBDoubleField, Double> {
     
@@ -52,7 +52,7 @@ class FBDoubleFieldTest extends BaseJUnit5TestFBField<FBDoubleField, Double> {
     void getBigDecimalNonNull() throws SQLException {
         toReturnDoubleExpectations(1.34578);
         
-        BigDecimal expectedValue = new BigDecimal(1.34578);
+        BigDecimal expectedValue = BigDecimal.valueOf(1.34578);
         assertEquals(expectedValue, field.getBigDecimal(), "Unexpected value for getBigDecimal");
     }
 
@@ -61,7 +61,7 @@ class FBDoubleFieldTest extends BaseJUnit5TestFBField<FBDoubleField, Double> {
     void getObject_BigDecimal() throws SQLException {
         toReturnDoubleExpectations(1.34578);
 
-        BigDecimal expectedValue = new BigDecimal(1.34578);
+        BigDecimal expectedValue = BigDecimal.valueOf(1.34578);
         assertEquals(expectedValue, field.getObject(BigDecimal.class),
                 "Unexpected value for getObject(BigDecimal.class)");
     }
@@ -758,7 +758,7 @@ class FBDoubleFieldTest extends BaseJUnit5TestFBField<FBDoubleField, Double> {
     void getDecimalNonNull() throws SQLException {
         toReturnDoubleExpectations(1.34578);
 
-        Decimal128 expectedValue = Decimal128.valueOf(new BigDecimal(1.34578));
+        Decimal128 expectedValue = Decimal128.valueOf(1.34578);
         assertEquals(expectedValue, field.getDecimal(), "Unexpected value for getDecimal");
     }
 

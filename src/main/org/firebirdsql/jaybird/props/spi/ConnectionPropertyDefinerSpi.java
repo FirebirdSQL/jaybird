@@ -37,7 +37,7 @@ import java.util.stream.Stream;
  * located in the same class path or class loader as Jaybird.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface ConnectionPropertyDefinerSpi {

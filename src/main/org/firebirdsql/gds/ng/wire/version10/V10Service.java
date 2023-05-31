@@ -35,7 +35,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 /**
  * {@link FbWireService} implementation for the V10 wire protocol
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10Service extends AbstractFbWireService implements FbWireService {

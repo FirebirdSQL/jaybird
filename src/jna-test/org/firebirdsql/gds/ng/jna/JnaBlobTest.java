@@ -25,6 +25,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
+import org.firebirdsql.jaybird.fb.constants.BpbItems;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -48,7 +49,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlobTest}. TODO: Consider refactoring test hierarchy
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class JnaBlobTest extends BaseTestBlob {
 
@@ -74,7 +75,7 @@ class JnaBlobTest extends BaseTestBlob {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
                 while (!blob.isEof()) {
@@ -107,7 +108,7 @@ class JnaBlobTest extends BaseTestBlob {
                 long blobId = getBlobId(testId, db);
 
                 // NOTE: What matters is if the blob on the server is stream or segment
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 int offset = baseContent.length / 2;
 
@@ -138,7 +139,7 @@ class JnaBlobTest extends BaseTestBlob {
                 long blobId = getBlobId(testId, db);
 
                 // NOTE: What matters is if the blob on the server is stream or segment
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 final int offset = requiredSize / 2;
 
@@ -170,7 +171,7 @@ class JnaBlobTest extends BaseTestBlob {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
                 while (!blob.isEof()) {
@@ -209,7 +210,7 @@ class JnaBlobTest extends BaseTestBlob {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 // Double open
                 SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
@@ -253,7 +254,7 @@ class JnaBlobTest extends BaseTestBlob {
 
         try (JnaDatabase db = createDatabaseConnection()) {
             final BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
-            blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);
+            blobParameterBuffer.addArgument(BpbItems.isc_bpb_type, BpbItems.TypeValues.isc_bpb_type_stream);
             writeBlob(testId, testBytes, db, blobParameterBuffer);
         }
 
@@ -268,7 +269,7 @@ class JnaBlobTest extends BaseTestBlob {
         try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                FbBlob blob = db.createBlobForOutput(transaction, null);
+                FbBlob blob = db.createBlobForOutput(transaction);
                 assumeTrue(blob.isEof(), "Output blob before open should be eof");
 
                 blob.open();
@@ -287,7 +288,7 @@ class JnaBlobTest extends BaseTestBlob {
         try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                FbBlob blob = db.createBlobForOutput(transaction, null);
+                FbBlob blob = db.createBlobForOutput(transaction);
                 assumeTrue(blob.isEof(), "Output blob before open should be eof");
                 blob.open();
 
@@ -307,7 +308,7 @@ class JnaBlobTest extends BaseTestBlob {
         try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                FbBlob blob = db.createBlobForOutput(transaction, null);
+                FbBlob blob = db.createBlobForOutput(transaction);
                 assumeTrue(blob.isEof(), "Output blob before open should be eof");
                 blob.open();
 
@@ -335,7 +336,7 @@ class JnaBlobTest extends BaseTestBlob {
             try {
                 final FbStatement statement = db.createStatement(transaction);
                 statement.addStatementListener(listener);
-                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                final FbBlob blob = db.createBlobForOutput(transaction);
                 blob.open();
                 int bytesWritten = 0;
                 while (bytesWritten < testBytes.length) {
@@ -376,7 +377,7 @@ class JnaBlobTest extends BaseTestBlob {
         try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                final FbBlob blob = db.createBlobForOutput(transaction);
                 blob.open();
                 int bytesWritten = 0;
                 while (bytesWritten < testBytes.length) {
@@ -407,7 +408,7 @@ class JnaBlobTest extends BaseTestBlob {
         try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                final FbBlob blob = db.createBlobForOutput(transaction);
                 blob.open();
                 SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
                 assertThat(exception, allOf(

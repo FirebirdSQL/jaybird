@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests the boolean support, which is only available in Firebird 3.0 or higher.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class BooleanSupportTest {
 
@@ -299,7 +299,7 @@ class BooleanSupportTest {
                 assertFalse(rs.getBoolean("CASE_SENSITIVE"), "Unexpected CASE_SENSITIVE");
                 assertEquals(DatabaseMetaData.typePredBasic, rs.getInt("SEARCHABLE"), "Unexpected SEARCHABLE");
                 assertTrue(rs.getBoolean("UNSIGNED_ATTRIBUTE"), "Unexpected UNSIGNED_ATTRIBUTE");
-                assertTrue(rs.getBoolean("FIXED_PREC_SCALE"), "Unexpected FIXED_PREC_SCALE");
+                assertFalse(rs.getBoolean("FIXED_PREC_SCALE"), "Unexpected FIXED_PREC_SCALE");
                 assertFalse(rs.getBoolean("AUTO_INCREMENT"), "Unexpected AUTO_INCREMENT");
                 assertEquals(2, rs.getInt("NUM_PREC_RADIX"), "Unexpected NUM_PREC_RADIX");
                 // Not testing other values

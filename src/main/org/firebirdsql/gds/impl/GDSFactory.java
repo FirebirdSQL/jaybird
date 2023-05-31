@@ -24,13 +24,13 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.jaybird.util.PluginLoader;
 import org.firebirdsql.util.InternalApi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.*;
@@ -40,19 +40,20 @@ import java.util.Map.Entry;
  * The class {@code GDSFactory} exists to provide a way to obtain objects
  * implementing GDS and Clumplet.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
-public class GDSFactory {
-
-    private static final Logger log = LoggerFactory.getLogger(GDSFactory.class);
+public final class GDSFactory {
 
     /**
      * Class for string comparison in the descendant order. This effectively
      * puts the shortest JDBC URLs at the end of the list, so the correct
      * default protocol handling can be implemented.
      */
-    private static class ReversedStringComparator implements Comparator<String>, Serializable {
+    private static final class ReversedStringComparator implements Comparator<String>, Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 8861240319376746440L;
 
         public int compare(String s1, String s2) {
             // note, we compare here s2 to s1,
@@ -62,113 +63,24 @@ public class GDSFactory {
     }
 
     private static final Set<GDSFactoryPlugin> registeredPlugins = new HashSet<>();
-
     private static final Map<GDSType, GDSFactoryPlugin> typeToPluginMap = new HashMap<>();
-
     private static final TreeMap<String, GDSFactoryPlugin> jdbcUrlToPluginMap = new TreeMap<>(new ReversedStringComparator());
 
     private static GDSType defaultType;
 
     static {
-        // register first all plugins that belong to the same class loader
-        // in which this class is loaded
-        final List<ClassLoader> classLoaders = classLoadersForLoading();
-        try {
-            for (ClassLoader classLoader : classLoaders) {
-                loadPluginsFromClassLoader(classLoader);
-            }
-        } catch (Exception ex) {
-            log.errorDebug("Can't register plugins", ex);
-        }
+        PluginLoader.findPlugins(GDSFactoryPlugin.class, List.of("org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin"))
+                .forEach(GDSFactory::registerPlugin);
 
-        if (jdbcUrlToPluginMap.isEmpty()) {
-            log.warn("No plugins loaded from META-INF/services, falling back to fixed registration of default plugins");
-            for (ClassLoader classLoader : classLoaders) {
-                loadPluginsFallback(classLoader);
-            }
+        GDSType pureJavaType = GDSType.getType(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME);
+        if (pureJavaType != null && defaultType != pureJavaType && typeToPluginMap.containsKey(pureJavaType)) {
+            // ensure defaultType is PURE_JAVA if that plugin was registered
+            defaultType = pureJavaType;
         }
     }
 
-    /**
-     * List of class loaders to use for loading the {@link GDSFactoryPlugin} implementations.
-     *
-     * @return Collection of {@link ClassLoader} instances
-     */
-    private static List<ClassLoader> classLoadersForLoading() {
-        final List<ClassLoader> classLoaders = new ArrayList<>(2);
-        final ClassLoader classLoader = GDSFactoryPlugin.class.getClassLoader();
-        if (classLoader != null) {
-            classLoaders.add(classLoader);
-        } else {
-            classLoaders.add(ClassLoader.getSystemClassLoader());
-        }
-
-        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-        if (contextClassLoader != null && !classLoaders.contains(contextClassLoader)) {
-            classLoaders.add(contextClassLoader);
-        }
-        return classLoaders;
-    }
-
-    /**
-     * Load all existing plugins from the specified class loader.
-     *
-     * @param classLoader
-     *         instance of {@link ClassLoader}.
-     */
-    private static void loadPluginsFromClassLoader(ClassLoader classLoader) {
-        ServiceLoader<GDSFactoryPlugin> pluginLoader = ServiceLoader.load(GDSFactoryPlugin.class, classLoader);
-        // We can't use foreach here, because the plugins are lazily loaded, which might trigger a ServiceConfigurationError
-        Iterator<GDSFactoryPlugin> pluginIterator = pluginLoader.iterator();
-        int retry = 0;
-        while (retry < 2) {
-            try {
-                while (pluginIterator.hasNext()) {
-                    try {
-                        GDSFactoryPlugin plugin = pluginIterator.next();
-                        registerPlugin(plugin);
-                    } catch (Exception | ServiceConfigurationError e) {
-                        log.errorDebug("Can't register plugin (skipping)", e);
-                    }
-                }
-                break;
-            } catch (ServiceConfigurationError e) {
-                log.error("Error finding next GDSFactoryPlugin", e);
-                retry++;
-            }
-        }
-    }
-
-    /**
-     * Loads the plugins from a hardcoded list of class names.
-     * <p>
-     * This method is intended as a fallback in case the plugins could not be discovered from the
-     * {@code META-INF/services/org.firebirdsql.gds.impl.GDSFactoryPlugin} file(s). See also
-     * <a href="http://tracker.firebirdsql.org/browse/JDBC-325">issue JDBC-325</a>
-     * </p>
-     */
-    private static void loadPluginsFallback(final ClassLoader classLoader) {
-        String[] pluginClasses = new String[] {
-                "org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.jni.FbOONativeGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.jni.FbOOEmbeddedGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin"
-        };
-        for (String className : pluginClasses) {
-            loadPlugin(className, classLoader);
-        }
-    }
-
-    private static void loadPlugin(String className, ClassLoader classLoader) {
-        try {
-            Class<?> clazz = classLoader.loadClass(className);
-            GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.getDeclaredConstructor().newInstance();
-            registerPlugin(plugin);
-        } catch (Exception ex) {
-            log.errorDebug("Can't register plugin " + className, ex);
-        }
+    private GDSFactory() {
+        // no instances
     }
 
     /**
@@ -188,24 +100,22 @@ public class GDSFactory {
         GDSType type = GDSType.registerType(plugin.getTypeName());
         typeToPluginMap.put(type, plugin);
 
-        // set the default type
+        // set the default type (see also the static initializer which ensures PURE_JAVA will be default if available)
         if (defaultType == null) defaultType = type;
 
         // register aliases
-        String[] aliases = plugin.getTypeAliases();
-        for (String alias : aliases) {
+        for (String alias : plugin.getTypeAliasList()) {
             GDSType aliasType = GDSType.registerType(alias);
             typeToPluginMap.put(aliasType, plugin);
         }
 
-        String[] jdbcUrls = plugin.getSupportedProtocols();
-        for (String jdbcUrl : jdbcUrls) {
+        for (String jdbcUrl : plugin.getSupportedProtocolList()) {
             GDSFactoryPlugin otherPlugin = jdbcUrlToPluginMap.put(jdbcUrl, plugin);
 
             if (otherPlugin != null && !otherPlugin.equals(plugin))
                 throw new IllegalArgumentException(
-                        "Duplicate JDBC URL pattern detected: URL " + jdbcUrl + ", plugin " + plugin.getTypeName() +
-                                ", other plugin " + otherPlugin.getTypeName());
+                        "Duplicate JDBC URL pattern detected: URL %s, plugin %s, other plugin %s".formatted(
+                                jdbcUrl, plugin.getTypeName(), otherPlugin.getTypeName()));
         }
     }
 
@@ -239,11 +149,11 @@ public class GDSFactory {
      * @param path
      *         database name or path to the database
      * @return full connection string
-     * @throws GDSException
+     * @throws SQLException
      *         if connection string cannot be obtained.
      */
     public static String getDatabasePath(GDSType gdsType, String server, Integer port, String path)
-            throws GDSException {
+            throws SQLException {
         return getPlugin(gdsType).getDatabasePath(server, port, path);
     }
 
@@ -257,11 +167,10 @@ public class GDSFactory {
      * @param jdbcUrl
      *         JDBC url from which the database path must be extracted.
      * @return path to the database specified in the JDBC URL.
-     * @throws GDSException
+     * @throws SQLException
      *         error when database path cannot be extracted.
      */
-    public static String getDatabasePath(GDSType gdsType, String jdbcUrl)
-            throws GDSException {
+    public static String getDatabasePath(GDSType gdsType, String jdbcUrl) throws SQLException {
         return getPlugin(gdsType).getDatabasePath(jdbcUrl);
     }
 
@@ -272,21 +181,6 @@ public class GDSFactory {
      */
     public static Set<String> getSupportedProtocols() {
         return Collections.unmodifiableSet(jdbcUrlToPluginMap.keySet());
-    }
-
-    /**
-     * Create JDBC URL for the specified GDS type and database path.
-     *
-     * @param gdsType
-     *         type of the plugin, to which operation will be delegated to.
-     * @param databasePath
-     *         path to the database.
-     * @return newly created JDBC URL.
-     * @deprecated Use {@link #getJdbcUrl(GDSType, DatabaseConnectionProperties)}; will be removed in Jaybird 6
-     */
-    @Deprecated
-    public static String getJdbcUrl(GDSType gdsType, String databasePath) {
-        return getPlugin(gdsType).getDefaultProtocol() + databasePath;
     }
 
     /**

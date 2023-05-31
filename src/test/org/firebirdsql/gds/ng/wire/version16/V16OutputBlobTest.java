@@ -29,7 +29,7 @@ import static org.firebirdsql.common.extension.RequireProtocolExtension.requireP
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10OutputBlob} in the version 16 protocol
  * (note: there is no version 16 specific implementation of this class).
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public class V16OutputBlobTest extends V15OutputBlobTest {

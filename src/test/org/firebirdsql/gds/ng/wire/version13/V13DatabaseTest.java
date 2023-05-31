@@ -28,7 +28,7 @@ import static org.firebirdsql.common.extension.RequireProtocolExtension.requireP
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version13.V13Database}, reuses test for V12.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V13DatabaseTest extends V12DatabaseTest {

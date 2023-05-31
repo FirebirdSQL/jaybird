@@ -29,7 +29,7 @@ import java.sql.SQLException;
  *
  * @param <E>
  *         type of SQLException (definition: {@code E extends SQLException})
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 @InternalApi

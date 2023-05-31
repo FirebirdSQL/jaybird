@@ -43,10 +43,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob}. This test class can
  * be sub-classed for tests running on newer protocol versions.
  * <p>
- * Tests from this class are also copied to {@link org.firebirdsql.gds.ng.jna.JnaBlobTest} TODO: Consider refactoring test hierarchy
+ * Tests from this class are also copied to {@code org.firebirdsql.gds.ng.jna.JnaBlobTest} TODO: Consider refactoring test hierarchy
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10InputBlobTest extends BaseTestV10Blob {
@@ -79,7 +79,7 @@ public class V10InputBlobTest extends BaseTestV10Blob {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
                 while (!blob.isEof()) {
@@ -112,7 +112,7 @@ public class V10InputBlobTest extends BaseTestV10Blob {
                 long blobId = getBlobId(testId, db);
 
                 // NOTE: What matters is if the blob on the server is stream or segment
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 int offset = baseContent.length / 2;
 
@@ -143,7 +143,7 @@ public class V10InputBlobTest extends BaseTestV10Blob {
                 long blobId = getBlobId(testId, db);
 
                 // NOTE: What matters is if the blob on the server is stream or segment
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 final int offset = requiredSize / 2;
 
@@ -175,7 +175,7 @@ public class V10InputBlobTest extends BaseTestV10Blob {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
                 while (!blob.isEof()) {
@@ -214,7 +214,7 @@ public class V10InputBlobTest extends BaseTestV10Blob {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 // Double open
                 SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);

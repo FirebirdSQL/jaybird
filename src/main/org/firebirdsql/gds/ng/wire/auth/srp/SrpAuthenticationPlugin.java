@@ -22,12 +22,11 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.wire.auth.AuthenticationPlugin;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.util.ByteArrayHelper;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+
+import static org.firebirdsql.util.ByteArrayHelper.toHexString;
 
 /**
  * Authentication plugin for authentication with Srp.
@@ -35,11 +34,9 @@ import java.sql.SQLException;
  * Supports multiple hash algorithms for the client proof.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class SrpAuthenticationPlugin implements AuthenticationPlugin {
-
-    private static final Logger log = LoggerFactory.getLogger(SrpAuthenticationPlugin.class);
 
     private final String pluginName;
     private final String clientProofHashAlgorithm;
@@ -69,12 +66,11 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
     @Override
     public AuthStatus authenticate(ClientAuthBlock clientAuthBlock) throws SQLException {
         if (srpClient == null) {
-            log.debug("SRP phase 1, user: " + clientAuthBlock.getLogin());
             if (clientAuthBlock.getLogin() == null || clientAuthBlock.getPassword() == null) {
                 return AuthStatus.AUTH_CONTINUE;
             }
             srpClient = new SrpClient(clientProofHashAlgorithm);
-            clientData = srpClient.getPublicKeyHex().getBytes(StandardCharsets.US_ASCII);
+            clientData = srpClient.getPublicKeyHex().getBytes(StandardCharsets.ISO_8859_1);
             return AuthStatus.AUTH_MORE_DATA;
         } else if (srpClient.getSessionKey() != null) {
             throw new FbExceptionBuilder().exception(ISCConstants.isc_random)
@@ -82,9 +78,9 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
                     .toSQLException();
         }
 
-        log.debug("SRP phase 2");
-        clientData = toHex(srpClient.clientProof(clientAuthBlock.getNormalizedLogin(), clientAuthBlock.getPassword(),
-                serverData)).getBytes(StandardCharsets.US_ASCII);
+        clientData = toHexString(
+                srpClient.clientProof(clientAuthBlock.getNormalizedLogin(), clientAuthBlock.getPassword(), serverData))
+                .getBytes(StandardCharsets.ISO_8859_1);
         return AuthStatus.AUTH_SUCCESS;
     }
 
@@ -109,7 +105,7 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
     }
 
     @Override
-    public byte[] getSessionKey() throws SQLException {
+    public byte[] getSessionKey() {
         return srpClient.getSessionKey();
     }
 
@@ -118,7 +114,4 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
         return getClass().getSimpleName() + " : " + getName();
     }
 
-    private static String toHex(byte[] bytes) {
-        return ByteArrayHelper.toHexString(bytes);
-    }
 }

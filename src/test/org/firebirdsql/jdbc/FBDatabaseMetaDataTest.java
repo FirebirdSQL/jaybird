@@ -20,16 +20,19 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import static java.lang.String.format;
@@ -49,16 +52,14 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Test for the {@link FBDatabaseMetaData} implementation of {@link java.sql.DatabaseMetaData}
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  * @version 1.0
  */
 class FBDatabaseMetaDataTest {
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
-
-    private static final Logger log = LoggerFactory.getLogger(FBDatabaseMetaDataTest.class);
 
     private static Connection connection;
     private static final boolean supportsComment = getDefaultSupportInfo().supportsComment();
@@ -87,7 +88,6 @@ class FBDatabaseMetaDataTest {
         try (ResultSet rs = dmd.getTables(null, null, "T1", null)) {
             assertTrue(rs.next(), "Expected one row in result");
             String name = rs.getString(3);
-            log.info("table name: " + name);
             assertEquals("T1", name, "Didn't get back the name expected");
             assertFalse(rs.next(), "Got more than one table name back!");
         }
@@ -95,18 +95,26 @@ class FBDatabaseMetaDataTest {
 
     @Test
     void testGetTableTypes() throws Exception {
-        final Set<String> expected = new HashSet<>(Arrays.asList(
-                getDefaultSupportInfo().supportsGlobalTemporaryTables()
-                        ? new String[] {TABLE, SYSTEM_TABLE, VIEW, GLOBAL_TEMPORARY}
-                        : new String[] {TABLE, SYSTEM_TABLE, VIEW}));
-        final Set<String> retrieved = new HashSet<>();
-
+        List<String> retrieved = new ArrayList<>();
         ResultSet rs = dmd.getTableTypes();
         while (rs.next()) {
             retrieved.add(rs.getString(1));
         }
 
-        assertEquals(expected, retrieved, "Unexpected result for getTableTypes");
+        assertEquals(getExpectedTableTypes(), retrieved, "Unexpected result for getTableTypes");
+    }
+
+    private static List<String> getExpectedTableTypes() {
+        return getDefaultSupportInfo().supportsGlobalTemporaryTables()
+                ? Arrays.asList(GLOBAL_TEMPORARY, SYSTEM_TABLE, TABLE, VIEW)
+                : Arrays.asList(SYSTEM_TABLE, TABLE, VIEW);
+    }
+
+    @Test
+    void testGetTableTypeNames() throws Exception {
+        List<String> retrieved = Arrays.asList(dmd.unwrap(FirebirdDatabaseMetaData.class).getTableTypeNames());
+
+        assertEquals(getExpectedTableTypes(), retrieved, "Unexpected result for getTableTypeNames");
     }
 
     @Test
@@ -125,7 +133,6 @@ class FBDatabaseMetaDataTest {
         try (ResultSet rs = dmd.getTables(null, null, "T1", new String[] { "TABLE" })) {
             assertTrue(rs.next(), "Expected one result in result set");
             String name = rs.getString(3);
-            log.info("table name: " + name);
             assertEquals("T1", name, "Didn't get back the name expected");
             assertFalse(rs.next(), "Expected only one row in result set");
         }
@@ -145,7 +152,6 @@ class FBDatabaseMetaDataTest {
         try (ResultSet rs = dmd.getTables(null, null, "RDB$RELATIONS", new String[] { "SYSTEM TABLE" })) {
             assertTrue(rs.next(), "Expected one result in result set");
             String name = rs.getString(3);
-            log.info("table name: " + name);
             assertEquals("RDB$RELATIONS", name, "Didn't get back the name expected");
             assertFalse(rs.next(), "Expected only one row in result set");
         }
@@ -156,8 +162,7 @@ class FBDatabaseMetaDataTest {
         try (ResultSet rs = dmd.getTables(null, null, "%", new String[] { "SYSTEM TABLE" })) {
             int count = 0;
             while (rs.next()) {
-                String name = rs.getString(3);
-                log.info("table name: " + name);
+                assertNotNull(rs.getString(3), "expected table name");
                 count++;
             }
 
@@ -188,7 +193,6 @@ class FBDatabaseMetaDataTest {
             int count = 0;
             while (rs.next()) {
                 String name = rs.getString(3);
-                log.info("table name: " + name);
                 assertThat("wrong name found", name, anyOf(equalTo("TEST_ME"), equalTo("TEST__ME")));
                 count++;
             }
@@ -198,7 +202,6 @@ class FBDatabaseMetaDataTest {
         try (ResultSet rs = dmd.getTables(null, null, "TEST\\_ME", new String[] { "TABLE" })) {
             assertTrue(rs.next(), "Expected one row in result set");
             String name = rs.getString(3);
-            log.info("table name: " + name);
             assertEquals("TEST_ME", name, "wrong name found");
             assertFalse(rs.next(), "Only one row expected in results et");
         }
@@ -206,7 +209,6 @@ class FBDatabaseMetaDataTest {
         try (ResultSet rs = dmd.getTables(null, null, "test\\_ me", new String[] { "TABLE" })) {
             assertTrue(rs.next(), "Expected on row in result set");
             String name = rs.getString(3);
-            log.info("table name: " + name);
             assertEquals("test_ me", name, "wrong name found");
             assertFalse(rs.next(), "Expected only one row in result set");
         }
@@ -215,7 +217,6 @@ class FBDatabaseMetaDataTest {
             int count = 0;
             while (rs.next()) {
                 String name = rs.getString(3);
-                log.info("table name: " + name);
                 assertThat("wrong name found", name, anyOf(equalTo("test_ me"), equalTo("test_ me too")));
                 count++;
             }
@@ -225,7 +226,6 @@ class FBDatabaseMetaDataTest {
         try (ResultSet rs = dmd.getTables(null, null, "RDB_RELATIONS", new String[] { "SYSTEM TABLE" })) {
             assertTrue(rs.next(), "Expected one row in resultset");
             String name = rs.getString(3);
-            log.info("table name: " + name);
             assertEquals("RDB$RELATIONS", name, "wrong name found");
             assertFalse(rs.next(), "Expected only one row in result set");
         }
@@ -241,9 +241,8 @@ class FBDatabaseMetaDataTest {
 
         try (ResultSet rs = dmd.getColumns(null, null, "test%m_", "my\\_ column2")) {
             assertTrue(rs.next(), "Expected one row in result set");
-            String name = rs.getString(3);
+            assertNotNull(rs.getString(3), "expected table name");
             String column = rs.getString(4);
-            log.info("table name: " + name);
             assertEquals("my_ column2", column, "wrong column found");
             assertFalse(rs.next(), "Expected only one row in result set");
         }
@@ -340,8 +339,7 @@ class FBDatabaseMetaDataTest {
                 short lit_type = rs.getShort("PROCEDURE_TYPE");
                 assertEquals(type, lit_type,
                         "result set from getProcedures schema mismatch: field 8 should be PROCEDURE_TYPE");
-                log.info(" got procedure " + name);
-                
+
                 if (name.equals("TESTPROC1")) {
                     assertFalse(gotproc1, "result set from getProcedures had duplicate entry for TESTPROC1");
                     gotproc1 = true;
@@ -401,7 +399,6 @@ class FBDatabaseMetaDataTest {
                 short radix = rs.getShort(11);
                 short nullable = rs.getShort(12);
                 String remarks = rs.getString(13);
-                log.info("row " + rownum + "proc " + procname + " field " + colname);
 
                 // per JDBC 2.0 spec, there is a very specific order these
                 // rows should come back, so if field names don't match
@@ -463,22 +460,6 @@ class FBDatabaseMetaDataTest {
     }
 
     @Test
-    void testGetColumnPrivileges() throws Exception {
-        try (ResultSet rs = dmd.getColumnPrivileges(null, null, "RDB$RELATIONS", "%")) {
-            assertNotNull(rs, "No result set returned from getColumnPrivileges");
-            // TODO Actual test?
-        }
-    }
-
-    @Test
-    void testGetTablePrivileges() throws Exception {
-        try (ResultSet rs = dmd.getTablePrivileges(null, null, "%")) {
-            assertNotNull(rs, "No result set returned from getTablePrivileges");
-            // TODO Actual test?
-        }
-    }
-
-    @Test
     void testGetTypeInfo() throws Exception {
         try (ResultSet rs = dmd.getTypeInfo()) {
             assertNotNull(rs, "No result set returned from getTypeInfo");
@@ -495,7 +476,7 @@ class FBDatabaseMetaDataTest {
                 }
                 out.append(getProperty("line.separator"));
             }
-            log.info("getTypeInfo returned: " + out);
+            System.out.println("getTypeInfo returned: " + out);
             assertThat("Not enough TypeInfo rows fetched", count, greaterThanOrEqualTo(15));
         }
     }
@@ -860,28 +841,26 @@ class FBDatabaseMetaDataTest {
 
     @Test
     void testGetJDBCMinorVersion() throws Exception {
-        String javaVersion = System.getProperty("java.specification.version");
-        int expectedMinor;
-        switch (javaVersion) {
-        case "1.8":
-            expectedMinor = 2;
-            break;
-        case "9":
-        case "10":
-        case "11":
-        case "12":
-        case "13":
-        case "14":
-        case "15":
-        case "16":
-        case "17":
-            expectedMinor = 3;
-            break;
-        default:
-            throw new AssertionError("Unexpected java.specification.version: " + javaVersion + " revise test case");
-        }
+        assertEquals(3, dmd.getJDBCMinorVersion(), "JDBCMinorVersion");
+    }
 
-        assertEquals(expectedMinor, dmd.getJDBCMinorVersion(), "JDBCMinorVersion");
+    /**
+     * @see FBDatabaseMetaDataDialect1Test#testGetIdentifierQuoteString_dialect1Db(String, String)
+     */
+    @ParameterizedTest
+    @CsvSource({
+            "1, ' '",
+            "2, \"",
+            "3, \""
+    })
+    void testGetIdentifierQuoteString_dialect3Db(String connectionDialect, String expectedIdentifierQuote)
+            throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("sqlDialect", connectionDialect);
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+            DatabaseMetaData md = connection.getMetaData();
+            assertEquals(expectedIdentifierQuote, md.getIdentifierQuoteString());
+        }
     }
 
     @SuppressWarnings("SameParameterValue")

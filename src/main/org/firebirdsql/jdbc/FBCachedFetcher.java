@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-class FBCachedFetcher implements FBFetcher {
+final class FBCachedFetcher implements FBFetcher {
 
     private final boolean forwardOnly;
     private List<RowValue> rows;
@@ -100,7 +100,6 @@ class FBCachedFetcher implements FBFetcher {
      *         {@code true} when the blobs need to be retrieved from the server and the current column values in
      *         {@code rows} of a blob is the blobid, otherwise the column values in {@code rows} for a blob should be
      *         the blob data.
-     * @throws SQLException
      */
     FBCachedFetcher(List<RowValue> rows, FBObjectListener.FetcherListener fetcherListener, RowDescriptor rowDescriptor,
             GDSHelper gdsHelper, boolean retrieveBlobs) throws SQLException {
@@ -214,10 +213,10 @@ class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean absolute(int row) throws SQLException {
-        return absolute(row, false);
+        return setRowNum(row);
     }
 
-    private boolean absolute(int row, boolean internal) throws SQLException {
+    private boolean setRowNum(int row) throws SQLException {
         checkScrollable();
 
         if (row < 0) {
@@ -251,17 +250,17 @@ class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean first() throws SQLException {
-        return absolute(1, true);
+        return setRowNum(1);
     }
 
     @Override
     public boolean last() throws SQLException {
-        return absolute(-1, true);
+        return setRowNum(-1);
     }
 
     @Override
     public boolean relative(int row) throws SQLException {
-        return absolute(rowNum + row, true);
+        return setRowNum(rowNum + row);
     }
 
     @Override

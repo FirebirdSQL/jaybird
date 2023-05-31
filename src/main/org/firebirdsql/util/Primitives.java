@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Helper methods for conversion to or from primitive values.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5.
  */
 @InternalApi

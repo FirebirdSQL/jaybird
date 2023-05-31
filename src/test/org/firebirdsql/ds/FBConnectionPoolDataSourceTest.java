@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Tests for {@link FBConnectionPoolDataSource}
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBConnectionPoolDataSourceTest extends FBConnectionPoolTestBase {
 
@@ -84,17 +84,6 @@ class FBConnectionPoolDataSourceTest extends FBConnectionPoolTestBase {
     @Test
     void testSetNonStandardProperty_singleParam() {
         ds.setNonStandardProperty("someProperty=someValue");
-        
-        assertEquals("someValue", ds.getProperty("someProperty"));
-    }
-    
-    /**
-     * Test if a property stored with {@link FBConnectionPoolDataSource#setNonStandardProperty(String, String)} is retrievable.
-     */
-    @SuppressWarnings("deprecation")
-    @Test
-    void testSetNonStandardProperty_twoParam() {
-        ds.setNonStandardProperty("someProperty", "someValue");
         
         assertEquals("someValue", ds.getProperty("someProperty"));
     }

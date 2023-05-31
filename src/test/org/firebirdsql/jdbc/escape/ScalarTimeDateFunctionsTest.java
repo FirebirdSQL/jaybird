@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Tests for support of the scalar time and date function escapes as defined in
  * appendix D.3 of the JDBC 4.1 specification.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class ScalarTimeDateFunctionsTest {
     

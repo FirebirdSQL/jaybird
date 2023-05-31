@@ -21,7 +21,9 @@ package org.firebirdsql.gds.ng.wire.version18;
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.CursorFlag;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FetchType;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -59,7 +61,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Tests for {@link V18Statement} in the V18 protocol, reuses test for V16.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class V18StatementTest extends V16StatementTest {
@@ -508,9 +510,8 @@ public class V18StatementTest extends V16StatementTest {
 
     /**
      * Holds information and data on a statement.
-     *
-     * TODO Consider if it makes sense to move this up in the StatementTest hierarchy for reuse in other tests
      */
+    // TODO Consider if it makes sense to move this up in the StatementTest hierarchy for reuse in other tests
     protected static final class StatementInfo {
 
         private final FbStatement statement;
@@ -562,7 +563,9 @@ public class V18StatementTest extends V16StatementTest {
         public int getCursorRecordCount() throws SQLException {
             return statement.getCursorInfo(new byte[] { (byte) INF_RECORD_COUNT, isc_info_end }, 10, buffer -> {
                 if (buffer[0] != INF_RECORD_COUNT) {
-                    throw new SQLException("Unexpected response buffer");
+                    throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
+                            .messageParameter("cursor")
+                            .toSQLException();
                 }
                 int length = iscVaxInteger2(buffer, 1);
                 return iscVaxInteger(buffer, 3, length);

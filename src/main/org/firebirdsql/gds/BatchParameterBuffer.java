@@ -27,7 +27,7 @@ package org.firebirdsql.gds;
 /**
  * Represents a batch parameter buffer, for Firebird 4 and higher batch configuration.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface BatchParameterBuffer extends ParameterBuffer {

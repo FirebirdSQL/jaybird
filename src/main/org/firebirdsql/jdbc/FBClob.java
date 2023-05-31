@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,17 +18,16 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 
 /**
  * Implementation of {@link Clob}.
@@ -37,10 +36,10 @@ import java.sql.SQLException;
  * transparently. It technically does not conform to the JDBC requirements for {@code NClob}.
  * </p>
  * 
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  * @version 1.0
  */
-public class FBClob implements Clob, NClob {
+public final class FBClob implements Clob, NClob {
 
 	private final FBBlob wrappedBlob;
 
@@ -60,7 +59,7 @@ public class FBClob implements Clob, NClob {
 	 * </p>
 	 */
 	@Override
-	public void truncate(long param1) throws SQLException {
+	public void truncate(long len) throws SQLException {
 		throw new FBDriverNotCapableException("Method truncate(long) is not supported");
 	}
 
@@ -69,7 +68,11 @@ public class FBClob implements Clob, NClob {
 		try (Reader reader = getCharacterStream()) {
 			long toSkip = pos - 1; // 1-based index
 			while (toSkip > 0) {
-				toSkip -= reader.skip(toSkip);
+				long skipped = reader.skip(toSkip);
+				if (skipped == 0) {
+					throw new EOFException("end of stream was reached at position " + (pos - toSkip));
+				}
+				toSkip -= skipped;
 			}
 			int n;
 			char[] buffer = new char[Math.min(length, 1024)];
@@ -86,26 +89,13 @@ public class FBClob implements Clob, NClob {
 
 	@Override
 	public Reader getCharacterStream() throws SQLException {
-		String encoding = getWrappedBlob().getGdsHelper().getJavaEncoding();
-		InputStream inputStream = wrappedBlob.getBinaryStream();
-		if (encoding == null) {
-			return new InputStreamReader(inputStream);
-		} else {
-			try {
-				return new InputStreamReader(wrappedBlob.getBinaryStream(), encoding);
-			} catch (IOException ioe) {
-				throw new FBSQLException(ioe);
-			}
-		}
+		return wrappedBlob.config().createReader(
+				wrappedBlob.getBinaryStream());
 	}
 
 	@Override
 	public InputStream getAsciiStream() throws SQLException {
-		InputStream inputStream = null;
-		if (wrappedBlob != null) {
-			inputStream = wrappedBlob.getBinaryStream();
-		}
-		return inputStream;
+		return wrappedBlob.getBinaryStream();
 	}
 
 	/**
@@ -133,7 +123,7 @@ public class FBClob implements Clob, NClob {
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird currently does not support this method.
+     * Jaybird currently only supports this method for {@code position == 1}.
      * </p>
      */
 	@Override
@@ -144,7 +134,7 @@ public class FBClob implements Clob, NClob {
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird currently does not support this method.
+     * Jaybird currently only supports this method for {@code position == 1}.
      * </p>
      */
 	@Override
@@ -163,19 +153,16 @@ public class FBClob implements Clob, NClob {
 	}
 
 	@Override
-	public Writer setCharacterStream(long position) throws SQLException {
-		String encoding = wrappedBlob.getGdsHelper().getJavaEncoding();
-		// FIXME: This is wrong for multibyte charactersets; doesn't matter right now as setBinaryStream isn't implemented for position > 1
-		OutputStream outputStream = wrappedBlob.setBinaryStream(position);
-		if (encoding == null) {
-			return new OutputStreamWriter(outputStream);
-		} else {
-			try {
-				return new OutputStreamWriter(outputStream, encoding);
-			} catch (UnsupportedEncodingException ioe) {
-				throw new FBSQLException(ioe);
-			}
+	public Writer setCharacterStream(long pos) throws SQLException {
+		if (pos < 1) {
+			throw new SQLNonTransientException("You can't start before the beginning of the blob",
+					SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
 		}
+		if (pos > 1) {
+			throw new FBDriverNotCapableException("Offset start positions are not supported.");
+		}
+		return wrappedBlob.config().createWriter(
+				wrappedBlob.setBinaryStream(1));
 	}
 
 	@Override
@@ -185,18 +172,7 @@ public class FBClob implements Clob, NClob {
 
 	@Override
 	public Reader getCharacterStream(long pos, long length) throws SQLException {
-	    // FIXME: This is wrong for multibyte charactersets; doesn't matter right now as getBinaryStream isn't implemented
-		InputStream inputStream = wrappedBlob.getBinaryStream(pos, length);
-		String encoding = getWrappedBlob().getGdsHelper().getJavaEncoding();
-		if (encoding == null) {
-			return new InputStreamReader(inputStream);
-		} else {
-			try {
-				return new InputStreamReader(inputStream, encoding);
-			} catch (IOException ioe) {
-				throw new FBSQLException(ioe);
-			}
-		}
+		throw new FBDriverNotCapableException("Method getCharacterStream(long, long) is not supported");
 	}
 
 	/**
@@ -209,39 +185,22 @@ public class FBClob implements Clob, NClob {
 	 * @param length The maximum number of bytes to copy, or {@code -1} to read the whole stream
 	 */
 	public void copyCharacterStream(Reader characterStream, long length) throws SQLException {
-		if (length == -1L) {
-			copyCharacterStream(characterStream);
-			return;
-		}
-        try (Writer writer = setCharacterStream(1)) {
-            int chunk;
-            final char[] buffer = new char[1024];
-            while (length > 0 && (chunk = characterStream.read(buffer)) != -1) {
-                writer.write(buffer, 0, chunk);
-                length -= chunk;
-            }
-        } catch (IOException ioe) {
-            throw new SQLException(ioe);
-        }
+		wrappedBlob.copyCharacterStream(characterStream, length);
 	}
 
+	/**
+	 * Copy data from a character stream into this Blob.
+	 *
+	 * @param characterStream the source of data to copy
+	 */
 	public void copyCharacterStream(Reader characterStream) throws SQLException {
-		try (Writer writer = setCharacterStream(1)) {
-			int chunk;
-			final char[] buffer = new char[1024];
-			while ((chunk = characterStream.read(buffer)) != -1) {
-                writer.write(buffer, 0, chunk);
-            }
-		} catch (IOException ioe) {
-			throw new SQLException(ioe);
-		}
+		wrappedBlob.copyCharacterStream(characterStream);
 	}
 
 	/**
 	 * Retrieves the FBBlob wrapped by this FBClob.
 	 * 
 	 * @return FBBlob instance
-	 * @throws SQLException
 	 */
 	public FBBlob getWrappedBlob() throws SQLException {
 		return wrappedBlob;

@@ -21,6 +21,7 @@ package org.firebirdsql.management;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -32,6 +33,7 @@ import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
+import static org.firebirdsql.common.FBTestProperties.ENABLE_PROTOCOL;
 import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
@@ -46,7 +48,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 /**
  * Tests for {@link org.firebirdsql.management.FBServiceManager}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class FBServiceManagerTest {
@@ -62,6 +64,7 @@ class FBServiceManagerTest {
         fbServiceManager.setServiceName(serviceName);
         fbServiceManager.setUser(FBTestProperties.DB_USER);
         fbServiceManager.setPassword(FBTestProperties.DB_PASSWORD);
+        fbServiceManager.setEnableProtocol(ENABLE_PROTOCOL);
 
         final GDSServerVersion serverVersion = fbServiceManager.getServerVersion();
 
@@ -111,17 +114,22 @@ class FBServiceManagerTest {
                 urlFormats.add("inet://%1$s:%2$d/");
                 urlFormats.add("inet://%1$s:%2$d");
                 // Not testing inet4/inet6
-                if (getDefaultSupportInfo().isWindows() && isWindowsSystem()) {
-                    // NOTE: This assumes the default WNET service name is used
-                    urlFormats.add("wnet://%1$s/%3$s");
-                    urlFormats.add("wnet://%1$s/");
-                    urlFormats.add("wnet://%1$s");
-                    urlFormats.add("\\\\%4$s\\%3$s");
-                    urlFormats.add("\\\\%4$s\\");
-                    urlFormats.add("\\\\%4$s");
+                FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+                if (supportInfo.isWindows() && isWindowsSystem()) {
+                    if (supportInfo.supportsWnet()) {
+                        // NOTE: This assumes the default WNET service name is used
+                        urlFormats.add("wnet://%1$s/%3$s");
+                        urlFormats.add("wnet://%1$s/");
+                        urlFormats.add("wnet://%1$s");
+                        urlFormats.add("\\\\%4$s\\%3$s");
+                        urlFormats.add("\\\\%4$s\\");
+                        urlFormats.add("\\\\%4$s");
+                        if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
+                            urlFormats.add("wnet://%3$s");
+                            urlFormats.add("wnet://");
+                        }
+                    }
                     if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
-                        urlFormats.add("wnet://%3$s");
-                        urlFormats.add("wnet://");
                         urlFormats.add("xnet://%3$s");
                         urlFormats.add("xnet://");
                     }

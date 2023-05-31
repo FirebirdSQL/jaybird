@@ -28,13 +28,12 @@ import java.sql.SQLException;
 
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.field.FBField;
+import org.firebirdsql.util.InternalApi;
 
 /**
- * INTERNAL INTERFACE: might be changed in the future!
- * 
- * Interface for the clean separation of the classes between result set and 
- * corresponding row updater. 
+ * Interface for the clean separation of the classes between result set and corresponding row updater.
  */
+@InternalApi
 interface FirebirdRowUpdater {
 
     void cancelRowUpdates() throws SQLException;

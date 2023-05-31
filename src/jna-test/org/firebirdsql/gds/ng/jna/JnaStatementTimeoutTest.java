@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Tests for statement timeouts with JNA statement.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @Unstable("Will fail when the test is run with a Firebird 3 or earlier fbclient")
 class JnaStatementTimeoutTest extends AbstractStatementTimeoutTest {

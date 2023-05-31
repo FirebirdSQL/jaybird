@@ -21,10 +21,7 @@ package org.firebirdsql.encodings;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
-import org.firebirdsql.gds.ng.jna.BigEndianDatatypeCoder;
-import org.firebirdsql.gds.ng.jna.LittleEndianDatatypeCoder;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.jaybird.util.PluginLoader;
 
 import java.lang.reflect.Constructor;
 import java.nio.charset.Charset;
@@ -34,21 +31,21 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.WARNING;
 import static org.firebirdsql.gds.ISCConstants.CS_dynamic;
 
 /**
  * Factory for {@link EncodingDefinition} and {@link Encoding}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class EncodingFactory implements IEncodingFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(EncodingFactory.class);
+    private static final System.Logger log = System.getLogger(EncodingFactory.class.getName());
 
     private static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
     private static final int MAX_NORMAL_CHARSET_ID = 255;
-    private static final Comparator<EncodingSet> ENCODING_SET_COMPARATOR =
-            Comparator.comparingInt(EncodingSet::getPreferenceWeight);
 
     public static final String ENCODING_NAME_NONE = "NONE";
     public static final String ENCODING_NAME_OCTETS = "OCTETS";
@@ -78,6 +75,8 @@ public final class EncodingFactory implements IEncodingFactory {
     private final EncodingDefinition defaultEncodingDefinition;
     private final ConcurrentMap<Class<? extends DatatypeCoder>, DatatypeCoder> datatypeCoderCache
             = new ConcurrentHashMap<>(3);
+    private final Map<EncodingDefinition, ConnectionEncodingFactory> connectionEncodingFactoryCache
+            = new ConcurrentHashMap<>();
 
     /**
      * Initializes EncodingFactory by processing the encodingSets using the provided iterator.
@@ -248,7 +247,6 @@ public final class EncodingFactory implements IEncodingFactory {
         try {
             EncodingDefinition encodingDefinition = null;
             Charset charset = null;
-            // TODO Consider returning getDefaultEncodingDefinition() if both firebirdEncodingName and javaCharsetAlias are NULL
             if (firebirdEncodingName != null) {
                 encodingDefinition = getEncodingDefinitionByFirebirdName(firebirdEncodingName);
                 if (javaCharsetAlias != null) {
@@ -264,7 +262,6 @@ public final class EncodingFactory implements IEncodingFactory {
             }
 
             if (encodingDefinition == null) {
-                // TODO Consider throwing exception if no EncodingDefinition is found
                 return null;
             } else if (!encodingDefinition.isInformationOnly()
                     && (charset == null || encodingDefinition.getJavaCharset().equals(charset))) {
@@ -281,10 +278,11 @@ public final class EncodingFactory implements IEncodingFactory {
                 encodingDefinition = getDefaultEncodingDefinition();
                 return new DefaultEncodingDefinition(ENCODING_NAME_NONE, encodingDefinition.getJavaCharset(), 1, ISCConstants.CS_NONE, false);
             }
-            // TODO Consider throwing exception if no EncodingDefinition is found
             return null;
         } catch (Exception e) {
-            log.debug(String.format("Exception looking up encoding definition for firebirdEncodingName %s, javaCharsetAlias %s", firebirdEncodingName, javaCharsetAlias), e);
+            log.log(DEBUG,
+                    () -> "Exception looking up encoding definition for firebirdEncodingName %s, javaCharsetAlias %s"
+                            .formatted(firebirdEncodingName, javaCharsetAlias), e);
             return null;
         }
     }
@@ -301,8 +299,8 @@ public final class EncodingFactory implements IEncodingFactory {
                 encodingDefinition != null && !encodingDefinition.isInformationOnly()
                         ? encodingDefinition
                         : getDefaultEncodingDefinition();
-        // TODO Add (weak?) cache for encoding factory instances?
-        return new ConnectionEncodingFactory(this, resolvedEncodingDefinition);
+        return connectionEncodingFactoryCache.computeIfAbsent(resolvedEncodingDefinition,
+                def -> new ConnectionEncodingFactory(this, def));
     }
 
     /**
@@ -313,22 +311,17 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     @Override
     public IEncodingFactory withDefaultEncodingDefinition(Charset charset) {
-        // TODO This might misbehave if there is no EncodingDefinition for charset (it will then revert to the default)
         return withDefaultEncodingDefinition(getEncodingDefinitionByCharset(charset));
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass) {
-        DatatypeCoder coder = datatypeCoderCache.get(datatypeCoderClass);
-        if (coder == null) {
-            T newCoder = createNewDatatypeCoder(datatypeCoderClass, this);
-            coder = datatypeCoderCache.putIfAbsent(datatypeCoderClass, newCoder);
-            if (coder == null) {
-                return newCoder;
-            }
-        }
-        return (T) coder;
+        return (T) datatypeCoderCache.computeIfAbsent(datatypeCoderClass, this::createNewDatatypeCoder);
+    }
+
+    private <T extends DatatypeCoder> T createNewDatatypeCoder(Class<T> datatypeCoderClass) {
+        return createNewDatatypeCoder(datatypeCoderClass, this);
     }
 
     @SuppressWarnings({ "unchecked" })
@@ -337,10 +330,6 @@ public final class EncodingFactory implements IEncodingFactory {
         // Avoid reflection if we can:
         if (datatypeCoderClass == DefaultDatatypeCoder.class) {
             return (T) new DefaultDatatypeCoder(encodingFactory);
-        } else if (datatypeCoderClass == LittleEndianDatatypeCoder.class) {
-            return (T) new LittleEndianDatatypeCoder(encodingFactory);
-        } else if (datatypeCoderClass == BigEndianDatatypeCoder.class) {
-            return (T) new BigEndianDatatypeCoder(encodingFactory);
         } else {
             try {
                 Constructor<T> datatypeCoderConstructor = datatypeCoderClass.getConstructor(IEncodingFactory.class);
@@ -368,28 +357,9 @@ public final class EncodingFactory implements IEncodingFactory {
      * @see EncodingSet
      */
     private static NavigableSet<EncodingSet> loadEncodingSets() {
-        final TreeSet<EncodingSet> encodingSets = new TreeSet<>(ENCODING_SET_COMPARATOR);
-        final ServiceLoader<EncodingSet> encodingSetLoader = ServiceLoader.load(EncodingSet.class, EncodingFactory.class.getClassLoader());
-        // We can't use foreach here, because the encoding sets are lazily loaded, which might trigger a ServiceConfigurationError
-        Iterator<EncodingSet> encodingSetIterator = encodingSetLoader.iterator();
-        // Load the encoding sets and populate the TreeMap
-        int retry = 0;
-        while (retry < 2) {
-            try {
-                while (encodingSetIterator.hasNext()) {
-                    try {
-                        EncodingSet encodingSet = encodingSetIterator.next();
-                        encodingSets.add(encodingSet);
-                    } catch (Exception | ServiceConfigurationError e) {
-                        log.errorDebug("Could not load encoding set (skipping)", e);
-                    }
-                }
-                break;
-            } catch (ServiceConfigurationError e) {
-                log.error("Error finding next EncodingSet", e);
-                retry++;
-            }
-        }
+        final var encodingSets = new TreeSet<>(encodingSetComparator());
+        encodingSets.addAll(
+                PluginLoader.findPlugins(EncodingSet.class, List.of(), PluginLoader.ClassSource.PLUGIN_CLASS_LOADER));
         return encodingSets;
     }
 
@@ -400,8 +370,8 @@ public final class EncodingFactory implements IEncodingFactory {
      *         The EncodingSet to process
      */
     private void processEncodingSet(final EncodingSet encodingSet) {
-        if (log.isDebugEnabled())
-            log.debug(String.format("Processing EncodingSet %s with preference weight %d", encodingSet.getClass().getName(), encodingSet.getPreferenceWeight()));
+        log.log(DEBUG, "Processing EncodingSet {0} with preference weight {1}",
+                encodingSet.getClass().getName(), encodingSet.getPreferenceWeight());
         for (EncodingDefinition encodingDefinition : encodingSet.getEncodings()) {
             processEncodingDefinition(encodingDefinition);
         }
@@ -420,15 +390,18 @@ public final class EncodingFactory implements IEncodingFactory {
         final int firebirdCharacterSetId = encodingDefinition.getFirebirdCharacterSetId();
         if (firebirdEncodingToDefinition.containsKey(firebirdEncodingName.toLowerCase(Locale.ROOT))) {
             // We already loaded a definition for this encoding
-            if (log.isDebugEnabled())
-                log.debug(String.format("Skipped loading encoding definition for Firebird encoding %s, already loaded a definition for that name", firebirdEncodingName));
+            log.log(DEBUG, "Skipped loading encoding definition for Firebird encoding {0}, already loaded a definition "
+                           + "for that name", firebirdEncodingName);
             return;
         } else if (firebirdCharacterSetId == CS_dynamic) {
-            if (log.isDebugEnabled())
-                log.debug(String.format("Skipped loading encoding definition for Firebird encoding %s, as it declared itself as the connection character set (FirebirdCharacterSetId 127 or CS_dynamic)", firebirdEncodingName));
+            log.log(DEBUG, "Skipped loading encoding definition for Firebird encoding {0}, as it declared itself as "
+                           + "the connection character set (FirebirdCharacterSetId 127 or CS_dynamic)",
+                    firebirdEncodingName);
             return;
         } else if (firebirdCharacterSetId < 0 || firebirdCharacterSetId > MAX_NORMAL_CHARSET_ID) {
-            log.warn(String.format("Skipped loading encoding definition for Firebird encoding %s, as it declared itself as FirebirdCharacterSetId %d, which is outside the range [0, 255]", firebirdEncodingName, firebirdCharacterSetId));
+            log.log(WARNING, "Skipped loading encoding definition for Firebird encoding {0}, as it declared itself as "
+                             + "FirebirdCharacterSetId {1}, which is outside the range [0, 255]", firebirdEncodingName,
+                    firebirdCharacterSetId);
             return;
         }
 
@@ -453,11 +426,10 @@ public final class EncodingFactory implements IEncodingFactory {
             for (String charsetAlias : charset.aliases()) {
                 javaAliasesToDefinition.put(charsetAlias.toLowerCase(Locale.ROOT), encodingDefinition);
             }
-        } else if (log.isDebugEnabled()) {
-            log.debug(String.format(
-                    "Not mapping java charset %s to Firebird encoding %s, already mapped to Firebird encoding %s",
+        } else {
+            log.log(DEBUG, "Not mapping java charset {0} to Firebird encoding {1}, already mapped to Firebird encoding {2}",
                     charset.name(), encodingDefinition.getEncoding(),
-                    currentEncodingDefinition.getFirebirdEncodingName()));
+                    currentEncodingDefinition.getFirebirdEncodingName());
         }
     }
 
@@ -484,10 +456,8 @@ public final class EncodingFactory implements IEncodingFactory {
             return encoding;
         }
         // We only get here if the EncodingDefinition implementation does not adhere to the contract
-        if (log.isDebugEnabled()) {
-            log.debug(String.format("EncodingDefinition for Firebird encoding %s returned null for getEncoding(), using fallback encoding",
-                    encodingDefinition.getFirebirdEncodingName()));
-        }
+        log.log(DEBUG, "EncodingDefinition for Firebird encoding {0} returned null for getEncoding(), using fallback encoding",
+                encodingDefinition.getFirebirdEncodingName());
         return fallbackEncoding;
     }
 
@@ -555,8 +525,10 @@ public final class EncodingFactory implements IEncodingFactory {
         // Process the encoding sets in descending order
         NavigableSet<EncodingSet> encodingSets = loadEncodingSets();
         if (encodingSets.isEmpty()) {
-            log.warn("No encoding sets were loaded. Make sure at least one valid /META-INF/services/org.firebirdsql.encodings.EncodingSet "
-                    + "exists on the classpath (it is normally part of the jaybird jar-file). Falling back to default definition.");
+            log.log(WARNING,
+                    "No encoding sets were loaded. Make sure at least one valid /META-INF/services/org.firebirdsql.encodings.EncodingSet "
+                    + "exists on the classpath (it is normally part of the jaybird jar-file). Falling back to default "
+                    + "definition.");
             encodingSets.add(new DefaultEncodingSet());
         }
         return new EncodingFactory(encodingSets.descendingIterator());
@@ -571,155 +543,11 @@ public final class EncodingFactory implements IEncodingFactory {
      * @return EncodingFactory instance based on the supplied encodingSets.
      */
     public static EncodingFactory createInstance(EncodingSet... encodingSets) {
-        TreeSet<EncodingSet> sortedEncodingSets = new TreeSet<>(ENCODING_SET_COMPARATOR);
+        TreeSet<EncodingSet> sortedEncodingSets = new TreeSet<>(encodingSetComparator());
         // Load the encoding sets and populate the TreeMap
         Collections.addAll(sortedEncodingSets, encodingSets);
         // Process the encoding sets in descending order
         return new EncodingFactory(sortedEncodingSets.descendingIterator());
-    }
-
-    /**
-     * Get size of a character for the specified character set.
-     *
-     * @param characterSetId
-     *         of the character set.
-     * @return maximum size of the character in bytes or 1 if charset was not
-     *         found.
-     * @deprecated Use the information provided by the {@link EncodingDefinition} returned by {@link
-     *             #getEncodingDefinitionByCharacterSetId(int)}
-     */
-    @Deprecated
-    public static int getCharacterSetSize(int characterSetId) {
-        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
-                .getEncodingDefinitionByCharacterSetId(characterSetId);
-        return encodingDefinition != null ? encodingDefinition.getMaxBytesPerChar() : 1;
-    }
-
-    /**
-     * Gets an {@link Encoding} instance for the supplied java Charset name.
-     *
-     * @param javaCharsetAlias
-     *         Java Charset name
-     * @return Instance of {@link Encoding}
-     * @deprecated Use {@link #getEncodingForCharsetAlias(String, Encoding)}
-     */
-    @Deprecated
-    public static Encoding getEncoding(String javaCharsetAlias) {
-        return getRootEncodingFactory().getEncodingForCharsetAlias(javaCharsetAlias, null);
-    }
-
-    /**
-     * Gets an {@link Encoding} instance for the supplied java Charset.
-     *
-     * @param charset
-     *         Java Charset
-     * @return Instance of {@link Encoding}
-     * @deprecated Use {@link #getEncodingForCharset(java.nio.charset.Charset, Encoding)} or {@link
-     *             #getOrCreateEncodingForCharset(java.nio.charset.Charset)}
-     */
-    @Deprecated
-    public static Encoding getEncoding(Charset charset) {
-        return getRootEncodingFactory().getOrCreateEncodingForCharset(charset);
-    }
-
-    /**
-     * Get Firebird encoding for given Java language encoding.
-     *
-     * @param javaCharsetAlias
-     *         Java language encoding.
-     * @return corresponding Firebird encoding or <code>null</code> if none
-     *         found.
-     * @deprecated Use {@link #getEncodingDefinitionByCharsetAlias(String)}
-     */
-    @Deprecated
-    @SuppressWarnings("deprecation")
-    public static String getIscEncoding(String javaCharsetAlias) {
-        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
-                .getEncodingDefinitionByCharsetAlias(javaCharsetAlias);
-        return encodingDefinition != null ? encodingDefinition.getFirebirdEncodingName() : null;
-    }
-
-    /**
-     * Get Firebird encoding for given Java Charset.
-     *
-     * @param javaCharset
-     *         Java Charset
-     * @return corresponding Firebird encoding or <code>null</code> if none
-     *         found.
-     * @deprecated Use {@link #getEncodingDefinitionByCharset(java.nio.charset.Charset)}
-     */
-    @Deprecated
-    public static String getIscEncoding(Charset javaCharset) {
-        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
-                .getEncodingDefinitionByCharset(javaCharset);
-        return encodingDefinition != null ? encodingDefinition.getFirebirdEncodingName() : null;
-    }
-
-    /**
-     * Get size of a character for the specified Firebird encoding.
-     *
-     * @param iscEncoding
-     *         Firebird encoding.
-     * @return maximum size of the character in bytes or 1 if encoding was not
-     *         found.
-     * @deprecated Use {@link #getEncodingDefinitionByFirebirdName(String)} and {@link EncodingDefinition#getMaxBytesPerChar()}
-     */
-    @Deprecated
-    public static int getIscEncodingSize(String iscEncoding) {
-        if (iscEncoding == null) {
-            return 1;
-        }
-        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
-                .getEncodingDefinitionByFirebirdName(iscEncoding);
-        return encodingDefinition != null ? encodingDefinition.getMaxBytesPerChar() : 1;
-    }
-
-    /**
-     * Get Java language encoding for given Firebird encoding.
-     *
-     * @param iscEncoding
-     *         Firebird encoding
-     * @return corresponding Java encoding or <code>null</code> if none found.
-     *         Use {@link #getEncodingDefinitionByFirebirdName(String)} and {@link org.firebirdsql.encodings.EncodingDefinition#getJavaEncodingName()}
-     */
-    @Deprecated
-    public static String getJavaEncoding(String iscEncoding) {
-        if (iscEncoding == null) {
-            return null;
-        }
-        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
-                .getEncodingDefinitionByFirebirdName(iscEncoding);
-
-        // very important for performance
-        // if javaEncoding is the default one, set to null
-        if (encodingDefinition == null || DEFAULT_CHARSET.equals(encodingDefinition.getJavaCharset())) {
-            return null;
-        }
-        return encodingDefinition.getJavaEncodingName();
-    }
-
-    /**
-     * Get Java language encoding for a given Java encoding alias.
-     * <p>
-     * Ensures that naming is consistent even if a different alias was used.
-     * </p>
-     *
-     * @param javaAlias
-     *         Java alias for the encoding
-     * @return Java Charset name
-     * @deprecated Use {@link #getEncodingDefinitionByCharsetAlias(String)} and {@link
-     *             EncodingDefinition#getJavaEncodingName()}
-     */
-    @Deprecated
-    public static String getJavaEncodingForAlias(String javaAlias) {
-        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
-                .getEncodingDefinitionByCharsetAlias(javaAlias);
-        // very important for performance
-        // if javaEncoding is the default one, set to null
-        if (encodingDefinition == null || DEFAULT_CHARSET.equals(encodingDefinition.getJavaCharset())) {
-            return null;
-        }
-        return encodingDefinition.getJavaEncodingName();
     }
 
     /**
@@ -754,5 +582,9 @@ public final class EncodingFactory implements IEncodingFactory {
             potentialNames.add(alias.toLowerCase(Locale.ROOT));
         }
         return potentialNames;
+    }
+
+    private static Comparator<EncodingSet> encodingSetComparator() {
+        return Comparator.comparingInt(EncodingSet::getPreferenceWeight);
     }
 }

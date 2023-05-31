@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,10 +24,10 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
 import java.sql.SQLException;
 
 /**
- * Provides conversion of parameters (eg from {@link org.firebirdsql.gds.ng.IConnectionProperties} to a
- * {@link org.firebirdsql.gds.DatabaseParameterBuffer}.
+ * Provides conversion of parameters (e.g. from {@link org.firebirdsql.gds.ng.IConnectionProperties} to a
+ * {@link org.firebirdsql.gds.DatabaseParameterBuffer}).
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface ParameterConverter<D extends AbstractConnection<IConnectionProperties, ?>, S extends AbstractConnection<IServiceProperties, ?>> {

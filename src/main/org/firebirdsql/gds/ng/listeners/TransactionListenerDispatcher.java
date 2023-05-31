@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,33 +20,27 @@ package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Dispatcher to maintain and notify other {@link TransactionListener}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class TransactionListenerDispatcher extends AbstractListenerDispatcher<TransactionListener>
         implements TransactionListener {
 
-    private static final Logger log = LoggerFactory.getLogger(TransactionListenerDispatcher.class);
+    private static final System.Logger log = System.getLogger(TransactionListenerDispatcher.class.getName());
 
     @Override
-    public void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState) {
-        for (TransactionListener listener : this) {
-            try {
-                listener.transactionStateChanged(transaction, newState, previousState);
-            } catch (Exception e) {
-                log.error("Error on notify transactionStateChanged to listener " + listener, e);
-            }
-        }
+    public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
+            TransactionState previousState) {
+        notify(listener -> listener.transactionStateChanged(transaction, newState, previousState),
+                "transactionStateChanged");
     }
 
     @Override
     protected void logError(String message, Throwable throwable) {
-        log.error(message, throwable);
+        log.log(System.Logger.Level.ERROR, message, throwable);
     }
 }

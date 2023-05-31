@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for "use Firebird autocommit" mode.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 class UseFirebirdAutocommitTest {
@@ -56,6 +56,9 @@ class UseFirebirdAutocommitTest {
     })
     void checkFirebirdAutocommitValue(String properties, boolean expectedUseFirebirdAutocommit) throws SQLException {
         String url = FBTestProperties.getUrl() + properties;
+        if (FBTestProperties.ENABLE_PROTOCOL != null) {
+            url += "&enableProtocol=" + FBTestProperties.ENABLE_PROTOCOL;
+        }
         try (FBConnection connection = (FBConnection) DriverManager.getConnection(url, FBTestProperties.DB_USER,
                 FBTestProperties.DB_PASSWORD)) {
             FBManagedConnectionFactory managedConnectionFactory = connection

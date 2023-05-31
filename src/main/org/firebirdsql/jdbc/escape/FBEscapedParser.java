@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -31,8 +31,8 @@ import java.util.regex.Pattern;
 /**
  * The class {@code FBEscapedParser} parses the SQL and converts escaped syntax to native form.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 @InternalApi
 public final class FBEscapedParser {
@@ -71,22 +71,21 @@ public final class FBEscapedParser {
     /**
      * Check if the target SQL contains at least one of the escaped syntax
      * commands. This method performs a simple regex match, so it may
-     * report that SQL contains escaped syntax when the <code>"{"</code> is
+     * report that SQL contains escaped syntax when the {@code "{"} is
      * followed by the escaped syntax command in regular string constants that
      * are passed as parameters. In this case {@link #parse(String)} will
      * perform complete SQL parsing.
      *
      * @param sql
      *         to test
-     * @return <code>true</code> if the <code>sql</code> is suspected to contain
-     * escaped syntax.
+     * @return {@code true} if the {@code sql} is suspected to contain escaped syntax.
      */
     private static boolean checkForEscapes(String sql) {
         return CHECK_ESCAPE_PATTERN.matcher(sql).find();
     }
 
     /**
-     * Converts escaped parts in the passed SQL to native representation.
+     * Converts escaped parts in {@code sql} to native representation.
      *
      * @param sql
      *         to parse
@@ -97,11 +96,11 @@ public final class FBEscapedParser {
     }
 
     /**
-     * Converts escaped parts in the passed SQL to native representation.
+     * Converts escaped parts in {@code sql} to native representation.
      *
      * @param sql
      *         to parse
-     * @return native form of the <code>sql</code>.
+     * @return native form of the {@code sql}.
      */
     public static String parse(final String sql) throws SQLException {
         if (!checkForEscapes(sql)) return sql;
@@ -308,8 +307,7 @@ public final class FBEscapedParser {
     }
 
     /**
-     * This methods converts the escaped procedure call syntax into the native
-     * procedure call.
+     * Converts the escaped procedure call syntax into the native procedure call.
      *
      * @param target
      *         Target StringBuilder to append native procedure call to.
@@ -339,8 +337,7 @@ public final class FBEscapedParser {
     }
 
     /**
-     * Convert the <code>"{escape '...'}"</code> call into the corresponding
-     * escape clause for Firebird.
+     * Convert the {@code "{escape '...'}"} call into the corresponding escape clause for Firebird.
      *
      * @param escapeString
      *         escape string to convert
@@ -350,18 +347,14 @@ public final class FBEscapedParser {
     }
 
     /**
-     * Convert the
-     * <code>"{limit &lt;rows&gt; [offset &lt;rows_offset&gt;]}"</code> call
-     * into the corresponding rows clause for Firebird.
+     * Convert the {@code "{limit <rows> [offset <rows_offset>]}"} call into the corresponding rows clause for Firebird.
      * <p>
-     * NOTE: We assume that the {limit ...} escape occurs in the right place to
-     * work for a
-     * <code><a href="http://www.firebirdsql.org/file/documentation/reference_manuals/reference_material/html/langrefupd25-select.html#langrefupd25-select-rows">ROWS</a></code>
+     * NOTE: We assume that the {limit ...} escape occurs in the right place to work for a
+     * <a href="https://www.firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref40/fblangref40-dml.html#fblangref40-dml-select-rows">{@code ROWS}</a>
      * clause in Firebird.
      * </p>
      * <p>
-     * This implementation supports a parameter for the value of &lt;rows&gt;,
-     * but not for &lt;rows_offset&gt;.
+     * This implementation supports a parameter for the value of &lt;rows&gt;, but not for &lt;rows_offset&gt;.
      * </p>
      *
      * @param limitClause

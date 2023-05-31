@@ -34,13 +34,13 @@ import java.util.Objects;
 import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
- * The class <code>FieldDescriptor</code> contains the column metadata of the XSQLVAR server
+ * The class {@code FieldDescriptor} contains the column metadata of the XSQLVAR server
  * data structure used to describe one column for input or output.
  * <p>
  * FieldDescriptor is an immutable type, the value of a field is maintained separately in {@link RowValue}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @version 3.0
  */
 public final class FieldDescriptor {
@@ -62,7 +62,7 @@ public final class FieldDescriptor {
      * Constructor for metadata FieldDescriptor.
      *
      * @param position
-     *         Position of this field (0-based), or {@code -1} if position is not known (eg for test code)
+     *         Position of this field (0-based), or {@code -1} if position is not known (e.g. for test code)
      * @param datatypeCoder
      *         Instance of DatatypeCoder to use when decoding column data (note that another instance may be derived
      *         internally, which then will be returned by {@link #getDatatypeCoder()})
@@ -85,12 +85,10 @@ public final class FieldDescriptor {
      * @param ownerName
      *         Owner of the column/table
      */
-    public FieldDescriptor(final int position, final DatatypeCoder datatypeCoder,
-            final int type, final int subType,
-            final int scale, int length,
-            final String fieldName, final String tableAlias, 
-            final String originalName, final String originalTableName,
-            final String ownerName) {
+    public FieldDescriptor(int position, DatatypeCoder datatypeCoder,
+            int type, int subType, int scale, int length,
+            String fieldName, String tableAlias, String originalName, String originalTableName,
+            String ownerName) {
         assert datatypeCoder != null : "dataTypeCoder should not be null";
         this.position = position;
         this.datatypeCoder = datatypeCoderForType(datatypeCoder, type, subType, scale);
@@ -171,7 +169,7 @@ public final class FieldDescriptor {
     }
 
     /**
-     * @return The original name of the field (eg the column name in the table)
+     * @return The original name of the field (e.g. the column name in the table)
      */
     public String getOriginalName() {
         return originalName;
@@ -246,8 +244,12 @@ public final class FieldDescriptor {
     public int getCharacterLength() {
         switch (type & ~1) {
         case SQL_TEXT:
-        case SQL_VARYING:
-            return length / getDatatypeCoder().getEncodingDefinition().getMaxBytesPerChar();
+        case SQL_VARYING: {
+            int maxBytesPerChar = getDatatypeCoder().getEncodingDefinition().getMaxBytesPerChar();
+            // In Firebird 1.5 and earlier, the CHAR(31) metadata columns are reported with a byte length of 31,
+            // while UNICODE_FSS has maxBytesPerChar 3
+            return maxBytesPerChar > 1 && length % maxBytesPerChar == 0 ? length / maxBytesPerChar : length;
+        }
         default:
             return -1;
         }
@@ -264,7 +266,7 @@ public final class FieldDescriptor {
      * @param type
      *         Firebird type code
      * @param subType
-     *         Firebird sub type code
+     *         Firebird subtype code
      * @param scale
      *         Scale
      * @return type-specific datatype coder
@@ -277,12 +279,12 @@ public final class FieldDescriptor {
     }
 
     /**
-     * Determines the character set id (without collation id) for a combination of type, sub type and scale.
+     * Determines the character set id (without collation id) for a combination of type, subtype and scale.
      *
      * @param type
      *         Firebird type code
      * @param subType
-     *         Firebird sub type code
+     *         Firebird subtype code
      * @param scale
      *         Firebird scale
      * @return Character set id for the type, if the type has no character set, than {@link ISCConstants#CS_dynamic}
@@ -306,6 +308,16 @@ public final class FieldDescriptor {
     }
 
     /**
+     * Determines the character set id (without collation id).
+     *
+     * @return Character set id for the type, if the type has no character set, than {@link ISCConstants#CS_dynamic}
+     * is returned
+     */
+    public int getCharacterSetId() {
+        return getCharacterSetId(type, subType, scale);
+    }
+
+    /**
      * Limited equals that only checks if the data type in the provided field descriptor is the same as this descriptor.
      * <p>
      * The fields checked are:
@@ -319,8 +331,8 @@ public final class FieldDescriptor {
      *
      * @param other
      *         Field descriptor to check
-     * @return <code>true</code> when <code>other</code> is not null and has the same type definition as this instance,
-     * <code>false</code> otherwise.
+     * @return {@code true} when {@code other} is not null and has the same type definition as this instance,
+     * {@code false} otherwise.
      */
     @SuppressWarnings("unused")
     public boolean typeEquals(final FieldDescriptor other) {
@@ -342,7 +354,7 @@ public final class FieldDescriptor {
         switch (type & ~1) {
         case SQL_TEXT:
         case SQL_VARYING:
-            if (getCharacterSetId(type, subType, scale) == CS_BINARY) {
+            if (getCharacterSetId() == CS_BINARY) {
                 return 0x00;
             }
             return 0x20;

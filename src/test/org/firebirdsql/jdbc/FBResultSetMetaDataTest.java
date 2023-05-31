@@ -19,6 +19,9 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -26,10 +29,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.List;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.gds.ISCConstants.SQL_DOUBLE;
+import static org.firebirdsql.gds.ISCConstants.SQL_FLOAT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -38,8 +45,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * This method tests correctness of {@link FBResultSetMetaData} class.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 class FBResultSetMetaDataTest {
 
@@ -90,7 +97,7 @@ class FBResultSetMetaDataTest {
             assertEquals(4, metaData.getPrecision(6), "short_field must have precision 4");
         }
     }
-    
+
     @Test
     void testResultSetMetaData2() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
@@ -352,6 +359,53 @@ class FBResultSetMetaDataTest {
                     assertEquals("A1", rsmd.getColumnLabel(1), "columnLabel1");
                     assertEquals("A2", rsmd.getColumnLabel(2), "columnLabel2");
                 }
+            }
+        }
+    }
+
+    /**
+     * Tests for <a href="https://github.com/FirebirdSQL/jaybird/issues/730">jaybird#730</a>.
+     */
+    @Test
+    void getPrecision_connectionLessResultSet_shouldSucceedWithoutException_730() throws Exception {
+        var rowDescriptor = new RowDescriptorBuilder(2,
+                DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8)))
+                .at(0).simple(SQL_FLOAT, 4, "TEST", "FLOAT").addField()
+                .at(1).simple(SQL_DOUBLE, 8, "TEST", "DOUBLE").addField()
+                .toRowDescriptor();
+        var rs = new FBResultSet(rowDescriptor, List.of());
+        ResultSetMetaData rsmd = rs.getMetaData();
+
+        assertEquals(24, rsmd.getPrecision(1));
+        assertEquals(53, rsmd.getPrecision(2));
+    }
+
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/731">jaybird#731</a>.
+     */
+    @Test
+    void extendedFieldInfo_moreThan70Columns_731() throws Exception {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+
+            var createTable = new StringBuilder(28 + 71 * 22).append("create table extfieldtest (");
+            var selectStmt = new StringBuilder(25 + 71 * 9).append("select ");
+            for (int colIdx = 1; colIdx <= 70; colIdx++) {
+                createTable.append("column").append(colIdx).append(" numeric(3,1),");
+                selectStmt.append("column").append(colIdx).append(',');
+            }
+            createTable.append("column71 numeric(2,1))");
+            selectStmt.append("column71 from extfieldtest");
+
+            stmt.execute(createTable.toString());
+
+            try (var rs = stmt.executeQuery(selectStmt.toString())) {
+                ResultSetMetaData rsmd = rs.getMetaData();
+
+                assertEquals(3, rsmd.getPrecision(70),
+                        "expected actual precision of 3 instead of estimated precision of 4");
+                assertEquals(2, rsmd.getPrecision(71),
+                        "expected actual precision of 2 instead of estimated precision of 4");
             }
         }
     }

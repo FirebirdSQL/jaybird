@@ -29,7 +29,7 @@ import java.sql.SQLException;
 /**
  * Plugin for Firebird authentication.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface AuthenticationPlugin {
@@ -108,7 +108,7 @@ public interface AuthenticationPlugin {
          */
         AUTH_CONTINUE,
         /**
-         * The authentication needs more data to complete (eg key exchange/handshake).
+         * The authentication needs more data to complete (e.g. key exchange/handshake).
          */
         AUTH_MORE_DATA
     }

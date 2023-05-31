@@ -31,7 +31,7 @@ package org.firebirdsql.gds.ng;
  * will result in an {@link java.util.concurrent.locks.Lock#unlock()} or equivalent.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @FunctionalInterface

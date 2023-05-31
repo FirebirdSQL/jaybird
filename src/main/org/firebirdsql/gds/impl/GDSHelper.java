@@ -26,20 +26,17 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.TimeZone;
 
 import static java.util.Objects.requireNonNull;
-import static org.firebirdsql.gds.ng.IConnectionProperties.SESSION_TIME_ZONE_SERVER;
+import static org.firebirdsql.jaybird.props.PropertyConstants.SESSION_TIME_ZONE_SERVER;
 
 /**
  * Helper class for all GDS-related operations.
  */
 public final class GDSHelper {
-
-    public static final int DEFAULT_BLOB_BUFFER_SIZE = 16 * 1024;
 
     private final FbDatabase database;
     private FbTransaction transaction;
@@ -93,8 +90,7 @@ public final class GDSHelper {
     /**
      * Retrieve whether this connection is currently involved in a transaction
      *
-     * @return <code>true</code> if this connection is currently in a
-     * transaction, <code>false</code> otherwise.
+     * @return {@code true} if this connection is currently in a transaction, {@code false} otherwise.
      */
     public boolean inTransaction() {
         try (LockCloseable ignored = withLock()) {
@@ -115,48 +111,32 @@ public final class GDSHelper {
     }
 
     /**
-     * Open a handle to a new blob within the current transaction with the given
-     * id.
+     * Open a handle to a new blob within the current transaction with the given id.
      *
-     * @param blob_id
-     *         The identifier to be given to the blob
-     * @param segmented
-     *         If <code>true</code>, the blob will be segmented, otherwise
-     *         is will be streamed
+     * @param blobId
+     *         the identifier to be given to the blob
+     * @param blobConfig
+     *         blob configuration
      * @throws SQLException
      *         if a Firebird-specific database error occurs
      */
-    public FbBlob openBlob(long blob_id, boolean segmented) throws SQLException {
-        BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
-
-        blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
-                segmented ? BlobParameterBuffer.TYPE_SEGMENTED
-                        : BlobParameterBuffer.TYPE_STREAM);
-
-        FbBlob blob = database.createBlobForInput(getCurrentTransaction(), blobParameterBuffer, blob_id);
+    public FbBlob openBlob(long blobId, BlobConfig blobConfig) throws SQLException {
+        FbBlob blob = database.createBlobForInput(getCurrentTransaction(), blobConfig, blobId);
         blob.open();
-
         return blob;
     }
 
     /**
      * Create a new blob within the current transaction.
      *
-     * @param segmented
-     *         If <code>true</code> the blob will be segmented, otherwise it will be streamed
+     * @param blobConfig
+     *         blob configuration
      * @throws SQLException
      *         if a Firebird-specific database error occurs
      */
-    public FbBlob createBlob(boolean segmented) throws SQLException {
-        BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
-
-        blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
-                segmented ? BlobParameterBuffer.TYPE_SEGMENTED
-                        : BlobParameterBuffer.TYPE_STREAM);
-
-        FbBlob blob = database.createBlobForOutput(getCurrentTransaction(), blobParameterBuffer);
+    public FbBlob createBlob(BlobConfig blobConfig) throws SQLException {
+        FbBlob blob = database.createBlobForOutput(getCurrentTransaction(), blobConfig);
         blob.open();
-
         return blob;
     }
 
@@ -190,7 +170,7 @@ public final class GDSHelper {
     }
 
     /**
-     * Get the version of the the database that we're connected to
+     * Get the version of the database that we're connected to.
      *
      * @return the database product version
      */
@@ -250,28 +230,6 @@ public final class GDSHelper {
     }
 
     /**
-     * Get the buffer length for blobs for this connection.
-     *
-     * @return The length of blob buffers
-     */
-    public int getBlobBufferLength() {
-        return database.getConnectionProperties().getBlobBufferSize();
-    }
-
-    /**
-     * Get the encoding used for this connection.
-     *
-     * @return The name of the encoding used
-     */
-    public String getIscEncoding() {
-        return database.getEncodingFactory().getDefaultEncodingDefinition().getFirebirdEncodingName();
-    }
-
-    public String getJavaEncoding() {
-        return database.getEncodingFactory().getDefaultEncodingDefinition().getJavaEncodingName();
-    }
-
-    /**
      * Get the session time zone as configured in the connection property.
      * <p>
      * NOTE: This is not necessarily the actual server time zone.
@@ -293,10 +251,10 @@ public final class GDSHelper {
         }
         TimeZone timeZone = TimeZone.getTimeZone(sessionTimeZoneName);
         if ("GMT".equals(timeZone.getID()) && !"GMT".equalsIgnoreCase(sessionTimeZoneName)) {
-            String message = "TimeZone fallback to GMT from " + sessionTimeZoneName
-                    + "; possible cause: value of sessionTimeZone unknown in Java. Time and Timestamp values may "
-                    + "yield unexpected values. Consider setting a different value for sessionTimeZone.";
-            LoggerFactory.getLogger(getClass()).warn(message);
+            System.getLogger(getClass().getName()).log(System.Logger.Level.WARNING,
+                    "TimeZone fallback to GMT from {0}; possible cause: value of sessionTimeZone unknown in Java. Time "
+                    + "and Timestamp values may yield unexpected values. Consider setting a different value for "
+                    + "sessionTimeZone", sessionTimeZoneName);
         }
         return sessionTimeZone = timeZone;
     }

@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,7 +21,7 @@ package org.firebirdsql.gds.ng.wire;
 /**
  * Listener interface for events on the asynchronous channel.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface AsynchronousChannelListener {
@@ -34,7 +32,8 @@ public interface AsynchronousChannelListener {
      * Fired before the channel is actually closed.
      * </p>
      *
-     * @param channel The channel that is being closed
+     * @param channel
+     *         channel that is being closed
      */
     void channelClosing(FbWireAsynchronousChannel channel);
 
@@ -45,29 +44,16 @@ public interface AsynchronousChannelListener {
      * complicated processing is necessary, please offload it to another thread or executor.
      * </p>
      *
-     * @param channel The channel that received the event
-     * @param event The event received
+     * @param channel
+     *         channel that received the event
+     * @param event
+     *         event received
      */
     void eventReceived(FbWireAsynchronousChannel channel, Event event);
 
     /**
      * Event count notification
      */
-    class Event {
-        private final int eventId;
-        private final int eventCount;
-
-        public Event(int eventId, int eventCount) {
-            this.eventId = eventId;
-            this.eventCount = eventCount;
-        }
-
-        public int getEventId() {
-            return eventId;
-        }
-
-        public int getEventCount() {
-            return eventCount;
-        }
+    record Event(int eventId, int eventCount) {
     }
 }

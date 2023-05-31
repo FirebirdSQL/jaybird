@@ -33,7 +33,7 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidClumpletStructure;
 /**
  * Reader for clumplets, similar to the implementation {@code ClumpletReader.cpp}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class ClumpletReader {
@@ -252,7 +252,11 @@ public class ClumpletReader {
                     return ClumpletType.StringSpb;
                 case ISCConstants.isc_spb_nbk_level:
                 case SpbItems.isc_spb_options:
+                case ISCConstants.isc_spb_nbk_keep_days:
+                case ISCConstants.isc_spb_nbk_keep_rows:
                     return ClumpletType.IntSpb;
+                case ISCConstants.isc_spb_nbk_clean_history:
+                    return ClumpletType.SingleTpb;
                 }
                 throw invalidStructure("unknown parameter for nbackup");
             case ISCConstants.isc_action_svc_nfix:
@@ -294,15 +298,10 @@ public class ClumpletReader {
     }
 
     public void adjustSpbState() throws SQLException {
-        switch (kind) {
-        case SpbStart:
-            if (spbState == 0 &&                              // Just started with service start block ...
-                    getClumpletSize(true, true, true) == 1) { // and this is action_XXX clumplet
-                spbState = getClumpTag();
-            }
-            break;
-        default:
-            break;
+        if (kind == Kind.SpbStart
+                && spbState == 0
+                && getClumpletSize(true, true, true) == 1) {
+            spbState = getClumpTag();
         }
     }
 

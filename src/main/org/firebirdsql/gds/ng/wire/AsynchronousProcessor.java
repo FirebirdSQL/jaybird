@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,35 +18,34 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.sql.SQLException;
 import java.util.*;
 
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.TRACE;
+
 /**
  * Process asynchronous channels for notification of events.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
-public class AsynchronousProcessor {
+public final class AsynchronousProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(AsynchronousProcessor.class);
+    private static final System.Logger log = System.getLogger(AsynchronousProcessor.class.getName());
 
     /**
      * Initialize on demand holder
      */
-    private static class ProcessorHolder {
+    private static final class ProcessorHolder {
         private static final AsynchronousProcessor INSTANCE = new AsynchronousProcessor();
     }
 
     private final AsynchronousChannelListener channelListener = new ProcessorChannelListener();
-    private final List<FbWireAsynchronousChannel> newChannels =
-            Collections.synchronizedList(new ArrayList<FbWireAsynchronousChannel>());
+    private final List<FbWireAsynchronousChannel> newChannels = Collections.synchronizedList(new ArrayList<>());
     private final SelectorTask selectorTask = new SelectorTask();
     private final Selector selector;
 
@@ -76,9 +75,22 @@ public class AsynchronousProcessor {
      *         The channel to register
      */
     public void registerAsynchronousChannel(FbWireAsynchronousChannel channel) {
-        newChannels.add(channel);
         channel.addChannelListener(channelListener);
+        newChannels.add(channel);
         selector.wakeup();
+    }
+
+    public void unregisterAsynchronousChannel(FbWireAsynchronousChannel channel) {
+        if (!newChannels.remove(channel)) {
+            // TODO Replace with map from channel to selectionkey?
+            for (SelectionKey key : new ArrayList<>(selector.keys())) {
+                if (key.isValid() && key.attachment() == channel) {
+                    key.cancel();
+                    break;
+                }
+            }
+        }
+        channel.removeChannelListener(channelListener);
     }
 
     // TODO Reduce visibility or remove entirely?
@@ -87,19 +99,10 @@ public class AsynchronousProcessor {
         selector.wakeup();
     }
 
-    private class ProcessorChannelListener implements AsynchronousChannelListener {
+    private final class ProcessorChannelListener implements AsynchronousChannelListener {
         @Override
         public void channelClosing(FbWireAsynchronousChannel channel) {
-            if (!newChannels.remove(channel)) {
-                // TODO Replace with map from channel to selectionkey?
-                for (SelectionKey key : new ArrayList<>(selector.keys())) {
-                    if (key.isValid() && key.attachment() == channel) {
-                        key.cancel();
-                        break;
-                    }
-                }
-            }
-            channel.removeChannelListener(this);
+            unregisterAsynchronousChannel(channel);
         }
 
         @Override
@@ -123,32 +126,18 @@ public class AsynchronousProcessor {
                         newChannels.clear();
                     }
 
-                    if (selector.select() == 0) continue;
-
-                    handleReadableKeys(selector.selectedKeys());
-                } catch (IOException ex) {
-                    // TODO check any other necessary handling
-                    log.error("IOException in async event processing", ex);
+                    selector.select(this::handleReadable);
+                } catch (Exception ex) {
+                    log.log(ERROR, "Exception in async event processing", ex);
                 }
             }
             try {
                 selector.close();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 // ignore
-                log.error("IOException closing event selector", e);
-            }
-        }
-
-        private void handleReadableKeys(final Set<SelectionKey> selectedKeys) {
-            synchronized (selectedKeys) {
-                Iterator<SelectionKey> selectedKeysIterator = selectedKeys.iterator();
-                while (selectedKeysIterator.hasNext()) {
-                    final SelectionKey selectionKey = selectedKeysIterator.next();
-                    selectedKeysIterator.remove();
-                    if (!selectionKey.isValid()) continue;
-
-                    handleReadable(selectionKey);
-                }
+                log.log(ERROR, "Exception closing event selector", e);
+            } finally {
+                newChannels.clear();
             }
         }
 
@@ -163,7 +152,7 @@ public class AsynchronousProcessor {
 
         private void handleReadable(SelectionKey selectionKey) {
             try {
-                if (!selectionKey.isReadable()) {
+                if (!(selectionKey.isValid() && selectionKey.isReadable())) {
                     return;
                 }
                 SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
@@ -178,22 +167,22 @@ public class AsynchronousProcessor {
                         channel.close();
                     } catch (SQLException e) {
                         // ignore
-                        log.error("SQLException closing event channel", e);
+                        log.log(ERROR, "SQLException closing event channel", e);
                     }
                 }
             } catch (AsynchronousCloseException e) {
                 // Channel closed
-                log.debug("AsynchronousCloseException reading from event channel; cancelling key", e);
+                log.log(TRACE, "AsynchronousCloseException reading from event channel; cancelling key", e);
                 selectionKey.cancel();
             } catch (CancelledKeyException e) {
                 // ignore; key cancelled as part of close
             } catch (Exception e) {
-                log.error(e.getClass().getName() + " reading from event channel; attempting to close async channel", e);
+                log.log(ERROR, "Exception reading from event channel; attempting to close async channel", e);
                 FbWireAsynchronousChannel channel = (FbWireAsynchronousChannel) selectionKey.attachment();
                 try {
                     channel.close();
                 } catch (Exception e1) {
-                    log.error("Attempt to close async channel failed", e1);
+                    log.log(ERROR, "Attempt to close async channel failed", e1);
                 }
             }
         }
@@ -206,7 +195,7 @@ public class AsynchronousProcessor {
     private static class LogUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
         @Override
         public void uncaughtException(Thread t, Throwable e) {
-            log.error("Jaybird asynchronous processing terminated. Uncaught exception on " + t.getName(), e);
+            log.log(ERROR, "Jaybird asynchronous processing terminated. Uncaught exception on " + t.getName(), e);
         }
     }
 }

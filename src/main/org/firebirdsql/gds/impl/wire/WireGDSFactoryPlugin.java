@@ -21,16 +21,15 @@ package org.firebirdsql.gds.impl.wire;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.wire.FbWireDatabaseFactory;
 
-import java.util.Arrays;
+import java.util.List;
 
-public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
+public final class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String PURE_JAVA_TYPE_NAME = "PURE_JAVA";
-    private static final String[] TYPE_ALIASES = new String[] { "TYPE4" };
+    private static final List<String> TYPE_ALIASES = List.of("TYPE4");
     private static final String DEFAULT_PROTOCOL = "jdbc:firebirdsql:";
-    private static final String[] JDBC_PROTOCOLS = new String[] {
-            "jdbc:firebirdsql:java:", "jdbc:firebird:java:", "jdbc:firebird:", DEFAULT_PROTOCOL
-    };
+    private static final List<String> JDBC_PROTOCOLS = List.of(
+            "jdbc:firebirdsql:java:", "jdbc:firebird:java:", "jdbc:firebird:", DEFAULT_PROTOCOL);
 
     @Override
     public String getPluginName() {
@@ -42,14 +41,28 @@ public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         return PURE_JAVA_TYPE_NAME;
     }
 
+    @SuppressWarnings("removal")
+    @Deprecated(since = "6", forRemoval = true)
     @Override
     public String[] getTypeAliases() {
-        return Arrays.copyOf(TYPE_ALIASES, TYPE_ALIASES.length);
+        return TYPE_ALIASES.toArray(new String[0]);
     }
 
     @Override
+    public List<String> getTypeAliasList() {
+        return TYPE_ALIASES;
+    }
+
+    @SuppressWarnings("removal")
+    @Deprecated(since = "6", forRemoval = true)
+    @Override
     public String[] getSupportedProtocols() {
-        return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
+        return JDBC_PROTOCOLS.toArray(new String[0]);
+    }
+
+    @Override
+    public List<String> getSupportedProtocolList() {
+        return JDBC_PROTOCOLS;
     }
 
     @Override

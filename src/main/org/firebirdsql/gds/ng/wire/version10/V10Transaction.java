@@ -23,8 +23,6 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -34,12 +32,12 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 /**
  * {@link FbTransaction} implementation for the version 10 wire protocol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10Transaction extends AbstractFbTransaction implements FbWireTransaction {
 
-    private static final Logger log = LoggerFactory.getLogger(V10Transaction.class);
+    private static final System.Logger log = System.getLogger(V10Transaction.class.getName());
 
     private final int handle;
 
@@ -86,14 +84,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.COMMITTED) {
-                String message = "Commit not completed, state was " + transactionState;
-                log.warn(message + "; see debug level for stacktrace");
-                if (log.isDebugEnabled()) {
-                    log.debug(message, new RuntimeException("Commit not completed"));
-                }
-            }
+            logUnexpectedState(TransactionState.COMMITTED, log);
         }
     }
 
@@ -107,14 +98,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.ROLLED_BACK) {
-                String message = "Rollback not completed, state was " + transactionState;
-                log.warn(message + "; see debug level for stacktrace");
-                if (log.isDebugEnabled()) {
-                    log.debug(message, new RuntimeException("Rollback not completed"));
-                }
-            }
+            logUnexpectedState(TransactionState.ROLLED_BACK, log);
         }
     }
 
@@ -164,13 +148,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            if (getState() != TransactionState.PREPARED) {
-                String message = "Prepare not completed";
-                log.warn(message + "; see debug level for stacktrace");
-                if (log.isDebugEnabled()) {
-                    log.debug(message, new RuntimeException(message));
-                }
-            }
+            logUnexpectedState(TransactionState.PREPARED, log);
         }
     }
 
@@ -183,4 +161,13 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             throw e;
         }
     }
+
+    /*
+     NOTE: V10Transaction does not perform any clean through a Cleaner, because there is realistically no option:
+     - ACTIVE transactions are held in AbstractFbDatabase.activeTransactions, so such cleanup would only happen when
+       the connection itself was also GC'd, which means an attempt to roll back would likely fail anyway (and the server
+       will perform a rollback eventually)
+     - There is no wire protocol equivalent of fb_disconnect_transaction, so we can't release the handle if we wanted to
+    */
+
 }

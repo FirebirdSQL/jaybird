@@ -29,23 +29,22 @@ import org.firebirdsql.util.InternalApi;
 import java.sql.SQLException;
 
 /**
- * Container for attachment information (ie server, port and filename/alias/service name/url).
+ * Container for attachment information (i.e. server, port and filename/alias/service name/url).
  */
 @InternalApi
-public class DbAttachInfo {
+public record DbAttachInfo(String serverName, int portNumber, String attachObjectName) {
 
-    private final String serverName;
-    private final int portNumber;
-    private final String attachObjectName;
+    public DbAttachInfo {
+        if (serverName != null && serverName.isEmpty()) {
+            serverName = null;
+        }
+        if (attachObjectName != null && attachObjectName.isEmpty()) {
+            attachObjectName = null;
+        }
+    }
 
     public DbAttachInfo(String serverName, Integer portNumber, String attachObjectName) {
         this(serverName, portNumber != null ? portNumber : PropertyConstants.DEFAULT_PORT, attachObjectName);
-    }
-
-    public DbAttachInfo(String serverName, int portNumber, String attachObjectName) {
-        this.serverName = serverName == null || serverName.isEmpty() ? null : serverName;
-        this.portNumber = portNumber;
-        this.attachObjectName = attachObjectName == null || attachObjectName.isEmpty() ? null : attachObjectName;
     }
 
     public static DbAttachInfo of(AttachmentProperties attachmentProperties) {
@@ -53,20 +52,8 @@ public class DbAttachInfo {
                 attachmentProperties.getProperty(PropertyNames.attachObjectName));
     }
 
-    public String getServerName() {
-        return serverName;
-    }
-
     public boolean hasServerName() {
         return serverName != null;
-    }
-
-    public int getPortNumber() {
-        return portNumber;
-    }
-
-    public String getAttachObjectName() {
-        return attachObjectName;
     }
 
     public boolean hasAttachObjectName() {

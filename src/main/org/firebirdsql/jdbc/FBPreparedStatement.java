@@ -27,10 +27,10 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.firebirdsql.jdbc.field.BlobListenableField;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
-import org.firebirdsql.jdbc.field.FBWorkaroundStringField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.util.Primitives;
 
@@ -47,9 +47,9 @@ import static java.util.Collections.emptyList;
 /**
  * Implementation of {@link java.sql.PreparedStatement}.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 @SuppressWarnings("RedundantThrows")
 public class FBPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
@@ -199,7 +199,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
                 if (internalExecute(isExecuteProcedureStatement) && !isGeneratedKeyQuery()) {
                     throw new FBSQLException("Update statement returned results.");
                 }
-                return getUpdateCount();
+                return getUpdateCountMinZero();
             } finally {
                 notifyStatementCompleted();
             }
@@ -320,28 +320,6 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     @Override
     public void setString(int parameterIndex, String x) throws SQLException {
         getField(parameterIndex).setString(x);
-    }
-
-    /**
-     * Sets the designated parameter to the given String value. This is a
-     * workaround for the ambiguous "operation was cancelled" response from the
-     * server for when an oversized string is set for a limited-size field. This
-     * method sets the string parameter without checking size constraints.
-     * 
-     * @param parameterIndex
-     *            the first parameter is 1, the second is 2, ...
-     * @param x
-     *            The String value to be set
-     * @throws SQLException
-     *             if a database access occurs
-     */
-    public void setStringForced(int parameterIndex, String x) throws SQLException {
-        FBField field = getField(parameterIndex);
-        if (field instanceof FBWorkaroundStringField) {
-            ((FBWorkaroundStringField) field).setStringForced(x);
-        } else {
-            field.setString(x);
-        }
     }
 
     @Override
@@ -601,6 +579,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * 
      * @throws SQLException if something went wrong.
      */
+    @SuppressWarnings("ForLoopReplaceableByForEach")
     private void flushFields() throws SQLException {
         // flush any cached data that can be hanging
         for (int i = 0; i < fields.length; i++) {
@@ -709,54 +688,32 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     @Override
     public void setBlob(int parameterIndex, Blob blob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
-        if (blob != null && !(blob instanceof FBBlob)) {
-            FBBlob fbb = new FBBlob(gdsHelper, blobListener);
-            fbb.copyStream(blob.getBinaryStream());
-            blob = fbb;
-        } 
-        
-        getField(parameterIndex).setBlob((FBBlob) blob);
+        getField(parameterIndex).setBlob(blob);
     }
 
     @Override
     public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
-        FBBlob blob = new FBBlob(gdsHelper, blobListener);
-        blob.copyStream(inputStream, length);
-        setBlob(parameterIndex, blob);
+        setBinaryStream(parameterIndex, inputStream, length);
     }
 
     @Override
     public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
-        FBBlob blob = new FBBlob(gdsHelper, blobListener);
-        blob.copyStream(inputStream);
-        setBlob(parameterIndex, blob);
+        setBinaryStream(parameterIndex, inputStream);
     }
 
     @Override
     public void setClob(int parameterIndex, Clob clob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
-        if (!(clob instanceof FBClob)) {
-            FBClob fbc = new FBClob(new FBBlob(gdsHelper, blobListener));
-            fbc.copyCharacterStream(clob.getCharacterStream());
-            clob = fbc;
-        } 
-        
-        getField(parameterIndex).setClob((FBClob) clob);
+        getField(parameterIndex).setClob(clob);
     }
 
     @Override
     public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
-        FBClob clob = new FBClob(new FBBlob(gdsHelper, blobListener));
-        clob.copyCharacterStream(reader, length);
-        setClob(parameterIndex, clob);
+        setCharacterStream(parameterIndex, reader, length);
     }
 
     @Override
     public void setClob(int parameterIndex, Reader reader) throws SQLException {
-        FBClob clob = new FBClob(new FBBlob(gdsHelper, blobListener));
-        clob.copyCharacterStream(reader);
-        setClob(parameterIndex, clob);
+        setCharacterStream(parameterIndex, reader);
     }
 
     /**
@@ -825,7 +782,11 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             };
 
             // FIXME check if we can safely pass cached here
-            fields[i] = FBField.createField(getParameterDescriptor(i + 1), dataProvider, gdsHelper, false);
+            FBField field = FBField.createField(getParameterDescriptor(i + 1), dataProvider, gdsHelper, false);
+            if (field instanceof BlobListenableField) {
+                ((BlobListenableField) field).setBlobListener(blobListener);
+            }
+            fields[i] = field;
         }
 
         this.isExecuteProcedureStatement = fbStatement.getType() == StatementType.STORED_PROCEDURE;
@@ -932,7 +893,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     public long executeLargeUpdate() throws SQLException {
         executeUpdate();
-        return getLargeUpdateCount();
+        return getLargeUpdateCountMinZero();
     }
 
     /**
@@ -1064,7 +1025,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
                         throw new SQLException("Statements executed as batch should not produce a result set",
                                 SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE);
                     }
-                    results.add(getLargeUpdateCount());
+                    results.add(getLargeUpdateCountMinZero());
                 }
                 return results;
             } catch (BatchUpdateException ex) {

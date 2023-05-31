@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,8 +23,8 @@ import java.util.Objects;
 /**
  * A user in the Firebird Security Database.
  *
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Steven Jardine
+ * @author Roman Rokytskyy
  */
 public class FBUser implements User {
 

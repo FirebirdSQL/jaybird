@@ -24,19 +24,22 @@ import org.firebirdsql.gds.ParameterBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.util.EnumSet;
 
 /**
  * {@link Argument} implementation for String values
  */
-public final class StringArgument extends Argument {
+public final class StringArgument extends TypedArgument {
 
     private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
             EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.StringSpb);
+    @Serial
+    private static final long serialVersionUID = -7980793147101287101L;
+    
     private final String value;
     private final byte[] asBytes;
     private final Encoding encoding;
-    private final ArgumentType argumentType;
 
     @Deprecated
     public StringArgument(int type, ArgumentType argumentType, String value) {
@@ -44,11 +47,10 @@ public final class StringArgument extends Argument {
     }
 
     public StringArgument(int type, ArgumentType argumentType, String value, Encoding encoding) {
-        super(type);
+        super(type, argumentType);
         if (!SUPPORTED_ARGUMENT_TYPES.contains(argumentType)) {
             throw new IllegalArgumentException("Invalid argument type: " + argumentType);
         }
-        this.argumentType = argumentType;
         if (encoding == null) {
             throw new IllegalArgumentException("Encoding is required");
         }
@@ -102,12 +104,8 @@ public final class StringArgument extends Argument {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof StringArgument)) {
-            return false;
-        }
-
-        final StringArgument otherStringArgument = (StringArgument) other;
-
+        if (this == other) return true;
+        if (!(other instanceof final StringArgument otherStringArgument)) return false;
         return this.getType() == otherStringArgument.getType() && value.equals(otherStringArgument.value);
     }
 }

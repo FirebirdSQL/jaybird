@@ -21,7 +21,7 @@ package org.firebirdsql.gds.ng;
 /**
  * Immutable implementation of {@link org.firebirdsql.gds.ng.IConnectionProperties}.
  *
- * @author @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author @author Mark Rotteveel
  * @see FbConnectionProperties
  * @since 3.0
  */

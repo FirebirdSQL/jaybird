@@ -38,6 +38,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
@@ -57,48 +58,52 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 class FBPreparedStatementTest {
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
-    //@formatter:off
     private static final String DROP_GENERATOR = "DROP GENERATOR test_generator";
     private static final String CREATE_GENERATOR = "CREATE GENERATOR test_generator";
 
-    private static final String CREATE_TEST_BLOB_TABLE =
-              "RECREATE TABLE test_blob ("
-            + "  ID INTEGER,"
-            + "  OBJ_DATA BLOB,"
-            + "  CLOB_DATA BLOB SUB_TYPE TEXT,"
-            + "  TS_FIELD TIMESTAMP,"
-            + "  T_FIELD TIME"
-            + ")";
+    private static final String CREATE_TEST_BLOB_TABLE = """
+            RECREATE TABLE test_blob (
+              ID INTEGER,
+              OBJ_DATA BLOB,
+              CLOB_DATA BLOB SUB_TYPE TEXT,
+              TS_FIELD TIMESTAMP,
+              T_FIELD TIME
+            )""";
 
-    private static final String CREATE_TEST_CHARS_TABLE =
-              "RECREATE TABLE TESTTAB ("
-            + "ID INTEGER, "
-            + "FIELD1 VARCHAR(10) NOT NULL PRIMARY KEY,"
-            + "FIELD2 VARCHAR(30),"
-            + "FIELD3 VARCHAR(20),"
-            + "FIELD4 FLOAT,"
-            + "FIELD5 CHAR,"
-            + "FIELD6 VARCHAR(5),"
-            + "FIELD7 CHAR(1),"
-            + "num_field numeric(9,2),"
-            + "UTFFIELD CHAR(1) CHARACTER SET UTF8,"
-            + "CHAR_OCTETS CHAR(15) CHARACTER SET OCTETS,"
-            + "VARCHAR_OCTETS VARCHAR(15) CHARACTER SET OCTETS"
-            + ")";
+    private static final String CREATE_TEST_CHARS_TABLE = """
+            RECREATE TABLE TESTTAB (
+              ID INTEGER,
+              FIELD1 VARCHAR(10) NOT NULL PRIMARY KEY,
+              FIELD2 VARCHAR(30),
+              FIELD3 VARCHAR(20),
+              FIELD4 FLOAT,
+              FIELD5 CHAR,
+              FIELD6 VARCHAR(5),
+              FIELD7 CHAR(1),
+              num_field numeric(9,2),
+              UTFFIELD CHAR(1) CHARACTER SET UTF8,
+              CHAR_OCTETS CHAR(15) CHARACTER SET OCTETS,
+              VARCHAR_OCTETS VARCHAR(15) CHARACTER SET OCTETS
+            )""";
 
-    private static final String CREATE_TEST_BIG_INTEGER_TABLE =
-              "recreate table test_big_integer ("
-            + "bigintfield bigint,"
-            + "varcharfield varchar(255)"
-            + ")";
+    private static final String CREATE_TEST_BIG_INTEGER_TABLE = """
+            recreate table test_big_integer (
+              bigintfield bigint,
+              varcharfield varchar(255)
+            )""";
+
+    private static final String CREATE_TEST_VARCHAR_5_UTF8_TABLE = """
+            recreate table test_varchar_5_utf8 (
+              varchar_field varchar(5) character set utf8
+            )""";
 
     private static final String TEST_STRING = "This is simple test string.";
     private static final String ANOTHER_TEST_STRING = "Another test string.";
@@ -107,7 +112,6 @@ class FBPreparedStatementTest {
     private static final String CREATE_TABLE = "RECREATE TABLE test ( col1 INTEGER )";
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
-    //@formatter:on
 
     private Connection con;
 
@@ -293,56 +297,6 @@ class FBPreparedStatementTest {
             rs.getLong("new_value");
 
             assertFalse(rs.next(), "should have only one row");
-        }
-    }
-
-    /**
-     * Test case to reproduce problem with the connection when "operation was
-     * cancelled" happens. Bug is fixed, however due to workaround for this
-     * problem (@see org.firebirdsql.jdbc.field.FBWorkaroundStringField) this
-     * test case is no longer relevant. In order to make it execute correctly
-     * one has to remove this workaround.
-     */
-    @Test
-    @Disabled(value="Broken due to FBWorkaroundStringField")
-    void testOpCancelled() throws Exception {
-        executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
-
-        try (PreparedStatement prep = con.prepareStatement(
-                "INSERT INTO TESTTAB (FIELD1, FIELD3, FIELD4, FIELD5 ) VALUES ( ?, ?, ?, ? )")) {
-            for (int i = 0; i < 5; i++) {
-                if (i == 0) {
-                    prep.setObject(1, "0123456789");
-                    prep.setObject(2, "01234567890123456789");
-                    prep.setObject(3, "1259.9");
-                    prep.setObject(4, "A");
-                }
-                if (i == 1) {
-                    prep.setObject(1, "0123456787");
-                    prep.setObject(2, "012345678901234567890");
-                    prep.setObject(3, "0.9");
-                    prep.setObject(4, "B");
-                }
-                if (i == 2) {
-                    prep.setObject(1, "0123456788");
-                    prep.setObject(2, "Fld3-Rec3");
-                    prep.setObject(3, "0.9");
-                    prep.setObject(4, "B");
-                }
-                if (i == 3) {
-                    prep.setObject(1, "0123456780");
-                    prep.setObject(2, "Fld3-Rec4");
-                    prep.setObject(3, "1299.5");
-                    prep.setObject(4, "Q");
-                }
-                if (i == 4) {
-                    prep.setObject(1, "0123456779");
-                    prep.setObject(2, "Fld3-Rec5");
-                    prep.setObject(3, "1844");
-                    prep.setObject(4, "Z");
-                }
-                prep.execute();
-            }
         }
     }
 
@@ -553,22 +507,61 @@ class FBPreparedStatementTest {
     }
 
     /**
-     * Test if failure in setting the parameter leaves the driver in correct state (i.e. "not all params were set").
+     * Test case for <a href="https://github.com/FirebirdSQL/jaybird/issues/396">jaybird#396</a>.
      */
-    @Test
-    @Disabled("Currently not working as expected due to implementation change (or bug in original implementation/expectation)")
-    void testLikeParameter() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = { "NONE", "UTF8", "WIN1252" })
+    void testBindParameterUtf8_396(String connectionCharset) throws Exception {
+        executeCreateTable(con, CREATE_TEST_VARCHAR_5_UTF8_TABLE);
+
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("lc_ctype", connectionCharset);
+
+        try (var con = DriverManager.getConnection(getUrl(), props)) {
+            con.setAutoCommit(false);
+            try (var pstmt = con.prepareStatement("insert into test_varchar_5_utf8 (varchar_field) values (?)")) {
+                // 20 bytes, 5 codepoints (for WIN1252: 5 bytes, 5 codepoints, all '?'))
+                pstmt.setString(1, "\uD83D\uDE03".repeat(5));
+                pstmt.execute();
+
+                pstmt.clearParameters();
+
+                // 6 bytes, 6 codepoints
+                DataTruncation exceptionOnSetString = assertThrows(DataTruncation.class,
+                        // Failure to set leaves parameter uninitialized
+                        () -> pstmt.setString(1, "abcdef"),
+                        "Expected data truncation");
+                assertAll(
+                        () -> assertEquals(5, exceptionOnSetString.getTransferSize(),
+                                "expected transfer size in codepoints"),
+                        () -> assertEquals(6, exceptionOnSetString.getDataSize(), "expected data size in codepoints"));
+                SQLException exceptionOnExecute = assertThrows(SQLException.class, pstmt::execute,
+                        "expected exception on execute");
+                assertThat(exceptionOnExecute, message(startsWith("Parameter with index 1 was not set")));
+            }
+        }
+
+    }
+
+    /**
+     * Test if failure in setting the parameter leaves the driver in correct
+     * state (i.e. "Parameter with index 1 was not set").
+     */
+    @ParameterizedTest
+    @ValueSource(strings = { "a%", "%a", "%a%" })
+    void testLikeParameter(String tooLongValue) throws Exception {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
         con.setAutoCommit(false);
 
         try (PreparedStatement ps = con.prepareStatement("SELECT * FROM testtab WHERE field7 LIKE ?")) {
-            ps.setString(1, "%a%");
-            ps.executeQuery();
-            // fail("should throw data truncation");
-        } catch (DataTruncation ex) {
-            // ignore
+            assertThrows(DataTruncation.class, () -> ps.setString(1, tooLongValue),
+                    "expected not to be able to set too long value");
+
+            SQLException exception = assertThrows(SQLException.class, ps::execute, "expected exception on execute");
+            assertThat(exception, message(startsWith("Parameter with index 1 was not set")));
         }
 
+        // verify connection still valid
         try (Statement stmt = con.createStatement()) {
             stmt.execute("SELECT 1 FROM RDB$DATABASE");
         }
@@ -1319,13 +1312,122 @@ class FBPreparedStatementTest {
         }
     }
 
+    @Test
+    void testSelectHasNoUpdateCount() throws Exception {
+        executeCreateTable(con, CREATE_TABLE);
+        prepareTestData();
+
+        try (PreparedStatement stmt = con.prepareStatement(SELECT_DATA)) {
+            assertTrue(stmt.execute(), "expected a result set");
+            ResultSet rs = stmt.getResultSet();
+            int count = 0;
+            while (rs.next()) {
+                assertFalse(rs.isClosed(), "Result set should be open");
+                assertFalse(stmt.isClosed(), "Statement should be open");
+                assertEquals(count, rs.getInt(1));
+                count++;
+            }
+            assertEquals(DATA_ITEMS, count);
+            assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
+            assertFalse(stmt.getMoreResults(), "expected no result set for getMoreResults");
+            assertEquals(-1, stmt.getUpdateCount(), "no update count (-1) was expected");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "binary", "text" })
+    void testSetClobNullClob(String subType) throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement(
+                "select cast(? as blob sub_type " + subType + ") from rdb$database")) {
+            pstmt.setClob(1, (Clob) null);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getClob(1));
+        }
+    }
+
+    @Test
+    void testSetClobNullReader() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
+            pstmt.setClob(1, (Reader) null);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getClob(1));
+        }
+    }
+
+    @Test
+    void testSetClobNullReaderWithLength() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
+            pstmt.setClob(1, null, 1);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getClob(1));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "binary", "text" })
+    void testSetBlobNullBlob(String subType) throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement(
+                "select cast(? as blob sub_type " + subType + ") from rdb$database")) {
+            pstmt.setBlob(1, (Blob) null);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getBlob(1));
+        }
+    }
+
+    @Test
+    void testSetBlobNullInputStream() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement(
+                "select cast(? as blob sub_type binary) from rdb$database")) {
+            pstmt.setBlob(1, (InputStream) null);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getBlob(1));
+        }
+    }
+
+    @Test
+    void testSetBlobNullInputStreamWithLength() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement(
+                "select cast(? as blob sub_type binary) from rdb$database")) {
+            pstmt.setBlob(1, null, 1);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getBlob(1));
+        }
+    }
+
+    /**
+     * Tests for <a href="https://github.com/FirebirdSQL/jaybird/issues/729">jaybird#729</a>.
+     */
+    @Test
+    void preparedStatementExecuteProcedureShouldNotTrim_729() throws Exception {
+        executeDDL(con, """
+                create procedure char_return returns (val char(5)) as
+                begin
+                  val = 'A';
+                end""");
+
+        try (PreparedStatement stmt = con.prepareStatement("execute procedure char_return");
+             ResultSet rs = stmt.executeQuery()) {
+            assertTrue(rs.next(), "Expected a row");
+            assertAll(
+                    () -> assertEquals("A    ", rs.getObject(1), "Unexpected trim by getObject"),
+                    () -> assertEquals("A    ", rs.getString(1), "Unexpected trim by getString"));
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);
         try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {
             for (int i = 0; i < DATA_ITEMS; i++) {
                 pstmt.setInt(1, i);
-                pstmt.execute();
+                pstmt.addBatch();
             }
+            pstmt.executeBatch();
         } finally {
             con.setAutoCommit(true);
         }

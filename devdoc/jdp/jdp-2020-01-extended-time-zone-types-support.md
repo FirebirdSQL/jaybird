@@ -19,7 +19,7 @@ bytes in the wire protocol). For offset based types, the offset is present twice
 for named zones, the offset is present in addition to the zone identifier.
 
 These data types are intended to address concerns for clients that do not or
-cannot resolve the named zones, but do not want to fallback to UTC time and
+cannot resolve the named zones, but do not want to fall back to UTC time and
 instead want to preserve the actual offset.
 
 These types are only surfaced through `SET BIND`/`isc_dpb_set_bind`.
@@ -62,8 +62,8 @@ Jaybird will provide minimal support for `EXTENDED TIME(STAMP) WITH TIME ZONE`,
 by always handling it is their normal `TIME(STAMP) WITH TIME ZONE` counterpart.
 
 In a situation where Jaybird cannot determine the offset of a named zone, this
-means we will fallback to UTC, just like we do for the normal time zone types.
-This also preserves consistency between 'extended' and normal types (eg in
+means we will fall back to UTC, just like we do for the normal time zone types.
+This also preserves consistency between 'extended' and normal types (e.g. in
 situations where Jaybird and Firebird might disagree how to derive the offset
 for a named zone).
 

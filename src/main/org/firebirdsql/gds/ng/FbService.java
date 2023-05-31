@@ -39,7 +39,7 @@ import java.sql.SQLException;
  * from them.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface FbService extends FbAttachment {

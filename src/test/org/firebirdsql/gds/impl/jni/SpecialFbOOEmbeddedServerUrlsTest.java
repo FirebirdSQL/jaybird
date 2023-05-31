@@ -20,7 +20,6 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.management.FBManager;
 import org.junit.jupiter.api.AfterEach;

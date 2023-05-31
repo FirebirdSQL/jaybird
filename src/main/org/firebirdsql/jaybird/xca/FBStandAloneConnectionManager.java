@@ -19,9 +19,8 @@
 package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.SQLException;
 
@@ -29,18 +28,15 @@ import java.sql.SQLException;
  * The class {@code FBStandAloneConnectionManager} provides the default implementation of FirebirdConnectionManager for
  * standalone use. There is no pooling or other features.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @version 1.0
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
-public class FBStandAloneConnectionManager implements XcaConnectionManager, XcaConnectionEventListener, Serializable {
+final class FBStandAloneConnectionManager implements XcaConnectionManager, XcaConnectionEventListener, Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    private static final Logger log = LoggerFactory.getLogger(FBStandAloneConnectionManager.class);
-
-    FBStandAloneConnectionManager() {
-    }
+    private static final System.Logger log = System.getLogger(FBStandAloneConnectionManager.class.getName());
 
     @Override
     public FirebirdConnection allocateConnection(FBManagedConnectionFactory mcf, FBConnectionRequestInfo cxRequestInfo)
@@ -53,20 +49,23 @@ public class FBStandAloneConnectionManager implements XcaConnectionManager, XcaC
 
     @Override
     public void connectionClosed(XcaConnectionEvent ce) {
-        try {
-            ce.getSource().destroy(ce);
-        } catch (SQLException e) {
-            log.debug("Exception closing unmanaged connection: ", e);
-        }
+        destroyConnection(ce);
     }
 
     @Override
     public void connectionErrorOccurred(XcaConnectionEvent ce) {
-        log.debug("ConnectionErrorOccurred, ", ce.getException());
+        log.log(System.Logger.Level.TRACE, "ConnectionErrorOccurred", ce.getException());
+        destroyConnection(ce);
+    }
+
+    private void destroyConnection(XcaConnectionEvent ce) {
+        FBManagedConnection mc = ce.getSource();
         try {
-            ce.getSource().destroy(ce);
+            mc.destroy(ce);
         } catch (SQLException e) {
-            log.debug("further problems destroying connection: ", e);
+            log.log(System.Logger.Level.WARNING, "Exception closing unmanaged connection", e);
+        } finally {
+            mc.removeConnectionEventListener(this);
         }
     }
 }

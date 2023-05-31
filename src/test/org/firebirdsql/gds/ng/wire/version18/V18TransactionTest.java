@@ -29,7 +29,7 @@ import static org.firebirdsql.common.extension.RequireProtocolExtension.requireP
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Transaction} in the version 18 protocol
  * (note: there is no version 18 specific implementation of this class).
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class V18TransactionTest extends V16TransactionTest {

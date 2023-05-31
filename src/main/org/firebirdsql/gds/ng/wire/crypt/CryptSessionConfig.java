@@ -21,7 +21,7 @@ package org.firebirdsql.gds.ng.wire.crypt;
 /**
  * Interface for the encryption/decryption session config for wire protocol encryption for a specific plugin.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface CryptSessionConfig extends AutoCloseable {
@@ -29,22 +29,22 @@ public interface CryptSessionConfig extends AutoCloseable {
     /**
      * @return Encryption identifier
      */
-    EncryptionIdentifier getEncryptionIdentifier();
+    EncryptionIdentifier encryptionIdentifier();
 
     /**
      * @return Encryption key
      */
-    byte[] getEncryptKey();
+    byte[] encryptKey();
 
     /**
      * @return Decryption key
      */
-    byte[] getDecryptKey();
+    byte[] decryptKey();
 
     /**
      * @return Plugin-specific data (can be {@code null})
      */
-    byte[] getSpecificData();
+    byte[] specificData();
 
     /**
      * Clears (e.g. zeroes out) the keys and specific data

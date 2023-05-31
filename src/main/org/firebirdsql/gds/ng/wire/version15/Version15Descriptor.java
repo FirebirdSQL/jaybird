@@ -39,7 +39,7 @@ import org.firebirdsql.gds.ng.wire.version13.V13Statement;
  * The {@link ProtocolDescriptor} for the Firebird version 15 protocol. This version
  * applies to Firebird 3.0.2, but also works with newer Firebird versions.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public final class Version15Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -32,13 +32,13 @@ import static org.firebirdsql.gds.ISCConstants.*;
 /**
  * Implements the backup and restore functionality of Firebird Services API.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 public class FBBackupManager extends FBBackupManagerBase implements BackupManager {
 
     private boolean noLimitBackup = false;
-    private List<PathSizeStruct> backupPaths = new ArrayList<>();
+    private final List<PathSizeStruct> backupPaths = new ArrayList<>();
 
     /**
      * Whether backing up will produce verbose output

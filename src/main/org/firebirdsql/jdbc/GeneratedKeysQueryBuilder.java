@@ -21,13 +21,11 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jdbc.metadata.MetadataPattern;
-import org.firebirdsql.jdbc.parser.DmlStatementDetector;
-import org.firebirdsql.jdbc.parser.DmlStatementType;
-import org.firebirdsql.jdbc.parser.FirebirdReservedWords;
-import org.firebirdsql.jdbc.parser.SqlParser;
-import org.firebirdsql.jdbc.parser.StatementIdentification;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.jaybird.parser.StatementDetector;
+import org.firebirdsql.jaybird.parser.LocalStatementType;
+import org.firebirdsql.jaybird.parser.FirebirdReservedWords;
+import org.firebirdsql.jaybird.parser.SqlParser;
+import org.firebirdsql.jaybird.parser.StatementIdentification;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,22 +34,22 @@ import java.util.*;
 /**
  * Builds (updates) queries to add generated keys support.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 final class GeneratedKeysQueryBuilder {
 
     // TODO Add caching for column info
 
-    private static final Logger logger = LoggerFactory.getLogger(GeneratedKeysQueryBuilder.class);
-    private static final Map<DmlStatementType, GeneratedKeysSupport.QueryType> statementTypeToQueryType;
+    private static final System.Logger logger = System.getLogger(GeneratedKeysQueryBuilder.class.getName());
+    private static final Map<LocalStatementType, GeneratedKeysSupport.QueryType> statementTypeToQueryType;
     static {
-        Map<DmlStatementType, GeneratedKeysSupport.QueryType> temp = new EnumMap<>(DmlStatementType.class);
-        temp.put(DmlStatementType.INSERT, GeneratedKeysSupport.QueryType.INSERT);
-        temp.put(DmlStatementType.UPDATE, GeneratedKeysSupport.QueryType.UPDATE);
-        temp.put(DmlStatementType.DELETE, GeneratedKeysSupport.QueryType.DELETE);
-        temp.put(DmlStatementType.UPDATE_OR_INSERT, GeneratedKeysSupport.QueryType.UPDATE_OR_INSERT);
-        temp.put(DmlStatementType.MERGE, GeneratedKeysSupport.QueryType.MERGE);
+        Map<LocalStatementType, GeneratedKeysSupport.QueryType> temp = new EnumMap<>(LocalStatementType.class);
+        temp.put(LocalStatementType.INSERT, GeneratedKeysSupport.QueryType.INSERT);
+        temp.put(LocalStatementType.UPDATE, GeneratedKeysSupport.QueryType.UPDATE);
+        temp.put(LocalStatementType.DELETE, GeneratedKeysSupport.QueryType.DELETE);
+        temp.put(LocalStatementType.UPDATE_OR_INSERT, GeneratedKeysSupport.QueryType.UPDATE_OR_INSERT);
+        temp.put(LocalStatementType.MERGE, GeneratedKeysSupport.QueryType.MERGE);
         statementTypeToQueryType = Collections.unmodifiableMap(temp);
     }
 
@@ -101,7 +99,7 @@ final class GeneratedKeysQueryBuilder {
     static GeneratedKeysQueryBuilder create(String statementText,
             Set<GeneratedKeysSupport.QueryType> supportedQueryTypes) {
         try {
-            DmlStatementDetector detector = new DmlStatementDetector();
+            StatementDetector detector = new StatementDetector();
             // NOTE: We currently don't care about the version of reserved words, so we use the latest.
             // This may change once we apply multiple visitors (e.g. JDBC escape processing) with a single parser.
             SqlParser.withReservedWords(FirebirdReservedWords.latest())
@@ -110,7 +108,9 @@ final class GeneratedKeysQueryBuilder {
                     .parse();
             return new GeneratedKeysQueryBuilder(statementText, detector.toStatementIdentification(), supportedQueryTypes);
         } catch (RuntimeException e) {
-            if (logger.isDebugEnabled()) logger.debug("Exception parsing query: " + statementText, e);
+            if (logger.isLoggable(System.Logger.Level.DEBUG)) {
+                logger.log(System.Logger.Level.DEBUG, "Exception parsing query: " + statementText, e);
+            }
             return new GeneratedKeysQueryBuilder(statementText);
         }
     }
@@ -122,7 +122,7 @@ final class GeneratedKeysQueryBuilder {
         if (statementIdentification == null) {
             return false;
         }
-        DmlStatementType statementType = statementIdentification.getDmlStatementType();
+        LocalStatementType statementType = statementIdentification.getStatementType();
         GeneratedKeysSupport.QueryType queryType =
                 statementTypeToQueryType.getOrDefault(statementType, GeneratedKeysSupport.QueryType.UNSUPPORTED);
         return supportedQueryTypes.contains(queryType);

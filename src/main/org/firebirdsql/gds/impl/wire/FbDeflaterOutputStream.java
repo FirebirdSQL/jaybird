@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,8 +18,7 @@
  */
 package org.firebirdsql.gds.impl.wire;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.gds.JaybirdSystemProperties;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
@@ -28,27 +27,29 @@ import java.io.OutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
-import static java.lang.String.format;
+import static java.lang.System.Logger.Level.TRACE;
 
 /**
  * {@code DeflaterOutputStream} with some modifications to simplify usage for Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 class FbDeflaterOutputStream extends DeflaterOutputStream implements EncryptedStreamSupport {
 
-    private static final Logger log = LoggerFactory.getLogger(FbDeflaterOutputStream.class);
+    private static final System.Logger log = System.getLogger(FbDeflaterOutputStream.class.getName());
+    private static final int BUF_SIZE = Math.max(512, JaybirdSystemProperties.getWireDeflateBufferSize(8192));
 
     private boolean encrypted;
 
     /**
      * Creates a {@code DeflaterOutputStream} with {@code syncFlush = true}.
      *
-     * @param out Output stream
+     * @param out
+     *         Output stream
      */
     public FbDeflaterOutputStream(OutputStream out) {
-        super(out, new Deflater(), true);
+        super(out, new Deflater(), BUF_SIZE, true);
     }
 
     @Override
@@ -56,16 +57,17 @@ class FbDeflaterOutputStream extends DeflaterOutputStream implements EncryptedSt
         try {
             super.close();
         } finally {
-            if (log.isTraceEnabled()) {
-                log.trace(format("FbDeflaterOutputStream: Uncompressed bytes: %d to compressed bytes: %d",
-                        def.getBytesRead(), def.getBytesWritten()));
+            buf = new byte[1];
+            if (log.isLoggable(TRACE)) {
+                log.log(TRACE, "FbDeflaterOutputStream: Uncompressed bytes: {0} to compressed bytes: {1}",
+                        def.getBytesRead(), def.getBytesWritten());
             }
             def.end();
         }
     }
 
     @Override
-    public synchronized void setCipher(Cipher cipher) throws IOException {
+    public void setCipher(Cipher cipher) throws IOException {
         if (encrypted) {
             throw new IOException("Output stream already encrypted");
         }

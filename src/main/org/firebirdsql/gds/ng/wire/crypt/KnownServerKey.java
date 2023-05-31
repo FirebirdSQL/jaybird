@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -26,14 +26,13 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
 
 /**
  * Class to hold server keys known to the client.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class KnownServerKey {
@@ -46,7 +45,7 @@ public final class KnownServerKey {
 
     private KnownServerKey(String keyType, List<String> plugins, Map<String, byte[]> specificData) {
         this.keyType = requireNonNull(keyType, "keyType");
-        this.plugins = unmodifiableList(new ArrayList<>(requireNonNull(plugins, "plugins")));
+        this.plugins = List.copyOf(requireNonNull(plugins, "plugins"));
         this.specificData = specificData == null || specificData.isEmpty()
                 ? emptyMap()
                 : unmodifiableMap(specificData);
@@ -74,27 +73,16 @@ public final class KnownServerKey {
     /**
      * Class to hold plugin specific data.
      *
+     * @param encryptionIdentifier
+     *         encryption identifier
+     * @param specificData
+     *         plugin specific data (can be {@code null})
      * @since 5
      */
-    public static final class PluginSpecificData {
+    public record PluginSpecificData(EncryptionIdentifier encryptionIdentifier, byte[] specificData) {
 
-        private final EncryptionIdentifier encryptionIdentifier;
-        private byte[] specificData;
-
-        private PluginSpecificData(EncryptionIdentifier encryptionIdentifier, byte[] specificData) {
-            this.encryptionIdentifier = requireNonNull(encryptionIdentifier, "encryptionIdentifier");
-            this.specificData = specificData;
-        }
-
-        public EncryptionIdentifier getEncryptionIdentifier() {
-            return encryptionIdentifier;
-        }
-
-        /**
-         * @return plugin specific data (can be {@code null})
-         */
-        public byte[] getSpecificData() {
-            return specificData;
+        public PluginSpecificData {
+            requireNonNull(encryptionIdentifier, "encryptionIdentifier");
         }
 
     }

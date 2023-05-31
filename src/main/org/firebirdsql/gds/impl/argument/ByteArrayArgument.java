@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,12 +18,12 @@
  */
 package org.firebirdsql.gds.impl.argument;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ParameterBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.util.Arrays;
 
 /**
@@ -32,10 +32,12 @@ import java.util.Arrays;
  * This implementation supports byte arrays up to length of the argument type.
  * </p>
  */
-public final class ByteArrayArgument extends Argument {
+public final class ByteArrayArgument extends TypedArgument {
 
+    @Serial
+    private static final long serialVersionUID = -8636439991275911102L;
+    
     private final byte[] value;
-    private final ArgumentType argumentType;
 
     /**
      * Initializes an instance of ByteArrayArgument.
@@ -46,8 +48,7 @@ public final class ByteArrayArgument extends Argument {
      *        Byte array with a maximum length defined by {@code argumentType}.
      */
     public ByteArrayArgument(int type, ArgumentType argumentType, byte[] value) {
-        super(type);
-        this.argumentType = argumentType;
+        super(type, argumentType);
         if (argumentType != ArgumentType.TraditionalDpb && argumentType != ArgumentType.Wide
                 && argumentType != ArgumentType.StringSpb) {
             throw new IllegalArgumentException(
@@ -92,12 +93,8 @@ public final class ByteArrayArgument extends Argument {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ByteArrayArgument)) {
-            return false;
-        }
-
-        final ByteArrayArgument otherByteArrayArgument = (ByteArrayArgument) other;
-
+        if (this == other) return true;
+        if (!(other instanceof final ByteArrayArgument otherByteArrayArgument)) return false;
         return this.getType() == otherByteArrayArgument.getType()
                 && Arrays.equals(this.value, otherByteArrayArgument.value);
     }

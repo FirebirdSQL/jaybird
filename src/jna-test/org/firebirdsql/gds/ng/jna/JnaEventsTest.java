@@ -30,47 +30,46 @@ import org.firebirdsql.gds.ng.SimpleEventHandler;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.with;
 import static org.firebirdsql.common.FBTestProperties.getDefaultTpb;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for events in {@link JnaDatabase}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class JnaEventsTest {
-
-    private final Logger log = LoggerFactory.getLogger(JnaEventsTest.class);
 
     @RegisterExtension
     @Order(1)
     static final GdsTypeExtension testType = GdsTypeExtension.supportsNativeOnly();
 
-    //@formatter:off
-    private static final String TABLE_DEF =
-            "CREATE TABLE TEST (" +
-            "     TESTVAL INTEGER NOT NULL" +
-            ")";
+    private static final String TABLE_DEF = """
+            CREATE TABLE TEST (
+              TESTVAL INTEGER NOT NULL
+            )""";
 
-    private static final String TRIGGER_DEF =
-            "CREATE TRIGGER INSERT_TRIG " +
-            "     FOR TEST AFTER INSERT " +
-            "AS BEGIN " +
-            "     POST_EVENT 'TEST_EVENT_A';" +
-            "     POST_EVENT 'TEST_EVENT_B';" +
-            "END";
-    //@formatter:on
+    private static final String TRIGGER_DEF = """
+            CREATE TRIGGER INSERT_TRIG
+              FOR TEST AFTER INSERT
+            AS BEGIN
+              POST_EVENT 'TEST_EVENT_A';
+              POST_EVENT 'TEST_EVENT_B';
+            END""";
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
@@ -84,13 +83,9 @@ class JnaEventsTest {
     private JnaDatabase db;
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         if (db != null && db.isAttached()) {
-            try {
-                db.close();
-            } catch (SQLException ex) {
-                log.debug("Exception on detach", ex);
-            }
+            db.close();
         }
     }
 
@@ -109,7 +104,7 @@ class JnaEventsTest {
         db = factory.connect(connectionInfo);
         db.attach();
 
-        SimpleEventHandler eventHandler = new SimpleEventHandler();
+        var eventHandler = new SimpleEventHandler();
 
         EventHandle eventHandleA = db.createEventHandle("TEST_EVENT_A", eventHandler);
         EventHandle eventHandleB = db.createEventHandle("TEST_EVENT_B", eventHandler);
@@ -117,12 +112,10 @@ class JnaEventsTest {
         // Initial queue will return events immediately
         db.queueEvent(eventHandleA);
         db.queueEvent(eventHandleB);
-        int retry = 0;
-        while (!(eventHandler.getReceivedEventHandles().contains(eventHandleA)
-                && eventHandler.getReceivedEventHandles().contains(eventHandleB))
-                && retry++ < 10) {
-            Thread.sleep(50);
-        }
+        with().pollInterval(50, TimeUnit.MILLISECONDS)
+                .await().atMost(1, TimeUnit.SECONDS)
+                .until(eventHandler::getReceivedEventHandles, hasItems(eventHandleA, eventHandleB));
+
         db.countEvents(eventHandleA);
         db.countEvents(eventHandleB);
 
@@ -131,8 +124,8 @@ class JnaEventsTest {
         db.queueEvent(eventHandleA);
         db.queueEvent(eventHandleB);
 
-        Thread.sleep(50);
-        assertTrue(eventHandler.getReceivedEventHandles().isEmpty(), "Expected events to not have been triggered");
+        with().pollInterval(50, TimeUnit.MILLISECONDS).pollDelay(Duration.ZERO).await()
+                .during(50, TimeUnit.MILLISECONDS).until(eventHandler::getReceivedEventHandles, empty());
 
         FbTransaction transaction = getTransaction(db);
         FbStatement statement = db.createStatement(transaction);
@@ -140,19 +133,14 @@ class JnaEventsTest {
         statement.execute(RowValue.EMPTY_ROW_VALUE);
         transaction.commit();
 
-        retry = 0;
-        while (!(eventHandler.getReceivedEventHandles().contains(eventHandleA)
-                && eventHandler.getReceivedEventHandles().contains(eventHandleB))
-                && retry++ < 10) {
-            Thread.sleep(50);
-        }
-        assertEquals(2, eventHandler.getReceivedEventHandles().size(), "Unexpected number of events received");
+        with().pollInterval(50, TimeUnit.MILLISECONDS)
+                .await().atMost(1, TimeUnit.SECONDS)
+                .until(eventHandler::getReceivedEventHandles, hasItems(eventHandleA, eventHandleB));
 
         db.countEvents(eventHandleA);
         db.countEvents(eventHandleB);
         assertEquals(1, eventHandleA.getEventCount());
         assertEquals(1, eventHandleB.getEventCount());
-
 
         // TODO Workaround for CORE-4794
         db.queueEvent(eventHandleA);
@@ -169,10 +157,10 @@ class JnaEventsTest {
         db.attach();
 
         FbClientLibrary lib = db.getClientLibrary();
-        ISC_STATUS[] statusVector = new ISC_STATUS[20];
-        SimpleEventHandler eventHandler = new SimpleEventHandler();
+        var statusVector = new ISC_STATUS[20];
+        var eventHandler = new SimpleEventHandler();
 
-        final JnaEventHandle eventHandle = new JnaEventHandle("TEST_EVENT_A", eventHandler, db.getEncoding());
+        final var eventHandle = new JnaEventHandle("TEST_EVENT_A", eventHandler, db.getEncoding());
         int size = lib.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(), (short) 1,
                 eventHandle.getEventNameMemory());
         eventHandle.setSize(size);
@@ -182,10 +170,9 @@ class JnaEventsTest {
                 (short) eventHandle.getSize(), eventHandle.getEventBuffer().getValue(),
                 eventHandle.getCallback(), eventHandle.getResultBuffer().getValue());
         // Event will notify almost immediately for initial setup.
-        Thread.sleep(50);
-
-        // Cancel (no event queued right now)
-        lib.isc_cancel_events(statusVector, db.getJnaHandle(), eventHandle.getJnaEventId());
+        with().pollDelay(50, TimeUnit.MILLISECONDS).untilAsserted(() ->
+                // Cancel (no event queued right now)
+                lib.isc_cancel_events(statusVector, db.getJnaHandle(), eventHandle.getJnaEventId()));
     }
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {

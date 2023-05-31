@@ -18,78 +18,28 @@
  */
 package org.firebirdsql.util;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
- * Utility class for generating the property files containing the error codes and error messages.
+ * Utility class for generating the property files containing the error codes and error messages from MSG.FDB.
+ * <p>
+ * This tool only works for Firebird 4.0 and earlier. For Firebird 5.0 and higher, use {@link MessageExtractor}.
+ * </p>
+ * 
+ * @deprecated Use {@link MessageExtractor}
  */
+@Deprecated
 public class MessageDump {
 
-    private static final int ISC_CODE = 0x14000000;
     private static final String FORMAT_OPTION_PREFIX = "--format=";
-    private static final String SPECIAL_SAVE_CHARS = "=: \t\r\n\f#!";
 
     private static Connection getConnection(String database) throws Exception {
         String url = "jdbc:firebirdsql:" + database;
         return DriverManager.getConnection(url, "SYSDBA", "masterkey");
-    }
-
-    private static int getErrorCode(int code, int number) {
-        return ISC_CODE | ((code & 0x1F) << 16) | (number & 0x3FFF);
-    }
-
-    private static String extractMessage(String fbMessage) {
-        char[] chars = fbMessage.toCharArray();
-
-        StringBuilder sb = new StringBuilder(fbMessage.length() + 10);
-        int counter = 0;
-
-        for (int i = 0; i < chars.length; i++) {
-            if (chars[i] == '%') {
-                i++;
-
-                if (chars[i] == 's') {
-                    sb.append('{').append(counter++).append('}');
-                } else if (chars[i] == 'd') {
-                    sb.append('{').append(counter++).append('}');
-                } else if (chars[i] == 'l') {
-                    i++;
-                    if (chars[i] == 'd') {
-                        sb.append('{').append(counter++).append('}');
-                    } else {
-                        sb.append("%l").append(chars[i]);
-                    }
-                } else {
-                    sb.append('%').append(chars[i]);
-                }
-            } else if (chars[i] == '@') {
-                i++;
-
-                try {
-                    // assumes parameter-number not to exceed 9.
-                    int msgNum = Integer.parseInt("" + chars[i]);
-                    sb.append('{').append(msgNum - 1).append('}');
-                } catch (NumberFormatException ex) {
-                    sb.append(chars[i]);
-                }
-            } else {
-                sb.append(chars[i]);
-            }
-        }
-
-        return sb.toString();
     }
 
     private static void extractErrorMessages(Statement stmt, MessageStore messageStore) throws SQLException {
@@ -148,191 +98,6 @@ public class MessageDump {
         }
         System.out.println("Saving");
         messageStore.save();
-    }
-
-    private static void store(Map<Integer, String> data, Path filePath) throws IOException {
-        try (BufferedWriter writer = Files.newBufferedWriter(filePath, ISO_8859_1)) {
-            MessageDump.store(data, writer);
-        }
-    }
-
-    private static void store(Map<Integer, String> map, BufferedWriter writer) throws IOException {
-        // This basically replicates how Properties.store works
-        for (Map.Entry<Integer, String> entry : map.entrySet()) {
-            String key = saveConvert(Integer.toString(entry.getKey()), true);
-
-            // No need to escape embedded and trailing spaces for value, hence pass false to flag.
-            String val = saveConvert(entry.getValue(), false);
-            writeln(writer, key + "=" + val);
-        }
-    }
-
-    private static String saveConvert(String theString, boolean escapeSpace) {
-        int len = theString.length();
-        StringBuilder outBuffer = new StringBuilder(len * 2);
-
-        for (int x = 0; x < len; x++) {
-            char aChar = theString.charAt(x);
-            switch (aChar) {
-            case ' ':
-                if (x == 0 || escapeSpace) outBuffer.append('\\');
-
-                outBuffer.append(' ');
-                break;
-            case '\\':
-                outBuffer.append('\\');
-                outBuffer.append('\\');
-                break;
-            case '\t':
-                outBuffer.append('\\');
-                outBuffer.append('t');
-                break;
-            case '\n':
-                outBuffer.append('\\');
-                outBuffer.append('n');
-                break;
-            case '\r':
-                outBuffer.append('\\');
-                outBuffer.append('r');
-                break;
-            case '\f':
-                outBuffer.append('\\');
-                outBuffer.append('f');
-                break;
-            default:
-                if ((aChar < 0x0020) || (aChar > 0x007e)) {
-                    outBuffer.append('\\');
-                    outBuffer.append('u');
-                    outBuffer.append(toHex(aChar >> 12));
-                    outBuffer.append(toHex(aChar >> 8));
-                    outBuffer.append(toHex(aChar >> 4));
-                    outBuffer.append(toHex(aChar));
-                } else {
-                    if (SPECIAL_SAVE_CHARS.indexOf(aChar) != -1) {
-                        outBuffer.append('\\');
-                    }
-                    outBuffer.append(aChar);
-                }
-            }
-        }
-        return outBuffer.toString();
-    }
-
-    private static void writeln(BufferedWriter bw, String s) throws IOException {
-        bw.write(s);
-        bw.newLine();
-    }
-
-    private static char toHex(int nibble) {
-        return hexDigit[nibble & 0xF];
-    }
-
-    /**
-     * A table of hex digits
-     */
-    private static final char[] hexDigit =
-            { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-
-    private interface MessageStore {
-
-        void addMessage(int code, int number, String message);
-
-        void addSqlState(int code, int number, String sqlState);
-
-        void save() throws IOException;
-
-    }
-
-    private enum OutputFormat {
-        SINGLE(SingleFileStore::new),
-        PER_FACILITY(PerFacilityStore::new),
-        ;
-
-        private final Supplier<MessageStore> messageStoreSupplier;
-
-        OutputFormat(Supplier<MessageStore> messageStoreSupplier) {
-            this.messageStoreSupplier = messageStoreSupplier;
-        }
-
-        MessageStore createMessageStore() {
-            return messageStoreSupplier.get();
-        }
-    }
-
-    /**
-     * Uses a single file for error messages, and a single file for SQLstates.
-     * <p>
-     * This is the format used by Jaybird.
-     * </p>
-     */
-    private static class SingleFileStore implements MessageStore {
-
-        private final Map<Integer, String> messages = new TreeMap<>();
-        private final Map<Integer, String> sqlStates = new TreeMap<>();
-
-        @Override
-        public void addMessage(int code, int number, String message) {
-            messages.put(getErrorCode(code, number), extractMessage(message));
-        }
-
-        @Override
-        public void addSqlState(int code, int number, String sqlState) {
-            sqlStates.put(getErrorCode(code, number), sqlState);
-        }
-
-        @Override
-        public void save() throws IOException {
-            store(messages, Path.of("isc_error_msg.properties"));
-            store(sqlStates, Path.of("isc_error_sqlstates.properties"));
-        }
-    }
-
-    /**
-     * Uses a file for error messages and a file for SQLstates per facility.
-     * <p>
-     * This format is currently not used, but we might use this for Jaybird in the future.
-     * </p>
-     */
-    private static class PerFacilityStore implements MessageStore {
-
-        private static final int MAX_FACILITY = 25; // NOTE: This is Firebird max, Jaybird has facility 26
-        static final int FACILITY_SIZE = MAX_FACILITY + 1;
-
-        private final Map<Integer, Map<Integer, String>> messagesPerFacility = new HashMap<>(FACILITY_SIZE, 1);
-        private final Map<Integer, Map<Integer, String>> sqlStatesPerFacility = new HashMap<>(FACILITY_SIZE, 1);
-
-        @Override
-        public void addMessage(int code, int number, String message) {
-            add(messagesPerFacility, code, number, extractMessage(message));
-        }
-
-        @Override
-        public void addSqlState(int code, int number, String sqlState) {
-            add(sqlStatesPerFacility, code, number, sqlState);
-        }
-
-        private static void add(Map<Integer, Map<Integer, String>> facilityMap, int code, int number, String data) {
-            Map<Integer, String> facilityData = facilityMap.computeIfAbsent(code, k -> new TreeMap<>());
-            facilityData.put(getErrorCode(code, number), data);
-        }
-
-        @Override
-        public void save() throws IOException {
-            save(messagesPerFacility, code -> format("error_messages_%d.properties", code));
-            save(sqlStatesPerFacility, code -> format("sql_states_%d.properties", code));
-        }
-
-        private static void save(Map<Integer, Map<Integer, String>> facilityMap,
-                Function<Integer, String> filenameGenerator) throws IOException {
-            for (Map.Entry<Integer, Map<Integer, String>> facilityEntry : facilityMap.entrySet()) {
-                Map<Integer, String> facilityData = facilityEntry.getValue();
-                if (facilityData.isEmpty()) {
-                    continue;
-                }
-                String fileName = filenameGenerator.apply(facilityEntry.getKey());
-                store(facilityData, Path.of(fileName));
-            }
-        }
     }
 
     @FunctionalInterface

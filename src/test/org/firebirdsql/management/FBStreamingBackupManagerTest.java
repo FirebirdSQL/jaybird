@@ -21,7 +21,6 @@ package org.firebirdsql.management;
 import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.gds.impl.GDSType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -41,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Test for {@link FBStreamingBackupManager}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBStreamingBackupManagerTest {
 
@@ -62,15 +61,14 @@ class FBStreamingBackupManagerTest {
 
     @BeforeEach
     void setUp() {
-        backupManager = new FBStreamingBackupManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")
-                || getGdsType() == GDSType.getType("FBOONATIVE")) {
-            backupManager.setServerName(DB_SERVER_URL);
-            backupManager.setPortNumber(DB_SERVER_PORT);
-        }
-        backupManager.setUser(DB_USER);
-        backupManager.setPassword(DB_PASSWORD);
+        backupManager = configureDefaultServiceProperties(new FBStreamingBackupManager(getGdsType()));
         backupManager.setDatabase(getDatabasePath());
+        /* NOTE:
+         1) Setting parallel workers unconditionally, but actual support was introduced in Firebird 5.0;
+         2) It is only possible to verify for restore if it was set (if a too high value was used), we're more testing
+            that the implementation doesn't set it for versions which don't support it, than testing if it gets set
+        */
+        backupManager.setParallelWorkers(2);
         backupManager.setLogger(System.out);
         backupManager.setVerbose(true);
     }

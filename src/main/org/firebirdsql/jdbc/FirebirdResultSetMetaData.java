@@ -32,7 +32,7 @@ import java.sql.SQLException;
 /**
  * Firebird-specific extensions to the {@link ResultSetMetaData} interface.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public interface FirebirdResultSetMetaData extends ResultSetMetaData {
 

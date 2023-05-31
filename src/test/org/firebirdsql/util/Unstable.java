@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
 /**
  * Annotation to indicate that a test is potentially unstable (may lead to false positives).
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 @Retention(RetentionPolicy.RUNTIME)

@@ -45,7 +45,7 @@ import static org.mockito.Mockito.when;
  * This test does not test against a database server.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @ExtendWith(MockitoExtension.class)
 class GeneratedKeysQueryTest {

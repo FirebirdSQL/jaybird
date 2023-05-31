@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +30,7 @@ import java.nio.charset.Charset;
  * Definition of a Firebird encoding. This is a mapping from the Firebird encoding to a Java Charset and additional
  * information needed by Jaybird to process this encoding.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface EncodingDefinition {
@@ -75,7 +73,7 @@ public interface EncodingDefinition {
     boolean isFirebirdOnly();
 
     /**
-     * Can this implementation create an {@link Encoding} instance, or does it provide information only (eg about
+     * Can this implementation create an {@link Encoding} instance, or does it provide information only (e.g. about
      * unsupported character sets)
      *
      * @return <code>true</code> if this EncodingDefinition only provides information, and is not capable of building a

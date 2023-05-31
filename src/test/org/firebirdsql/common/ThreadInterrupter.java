@@ -5,7 +5,7 @@ import java.util.TimerTask;
 /**
  * Helper class to interrupt a Thread from a Timer.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class ThreadInterrupter extends TimerTask {
 	

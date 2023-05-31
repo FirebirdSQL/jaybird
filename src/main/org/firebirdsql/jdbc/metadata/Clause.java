@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -28,7 +28,7 @@ import java.util.Objects;
 /**
  * Condition clause for constructing metadata query conditions.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 @InternalApi
@@ -46,9 +46,25 @@ public final class Clause {
      *         Metadata pattern
      */
     public Clause(String columnName, String pattern) {
-        MetadataPattern metadataPattern = MetadataPattern.compile(pattern);
+        this(columnName, MetadataPattern.compile(pattern));
+    }
+
+    private Clause(String columnName, MetadataPattern metadataPattern) {
         condition = metadataPattern.renderCondition(columnName);
         value = metadataPattern.getConditionValue();
+    }
+
+    /**
+     * Creates an equals clause.
+     *
+     * @param columnName
+     *         Column name or expression resulting in a string value
+     * @param value
+     *         value for equals condition
+     * @return clause for a SQL equals ({@code =}) condition
+     */
+    static Clause equalsClause(String columnName, String value) {
+        return new Clause(columnName, MetadataPattern.equalsCondition(value));
     }
 
     /**
@@ -142,6 +158,16 @@ public final class Clause {
 
     public static List<String> parameters(Clause... clauses) {
         List<String> list = new ArrayList<>(clauses.length);
+        for (Clause clause : clauses) {
+            if (clause.hasCondition()) {
+                list.add(clause.getValue());
+            }
+        }
+        return list;
+    }
+
+    public static List<String> parameters(List<Clause> clauses) {
+        List<String> list = new ArrayList<>(clauses.size());
         for (Clause clause : clauses) {
             if (clause.hasCondition()) {
                 list.add(clause.getValue());

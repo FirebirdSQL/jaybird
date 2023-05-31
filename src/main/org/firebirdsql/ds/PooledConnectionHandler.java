@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,8 +18,11 @@
  */
 package org.firebirdsql.ds;
 
-import static org.firebirdsql.util.ReflectionHelper.findMethod;
-import static org.firebirdsql.util.ReflectionHelper.getAllInterfaces;
+import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.FirebirdConnection;
+import org.firebirdsql.jdbc.SQLStateConstants;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -29,16 +32,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.firebirdsql.jdbc.FBSQLException;
-import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
+import static org.firebirdsql.util.ReflectionHelper.findMethod;
+import static org.firebirdsql.util.ReflectionHelper.getAllInterfaces;
 
 /**
  * InvocationHandler for the logical connection returned by FBPooledConnection.
@@ -47,7 +45,7 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  * wrappers for every individual JDBC version.
  * </p>
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 class PooledConnectionHandler implements InvocationHandler {
@@ -59,8 +57,7 @@ class PooledConnectionHandler implements InvocationHandler {
     protected volatile Connection proxy;
     protected volatile boolean forcedClose;
 
-    private final List<StatementHandler> openStatements =
-            Collections.synchronizedList(new LinkedList<StatementHandler>());
+    private final List<StatementHandler> openStatements = new ArrayList<>();
 
     protected PooledConnectionHandler(Connection connection, FBPooledConnection owner) {
         this.connection = connection;
@@ -115,7 +112,9 @@ class PooledConnectionHandler implements InvocationHandler {
                     && STATEMENT_CREATION_METHOD_NAMES.contains(method.getName())) {
                 Statement pstmt = (Statement) method.invoke(connection, args);
                 StatementHandler stmtHandler = new StatementHandler(this, pstmt);
-                openStatements.add(stmtHandler);
+                try (LockCloseable ignored = owner.withLock()) {
+                    openStatements.add(stmtHandler);
+                }
                 return stmtHandler.getProxy();
             }
 
@@ -211,8 +210,6 @@ class PooledConnectionHandler implements InvocationHandler {
      * Closes this PooledConnectionHandler. Intended to be called by the
      * ConnectionPoolDataSource when it wants to forcibly close the logical
      * connection to reuse it.
-     * 
-     * @throws SQLException
      */
     protected void close() throws SQLException {
         if (!isClosed()) {
@@ -233,12 +230,14 @@ class PooledConnectionHandler implements InvocationHandler {
     }
 
     protected void forgetStatement(StatementHandler stmtHandler) {
-        openStatements.remove(stmtHandler);
+        try (LockCloseable ignored = owner.withLock()) {
+            openStatements.remove(stmtHandler);
+        }
     }
 
     protected void closeStatements() throws SQLException {
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
-        synchronized (openStatements) {
+        try (LockCloseable ignored = owner.withLock()) {
             // Make copy as the StatementHandler close will remove itself from openStatements
             for (StatementHandler stmt : new ArrayList<>(openStatements)) {
                 try {
@@ -257,23 +256,14 @@ class PooledConnectionHandler implements InvocationHandler {
     }
 
     // Connection methods
-    private final static Method CONNECTION_IS_CLOSED = findMethod(Connection.class, "isClosed",
-            new Class[0]);
-    private final static Method CONNECTION_CLOSE = findMethod(Connection.class, "close",
-            new Class[0]);
+    private final static Method CONNECTION_IS_CLOSED = findMethod(Connection.class, "isClosed", new Class[0]);
+    private final static Method CONNECTION_CLOSE = findMethod(Connection.class, "close", new Class[0]);
     
-    private static final Set<String> STATEMENT_CREATION_METHOD_NAMES;
-    static {
-        Set<String> temp = new HashSet<>();
-        temp.add("createStatement");
-        temp.add("prepareCall");
-        temp.add("prepareStatement");
-        STATEMENT_CREATION_METHOD_NAMES = Collections.unmodifiableSet(temp);
-    }
+    private static final Set<String> STATEMENT_CREATION_METHOD_NAMES =
+            Set.of("createStatement", "prepareCall", "prepareStatement");
 
     // Object Methods
     private final static Method TO_STRING = findMethod(Object.class, "toString", new Class[0]);
-    private final static Method EQUALS = findMethod(Object.class, "equals",
-            new Class[] { Object.class });
+    private final static Method EQUALS = findMethod(Object.class, "equals", new Class[] { Object.class });
     private final static Method HASH_CODE = findMethod(Object.class, "hashCode", new Class[0]);
 }

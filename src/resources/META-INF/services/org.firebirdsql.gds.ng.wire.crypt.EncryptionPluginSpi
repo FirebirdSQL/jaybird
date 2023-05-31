@@ -1,0 +1,2 @@
+org.firebirdsql.gds.ng.wire.crypt.arc4.Arc4EncryptionPluginSpi
+org.firebirdsql.gds.ng.wire.crypt.chacha.ChaChaEncryptionPluginSpi

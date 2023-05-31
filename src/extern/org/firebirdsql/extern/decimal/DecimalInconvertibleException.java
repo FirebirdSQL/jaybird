@@ -32,7 +32,7 @@ package org.firebirdsql.extern.decimal;
  * signalling NaN. In that situation, NaN should be returned.
  * </p>
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class DecimalInconvertibleException extends ArithmeticException {
 

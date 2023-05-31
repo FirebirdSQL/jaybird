@@ -22,8 +22,6 @@ import org.firebirdsql.jaybird.fb.constants.DpbItems;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -43,12 +41,12 @@ import static org.firebirdsql.jaybird.props.def.ConnectionProperty.builder;
  * the property will not get defined. These properties will be registered as type string.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 class UnregisteredDpbDefiner implements ConnectionPropertyDefinerSpi {
 
-    private final Logger log = LoggerFactory.getLogger(UnregisteredDpbDefiner.class);
+    private final System.Logger log = System.getLogger(UnregisteredDpbDefiner.class.getName());
 
     private final Collection<String> knownPropertyNames;
     private final Set<String> excludedShortNames;
@@ -70,7 +68,7 @@ class UnregisteredDpbDefiner implements ConnectionPropertyDefinerSpi {
         // We only consider DPB items for addition, but will add matching SPB items
         return dpbItems.keySet().stream()
                 .map(shortName -> {
-                    log.debug("Defining unregistered DPB/SPB property " + shortName);
+                    log.log(System.Logger.Level.DEBUG, "Defining unregistered DPB/SPB property {0}", shortName);
                     ConnectionProperty.Builder builder = builder(shortName);
                     if (dpbItems.containsKey(shortName)) {
                         builder.aliases(("isc_dpb_" + shortName).intern());
@@ -110,6 +108,6 @@ class UnregisteredDpbDefiner implements ConnectionPropertyDefinerSpi {
 
     @Override
     public void notRegistered(ConnectionProperty connectionProperty) {
-        log.debug("Property not registered: " + connectionProperty);
+        log.log(System.Logger.Level.DEBUG, "Property not registered: {0}", connectionProperty);
     }
 }

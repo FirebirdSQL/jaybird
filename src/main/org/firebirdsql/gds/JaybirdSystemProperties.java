@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,18 +24,16 @@ import java.security.PrivilegedAction;
 /**
  * Class to access Jaybird-specific system properties from a single place.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class JaybirdSystemProperties {
 
     private static final String COMMON_PREFIX = "org.firebirdsql.";
     private static final String JDBC_PREFIX = COMMON_PREFIX + "jdbc.";
+    private static final String WIRE_PREFIX = COMMON_PREFIX + "wire.";
 
     // do not include 'sensitive' properties, and only include Jaybird specific properties
 
-    public static final String FORCE_CONSOLE_LOGGER_PROP = JDBC_PREFIX + "forceConsoleLogger";
-    public static final String DISABLE_LOGGING_PROP = JDBC_PREFIX + "disableLogging";
-    public static final String LOGGER_IMPLEMENTATION_PROP = JDBC_PREFIX + "loggerImplementation";
     public static final String SYNC_WRAP_NATIVE_LIBRARY_PROP = COMMON_PREFIX + "jna.syncWrapNativeLibrary";
     public static final String PROCESS_ID_PROP = JDBC_PREFIX + "pid";
     public static final String PROCESS_NAME_PROP = JDBC_PREFIX + "processName";
@@ -43,21 +41,14 @@ public final class JaybirdSystemProperties {
     public static final String REQUIRE_CONNECTION_ENCODING_PROPERTY = JDBC_PREFIX + "requireConnectionEncoding";
     public static final String DATATYPE_CODER_CACHE_SIZE = COMMON_PREFIX + "datatypeCoderCacheSize";
     public static final String NATIVE_LIBRARY_SHUTDOWN_DISABLED = COMMON_PREFIX + "nativeResourceShutdownDisabled";
+    public static final String WIRE_DEFLATE_BUFFER_SIZE = WIRE_PREFIX + "deflateBufferSize";
+    public static final String WIRE_INFLATE_BUFFER_SIZE = WIRE_PREFIX + "inflateBufferSize";
+    public static final String WIRE_DECRYPT_BUFFER_SIZE = WIRE_PREFIX + "decryptBufferSize";
+    public static final String WIRE_INPUT_BUFFER_SIZE = WIRE_PREFIX + "inputBufferSize";
+    public static final String WIRE_OUTPUT_BUFFER_SIZE = WIRE_PREFIX + "outputBufferSize";
 
     private JaybirdSystemProperties() {
         // no instances
-    }
-
-    public static boolean isForceConsoleLogger() {
-        return getBooleanSystemPropertyPrivileged(FORCE_CONSOLE_LOGGER_PROP);
-    }
-
-    public static boolean isDisableLogging() {
-        return getBooleanSystemPropertyPrivileged(DISABLE_LOGGING_PROP);
-    }
-
-    public static String getLoggerImplementation() {
-        return getSystemPropertyPrivileged(LOGGER_IMPLEMENTATION_PROP);
     }
 
     public static boolean isSyncWrapNativeLibrary() {
@@ -85,7 +76,31 @@ public final class JaybirdSystemProperties {
     }
 
     public static int getDatatypeCoderCacheSize(int defaultValue) {
-        Integer value = getIntegerSystemPropertyPrivileged(DATATYPE_CODER_CACHE_SIZE);
+        return getWithDefault(DATATYPE_CODER_CACHE_SIZE, defaultValue);
+    }
+
+    public static int getWireDeflateBufferSize(int defaultValue) {
+        return getWithDefault(WIRE_DEFLATE_BUFFER_SIZE, defaultValue);
+    }
+
+    public static int getWireInflateBufferSize(int defaultValue) {
+        return getWithDefault(WIRE_INFLATE_BUFFER_SIZE, defaultValue);
+    }
+
+    public static int getWireDecryptBufferSize(int defaultValue) {
+        return getWithDefault(WIRE_DECRYPT_BUFFER_SIZE, defaultValue);
+    }
+
+    public static int getWireInputBufferSize(int defaultValue) {
+        return getWithDefault(WIRE_INPUT_BUFFER_SIZE, defaultValue);
+    }
+
+    public static int getWireOutputBufferSize(int defaultValue) {
+        return getWithDefault(WIRE_OUTPUT_BUFFER_SIZE, defaultValue);
+    }
+
+    private static int getWithDefault(String propertyName, int defaultValue) {
+        Integer value = getIntegerSystemPropertyPrivileged(propertyName);
         return value != null ? value : defaultValue;
     }
 

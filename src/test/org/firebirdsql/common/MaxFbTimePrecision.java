@@ -25,7 +25,7 @@ import java.time.temporal.TemporalUnit;
 /**
  * Maximum time precision of Firebird time/timestamp.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class MaxFbTimePrecision implements TemporalUnit {
 

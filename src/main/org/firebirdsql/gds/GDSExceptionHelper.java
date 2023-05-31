@@ -25,8 +25,6 @@
 package org.firebirdsql.gds;
 
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,15 +37,13 @@ import java.util.regex.Pattern;
  * This loads all messages during class initialization.
  * </p>
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Roman Rokytskyy
+ * @author Blas Rodriguez Somoza
+ * @author Mark Rotteveel
  * @version 1.0
  */
 public final class GDSExceptionHelper {
-
-    private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class);
 
     private static final Pattern MESSAGE_PARAM_PATTERN = Pattern.compile("\\{(\\d+)}");
     private static final MessageLookup MESSAGE_LOOKUP;
@@ -59,7 +55,8 @@ public final class GDSExceptionHelper {
         try {
             MESSAGE_LOOKUP = MessageLoader.loadErrorMessages();
         } catch (Exception ex) {
-            log.error("Exception in init of GDSExceptionHelper, unable to load error information", ex);
+            System.getLogger(GDSExceptionHelper.class.getName()).log(System.Logger.Level.ERROR,
+                    "Exception in init of GDSExceptionHelper, unable to load error information", ex);
             throw new ExceptionInInitializerError(ex);
         }
     }
@@ -73,11 +70,15 @@ public final class GDSExceptionHelper {
      *
      * @param code
      *         Firebird error code
-     * @return instance of <code>GDSExceptionHelper.GDSMessage</code> class where you can set desired parameters.
+     * @return instance of {@code GDSExceptionHelper.GDSMessage} class where you can set desired parameters.
      */
     public static GDSMessage getMessage(int code) {
-        final String message = MESSAGE_LOOKUP.getErrorMessage(code);
-        return new GDSMessage(message != null ? message : "No message for code " + code + " found.");
+        return new GDSMessage(getMessageText(code), code != ISCConstants.isc_formatted_exception);
+    }
+
+    private static String getMessageText(int code) {
+        String message = MESSAGE_LOOKUP.getErrorMessage(code);
+        return message != null ? message : "No message for code " + code + " found.";
     }
 
     /**
@@ -98,7 +99,7 @@ public final class GDSExceptionHelper {
      *         Firebird error code
      * @param defaultSQLState
      *         The default SQLState to return
-     * @return SQL state for the Firebird error code, or <code>defaultSQLState</code> if nothing found.
+     * @return SQL state for the Firebird error code, or {@code defaultSQLState} if nothing found.
      */
     public static String getSQLState(int code, String defaultSQLState) {
         final String sqlState = MESSAGE_LOOKUP.getSqlState(code);
@@ -115,13 +116,25 @@ public final class GDSExceptionHelper {
         private final String template;
         private final String[] params;
         private final List<String> extraParameters = new ArrayList<>();
+        private final boolean includeExtraParameters;
 
         /**
          * Constructs an instance of GDSMessage for the specified template.
          */
         public GDSMessage(String template) {
+            this(template, true);
+        }
+
+        /**
+         * Constructs an instance of GDSMessage for the specified template.
+         *
+         * @param includeExtraParameters
+         *         {@code true} append extra parameters to the end of the message, {@code false} ignore extra parameters
+         */
+        private GDSMessage(String template, boolean includeExtraParameters) {
             this.template = template;
             params = new String[getParamCountInternal(template)];
+            this.includeExtraParameters = includeExtraParameters;
         }
 
         /**
@@ -185,7 +198,7 @@ public final class GDSExceptionHelper {
          * @return string representation of the message.
          */
         public String toString() {
-            final StringBuffer messageBuffer = new StringBuffer(estimateBufferCapacity());
+            final var messageBuffer = new StringBuilder(estimateBufferCapacity());
             final Matcher matcher = MESSAGE_PARAM_PATTERN.matcher(template);
             while (matcher.find()) {
                 final int paramIndex = Integer.parseInt(matcher.group(1));
@@ -195,9 +208,11 @@ public final class GDSExceptionHelper {
                 messageBuffer.append(parameterValue != null ? parameterValue : "(null)");
             }
             matcher.appendTail(messageBuffer);
-            // Include extra parameters at the end of the message
-            for (String extraParameter : extraParameters) {
-                messageBuffer.append("; ").append(extraParameter);
+            if (includeExtraParameters) {
+                // Include extra parameters at the end of the message
+                for (String extraParameter : extraParameters) {
+                    messageBuffer.append("; ").append(extraParameter);
+                }
             }
 
             return messageBuffer.toString();

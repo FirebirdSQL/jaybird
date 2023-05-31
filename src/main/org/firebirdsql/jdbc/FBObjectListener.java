@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -28,8 +26,8 @@ import java.sql.SQLException;
 /**
  * This interface defines set of listeners that will be called in different situations.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 public interface FBObjectListener {
 
@@ -164,7 +162,7 @@ public interface FBObjectListener {
 
         /**
          * Notify the listener that statement is completed. This is shortcut method for
-         * <code>statementCompleted(AbstractStatement, true)</code>.
+         * {@code statementCompleted(AbstractStatement, true)}.
          *
          * @param stmt
          *         statement that was completed.
@@ -172,14 +170,14 @@ public interface FBObjectListener {
         void statementCompleted(FBStatement stmt) throws SQLException;
 
         /**
-         * Notify the listener that statement is completed and tell whether execution was successfull or not.
+         * Notify the listener that statement is completed and tell whether execution was successful or not.
          *
          * @param stmt
          *         statement that was completed.
          * @param success
-         *         <code>true</code> if completion was successfull.
+         *         {@code true} if completion was successful.
          * @throws SQLException
-         *         if an error occured.
+         *         if an error occurred.
          */
         void statementCompleted(FBStatement stmt, boolean success)
                 throws SQLException;
@@ -227,9 +225,10 @@ public interface FBObjectListener {
         }
 
         @Override
-        public void executionStarted(FirebirdBlob blob) throws SQLException { }
+        public void executionStarted(FirebirdBlob blob) { }
+
         @Override
-        public void executionCompleted(FirebirdBlob blob) throws SQLException { }
+        public void executionCompleted(FirebirdBlob blob) { }
     }
 
 }

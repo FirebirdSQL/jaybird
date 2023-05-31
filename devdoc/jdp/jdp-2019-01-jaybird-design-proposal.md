@@ -3,6 +3,7 @@
 ## Status
 
 - Published
+- Updated: 2023-05-19
 
 ## Type
 
@@ -11,7 +12,7 @@
 
 ## Context
 
-Jaybird is a long running project, and its design decisions are currently 
+Jaybird is a long-running project, and its design decisions are currently 
 either implicit or hidden in commits, tracker tickets, code comments, 
 discussions on - for example - Firebird-java, or - even worse - just in the mind 
 of the implementer (and likely long since forgotten).
@@ -57,19 +58,23 @@ For example
 
     jdp-2019-01: Jaybird Design Proposal
 
-The document should be in markdown format, and stored in `devdoc/jdp` with a
-filename consisting of the JDP number, followed by the lowercased, dash 
-separated descriptive title:
+The document should be in Asciidoc format (see also below) and stored in
+`devdoc/jdp` with a filename consisting of the JDP number, followed by the
+lowercase, dash separated descriptive title:
 
-    jdp-yyyy-nn-descriptive-title.md
+    jdp-yyyy-nn-descriptive-title.adoc
     
 For example
 
-    jdp-2019-01-jaybird-design-proposal.md
+    jdp-2019-01-jaybird-design-proposal.adoc
 
 A JDP should consist of the following sections. The sections _Status_ and _Type_
 are required. The other sections should be considered the preferred structure. 
 Feel free to use a different structure if it makes more sense for a document.
+
+JDPs before _jdp-2023-06_ were specified in Markdown, not Asciidoc. They may be
+converted to Asciidoc if and when needed (e.g. large scale changes, or just when
+we feel like it), or remain in Markdown.
 
 #### Status
 
@@ -83,6 +88,11 @@ The status of the document. Possible values:
 - Proposed for: (proposed Jaybird version to implement this) 
 - Deferred indefinitely : not implemented nor proposed for a version; likely
 the feature described will never be implemented
+- Updated: (date) -- the last date a previously published document was updated
+
+  This should be used only for textual corrections (i.e. typo fixes), for 
+  (minor) changes which do not affect anything for application versions released
+  after the original publish date, or for living documents.
 
 The status section should also reference the JDP(s) it updates or replaces:
 
@@ -96,16 +106,20 @@ mutually exclusive.
 
 The type of document. Possible values:
 
-- Project-Specification : Specification for the project itself (eg governance,
+- Project-Specification : Specification for the project itself (e.g. governance,
   way of working, etc)
 - Living document : indicates the document can undergo fundamental changes 
   without being replaced.
 - Feature-Specification : Specification of features, architecture and other code
   related things
+- Experimental : Feature is experimental and might be modified or dropped in
+  point releases (only for use with _Feature-Specification_)
 - .. (we'll likely find new types to add once we're using this)
 
 A document can have multiple types. The types _Project-Specification_ and 
-_Feature-Specification_ are mutually exclusive.
+_Feature-Specification_ are mutually exclusive. The type _Experimental_ can only
+occur with _Feature-Specification_. Modifications to _Experimental_ JDPs must 
+be published as separate JDPs.
 
 The _Living document_ type should generally only be used for 
 _Project-Specification_ documents like this document, and not for features.

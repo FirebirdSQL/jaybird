@@ -32,7 +32,7 @@ import java.util.Set;
  *
  * @param <T>
  *         Enum containing the metadata columns to be validated.
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 final class MetaDataTestSupport<T extends Enum<T> & MetaDataInfo> {
 

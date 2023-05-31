@@ -25,7 +25,7 @@ import javax.sql.PooledConnection;
 /**
  * Helper class for closing JDBC resources, ignoring all SQLExceptions.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class JdbcResourceHelper {
 

@@ -32,7 +32,7 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * Indicates that the annotated class, method or value is volatile, and may change in a next version.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)

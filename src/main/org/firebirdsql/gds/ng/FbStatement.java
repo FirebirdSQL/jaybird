@@ -41,7 +41,7 @@ import java.util.Collection;
  * defined in this interface.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface FbStatement extends ExceptionListenable, AutoCloseable {
@@ -243,15 +243,26 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * Registers a {@link org.firebirdsql.gds.ng.listeners.StatementListener}.
      *
      * @param statementListener
-     *         The row listener
+     *         The statement listener
      */
     void addStatementListener(StatementListener statementListener);
+
+    /**
+     * Adds a {@link StatementListener} instance to this database using a weak reference.
+     * <p>
+     * If the listener is already strongly referenced, this call will be ignored
+     * </p>
+     *
+     * @param statementListener
+     *         statement listener
+     */
+    void addWeakStatementListener(StatementListener statementListener);
 
     /**
      * Removes a {@link org.firebirdsql.gds.ng.listeners.StatementListener}.
      *
      * @param statementListener
-     *         The row listener
+     *         The statement listener
      */
     void removeStatementListener(StatementListener statementListener);
 
@@ -395,13 +406,8 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
     RowDescriptor emptyRowDescriptor();
 
     /**
-     * Ensures that the statement cursor is closed. Resets a statement so it is ready to be reused for re-execute or
+     * Ensures that the statement cursor is closed. Resets a statement, so it is ready to be reused for re-execute or
      * prepare.
-     * <p>
-     * Implementations should only close an open cursor and log this fact with a stacktrace on debug. This is a stopgap
-     * measure for situations where the code using this statement handle has not been able to properly close the
-     * cursor.
-     * </p>
      *
      * @param transactionEnd
      *         Close is in response to a transaction end

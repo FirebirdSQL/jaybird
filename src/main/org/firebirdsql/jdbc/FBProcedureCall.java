@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Vector;
 
 /**
@@ -374,16 +375,10 @@ public class FBProcedureCall implements Cloneable {
      */
     public boolean equals(Object obj) {
         if (obj == this) return true;
-        if (!(obj instanceof FBProcedureCall)) return false;
-
-        FBProcedureCall that = (FBProcedureCall) obj;
-
-        boolean result = this.name != null ? this.name.equals(that.name) : that.name == null;
-
-        result &= this.inputParams.equals(that.inputParams);
-        result &= this.outputParams.equals(that.outputParams);
-
-        return result;
+        if (!(obj instanceof FBProcedureCall other)) return false;
+        return Objects.equals(name, other.name)
+                && inputParams.equals(other.inputParams)
+                && outputParams.equals(other.outputParams);
     }
 
     public int hashCode() {
@@ -404,10 +399,24 @@ public class FBProcedureCall implements Cloneable {
 
         private static final NullParam NULL_PARAM = new NullParam();
 
+        private NullParam() {
+            super(-1, "NULL");
+        }
+
+        @Override
         public void setValue(Object value) throws SQLException {
-            throw new FBSQLException("You cannot set value of an non-existing parameter.",
+            throw new FBSQLException("You cannot set value of a non-existing parameter.",
                     SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
 
+        @Override
+        public void setIndex(int index) {
+            throw new UnsupportedOperationException("You cannot set index of a non-existing parameter.");
+        }
+
+        @Override
+        public void setType(int type) {
+            throw new UnsupportedOperationException("You cannot set type of a non-existing parameter.");
+        }
     }
 }

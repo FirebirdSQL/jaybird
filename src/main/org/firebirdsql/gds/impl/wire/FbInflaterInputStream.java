@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,37 +18,37 @@
  */
 package org.firebirdsql.gds.impl.wire;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.gds.JaybirdSystemProperties;
 
 import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
-import static java.lang.String.format;
+import static java.lang.System.Logger.Level.TRACE;
 
 /**
  * {@code InflaterOutputStream} with some modifications to simplify usage for Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 class FbInflaterInputStream extends InflaterInputStream implements EncryptedStreamSupport {
 
-    private static final Logger log = LoggerFactory.getLogger(FbInflaterInputStream.class);
+    private static final System.Logger log = System.getLogger(FbInflaterInputStream.class.getName());
+    private static final int BUF_SIZE = Math.max(512, JaybirdSystemProperties.getWireInflateBufferSize(8192));
 
     private boolean encrypted;
 
     /**
-     * Creates a {@code DeflaterOutputStream} with {@code syncFlush = true}.
+     * Creates a {@code InflaterInputStream}.
      *
-     * @param in Input stream
+     * @param in
+     *         Input stream
      */
     public FbInflaterInputStream(InputStream in) {
-        super(in, new Inflater());
+        super(in, new Inflater(), BUF_SIZE);
     }
 
     @Override
@@ -56,20 +56,21 @@ class FbInflaterInputStream extends InflaterInputStream implements EncryptedStre
         try {
             super.close();
         } finally {
-            if (log.isTraceEnabled()) {
-                log.trace(format("FbInflaterInputStream: Compressed bytes: %d to uncompressed bytes: %d",
-                        inf.getBytesRead(), inf.getBytesWritten()));
+            buf = new byte[1];
+            if (log.isLoggable(TRACE)) {
+                log.log(TRACE, "FbInflaterInputStream: Compressed bytes: {0} to uncompressed bytes: {1}",
+                        inf.getBytesRead(), inf.getBytesWritten());
             }
             inf.end();
         }
     }
 
     @Override
-    public synchronized void setCipher(Cipher cipher) throws IOException {
+    public void setCipher(Cipher cipher) throws IOException {
         if (encrypted) {
             throw new IOException("Input stream already encrypted");
         }
-        in = new CipherInputStream(in, cipher);
+        in = new FbCipherInputStream(in, cipher);
         encrypted = true;
     }
 }

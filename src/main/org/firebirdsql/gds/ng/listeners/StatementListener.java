@@ -39,7 +39,7 @@ import java.sql.SQLWarning;
  * All listener methods have a default implementation that does nothing.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface StatementListener {

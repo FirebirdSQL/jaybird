@@ -33,6 +33,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Types;
@@ -46,17 +47,17 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for {@link FBStringField}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
 
-    static short TEST_STRING_SIZE = 40;
+    private static final short TEST_STRING_SIZE = 40;
 
     // TEST_STRING_LONG should be shorter than TEST_STRING_SIZE
-    static String TEST_STRING_SHORT = "This is short string.";
+    private static final String TEST_STRING_SHORT = "This is short string.";
 
     // TEST_STRING_LONG should be longer than TEST_STRING_SIZE
-    static String TEST_STRING_LONG = "And this string should be longer than short one.";
+    private static final String TEST_STRING_LONG = "And this string should be longer than short one.";
 
     private static final Encoding encoding = EncodingFactory.getPlatformEncoding();
 
@@ -76,17 +77,6 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     void getString() throws SQLException {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
         assertEquals(TEST_STRING_SHORT, field.getString().trim(), "String does not equal to assigned one.");
-        /*
-        // Commented out by R.Rokytskyy: FBStringField was changed to allow
-        // server complain about data truncation, not the driver. This was done
-        // in order to avoid problems in case of multi-byte character fields.
-        try {
-            field.setString(TEST_STRING_LONG);
-            assertTrue(false, "String longer than available space should not be allowed");
-        } catch(SQLException sqlex) {
-            // everything is ok
-        }
-        */
     }
 
    @Test
@@ -338,12 +328,11 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     }
 
     @Test
-    void setCharacterStream_tooLong() throws Exception {
-        // TODO: length not validated in current implementation
-        // assertThrows(TypeConversionException.class, () ->
-        field.setCharacterStream(new StringReader(TEST_STRING_LONG), TEST_STRING_LONG.length());
+    void setCharacterStream_tooLong() {
+        assertThrows(DataTruncation.class,
+                () -> field.setCharacterStream(new StringReader(TEST_STRING_LONG), TEST_STRING_LONG.length()));
 
-        verifySetString(TEST_STRING_LONG, encoding);
+        verifyNotSet();
     }
 
     @Test
@@ -518,12 +507,11 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     }
 
     @Test
-    void setObject_tooLong() throws SQLException {
-        // assertThrows(DataTruncation.class, () -> 
-        //TODO Current implementation will accept too long values and leave error to server
-        field.setObject(TEST_STRING_LONG);
+    void setObject_tooLong() {
+        assertThrows(DataTruncation.class,
+                () -> field.setObject(TEST_STRING_LONG));
         
-        verifySetString(TEST_STRING_LONG, encoding);
+        verifyNotSet();
     }
 
     @Test

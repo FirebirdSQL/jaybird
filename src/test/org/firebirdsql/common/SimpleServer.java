@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -27,7 +27,7 @@ import java.net.Socket;
 /**
  * Simple server accepting a single connection at a time for testing purposes.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class SimpleServer implements AutoCloseable {
@@ -60,7 +60,6 @@ public final class SimpleServer implements AutoCloseable {
 
     /**
      * @return The input stream of the open connection
-     * @throws IOException
      */
     public InputStream getInputStream() throws IOException {
         if (!isConnected()) throw new IllegalStateException("Not connected");
@@ -69,7 +68,6 @@ public final class SimpleServer implements AutoCloseable {
 
     /**
      * @return The output stream of the open connection
-     * @throws IOException
      */
     public OutputStream getOutputStream() throws IOException {
         if (!isConnected()) throw new IllegalStateException("Not connected");
@@ -81,18 +79,18 @@ public final class SimpleServer implements AutoCloseable {
      * <p>
      * Important: when testing the client connect and this accept should run on separate threads.
      * </p>
-     *
-     * @throws IOException
      */
     public void acceptConnection() throws IOException {
         if (isConnected()) throw new IllegalStateException("Already connected");
         socket = serverSocket.accept();
+        socket.setTcpNoDelay(true);
+        // This should be unnecessary, but it seems to reduce the occurrence of test failures when my machine is
+        // running with the "Power saver" power plan
+        Thread.yield();
     }
 
     /**
      * Closes the open connection only. The server socket remains open.
-     *
-     * @throws IOException
      */
     public void closeConnection() throws IOException {
         if (!isConnected()) return;
@@ -101,11 +99,9 @@ public final class SimpleServer implements AutoCloseable {
 
     /**
      * Closes the open connection and the server socket.
-     *
-     * @throws IOException
      */
     public void close() throws IOException {
-        try (ServerSocket refServerSocket = serverSocket){
+        try (serverSocket){
             closeConnection();
         }
     }

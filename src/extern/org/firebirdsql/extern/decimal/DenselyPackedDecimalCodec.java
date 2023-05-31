@@ -45,7 +45,7 @@ import java.util.Arrays;
  * parameter ({@code firstDigit}).
  * </p>
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class DenselyPackedDecimalCodec {
 

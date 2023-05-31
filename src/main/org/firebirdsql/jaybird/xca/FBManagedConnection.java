@@ -22,6 +22,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
@@ -31,15 +32,12 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.ByteArrayHelper;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
@@ -49,22 +47,27 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.TRACE;
+import static java.lang.System.Logger.Level.WARNING;
 import static java.util.Collections.unmodifiableSet;
 
 /**
  * A physical connection handle to a Firebird database, providing a {@code XAResource}.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  * @version 1.0
  */
-public class FBManagedConnection implements ExceptionListener {
+public final class FBManagedConnection implements ExceptionListener {
 
-    public static final String WARNING_NO_CHARSET = "WARNING: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding), defaulting to character set ";
-    public static final String ERROR_NO_CHARSET = "Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding). "
-            + "Please specify a connection character set (eg property charSet=utf-8) or consult the Jaybird documentation for more information.";
+    public static final String ERROR_NO_CHARSET =
+            "Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or "
+            + "localEncoding). Please specify a connection character set (eg property charSet=utf-8) or consult the "
+            + "Jaybird documentation for more information.";
 
-    private static final Logger log = LoggerFactory.getLogger(FBManagedConnection.class);
+    private static final System.Logger log = System.getLogger(FBManagedConnection.class.getName());
 
     private final FBManagedConnectionFactory mcf;
 
@@ -110,10 +113,6 @@ public class FBManagedConnection implements ExceptionListener {
                         SQLStateConstants.SQL_STATE_CONNECTION_ERROR);
             }
             connectionProperties.setEncoding(defaultEncoding);
-
-            String warningMessage = WARNING_NO_CHARSET + defaultEncoding;
-            log.warn(warningMessage);
-            notifyWarning(new SQLWarning(warningMessage));
         }
 
         if (connectionProperties.getConnectTimeout() == PropertyConstants.TIMEOUT_NOT_SET
@@ -131,13 +130,12 @@ public class FBManagedConnection implements ExceptionListener {
 
     @Override
     public void errorOccurred(Object source, SQLException ex) {
-        log.trace(ex.getMessage());
+        log.log(TRACE, "Error occurred", ex);
 
-        if (!FatalGDSErrorHelper.isFatal(ex)) {
+        if (!FatalErrorHelper.isFatal(ex)) {
             return;
         }
-        XcaConnectionEvent event = new XcaConnectionEvent(this, XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED,
-                ex);
+        var event = new XcaConnectionEvent(this, XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED, ex);
 
         notify(connectionErrorOccurredNotifier, event);
     }
@@ -163,17 +161,6 @@ public class FBManagedConnection implements ExceptionListener {
         }
 
         return gdsHelper;
-    }
-
-    /**
-     * Returns the {@code databaseName} property as configured on the {@code ManagedConnectionFactory}.
-     *
-     * @return database name
-     * @deprecated Will be removed in Jaybird 6; there is no direction replacement
-     */
-    @Deprecated
-    public String getDatabase() {
-        return mcf.getDatabaseName();
     }
 
     public boolean isManagedEnvironment() {
@@ -287,7 +274,7 @@ public class FBManagedConnection implements ExceptionListener {
                 connection.setManagedConnection(null);
                 connection.close();
             } catch (SQLException sqlex) {
-                log.debug("Exception ignored during forced disassociation", sqlex);
+                log.log(DEBUG, "Exception ignored during forced disassociation", sqlex);
             }
         }
     }
@@ -308,16 +295,16 @@ public class FBManagedConnection implements ExceptionListener {
         FBConnection previous = connectionHandleUpdater.getAndSet(this, c);
         if (previous != null) {
             previous.setManagedConnection(null);
-            if (log.isDebugEnabled()) {
+            if (log.isLoggable(DEBUG)) {
                 // This would indicate a concurrent getConnection call on this managed connection
-                log.debug("A connection was already associated with the managed connection",
+                log.log(DEBUG, "A connection was already associated with the managed connection",
                         new RuntimeException("debug call trace"));
             }
             try {
                 previous.setManagedConnection(null);
                 previous.close();
             } catch (SQLException e) {
-                log.debug("Error forcing previous connection to close", e);
+                log.log(DEBUG, "Error forcing previous connection to close", e);
             }
         }
         final SQLWarning warnings = unnotifiedWarningsUpdater.getAndSet(this, null);
@@ -372,56 +359,18 @@ public class FBManagedConnection implements ExceptionListener {
             return false;
         }
 
-        Exception connectionEventException = connectionEvent.getException();
-        if (connectionEventException == null) {
-            return false;
-        }
-
-        SQLException firstSqlException = findException(connectionEventException, SQLException.class);
-        if (firstSqlException != null && isBrokenConnectionErrorCode(firstSqlException.getErrorCode())) {
-            return true;
-        }
-
-        if (findException(connectionEventException, SocketTimeoutException.class) != null) {
-            return true;
-        }
-
-        // TODO Should this test for SocketException or something else, as SocketTimeoutException is also tested in the
-        //  previous check
-        //noinspection RedundantIfStatement
-        if (findException(connectionEventException, SocketTimeoutException.class) != null) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private boolean isBrokenConnectionErrorCode(int iscCode) {
-        return iscCode == ISCConstants.isc_network_error
-                || iscCode == ISCConstants.isc_net_read_err
-                || iscCode == ISCConstants.isc_net_write_err;
-    }
-
-    private <T extends Exception> T findException(Exception root, Class<T> exceptionType) {
-        Throwable current = root;
-        while (current != null) {
-            if (exceptionType.isInstance(current)) {
-                return exceptionType.cast(current);
-            }
-            current = current.getCause();
-        }
-        return null;
+        return FatalErrorHelper.isBrokenConnection(connectionEvent.getException());
     }
 
     /**
-     * Returns an {@code javax.transaction.xa.XAresource} instance. An application server enlists this XAResource
+     * Returns an {@code javax.transaction.xa.XAResource} instance. An application server enlists this XAResource
      * instance with the Transaction Manager if the FBManagedConnection instance is being used in a Java EE transaction
      * that is coordinated by the Transaction Manager.
      *
      * @return XAResource instance
      */
     public XAResource getXAResource() {
-        log.debug("XAResource requested from FBManagedConnection");
+        log.log(TRACE, "XAResource requested from FBManagedConnection");
         try (LockCloseable ignored = withLock()) {
             if (xaResource == null) {
                 xaResource = new FbMcXaResource();
@@ -460,7 +409,7 @@ public class FBManagedConnection implements ExceptionListener {
      *         if an error occurs
      */
     void internalCommit(Xid xid, boolean onePhase) throws XAException {
-        if (log.isTraceEnabled()) log.trace("Commit called: " + xid);
+        log.log(TRACE, "Commit called: {0}", xid);
         FbTransaction committingTr = xidMap.get(xid);
 
         // check that prepare has NOT been called when onePhase = true
@@ -488,10 +437,10 @@ public class FBManagedConnection implements ExceptionListener {
                 try {
                     committingTr.rollback();
                 } catch (SQLException ge2) {
-                    log.debug("Exception rolling back failed tx: ", ge2);
+                    log.log(DEBUG, "Exception rolling back failed tx: ", ge2);
                 }
             } else {
-                log.warn("Unable to rollback failed tx, connection closed or lost");
+                log.log(WARNING, "Unable to rollback failed tx, connection closed or lost");
             }
             throw new FBXAException(ge.getMessage(), XAException.XAER_RMERR, ge);
         } finally {
@@ -538,7 +487,7 @@ public class FBManagedConnection implements ExceptionListener {
      *         if an error occurs
      */
     void internalEnd(Xid xid, int flags) throws XAException {
-        if (log.isDebugEnabled()) log.debug("End called: " + xid);
+        log.log(TRACE, "End called: {0}", xid);
         FbTransaction endingTr = xidMap.get(xid);
 
         if (endingTr == null) {
@@ -569,12 +518,9 @@ public class FBManagedConnection implements ExceptionListener {
         }
     }
 
-    private static final String FIND_TRANSACTION_FRAGMENT =
-            "SELECT RDB$TRANSACTION_ID, cast(RDB$TRANSACTION_DESCRIPTION as varchar(32764) character set octets) "
-                    + "FROM RDB$TRANSACTIONS ";
-    private static final String FORGET_FIND_QUERY = FIND_TRANSACTION_FRAGMENT + "WHERE RDB$TRANSACTION_STATE IN (2, 3) "
-            + "and RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
-    private static final String FORGET_DELETE_QUERY = "DELETE FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_ID = ";
+    private XidQueries getXidQueries() {
+        return XidQueries.forVersion(database.getServerVersion());
+    }
 
     /**
      * Indicates that no further action will be taken on behalf of this
@@ -597,7 +543,7 @@ public class FBManagedConnection implements ExceptionListener {
             GDSHelper gdsHelper2 = new GDSHelper(database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
-            stmtHandle2.prepare(FORGET_FIND_QUERY);
+            stmtHandle2.prepare(getXidQueries().forgetFindQuery());
 
             DataProvider dataProvider = new DataProvider(stmtHandle2);
             stmtHandle2.addStatementListener(dataProvider);
@@ -610,7 +556,7 @@ public class FBManagedConnection implements ExceptionListener {
                 byte[] inLimboMessage = field1.getBytes();
 
                 try {
-                    FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
+                    FBXid xid = new FBXid(inLimboMessage, inLimboTxId);
 
                     boolean gtridEquals = Arrays.equals(xid.getGlobalTransactionId(), id.getGlobalTransactionId());
                     boolean bqualEquals = Arrays.equals(xid.getBranchQualifier(), id.getBranchQualifier());
@@ -620,15 +566,19 @@ public class FBManagedConnection implements ExceptionListener {
                         break;
                     }
                 } catch (FBIncorrectXidException ex) {
-                    log.warnDebug(
-                            "incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId, ex);
+                    if (log.isLoggable(WARNING)) {
+                        String message =
+                                "incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId;
+                        log.log(WARNING, message + "; see debug level for stacktrace", ex);
+                        log.log(DEBUG, message, ex);
+                    }
                 }
             }
 
             stmtHandle2.close();
             trHandle2.commit();
-        } catch (SQLException | IOException ex) {
-            log.debug("can't perform query to fetch xids", ex);
+        } catch (SQLException ex) {
+            log.log(DEBUG, "can't perform query to fetch xids", ex);
             throw new FBXAException(XAException.XAER_RMFAIL, ex);
         }
 
@@ -643,7 +593,7 @@ public class FBManagedConnection implements ExceptionListener {
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            stmtHandle2.prepare(FORGET_DELETE_QUERY + inLimboId);
+            stmtHandle2.prepare(getXidQueries().forgetDelete() + inLimboId);
             stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
 
             stmtHandle2.close();
@@ -669,7 +619,7 @@ public class FBManagedConnection implements ExceptionListener {
     }
 
     int internalPrepare(Xid xid) throws FBXAException {
-        if (log.isTraceEnabled()) log.trace("prepare called: " + xid);
+        log.log(TRACE, "prepare called: {0}", xid);
         FbTransaction committingTr = xidMap.get(xid);
         if (committingTr == null) {
             throw new FBXAException("Prepare called with unknown transaction", XAException.XAER_NOTA);
@@ -693,24 +643,21 @@ public class FBManagedConnection implements ExceptionListener {
                 if (gdsHelper != null) {
                     committingTr.rollback();
                 } else {
-                    log.warn("Unable to rollback failed tx, connection closed or lost");
+                    log.log(WARNING, "Unable to rollback failed tx, connection closed or lost");
                 }
             } catch (SQLException ge2) {
-                log.debug("Exception rolling back failed tx: ", ge2);
+                log.log(DEBUG, "Exception rolling back failed tx", ge2);
             } finally {
                 xidMap.remove(xid);
             }
 
-            log.warn("error in prepare", ge);
+            log.log(WARNING, "error in prepare", ge);
             throw new FBXAException(XAException.XAER_RMERR, ge);
         }
 
         preparedXid.add(xid);
         return XAResource.XA_OK;
     }
-
-    private static final String RECOVERY_QUERY = FIND_TRANSACTION_FRAGMENT
-            + " where RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
 
     /**
      * Obtain a list of prepared transaction branches from a resource manager.
@@ -746,7 +693,7 @@ public class FBManagedConnection implements ExceptionListener {
             GDSHelper gdsHelper2 = new GDSHelper(database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
-            stmtHandle2.prepare(RECOVERY_QUERY);
+            stmtHandle2.prepare(getXidQueries().recoveryQuery());
 
             DataProvider dataProvider = new DataProvider(stmtHandle2);
             stmtHandle2.addStatementListener(dataProvider);
@@ -761,11 +708,9 @@ public class FBManagedConnection implements ExceptionListener {
                 long inLimboTxId = field0.getLong();
                 byte[] inLimboMessage = field1.getBytes();
 
-                try {
-                    FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
+                FBXid xid = extractXid(inLimboMessage, inLimboTxId);
+                if (xid != null) {
                     xids.add(xid);
-                } catch (FBIncorrectXidException ex) {
-                    log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
                 }
             }
 
@@ -778,8 +723,18 @@ public class FBManagedConnection implements ExceptionListener {
         }
     }
 
-    private static final String RECOVERY_QUERY_PARAMETRIZED = FIND_TRANSACTION_FRAGMENT
-            + "WHERE RDB$TRANSACTION_DESCRIPTION = CAST(? AS VARCHAR(32764) CHARACTER SET OCTETS)";
+    private static FBXid extractXid(byte[] xidData, long txId) throws IOException {
+        try {
+            return new FBXid(xidData, txId);
+        } catch (FBIncorrectXidException e) {
+            if (log.isLoggable(WARNING)) {
+                log.log(WARNING,
+                        "ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID={0}: {1}",
+                        txId, ByteArrayHelper.toHexString(xidData));
+            }
+        }
+        return null;
+    }
 
     /**
      * Obtain a single prepared transaction branch from a resource manager, based on a Xid
@@ -791,7 +746,7 @@ public class FBManagedConnection implements ExceptionListener {
      *         An error has occurred. Possible values are XAER_RMERR,
      *         XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
      */
-    protected Xid findSingleXid(Xid externalXid) throws javax.transaction.xa.XAException {
+    Xid findSingleXid(Xid externalXid) throws javax.transaction.xa.XAException {
         try {
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
 
@@ -800,7 +755,7 @@ public class FBManagedConnection implements ExceptionListener {
             GDSHelper gdsHelper2 = new GDSHelper(database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
-            stmtHandle2.prepare(RECOVERY_QUERY_PARAMETRIZED);
+            stmtHandle2.prepare(getXidQueries().recoveryQueryParameterized());
 
             DataProvider dataProvider = new DataProvider(stmtHandle2);
             stmtHandle2.addStatementListener(dataProvider);
@@ -818,11 +773,7 @@ public class FBManagedConnection implements ExceptionListener {
                 long inLimboTxId = field0.getLong();
                 byte[] inLimboMessage = field1.getBytes();
 
-                try {
-                    xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
-                } catch (FBIncorrectXidException ex) {
-                    log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
-                }
+                xid = extractXid(inLimboMessage, inLimboTxId);
             }
 
             stmtHandle2.close();
@@ -837,14 +788,14 @@ public class FBManagedConnection implements ExceptionListener {
     /**
      * @see FbAttachment#withLock()
      */
-    public final LockCloseable withLock() {
+    public LockCloseable withLock() {
         return database.withLock();
     }
 
     /**
      * @see FbAttachment#isLockedByCurrentThread()
      */
-    public final boolean isLockedByCurrentThread() {
+    public boolean isLockedByCurrentThread() {
         return database.isLockedByCurrentThread();
     }
 
@@ -918,7 +869,7 @@ public class FBManagedConnection implements ExceptionListener {
     }
 
     void internalRollback(Xid xid) throws XAException {
-        if (log.isTraceEnabled()) log.trace("rollback called: " + xid);
+        log.log(TRACE, "rollback called: {0}", xid);
         FbTransaction committingTr = xidMap.get(xid);
         if (committingTr == null) {
             throw new FBXAException("Rollback called with unknown transaction: " + xid);
@@ -935,7 +886,7 @@ public class FBManagedConnection implements ExceptionListener {
                 preparedXid.remove(xid);
             }
         } catch (SQLException ge) {
-            log.debug("Exception in rollback", ge);
+            log.log(DEBUG, "Exception in rollback", ge);
             throw new FBXAException(ge.getMessage(), XAException.XAER_RMERR, ge);
         }
     }
@@ -960,7 +911,7 @@ public class FBManagedConnection implements ExceptionListener {
      * Associates a JDBC connection with a global transaction. We assume that
      * end will be called followed by prepare, commit, or rollback. If start is
      * called after end but before commit or rollback, there is no way to
-     * distinguish work done by different transactions on the same connection).
+     * distinguish work done by different transactions on the same connection.
      * If start is called more than once before end, either it's a duplicate
      * transaction ID or illegal transaction ID (since you can't have two
      * transactions associated with one DB connection).
@@ -1011,11 +962,10 @@ public class FBManagedConnection implements ExceptionListener {
      * @throws XAException
      *         If the transaction is already started, or this connection cannot participate in the distributed
      *         transaction
-     * @throws SQLException
      * @see #start(Xid, int)
      */
     public void internalStart(Xid id, int flags) throws XAException, SQLException {
-        if (log.isTraceEnabled()) log.trace("start called: " + id);
+        log.log(TRACE, "start called: {0}", id);
 
         if (getGDSHelper().getCurrentTransaction() != null)
             throw new FBXAException("Transaction already started", XAException.XAER_PROTO);
@@ -1026,15 +976,15 @@ public class FBManagedConnection implements ExceptionListener {
     // FB public methods. Could be package if packages reorganized.
 
     /**
-     * Close this connection with regards to a wrapping {@code AbstractConnection}.
+     * Close this connection with regard to a wrapping {@code AbstractConnection}.
      *
      * @param c
      *         The {@code AbstractConnection} that is being closed
      */
     public void close(FBConnection c) {
         c.setManagedConnection(null);
-        if (!connectionHandleUpdater.compareAndSet(this, c, null) && log.isDebugEnabled()) {
-            log.debug("Call of close for connection not currently associated with this managed connection",
+        if (!connectionHandleUpdater.compareAndSet(this, c, null) && log.isLoggable(DEBUG)) {
+            log.log(DEBUG, "Call of close for connection not currently associated with this managed connection",
                     new RuntimeException("debug call trace"));
         }
         XcaConnectionEvent ce = new XcaConnectionEvent(this, XcaConnectionEvent.EventType.CONNECTION_CLOSED);
@@ -1238,7 +1188,7 @@ public class FBManagedConnection implements ExceptionListener {
             }
             return defaultConnectionEncoding;
         } catch (Exception e) {
-            log.error("Exception obtaining default connection encoding", e);
+            log.log(ERROR, "Exception obtaining default connection encoding", e);
         }
         return "NONE";
     }
@@ -1323,6 +1273,119 @@ public class FBManagedConnection implements ExceptionListener {
         @Override
         public boolean setTransactionTimeout(int seconds) throws XAException {
             return FBManagedConnection.this.setTransactionTimeout(seconds);
+        }
+    }
+
+    private interface XidQueries {
+        String forgetFindQuery();
+        String forgetDelete();
+        String recoveryQuery();
+        String recoveryQueryParameterized();
+
+        static XidQueries forVersion(GDSServerVersion version) {
+            if (version.isEqualOrAbove(3, 0)) {
+                return XidQueriesFB30.INSTANCE;
+            }
+            if (version.isEqualOrAbove(2, 5)) {
+                return XidQueriesFB25.INSTANCE;
+            }
+            return XidQueriesFB21.INSTANCE;
+        }
+    }
+
+    /**
+     * Relatively efficient XID queries that work with Firebird 3.0 and higher.
+     */
+    private static final class XidQueriesFB30 implements XidQueries {
+
+        static final XidQueriesFB30 INSTANCE = new XidQueriesFB30();
+        private static final String FIND_TRANSACTION_FRAGMENT =
+                "select RDB$TRANSACTION_ID, cast(RDB$TRANSACTION_DESCRIPTION as varchar(32764) character set octets) "
+                        + "from RDB$TRANSACTIONS ";
+
+        @Override
+        public String forgetFindQuery() {
+            return FIND_TRANSACTION_FRAGMENT + "WHERE RDB$TRANSACTION_STATE IN (2, 3) "
+                    + "and RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
+        }
+
+        @Override
+        public String forgetDelete() {
+            return "delete from RDB$TRANSACTIONS where RDB$TRANSACTION_ID = ";
+        }
+
+        @Override
+        public String recoveryQuery() {
+            return FIND_TRANSACTION_FRAGMENT + " where RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
+        }
+
+        @Override
+        public String recoveryQueryParameterized() {
+            return FIND_TRANSACTION_FRAGMENT
+                    + "where RDB$TRANSACTION_DESCRIPTION = cast(? AS varchar(32764) character set octets)";
+        }
+    }
+
+    /**
+     * Less efficient XID queries that work with Firebird 2.5.
+     */
+    private static final class XidQueriesFB25 implements XidQueries {
+
+        static final XidQueriesFB25 INSTANCE = new XidQueriesFB25();
+        private static final String FIND_TRANSACTION_FRAGMENT =
+                "select RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION from RDB$TRANSACTIONS ";
+
+        @Override
+        public String forgetFindQuery() {
+            return FIND_TRANSACTION_FRAGMENT + "WHERE RDB$TRANSACTION_STATE IN (2, 3) "
+                    + "and RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
+        }
+
+        @Override
+        public String forgetDelete() {
+            return "delete from RDB$TRANSACTIONS where RDB$TRANSACTION_ID = ";
+        }
+
+        @Override
+        public String recoveryQuery() {
+            return FIND_TRANSACTION_FRAGMENT + " where RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
+        }
+
+        @Override
+        public String recoveryQueryParameterized() {
+            return FIND_TRANSACTION_FRAGMENT
+                    + "where RDB$TRANSACTION_DESCRIPTION = cast(? AS varchar(32764) character set octets)";
+        }
+    }
+
+    /**
+     * Even less efficient queries that work with Firebird 2.1 and older (unsupported versions).
+     */
+    private static final class XidQueriesFB21 implements XidQueries {
+
+        static final XidQueriesFB21 INSTANCE = new XidQueriesFB21();
+        private static final String FIND_TRANSACTION_FRAGMENT =
+                "select RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION from RDB$TRANSACTIONS ";
+
+        @Override
+        public String forgetFindQuery() {
+            return FIND_TRANSACTION_FRAGMENT + "WHERE RDB$TRANSACTION_STATE IN (2, 3)";
+        }
+
+        @Override
+        public String forgetDelete() {
+            return "delete from RDB$TRANSACTIONS where RDB$TRANSACTION_ID = ";
+        }
+
+        @Override
+        public String recoveryQuery() {
+            return FIND_TRANSACTION_FRAGMENT;
+        }
+
+        @Override
+        public String recoveryQueryParameterized() {
+            return FIND_TRANSACTION_FRAGMENT
+                    + "where RDB$TRANSACTION_DESCRIPTION = cast(? AS varchar(32764) character set octets)";
         }
     }
 }

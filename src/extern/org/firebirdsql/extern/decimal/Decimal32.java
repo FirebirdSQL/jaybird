@@ -27,7 +27,7 @@ import java.math.BigInteger;
 /**
  * An IEEE-754 Decimal32.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class Decimal32 extends Decimal<Decimal32> {
 

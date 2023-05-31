@@ -20,32 +20,32 @@ package org.firebirdsql.ds;
 
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.xca.*;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.SQLException;
 
 /**
  * Bare-bones implementation of {@link javax.sql.XADataSource}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 public class FBXADataSource extends FBAbstractCommonDataSource implements XADataSource, Referenceable {
 
     // TODO Implement in terms of FBManagedConnectionFactory
 
-    private static final Logger LOG = LoggerFactory.getLogger(FBXADataSource.class);
+    private static final System.Logger LOG = System.getLogger(FBXADataSource.class.getName());
 
     private volatile FBDataSource internalDs;
 
@@ -62,7 +62,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
     }
 
     private void initialize() throws SQLException {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             if (internalDs != null) {
                 return;
             }
@@ -87,6 +87,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
     private static class XAConnectionManager implements XcaConnectionManager, XcaConnectionEventListener,
             Serializable {
 
+        @Serial
         private static final long serialVersionUID = 7926533334548378200L;
 
         @Override
@@ -100,19 +101,22 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
 
         @Override
         public void connectionClosed(XcaConnectionEvent ce) {
-            try {
-                ce.getSource().destroy(ce);
-            } catch (SQLException e) {
-                LOG.warn("Exception closing unmanaged connection", e);
-            }
+            destroyConnection(ce);
         }
 
         @Override
         public void connectionErrorOccurred(XcaConnectionEvent ce) {
+            destroyConnection(ce);
+        }
+
+        private void destroyConnection(XcaConnectionEvent ce) {
+            FBManagedConnection mc = ce.getSource();
             try {
-                ce.getSource().destroy(ce);
+                mc.destroy(ce);
             } catch (SQLException e) {
-                LOG.warn("Exception closing unmanaged connection", e);
+                LOG.log(System.Logger.Level.WARNING, "Ignored exception closing unmanaged connection", e);
+            } finally {
+                mc.removeConnectionEventListener(this);
             }
         }
     }

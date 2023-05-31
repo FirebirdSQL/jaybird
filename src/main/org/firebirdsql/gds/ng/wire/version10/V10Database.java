@@ -34,10 +34,7 @@ import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
@@ -50,12 +47,10 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 /**
  * {@link FbWireDatabase} implementation for the version 10 wire protocol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10Database extends AbstractFbWireDatabase implements FbWireDatabase {
-
-    private static final Logger log = LoggerFactory.getLogger(V10Database.class);
 
     private BlrCalculator blrCalculator;
 
@@ -280,7 +275,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 try {
                     closeConnection();
                 } catch (IOException e) {
-                    log.debug("Ignored exception on connection close in dropDatabase()", e);
+                    System.getLogger(getClass().getName()).log(System.Logger.Level.DEBUG,
+                            "Ignored exception on connection close in dropDatabase()", e);
                 }
             }
         } catch (SQLException ex) {
@@ -345,16 +341,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             exceptionListenerDispatcher.errorOccurred(ex);
             throw ex;
         }
-    }
-
-    protected byte[] getTransactionIdBuffer(long transactionId) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(4);
-        try {
-            VaxEncoding.encodeVaxIntegerWithoutLength(bos, (int) transactionId);
-        } catch (IOException e) {
-            // ignored: won't happen with a ByteArrayOutputStream
-        }
-        return bos.toByteArray();
     }
 
     @Override

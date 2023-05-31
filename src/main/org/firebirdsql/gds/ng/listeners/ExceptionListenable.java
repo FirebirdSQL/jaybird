@@ -31,7 +31,7 @@ package org.firebirdsql.gds.ng.listeners;
  * {@link ExceptionListenerDispatcher} in your implementation.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface ExceptionListenable {

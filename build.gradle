@@ -4,12 +4,6 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
 /*
   Gradle build script for Jaybird - Firebird JDBC driver.
 
-  Define target Java version:
-  - -PbuildProfile=java8           : Java 8  (supported)
-  - -PbuildProfile=java11 or
-    not specified or unknown value : Java 11 (supported)
-  - -PbuildProfile=java17          : Java 17 (for compatibility testing only)
-
   Uploading archives:
 
   publish -PcredentialsPassphrase=<credentials password>
@@ -17,7 +11,7 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
 
 plugins {
     id 'java-library'
-    id 'nu.studer.credentials' version '2.1'
+    id 'nu.studer.credentials' version '3.0'
     id 'maven-publish'
     id 'signing'
     id 'org.asciidoctor.jvm.convert' version '3.3.2'
@@ -29,60 +23,45 @@ apply from: 'build-properties.gradle'
 
 group = 'org.firebirdsql.jdbc'
 version = project.'version.maven'
+archivesBaseName = project.mavenName
 
 allprojects {
-    tasks.withType(JavaCompile) {
+    tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
     }
-    tasks.withType(Test) {
+    tasks.withType(Test).configureEach {
         systemProperty 'file.encoding', 'UTF-8'
     }
-}
-
-repositories {
-    mavenCentral()
 }
 
 java {
     withJavadocJar()
     withSourcesJar()
-    registerFeature('native') {
-        usingSourceSet(sourceSets.main)
-    }
-}
-
-ext {
-    junit_jupiter = '5.9.0'
-    hamcrest = '2.2'
-    assertj = '3.23.1'
-    mockito = '4.7.0'
 }
 
 dependencies {
-    nativeImplementation 'net.java.dev.jna:jna:5.12.1'
-
-    compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
-    compileOnly 'jakarta.servlet:jakarta.servlet-api:5.0.0'
-
     // Use JUnit Jupiter API for testing.
-    testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_jupiter"
-    testImplementation "org.junit.jupiter:junit-jupiter-params:$junit_jupiter"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_jupiter"
+    testImplementation platform(testLibs.junit.bom)
+    testImplementation testLibs.bundles.junit
 
-    testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
-    testImplementation "org.hamcrest:hamcrest-library:$hamcrest"
-    testImplementation "org.assertj:assertj-core:$assertj"
+    testImplementation testLibs.bundles.hamcrest
+    testImplementation testLibs.assertj.core
 
-    testImplementation "org.mockito:mockito-core:$mockito"
-    testImplementation "org.mockito:mockito-junit-jupiter:$mockito"
+    testImplementation platform(testLibs.mockito.bom)
+    testImplementation testLibs.bundles.mockito
+
+    testImplementation testLibs.awaitility
+    // A lot (if not all) tests for jaybird-native are in the main project given dependencies on test infrastructure
+    testImplementation project('jaybird-native')
+    if (findProperty('test.chacha64') != 'disabled') {
+        testRuntimeOnly project('chacha64-plugin')
+    }
 }
 
 sourceSets {
     main {
         java {
-            srcDirs = findProperty('buildProfile') == 'java8'
-                    ? ['src/main', 'src/extern', 'src/jna-client', 'src/openoffice', 'src/nativeoo']
-                    : ['src/main', 'src/extern', 'src/jna-client', 'src/openoffice', 'src/nativeoo', 'src/chacha_j11']
+            srcDirs = ['src/main', 'src/extern']
         }
         resources {
             srcDirs = ['src/resources']
@@ -109,7 +88,7 @@ processResources {
     filter ReplaceTokens, tokens: [
             'NAME'         : project.capitalizedName,
             'VERSION'      : project.'version.simple',
-            'MAVEN_NAME'   : project.name,
+            'MAVEN_NAME'   : project.mavenName,
             'VERSION_FULL' : project.'version.maven',
             'VERSION_MAJOR': project.'version.major',
             'VERSION_MINOR': project.'version.minor'
@@ -119,18 +98,19 @@ processResources {
 //apply from: 'documentation.gradle'
 
 asciidoctorj {
+    version = '2.5.7'
     attributes 'revnumber': null,
             'version_simple': project.'version.simple',
             'version_wo_target': "${project.'version.simple'}${project.'version.tag'}",
             'version_tag': project.'version.tag',
-            'version_example': "${project.'version.simple'}.java8${project.'version.tag'}",
+            'version_example': "${project.'version.simple'}${project.'version.tag'}",
             'stylesdir': file('src/docs/theme/jaybird-html'),
             'stylesheet': 'firebird.css',
             'docinfo': 'shared',
             'docinfodir': file('src/docs/theme/jaybird-html/docinfo')
 }
 
-task dist(type: Zip) {
+tasks.register('dist', Zip) {
     dependsOn assemble, asciidoctor
     destinationDirectory = file("$buildDir/dist")
 
@@ -149,8 +129,25 @@ task dist(type: Zip) {
     }
     from('.') {
         include 'CONTRIBUTING.md'
+        include 'SECURITY.md'
     }
     from(configurations.runtimeClasspath) {
+        into 'lib'
+    }
+    def chacha64 = project('chacha64-plugin')
+    from chacha64.jar.outputs
+    from chacha64.javadocJar.outputs
+    from chacha64.sourcesJar.outputs
+    from(chacha64.configurations.runtimeClasspath) {
+        exclude 'jaybird-*'
+        into 'lib'
+    }
+    def jaybirdNative = project('jaybird-native')
+    from jaybirdNative.jar.outputs
+    from jaybirdNative.javadocJar.outputs
+    from jaybirdNative.sourcesJar.outputs
+    from(jaybirdNative.configurations.runtimeClasspath) {
+        exclude 'jaybird-*'
         into 'lib'
     }
 }
@@ -164,7 +161,7 @@ jar {
                 'Specification-Vendor': project.'specification.vendor',
                 'Implementation-Title': project.'implementation.title',
                 'Implementation-Url': project.'implementation.url',
-                'Implementation-Version': "$project.version (build: variant=$project.name tag=${project.'version.svntag'} date=${project.'build.id'})",
+                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'})",
                 'Implementation-Vendor': project.'implementation.vendor',
                 'Implementation-Vendor-Id': project.'implementation.vendor.id',
                 'Automatic-Module-Name': 'org.firebirdsql.jaybird'
@@ -174,18 +171,11 @@ jar {
 
 javadoc {
     options.author()
-    options.windowTitle = "$project.capitalizedName API"
-    options.docTitle = project.capitalizedName
+    options.windowTitle = "$project.capitalizedName ${project.'version.maven'} API"
+    options.docTitle = "$project.capitalizedName ${project.'version.maven'}"
     options.bottom = "Copyright &copy; 2001-${project.YEAR} Jaybird (Firebird JDBC) team. All rights reserved."
     def currentJavaVersion = JavaVersion.current()
-    if (currentJavaVersion.isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
-
-        if (currentJavaVersion.isJava11Compatible() && !currentJavaVersion.isCompatibleWith(JavaVersion.VERSION_13)) {
-            // Ensure search index works correctly
-            options.addBooleanOption('-no-module-directories', true)
-        }
-    }
+    options.addBooleanOption('html5', true)
     options.addBooleanOption('Xdoclint:none', true)
     exclude 'org/firebirdsql/jdbc/oo/**'
 }
@@ -207,6 +197,7 @@ test {
             'test.use_firebird_autocommit': project.'test.use.firebird.autocommit',
             'jdk.net.useFastTcpLoopback': project.findProperty('jdk.net.useFastTcpLoopback') ?: 'false',
             'test.db_on_docker': project.findProperty('test.dbondocker') ?: 'false',
+            'test.enableProtocol': project.'test.enableProtocol'
     )
     if (project.hasProperty('test.jna.library.path')) {
         systemProperty 'jna.library.path', project.'test.jna.library.path'

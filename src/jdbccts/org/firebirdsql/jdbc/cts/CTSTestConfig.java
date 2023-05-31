@@ -27,7 +27,7 @@ import java.util.Properties;
 /**
  * Configuration for CTS test suite.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public class CTSTestConfig {
     public static final String CTS_CONFIG_FILE = "cts.config.file";

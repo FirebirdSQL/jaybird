@@ -23,7 +23,7 @@ import junit.framework.TestSuite;
 /**
  * Database meta data CTS test suite.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public class DbMetaSuite extends FirebirdSuite {
 

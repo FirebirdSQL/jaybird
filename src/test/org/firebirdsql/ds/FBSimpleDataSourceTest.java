@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
+import static org.firebirdsql.common.FBTestProperties.configureDefaultDbProperties;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
@@ -39,7 +40,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Tests for {@link FBSimpleDataSource}
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class FBSimpleDataSourceTest {
@@ -52,11 +53,7 @@ class FBSimpleDataSourceTest {
      */
     @Test
     void testJavaCharSetIsDefaultCharSet() {
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
         ds.setCharSet(System.getProperty("file.encoding"));
         try (Connection con = ds.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM RDB$DATABASE");
@@ -70,11 +67,7 @@ class FBSimpleDataSourceTest {
     @Test
     void defaultDisableWireCompression() throws Exception {
         assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
 
         try (Connection connection = ds.getConnection()) {
             assertTrue(connection.isValid(0));
@@ -88,11 +81,7 @@ class FBSimpleDataSourceTest {
     void enableWireCompression() throws Exception {
         assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
         assumeTrue(getDefaultSupportInfo().supportsWireCompression(), "Test requires wire compression");
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
 
         ds.setWireCompression(true);
 
@@ -106,11 +95,7 @@ class FBSimpleDataSourceTest {
 
     @Test
     void canChangeConfigAfterConnectionCreation() throws Exception {
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
 
         // possible before connecting
         ds.setBlobBufferSize(1024);
@@ -126,11 +111,7 @@ class FBSimpleDataSourceTest {
     @Test
     void cannotChangeConfigAfterConnectionCreation_usingSharedMCF() throws Exception {
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
-        FBSimpleDataSource ds = new FBSimpleDataSource(mcf);
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource(mcf));
 
         // possible before connecting
         ds.setBlobBufferSize(1024);
@@ -142,4 +123,18 @@ class FBSimpleDataSourceTest {
         // not possible after creating a connection
         assertThrows(IllegalStateException.class, () -> ds.setBlobBufferSize(2048));
     }
+
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/494">jaybird#494</a>.
+     */
+    @Test
+    void canConnectWithEmptyRoleName_494() throws Exception {
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
+        ds.setRoleName("");
+
+        try (Connection connection = ds.getConnection()) {
+            assertTrue(connection.isValid(1000));
+        }
+    }
+
 }

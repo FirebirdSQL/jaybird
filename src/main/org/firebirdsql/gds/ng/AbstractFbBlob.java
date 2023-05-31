@@ -24,19 +24,20 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 
+import static java.lang.System.Logger.Level.ERROR;
+import static java.lang.System.Logger.Level.TRACE;
+
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbBlob implements FbBlob, TransactionListener, DatabaseListener {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbBlob.class);
+    private static final System.Logger log = System.getLogger(AbstractFbBlob.class.getName());
 
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final BlobParameterBuffer blobParameterBuffer;
@@ -203,7 +204,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             try {
                 close();
             } catch (SQLException e) {
-                log.error("Exception while closing blob during transaction end", e);
+                log.log(ERROR, "Exception while closing blob during transaction end", e);
             }
             break;
         case COMMITTED:
@@ -229,13 +230,11 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         }
         try (LockCloseable ignored = withLock()) {
             if (open) {
-                if (log.isDebugEnabled()) {
-                    log.debug(String.format("blob with blobId %d still open on database detach", getBlobId()));
-                }
+                log.log(TRACE, "blob with blobId {0} still open on database detach", getBlobId());
                 try {
                     close();
                 } catch (SQLException e) {
-                    log.error("Blob close in detaching event failed", e);
+                    log.log(ERROR, "Blob close in detaching event failed", e);
                 }
             }
         }
@@ -394,10 +393,10 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     /**
-     * @return New instance of {@link BlobLengthProcessor} (or subclass) for this blob.
+     * @return New instance of {@link BlobLengthProcessor} for this blob.
      */
     protected BlobLengthProcessor createBlobLengthProcessor() {
-        return new BlobLengthProcessor(this);
+        return new BlobLengthProcessor();
     }
 
     @Override

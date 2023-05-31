@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.gds.ng.tz;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.StringUtils;
 
 import java.io.IOException;
@@ -32,12 +30,12 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Mapping of Firebird time zone ids.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public final class TimeZoneMapping {
 
-    private final Logger logger = LoggerFactory.getLogger(TimeZoneMapping.class);
+    private final System.Logger logger = System.getLogger(TimeZoneMapping.class.getName());
 
     private static final TimeZoneMapping INSTANCE = new TimeZoneMapping();
     private static final int MAX_ZONE_ID = 65535;
@@ -151,13 +149,12 @@ public final class TimeZoneMapping {
     }
 
     private void logInvalidOffsetTimeZoneId(int timeZoneId) {
-        if (logger.isWarnEnabled()) {
+        if (logger.isLoggable(System.Logger.Level.WARNING)) {
             String message = "Provided timezone id " + timeZoneId + " is not a valid offset time zone. "
                     + "Valid range is [0, " + MAX_OFFSET_ENCODED + "]. Returning offset 0 (UTC) instead.";
-            if (logger.isDebugEnabled()) {
-                logger.debug(message, new RuntimeException("debugging stacktrace"));
-            } else {
-                logger.warn(message + " See debug level for location.");
+            logger.log(System.Logger.Level.WARNING, message + " See debug level for location.");
+            if (logger.isLoggable(System.Logger.Level.DEBUG)) {
+                logger.log(System.Logger.Level.DEBUG, message, new RuntimeException("debugging stacktrace"));
             }
         }
     }
@@ -225,13 +222,12 @@ public final class TimeZoneMapping {
     }
 
     private void logInvalidOffsetMinutes(int offsetMinutes) {
-        if (logger.isWarnEnabled()) {
+        if (logger.isLoggable(System.Logger.Level.WARNING)) {
             String message = "Offset value " + offsetMinutes + " out of range [" + MIN_OFFSET + ", " + MAX_OFFSET
                     + "]. Returning id for offset 0 instead.";
-            if (logger.isDebugEnabled()) {
-                logger.debug(message, new RuntimeException("debugging stacktrace"));
-            } else {
-                logger.warn(message + " See debug level for location");
+            logger.log(System.Logger.Level.WARNING, message + " See debug level for location");
+            if (logger.isLoggable(System.Logger.Level.DEBUG)) {
+                logger.log(System.Logger.Level.DEBUG, message, new RuntimeException("debugging stacktrace"));
             }
         }
     }
@@ -308,13 +304,12 @@ public final class TimeZoneMapping {
     }
 
     private void logOutOfRange(int timeZoneId) {
-        if (logger.isWarnEnabled()) {
+        if (logger.isLoggable(System.Logger.Level.WARNING)) {
             String message = "Unmapped or out of range timezone id received, defaulting to " + FALLBACK_ZONE
                     + ", was id: " + timeZoneId + ".";
-            if (logger.isDebugEnabled()) {
-                logger.debug(message, new RuntimeException("debugging stacktrace"));
-            } else {
-                logger.warn(message + " See debug level for location.");
+            logger.log(System.Logger.Level.WARNING, message + " See debug level for location.");
+            if (logger.isLoggable(System.Logger.Level.DEBUG)) {
+                logger.log(System.Logger.Level.DEBUG, message, new RuntimeException("debugging stacktrace"));
             }
         }
     }
@@ -361,11 +356,11 @@ public final class TimeZoneMapping {
                 zonesById[internalId] = timeZoneName != null ? timeZoneName : FALLBACK_ZONE;
             }
 
-            return Collections.unmodifiableList(Arrays.asList(zonesById));
+            return List.of(zonesById);
         } catch (Exception e) {
-            LoggerFactory.getLogger(TimeZoneMapping.class).warn(
+            System.getLogger(TimeZoneMapping.class.getName()).log(System.Logger.Level.WARNING,
                     "Unable to load Firebird time zone id to name mapping, only offset timezone support will be "
-                            + "available ", e);
+                    + "available ", e);
             // Populating with 65535 (internalId 0) == GMT
             return Collections.singletonList("GMT");
         }

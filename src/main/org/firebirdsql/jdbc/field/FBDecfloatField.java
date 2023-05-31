@@ -38,7 +38,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Field for the SQL:2016 DECFLOAT type (decimal floating point), backed by an IEEE-754 Decimal64 or Decimal128.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 

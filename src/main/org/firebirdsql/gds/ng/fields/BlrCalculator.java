@@ -29,7 +29,7 @@ import java.sql.SQLException;
 /**
  * Interface for calculating the blr (binary language representation) of a row.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface BlrCalculator {

@@ -41,7 +41,7 @@ import java.sql.SQLException;
  * </ul>
  * </p>
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
+ * @author Gabriel Reid
  */
 public interface StatisticsManager extends ServiceManager {
 

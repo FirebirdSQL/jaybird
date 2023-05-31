@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,18 +18,14 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
-import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.version12.V12Database;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
 /**
  * {@link org.firebirdsql.gds.ng.wire.FbWireDatabase} implementation for the version 13 wire protocol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class V13Database extends V12Database {
 
@@ -45,17 +41,6 @@ public class V13Database extends V12Database {
     protected V13Database(WireDatabaseConnection connection,
             ProtocolDescriptor descriptor) {
         super(connection, descriptor);
-    }
-
-    @Override
-    protected byte[] getTransactionIdBuffer(long transactionId) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(8);
-        try {
-            VaxEncoding.encodeVaxLongWithoutLength(bos, (int) transactionId);
-        } catch (IOException e) {
-            // ignored: won't happen with a ByteArrayOutputStream
-        }
-        return bos.toByteArray();
     }
 
 }

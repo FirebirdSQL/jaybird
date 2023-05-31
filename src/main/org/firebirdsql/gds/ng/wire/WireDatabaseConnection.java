@@ -30,7 +30,7 @@ import java.sql.SQLException;
 /**
  * Wire connection instance for connecting to a database
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class WireDatabaseConnection extends WireConnection<IConnectionProperties, FbWireDatabase> {
@@ -67,7 +67,7 @@ public final class WireDatabaseConnection extends WireConnection<IConnectionProp
 
         DbAttachInfo dbAttachInfo = initialDbAttachInfo.hasServerName()
                 ? initialDbAttachInfo
-                : DbAttachInfo.parseConnectString(initialDbAttachInfo.getAttachObjectName());
+                : DbAttachInfo.parseConnectString(initialDbAttachInfo.attachObjectName());
 
         if (!dbAttachInfo.hasServerName()) {
             // fallback to localhost (preserves backwards compatibility when serverName/host defaulted to localhost)
@@ -77,7 +77,7 @@ public final class WireDatabaseConnection extends WireConnection<IConnectionProp
         if (!dbAttachInfo.hasAttachObjectName()) {
             throw new FbExceptionBuilder()
                     .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                    .messageParameter(initialDbAttachInfo.getAttachObjectName())
+                    .messageParameter(initialDbAttachInfo.attachObjectName())
                     .messageParameter("null or empty database name in connection string")
                     .toSQLException();
         }

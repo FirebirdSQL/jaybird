@@ -27,7 +27,7 @@ import org.firebirdsql.gds.ng.wire.version10.V10Service;
 /**
  * Class to contain common connection information shared by the V11 tests.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V11CommonConnectionInfo extends V10CommonConnectionInfo {

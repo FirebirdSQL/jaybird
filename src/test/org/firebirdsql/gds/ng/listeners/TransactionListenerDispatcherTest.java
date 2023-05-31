@@ -32,7 +32,7 @@ import static org.mockito.Mockito.verify;
 /**
  * Tests for {@link org.firebirdsql.gds.ng.listeners.TransactionListenerDispatcher}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 @ExtendWith(MockitoExtension.class)

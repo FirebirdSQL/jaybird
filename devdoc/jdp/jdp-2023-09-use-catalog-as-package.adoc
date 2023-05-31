@@ -1,0 +1,81 @@
+= jdp-2023-08: Use Catalog as Package
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+Firebird 3.0 introduced packages as a way to group stored procedures and stored functions in a single module.
+
+The JDBC specification -- and by extension Jaybird -- provides no support to access metadata information on stored procedures and stored functions in packages.
+
+`DatabaseMetaData` methods `getFunctions`, `getFunctionColumns`, `getProducedures` and `getProcedureColumns` do offer two parameters which are unused by Jaybird: `catalog` and `schemaNamePattern`.
+In JDBC methods, a parameter value `null` means "`[catalog/schema] name should not be used to narrow the search`", while `""` (empty string) means "`return those without [catalog/schema]`".
+
+According to the SQL standard, catalogs are:
+
+[quote,ISO/IEC 9075-1:2003]
+____
+A _catalog_ is a named collection of SQL-schemas, foreign server descriptors, and foreign data wrapper descriptors in an SQL-environment.
+____
+
+Which in our interpretation refers to an individual database.
+In Firebird, databases are isolated and unknown to each other, and it is not possible to directly query another database.
+We don't expect this state of affairs to change any time soon.
+
+Schemas are:
+
+[quote,ISO/IEC 9075-1:2003]
+____
+An _SQL-schema_, often referred to simply as a schema, is a persistent, named collection of descriptors.
+____
+
+Firebird currently doesn't have schemas.
+Although the definition of schema is closer to that of a package (it is a named collection of procedure and function descriptors), we expect that _if_ schemas are implemented in Firebird, packages are likely contained in schemas.
+
+The Oracle JDBC driver also uses the `catalog` parameter of metadata methods to refine searches to a packages (see https://docs.oracle.com/en/database/oracle/oracle-database/21/jjdbc/JDBC-reference-information.html#GUID-07453AC2-CFF8-42FA-8107-FE2AACF6AEF9[this note^]).
+
+== Decision
+
+Jaybird will introduce a Boolean connection property `useCatalogAsPackage`.
+When this property is enabled, Jaybird will accept the `catalog` parameter in `DatabaseMetaData` to return information in procedures and functions in packages.
+
+=== Rejected alternatives
+
+The following options were considered and rejected:
+
+* Enable by default, and always report information on packages in catalog columns.
++
+We're not sure how standard JDBC tools will handle this, so we prefer a conservative approach and require opt-in.
++
+This may be changed in the future
+* Use schema instead of catalog.
++
+As mentioned earlier, we think it is more likely that Firebird will introduce _schema_ than discoverability of other databases and cross-database query capability (i.e. _catalog_).
+
+== Consequences
+
+When `useCatalogAsPackage` is enabled, `DatabaseMetaData` will exhibit the following behaviour:
+
+* `getCatalogs()` lists packages, with package names in `TABLE_CAT`.
+* `getFunctions`, `getFunctionColumns`, `getProcedures`, and `getProcedureColumns` include information on procedures and functions in packages
+** Normal (non-packaged) procedures and functions report their catalog as empty string instead of `null` (because of the following rule)
+** If `catalog` is ``""`` (empty string), only normal stored procedures and stored functions are reported.
+** If `catalog` is `null`, both packaged and normal stored procedures and stored functions are reported.
+** If `catalog` is not `null` and not an empty string, these metadata methods will only return procedures, functions, or their columns of the specified package (exact match, case-sensitive, not a `LIKE` pattern)
+* `getCatalogSeparator()` returns `"."` (string with period).
+* `getCatalogTerm` returns `"PACKAGE"`.
+* `isCatalogAtStart()` returns `true`.
+* `getMaxCatalogNameLength()` returns 31 or 63 depending on the max identifier length of the database.
+* `supportsCatalogsInDataManipulation()` returns `true` (i.e. access selectable stored procedures and functions).
+* `supportsCatalogsInProcedureCalls()` returns `true`.
+* The other `supportsCatalogsIn__type__()` methods continue to return `false`.
+* Other metadata methods with a `catalog` parameter continue to ignore it, just like they do when `useCatalogAsPackage` is disabled.
+
+The `useCatalogAsPackage` connection property does not result in any other behaviour.

@@ -35,27 +35,15 @@ package org.firebirdsql.gds;
  * Two features are available:
  * <ul>
  * <li>Specifying the source and target BLOB types (server uses BLOB filters to
- * perform the conversion)
+ * perform the conversion)</li>
  * <li>Specifying type of the BLOB - either segmented or stream. The only
  * visible to user difference between segmented and stream BLOBs is the fact
  * that "seek" operation is not defined for segmented BLOBs (see
  * {@link org.firebirdsql.gds.ng.FbBlob#seek(int, org.firebirdsql.gds.ng.FbBlob.SeekMode)}
- * for more details).
+ * for more details).</li>
  * </ul>
  */
 public interface BlobParameterBuffer extends ParameterBuffer {
-    
-    int SOURCE_TYPE             =  ISCConstants.isc_bpb_source_type;
-    int TARGET_TYPE             =  ISCConstants.isc_bpb_target_type;
-
-    int SOURCE_INTERP           =  ISCConstants.isc_bpb_source_interp;
-    int TARGET_INTERP           =  ISCConstants.isc_bpb_target_interp;
-    
-    int FILTER_PARAMETER        =  ISCConstants.isc_bpb_filter_parameter;
-
-    int TYPE                    =  ISCConstants.isc_bpb_type;
-    int TYPE_SEGMENTED          =  ISCConstants.isc_bpb_type_segmented;
-    int TYPE_STREAM             =  ISCConstants.isc_bpb_type_stream;
 
     /**
      * Set a void (valueless) parameter on this {@code BlobParameterBuffer}.

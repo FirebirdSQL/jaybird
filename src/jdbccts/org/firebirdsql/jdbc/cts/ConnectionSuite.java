@@ -23,7 +23,7 @@ import junit.framework.TestSuite;
 /**
  * Connection CTS test suite.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public class ConnectionSuite extends FirebirdSuite {
 

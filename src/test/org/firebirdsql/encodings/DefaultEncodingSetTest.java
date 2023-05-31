@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Additional tests for {@link DefaultEncodingSet}. Note that most of this class is tested through
  * {@link EncodingFactoryTest}. This is only to test additional behaviour.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class DefaultEncodingSetTest {

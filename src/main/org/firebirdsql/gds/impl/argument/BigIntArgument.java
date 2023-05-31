@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,26 +24,28 @@ import org.firebirdsql.gds.VaxEncoding;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serial;
 import java.util.EnumSet;
 
 /**
  * {@link Argument} implementation for bigint (long) values.
  * @since 3.0
  */
-public final class BigIntArgument extends Argument {
+public final class BigIntArgument extends TypedArgument {
 
     private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
             EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.IntSpb, ArgumentType.BigIntSpb);
-    private final ArgumentType argumentType;
+    @Serial
+    private static final long serialVersionUID = -6152038317321572191L;
+
     private final long value;
 
     public BigIntArgument(int type, ArgumentType argumentType, long value) {
-        super(type);
+        super(type, argumentType);
         if (!SUPPORTED_ARGUMENT_TYPES.contains(argumentType)) {
             throw new IllegalArgumentException("Invalid argument type: " + argumentType);
         }
         // TODO Check if value fits if it is an IntSpb?
-        this.argumentType = argumentType;
         this.value = value;
     }
 
@@ -61,7 +63,7 @@ public final class BigIntArgument extends Argument {
         return 9 + argumentType.getLengthSize();
     }
 
-    protected void writeValue(final OutputStream outputStream, final long value) throws IOException {
+    private void writeValue(final OutputStream outputStream, final long value) throws IOException {
         if (argumentType == ArgumentType.IntSpb) {
             argumentType.writeLength(4, outputStream);
             VaxEncoding.encodeVaxIntegerWithoutLength(outputStream, (int) value);
@@ -83,12 +85,8 @@ public final class BigIntArgument extends Argument {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof BigIntArgument)) {
-            return false;
-        }
-
-        final BigIntArgument otherBigIntArgument = (BigIntArgument) other;
-
+        if (this == other) return true;
+        if (!(other instanceof final BigIntArgument otherBigIntArgument)) return false;
         return this.getType() == otherBigIntArgument.getType() && this.value == otherBigIntArgument.value;
     }
 

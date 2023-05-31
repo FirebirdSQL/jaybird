@@ -35,8 +35,6 @@ import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.management.FBManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +53,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
+/*
  * Demonstrates a problem backing up a database which has been created using streamed blobs(As far as my testing shows
  * it does not occur when segmented blobs are used ).
  *
@@ -106,45 +104,35 @@ class JaybirdBlobBackupProblemTest {
     @TempDir
     private Path tempDir;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private String mAbsoluteDatabasePath = null;
     private String mAbsoluteBackupPath = null;
     private FBManager fbManager = null;
     private FbDatabaseFactory dbFactory;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         GDSType gdsType = FBTestProperties.getGdsType();
         dbFactory = FBTestProperties.getFbDatabaseFactory();
-        try {
-            fbManager = new FBManager(gdsType);
+        fbManager = new FBManager(gdsType);
 
-            fbManager.setServer("localhost");
-            fbManager.setPort(5066);
-            fbManager.start();
+        fbManager.setServer("localhost");
+        fbManager.setPort(5066);
+        fbManager.start();
 
-            Path dbFolder = tempDir.resolve("db");
-            Files.createDirectories(dbFolder);
+        Path dbFolder = tempDir.resolve("db");
+        Files.createDirectories(dbFolder);
 
-            mAbsoluteBackupPath = dbFolder.resolve("testES01344.fbk").toString();
+        mAbsoluteBackupPath = dbFolder.resolve("testES01344.fbk").toString();
 
-            mAbsoluteDatabasePath = dbFolder.resolve("testES01344.fdb").toString();
+        mAbsoluteDatabasePath = dbFolder.resolve("testES01344.fdb").toString();
 
-            fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-        } catch (Exception e) {
-            log.warn("exception in setup: ", e);
-        }
+        fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
     }
 
     @AfterEach
-    void tearDown() {
-        try {
-            fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-            fbManager.stop();
-        } catch (Exception e) {
-            log.warn("exception in teardown: ", e);
-        }
+    void tearDown() throws Exception {
+        fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
+        fbManager.stop();
     }
 
     @Test
@@ -208,16 +196,16 @@ class JaybirdBlobBackupProblemTest {
         ServiceRequestBuffer serviceRequestBuffer = service.createServiceRequestBuffer();
         serviceRequestBuffer.addArgument(ISCConstants.isc_info_svc_to_eof);
 
-        final StringBuilder stringBuffer = new StringBuilder();
+        final var sb = new StringBuilder();
         boolean finished = false;
         try (FileOutputStream file = new FileOutputStream(outputFilename)) {
             while (!finished) {
                 byte[] buffer = service.getServiceInfo(null, serviceRequestBuffer, 1024);
 
-                final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer);
+                final var byteArrayInputStream = new ByteArrayInputStream(buffer);
 
                 // TODO Find out why unused
-                final byte firstByte = (byte) byteArrayInputStream.read();
+                byteArrayInputStream.read();
 
                 int numberOfBytes = (short) ((byteArrayInputStream.read()) + (byteArrayInputStream.read() << 8));
 
@@ -231,13 +219,13 @@ class JaybirdBlobBackupProblemTest {
                         final byte byteToWrite = (byte) byteArrayInputStream.read();
 
                         file.write(byteToWrite);
-                        stringBuffer.append((char) byteToWrite);
+                        sb.append((char) byteToWrite);
                     }
                 }
             }
         }
 
-        assertThat("Looks like the backup failed. See logfile " + outputFilename, stringBuffer.toString(),
+        assertThat("Looks like the backup failed. See logfile " + outputFilename, sb.toString(),
                 containsString("committing, and finishing."));
     }
 

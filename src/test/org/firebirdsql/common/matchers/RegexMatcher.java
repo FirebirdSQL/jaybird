@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 /**
  * Hamcrest matcher for string matching a regular expression.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public class RegexMatcher extends TypeSafeMatcher<String> {
 

@@ -24,6 +24,7 @@
  */
 package org.firebirdsql.gds.impl;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -45,6 +46,7 @@ import java.util.regex.Pattern;
  */
 public final class GDSServerVersion implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -3401092369588765195L;
 
     @SuppressWarnings("unused")
@@ -248,14 +250,27 @@ public final class GDSServerVersion implements Serializable {
     }
 
     /**
-     * Convenience method to check if the major.minor of this version is equal to or larger than the specified required
-     * version.
+     * Convenience method to check if the <em>major</em> of this version is equal to or larger than the specified
+     * required version.
+     *
+     * @param requiredMajorVersion
+     *         Required major version
+     * @return {@code true} when current major is equal to or larger than required
+     * @since 6
+     */
+    public boolean isEqualOrAbove(int requiredMajorVersion) {
+        return majorVersion >= requiredMajorVersion;
+    }
+
+    /**
+     * Convenience method to check if the <em>major.minor</em> of this version is equal to or larger than the specified
+     * required version.
      *
      * @param requiredMajorVersion
      *         Required major version
      * @param requiredMinorVersion
      *         Required minor version
-     * @return <code>true</code> when current major is larger than required, or major is same and minor is equal to or
+     * @return {@code true} when current major is larger than required, or major is same and minor is equal to or
      * larger than required
      */
     public boolean isEqualOrAbove(int requiredMajorVersion, int requiredMinorVersion) {

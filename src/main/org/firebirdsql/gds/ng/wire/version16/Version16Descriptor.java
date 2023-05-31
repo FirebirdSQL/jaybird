@@ -38,7 +38,7 @@ import org.firebirdsql.gds.ng.wire.version13.V13ParameterConverter;
  * The {@link ProtocolDescriptor} for the Firebird version 16 protocol. This version
  * applies to Firebird 4, but also works with newer Firebird versions.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public final class Version16Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {

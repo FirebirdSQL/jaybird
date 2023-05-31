@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -26,16 +26,16 @@ import java.sql.SQLException;
  * Instances of this field cache data in auto-commit case if no transaction is
  * yet available and must be flushed before transaction is committed.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  * @version 1.0
  */
 public interface FBFlushableField {
 
     class CachedObject {
-        public byte[] bytes;
-        public InputStream binaryStream;
-        public Reader characterStream;
-        public long length;
+        public final byte[] bytes;
+        public final InputStream binaryStream;
+        public final Reader characterStream;
+        public final long length;
 
         public CachedObject(byte[] bytes, InputStream binaryStream, Reader characterStream, long length) {
             this.bytes = bytes;

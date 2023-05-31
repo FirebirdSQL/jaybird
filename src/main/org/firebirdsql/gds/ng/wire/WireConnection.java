@@ -22,6 +22,7 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ClumpletReader;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
@@ -35,8 +36,6 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.ByteArrayHelper;
 
 import java.io.ByteArrayOutputStream;
@@ -56,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.System.Logger.Level.DEBUG;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
@@ -65,7 +65,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  *         Type of attach properties
  * @param <C>
  *         Type of connection handle
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class WireConnection<T extends IAttachProperties<T>, C extends FbWireAttachment>
@@ -73,7 +73,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
     // TODO Check if methods currently throwing IOException should throw SQLException instead
 
-    private static final Logger log = LoggerFactory.getLogger(WireConnection.class);
+    private static final System.Logger log = System.getLogger(WireConnection.class.getName());
+    private static final String REJECTION_POSSIBLE_REASON =
+            "The server and client could not agree on connection options. A possible reasons is attempting to connect "
+            + "to an unsupported Firebird version. See the documentation of connection property 'enableProtocol' for "
+            + "a possible workaround.";
 
     // Micro-optimization: we usually expect at most 3 (Firebird 5)
     private final List<KnownServerKey> knownServerKeys = new ArrayList<>(3);
@@ -115,7 +119,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
      *         Attach properties
      */
     protected WireConnection(T attachProperties) throws SQLException {
-        this(attachProperties, EncodingFactory.getPlatformDefault(), ProtocolCollection.getDefaultCollection());
+        this(attachProperties, EncodingFactory.getPlatformDefault(),
+                ProtocolCollection.getProtocols(attachProperties.getEnableProtocol()));
     }
 
     /**
@@ -143,15 +148,22 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     }
 
     public final String getServerName() {
-        return dbAttachInfo.getServerName();
+        return dbAttachInfo.serverName();
     }
 
     public final int getPortNumber() {
-        return dbAttachInfo.getPortNumber();
+        return dbAttachInfo.portNumber();
+    }
+
+    /**
+     * @return The file name to use in the p_cnct_file of the op_connect request
+     */
+    protected String getCnctFile() {
+        return getAttachObjectName();
     }
 
     public final String getAttachObjectName() {
-        return dbAttachInfo.getAttachObjectName();
+        return dbAttachInfo.attachObjectName();
     }
 
     protected abstract DbAttachInfo toDbAttachInfo(T attachProperties) throws SQLException;
@@ -208,8 +220,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                     socket.setSoTimeout(desiredTimeout);
                 }
             } catch (SocketException e) {
-                // TODO Add SQLState
-                throw new SQLException("Unable to change socket timeout (SO_TIMEOUT)", e);
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_couldNotChangeSoTimeout).cause(e)
+                        .toSQLException();
             }
         }
     }
@@ -280,11 +292,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             xdrOut = new XdrOutputStream(socket.getOutputStream());
 
             xdrOut.writeInt(op_connect);
-            xdrOut.writeInt(op_attach);
-            xdrOut.writeInt(CONNECT_VERSION3);
-            xdrOut.writeInt(arch_generic);
+            xdrOut.writeInt(op_attach); // p_cnct_operation
+            xdrOut.writeInt(CONNECT_VERSION3); // p_cnct_cversion
+            xdrOut.writeInt(arch_generic); // p_cnct_client
 
-            xdrOut.writeString(getAttachObjectName(), getEncoding());
+            xdrOut.writeString(getCnctFile(), getEncoding()); // p_cnct_file
             xdrOut.writeInt(protocols.getProtocolCount()); // Count of protocols understood
             xdrOut.writeBuffer(createUserIdentificationBlock());
 
@@ -315,6 +327,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 cryptKeyCallbackWireOperations.handleCryptKeyCallback(dbCryptCallback);
                 operation = readNextOperation();
             }
+
             if (operation == op_accept || operation == op_cond_accept || operation == op_accept_data) {
                 FbWireAttachment.AcceptPacket acceptPacket = new FbWireAttachment.AcceptPacket();
                 acceptPacket.operation = operation;
@@ -365,19 +378,20 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                         // Handle exception from response
                         AbstractWireOperations wireOperations = getDefaultWireOperations();
                         wireOperations.processResponse(wireOperations.processOperation(operation));
+                    } else if (operation == op_reject) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_connect_reject)
+                                .messageParameter(REJECTION_POSSIBLE_REASON).toSQLException();
                     }
+                    log.log(DEBUG, "Reached end of identify without error or connection, last operation: {0}", operation);
+                    // If we reach here, authentication failed (or never authenticated for lack of username and password)
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toSQLException();
                 } finally {
                     try {
                         close();
                     } catch (Exception ex) {
-                        log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
+                        log.log(DEBUG, "Ignoring exception on disconnect in connect phase of protocol", ex);
                     }
                 }
-                if (log.isDebugEnabled()) {
-                    log.debug("Reached end of identify without error or connection, last operation: " + operation);
-                }
-                // If we reach here, authentication failed (or never authenticated for lack of username and password)
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toSQLException();
             }
         } catch (SocketTimeoutException ste) {
             throw new FbExceptionBuilder().timeoutException(ISCConstants.isc_network_error)
@@ -434,10 +448,10 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 break;
             case TAG_PLUGIN_SPECIFIC:
                 // Nothing to do (yet)
-                log.debug("Possible implementation problem, found TAG_PLUGIN_SPECIFIC without TAG_KEY_TYPE");
+                log.log(DEBUG, "Possible implementation problem, found TAG_PLUGIN_SPECIFIC without TAG_KEY_TYPE");
                 break;
             case TAG_KEY_TYPE: {
-                String keyType = newKeys.getString(StandardCharsets.US_ASCII);
+                String keyType = newKeys.getString(StandardCharsets.ISO_8859_1);
 
                 newKeys.moveNext();
                 if (newKeys.isEof()) {
@@ -447,14 +461,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 if (currentTag != TAG_KEY_PLUGINS) {
                     throw new SQLException("Unexpected tag type: " + currentTag);
                 }
-                String keyPlugins = newKeys.getString(StandardCharsets.US_ASCII);
+                String keyPlugins = newKeys.getString(StandardCharsets.ISO_8859_1);
 
                 Map<String, byte[]> pluginSpecificData = null;
                 while (newKeys.directNext(TAG_PLUGIN_SPECIFIC)) {
                     byte[] data = newKeys.getBytes();
                     int sepIdx = ByteArrayHelper.indexOf(data, (byte) 0);
                     if (sepIdx > 0) {
-                        String plugin = new String(data, 0, sepIdx, StandardCharsets.US_ASCII);
+                        String plugin = new String(data, 0, sepIdx, StandardCharsets.ISO_8859_1);
                         byte[] specificData = Arrays.copyOfRange(data, sepIdx + 1, data.length);
                         if (pluginSpecificData == null) {
                             pluginSpecificData = new HashMap<>();
@@ -467,7 +481,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 break;
             }
             default:
-                log.debug("Ignored unexpected tag type: " + currentTag);
+                log.log(DEBUG, "Ignored unexpected tag type: {0}", currentTag);
                 break;
             }
         }
@@ -560,7 +574,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         try {
             return getSystemPropertyPrivileged("user.name");
         } catch (SecurityException ex) {
-            log.debug("Unable to retrieve user.name property", ex);
+            log.log(DEBUG, "Unable to retrieve user.name property", ex);
             return "jaybird";
         }
     }

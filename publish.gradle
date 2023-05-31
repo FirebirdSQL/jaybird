@@ -3,8 +3,9 @@ import org.apache.tools.ant.filters.*
 publishing {
     publications {
         // Main maven artifact
-        mavenJava(MavenPublication) {
+        jaybird(MavenPublication) {
             from components.java
+            artifactId project.mavenName
             suppressPomMetadataWarningsFor 'nativeApiElements'
             suppressPomMetadataWarningsFor 'nativeRuntimeElements'
             pom {
@@ -118,6 +119,17 @@ publishing {
                     }
                 }
 
+                mailingLists {
+                    mailingList {
+                        name = 'firebird-java'
+                        subscribe = 'firebird-java+subscribe@googlegroups.com'
+                        unsubscribe = 'firebird-java+unsubscribe@googlegroups.com'
+                        post = 'firebird-java@googlegroups.com'
+                        archive = 'https://groups.google.com/g/firebird-java'
+                        otherArchives = ['http://fb-list-archive.s3-website-eu-west-1.amazonaws.com/firebird-java/index.html']
+                    }
+                }
+
                 licenses {
                     license {
                         name = 'GNU Lesser General Public License'
@@ -147,32 +159,6 @@ publishing {
                 }
             }
         }
-
-        // Relocation artifact for Java 8
-        if (findProperty('buildProfile') == 'java8') {
-            mavenRelocation(MavenPublication) {
-                pom {
-                    artifactId = 'jaybird-jdk18'
-                    distributionManagement {
-                        relocation {
-                            artifactId = project.name
-                        }
-                    }
-                    packaging = 'pom'
-                    description = 'JDBC Driver for the Firebird RDBMS'
-                    url = 'https://www.firebirdsql.org/en/devel-jdbc-driver/'
-
-                    developers {
-                        developer {
-                            id = 'mrotteveel'
-                            name = 'Mark Rotteveel'
-                            email = 'mark@lawinegevaar.nl'
-                            roles = ['Administrator', 'Developer']
-                        }
-                    }
-                }
-            }
-        }
     }
     repositories {
         maven {
@@ -185,16 +171,18 @@ publishing {
     }
 }
 
-tasks.withType(PublishToMavenRepository).each {
-    it.doFirst {
-        if (findProperty('ossrhUsername') == null || findProperty('ossrhPassword') == null) {
-            throw new RuntimeException('No credentials for publishing, make sure to specify the properties ' +
-                    'credentialsPassphrase, or ossrhUsername and ossrhPassword. See devdoc/publish.md for details.')
+allprojects {
+    tasks.withType(PublishToMavenRepository).each {
+        it.doFirst {
+            if (findProperty('ossrhUsername') == null || findProperty('ossrhPassword') == null) {
+                throw new RuntimeException('No credentials for publishing, make sure to specify the properties ' +
+                        'credentialsPassphrase, or ossrhUsername and ossrhPassword. See devdoc/publish.md for details.')
+            }
         }
     }
 }
 
 signing {
     required { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
-    sign publishing.publications.mavenJava
+    sign publishing.publications.jaybird
 }

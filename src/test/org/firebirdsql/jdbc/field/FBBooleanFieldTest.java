@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test for boolean fields. Note that boolean fields are only supported in Firebird 3.0 or higher.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBBooleanFieldTest extends BaseJUnit5TestFBField<FBBooleanField, Boolean> {
 

@@ -25,7 +25,7 @@ import java.sql.SQLException;
 /**
  * Abstract implementation of {@link FirebirdConnectionProperties} to ensure subclasses can be introspected as beans.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public abstract class AbstractConnectionPropertiesDataSource extends RootCommonDataSource
@@ -62,18 +62,6 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     @Override
     public void setDatabaseName(String databaseName) {
         FirebirdConnectionProperties.super.setDatabaseName(databaseName);
-    }
-
-    @Deprecated
-    @Override
-    public String getDatabase() {
-        return FirebirdConnectionProperties.super.getDatabase();
-    }
-
-    @Deprecated
-    @Override
-    public void setDatabase(String database) {
-        FirebirdConnectionProperties.super.setDatabase(database);
     }
 
     @Override
@@ -246,6 +234,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     @Override
     public void setWireCompression(boolean wireCompression) {
         FirebirdConnectionProperties.super.setWireCompression(wireCompression);
+    }
+
+    @Override
+    public String getEnableProtocol() {
+        return FirebirdConnectionProperties.super.getEnableProtocol();
+    }
+
+    @Override
+    public void setEnableProtocol(String enableProtocol) {
+        FirebirdConnectionProperties.super.setEnableProtocol(enableProtocol);
     }
 
     @Override
@@ -438,6 +436,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setServerBatchBufferSize(serverBatchBufferSize);
     }
 
+    @Override
+    public int getParallelWorkers() {
+        return FirebirdConnectionProperties.super.getParallelWorkers();
+    }
+
+    @Override
+    public void setParallelWorkers(int parallelWorkers) {
+        FirebirdConnectionProperties.super.setParallelWorkers(parallelWorkers);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated
     @Override
@@ -464,20 +472,6 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     @Override
     public void setUserName(String userName) {
         FirebirdConnectionProperties.super.setUserName(userName);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Deprecated
-    @Override
-    public int getBuffersNumber() {
-        return FirebirdConnectionProperties.super.getBuffersNumber();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Deprecated
-    @Override
-    public void setBuffersNumber(int buffersNumber) {
-        FirebirdConnectionProperties.super.setBuffersNumber(buffersNumber);
     }
 
 }

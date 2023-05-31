@@ -20,6 +20,7 @@ package org.firebirdsql.ds;
 
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDataSource;
 
@@ -39,7 +40,7 @@ import java.sql.SQLException;
  * consider using a connectionpool implementation like HikariCP, c3p0 or DBCP.
  * </p>
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource implements ConnectionPoolDataSource,
@@ -61,7 +62,7 @@ public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource imple
     }
     
     private void initialize() throws SQLException {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             if (internalDs != null) {
                 return;
             }

@@ -25,13 +25,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.Locale;
+import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
 /**
  * Abstract base class for IEEE-754 decimals.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public abstract class Decimal<T extends Decimal<T>> {
 
@@ -69,7 +70,7 @@ public abstract class Decimal<T extends Decimal<T>> {
     public final BigDecimal toBigDecimal() {
         if (type != DecimalType.FINITE) {
             throw new DecimalInconvertibleException(
-                    "Value " + toString() + " cannot be converted to a BigDecimal", type, signum);
+                    "Value " + this + " cannot be converted to a BigDecimal", type, signum);
         }
         return bigDecimal;
     }
@@ -229,11 +230,11 @@ public abstract class Decimal<T extends Decimal<T>> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Decimal decimal = (Decimal) o;
+        Decimal<?> decimal = (Decimal<?>) o;
 
         if (signum != decimal.signum) return false;
         if (type != decimal.type) return false;
-        return bigDecimal != null ? bigDecimal.equals(decimal.bigDecimal) : decimal.bigDecimal == null;
+        return Objects.equals(bigDecimal, decimal.bigDecimal);
     }
 
     @Override
@@ -374,7 +375,6 @@ public abstract class Decimal<T extends Decimal<T>> {
                 return getSpecialConstant(Signum.NEGATIVE, DecimalType.INFINITY);
             }
 
-            // TODO Use new BigDecimal(double, MathContext) instead, has slightly different precision?
             return valueOf(new BigDecimal(Double.toString(value), getMathContext()), overflowHandling);
         }
 

@@ -25,8 +25,6 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -36,7 +34,9 @@ import java.sql.SQLWarning;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * {@link org.firebirdsql.gds.ng.wire.FbWireStatement} implementation for the version 10 wire protocol.
+ *
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10Statement extends AbstractFbWireStatement implements FbWireStatement {
@@ -47,7 +47,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     private static final int NULL_INDICATOR_NOT_NULL = 0;
     private static final int NULL_INDICATOR_NULL = -1;
 
-    private static final Logger log = LoggerFactory.getLogger(V10Statement.class);
+    private static final System.Logger log = System.getLogger(V10Statement.class.getName());
 
     /**
      * Creates a new instance of V10Statement for the specified database.
@@ -79,11 +79,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Handles sending the free statement packet and associated state changes on this statement
+     * Handles sending the <em>free statement</em> packet and associated state changes on this statement
      *
      * @param option
-     *         Free statement option
-     * @throws SQLException
+     *         <em>free statement</em> option
      */
     protected void doFreePacket(int option) throws SQLException, IOException {
         sendFree(option);
@@ -93,12 +92,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the free statement to the database
+     * Sends the <em>free statement</em> to the database
      *
      * @param option
      *         Free statement option
-     * @throws IOException
-     * @throws SQLException
      */
     protected void sendFree(int option) throws IOException, SQLException {
         final XdrOutputStream xdrOut = getXdrOut();
@@ -108,7 +105,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Processes the response to the free statement.
+     * Processes the response to the <em>free statement</em>.
      *
      * @param response
      *         Response object
@@ -173,7 +170,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the statement prepare to the connection.
+     * Sends the statement <em>prepare</em> to the connection.
      *
      * @param statementText
      *         Statement
@@ -191,11 +188,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Processes the prepare response from the server.
+     * Processes the <em>prepare</em> response from the server.
      *
      * @param genericResponse
      *         GenericResponse
-     * @throws SQLException
      */
     protected void processPrepareResponse(final GenericResponse genericResponse) throws SQLException {
         parseStatementInfo(genericResponse.getData());
@@ -288,8 +284,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                                 expectedResponseCount = 0;
                                 SQLWarning sqlWarning = new SQLWarning(
                                         "Expected an SqlResponse, instead received a " + response.getClass().getName());
-                                log.warn(sqlWarning + "; see debug level for stacktrace");
-                                log.debug(sqlWarning.toString(), sqlWarning);
+                                log.log(System.Logger.Level.WARNING, "Unexpected response; see debug level for stacktrace");
+                                log.log(System.Logger.Level.DEBUG, "Unexpected response", sqlWarning);
                                 statementWarningCallback.processWarning(sqlWarning);
                             }
                             setAfterLast();
@@ -327,10 +323,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the execute (for <code>op_execute</code> or <code>op_execute2</code>) to the database.
+     * Sends the <em>execute</em> (for {@code op_execute} or {@code op_execute2}) to the database.
      *
      * @param operation
-     *         Operation (<code>op_execute</code> or <code>op_execute2</code>)
+     *         Operation ({@code op_execute} or {@code op_execute2})
      * @param parameters
      *         Parameters
      */
@@ -361,12 +357,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Process the execute response for statements with a singleton response (<code>op_execute2</code>; stored procedures).
+     * Process the <em>execute</em> response for statements with a singleton response ({@code op_execute2}; stored
+     * procedures).
      *
      * @param sqlResponse
      *         SQL response object
-     * @throws SQLException
-     * @throws IOException
      */
     protected void processExecuteSingletonResponse(SqlResponse sqlResponse) throws SQLException, IOException {
         if (sqlResponse.getCount() > 0) {
@@ -375,7 +370,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Process the execute response.
+     * Process the <em>execute</em> response.
      *
      * @param genericResponse
      *         Generic response object
@@ -419,7 +414,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Process the fetch response by reading the returned rows and queuing them.
+     * Process the <em>fetch</em> response by reading the returned rows and queuing them.
      *
      * @param direction
      *         fetch direction
@@ -452,7 +447,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 // Exit loop
                 break;
             } else {
-                log.debug("Received unexpected fetch response " + fetchResponse + ", ignored");
+                log.log(System.Logger.Level.DEBUG, "Received unexpected fetch response {0}, ignored", fetchResponse);
                 break;
             }
         }
@@ -460,11 +455,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the fetch request to the database.
+     * Sends the <em>fetch</em> request to the database.
      *
      * @param fetchSize Number of rows to fetch.
-     * @throws SQLException
-     * @throws IOException
      */
     protected void sendFetch(int fetchSize) throws SQLException, IOException {
         final XdrOutputStream xdrOut = getXdrOut();
@@ -500,25 +493,16 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     protected byte[] readColumnData(XdrInputStream xdrIn, int len) throws IOException {
-        byte[] buffer;
         if (len == 0) {
             // Length specified in response
-            len = xdrIn.readInt();
-            buffer = new byte[len];
-            xdrIn.readFully(buffer, 0, len);
-            xdrIn.skipPadding(len);
+            return xdrIn.readBuffer();
         } else if (len < 0) {
             // Buffer is not padded
-            buffer = new byte[-len];
-            xdrIn.readFully(buffer, 0, -len);
+            return xdrIn.readRawBuffer(-len);
         } else {
-            // len is incremented in calculateIoLength to avoid value 0 so it must be decremented
-            len--;
-            buffer = new byte[len];
-            xdrIn.readFully(buffer, 0, len);
-            xdrIn.skipPadding(len);
+            // len is incremented in calculateIoLength to avoid value 0, so it must be decremented
+            return xdrIn.readBuffer(len - 1);
         }
-        return buffer;
     }
 
     /**
@@ -591,10 +575,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the allocate request to the server.
-     *
-     * @throws SQLException
-     * @throws IOException
+     * Sends the <em>allocate</em> request to the server.
      */
     protected void sendAllocate() throws SQLException, IOException {
         final XdrOutputStream xdrOut = getXdrOut();
@@ -603,7 +584,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Processes the allocate response from the server.
+     * Processes the <em>allocate</em> response from the server.
      *
      * @param response
      *         GenericResponse

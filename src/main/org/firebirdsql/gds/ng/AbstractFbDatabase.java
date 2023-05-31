@@ -19,20 +19,17 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.BlobParameterBufferImp;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,13 +41,13 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  * Abstract implementation of {@link org.firebirdsql.gds.ng.FbDatabase} with behavior common to the various
  * implementations.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectionProperties, ? extends FbDatabase>>
         extends AbstractFbAttachment<T> implements FbDatabase, TransactionListener {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbDatabase.class);
+    private static final System.Logger log = System.getLogger(AbstractFbDatabase.class.getName());
 
     /**
      * Info-request block for database information.
@@ -68,7 +65,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     // @formatter:on
 
     protected final DatabaseListenerDispatcher databaseListenerDispatcher = new DatabaseListenerDispatcher();
-    private final Set<FbTransaction> activeTransactions = Collections.synchronizedSet(new HashSet<>());
+    private final Set<FbTransaction> activeTransactions = new HashSet<>();
     private final WarningMessageCallback warningCallback =
             warning -> databaseListenerDispatcher.warningReceived(AbstractFbDatabase.this, warning);
     private final RowDescriptor emptyRowDescriptor;
@@ -92,7 +89,9 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
      * @return Number of active (not prepared or committed/rolled back) transactions
      */
     public final int getActiveTransactionCount() {
-        return activeTransactions.size();
+        try (LockCloseable ignored = withLock()) {
+            return activeTransactions.size();
+        }
     }
 
     /**
@@ -102,7 +101,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
      * </p>
      */
     protected final void transactionAdded(FbTransaction transaction) {
-        synchronized (activeTransactions) {
+        try (LockCloseable ignored = withLock()) {
             if (transaction.getState() == TransactionState.ACTIVE) {
                 activeTransactions.add(transaction);
             }
@@ -171,14 +170,15 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     public final void close() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkConnected();
-            if (getActiveTransactionCount() > 0) {
+            int activeTransactionCount = getActiveTransactionCount();
+            if (activeTransactionCount > 0) {
                 // Throw open transactions as exception, fbclient doesn't disconnect with outstanding (unprepared)
                 // transactions
                 // In the case of wire protocol we could ignore this and simply close, but that would be
                 // inconsistent with fbclient
                 throw new FbExceptionBuilder()
-                        .exception(ISCConstants.isc_open_trans)
-                        .messageParameter(getActiveTransactionCount())
+                        .exception(isc_open_trans)
+                        .messageParameter(activeTransactionCount)
                         .toSQLException();
             }
 
@@ -276,9 +276,6 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     public final void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
         switch (newState) {
-        case PREPARED:
-            activeTransactions.remove(transaction);
-            break;
         case COMMITTING:
         case ROLLING_BACK:
             /* Even if the commit or rollback fails, we no longer consider it an active transaction
@@ -289,12 +286,18 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                the server, or the transaction was already committed or rolled back.
             */
             // TODO "register" transaction as pendingEnd for debugging?
-            activeTransactions.remove(transaction);
+        case PREPARED:
+            try (LockCloseable ignored = withLock()) {
+                activeTransactions.remove(transaction);
+            }
             break;
         case COMMITTED:
         case ROLLED_BACK:
-            activeTransactions.remove(transaction);
-            transaction.removeTransactionListener(this);
+            try (LockCloseable ignored = withLock()) {
+                activeTransactions.remove(transaction);
+                transaction.removeTransactionListener(this);
+                transaction.removeExceptionListener(exceptionListenerDispatcher);
+            }
             break;
         default:
             // do nothing
@@ -322,51 +325,57 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
         return emptyRowDescriptor;
     }
 
+    /**
+     * Encodes the transactionId for use in {@code isc_reconnect_transaction}/{@code op_reconnect}.
+     *
+     * @param transactionId
+     *         transaction id
+     * @return byte array (4 bytes for max 31-bit transaction id, 8 bytes for larger transaction id)
+     */
+    protected byte[] getTransactionIdBuffer(long transactionId) {
+        // Note: This uses an atypical encoding (as this is actually a TPB without a type)
+        byte[] buf;
+        if ((transactionId & 0x7FFF_FFFFL) == transactionId) {
+            buf = new byte[4];
+            VaxEncoding.encodeVaxIntegerWithoutLength(buf, 0, (int) transactionId);
+        } else {
+            // assume this is FB 3, because FB 2.5 and lower only have 31 bits tx ids; might fail if this path is
+            // triggered on FB 2.5 and lower
+            buf = new byte[8];
+            VaxEncoding.encodeVaxLongWithoutLength(buf, 0, transactionId);
+        }
+        return buf;
+    }
+
     private class DatabaseInformationProcessor implements InfoProcessor<FbDatabase> {
         @Override
         public FbDatabase process(byte[] info) throws SQLException {
-            boolean debug = log.isDebugEnabled();
             if (info.length == 0) {
-                throw new SQLException("Response buffer for database information request is empty");
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
+                        .messageParameter("database")
+                        .toSQLException();
             }
-            if (debug)
-                log.debug(String.format("DatabaseInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",
-                        iscVaxInteger2(info, 0), info[0], info[1]));
-            int value;
-            int len;
             int i = 0;
-            while (info[i] != ISCConstants.isc_info_end) {
-                switch (info[i++]) {
-                case ISCConstants.isc_info_db_sql_dialect:
-                    len = iscVaxInteger2(info, i);
+            while (info[i] != isc_info_end) {
+                int arg = info[i++];
+                switch (arg) {
+                case isc_info_db_sql_dialect, isc_info_ods_version, isc_info_ods_minor_version -> {
+                    int len = iscVaxInteger2(info, i);
                     i += 2;
-                    value = iscVaxInteger(info, i, len);
+                    int value = iscVaxInteger(info, i, len);
                     i += len;
-                    setDatabaseDialect((short) value);
-                    if (debug) log.debug("isc_info_db_sql_dialect:" + value);
-                    break;
-                case ISCConstants.isc_info_ods_version:
-                    len = iscVaxInteger2(info, i);
+                    switch (arg) {
+                    case isc_info_db_sql_dialect -> setDatabaseDialect((short) value);
+                    case isc_info_ods_version -> setOdsMajor(value);
+                    case isc_info_ods_minor_version -> setOdsMinor(value);
+                    }
+                }
+                case isc_info_firebird_version -> {
+                    int len = iscVaxInteger2(info, i);
                     i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    setOdsMajor(value);
-                    if (debug) log.debug("isc_info_ods_version:" + value);
-                    break;
-                case ISCConstants.isc_info_ods_minor_version:
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    setOdsMinor(value);
-                    if (debug) log.debug("isc_info_ods_minor_version:" + value);
-                    break;
-                case ISCConstants.isc_info_firebird_version: {
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    final int expectedIndex = i + len;
-                    final int versionCount = info[i++] & 0xFF;
-                    final String[] versionParts = new String[versionCount];
+                    int expectedIndex = i + len;
+                    int versionCount = info[i++] & 0xFF;
+                    String[] versionParts = new String[versionCount];
                     for (int versionIndex = 0; versionIndex < versionCount; versionIndex++) {
                         int versionLength = info[i++] & 0xFF;
                         versionParts[versionIndex] = new String(info, i, versionLength, StandardCharsets.UTF_8);
@@ -374,14 +383,12 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                     }
                     assert i == expectedIndex : "Parsing version information lead to wrong index";
                     setServerVersion(versionParts);
-                    if (debug) log.debug("isc_info_firebird_version: " + Arrays.toString(versionParts));
-                    break;
                 }
-                case ISCConstants.isc_info_truncated:
-                    if (debug) log.debug("isc_info_truncated ");
+                case isc_info_truncated -> {
+                    log.log(System.Logger.Level.DEBUG, "Received isc_info_truncated");
                     return AbstractFbDatabase.this;
-                default:
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();
+                }
+                default -> throw new FbExceptionBuilder().exception(isc_infunk).toSQLException();
                 }
             }
             return AbstractFbDatabase.this;

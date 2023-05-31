@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -38,7 +38,7 @@ import static org.firebirdsql.util.ReflectionHelper.*;
  * wrappers for every individual JDBC version.
  * </p>
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 class StatementHandler implements InvocationHandler {
@@ -149,8 +149,6 @@ class StatementHandler implements InvocationHandler {
 
     /**
      * Closes this StatementHandler
-     * 
-     * @throws SQLException
      */
     protected void close() throws SQLException {
         handleClose();

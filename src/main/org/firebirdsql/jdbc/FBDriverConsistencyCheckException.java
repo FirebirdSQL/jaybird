@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,14 +18,18 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.io.Serial;
+
 /**
  * Internal driver consistency check failed. This exception is thrown when some
  * internal consistency check fails.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 public class FBDriverConsistencyCheckException extends FBSQLException {
 
+    @Serial
+    private static final long serialVersionUID = 5310800494603767792L;
 
     /**
      * Create instance of this exception for the specified message.

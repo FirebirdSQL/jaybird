@@ -18,29 +18,41 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.extension.RunEnvironmentExtension.EnvironmentRequirement;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.FirebirdDatabaseMetaData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
+import org.opentest4j.TestAbortedException;
 
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCode;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.oneOf;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -70,16 +82,15 @@ class FBMaintenanceManagerTest {
 
     @BeforeEach
     void setUp() {
-        maintenanceManager = new FBMaintenanceManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")
-                || getGdsType() == GDSType.getType("FBOONATIVE")) {
-            maintenanceManager.setServerName(DB_SERVER_URL);
-            maintenanceManager.setPortNumber(DB_SERVER_PORT);
-        }
-
-        maintenanceManager.setUser(DB_USER);
-        maintenanceManager.setPassword(DB_PASSWORD);
+        maintenanceManager = configureDefaultServiceProperties(new FBMaintenanceManager(getGdsType()));
         maintenanceManager.setDatabase(getDatabasePath());
+        /* NOTE:
+         1) Setting parallel workers unconditionally, but actual support was introduced in Firebird 5.0;
+         2) There is no way to verify if we're actually setting it (we're more testing that the implementation doesn't
+            set it for options or versions which don't support it, than testing if it gets set);
+         3) The actual usage of the configured value is determined per option
+        */
+        maintenanceManager.setParallelWorkers(2);
         maintenanceManager.setLogger(System.out);
     }
 
@@ -174,6 +185,7 @@ class FBMaintenanceManagerTest {
      */
     @Test
     void testForcedShutdown() throws Exception {
+        assumeThat("Test doesn't work correctly under embedded", GDS_TYPE, not(isEmbeddedType()));
         try (Connection conn = getConnectionViaDriverManager()) {
             createTestTable();
 
@@ -514,4 +526,64 @@ class FBMaintenanceManagerTest {
             }
         }
     }
+
+    // NOTE: this test only confirms that the repair option can be run, given we can't (easily) create databases with
+    // a previous ODS, we can't test if it is really run, see next test for an environment-specific test
+    @Test
+    void testUpgradeOds() {
+        assumeTrue(getDefaultSupportInfo().supportsUpgradeOds(), "test requires upgrade ODS support");
+        assertDoesNotThrow(() -> maintenanceManager.upgradeOds());
+    }
+
+    /**
+     * Test upgrade ODS, with a specific Firebird 4.0 database file.
+     * <p>
+     * This test is machine specific (or at least, environment-specific), as it requires a Firebird database with
+     * the path {@code E:\DB\FB4\FB4TESTDATABASE.FDB}.
+     * </p>
+     */
+    @Test
+    void testUpgradeOds_machineSpecific(@TempDir Path tempDir) throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsUpgradeOds(), "test requires upgrade ODS support");
+        assumeTrue(EnvironmentRequirement.DB_LOCAL_FS.isMet(), "Requires DB on local file system");
+        // In the future, this may need to declare an upper version limit, or select DB based on the actual version
+        Path fb4DbPath;
+        try {
+            fb4DbPath = Path.of("E:/DB/FB4/FB4TESTDATABASE.FDB");
+        } catch (InvalidPathException e) {
+            throw new TestAbortedException("Database path is invalid on this system", e);
+        }
+        assumeTrue(Files.exists(fb4DbPath), "Expected database does not exist");
+
+        var testDb = tempDir.resolve("tempdb.fdb").toAbsolutePath();
+        Files.copy(fb4DbPath, testDb);
+        maintenanceManager.setDatabase(testDb.toString());
+        String jdbcUrl = getUrl(testDb.toString());
+        Properties props = getDefaultPropertiesForConnection();
+
+        // Verify ODS before upgrade
+        try (var connection = DriverManager.getConnection(jdbcUrl, props)) {
+            var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+            assertEquals(13, dbmd.getOdsMajorVersion(), "ODS major before upgrade");
+            assertEquals(0, dbmd.getOdsMinorVersion(), "ODS minor before upgrade");
+        }
+
+        maintenanceManager.upgradeOds();
+
+        // Verify ODS after upgrade
+        try (var connection = DriverManager.getConnection(jdbcUrl, props)) {
+            var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+            assertEquals(13, dbmd.getOdsMajorVersion(), "ODS major after upgrade");
+            // NOTE: applies to Firebird 5.0.0, may need to be made dynamic
+            assertEquals(1, dbmd.getOdsMinorVersion(), "ODS minor after upgrade");
+        }
+    }
+
+    // NOTE: this test only confirms that the repair option can be run
+    @Test
+    void testFixIcu() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsFixIcu(), "test requires fix ICU support");
+        maintenanceManager.fixIcu();
+    }
+
 }

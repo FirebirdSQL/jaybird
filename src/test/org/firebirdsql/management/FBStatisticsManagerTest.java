@@ -19,7 +19,6 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,15 +32,7 @@ import java.sql.Statement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
-import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
-import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
-import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.firebirdsql.common.FBTestProperties.getGdsType;
+import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -64,15 +55,7 @@ class FBStatisticsManagerTest {
     @BeforeEach
     void setUp() {
         loggingStream = new ByteArrayOutputStream();
-    
-        statManager = new FBStatisticsManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")
-                || getGdsType() == GDSType.getType("FBOONATIVE")) {
-            statManager.setServerName(DB_SERVER_URL);
-            statManager.setPortNumber(DB_SERVER_PORT);
-        }
-        statManager.setUser(DB_USER);
-        statManager.setPassword(DB_PASSWORD);
+        statManager = configureDefaultServiceProperties(new FBStatisticsManager(getGdsType()));
         statManager.setDatabase(getDatabasePath());
         statManager.setLogger(loggingStream);
     }

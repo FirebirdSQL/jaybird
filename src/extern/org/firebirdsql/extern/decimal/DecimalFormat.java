@@ -33,7 +33,7 @@ import static org.firebirdsql.extern.decimal.DenselyPackedDecimalCodec.DIGITS_PE
 /**
  * Constant values for the decimal 32, 64 and 128 formats.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 enum DecimalFormat {
 
@@ -50,8 +50,6 @@ enum DecimalFormat {
     final int exponentContinuationBits;
     final int coefficientContinuationBits;
     final int eLimit;
-    private final int eMax;
-    private final int eMin;
     private final int exponentBias;
     private final BigInteger maxCoefficient;
     private final BigInteger minCoefficient;
@@ -66,8 +64,8 @@ enum DecimalFormat {
         coefficientContinuationBits = calculateCoefficientContinuationBits(coefficientDigits);
         exponentContinuationBits = calculateExponentContinuationBits(formatBitLength, coefficientContinuationBits);
         eLimit = calculateExponentLimit(exponentContinuationBits);
-        eMin = -eLimit / 2;
-        eMax = -eMin + 1;
+        int eMin = -eLimit / 2;
+        // int eMax = -eMin + 1;
         exponentBias = -eMin + coefficientDigits - 1;
         char[] digits = new char[coefficientDigits];
         Arrays.fill(digits, '9');

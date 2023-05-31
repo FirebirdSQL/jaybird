@@ -29,7 +29,7 @@ import java.sql.SQLException;
 /**
  * JUnit extension that checks if a database exists.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class DatabaseExistsExtension implements BeforeAllCallback {

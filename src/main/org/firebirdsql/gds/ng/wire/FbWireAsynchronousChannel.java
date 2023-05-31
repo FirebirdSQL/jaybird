@@ -35,7 +35,7 @@ import java.sql.SQLException;
 /**
  * Interface for the asynchronous channel used for event notification.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface FbWireAsynchronousChannel {

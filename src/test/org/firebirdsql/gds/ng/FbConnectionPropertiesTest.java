@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * Tests for {@link FbConnectionProperties}
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class FbConnectionPropertiesTest {
@@ -240,5 +240,18 @@ class FbConnectionPropertiesTest {
                 .extracting("databaseName", "serverName", "portNumber")
                 .isEqualTo(Arrays.<Object>asList("testValue", "xyz", 1203));
         assertThat(info.connectionPropertyValues()).isEqualTo(immutable.connectionPropertyValues());
+    }
+
+    @Test
+    void testSessionTimeZoneSpecialGmtOffsetHandling() {
+        final TimeZone before = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("GMT-08:00"));
+            // Need to create new instance after initializing TZ
+            FbConnectionProperties info = new FbConnectionProperties();
+            assertEquals("-08:00", info.getSessionTimeZone(), "Expected sessionTimeZone without GMT prefix");
+        } finally {
+            TimeZone.setDefault(before);
+        }
     }
 }

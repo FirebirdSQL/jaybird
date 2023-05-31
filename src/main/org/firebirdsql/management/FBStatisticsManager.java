@@ -24,7 +24,9 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
@@ -32,8 +34,6 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -56,7 +56,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
  * </ul>
  * </p>
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
+ * @author Gabriel Reid
  */
 public class FBStatisticsManager extends FBServiceManager implements StatisticsManager {
 
@@ -197,12 +197,14 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
 
     private static final class DatabaseTransactionInfoProcessor implements InfoProcessor<DatabaseTransactionInfo> {
 
-        private static final Logger log = LoggerFactory.getLogger(DatabaseTransactionInfoProcessor.class);
+        private static final System.Logger log = System.getLogger(DatabaseTransactionInfoProcessor.class.getName());
 
         @Override
         public DatabaseTransactionInfo process(byte[] info) throws SQLException {
             if (info.length == 0) {
-                throw new SQLException("Response buffer for service information request is empty");
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
+                        .messageParameter("database")
+                        .toSQLException();
             }
             DatabaseTransactionInfo databaseTransactionInfo = new DatabaseTransactionInfo();
             int idx = 0;
@@ -210,8 +212,9 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
                 final byte infoItem = info[idx];
                 idx++;
                 if (infoItem == isc_info_truncated) {
-                    log.warn("Transaction information response was truncated at index " + idx + ". Info block size: " +
-                            info.length + ". This could indicate a bug in the implementation.");
+                    log.log(System.Logger.Level.WARNING,
+                            "Transaction info response was truncated at index {0}. Response size: {1}; this could "
+                            + "indicate a bug in the implementation", idx, info.length);
                     break;
                 }
 
@@ -242,7 +245,7 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
                     break;
                     
                 default:
-                    log.warn("Unknown or unexpected info item: " + infoItem);
+                    log.log(System.Logger.Level.WARNING, "Unknown or unexpected info item: {0}", infoItem);
                     break;
                 }
             }

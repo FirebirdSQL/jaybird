@@ -25,8 +25,6 @@ import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.IConnectionProperties;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 
@@ -39,13 +37,13 @@ import java.sql.SQLException;
  * See {@link FBManagerMBean} for documentation.
  * </p>
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author David Jencks
  * @version 1.0
  */
 public class FBManager implements FBManagerMBean {
 
     private static final int DEFAULT_PORT = 3050;
-    private static final Logger log = LoggerFactory.getLogger(FBManager.class);
+    private static final System.Logger log = System.getLogger(FBManager.class.getName());
 
     private FbDatabaseFactory dbFactory;
     private String host = "localhost";
@@ -53,6 +51,8 @@ public class FBManager implements FBManagerMBean {
     private String fileName;
     private String userName;
     private String password;
+    private String roleName;
+    private String enableProtocol;
     private int dialect = ISCConstants.SQL_DIALECT_CURRENT;
     private int pageSize = -1;
     private String defaultCharacterSet;
@@ -88,7 +88,7 @@ public class FBManager implements FBManagerMBean {
         state = STARTED;
         String fileName = getFileName();
         if (isCreateOnStart() && fileName != null) {
-            createDatabase(fileName, getUserName(), getPassword());
+            createDatabase(fileName, getUserName(), getPassword(), getRoleName());
         }
     }
 
@@ -96,12 +96,12 @@ public class FBManager implements FBManagerMBean {
     public synchronized void stop() throws Exception {
         try {
             if (STOPPED.equals(state)) {
-                log.warn("FBManager already stopped.");
+                log.log(System.Logger.Level.WARNING, "FBManager already stopped");
                 return;
             }
             String fileName = getFileName();
             if (isDropOnStop() && fileName != null) {
-                dropDatabase(fileName, getUserName(), getPassword());
+                dropDatabase(fileName, getUserName(), getPassword(), getRoleName());
             }
         } finally {
             dbFactory = null;
@@ -128,7 +128,7 @@ public class FBManager implements FBManagerMBean {
     //Which server are we connecting to?
 
     @Override
-    public void setServer(final String host) {
+    public void setServer(String host) {
         this.host = host;
     }
 
@@ -153,7 +153,7 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public void setFileName(final String fileName) {
+    public void setFileName(String fileName) {
         this.fileName = fileName;
     }
 
@@ -164,7 +164,7 @@ public class FBManager implements FBManagerMBean {
 
     @Override
     public void setType(String type) {
-        final GDSType gdsType = GDSType.getType(type);
+        GDSType gdsType = GDSType.getType(type);
 
         if (gdsType == null)
             throw new RuntimeException("Unrecognized type '" + type + "'");
@@ -178,7 +178,7 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public void setUserName(final String userName) {
+    public void setUserName(String userName) {
         this.userName = userName;
     }
 
@@ -188,8 +188,28 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public void setPassword(final String password) {
+    public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Override
+    public String getRoleName() {
+        return roleName;
+    }
+
+    @Override
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+
+    @Override
+    public void setEnableProtocol(String enableProtocol) {
+        this.enableProtocol = enableProtocol;
+    }
+
+    @Override
+    public String getEnableProtocol() {
+        return enableProtocol;
     }
 
     @Override
@@ -239,7 +259,7 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public void setCreateOnStart(final boolean createOnStart) {
+    public void setCreateOnStart(boolean createOnStart) {
         this.createOnStart = createOnStart;
     }
 
@@ -249,7 +269,7 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public void setDropOnStop(final boolean dropOnStop) {
+    public void setDropOnStop(boolean dropOnStop) {
         this.dropOnStop = dropOnStop;
     }
 
@@ -266,10 +286,16 @@ public class FBManager implements FBManagerMBean {
     //Meaningful management methods
 
     @Override
-    public synchronized void createDatabase(String fileName, String user, String password) throws Exception {
+    public void createDatabase(String fileName, String user, String password) throws Exception {
+        createDatabase(fileName, user, password, null);
+    }
+
+    @Override
+    public synchronized void createDatabase(String fileName, String user, String password, String roleName)
+            throws Exception {
         checkStarted();
         try {
-            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
+            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, roleName);
             connectionProperties.setDatabaseName(fileName);
             FbDatabase db = dbFactory.connect(connectionProperties);
             db.attach();
@@ -287,7 +313,7 @@ public class FBManager implements FBManagerMBean {
         }
 
         try {
-            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
+            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, roleName);
             connectionProperties.setDatabaseName(fileName);
             connectionProperties.setSqlDialect(dialect);
             if (getPageSize() != -1) {
@@ -304,22 +330,28 @@ public class FBManager implements FBManagerMBean {
                 db.createDatabase();
             }
         } catch (Exception e) {
-            log.error("Exception creating database", e);
+            log.log(System.Logger.Level.ERROR, "Exception creating database", e);
             throw e;
         }
     }
 
     @Override
-    public synchronized void dropDatabase(String fileName, String user, String password) throws Exception {
+    public void dropDatabase(String fileName, String user, String password) throws Exception {
+        dropDatabase(fileName, user, password, null);
+    }
+
+    @Override
+    public synchronized void dropDatabase(String fileName, String user, String password, String roleName)
+            throws Exception {
         checkStarted();
         try {
-            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
+            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, roleName);
             connectionProperties.setDatabaseName(fileName);
             FbDatabase db = dbFactory.connect(connectionProperties);
             db.attach();
             db.dropDatabase();
         } catch (Exception e) {
-            log.error("Exception dropping database", e);
+            log.log(System.Logger.Level.ERROR, "Exception dropping database", e);
             throw e;
         }
     }
@@ -328,7 +360,7 @@ public class FBManager implements FBManagerMBean {
     public synchronized boolean isDatabaseExists(String fileName, String user, String password) throws Exception {
         checkStarted();
         try {
-            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
+            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, null);
             connectionProperties.setDatabaseName(fileName);
             FbDatabase db = dbFactory.connect(connectionProperties);
             db.attach();
@@ -339,12 +371,14 @@ public class FBManager implements FBManagerMBean {
         }
     }
 
-    private IConnectionProperties createDefaultConnectionProperties(String user, String password) {
+    private IConnectionProperties createDefaultConnectionProperties(String user, String password, String roleName) {
         FbConnectionProperties connectionProperties = new FbConnectionProperties();
         connectionProperties.setUser(user);
         connectionProperties.setPassword(password);
+        connectionProperties.setRoleName(roleName);
         connectionProperties.setServerName(getServer());
         connectionProperties.setPortNumber(getPort());
+        connectionProperties.setEnableProtocol(getEnableProtocol());
         return connectionProperties;
     }
 

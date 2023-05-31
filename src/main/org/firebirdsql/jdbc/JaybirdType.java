@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -25,7 +25,7 @@ import java.sql.SQLType;
 /**
  * {@link SQLType} definitions specific to Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @Volatile(reason = "Defined types may receive a different type number when standardized in JDBC")
 public enum JaybirdType implements SQLType {
@@ -33,9 +33,9 @@ public enum JaybirdType implements SQLType {
     @Volatile(reason = "To be standardized by future version of JDBC, will be deprecated")
     DECFLOAT(JaybirdTypeCodes.DECFLOAT);
 
-    private Integer type;
+    private final Integer type;
 
-    JaybirdType(final Integer type) {
+    JaybirdType(Integer type) {
         this.type = type;
     }
 

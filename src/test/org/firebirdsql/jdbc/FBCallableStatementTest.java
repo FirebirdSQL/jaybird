@@ -39,10 +39,9 @@ import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementClosed;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementOnlyMethod;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -50,8 +49,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * This test case checks callable statements by executing procedure through
  * {@link java.sql.CallableStatement} and {@link java.sql.PreparedStatement}.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
 class FBCallableStatementTest {
 
@@ -965,7 +964,7 @@ class FBCallableStatementTest {
             cs.execute();
             String value = cs.getString(1);
             assertNotNull(value, "Expected non-null value");
-            assertThat("Expected non-empty value", value.trim(), not(emptyString()));
+            assertThat("Expected non-empty value", value.trim(), containsString("EXECUTE BLOCK"));
         }
     }
 
@@ -1033,6 +1032,92 @@ class FBCallableStatementTest {
                 assertTrue(rs.next(), "Should have at least one row");
                 assertEquals("DGPII", rs.getString(1), "First row value must be DGPII");
                 assertFalse(rs.next(), "Should not have a second row");
+            }
+        }
+    }
+
+    /**
+     * Tests for <a href="https://github.com/FirebirdSQL/jaybird/issues/729">jaybird#729</a>.
+     */
+    @Test
+    void callableStatementExecuteProcedureShouldNotTrim_729() throws Exception {
+        executeDDL(con, """
+                create procedure char_return returns (val char(5)) as
+                begin
+                  val = 'A';
+                end""");
+
+        try (var cstmt = con.prepareCall("execute procedure char_return")) {
+            cstmt.execute();
+            ResultSet rs = cstmt.getResultSet();
+            assertTrue(rs.next(), "Expected a row");
+            assertAll(
+                    () -> assertEquals("A    ", rs.getString(1), "Unexpected trim by rs.getString"),
+                    () -> assertEquals("A    ", cstmt.getObject(1), "Unexpected trim by cstmt.getObject"),
+                    () -> assertEquals("A    ", cstmt.getString(1), "Unexpected trim by cstmt.getString"));
+        }
+    }
+
+    /**
+     * Tests if executing a selectable procedure without rows and accessing it through {@code CallableStatement.getXXX}
+     * throws an exception. This example uses {@code EXECUTE PROCEDURE}, but the default behaviour automatically uses
+     * {@code select * from procedure_name()}.
+     * <p>
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/636">jaybird#636</a>.
+     * </p>
+     */
+    @Test
+    void executeProcedureOnSelectableDefault_noDataToReturn_636() throws Exception {
+        try (Connection conn = getConnectionViaDriverManager()) {
+            conn.setAutoCommit(false);
+            try (var stmt = con.createStatement()) {
+                stmt.execute("""
+                        create or alter procedure test
+                          returns (msg varchar(1000))
+                        as
+                        begin
+                          msg = 'sentinel';
+                          if (msg <> 'sentinel') then suspend;
+                        end""");
+            }
+            conn.commit();
+            try (var cstmt = conn.prepareCall("EXECUTE PROCEDURE test (?)")) {
+                cstmt.registerOutParameter(1, java.sql.Types.VARCHAR);
+                cstmt.execute();
+                var exception = assertThrows(SQLException.class, () -> cstmt.getString("MSG"));
+                assertThat(exception, message(equalTo("Current statement has no data to return.")));
+            }
+        }
+    }
+
+    /**
+     * Tests if executing a selectable procedure using {@code EXECUTE PROCEDURE} and
+     * {@code ignoreProcedureType=true} will allow access through {@code getXXX}.
+     * <p>
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/636">jaybird#636</a>
+     * </p>
+     */
+    @Test
+    void executeProcedureOnSelectable_ignoreProcedureType_null_636() throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.ignoreProcedureType, "true");
+        try (var conn = DriverManager.getConnection(getUrl(), props)) {
+            conn.setAutoCommit(false);
+            try (var stmt = con.createStatement()) {
+                stmt.execute("""
+                        create or alter procedure test
+                          returns (msg varchar(1000))
+                        as
+                        begin
+                          msg = 'sentinel';
+                          if (msg <> 'sentinel') then suspend;
+                        end""");
+            }
+            conn.commit();
+            try (var cstmt = conn.prepareCall("EXECUTE PROCEDURE test (?)")) {
+                cstmt.registerOutParameter(1, java.sql.Types.VARCHAR);
+                cstmt.execute();
+                assertEquals("sentinel", cstmt.getString("MSG"));
             }
         }
     }

@@ -140,7 +140,7 @@ class FBStatementTest {
     void testNoCloseOnCompletion_StatementOpen_afterImplicitResultSetClose() throws SQLException {
         prepareTestData();
         try (Statement stmt = con.createStatement()) {
-            stmt.execute(SELECT_DATA);
+            assertTrue(stmt.execute(SELECT_DATA), "expected a result set");
             ResultSet rs = stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
@@ -151,6 +151,9 @@ class FBStatementTest {
             }
             assertEquals(DATA_ITEMS, count);
             assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
+            assertFalse(stmt.isClosed(), "Statement should be open");
+            assertFalse(stmt.getMoreResults(), "expected no result set for getMoreResults");
+            assertEquals(-1, stmt.getUpdateCount(), "no update count (-1) was expected");
             assertFalse(stmt.isClosed(), "Statement should be open");
         }
     }
@@ -825,7 +828,7 @@ class FBStatementTest {
 
         try (Statement stmt = con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class, () ->
-                    //@formatter:off
+                            //@formatter:off
                     stmt.execute(
                         "EXECUTE BLOCK AS " +
                         "BEGIN " +
@@ -909,9 +912,9 @@ class FBStatementTest {
     void verifySingletonStatementWithException() throws Exception {
         // @formatting:off
         executeDDL(con, "create procedure singleton_error returns (intresult int) as "
-                + "begin "
-                + "  execute statement 'select cast(''x'' as integer) from rdb$database' into intresult;"
-                + "end");
+                        + "begin "
+                        + "  execute statement 'select cast(''x'' as integer) from rdb$database' into intresult;"
+                        + "end");
         // @formatting:on
         try (Statement stmt = con.createStatement()) {
             assertThrows(SQLException.class, () -> stmt.execute("execute procedure singleton_error"));
@@ -986,14 +989,145 @@ class FBStatementTest {
         }
     }
 
+    @Test
+    void testSelectHasNoUpdateCount() throws SQLException {
+        prepareTestData();
+        try (Statement stmt = con.createStatement()) {
+            assertTrue(stmt.execute(SELECT_DATA), "expected a result set");
+            ResultSet rs = stmt.getResultSet();
+            int count = 0;
+            while (rs.next()) {
+                assertFalse(rs.isClosed(), "Result set should be open");
+                assertFalse(stmt.isClosed(), "Statement should be open");
+                assertEquals(count, rs.getInt(1));
+                count++;
+            }
+            assertEquals(DATA_ITEMS, count);
+            assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
+            assertFalse(stmt.getMoreResults(), "expected no result set for getMoreResults");
+            assertEquals(-1, stmt.getUpdateCount(), "no update count (-1) was expected");
+        }
+    }
+
+    @Test
+    void updateCountOfDDL() throws Exception {
+        try (Statement stmt = con.createStatement()) {
+            assertFalse(stmt.execute(CREATE_TABLE), "expected no result set");
+            assertEquals(-1, stmt.getUpdateCount());
+        }
+    }
+
+    @Test
+    void updateCountOfExecuteProcedure() throws Exception {
+        try (Statement stmt = con.createStatement()) {
+            con.setAutoCommit(false);
+            stmt.execute(CREATE_TABLE);
+            stmt.execute("recreate procedure insert_proc as begin INSERT INTO test(col1) VALUES(1); end");
+            con.commit();
+            assertFalse(stmt.execute("execute procedure insert_proc"), "expected no result set");
+            assertEquals(-1, stmt.getUpdateCount());
+        }
+    }
+
+    /**
+     * Test statement execution with statement text longer than 64KB (requires Firebird 3.0 or higher).
+     * <p>
+     * NOTE: For native, this also requires a Firebird 3.0 or higher fbclient.dll
+     * </p>
+     */
+    @Test
+    void statementTextLongerThan64KB() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsStatementTextLongerThan64K(), "requires long statement text support");
+        // For some reason the native implementation can't handle exactly 32KB values, but it can handle 32KB - 1
+        char[] symbols = new char[32 * 1024 - 1];
+        Arrays.fill(symbols, 'X');
+        String text32kb = new String(symbols);
+
+        try (Statement stmt = con.createStatement()) {
+            ResultSet rs = stmt.executeQuery(
+                    "select '" + text32kb + "' val from rdb$database "
+                    + "union all "
+                    + "select '" + text32kb + "' from rdb$database");
+            assertTrue(rs.next(), "expected row");
+            assertEquals(text32kb, rs.getString(1));
+            assertTrue(rs.next(), "expected row");
+            assertEquals(text32kb, rs.getString(1));
+        }
+    }
+
+    /**
+     * Test case for <a href="https://github.com/FirebirdSQL/jaybird/issues/728">jaybird#728</a> with thanks to Lukas
+     * Eder.
+     */
+    @Test
+    void testCaseBlobInReturning_728() throws Exception {
+        try (Statement stmt = con.createStatement()) {
+            stmt.executeUpdate("create table t (a integer not null primary key, b blob)");
+
+            try (ResultSet rs = stmt.executeQuery("insert into t (a, b) values (1, X'010203') returning a, b")) {
+                assertTrue(rs.next(), "Expected a row");
+                assertArrayEquals(new byte[] { 1, 2, 3 }, rs.getBytes(2));
+            }
+
+            try (ResultSet rs = stmt.executeQuery("select a, b from t")) {
+                assertTrue(rs.next(), "Expected a row");
+                assertArrayEquals(new byte[] { 1, 2, 3 }, rs.getBytes(2));
+            }
+        }
+    }
+
+    /**
+     * Tests for <a href="https://github.com/FirebirdSQL/jaybird/issues/729">jaybird#729</a>.
+     */
+    @Test
+    void statementExecuteProcedureShouldNotTrim_729() throws Exception {
+        executeDDL(con, """
+                create procedure char_return returns (val char(5)) as
+                begin
+                  val = 'A';
+                end""");
+
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("execute procedure char_return")) {
+            assertTrue(rs.next(), "Expected a row");
+            assertAll(
+                    () -> assertEquals("A    ", rs.getObject(1), "Unexpected trim by getObject"),
+                    () -> assertEquals("A    ", rs.getString(1), "Unexpected trim by getString"));
+        }
+    }
+
+    /**
+     * Tests rendering of PSQL exception with parameters ({@code isc_formatted_exception}).
+     * <p>
+     * Companion to {@code GDSExceptionHelperTest#extraParametersOfFormattedExceptionIgnored()}
+     * </p>
+     */
+    @Test
+    void psqlExceptionWithParametersRendering() throws Exception {
+        try (var stmt = con.createStatement()) {
+            stmt.execute("create exception ex_param 'something wrong in @1'");
+            SQLException sqle = assertThrows(SQLException.class, () -> stmt.execute("""
+                     execute block as
+                     begin
+                        exception ex_param using('PARAMETER_1');
+                     end
+                     """));
+            assertThat(sqle, message(allOf(
+                    startsWith("exception 1; EX_PARAM; something wrong in PARAMETER_1"),
+                    // The exception parameter value should not be repeated after the formatted message
+                    not(containsString("something wrong in PARAMETER_1; PARAMETER_1")))));
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
         try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {
             for (int i = 0; i < DATA_ITEMS; i++) {
                 pstmt.setInt(1, i);
-                pstmt.execute();
+                pstmt.addBatch();
             }
+            pstmt.executeBatch();
         }
     }
 

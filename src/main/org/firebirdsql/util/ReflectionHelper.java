@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -28,7 +26,7 @@ import java.util.Set;
 /**
  * Class containing static helper methods for reflective access.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 @InternalApi
@@ -44,7 +42,7 @@ public final class ReflectionHelper {
      * @return array of all implemented interfaces.
      */
     public static Class<?>[] getAllInterfaces(Class<?> clazz) {
-        Set<Class<?>> result = new HashSet<Class<?>>();
+        Set<Class<?>> result = new HashSet<>();
         do {
             Collections.addAll(result, clazz.getInterfaces());
             clazz = clazz.getSuperclass();

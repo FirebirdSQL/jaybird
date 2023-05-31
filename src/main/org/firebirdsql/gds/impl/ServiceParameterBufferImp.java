@@ -25,10 +25,15 @@ import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
 
+import java.io.Serial;
+
 /**
  * Implementation of ServiceParameterBuffer.
  */
 public class ServiceParameterBufferImp extends ParameterBufferBase implements ServiceParameterBuffer {
+
+    @Serial
+    private static final long serialVersionUID = 3112578847419907591L;
 
     /**
      * Creates an empty service parameter buffer
@@ -90,19 +95,22 @@ public class ServiceParameterBufferImp extends ParameterBufferBase implements Se
 
             @Override
             public ArgumentType getIntegerArgumentType(int tag) {
-                switch (tag) {
-                case ISCConstants.isc_spb_rpr_commit_trans_64:
-                case ISCConstants.isc_spb_rpr_rollback_trans_64:
-                case ISCConstants.isc_spb_rpr_recover_two_phase_64:
-                    return ArgumentType.BigIntSpb;
-                default:
-                    return ArgumentType.IntSpb;
-                }
+                return switch (tag) {
+                    case ISCConstants.isc_spb_rpr_commit_trans_64,
+                            ISCConstants.isc_spb_rpr_rollback_trans_64,
+                            ISCConstants.isc_spb_rpr_recover_two_phase_64 -> ArgumentType.BigIntSpb;
+                    default -> ArgumentType.IntSpb;
+                };
             }
 
             @Override
             public ArgumentType getSingleArgumentType(int tag) {
                 return ArgumentType.SingleTpb;
+            }
+
+            @Override
+            public ArgumentType getByteArgumentType(int tag) {
+                return ArgumentType.ByteSpb;
             }
         },
         SPB_VERSION_3_ATTACH(ISCConstants.isc_spb_version3) {

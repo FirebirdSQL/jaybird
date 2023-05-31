@@ -18,28 +18,27 @@
  */
 package org.firebirdsql.encodings;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Objects;
 
-import static java.lang.String.format;
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Definition of a Firebird encoding. This is the default implementation of {@link EncodingDefinition}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class DefaultEncodingDefinition implements EncodingDefinition {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultEncodingDefinition.class);
+    private static final System.Logger logger = System.getLogger(DefaultEncodingDefinition.class.getName());
 
     /**
      * Marker object to indicate the encoding field of an instance hasn't been initialized yet
-     * (since <code>null</code> is a valid initialization).
+     * (since {@code null} is a valid initialization).
      */
     private static final Encoding NOT_INITIALIZED = new EncodingGeneric(null);
 
@@ -63,7 +62,7 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
      * @param firebirdCharacterSetId
      *         Firebird character set id
      * @param firebirdOnly
-     *         Mapping only applies from Firebird to Java, but not from Java to Firebird (eg Firebird UNICODE-FSS maps
+     *         Mapping only applies from Firebird to Java, but not from Java to Firebird (e.g. Firebird UNICODE-FSS maps
      *         to Java UTF-8, but Java UTF-8 does not map to Firebird UNICODE-FSS (but to Firebird UTF8)
      */
     public DefaultEncodingDefinition(String firebirdEncodingName, Charset charset, int maxBytesPerChar,
@@ -89,12 +88,12 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
      * @param firebirdCharacterSetId
      *         Firebird character set id
      * @param firebirdOnly
-     *         Mapping only applies from Firebird to Java, but not from Java to Firebird (eg Firebird UNICODE-FSS maps
+     *         Mapping only applies from Firebird to Java, but not from Java to Firebird (e.g. Firebird UNICODE-FSS maps
      *         to Java UTF-8, but Java UTF-8 does not map to Firebird UNICODE-FSS (but to Firebird UTF8)
      */
     public DefaultEncodingDefinition(String firebirdEncodingName, String charsetName, int maxBytesPerChar,
             int firebirdCharacterSetId, boolean firebirdOnly) {
-        this.firebirdEncodingName = firebirdEncodingName;
+        this.firebirdEncodingName = requireNonNull(firebirdEncodingName, "firebirdEncodingName");
         this.charsetName = charsetName;
         if (charsetName == null) {
             encoding = null;
@@ -161,12 +160,31 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
     @Override
     public String toString() {
         return "[" +
-                "firebirdEncodingName='" + getFirebirdEncodingName() + "'," +
-                "javaEncodingName='" + getJavaEncodingName() + "'," +
-                "maxBytesPerChar=" + getMaxBytesPerChar() + "," +
-                "firebirdOnly=" + isFirebirdOnly() + "," +
-                "firebirdCharacterSetId=" + getFirebirdCharacterSetId() +
-                "]";
+               "firebirdEncodingName='" + getFirebirdEncodingName() + "'," +
+               "javaEncodingName='" + getJavaEncodingName() + "'," +
+               "maxBytesPerChar=" + getMaxBytesPerChar() + "," +
+               "firebirdOnly=" + isFirebirdOnly() + "," +
+               "firebirdCharacterSetId=" + getFirebirdCharacterSetId() +
+               "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DefaultEncodingDefinition that = (DefaultEncodingDefinition) o;
+        return maxBytesPerChar == that.maxBytesPerChar
+               && firebirdCharacterSetId == that.firebirdCharacterSetId
+               && firebirdOnly == that.firebirdOnly
+               && Objects.equals(charsetName, that.charsetName)
+               && firebirdEncodingName.equals(that.firebirdEncodingName);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = charsetName != null ? charsetName.hashCode() : 0;
+        result = 31 * result + firebirdCharacterSetId;
+        return result;
     }
 
     private void initCharset() {
@@ -175,10 +193,11 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
         } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
             // Prevent further attempts
             encoding = null;
-            logger.warnDebug(
-                    format("charsetName=\"%s\" specified for Firebird encoding \"%s\" is an illegal or unsupported "
-                            + "character set name, handling as information-only", charsetName, firebirdEncodingName),
-                    e);
+            logger.log(System.Logger.Level.WARNING,
+                    "charsetName=\"{0}\" specified for Firebird encoding \"{1}\" is an illegal or unsupported "
+                    + "character set name, handling as information-only; see debug level for stacktrace",
+                    charsetName, firebirdEncodingName);
+            logger.log(DEBUG, "Exception for illegal or unsupported character set name", e);
         }
     }
 

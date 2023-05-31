@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -36,9 +36,9 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  * Base class for {@link org.firebirdsql.jdbc.FBResultSetMetaData} and
  * {@link org.firebirdsql.jdbc.FBParameterMetaData} for methods common to both implementations.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:skidder@users.sourceforge.net">Nickolay Samofatov</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Nickolay Samofatov
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFieldMetaData implements Wrapper {
@@ -349,14 +349,14 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         }
 
         case Types.FLOAT: {
-            if (supportInfoFor(connection).supportsFloatBinaryPrecision()) {
+            if (connection == null || supportInfoFor(connection).supportsFloatBinaryPrecision()) {
                 return 24;
             } else {
                 return 7;
             }
         }
         case Types.DOUBLE: {
-            if (supportInfoFor(connection).supportsFloatBinaryPrecision()) {
+            if (connection == null || supportInfoFor(connection).supportsFloatBinaryPrecision()) {
                 return 53;
             } else {
                 return 15;
@@ -412,89 +412,40 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             extendedInfo = getExtendedFieldInfo(connection);
         }
 
-        FieldKey key = new FieldKey(
-                getFieldDescriptor(columnIndex).getOriginalTableName(),
-                getFieldDescriptor(columnIndex).getOriginalName());
-
-        return extendedInfo.get(key);
+        return extendedInfo.get(new FieldKey(getFieldDescriptor(columnIndex)));
     }
 
     /**
-     * This method retrieves extended information from the system tables in
-     * a database. Since this method is expensive, use it with care.
+     * This method retrieves extended information from the system tables in a database. Since this method is expensive,
+     * use it with care.
      *
-     * @return mapping between {@link FieldKey} instances and {@link ExtendedFieldInfo} instances,
-     * or an empty Map if the metadata implementation does not support extended info.
+     * @return mapping between {@link FieldKey} instances and {@link ExtendedFieldInfo} instances, or an empty Map if
+     * the metadata implementation does not support extended info.
      * @throws SQLException
      *         if a database error occurs while obtaining extended field information.
      */
     protected abstract Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException;
 
     /**
-     * This class is an old-fashion data structure that stores additional
-     * information about fields in a database.
+     * Stores additional information about fields in a database.
      */
-    protected static class ExtendedFieldInfo {
-        final FieldKey fieldKey;
-        final int fieldPrecision;
-
+    protected record ExtendedFieldInfo(FieldKey fieldKey, int fieldPrecision) {
         public ExtendedFieldInfo(String relationName, String fieldName, int precision) {
-            fieldKey = new FieldKey(relationName, fieldName);
-            fieldPrecision = precision;
+            this(new FieldKey(relationName, fieldName), precision);
         }
     }
 
     /**
-     * This class should be used as a composite key in an internal field
-     * mapping structures.
+     * A composite key for internal field mapping structures.
+     *
+     * @param relationName
+     *         relation name
+     * @param fieldName
+     *         field name
      */
-    protected static final class FieldKey {
-        private final String relationName;
-        private final String fieldName;
-
-        /**
-         * Create instance of this class for the specified relation and field
-         * names.
-         *
-         * @param relationName
-         *         relation name.
-         * @param fieldName
-         *         field name.
-         */
-        FieldKey(String relationName, String fieldName) {
-            this.relationName = relationName;
-            this.fieldName = fieldName;
-        }
-
-        /**
-         * Check if <code>obj</code> is equal to this object.
-         *
-         * @param obj
-         *         object to check.
-         * @return <code>true</code> if <code>obj</code> is instance of this
-         * class and has equal relation and field names.
-         */
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (!(obj instanceof FieldKey)) return false;
-
-            FieldKey that = (FieldKey) obj;
-
-            return (relationName != null ? relationName.equals(that.relationName) : that.relationName == null)
-                    && (fieldName != null ? fieldName.equals(that.fieldName) : that.fieldName == null);
-        }
-
-        /**
-         * Get hash code of this instance.
-         *
-         * @return combination of hash codes of <code>relationName</code> field
-         * and <code>fieldName</code> field.
-         */
-        public int hashCode() {
-            int result = 971;
-            result = 23 * result + (relationName != null ? relationName.hashCode() : 0);
-            result = 23 * result + (fieldName != null ? fieldName.hashCode() : 0);
-            return result;
+    protected record FieldKey(String relationName, String fieldName) {
+        public FieldKey(FieldDescriptor fieldDescriptor) {
+            this(fieldDescriptor.getOriginalTableName(), fieldDescriptor.getOriginalName());
         }
     }
 }

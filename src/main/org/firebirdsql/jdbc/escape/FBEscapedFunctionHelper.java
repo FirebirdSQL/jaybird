@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE connector - JDBC driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -25,11 +25,11 @@ import java.util.*;
 /**
  * Helper class for escaped functions.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 @InternalApi
-public class FBEscapedFunctionHelper {
+public final class FBEscapedFunctionHelper {
 
     /**
      * This map contains mapping between JDBC function names and Firebird ones.
@@ -61,22 +61,22 @@ public class FBEscapedFunctionHelper {
         final Map<String, SQLFunction> functionMap = new HashMap<>(71);
         /* Numeric Functions */
         Map<String, SQLFunction> numericFunctionMap = getNumericFunctions();
-        SUPPORTED_NUMERIC_FUNCTIONS = Collections.unmodifiableSet(new HashSet<>(numericFunctionMap.keySet()));
+        SUPPORTED_NUMERIC_FUNCTIONS = Set.copyOf(numericFunctionMap.keySet());
         functionMap.putAll(numericFunctionMap);
 
         /* String Functions */
         Map<String, SQLFunction> stringFunctionMap = getStringFunctions();
-        SUPPORTED_STRING_FUNCTIONS = Collections.unmodifiableSet(new HashSet<>(stringFunctionMap.keySet()));
+        SUPPORTED_STRING_FUNCTIONS = Set.copyOf(stringFunctionMap.keySet());
         functionMap.putAll(stringFunctionMap);
 
         /* Time and Date Functions */
         Map<String, SQLFunction> timeDateFunctionMap = getTimeDateFunctions();
-        SUPPORTED_TIME_DATE_FUNCTIONS = Collections.unmodifiableSet(new HashSet<>(timeDateFunctionMap.keySet()));
+        SUPPORTED_TIME_DATE_FUNCTIONS = Set.copyOf(timeDateFunctionMap.keySet());
         functionMap.putAll(timeDateFunctionMap);
 
         /* System Functions */
         Map<String, SQLFunction> systemFunctionMap = getSystemFunctions();
-        SUPPORTED_SYSTEM_FUNCTIONS = Collections.unmodifiableSet(new HashSet<>(systemFunctionMap.keySet()));
+        SUPPORTED_SYSTEM_FUNCTIONS = Set.copyOf(systemFunctionMap.keySet());
         functionMap.putAll(systemFunctionMap);
 
         /* Conversion Functions */
@@ -97,6 +97,10 @@ public class FBEscapedFunctionHelper {
         // ...none
 
         FUNCTION_MAP = Collections.unmodifiableMap(functionMap);
+    }
+
+    private FBEscapedFunctionHelper() {
+        // no instances
     }
 
     private static Map<String, SQLFunction> getNumericFunctions() {
@@ -374,7 +378,6 @@ public class FBEscapedFunctionHelper {
              * functions defined in Appendix D "Scalar Functions". The escape syntax is not
              * intended to be used to invoke user-defined or vendor specific scalar functions."
              */
-            // TODO Consider throwing SQLFeatureNotSupported or a different SQLException
             throw new FBSQLParseException("Unsupported JDBC function escape: " + functionName);
         }
 

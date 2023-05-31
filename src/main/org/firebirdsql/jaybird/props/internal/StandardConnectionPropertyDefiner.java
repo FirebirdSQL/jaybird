@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jaybird.props.internal;
 
+import org.firebirdsql.jaybird.props.DpbType;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi;
 
@@ -40,7 +41,7 @@ import static org.firebirdsql.jaybird.props.internal.TransactionNameMapping.TRAN
 /**
  * Connection property definer for the standard connection properties of Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi {
@@ -73,6 +74,9 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 // NOTE: Intentionally not mapped to DPB/SPB item, that is handled during authentication
                 builder(authPlugins).aliases("auth_plugin_list", "isc_dpb_auth_plugin_list"),
                 builder(wireCompression).type(BOOLEAN).aliases("wire_compression"),
+                builder(enableProtocol),
+                builder(parallelWorkers).type(INT).aliases("parallel_workers", "isc_dpb_parallel_workers")
+                        .dpbItem(isc_dpb_parallel_workers),
 
                 // Database properties
                 builder(charSet).aliases("charset", "localEncoding", "local_encoding"),
@@ -112,7 +116,7 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder("filename_charset"),
 
                 // Service properties
-                // Nothing so far
+                builder(expectedDb).spbItem(isc_spb_expected_db),
 
                 // Formally unsupported properties that will need explicit type mapping other than string to work
                 builder("page_size").type(INT).aliases("isc_dpb_page_size").dpbItem(isc_dpb_page_size),
@@ -147,7 +151,10 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder("debug").type(INT).aliases("isc_dpb_debug").dpbItem(isc_dpb_debug),
                 builder("trace").type(INT).aliases("isc_dpb_trace").dpbItem(isc_dpb_trace),
                 builder("interp").type(INT).aliases("isc_dpb_interp").dpbItem(isc_dpb_interp),
-                builder("ext_call_depth").type(INT).aliases("isc_dpb_ext_call_depth").dpbItem(isc_dpb_ext_call_depth)
+                builder("ext_call_depth").type(INT).aliases("isc_dpb_ext_call_depth").dpbItem(isc_dpb_ext_call_depth),
+                builder("clear_map").type(BOOLEAN).aliases("isc_dpb_clear_map").dpbItem(isc_dpb_clear_map)
+                        .pbType(DpbType.BYTE),
+                builder("worker_attach").type(BOOLEAN).aliases("isc_dpb_worker_attach").dpbItem(isc_dpb_worker_attach)
 
                 // NOTE: Properties not defined elsewhere will be defined through UnregisteredDpbDefiner as type string
         ).map(ConnectionProperty.Builder::build);

@@ -42,8 +42,8 @@ import java.util.Arrays;
 /**
  * SRP client handshake implementation.
  *
- * @author <a href="mailto:nakagami@gmail.com">Hajime Nakagami</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Hajime Nakagami
+ * @author Mark Rotteveel
  */
 public final class SrpClient {
     
@@ -260,7 +260,7 @@ public final class SrpClient {
                     .toSQLException();
         }
         final String hexServerPublicKey = new String(authData, serverKeyStart, authData.length - serverKeyStart,
-                StandardCharsets.US_ASCII);
+                StandardCharsets.ISO_8859_1);
         final BigInteger serverPublicKey = new BigInteger(padHexBinary(hexServerPublicKey), 16);
 
         return clientProof(user, password, salt, serverPublicKey);
@@ -271,7 +271,8 @@ public final class SrpClient {
     }
 
     static class KeyPair {
-        private BigInteger pub, secret;
+        private final BigInteger pub;
+        private final BigInteger secret;
 
         private KeyPair(BigInteger pub, BigInteger secret) {
             this.pub = pub;

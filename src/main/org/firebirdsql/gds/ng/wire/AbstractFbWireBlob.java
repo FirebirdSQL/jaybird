@@ -26,7 +26,7 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import java.sql.SQLException;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWireBlob {
@@ -108,7 +108,6 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
     public byte[] getBlobInfo(final byte[] requestItems, final int bufferLength) throws SQLException {
         try {
             return getDatabase()
-                    // TODO: Blob warning callback or just database default?
                     .getInfo(WireProtocolConstants.op_info_blob, getHandle(), requestItems, bufferLength, null);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);

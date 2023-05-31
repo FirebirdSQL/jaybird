@@ -26,19 +26,19 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.*;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
-import java.sql.SQLTransientException;
 import java.sql.SQLWarning;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
+import static java.lang.String.format;
+import static java.lang.System.Logger.Level.DEBUG;
+
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbStatement implements FbStatement {
@@ -50,7 +50,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      */
     private static final Set<StatementState> RESET_TO_PREPARED = Collections.unmodifiableSet(
             EnumSet.of(StatementState.EXECUTING, StatementState.CURSOR_OPEN));
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbStatement.class);
+    private static final System.Logger log = System.getLogger(AbstractFbStatement.class.getName());
 
     // NOTE: BEFORE_FIRST is also used for statements that don't produce rows
     private static final int BEFORE_FIRST = -1;
@@ -192,9 +192,6 @@ public abstract class AbstractFbStatement implements FbStatement {
     @Override
     public final void ensureClosedCursor(boolean transactionEnd) throws SQLException {
         if (getState().isCursorOpen()) {
-            if (log.isDebugEnabled()) {
-                log.debug("ensureClosedCursor has to close a cursor at", new RuntimeException("debugging stacktrace"));
-            }
             closeCursor(transactionEnd);
         }
     }
@@ -241,7 +238,8 @@ public abstract class AbstractFbStatement implements FbStatement {
                 state = newState;
                 statementListenerDispatcher.statementStateChanged(this, newState, currentState);
             } else {
-                throw new SQLNonTransientException(String.format("Statement state %s only allows next states %s, received %s", currentState, currentState.validTransitionSet(), newState));
+                throw new SQLNonTransientException(format("Statement state %s only allows next states %s, received %s",
+                        currentState, currentState.validTransitionSet(), newState));
             }
         }
     }
@@ -260,11 +258,10 @@ public abstract class AbstractFbStatement implements FbStatement {
         try (LockCloseable ignored = withLock()) {
             final StatementState currentState = state;
             if (currentState == newState || currentState == StatementState.CLOSED) return;
-            if (log.isDebugEnabled() && !currentState.isValidTransition(newState)) {
-                log.debug(
-                        String.format("Forced statement transition is invalid; state %s only allows next states %s, forced to set %s",
-                                currentState, currentState.validTransitionSet(), newState),
-                        new IllegalStateException());
+            if (!currentState.isValidTransition(newState) && log.isLoggable(DEBUG)) {
+                log.log(DEBUG, "Forced statement transition is invalid; state %s only allows next states %s, forced to set %s"
+                                .formatted(currentState, currentState.validTransitionSet(), newState),
+                        new IllegalStateException("debugging stacktrace"));
             }
             state = newState;
             statementListenerDispatcher.statementStateChanged(this, newState, currentState);
@@ -336,14 +333,15 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
-     * Reset statement state, equivalent to calling {@link #reset(boolean)} with <code>false</code>
+     * Reset statement state, equivalent to calling {@link #reset(boolean)} with {@code false}.
      */
     protected final void reset() {
         reset(false);
     }
 
     /**
-     * Reset statement state and clear parameter description, equivalent to calling {@link #reset(boolean)} with <code>true</code>
+     * Reset statement state and clear parameter description, equivalent to calling {@link #reset(boolean)} with
+     * {@code true}.
      */
     protected final void resetAll() {
         reset(true);
@@ -378,7 +376,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      *
      * @param state
      *         The statement state
-     * @return <code>true</code> call to <code>prepare</code> is allowed
+     * @return {@code true} call to {@code prepare} is allowed
      */
     protected boolean isPrepareAllowed(final StatementState state) {
         return PREPARE_ALLOWED_STATES.contains(state);
@@ -576,8 +574,9 @@ public abstract class AbstractFbStatement implements FbStatement {
             checkStatementValid();
             if (getState() == StatementState.CURSOR_OPEN && !isAfterLast()) {
                 // We disallow fetching count when we haven't fetched all rows yet.
-                // TODO SQLState
-                throw new SQLNonTransientException("Cursor still open, fetch all rows or close cursor before fetching SQL counts");
+                throw new FbExceptionBuilder()
+                        .nonTransientException(JaybirdErrorCodes.jb_closeCursorBeforeCount)
+                        .toSQLException();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -598,8 +597,8 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
-     * Frees the currently allocated statement (either close the cursor with {@link ISCConstants#DSQL_close} or drop the statement
-     * handle using {@link ISCConstants#DSQL_drop}.
+     * Frees the currently allocated statement. Either close the cursor with {@link ISCConstants#DSQL_close} or drop
+     * the statement handle using {@link ISCConstants#DSQL_drop}.
      *
      * @param option
      *         Free option
@@ -611,18 +610,18 @@ public abstract class AbstractFbStatement implements FbStatement {
         final RowDescriptor parameterDescriptor = getParameterDescriptor();
         final int expectedSize = parameterDescriptor != null ? parameterDescriptor.getCount() : 0;
         final int actualSize = parameters.getCount();
-        // TODO Externalize sqlstates and error messages
         if (actualSize != expectedSize) {
-            // TODO use HY021 (inconsistent descriptor information) instead?
-            throw new SQLNonTransientException(String.format("Invalid number of parameters, expected %d, got %d",
-                    expectedSize, actualSize), "07008"); // invalid descriptor count
+            throw new FbExceptionBuilder()
+                    .nonTransientException(JaybirdErrorCodes.jb_invalidParameterCount)
+                    .messageParameter(expectedSize, actualSize)
+                    .toSQLException();
         }
         for (int fieldIndex = 0; fieldIndex < actualSize; fieldIndex++) {
             if (!parameters.isInitialized(fieldIndex)) {
                 // Communicating 1-based index, so it doesn't cause confusion when JDBC user sees this.
-                // TODO use HY000 (dynamic parameter value needed) instead?
-                throw new SQLTransientException(String.format("Parameter with index %d was not set",
-                        fieldIndex + 1), "0700C"); // undefined DATA value
+                throw new FbExceptionBuilder().transientException(JaybirdErrorCodes.jb_parameterNotSet)
+                        .messageParameter(fieldIndex + 1)
+                        .toSQLException();
             }
         }
     }
@@ -631,6 +630,12 @@ public abstract class AbstractFbStatement implements FbStatement {
     public final void addStatementListener(StatementListener statementListener) {
         if (getState() == StatementState.CLOSED) return;
         statementListenerDispatcher.addListener(statementListener);
+    }
+
+    @Override
+    public void addWeakStatementListener(StatementListener statementListener) {
+        if (getState() == StatementState.CLOSED) return;
+        statementListenerDispatcher.addWeakListener(statementListener);
     }
 
     @Override
@@ -650,7 +655,7 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     /**
      * Checks if this statement is not in {@link StatementState#CLOSED}, {@link StatementState#CLOSING},
-     * {@link StatementState#NEW} or {@link StatementState#ERROR}, and throws an <code>SQLException</code> if it is.
+     * {@link StatementState#NEW} or {@link StatementState#ERROR}, and throws an {@code SQLException} if it is.
      *
      * @throws SQLException
      *         When this statement is closed or in error state.
@@ -658,18 +663,18 @@ public abstract class AbstractFbStatement implements FbStatement {
     protected final void checkStatementValid() throws SQLException {
         switch (getState()) {
         case NEW:
-            // TODO Externalize sqlstate
-            // TODO See if there is a firebird error code matching this (isc_cursor_not_open is not exactly the same)
-            throw new SQLNonTransientException("Statement not yet allocated", "24000");
+            throw new FbExceptionBuilder()
+                    .nonTransientException(JaybirdErrorCodes.jb_stmtNotAllocated)
+                    .toSQLException();
         case CLOSING:
         case CLOSED:
-            // TODO Externalize sqlstate
-            // TODO See if there is a firebird error code matching this (isc_cursor_not_open is not exactly the same)
-            throw new SQLNonTransientException("Statement closed", "24000");
+            throw new FbExceptionBuilder()
+                    .nonTransientException(JaybirdErrorCodes.jb_stmtClosed)
+                    .toSQLException();
         case ERROR:
-            // TODO SQLState?
-            // TODO See if there is a firebird error code matching this
-            throw new SQLNonTransientException("Statement is in error state and needs to be closed");
+            throw new FbExceptionBuilder()
+                    .nonTransientException(JaybirdErrorCodes.jb_stmtInErrorRequireCLose)
+                    .toSQLException();
         default:
             // Valid state, continue
             break;
@@ -692,15 +697,6 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (getState() != StatementState.CLOSED) close();
-        } finally {
-            super.finalize();
-        }
-    }
-
-    @Override
     public FbTransaction getTransaction() {
         return transaction;
     }
@@ -714,7 +710,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      *
      * @param transactionClass
      *         Class of the transaction
-     * @return <code>true</code> when the transaction class is valid for the statement implementation.
+     * @return {@code true} when the transaction class is valid for the statement implementation.
      */
     protected abstract boolean isValidTransactionClass(Class<? extends FbTransaction> transactionClass);
 
@@ -736,7 +732,7 @@ public abstract class AbstractFbStatement implements FbStatement {
                     }
                 }
             } else {
-                throw new SQLNonTransientException(String.format("Invalid transaction handle type, got \"%s\"",
+                throw new SQLNonTransientException(format("Invalid transaction handle type, got \"%s\"",
                         newTransaction.getClass().getName()), SQLStateConstants.SQL_STATE_GENERAL_ERROR);
             }
         } catch (SQLNonTransientException e) {
@@ -788,7 +784,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
-     * Parse the statement info response in <code>statementInfoResponse</code>. If the response is truncated, a new
+     * Parse the statement info response in {@code statementInfoResponse}. If the response is truncated, a new
      * request is done using {@link #getStatementInfoRequestItems()}
      *
      * @param statementInfoResponse
@@ -862,7 +858,7 @@ public abstract class AbstractFbStatement implements FbStatement {
                 try {
                     closeCursor();
                 } catch (SQLException e) {
-                    log.error("Unable to close cursor after statement timeout", e);
+                    log.log(System.Logger.Level.ERROR, "Unable to close cursor after statement timeout", e);
                 }
                 break;
             }

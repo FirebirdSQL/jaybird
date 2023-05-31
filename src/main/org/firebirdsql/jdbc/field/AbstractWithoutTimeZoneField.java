@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -30,7 +30,7 @@ import java.util.TimeZone;
 /**
  * Superclass for {@link FBTimeField}, {@link FBTimestampField} and {@link FBDateField} to handle session time zone.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 abstract class AbstractWithoutTimeZoneField extends FBField {
 

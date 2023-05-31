@@ -24,6 +24,7 @@ import org.firebirdsql.ds.FBSimpleDataSource;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -43,6 +44,7 @@ import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
 import static org.firebirdsql.common.FBTestProperties.DB_USER;
+import static org.firebirdsql.common.FBTestProperties.ENABLE_PROTOCOL;
 import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
 import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
@@ -61,6 +63,9 @@ class DatabaseUrlFormatsTest {
     @ParameterizedTest
     @MethodSource
     void testConnectionWithDriverManager(String url) throws Exception {
+        if (ENABLE_PROTOCOL != null) {
+            url += (url.contains("?") ? '&' : "?") + "enableProtocol=" + ENABLE_PROTOCOL;
+        }
         try (Connection connection = DriverManager.getConnection(url, DB_USER, FBTestProperties.DB_PASSWORD)) {
             assertTrue(connection.isValid(1000));
         }
@@ -68,8 +73,7 @@ class DatabaseUrlFormatsTest {
 
     @SuppressWarnings("unused")
     static Stream<Arguments> testConnectionWithDriverManager() {
-        final List<String> urlPrefixes = Arrays.asList(
-                GDSFactory.getPlugin(FBTestProperties.getGdsType()).getSupportedProtocols());
+        final List<String> urlPrefixes = GDSFactory.getPlugin(FBTestProperties.getGdsType()).getSupportedProtocolList();
         final List<String> urls = urlsWithoutProtocolPrefix();
 
         return urlPrefixes.stream()
@@ -94,7 +98,7 @@ class DatabaseUrlFormatsTest {
 
     @SuppressWarnings("unused")
     static Stream<Arguments> testConnectionWithEmptyUrl() {
-        return Arrays.stream(GDSFactory.getPlugin(FBTestProperties.getGdsType()).getSupportedProtocols())
+        return GDSFactory.getPlugin(FBTestProperties.getGdsType()).getSupportedProtocolList().stream()
                 .map(Arguments::of);
     }
 
@@ -105,6 +109,7 @@ class DatabaseUrlFormatsTest {
         FBSimpleDataSource dataSource = new FBSimpleDataSource(FBTestProperties.getGdsType());
         dataSource.setUser(DB_USER);
         dataSource.setPassword(DB_PASSWORD);
+        dataSource.setEnableProtocol(ENABLE_PROTOCOL);
         dataSource.setServerName(serverName);
         if (portNumber != null) dataSource.setPortNumber(portNumber);
         dataSource.setDatabaseName(databaseName);
@@ -163,12 +168,17 @@ class DatabaseUrlFormatsTest {
                 // NOTE: This test assumes a Firebird 3.0 or higher client library is used
                 urlFormats.add("inet://%1$s:%2$d/%3$s");
                 // Not testing inet4/inet6
-                if (getDefaultSupportInfo().isWindows() && isWindowsSystem()) {
-                    // NOTE: This assumes the default WNET service name is used
-                    urlFormats.add("wnet://%1$s/%3$s");
-                    urlFormats.add("\\\\%4$s\\%3$s");
+                FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+                if (supportInfo.isWindows() && isWindowsSystem()) {
+                    if (supportInfo.supportsWnet()) {
+                        // NOTE: This assumes the default WNET service name is used
+                        urlFormats.add("wnet://%1$s/%3$s");
+                        urlFormats.add("\\\\%4$s\\%3$s");
+                        if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
+                            urlFormats.add("wnet://%3$s");
+                        }
+                    }
                     if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
-                        urlFormats.add("wnet://%3$s");
                         urlFormats.add("xnet://%3$s");
                     }
                 }

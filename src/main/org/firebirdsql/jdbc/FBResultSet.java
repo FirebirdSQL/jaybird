@@ -28,6 +28,7 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.field.FBCloseableField;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
+import org.firebirdsql.jdbc.field.TrimmableField;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.InputStream;
@@ -44,9 +45,9 @@ import java.util.Map;
 /**
  * Implementation of {@link ResultSet}.
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 @SuppressWarnings("RedundantThrows")
 public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListener.FetcherListener {
@@ -68,10 +69,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     private boolean wasNullValid = false;
     // closed is false until the close method is invoked;
     private volatile boolean closed = false;
-
-    //might be a bit of a kludge, or a useful feature.
-    // TODO Consider subclassing for metadata resultsets (instead of using metaDataQuery parameter and/or parameter taking xsqlvars and rows)
-    private final boolean trimStrings;
 
     private SQLWarning firstWarning;
 
@@ -120,7 +117,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
             cursorName = fbStatement.getCursorName();
             this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
-            trimStrings = metaDataQuery;
             rowDescriptor = stmt.getRowDescriptor();
             fields = new FBField[rowDescriptor.getCount()];
             colNames = new HashMap<>(rowDescriptor.getCount(), 1);
@@ -137,7 +133,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
                         && stmt.supportsFetchScroll();
             cached = cached || metaDataQuery || !(rsType == TYPE_FORWARD_ONLY || serverSideScrollable);
 
-            prepareVars(cached);
+            prepareVars(cached, metaDataQuery);
             if (cached) {
                 fbFetcher = new FBCachedFetcher(gdsHelper, fbStatement.fetchSize, fbStatement.maxRows, stmt, this,
                         rsType == ResultSet.TYPE_FORWARD_ONLY);
@@ -189,85 +185,99 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      *
      * @param rowDescriptor
-     *         Column definition
+     *         column definition
      * @param rows
-     *         Row data
+     *         row data
+     * @param listener
+     *         result set listener
      */
-    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows,
-            FBObjectListener.ResultSetListener listener) throws SQLException {
+    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows, FBObjectListener.ResultSetListener listener)
+            throws SQLException {
+        this(rowDescriptor, null, rows, listener, false, false);
+    }
+
+    /**
+     * Creates a FBResultSet with the columns specified by {@code rowDescriptor} and the data in {@code rows}.
+     * <p>
+     * This constructor is intended for metadata result sets, but can be used for other purposes as well.
+     * </p>
+     * <p>
+     * Current implementation will ensure that strings will be trimmed on retrieval.
+     * </p>
+     *
+     * @param rowDescriptor
+     *         column definition
+     * @param rows
+     *         row data
+     */
+    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
+        this(rowDescriptor, rows, null);
+    }
+
+    /**
+     * Creates a FBResultSet with the columns specified by {@code rowDescriptor} and the data in {@code rows}.
+     * <p>
+     * This constructor is intended for metadata result sets, but can be used for other purposes as well.
+     * </p>
+     * <p>
+     * Current implementation will ensure that strings will be trimmed on retrieval.
+     * </p>
+     *
+     * @param rowDescriptor
+     *         column definition
+     * @param connection
+     *         connection (cannot be null when {@code retrieveBlobs} is {@code true}
+     * @param rows
+     *         row data
+     * @param retrieveBlobs
+     *         {@code true} retrieves the blob data
+     */
+    public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
+            boolean retrieveBlobs) throws SQLException {
+        this(rowDescriptor, connection, rows, null, retrieveBlobs, true);
+    }
+
+    /**
+     * Creates a FBResultSet with the columns specified by {@code rowDescriptor} and the data in {@code rows}.
+     * <p>
+     * Current implementation will ensure that strings will be trimmed on retrieval.
+     * </p>
+     *
+     * @param rowDescriptor
+     *         column definition
+     * @param connection
+     *         connection (cannot be {@code null} when {@code retrieveBlobs} is {@code true}
+     * @param rows
+     *         row data
+     * @param listener
+     *         result set listener
+     * @param retrieveBlobs
+     *         {@code true} retrieves the blob data
+     * @param trimStrings
+     *         {@code true} when strings need to be trimmed (generally only for metadata queries)
+     * @since 5.0.1
+     */
+    public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
+            FBObjectListener.ResultSetListener listener, boolean retrieveBlobs, boolean trimStrings)
+            throws SQLException {
         // TODO Evaluate if we need to share more implementation with constructor above
-        connection = null;
-        gdsHelper = null;
+        this.connection = connection;
+        gdsHelper = connection != null ? connection.getGDSHelper() : null;;
         fbStatement = null;
         this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
         cursorName = null;
-        fbFetcher = new FBCachedFetcher(rows, this, rowDescriptor, null, false);
-        trimStrings = false;
+        fbFetcher = new FBCachedFetcher(rows, this, rowDescriptor, gdsHelper, retrieveBlobs);
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];
         colNames = new HashMap<>(rowDescriptor.getCount(), 1);
-        prepareVars(true);
+        prepareVars(true, trimStrings);
         // TODO Set specific types (see also previous todo)
         rsType = ResultSet.TYPE_FORWARD_ONLY;
         rsConcurrency = ResultSet.CONCUR_READ_ONLY;
         rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
-    /**
-     * Creates a FBResultSet with the columns specified by {@code rowDescriptor} and the data in {@code rows}.
-     * <p>
-     * This constructor is intended for metadata result sets, but can be used for other purposes as well.
-     * </p>
-     * <p>
-     * Current implementation will ensure that strings will be trimmed on retrieval.
-     * </p>
-     *
-     * @param rowDescriptor
-     *         Column definition
-     * @param rows
-     *         Row data
-     */
-    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
-        this(rowDescriptor, null, rows, false);
-    }
-
-    /**
-     * Creates a FBResultSet with the columns specified by {@code rowDescriptor} and the data in {@code rows}.
-     * <p>
-     * This constructor is intended for metadata result sets, but can be used for other purposes as well.
-     * </p>
-     * <p>
-     * Current implementation will ensure that strings will be trimmed on retrieval.
-     * </p>
-     *
-     * @param rowDescriptor
-     *         Column definition
-     * @param connection
-     *         Connection (cannot be null when {@code retrieveBlobs} is {@code true}
-     * @param rows
-     *         Row data
-     * @param retrieveBlobs
-     *         {@code true} retrieves the blob data
-     */
-    public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
-            boolean retrieveBlobs) throws SQLException {
-        this.connection = connection;
-        this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
-        fbStatement = null;
-        listener = FBObjectListener.NoActionResultSetListener.instance();
-        cursorName = null;
-        fbFetcher = new FBCachedFetcher(rows, this, rowDescriptor, gdsHelper, retrieveBlobs);
-        trimStrings = true;
-        this.rowDescriptor = rowDescriptor;
-        fields = new FBField[rowDescriptor.getCount()];
-        colNames = new HashMap<>(rowDescriptor.getCount(), 1);
-        prepareVars(true);
-        rsType = ResultSet.TYPE_FORWARD_ONLY;
-        rsConcurrency = ResultSet.CONCUR_READ_ONLY;
-        rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
-    }
-
-    private void prepareVars(boolean cached) throws SQLException {
+    private void prepareVars(boolean cached, boolean trimStrings) throws SQLException {
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
             final int fieldPosition = i;
 
@@ -287,6 +297,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
             if (field instanceof FBCloseableField) {
                 closeableFields.add((FBCloseableField) field);
+            }
+
+            if (trimStrings && field instanceof TrimmableField) {
+                ((TrimmableField) field).setTrimTrailing(true);
             }
 
             fields[i] = field;
@@ -381,16 +395,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public void close() throws SQLException {
-        close(true);
+        close(true, CompletionReason.OTHER);
     }
 
     @Override
     public boolean isClosed() throws SQLException {
         return closed;
-    }
-
-    void close(boolean notifyListener) throws SQLException {
-        close(notifyListener, CompletionReason.OTHER);
     }
 
     void close(boolean notifyListener, CompletionReason completionReason) throws SQLException {
@@ -527,11 +537,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public String getString(int columnIndex) throws SQLException {
-        if (trimStrings) {
-            String result = getField(columnIndex).getString();
-            return result != null ? result.trim() : null;
-        } else
-            return getField(columnIndex).getString();
+        return getField(columnIndex).getString();
     }
 
     /**
@@ -666,11 +672,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public String getString(String columnName) throws SQLException {
-        String result = getField(columnName).getString();
-        if (trimStrings) {
-            return result != null ? result.trim() : null;
-        }
-        return result;
+        return getField(columnName).getString();
     }
 
     /**
@@ -1669,26 +1671,13 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public void updateBlob(int columnIndex, Blob blob) throws SQLException {
         checkUpdatable();
-        getField(columnIndex).setBlob(asFBBlob(blob));
-    }
-
-    private FBBlob asFBBlob(Blob blob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
-        if (blob == null) {
-            return null;
-        }
-        if (blob instanceof FBBlob) {
-            return (FBBlob) blob;
-        }
-        FBBlob fbb = new FBBlob(gdsHelper);
-        fbb.copyStream(blob.getBinaryStream());
-        return fbb;
+        getField(columnIndex).setBlob(blob);
     }
 
     @Override
     public void updateBlob(String columnLabel, Blob blob) throws SQLException {
         checkUpdatable();
-        getField(columnLabel).setBlob(asFBBlob(blob));
+        getField(columnLabel).setBlob(blob);
     }
 
     @Override
@@ -1718,26 +1707,13 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public void updateClob(int columnIndex, java.sql.Clob clob) throws SQLException {
         checkUpdatable();
-        getField(columnIndex).setClob(asFBClob(clob));
-    }
-
-    private FBClob asFBClob(Clob clob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
-        if (clob == null) {
-            return null;
-        }
-        if (clob instanceof FBClob) {
-            return (FBClob) clob;
-        }
-        FBClob fbc = new FBClob(new FBBlob(gdsHelper));
-        fbc.copyCharacterStream(clob.getCharacterStream());
-        return fbc;
+        getField(columnIndex).setClob(clob);
     }
 
     @Override
     public void updateClob(String columnLabel, Clob clob) throws SQLException {
         checkUpdatable();
-        getField(columnLabel).setClob(asFBClob(clob));
+        getField(columnLabel).setClob(clob);
     }
 
     @Override

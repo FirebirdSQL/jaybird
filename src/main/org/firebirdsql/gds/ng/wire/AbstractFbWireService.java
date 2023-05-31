@@ -38,7 +38,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Abstract service implementation for the wire protocol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbWireService extends AbstractFbService<WireServiceConnection>
@@ -185,20 +185,6 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
             } finally {
                 setDetached();
             }
-        }
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (!connection.isConnected()) return;
-            if (isAttached()) {
-                safelyDetach();
-            } else {
-                closeConnection();
-            }
-        } finally {
-            super.finalize();
         }
     }
 

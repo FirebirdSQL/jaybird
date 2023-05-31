@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
@@ -56,8 +56,7 @@ public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
      * @param operation
      *         Operation
      * @param objectId
-     *         Id of the object to release
-     * @throws SQLException
+     *         ID of the object to release
      */
     void releaseObject(int operation, int objectId) throws SQLException;
 

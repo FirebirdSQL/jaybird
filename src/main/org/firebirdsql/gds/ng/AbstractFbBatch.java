@@ -11,10 +11,7 @@ import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.jdbc.field.FBField;
-import org.firebirdsql.jdbc.field.FBWorkaroundStringField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -199,28 +196,6 @@ public abstract class AbstractFbBatch implements FbBatch {
 
     public void setString(int parameterIndex, String x) throws SQLException {
         getField(parameterIndex).setString(x);
-    }
-
-    /**
-     * Sets the designated parameter to the given String value. This is a
-     * workaround for the ambiguous "operation was cancelled" response from the
-     * server for when an oversized string is set for a limited-size field. This
-     * method sets the string parameter without checking size constraints.
-     *
-     * @param parameterIndex
-     *            the first parameter is 1, the second is 2, ...
-     * @param x
-     *            The String value to be set
-     * @throws SQLException
-     *             if a database access occurs
-     */
-    public void setStringForced(int parameterIndex, String x) throws SQLException {
-        FBField field = getField(parameterIndex);
-        if (field instanceof FBWorkaroundStringField) {
-            ((FBWorkaroundStringField) field).setStringForced(x);
-        } else {
-            field.setString(x);
-        }
     }
 
     public void setTime(int parameterIndex, Time x) throws SQLException {

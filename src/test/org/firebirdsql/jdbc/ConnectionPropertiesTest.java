@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Tests for connection properties (does not cover all properties for now)
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class ConnectionPropertiesTest {
 
@@ -76,11 +76,6 @@ class ConnectionPropertiesTest {
     }
 
     private FBSimpleDataSource createDataSource() {
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(getdbpath(DB_NAME));
-        ds.setType(GDS_TYPE);
-        ds.setUser(DB_USER);
-        ds.setPassword(DB_PASSWORD);
-        return ds;
+        return configureDefaultDbProperties(new FBSimpleDataSource());
     }
 }

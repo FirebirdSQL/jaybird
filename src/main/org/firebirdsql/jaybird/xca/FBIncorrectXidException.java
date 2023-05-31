@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,13 +18,22 @@
  */
 package org.firebirdsql.jaybird.xca;
 
+import java.io.Serial;
+
 /**
  * This error is thrown when message read from the RDB$TRANSACTIONS table does not represent a serialized Xid.
  */
 public class FBIncorrectXidException extends Exception {
 
+    @Serial
+    private static final long serialVersionUID = -4422195562607053359L;
+
     public FBIncorrectXidException(String reason) {
         super(reason);
+    }
+
+    public FBIncorrectXidException(String reason, Throwable cause) {
+        super(reason, cause);
     }
 
 }

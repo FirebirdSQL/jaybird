@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.encodings.EncodingDefinition;
+import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.util.IOUtils;
@@ -34,22 +36,15 @@ import java.util.Calendar;
 import java.util.function.Function;
 
 /**
- * Describe class <code>FBStringField</code> here.
+ * Field implementation for {@code CHAR} and {@code VARCHAR}.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @version 1.0
- * @todo implement data handling code
- * @todo implement correct exception throwing in all setXXX methods that use
- * setString(String), currently it will raise an exception with string conversion
- * error message, instead it should complain about error coresponding to the XXX.
- * @todo think about the right setBoolean and getBoolean (currently it is "Y"
- * and "N", or "TRUE" and "FALSE").
- * <p>
- * TODO check if the setBinaryStream(null) is allowed by specs.
+ * @author Roman Rokytskyy
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
-class FBStringField extends FBField {
+class FBStringField extends FBField implements TrimmableField {
+
+    // TODO think about the right setBoolean and getBoolean (currently it is "Y" and "N", or "TRUE" and "FALSE")
     
     static final String SHORT_TRUE = "Y";
     static final String SHORT_FALSE = "N";
@@ -59,6 +54,7 @@ class FBStringField extends FBField {
     static final String SHORT_TRUE_3 = "1";
 
     protected final int possibleCharLength;
+    private boolean trimTrailing;
 
     FBStringField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
@@ -68,6 +64,16 @@ class FBStringField extends FBField {
         // TODO This might wreak havoc if field is a FBLongVarcharField
         // TODO currently avoiding -1 to avoid problems in FBLongVarcharField (eg with setBoolean); need to fix that
         possibleCharLength = charLength != -1 ? charLength : fieldDescriptor.getLength();
+    }
+
+    @Override
+    public final void setTrimTrailing(boolean trimTrailing) {
+        this.trimTrailing = trimTrailing;
+    }
+
+    @Override
+    public final boolean isTrimTrailing() {
+        return trimTrailing;
     }
 
     @Override
@@ -180,7 +186,34 @@ class FBStringField extends FBField {
     @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
-        return getDatatypeCoder().decodeString(getFieldData());
+        String result = applyTrimTrailing(getDatatypeCoder().decodeString(getFieldData()));
+        if (requiredType == Types.VARCHAR || isTrimTrailing()) {
+            return result;
+        }
+
+        return fixPadding(result);
+    }
+
+    private String fixPadding(String result) {
+        // fix incorrect padding of multibyte charsets (e.g. a CHAR(5) UTF8 can have upto 20 spaces, instead of 5)
+        // NOTE: For Firebird 3.0 and earlier, this prevents access to oversized CHAR(n) CHARACTER SET UNICODE_FSS.
+        // We accept that limitation because the workaround is to cast to VARCHAR, and because Firebird 4.0 no longer
+        // allows storing oversized UNICODE_FSS values
+        if (result.length() > possibleCharLength) {
+            return result.substring(0, possibleCharLength);
+        }
+        return result;
+    }
+
+    /**
+     * Applies trim trailing if enabled.
+     *
+     * @param value
+     *         value to trim
+     * @return {@code value} when trim trailing is disabled, or trimmed value when enabled
+     */
+    final String applyTrimTrailing(String value) {
+        return trimTrailing ? TrimmableField.trimTrailing(value) : value;
     }
 
     //----- getXXXStream code
@@ -335,7 +368,25 @@ class FBStringField extends FBField {
     @Override
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
-        setFieldData(getDatatypeCoder().encodeString(value));
+        DatatypeCoder datatypeCoder = getDatatypeCoder();
+        EncodingDefinition encodingDefinition = datatypeCoder.getEncodingDefinition();
+        // Special rules for UTF8 (but not UNICODE_FSS), compare by codepoint count
+        if (encodingDefinition.getFirebirdCharacterSetId() == 4 /* UTF8 */ && value.length() > possibleCharLength) {
+            int codePointCount = value.codePointCount(0, value.length());
+            if (codePointCount > possibleCharLength) {
+                // NOTE: We're reporting the codepoint lengths, not the maximum size in bytes
+                throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, codePointCount,
+                        possibleCharLength);
+            }
+        }
+        byte[] data = datatypeCoder.encodeString(value);
+        if (data.length > fieldDescriptor.getLength()) {
+            // NOTE: This doesn't catch truncation errors for oversized strings with multibyte character sets that
+            // still fit, those are handled by the server on execute. For UTF8, the earlier check should handle this.
+            throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, data.length,
+                    fieldDescriptor.getLength());
+        }
+        setFieldData(data);
     }
 
     //----- setXXXStream code

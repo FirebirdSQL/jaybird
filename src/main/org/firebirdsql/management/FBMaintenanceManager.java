@@ -32,7 +32,6 @@ import org.firebirdsql.util.NumericHelper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,8 +41,8 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
 
 /**
- * The <code>FBMaintenanceManager</code> class is responsible for replicating the functionality provided by
- * the <code>gfix</code> command-line tool.
+ * The {@code FBMaintenanceManager} class is responsible for replicating the functionality provided by
+ * the {@code gfix} command-line tool.
  * <p>
  * Among the responsibilities of this class are:
  * <ul>
@@ -60,21 +59,21 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
  * </ul>
  * </p>
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
- * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Gabriel Reid
+ * @author Thomas Steinmaurer
+ * @author Mark Rotteveel
  */
 public class FBMaintenanceManager extends FBServiceManager implements MaintenanceManager {
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on the default GDSType.
+     * Create a new instance of {@code FBMaintenanceManager} based on the default GDSType.
      */
     public FBMaintenanceManager() {
         super();
     }
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on a given GDSType.
+     * Create a new instance of {@code FBMaintenanceManager} based on a given GDSType.
      *
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
@@ -84,7 +83,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
     }
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on a given GDSType.
+     * Create a new instance of {@code FBMaintenanceManager} based on a given GDSType.
      *
      * @param gdsType
      *         The GDS implementation type to use
@@ -363,10 +362,20 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         }
     }
 
+    @Override
+    public void upgradeOds() throws SQLException {
+        executeRepairOperation(isc_spb_rpr_upgrade_db);
+    }
+
+    @Override
+    public void fixIcu() throws SQLException {
+        executeRepairOperation(isc_spb_rpr_icu);
+    }
+
     // ----------- Private implementation methods --------------------
 
     /**
-     * Execute a isc_spb_rpr_* (repair) services operation.
+     * Execute an isc_spb_rpr_* (repair) services operation.
      *
      * @param operation
      *         The identifier for the operation to be executed
@@ -427,8 +436,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
     }
 
     /**
-     * Get a mostly-empty repair-operation request buffer that can be
-     * filled as needed.
+     * Get a mostly-empty repair-operation request buffer that can be filled as needed.
      *
      * @param service
      *         Service handle
@@ -436,6 +444,25 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
      *         The options bitmask for the request buffer
      */
     private ServiceRequestBuffer createRepairSRB(FbService service, int options) {
-        return createRequestBuffer(service, isc_action_svc_repair, options);
+        ServiceRequestBuffer srb = createRequestBuffer(service, isc_action_svc_repair, options);
+        if (getParallelWorkers() > 0 && (options & getParallelRepairOptions(service)) != 0) {
+            srb.addArgument(isc_spb_rpr_par_workers, getParallelWorkers());
+        }
+        return srb;
     }
+
+    /**
+     * Bitmask of repair options which support parallel workers.
+     *
+     * @param service service attachment, to determine supported options
+     * @return bitmask of repair options
+     */
+    private int getParallelRepairOptions(FbService service) {
+        if (service.getServerVersion().isEqualOrAbove(5, 0)) {
+            return isc_spb_rpr_sweep_db | isc_spb_rpr_icu;
+        } else {
+            return 0;
+        }
+    }
+    
 }

@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Tests for savepoint handling.
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
 class FBSavepointTest {
 

@@ -24,10 +24,15 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
 
+import java.io.Serial;
+
 /**
  * Implementation for DatabaseParameterBuffer.
  */
 public final class DatabaseParameterBufferImp extends ParameterBufferBase implements DatabaseParameterBuffer {
+
+    @Serial
+    private static final long serialVersionUID = -4407431322168409761L;
 
     public DatabaseParameterBufferImp(DpbMetaData dpbMetaData, Encoding defaultEncoding) {
         super(dpbMetaData, defaultEncoding);
@@ -35,10 +40,10 @@ public final class DatabaseParameterBufferImp extends ParameterBufferBase implem
 
     @Override
     public DatabaseParameterBuffer deepCopy() {
-        final DatabaseParameterBufferImp copy =
+        final var copy =
                 new DatabaseParameterBufferImp((DpbMetaData) getParameterBufferMetaData(), getDefaultEncoding());
 
-        // All the Argument sub classes are immutable so to make a 'deep' copy this is all we have to do.
+        // All the Argument subclasses are immutable so to make a 'deep' copy this is all we have to do.
         copy.getArgumentsList().addAll(this.getArgumentsList());
 
         return copy;

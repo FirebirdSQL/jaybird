@@ -27,7 +27,7 @@ import java.math.BigInteger;
 /**
  * Encodes and decodes decimal values.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 final class DecimalCodec<T extends Decimal<T>> {
 

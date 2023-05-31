@@ -29,7 +29,7 @@ import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import java.util.Locale;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public enum WireCrypt {
     REQUIRED(WireProtocolConstants.WIRE_CRYPT_REQUIRED),

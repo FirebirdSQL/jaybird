@@ -27,7 +27,7 @@ import java.sql.Connection;
 /**
  * Property constants.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @InternalApi
@@ -45,13 +45,13 @@ public final class PropertyConstants {
 
     public static final int DEFAULT_DIALECT = ISCConstants.SQL_DIALECT_V6;
 
-    static final boolean DEFAULT_STREAM_BLOBS = true;
+    public static final boolean DEFAULT_STREAM_BLOBS = true;
     static final boolean DEFAULT_RESULT_SET_HOLDABLE = false;
     static final boolean DEFAULT_COLUMN_LABEL_FOR_NAME = false;
     static final boolean DEFAULT_USE_FIREBIRD_AUTO_COMMIT = false;
     static final boolean DEFAULT_IGNORE_PROCEDURE_TYPE = false;
     static final boolean DEFAULT_WIRE_COMPRESSION = false;
-    static final int DEFAULT_BLOB_BUFFER_SIZE = 16384;
+    public static final int DEFAULT_BLOB_BUFFER_SIZE = 16384;
     public static final int DEFAULT_PAGE_CACHE_SIZE = 0;
     static final boolean DEFAULT_USE_SERVER_BATCH = true;
     public static final int DEFAULT_SERVER_BATCH_BUFFER_SIZE = 0;
@@ -66,6 +66,7 @@ public final class PropertyConstants {
 
     public static final int TIMEOUT_NOT_SET = -1;
     public static final int BUFFER_SIZE_NOT_SET = -1;
+    static final int PARALLEL_WORKERS_NOT_SET = -1;
 
     public static final String SESSION_TIME_ZONE_SERVER = "server";
 

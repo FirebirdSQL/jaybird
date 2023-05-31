@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -31,12 +31,13 @@ import java.util.TreeMap;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
+import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
 
 /**
  * Implements the display/add/delete/modify user functionality of the Firebird Services API.
  *
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Steven Jardine
+ * @author Mark Rotteveel
  */
 public class FBUserManager extends FBServiceManager implements UserManager {
 
@@ -44,43 +45,42 @@ public class FBUserManager extends FBServiceManager implements UserManager {
     private String securityDatabase = null;
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on
-     * the default GDSType.
+     * Create a new instance of {@code FBMaintenanceManager} based on the default GDSType.
      */
+    @SuppressWarnings("unused")
     public FBUserManager() {
         super();
     }
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on
+     * Create a new instance of {@code FBMaintenanceManager} based on
      * a given GDSType.
      *
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
+    @SuppressWarnings("unused")
     public FBUserManager(String gdsType) {
         super(gdsType);
     }
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on
+     * Create a new instance of {@code FBMaintenanceManager} based on
      * a given GDSType.
      *
      * @param gdsType
-     *         The GDS implementation type to use
+     *         the GDS implementation type to use
      */
     public FBUserManager(GDSType gdsType) {
         super(gdsType);
     }
 
     /**
-     * Parses the displayBuffer and creates a map of users.
+     * Parses the display buffer and creates a map of users.
      *
-     * @return a map of users parsed from the displayBuffer.
-     * @throws SQLException
-     * @throws IOException
+     * @return a map of users parsed from the display buffer.
      */
-    private Map<String, User> getFBUsers() throws SQLException, IOException {
+    private Map<String, User> getFBUsers() {
         User user = null;
         Map<String, User> users = new TreeMap<>();
         byte[] displayBuffer = ((ByteArrayOutputStream) getLogger()).toByteArray();
@@ -130,9 +130,11 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      * Generate the service request buffer for the specified action.
      *
      * @param service
-     *         Service handle
+     *         service handle
      * @param action
+     *         action to execute
      * @param user
+     *         user
      * @return the service request buffer for the specified action.
      */
     private ServiceRequestBuffer getUserSRB(FbService service, int action, User user) {
@@ -164,11 +166,11 @@ public class FBUserManager extends FBServiceManager implements UserManager {
     }
 
     /**
-     * Returns an integer from ther service request buffer. Integers are 4 bytes
-     * in length.
+     * Returns an integer from the service request buffer. Integers are 4 bytes in length.
      *
      * @param displayBuffer
-     * @return an integer from ther service request buffer.
+     *         display buffer
+     * @return an integer from the service request buffer.
      */
     private int getSRBInteger(byte[] displayBuffer) {
         count += 1;
@@ -178,10 +180,11 @@ public class FBUserManager extends FBServiceManager implements UserManager {
     }
 
     /**
-     * Returns a string from ther service request buffer.
+     * Returns a string from the service request buffer.
      *
      * @param displayBuffer
-     * @return an string from ther service request buffer.
+     *         display buffer
+     * @return a string from the service request buffer.
      */
     private String getSRBString(byte[] displayBuffer) {
         count += 1;
@@ -210,11 +213,11 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      * Perform the specified action.
      *
      * @param action
+     *         action to execute
      * @param user
-     * @throws SQLException
-     * @throws IOException
+     *         user
      */
-    private void userAction(int action, User user) throws SQLException, IOException {
+    private void userAction(int action, User user) throws SQLException {
         try (FbService service = attachServiceManager()) {
             ServiceRequestBuffer srb = getUserSRB(service, action, user);
             setSecurityDatabaseArgument(srb);
@@ -246,6 +249,7 @@ public class FBUserManager extends FBServiceManager implements UserManager {
         userAction(isc_action_svc_modify_user, user);
     }
 
+    @SuppressWarnings("RedundantThrows")
     public Map<String, User> getUsers() throws SQLException, IOException {
         OutputStream savedStream = getLogger();
         setLogger(new ByteArrayOutputStream());
@@ -265,10 +269,9 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      * Services API execution for setting and dropping the auto admin role mapping
      *
      * @param action
-     * @throws SQLException
-     * @throws IOException
+     *         action to execute
      */
-    private void adminRoleAction(int action) throws SQLException, IOException {
+    private void adminRoleAction(int action) throws SQLException {
         try (FbService service = attachServiceManager()) {
             ServiceRequestBuffer srb = service.createServiceRequestBuffer();
             srb.addArgument(action);
@@ -277,10 +280,12 @@ public class FBUserManager extends FBServiceManager implements UserManager {
         }
     }
 
+    @SuppressWarnings("RedundantThrows")
     public void setAdminRoleMapping() throws SQLException, IOException {
         adminRoleAction(isc_action_svc_set_mapping);
     }
 
+    @SuppressWarnings("RedundantThrows")
     public void dropAdminRoleMapping() throws SQLException, IOException {
         adminRoleAction(isc_action_svc_drop_mapping);
     }

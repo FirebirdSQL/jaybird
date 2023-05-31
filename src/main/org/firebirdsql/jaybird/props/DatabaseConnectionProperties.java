@@ -29,7 +29,7 @@ import org.firebirdsql.jdbc.FirebirdCallableStatement;
 /**
  * Properties for database connections.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface DatabaseConnectionProperties extends AttachmentProperties {
@@ -52,13 +52,13 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * but without the {@code jdbc:firebird[sql]:[subprotocol:]} prefix and without connection properties. Examples:
      * </p>
      * <ul>
-     * <li>//localhost/employee &mdash; PURE_JAVA, OOREMOTE, NATIVE (for NATIVE, this format is parsed and
+     * <li>//localhost/employee &mdash; PURE_JAVA, NATIVE (for NATIVE, this format is parsed and
      * transformed to the next example)</li>
-     * <li>localhost:employee &mdash; NATIVE, PURE_JAVA, OOREMOTE</li>
-     * <li>//localhost:3051/employee &mdash; PURE_JAVA, OOREMOTE, NATIVE (for NATIVE, this format is parsed and
+     * <li>localhost:employee &mdash; NATIVE, PURE_JAVA</li>
+     * <li>//localhost:3051/employee &mdash; PURE_JAVA, NATIVE (for NATIVE, this format is parsed and
      * transformed to the next example)</li>
-     * <li>localhost/3051:employee &mdash; NATIVE, PURE_JAVA, OOREMOTE</li>
-     * <li>/path/to/your.fdb &mdash; NATIVE, EMBEDDED, PURE_JAVA, OOREMOTE (PURE_JAVA and OOREMOTE will use localhost
+     * <li>localhost/3051:employee &mdash; NATIVE, PURE_JAVA</li>
+     * <li>/path/to/your.fdb &mdash; NATIVE, EMBEDDED, PURE_JAVA (PURE_JAVA will use localhost
      * as {@code serverName}, depending on the Firebird version and platform, NATIVE may use Firebird Embedded)</li>
      * <li>C:\path\to\your.fdb &mdash; NATIVE, EMBEDDED (protocols like PURE_JAVA may attempt to connect to a server
      * called {@code C}, depending on the Firebird version and platform, NATIVE may use Firebird Embedded)</li>
@@ -86,7 +86,8 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * <li>relative/path/to/your.fdb &mdash; not recommended</li>
      * </ul>
      *
-     * @param databaseName database name
+     * @param databaseName
+     *         database name
      */
     default void setDatabaseName(String databaseName) {
         setProperty(PropertyNames.databaseName, databaseName);
@@ -386,7 +387,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     /**
      * Get the used TPB mapping.
      *
-     * @return path to the TPB mapping
+     * @return resource bundle name of the TPB mapping
      * @see #setTpbMapping(String)
      */
     default String getTpbMapping() {
@@ -394,17 +395,22 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     }
 
     /**
-     * Set path to the properties file with the TPB mapping. The path begins with the protocol specification followed
-     * by the path to the resource. A special protocol {@code "res:"} should be used to specify resource in the
-     * classpath.
-     * <p/>
-     * For compatibility reasons, if no protocol is specified, classpath is used by default.
-     * <p/>
-     * Properties file contains a mapping between the transaction isolation level (name of the constant in the
-     * {@link java.sql.Connection} interface and a comma-separated list of TPB parameters.
+     * Sets a <em>resource bundle</em> name with the TPB mapping.
+     * <p>
+     * For compatibility reasons, the prefix {@code "res:"} is allowed, but this works exactly the same as without a
+     * prefix. We strongly recommend not to use the {@code "res:"} prefix, future versions of Jaybird (Jaybird 7 or
+     * later) may stop supporting this.
+     * </p>
+     * <p>
+     * The resource bundle should contain a mapping between the transaction isolation level (name of the constant in
+     * the {@link java.sql.Connection} interface and a comma-separated list of TPB parameters).
+     * </p>
+     * <p>
+     *
+     * </p>
      *
      * @param tpbMapping
-     *         path to the properties file
+     *         name of the resource bundle
      * @throws IllegalStateException
      *         May be thrown when the mapping has already been initialized (not all implementations do this)
      */
@@ -538,8 +544,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * </p>
      *
      * @param useServerBatch
-     *         {@code true}, use server-side batch support if possible, {@code false} always use emulated
-     *         batch
+     *         {@code true}, use server-side batch support if possible, {@code false} always use emulated batch
      */
     default void setUseServerBatch(boolean useServerBatch) {
         setBooleanProperty(PropertyNames.useServerBatch, useServerBatch);
@@ -564,7 +569,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      *         will set server-side maximum
      */
     default void setServerBatchBufferSize(int serverBatchBufferSize) {
-        setIntProperty(PropertyNames.serverBatchBufferSize, PropertyConstants.DEFAULT_SERVER_BATCH_BUFFER_SIZE);
+        setIntProperty(PropertyNames.serverBatchBufferSize, serverBatchBufferSize);
     }
 
 }

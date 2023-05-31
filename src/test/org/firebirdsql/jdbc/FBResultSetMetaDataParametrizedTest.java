@@ -52,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * This test is similar to {@link org.firebirdsql.jdbc.FBPreparedStatementMetaDataTest}.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class FBResultSetMetaDataParametrizedTest {

@@ -24,8 +24,6 @@
  */
 package org.firebirdsql.gds;
 
-import org.firebirdsql.jaybird.fb.constants.SpbItems;
-
 /**
  * Instance of this interface represents a Service Parameter Buffer from the
  * Firebird API documentation and specifies the attributes for the Services API
@@ -33,39 +31,4 @@ import org.firebirdsql.jaybird.fb.constants.SpbItems;
  */
 public interface ServiceParameterBuffer extends ConnectionParameterBuffer {
 
-    //@formatter:off
-    @Deprecated
-    int VERSION                 = ISCConstants.isc_spb_version;
-    @Deprecated
-    int VERSION1                = ISCConstants.isc_spb_version1;
-    @Deprecated
-    int CURRENT_VERSION         = ISCConstants.isc_spb_current_version;
-
-    @Deprecated
-    int USER_NAME               = SpbItems.isc_spb_user_name;
-    @Deprecated
-    int SYS_USER_NAME           = SpbItems.isc_spb_sys_user_name;
-    @Deprecated
-    int SYS_USER_NAME_ENC       = SpbItems.isc_spb_sys_user_name_enc;
-    @Deprecated
-    int PASSWORD                = SpbItems.isc_spb_password;
-    @Deprecated
-    int PASSWORD_ENC            = SpbItems.isc_spb_password_enc;
-
-    @Deprecated
-    int COMMAND_LINE            = SpbItems.isc_spb_command_line;
-    @Deprecated
-    int DBNAME                  = SpbItems.isc_spb_dbname;
-    @Deprecated
-    int VERBOSE                 = SpbItems.isc_spb_verbose;
-    @Deprecated
-    int OPTIONS                 = SpbItems.isc_spb_options;
-
-    @Deprecated
-    int CONNECT_TIMEOUT         = SpbItems.isc_spb_connect_timeout;
-    @Deprecated
-    int DUMMY_PACKET_INTERVAL   = SpbItems.isc_spb_dummy_packet_interval;
-    @Deprecated
-    int SQL_ROLE_NAME           = SpbItems.isc_spb_sql_role_name;
-    //@formatter:on
 }

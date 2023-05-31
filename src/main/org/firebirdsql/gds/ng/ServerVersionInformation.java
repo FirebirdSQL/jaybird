@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -31,7 +29,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * Currently only contains information items for statement info requests.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 enum ServerVersionInformation {
@@ -69,7 +67,7 @@ enum ServerVersionInformation {
     private final int majorVersion;
     private final int minorVersion;
 
-    private ServerVersionInformation(int majorVersion, int minorVersion) {
+    ServerVersionInformation(int majorVersion, int minorVersion) {
         this.majorVersion = majorVersion;
         this.minorVersion = minorVersion;
     }

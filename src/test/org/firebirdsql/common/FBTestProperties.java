@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.common;
 
+import org.firebirdsql.event.FBEventManager;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
@@ -26,6 +27,9 @@ import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
+import org.firebirdsql.jaybird.props.AttachmentProperties;
+import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
+import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
@@ -38,6 +42,9 @@ import java.io.File;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
+
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
+import static org.firebirdsql.util.StringUtils.trimToNull;
 
 /**
  * Helper class for test properties (database user, password, paths etc)
@@ -80,20 +87,21 @@ public final class FBTestProperties {
     public static final int DB_SERVER_PORT = Integer.parseInt(getProperty("test.db.port", "3050"));
     public static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
     public static final boolean DB_ON_DOCKER = Boolean.parseBoolean(getProperty("test.db_on_docker", "false"));
-    public static final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
     public static final String GDS_TYPE = getProperty("test.gds_type", "PURE_JAVA");
     public static final boolean USE_FIREBIRD_AUTOCOMMIT =
             Boolean.parseBoolean(getProperty("test.use_firebird_autocommit", "false"));
+    public static final String ENABLE_PROTOCOL = trimToNull(getProperty("test.enableProtocol", "*"));
 
     public static String getDatabasePath() {
         return getDatabasePath(DB_NAME);
     }
 
     public static String getDatabasePath(String name) {
-        if (!("127.0.0.1".equals(DB_SERVER_URL) || "localhost".equals(DB_SERVER_URL)) || DB_ON_DOCKER)
+        if (!isEmbeddedType().matches(GDS_TYPE) &&
+            (!("127.0.0.1".equals(DB_SERVER_URL) || "localhost".equals(DB_SERVER_URL)) || DB_ON_DOCKER)) {
             return DB_PATH + "/" + name;
-        else
-            return new File(DB_PATH, name).getAbsolutePath();
+        }
+        return new File(DB_PATH, name).getAbsolutePath();
     }
 
     /**
@@ -124,27 +132,43 @@ public final class FBTestProperties {
         if (USE_FIREBIRD_AUTOCOMMIT) {
             returnValue.setProperty("useFirebirdAutocommit", "true");
         }
+        if (ENABLE_PROTOCOL != null) {
+            returnValue.setProperty("enableProtocol", ENABLE_PROTOCOL);
+        }
 
         return returnValue;
     }
 
     public static FbConnectionProperties getDefaultFbConnectionProperties() {
-        FbConnectionProperties connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding(DB_LC_CTYPE);
-        return connectionInfo;
+        return configureDefaultDbProperties(new FbConnectionProperties());
     }
 
     public static FbServiceProperties getDefaultServiceProperties() {
-        FbServiceProperties connectionInfo = new FbServiceProperties();
-        connectionInfo.setServerName(DB_SERVER_URL);
-        connectionInfo.setPortNumber(DB_SERVER_PORT);
+        return configureDefaultServiceProperties(new FbServiceProperties());
+    }
+
+    public static <T extends DatabaseConnectionProperties> T configureDefaultDbProperties(T connectionInfo) {
+        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
+        return configureDefaultAttachmentProperties(connectionInfo);
+    }
+
+    public static <T extends ServiceConnectionProperties> T configureDefaultServiceProperties(T connectionInfo) {
+        return configureDefaultAttachmentProperties(connectionInfo);
+    }
+
+    public static <T extends AttachmentProperties> T configureDefaultAttachmentProperties(T connectionInfo) {
+        if (getGdsType() != GDSType.getType("EMBEDDED")) {
+            connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
+            connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
+        }
+        // FBServiceManager and FBEventManager don't allow setting type after construction
+        if (!(connectionInfo instanceof FBServiceManager || connectionInfo instanceof FBEventManager)) {
+            connectionInfo.setType(GDS_TYPE);
+        }
         connectionInfo.setUser(DB_USER);
         connectionInfo.setPassword(DB_PASSWORD);
+        connectionInfo.setEncoding(DB_LC_CTYPE);
+        connectionInfo.setEnableProtocol(ENABLE_PROTOCOL);
         return connectionInfo;
     }
 
@@ -168,10 +192,7 @@ public final class FBTestProperties {
      * @param serviceManager Service manager to configure
      */
     public static <T extends ServiceManager> T configureServiceManager(T serviceManager) {
-        serviceManager.setServerName(DB_SERVER_URL);
-        serviceManager.setPortNumber(DB_SERVER_PORT);
-        serviceManager.setUser(DB_USER);
-        serviceManager.setPassword(DB_PASSWORD);
+        configureDefaultAttachmentProperties(serviceManager);
         return serviceManager;
     }
 
@@ -194,17 +215,9 @@ public final class FBTestProperties {
     public static FirebirdSupportInfo getDefaultSupportInfo() {
         try {
             if (firebirdSupportInfo == null) {
-                final GDSType gdsType = getGdsType();
-                final FBServiceManager fbServiceManager = new FBServiceManager(gdsType);
-                if (gdsType == GDSType.getType("PURE_JAVA")
-                        || gdsType == GDSType.getType("NATIVE")
-                        || gdsType == GDSType.getType("OOREMOTE")
-                        || gdsType == GDSType.getType("FBOONATIVE")) {
-                    fbServiceManager.setServerName(DB_SERVER_URL);
-                    fbServiceManager.setPortNumber(DB_SERVER_PORT);
-                }
-                fbServiceManager.setUser(FBTestProperties.DB_USER);
-                fbServiceManager.setPassword(FBTestProperties.DB_PASSWORD);
+                GDSType gdsType = getGdsType();
+                FBServiceManager fbServiceManager = configureDefaultServiceProperties(new FBServiceManager(gdsType));
+                fbServiceManager.setEnableProtocol("*");
                 firebirdSupportInfo = FirebirdSupportInfo.supportInfoFor(fbServiceManager.getServerVersion());
             }
             return firebirdSupportInfo;
@@ -213,26 +226,15 @@ public final class FBTestProperties {
         }
     }
 
-    private static final Map<GDSType, String> gdsTypeToUrlPrefixMap = new HashMap<>();
-    static {
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"), "jdbc:firebirdsql:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"), "jdbc:firebirdsql:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("FBOOEMBEDDED"), "jdbc:firebirdsql:fboo:embedded:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("FBOONATIVE"), "jdbc:firebirdsql:fboo:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("OOREMOTE"), "jdbc:firebirdsql:oo:");
-
-        // TODO Replace with an external definition/way to add additional types for third party plugins?
-        // Not part of Jaybird:
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"), "jdbc:firebirdsql:oracle:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"), "jdbc:firebirdsql:nio:");
+    private static String getProtocolPrefix() {
+        return GDSFactory.getPlugin(getGdsType()).getDefaultProtocol();
     }
 
     /**
      * @return JDBC URL (without parameters) for this testrun
      */
     public static String getUrl() {
-        return gdsTypeToUrlPrefixMap.get(getGdsType()) + getdbpath(DB_NAME);
+        return getProtocolPrefix() + getdbpath(DB_NAME);
     }
 
     /**
@@ -240,17 +242,16 @@ public final class FBTestProperties {
      * @return JDBC URL (without parameters) for this testrun
      */
     public static String getUrl(String dbPath) {
-        if ("EMBEDDED".equalsIgnoreCase(GDS_TYPE) || "FBOOEMBEDDED".equalsIgnoreCase(GDS_TYPE)) {
-            return gdsTypeToUrlPrefixMap.get(getGdsType()) + dbPath;
+        if (isEmbeddedType().matches(GDS_TYPE)) {
+            return getProtocolPrefix() + dbPath;
         } else {
-            return gdsTypeToUrlPrefixMap.get(getGdsType()) + DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + dbPath;
+            return getProtocolPrefix() + DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + dbPath;
         }
     }
 
     // FACTORY METHODS
     //
-    // These methods should be used where possible so as to create the objects
-    // bound to the appropriate GDS implementation.
+    // These methods should be used where possible, to create the objects bound to the appropriate GDS implementation.
 
     public static FbDatabaseFactory getFbDatabaseFactory() {
         return GDSFactory.getDatabaseFactoryForType(getGdsType());
@@ -265,22 +266,33 @@ public final class FBTestProperties {
     }
 
     public static FBManagedConnectionFactory createDefaultMcf(boolean shared) {
-        FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(shared);
-        mcf.setDatabaseName(DB_DATASOURCE_URL);
-        mcf.setUser(DB_USER);
-        mcf.setPassword(DB_PASSWORD);
-        mcf.setEncoding(DB_LC_CTYPE);
-
-        return mcf;
+        return configureDefaultDbProperties(createFBManagedConnectionFactory(shared));
     }
 
     public static FBManager createFBManager() {
-        return new FBManager(getGdsType());
+        FBManager fbManager = new FBManager(getGdsType());
+        fbManager.setEnableProtocol(ENABLE_PROTOCOL);
+        return fbManager;
     }
 
     public static FirebirdConnection getConnectionViaDriverManager() throws SQLException {
         return (FirebirdConnection) DriverManager.getConnection(getUrl(),
                 getDefaultPropertiesForConnection());
+    }
+
+    public static void configureFBManager(FBManager fbManager) throws Exception {
+        final GDSType gdsType = getGdsType();
+        if (gdsType == GDSType.getType("PURE_JAVA")
+                || gdsType == GDSType.getType("NATIVE")
+                || gdsType == GDSType.getType("FBOONATIVE")) {
+            fbManager.setServer(DB_SERVER_URL);
+            fbManager.setPort(DB_SERVER_PORT);
+        }
+        fbManager.setEnableProtocol(ENABLE_PROTOCOL);
+        fbManager.start();
+        fbManager.setForceCreate(true);
+        // disable force write for minor increase in test throughput
+        fbManager.setForceWrite(false);
     }
 
     /**
@@ -290,18 +302,7 @@ public final class FBTestProperties {
      *         instance used for creation of the database
      */
     public static void defaultDatabaseSetUp(FBManager fbManager) throws Exception {
-        final GDSType gdsType = getGdsType();
-        if (gdsType == GDSType.getType("PURE_JAVA")
-                || gdsType == GDSType.getType("NATIVE")
-                || gdsType == GDSType.getType("OOREMOTE")
-                || gdsType == GDSType.getType("FBOONATIVE")) {
-            fbManager.setServer(DB_SERVER_URL);
-            fbManager.setPort(DB_SERVER_PORT);
-        }
-        fbManager.start();
-        fbManager.setForceCreate(true);
-        // disable force write for minor increase in test throughput
-        fbManager.setForceWrite(false);
+        configureFBManager(fbManager);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
     }
 

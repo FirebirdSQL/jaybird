@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
-* @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+* @author Mark Rotteveel
 */
 public class SimpleEventHandler implements EventHandler {
 

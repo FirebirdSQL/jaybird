@@ -4,6 +4,7 @@ gen/
 build_*.bat
 .idea/
 build-local.properties
+local-test-logging.properties
 classes/
 *.iml
 *.eml

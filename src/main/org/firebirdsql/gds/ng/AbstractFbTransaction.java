@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
@@ -34,7 +35,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbTransaction implements FbTransaction {
@@ -51,7 +52,7 @@ public abstract class AbstractFbTransaction implements FbTransaction {
      *
      * @param initialState
      *         Initial transaction state (allowed values are {@link org.firebirdsql.gds.ng.TransactionState#ACTIVE}
-     *         and {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}.
+     *         and {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}).
      * @param database
      *         FbDatabase that created this handle.
      */
@@ -85,9 +86,9 @@ public abstract class AbstractFbTransaction implements FbTransaction {
                 state = newState;
                 transactionListenerDispatcher.transactionStateChanged(this, newState, currentState);
             } else {
-                // TODO Include sqlstate or use ISCConstants.isc_tra_state instead
-                throw new SQLException(String.format("Unable to change transaction state: state %s is not valid after %s",
-                        newState, currentState));
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidTransactionStateTransition)
+                        .messageParameter(newState, currentState)
+                        .toSQLException();
             }
         }
     }
@@ -134,8 +135,10 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         // TODO As separate class?
         return getTransactionInfo(new byte[] { ISCConstants.isc_info_tra_id }, 16, infoResponse -> {
             if (infoResponse[0] != ISCConstants.isc_info_tra_id) {
-                // TODO Message, SQL state, error code?
-                throw new SQLException("Unexpected response buffer");
+                throw new FbExceptionBuilder().exception(JaybirdErrorCodes.jb_unexpectedInfoResponse)
+                        .messageParameter(
+                                "transaction", "isc_info_tra_id", ISCConstants.isc_info_tra_id, infoResponse[0])
+                        .toSQLException();
             }
             int length = iscVaxInteger2(infoResponse, 1);
             return iscVaxLong(infoResponse, 3, length);
@@ -149,21 +152,19 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         return database.withLock();
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            try {
-                if (getState() == TransactionState.ACTIVE)
-                    rollback();
-            } catch (Throwable t) {
-                // ignore TODO: Log?
-            }
-        } finally {
-            super.finalize();
-        }
-    }
-
     protected FbDatabase getDatabase() {
         return database;
+    }
+
+    protected final void logUnexpectedState(TransactionState expectedState, System.Logger log) {
+        final TransactionState transactionState = getState();
+        if (transactionState != expectedState && log.isLoggable(System.Logger.Level.WARNING)) {
+            String message = "Expected state: " + expectedState + ", but state was: " + transactionState;
+            log.log(System.Logger.Level.WARNING, message + "; see debug level for stacktrace");
+            if (log.isLoggable(System.Logger.Level.DEBUG)) {
+                log.log(System.Logger.Level.DEBUG, message,
+                        new RuntimeException("State " + expectedState + " unexpectedly not reached"));
+            }
+        }
     }
 }

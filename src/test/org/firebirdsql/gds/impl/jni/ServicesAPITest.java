@@ -29,8 +29,6 @@ import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.jdbc.FBDriver;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.management.FBManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +54,7 @@ class ServicesAPITest {
     @TempDir
     private Path tempDir;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final System.Logger log = System.getLogger(getClass().getName());
 
     private String mAbsoluteDatabasePath;
     private String mAbsoluteBackupPath;
@@ -138,7 +136,7 @@ class ServicesAPITest {
 
         assertTrue(new File(mAbsoluteDatabasePath).exists(), "Database file doesn't exist after restore !");
         if (!new File(mAbsoluteBackupPath).delete()) {
-            this.log.debug("Unable to delete file " + mAbsoluteBackupPath);
+            log.log(System.Logger.Level.DEBUG, "Unable to delete file {0}", mAbsoluteBackupPath);
         }
     }
 
@@ -163,7 +161,7 @@ class ServicesAPITest {
 
     private void backupDatabase(FbService service) throws Exception {
         if (!new File(mAbsoluteBackupPath).delete()) {
-            log.debug("Unable to delete file " + mAbsoluteBackupPath);
+            log.log(System.Logger.Level.DEBUG, "Unable to delete file {0}", mAbsoluteBackupPath);
         }
 
         startBackup(service);
@@ -185,7 +183,7 @@ class ServicesAPITest {
                 final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer);
 
                 // TODO Find out why unused
-                final byte firstByte = (byte) byteArrayInputStream.read();
+                byteArrayInputStream.read();
 
                 int numberOfBytes = (short) ((byteArrayInputStream.read()) + (byteArrayInputStream.read() << 8));
 

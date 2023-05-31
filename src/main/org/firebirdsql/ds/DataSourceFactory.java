@@ -20,7 +20,6 @@ package org.firebirdsql.ds;
 
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBConnectionProperties;
-import org.firebirdsql.logging.LoggerFactory;
 
 import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
@@ -30,7 +29,7 @@ import java.util.Hashtable;
 /**
  * ObjectFactory for the DataSources in org.firebirdsql.ds.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 public class DataSourceFactory implements ObjectFactory {
@@ -40,28 +39,23 @@ public class DataSourceFactory implements ObjectFactory {
     public Object getObjectInstance(Object obj, Name name, Context nameCtx,Hashtable<?, ?> environment)
             throws Exception {
         Reference ref = (Reference) obj;
-        String className = ref.getClassName();
-        switch (className) {
-        case "org.firebirdsql.ds.FBConnectionPoolDataSource":
-            return loadConnectionPoolDS(ref);
-        case "org.firebirdsql.ds.FBXADataSource":
-            return loadXADS(ref);
-        case "org.firebirdsql.ds.FBSimpleDataSource":
-            return loadSimpleDS(ref);
-        default:
-            return null;
-        }
+        return switch (ref.getClassName()) {
+            case "org.firebirdsql.ds.FBConnectionPoolDataSource" -> loadConnectionPoolDS(ref);
+            case "org.firebirdsql.ds.FBXADataSource" -> loadXADS(ref);
+            case "org.firebirdsql.ds.FBSimpleDataSource" -> loadSimpleDS(ref);
+            default -> null;
+        };
     }
 
     private Object loadConnectionPoolDS(Reference ref) {
-        FBConnectionPoolDataSource ds = new FBConnectionPoolDataSource();
+        var ds = new FBConnectionPoolDataSource();
         loadAbstractCommonDataSource(ds, ref);
 
         return ds;
     }
 
     private Object loadXADS(Reference ref) {
-        FBXADataSource ds = new FBXADataSource();
+        var ds = new FBXADataSource();
         loadAbstractCommonDataSource(ds, ref);
 
         return ds;
@@ -77,7 +71,7 @@ public class DataSourceFactory implements ObjectFactory {
         if (mcf == null) {
             mcf = new FBManagedConnectionFactory(false);
         }
-        FBSimpleDataSource ds = new FBSimpleDataSource(mcf);
+        var ds = new FBSimpleDataSource(mcf);
         ds.setDescription(getRefAddr(ref, FBSimpleDataSource.REF_DESCRIPTION));
         return ds;
     }
@@ -112,26 +106,25 @@ public class DataSourceFactory implements ObjectFactory {
 
     protected static byte[] serialize(Object obj) throws NamingException {
         try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            ObjectOutputStream out = new ObjectOutputStream(bout);
+            var bout = new ByteArrayOutputStream();
+            var out = new ObjectOutputStream(bout);
             out.writeObject(obj);
             out.flush();
             return bout.toByteArray();
         } catch (IOException e) {
-            NamingException namingException = new NamingException("Could not serialize object");
+            var namingException = new NamingException("Could not serialize object");
             namingException.initCause(e);
             throw namingException;
         }
     }
 
     protected static Object deserialize(byte[] data) {
-        ByteArrayInputStream bin = new ByteArrayInputStream(data);
-
         try {
-            ObjectInputStream in = new ObjectInputStream(bin);
+            var in = new ObjectInputStream(new ByteArrayInputStream(data));
             return in.readObject();
         } catch (IOException | ClassNotFoundException ex) {
-            LoggerFactory.getLogger(DataSourceFactory.class).warn("Could not deserialize object, returning null", ex);
+            System.getLogger(DataSourceFactory.class.getName())
+                    .log(System.Logger.Level.WARNING, "Could not deserialize object, returning null", ex);
             return null;
         }
     }

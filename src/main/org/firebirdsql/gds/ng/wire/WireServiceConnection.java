@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -28,7 +28,7 @@ import java.sql.SQLException;
 /**
  * Wire connection instance for connecting to a service.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class WireServiceConnection extends WireConnection<IServiceProperties, FbWireService> {
@@ -60,6 +60,15 @@ public class WireServiceConnection extends WireConnection<IServiceProperties, Fb
     }
 
     @Override
+    protected String getCnctFile() {
+        String expectedDb = attachProperties.getExpectedDb();
+        if (expectedDb != null) {
+            return expectedDb;
+        }
+        return super.getCnctFile();
+    }
+
+    @Override
     protected DbAttachInfo toDbAttachInfo(IServiceProperties attachProperties) throws SQLException {
         final DbAttachInfo initialDbAttachInfo = DbAttachInfo.of(attachProperties);
 
@@ -67,10 +76,10 @@ public class WireServiceConnection extends WireConnection<IServiceProperties, Fb
         if (initialDbAttachInfo.hasServerName()) {
             dbAttachInfo = initialDbAttachInfo;
         } else if (initialDbAttachInfo.hasAttachObjectName()) {
-            dbAttachInfo = DbAttachInfo.parseConnectString(initialDbAttachInfo.getAttachObjectName());
+            dbAttachInfo = DbAttachInfo.parseConnectString(initialDbAttachInfo.attachObjectName());
         } else {
             // fallback to localhost + service_mgr
-            return new DbAttachInfo(PropertyConstants.DEFAULT_SERVER_NAME, initialDbAttachInfo.getPortNumber(),
+            return new DbAttachInfo(PropertyConstants.DEFAULT_SERVER_NAME, initialDbAttachInfo.portNumber(),
                     PropertyConstants.DEFAULT_SERVICE_NAME);
         }
 

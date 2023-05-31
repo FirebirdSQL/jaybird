@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,8 +18,10 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jdbc.FBConnection;
+
+import java.sql.SQLException;
+import java.sql.SQLNonTransientConnectionException;
 
 /**
  * Base class for {@link GDSFactoryPlugin} implementations.
@@ -27,7 +29,7 @@ import org.firebirdsql.jdbc.FBConnection;
  * Handles commonalities across existing implementations.
  * </p>
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
@@ -39,31 +41,31 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
 
     @Override
     public String getDefaultProtocol() {
-        return getSupportedProtocols()[0];
+        return getSupportedProtocolList().get(0);
     }
 
     @Override
-    public String getDatabasePath(String jdbcUrl) throws GDSException {
-        String[] protocols = getSupportedProtocols();
-        for (String protocol : protocols) {
-            if (jdbcUrl.startsWith(protocol))
+    public String getDatabasePath(String jdbcUrl) throws SQLException {
+        for (String protocol : getSupportedProtocolList()) {
+            if (jdbcUrl.startsWith(protocol)) {
                 return jdbcUrl.substring(protocol.length());
+            }
         }
 
-        throw new IllegalArgumentException("Incorrect JDBC protocol handling: " + jdbcUrl);
+        throw new SQLNonTransientConnectionException("Incorrect JDBC protocol handling: " + jdbcUrl);
     }
 
     @Override
-    public String getDatabasePath(String server, Integer port, String path) throws GDSException {
+    public String getDatabasePath(String server, Integer port, String path) throws SQLException {
         if (path == null) {
-            throw new GDSException("Database name/path is required.");
+            throw new SQLNonTransientConnectionException("Database name/path is required");
         }
 
         if (server == null) {
             return path;
         }
 
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append("//").append(server);
         if (port != null) {
             sb.append(':').append(port.intValue());
@@ -80,6 +82,6 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
 
     @Override
     public final boolean equals(Object obj) {
-        return obj != null && (obj == this || getClass().equals(obj.getClass()));
+        return obj != null && (obj == this || getClass() == obj.getClass());
     }
 }

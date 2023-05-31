@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,24 +20,21 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
-import org.firebirdsql.gds.impl.argument.NumericArgument;
+
+import java.io.Serial;
 
 /**
  * Implementation of ServiceRequestBufferImp.
  */
 public class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequestBuffer {
 
+    @Serial
+    private static final long serialVersionUID = -6651365729319455905L;
+
     public ServiceRequestBufferImp(SrbMetaData srbMetaData, Encoding encoding) {
         super(srbMetaData, encoding);
-    }
-
-    @Override
-    public void addArgument(int argumentType, byte value) {
-        // TODO Handle through metadata behavior
-        getArgumentsList().add(new NumericArgument(argumentType, ArgumentType.ByteSpb, value));
     }
 
     public enum SrbMetaData implements ParameterBufferMetaData {
@@ -56,19 +53,22 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
 
             @Override
             public ArgumentType getIntegerArgumentType(int tag) {
-                switch (tag) {
-                case ISCConstants.isc_spb_rpr_commit_trans_64:
-                case ISCConstants.isc_spb_rpr_rollback_trans_64:
-                case ISCConstants.isc_spb_rpr_recover_two_phase_64:
-                    return ArgumentType.BigIntSpb;
-                default:
-                    return ArgumentType.IntSpb;
-                }
+                return switch (tag) {
+                    case ISCConstants.isc_spb_rpr_commit_trans_64,
+                            ISCConstants.isc_spb_rpr_rollback_trans_64,
+                            ISCConstants.isc_spb_rpr_recover_two_phase_64 -> ArgumentType.BigIntSpb;
+                    default -> ArgumentType.IntSpb;
+                };
             }
 
             @Override
             public ArgumentType getSingleArgumentType(int tag) {
                 return ArgumentType.SingleTpb;
+            }
+
+            @Override
+            public ArgumentType getByteArgumentType(int tag) {
+                return ArgumentType.ByteSpb;
             }
         };
 

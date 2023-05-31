@@ -36,7 +36,7 @@ import static org.firebirdsql.jaybird.fb.constants.BatchItems.TAG_RECORD_COUNTS;
 /**
  * Configuration for a Firebird 4+ batch.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface FbBatchConfig {

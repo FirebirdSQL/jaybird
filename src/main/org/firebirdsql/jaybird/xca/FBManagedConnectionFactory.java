@@ -30,7 +30,6 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.*;
-import org.firebirdsql.logging.LoggerFactory;
 
 import javax.sql.DataSource;
 import javax.transaction.xa.XAException;
@@ -38,6 +37,7 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -57,10 +57,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * xid.
  * </p>
  *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author David Jencks
+ * @author Mark Rotteveel
  */
-public class FBManagedConnectionFactory implements FirebirdConnectionProperties, Serializable {
+public final class FBManagedConnectionFactory implements FirebirdConnectionProperties, Serializable {
 
     // This class uses a serialization proxy, see class at end of file
 
@@ -287,11 +287,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     @Override
     public boolean equals(Object other) {
         if (other == this) return true;
-
-        if (!(other instanceof FBManagedConnectionFactory)) return false;
-
-        FBManagedConnectionFactory that = (FBManagedConnectionFactory) other;
-
+        if (!(other instanceof FBManagedConnectionFactory that)) return false;
         return this.connectionProperties.equals(that.connectionProperties);
     }
 
@@ -374,24 +370,29 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         return new FBManagedConnection(connectionRequestInfo, this);
     }
 
+    @Serial
     private void readObject(ObjectInputStream stream) throws InvalidObjectException {
         throw new InvalidObjectException("Serialization proxy required");
     }
 
-    protected Object writeReplace() {
+    @Serial
+    private Object writeReplace() {
         return new SerializationProxy(this);
     }
 
     /**
-     * The {@code canonicalize} method is used in FBDriver to reuse previous fbmcf instances if they have been create.
+     * The {@code canonicalize} method is used in FBDriver to reuse previous fbmcf instances if they have been created.
      * It should really be package access level
      *
      * @return a {@code FBManagedConnectionFactory} value
      */
     public FBManagedConnectionFactory canonicalize() {
         if (!shared) {
-            LoggerFactory.getLogger(FBManagedConnectionFactory.class)
-                    .debug("canonicalize called on MCF with shared=false", new RuntimeException("trace exception"));
+            var logger = System.getLogger(FBManagedConnectionFactory.class.getName());
+            if (logger.isLoggable(System.Logger.Level.DEBUG)) {
+                logger.log(System.Logger.Level.DEBUG, "canonicalize called on MCF with shared=false",
+                        new RuntimeException("trace exception"));
+            }
         }
         final FBManagedConnectionFactory mcf = internalCanonicalize();
         if (mcf != null) return mcf;
@@ -448,7 +449,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         xidMap.put(xid, mc);
     }
 
-    void notifyEnd(FBManagedConnection mc, Xid xid) throws XAException {
+    void notifyEnd(FBManagedConnection mc, Xid xid) {
         // empty
     }
 
@@ -463,27 +464,29 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     void notifyCommit(FBManagedConnection mc, Xid xid, boolean onePhase) throws XAException {
-        FBManagedConnection targetMc = xidMap.get(xid);
-
-        if (targetMc == null) {
-            tryCompleteInLimboTransaction(xid, true);
-        } else {
-            targetMc.internalCommit(xid, onePhase);
+        try {
+            FBManagedConnection targetMc = xidMap.get(xid);
+            if (targetMc == null) {
+                tryCompleteInLimboTransaction(xid, true);
+            } else {
+                targetMc.internalCommit(xid, onePhase);
+            }
+        } finally {
+            forget(mc, xid);
         }
-
-        xidMap.remove(xid);
     }
 
     void notifyRollback(FBManagedConnection mc, Xid xid) throws XAException {
-        FBManagedConnection targetMc = xidMap.get(xid);
-
-        if (targetMc == null) {
-            tryCompleteInLimboTransaction(xid, false);
-        } else {
-            targetMc.internalRollback(xid);
+        try {
+            FBManagedConnection targetMc = xidMap.get(xid);
+            if (targetMc == null) {
+                tryCompleteInLimboTransaction(xid, false);
+            } else {
+                targetMc.internalRollback(xid);
+            }
+        } finally {
+            forget(mc, xid);
         }
-
-        xidMap.remove(xid);
     }
 
     public void forget(FBManagedConnection mc, Xid xid) {
@@ -603,23 +606,23 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     FBConnection newConnection(FBManagedConnection mc) throws SQLException {
         Class<?> connectionClass = GDSFactory.getConnectionClass(getGDSType());
+        return connectionClass == FBConnection.class ? new FBConnection(mc) : newConnection(mc, connectionClass);
+    }
 
-        if (!FBConnection.class.isAssignableFrom(connectionClass))
-            throw new IllegalArgumentException("Specified connection class"
-                    + " does not extend " + FBConnection.class.getName()
-                    + " class");
+    private static FBConnection newConnection(FBManagedConnection mc, Class<?> connectionClass) throws SQLException {
+        if (!FBConnection.class.isAssignableFrom(connectionClass)) {
+            throw new IllegalArgumentException(
+                    "Specified connection class does not extend " + FBConnection.class.getName() + " class");
+        }
 
         try {
-            Constructor<?> constructor = connectionClass
-                    .getConstructor(FBManagedConnection.class);
-
-            return (FBConnection) constructor
-                    .newInstance(mc);
+            Constructor<?> constructor = connectionClass.getConstructor(FBManagedConnection.class);
+            return (FBConnection) constructor.newInstance(mc);
         } catch (NoSuchMethodException ex) {
             // TODO More specific exception, Jaybird error code
             throw new SQLException("Cannot instantiate connection class " + connectionClass.getName()
-                    + ", no constructor accepting " + FBManagedConnection.class
-                    + " class as single parameter was found.");
+                                   + ", no constructor accepting " + FBManagedConnection.class
+                                   + " class as single parameter was found.");
         } catch (InvocationTargetException ex) {
             final Throwable cause = ex.getCause();
             if (cause instanceof RuntimeException) {
@@ -645,12 +648,13 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         }
     }
 
-    public final FBConnectionProperties getCacheKey() {
+    public FBConnectionProperties getCacheKey() {
         return (FBConnectionProperties) connectionProperties.clone();
     }
 
     private static class SerializationProxy implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = 1L;
 
         private final boolean shared;
@@ -665,6 +669,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
             this.fbConnectionProperties = connectionFactory.connectionProperties;
         }
 
+        @Serial
         protected Object readResolve() {
             GDSType gdsType = GDSType.getType(type);
             if (gdsType == null) {

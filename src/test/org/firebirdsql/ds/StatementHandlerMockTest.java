@@ -40,7 +40,7 @@ import static org.mockito.Mockito.*;
 /**
  * Tests for {@link StatementHandler} using mocks.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @ExtendWith(MockitoExtension.class)
 class StatementHandlerMockTest {
@@ -67,9 +67,8 @@ class StatementHandlerMockTest {
      * Calling any Statement method (except isClosed() and close()) on a proxy
      * that was closed itself should throw an SQLException mentioning the
      * statement was closed; the owner should not be notified of the exception.
-     *
-     * TODO: Consider testing for all Connection methods
      */
+    // TODO: Consider testing for all Connection methods
     @Test
     void testClosedProxy_throwsException() throws SQLException {
         Statement proxy = handler.getProxy();

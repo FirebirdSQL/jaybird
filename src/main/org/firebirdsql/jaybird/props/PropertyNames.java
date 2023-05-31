@@ -31,7 +31,7 @@ package org.firebirdsql.jaybird.props;
  * (if syntactically valid).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class PropertyNames {
@@ -59,6 +59,8 @@ public final class PropertyNames {
     public static final String dbCryptConfig = "dbCryptConfig";
     public static final String authPlugins = "authPlugins";
     public static final String wireCompression = "wireCompression";
+    public static final String enableProtocol = "enableProtocol";
+    public static final String parallelWorkers = "parallelWorkers";
 
     // database connection
     public static final String sqlDialect = "sqlDialect";
@@ -80,10 +82,13 @@ public final class PropertyNames {
     public static final String useServerBatch = "useServerBatch";
     public static final String serverBatchBufferSize = "serverBatchBufferSize";
 
+    // service connection
+    public static final String expectedDb = "expectedDb";
+
     /**
      * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)
      */
-    @Deprecated
+    @Deprecated(since = "5", forRemoval = true)
     public static final String timestampUsesLocalTimezone = "timestampUsesLocalTimezone";
 
     private PropertyNames() {

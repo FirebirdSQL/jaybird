@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source J2EE Connector - JDBC Driver
  * 
  * Copyright (C) All Rights Reserved.
@@ -43,7 +41,7 @@ package org.firebirdsql.event;
 /**
  * An interface for callbacks in response to Firebird events 
  *
- * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
+ * @author Gabriel Reid
  */
 public interface EventListener {
 
@@ -52,7 +50,7 @@ public interface EventListener {
      *
      * @param event Object with information about the event that has occurred 
      */
-    public void eventOccurred(DatabaseEvent event);
+    void eventOccurred(DatabaseEvent event);
 
 }
 

@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * Batch execution of a statement.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 interface Batch {

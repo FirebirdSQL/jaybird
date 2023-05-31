@@ -21,12 +21,10 @@ package org.firebirdsql.ds;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jaybird.xca.XidImpl;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -52,7 +50,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Test for XADataSource. Behavior of XAResource (FBManagedConnection) is tested in {@code org.firebirdsql.jaybird.xca.FBXAResourceTest}.
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 class FBXADataSourceTest {
@@ -62,25 +60,7 @@ class FBXADataSourceTest {
 
     private final List<XAConnection> connections = new ArrayList<>();
 
-    private FBXADataSource ds;
-
-    @BeforeEach
-    void setUp() {
-        FBXADataSource newDs = new FBXADataSource();
-        newDs.setType(getProperty("test.gds_type", null));
-        if (getGdsType() == GDSType.getType("PURE_JAVA")
-                || getGdsType() == GDSType.getType("NATIVE")
-                || getGdsType() == GDSType.getType("FBOONATIVE")) {
-            newDs.setServerName(DB_SERVER_URL);
-            newDs.setPortNumber(DB_SERVER_PORT);
-        }
-        newDs.setDatabaseName(getDatabasePath());
-        newDs.setUser(DB_USER);
-        newDs.setPassword(DB_PASSWORD);
-        newDs.setEncoding(DB_LC_CTYPE);
-
-        ds = newDs;
-    }
+    private final FBXADataSource ds = configureDefaultDbProperties(new FBXADataSource());
 
     @AfterEach
     void tearDown() {
@@ -280,17 +260,6 @@ class FBXADataSourceTest {
     @Test
     void testSetNonStandardProperty_singleParam() {
         ds.setNonStandardProperty("someProperty=someValue");
-
-        assertEquals("someValue", ds.getProperty("someProperty"));
-    }
-
-    /**
-     * Test if a property stored with {@link FBXADataSource#setNonStandardProperty(String, String)} is retrievable.
-     */
-    @SuppressWarnings("deprecation")
-    @Test
-    void testSetNonStandardProperty_twoParam() {
-        ds.setNonStandardProperty("someProperty", "someValue");
 
         assertEquals("someValue", ds.getProperty("someProperty"));
     }

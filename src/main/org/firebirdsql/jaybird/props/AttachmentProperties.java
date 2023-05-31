@@ -32,7 +32,7 @@ import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_WIRE_COMPR
 /**
  * Attachment properties shared by database and service connections.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface AttachmentProperties extends BaseProperties {
@@ -285,7 +285,7 @@ public interface AttachmentProperties extends BaseProperties {
     }
 
     /**
-     * Get the connect timeout in seconds.
+     * Get the <em>connect timeout</em> in seconds.
      *
      * @return Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout), or {@code -1} if not set
      */
@@ -294,7 +294,7 @@ public interface AttachmentProperties extends BaseProperties {
     }
 
     /**
-     * Set the connect timeout in seconds.
+     * Set the <em>connect timeout</em> in seconds.
      *
      * @param connectTimeout
      *         Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout)
@@ -403,6 +403,66 @@ public interface AttachmentProperties extends BaseProperties {
      */
     default void setWireCompression(boolean wireCompression) {
         setBooleanProperty(PropertyNames.wireCompression, wireCompression);
+    }
+
+    /**
+     * Comma-separated list of additionally enabled protocols.
+     * <p>
+     * By default, pure Java connections of Jaybird only supports the protocol versions of supported Firebird versions.
+     * This property lists the additionally enabled unsupported protocol versions. If Jaybird does not have a listed
+     * protocol, it is silently ignored.
+     * </p>
+     * <p>
+     * This property is ignored for native connections.
+     * </p>
+     *
+     * @return List of unsupported protocol versions to try in addition to the supported protocols. Comma-separated
+     * using only the version number (e.g. {@code "10,11"}). Both the unmasked and masked version are supported (e.g.
+     * {@code 32780} for protocol {@code 12}), but we recommend to use the unmasked version. The value {@code "*"} will
+     * try all available protocols.
+     * @since 6
+     */
+    default String getEnableProtocol() {
+        return getProperty(PropertyNames.enableProtocol);
+    }
+
+    /**
+     * Comma-separated list of additionally enabled protocols.
+     *
+     * @param enableProtocol
+     *         List of unsupported protocol versions to try in addition to the supported protocols.
+     * @see #getEnableProtocol()
+     * @since 6
+     */
+    default void setEnableProtocol(String enableProtocol) {
+        setProperty(PropertyNames.enableProtocol, enableProtocol);
+    }
+
+    /**
+     * @return number of parallel workers, {@code -1} means no value was set (or it was explicitly set to {@code -1})
+     * @since 5.0.2
+     */
+    default int getParallelWorkers() {
+        return getIntProperty(PropertyNames.parallelWorkers, PropertyConstants.PARALLEL_WORKERS_NOT_SET);
+    }
+
+    /**
+     * Sets the number of parallel workers of the connection.
+     * <p>
+     * Requires Firebird 5.0 or higher, and a Firebird server configured with {@code MaxParallelWorkers} higher than
+     * specified by {@code parallelWorkers}.
+     * </p>
+     * <p>
+     * NOTE: For service attachments, this property controls behaviour only for specific operations, and requires
+     * Jaybird to explicitly set the parallel workers for that operation.
+     * </p>
+     *
+     * @param parallelWorkers
+     *         number of parallel workers
+     * @since 5.0.2
+     */
+    default void setParallelWorkers(int parallelWorkers) {
+        setIntProperty(PropertyNames.parallelWorkers, parallelWorkers);
     }
 
 }

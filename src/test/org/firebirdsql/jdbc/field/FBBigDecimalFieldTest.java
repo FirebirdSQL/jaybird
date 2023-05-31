@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for {@link FBBigDecimalField}
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBBigDecimalFieldTest extends BaseJUnit5TestFBField<FBBigDecimalField, BigDecimal> {
     

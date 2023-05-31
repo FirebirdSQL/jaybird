@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,6 +19,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 
 import java.sql.SQLException;
 
@@ -30,25 +29,28 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
 /**
  * Blob information processor for retrieving blob length.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
-public class BlobLengthProcessor implements InfoProcessor<Long> {
+public final class BlobLengthProcessor implements InfoProcessor<Long> {
 
     private static final byte[] BLOB_LENGTH_ITEMS = new byte[] {
             ISCConstants.isc_info_blob_total_length
     };
 
-    private final FbBlob blob;
-
-    public BlobLengthProcessor(FbBlob blob) {
-        this.blob = blob;
-    }
-
     @Override
     public Long process(byte[] infoResponse) throws SQLException {
-        if (infoResponse.length == 0 || infoResponse[0] != ISCConstants.isc_info_blob_total_length)
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_req_sync).toSQLException();
+        if (infoResponse.length == 0) {
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
+                    .messageParameter("blob")
+                    .toSQLException();
+        }
+        if (infoResponse[0] != ISCConstants.isc_info_blob_total_length) {
+            throw new FbExceptionBuilder().exception(JaybirdErrorCodes.jb_unexpectedInfoResponse)
+                    .messageParameter("transaction", "isc_info_blob_total_length",
+                            ISCConstants.isc_info_blob_total_length, infoResponse[0])
+                    .toSQLException();
+        }
 
         int dataLength = iscVaxInteger2(infoResponse, 1);
         return iscVaxLong(infoResponse, 3, dataLength);

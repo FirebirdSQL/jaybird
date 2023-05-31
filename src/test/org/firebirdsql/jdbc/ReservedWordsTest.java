@@ -40,7 +40,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 /**
  * Test to check if a list of keywords are actually reserved words by creating a table with a column with that name.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @Disabled
 class ReservedWordsTest {

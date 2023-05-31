@@ -29,7 +29,7 @@ import java.util.function.Consumer;
  * Dispatcher to maintain a list of listeners of type <code>TListener</code>
  *
  * @param <TListener> Listener type
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractListenerDispatcher<TListener> implements Iterable<TListener> {
@@ -86,18 +86,12 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
             return;
         }
         // Try to remove weak listener
-        for (WeakReference<TListener> ref : weakListeners) {
+        weakListeners.removeIf(ref -> {
             TListener refValue = ref.get();
-            if (refValue == listener) {
-                weakListeners.remove(ref);
-                return;
-            } else if (refValue == null) {
-                weakListeners.remove(ref);
-            }
-        }
+            return refValue == null || refValue == listener;
+        });
     }
 
-    // TODO Change other listeners to use notify just like StatementListenerDispatcher
     protected final void notify(Consumer<TListener> notificationHandler, String notificationLogName) {
         for (TListener listener : this) {
             try {
@@ -143,11 +137,7 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
     }
 
     private void cleanWeakListeners() {
-        for (WeakReference<TListener> ref : weakListeners) {
-            if (ref.get() == null) {
-                weakListeners.remove(ref);
-            }
-        }
+        weakListeners.removeIf(ref -> ref.get() == null);
     }
 
     /**

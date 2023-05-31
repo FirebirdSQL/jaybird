@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source repository history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -21,8 +21,6 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 
@@ -33,12 +31,12 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  * InfoProcessor to retrieve the statement information associated with {@link org.firebirdsql.gds.ng.AbstractFbStatement#getStatementInfoRequestItems()}
  * and {@link org.firebirdsql.gds.ng.AbstractFbStatement#getParameterDescriptionInfoRequestItems()}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor.StatementInfo> {
 
-    private static final Logger log = LoggerFactory.getLogger(StatementInfoProcessor.class);
+    private static final System.Logger log = System.getLogger(StatementInfoProcessor.class.getName());
 
     private final AbstractFbStatement statement;
     private final FbDatabase database;
@@ -80,7 +78,7 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
                 break;
 
             default:
-                log.debug(String.format("Unexpected item type %d", info.currentItem));
+                log.log(System.Logger.Level.DEBUG, "Unexpected item type %d", info.currentItem);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_dsql_sqlda_err).toSQLException();
             }
         }
@@ -92,7 +90,6 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
      *
      * @param info
      *         StatementInfo
-     * @throws SQLException
      */
     private void handleTruncatedInfo(final StatementInfo info) throws SQLException {
         final byte[] originalInfo = statement.getStatementInfoRequestItems();
@@ -225,7 +222,7 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
                 return;
 
             default:
-                log.debug(String.format("Unexpected item type %d", info.currentItem));
+                log.log(System.Logger.Level.DEBUG, "Unexpected item type %d", info.currentItem);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_dsql_sqlda_err).toSQLException();
             }
         }

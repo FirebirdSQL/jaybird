@@ -18,12 +18,11 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.ng.listeners.ServiceListener;
 import org.firebirdsql.gds.ng.listeners.ServiceListenerDispatcher;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -34,13 +33,13 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 /**
  * Abstract service implementation.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbService<T extends AbstractConnection<IServiceProperties, ? extends FbService>>
         extends AbstractFbAttachment<T> implements FbService {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbService.class);
+    private static final System.Logger log = System.getLogger(AbstractFbService.class.getName());
     protected final ServiceListenerDispatcher serviceListenerDispatcher = new ServiceListenerDispatcher();
     private final WarningMessageCallback serviceWarningCallback =
             warning -> serviceListenerDispatcher.warningReceived(AbstractFbService.this, warning);
@@ -129,31 +128,27 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
     private class ServiceInformationProcessor implements InfoProcessor<FbService> {
         @Override
         public FbService process(byte[] info) throws SQLException {
-            boolean debug = log.isDebugEnabled();
             if (info.length == 0) {
-                throw new SQLException("Response buffer for service information request is empty");
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
+                        .messageParameter("service")
+                        .toSQLException();
             }
-            if (debug)
-                log.debug(String.format("ServiceInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",
-                        iscVaxInteger2(info, 0), info[0], info[1]));
             int len;
             int i = 0;
             while (info[i] != isc_info_end) {
                 switch (info[i++]) {
-                case isc_info_svc_server_version: {
+                case isc_info_svc_server_version -> {
                     len = iscVaxInteger2(info, i);
                     i += 2;
                     String firebirdVersion = new String(info, i, len, StandardCharsets.UTF_8);
                     i += len;
                     setServerVersion(firebirdVersion);
-                    if (debug) log.debug("isc_info_svc_server_version:" + firebirdVersion);
-                    break;
                 }
-                case isc_info_truncated:
-                    log.debug("isc_info_truncated ");
+                case isc_info_truncated -> {
+                    log.log(System.Logger.Level.DEBUG, "Received isc_info_truncated");
                     return AbstractFbService.this;
-                default:
-                    throw new FbExceptionBuilder().exception(isc_infunk).toSQLException();
+                }
+                default -> throw new FbExceptionBuilder().exception(isc_infunk).toSQLException();
                 }
             }
             return AbstractFbService.this;

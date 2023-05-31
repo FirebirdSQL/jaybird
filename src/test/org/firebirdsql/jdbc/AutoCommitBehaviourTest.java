@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * autocommit. A lot of the autocommit behaviour is tested elsewhere.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 2.2
  */
 class AutoCommitBehaviourTest {
@@ -66,8 +66,9 @@ class AutoCommitBehaviourTest {
             stmt.execute("delete from ID_TABLE");
             for (int idValue = 1; idValue <= MAX_ID; idValue++) {
                 pstmt.setInt(1, idValue);
-                pstmt.execute();
+                pstmt.addBatch();
             }
+            pstmt.executeBatch();
         } finally {
             connection.setAutoCommit(true);
         }

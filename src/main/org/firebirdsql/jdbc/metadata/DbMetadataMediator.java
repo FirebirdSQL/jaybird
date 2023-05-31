@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,8 +19,10 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.firebirdsql.jdbc.FBDatabaseMetaData;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
 
@@ -34,7 +36,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Provides access to the database connection for executing database metadata queries.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 @InternalApi
@@ -61,33 +63,17 @@ public abstract class DbMetadataMediator {
      */
     protected abstract ResultSet performMetaDataQuery(MetadataQuery metadataQuery) throws SQLException;
 
-    byte[] createInt(int intValue) {
-        return datatypeCoder.encodeInt(intValue);
-    }
-
-    byte[] createInt(Number intValue) {
-        return intValue == null ? null : createInt(intValue.intValue());
-    }
-
-    byte[] createShort(int shortValue) {
-        return datatypeCoder.encodeShort(shortValue);
-    }
-
-    byte[] createShort(Number shortValue) {
-        return shortValue == null ? null : createShort(shortValue.intValue());
-    }
-
-    byte[] createString(String value) {
-        return value != null ? value.getBytes(StandardCharsets.UTF_8) : null;
-    }
+    /**
+     * A {@code FBDatabaseMetaData} instance of the connection that created this mediator.
+     *
+     * @return metadata instance
+     */
+    protected abstract FBDatabaseMetaData getMetaData();
 
     /**
-     * @deprecated Use {@link #createString(String)} instead; provided for ease of migration from FBDatabaseMetaData
+     * @return GDSType of the current connection
      */
-    @Deprecated
-    byte[] getBytes(String value) {
-        return createString(value);
-    }
+    protected abstract GDSType getGDSType();
 
     /**
      * Holder class for query text and parameters.

@@ -31,7 +31,7 @@ import java.util.Map;
 /**
  * The base Firebird Service API functionality.
  *
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
+ * @author Steven Jardine
  */
 public interface UserManager extends ServiceManager {
 
@@ -40,8 +40,6 @@ public interface UserManager extends ServiceManager {
      *
      * @param user
      *         to the Firebird Security Database.
-     * @throws SQLException
-     * @throws IOException
      */
     void add(User user) throws SQLException, IOException;
 
@@ -50,8 +48,6 @@ public interface UserManager extends ServiceManager {
      *
      * @param user
      *         to the Firebird Security Database.
-     * @throws SQLException
-     * @throws IOException
      */
     void delete(User user) throws SQLException, IOException;
 
@@ -60,8 +56,6 @@ public interface UserManager extends ServiceManager {
      *
      * @param user
      *         to the Firebird Security Database.
-     * @throws SQLException
-     * @throws IOException
      */
     void update(User user) throws SQLException, IOException;
 
@@ -69,8 +63,6 @@ public interface UserManager extends ServiceManager {
      * Return all valid users in the Firebird Security Database.
      *
      * @return all valid users in the Firebird Security Database.
-     * @throws SQLException
-     * @throws IOException
      */
     Map<String, User> getUsers() throws SQLException, IOException;
 

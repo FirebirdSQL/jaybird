@@ -29,7 +29,7 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.gds.ng.FbBlob;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface FbWireBlob extends FbBlob {

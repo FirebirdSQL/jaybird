@@ -38,7 +38,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_transa
 /**
  * Abstract class for operations common to all version of the wire protocol implementation.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireDatabaseConnection>
@@ -230,11 +230,16 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     public final void queueEvent(EventHandle eventHandle) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkAttached();
-            if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
-                asynchronousChannel = initAsynchronousChannel();
-                AsynchronousProcessor.getInstance().registerAsynchronousChannel(asynchronousChannel);
+            FbWireAsynchronousChannel channel = asynchronousChannel;
+            if (channel == null || !channel.isConnected()) {
+                var asynchronousProcessor = AsynchronousProcessor.getInstance();
+                if (channel != null) {
+                    asynchronousProcessor.unregisterAsynchronousChannel(channel);
+                }
+                channel = asynchronousChannel = initAsynchronousChannel();
+                asynchronousProcessor.registerAsynchronousChannel(channel);
             }
-            asynchronousChannel.queueEvent(eventHandle);
+            channel.queueEvent(eventHandle);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -245,12 +250,16 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     public final void cancelEvent(EventHandle eventHandle) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkAttached();
-            if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
+            FbWireAsynchronousChannel channel = asynchronousChannel;
+            if (channel == null || !channel.isConnected()) {
+                if (channel != null) {
+                    AsynchronousProcessor.getInstance().unregisterAsynchronousChannel(channel);
+                }
                 throw new FbExceptionBuilder()
                         .nonTransientException(JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected)
                         .toSQLException();
             }
-            asynchronousChannel.cancelEvent(eventHandle);
+            channel.cancelEvent(eventHandle);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -317,17 +326,4 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
      */
     public abstract FbWireAsynchronousChannel initAsynchronousChannel() throws SQLException;
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (!connection.isConnected()) return;
-            if (isAttached()) {
-                safelyDetach();
-            } else {
-                closeConnection();
-            }
-        } finally {
-            super.finalize();
-        }
-    }
 }

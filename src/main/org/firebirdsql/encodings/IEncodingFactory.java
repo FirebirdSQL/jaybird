@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -27,11 +27,11 @@ import java.nio.charset.Charset;
  * <p>
  * Note on naming convention: normally the prefix {@code I} for interfaces is avoided in Java, in this particular
  * case I decided to use it as the concrete class {@link EncodingFactory} is the actual factory and the main access for
- * encoding related information. This interface is used for connection specific factories (eg so the defaultEncoding is
- * the connection character set).
+ * encoding related information. This interface is used for connection specific factories (e.g. so the defaultEncoding
+ * is the connection character set).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface IEncodingFactory {
@@ -56,7 +56,7 @@ public interface IEncodingFactory {
      * Looks up the {@link org.firebirdsql.encodings.EncodingDefinition} for the specified Firebird encoding name.
      *
      * @param firebirdEncodingName
-     *         The Firebird encoding name (case insensitive)
+     *         The Firebird encoding name (case-insensitive)
      * @return EncodingDefinition instance or {@code null} if the encoding name is unknown
      */
     EncodingDefinition getEncodingDefinitionByFirebirdName(String firebirdEncodingName);
@@ -67,7 +67,7 @@ public interface IEncodingFactory {
      * or the loaded EncodingDefinition is information-only, then the defaultEncoding is used.
      *
      * @param firebirdEncodingName
-     *         The Firebird encoding name (case insensitive)
+     *         The Firebird encoding name (case-insensitive)
      * @return Encoding instance (never null)
      */
     Encoding getEncodingForFirebirdName(final String firebirdEncodingName);
@@ -157,7 +157,7 @@ public interface IEncodingFactory {
      * alias.
      *
      * @param charsetAlias
-     *         Name (or alias) of the Java character set (case insensitive)
+     *         Name (or alias) of the Java character set (case-insensitive)
      * @return EncodingDefinition instance or {@code null} if the character set name is not mapped
      */
     EncodingDefinition getEncodingDefinitionByCharsetAlias(String charsetAlias);

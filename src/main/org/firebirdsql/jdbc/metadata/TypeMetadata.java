@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,7 +21,10 @@ package org.firebirdsql.jdbc.metadata;
 import org.firebirdsql.jdbc.JaybirdTypeCodes;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.firebirdsql.util.InternalApi;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -33,10 +36,20 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 /**
  * Helper class to determine type metadata conforming to expectations of {@link java.sql.DatabaseMetaData}.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
-public class TypeMetadata {
+@InternalApi
+public final class TypeMetadata {
+
+    static final String FIELD_TYPE = "FIELD_TYPE";
+    static final String FIELD_SUB_TYPE = "FIELD_SUB_TYPE";
+    static final String FIELD_PRECISION = "FIELD_PRECISION";
+    static final String FIELD_SCALE = "FIELD_SCALE";
+    static final String FIELD_LENGTH = "FIELD_LENGTH";
+    // Avoid CHAR_LENGTH and CHARACTER_LENGTH as those are reserved words
+    static final String CHAR_LEN = "CHAR_LEN";
+    static final String CHARSET_ID = "CHARSET_ID";
 
     private final int type;
     private final int subType;
@@ -63,21 +76,28 @@ public class TypeMetadata {
             this.characterLength = characterLength;
         }
         this.typeBehaviours = typeBehaviours.isEmpty()
-                ? Collections.<TypeBehaviour>emptySet()
+                ? Collections.emptySet()
                 : Collections.unmodifiableSet(EnumSet.copyOf(typeBehaviours));
+    }
+
+    /**
+     * @return Firebird type number
+     */
+    int getType() {
+        return type;
     }
 
     /**
      * @return The {@link java.sql.Types} or {@link JaybirdTypeCodes} code for this datatype
      */
-    public int getJdbcType() {
+    int getJdbcType() {
         return jdbcType;
     }
 
     /**
      * @return The SQL datatype name, returns {@code "NULL"} if the type is unknown
      */
-    public String getSqlTypeName() {
+    String getSqlTypeName() {
         return getDataTypeName(type, subType, coalesce(scale, 0));
     }
 
@@ -90,13 +110,13 @@ public class TypeMetadata {
      * {@link java.sql.DatabaseMetaData#getFunctionColumns(String, String, String, String)}.
      * </p>
      * <p>
-     * This method will also return any non-zero precision information stored for other datatypes than those listed in
+     * This method will also return any non-zero precision information stored for other data types than those listed in
      * the {@code COLUMN_SIZE} definition in the JDBC API.
      * </p>
      *
      * @return The column size as defined in {@link java.sql.DatabaseMetaData}, or {@code null}.
      */
-    public Integer getColumnSize() {
+    Integer getColumnSize() {
         switch (jdbcType) {
         case Types.FLOAT:
             return isFloatBinaryPrecision() ? FLOAT_BINARY_PRECISION : FLOAT_DECIMAL_PRECISION;
@@ -127,6 +147,10 @@ public class TypeMetadata {
             case smallint_type:
                 return coalesce(precision, NUMERIC_SMALLINT_PRECISION);
             case int128_type:
+                if (precision == 0) {
+                    // INT128 (precision reported as 38, not 39 to avoid issues with tools using type name as NUMERIC)
+                    return NUMERIC_INT128_PRECISION;
+                }
                 return coalesce(precision, NUMERIC_INT128_PRECISION);
             default:
                 throw new IllegalStateException(String.format(
@@ -162,7 +186,7 @@ public class TypeMetadata {
     /**
      * @return The field length in bytes
      */
-    public Integer getLength() {
+    Integer getLength() {
         return fieldLength;
     }
 
@@ -175,7 +199,7 @@ public class TypeMetadata {
      *
      * @return The scale of a field, or {@code null}.
      */
-    public Integer getScale() {
+    Integer getScale() {
         switch (jdbcType) {
         case Types.BIGINT:
         case Types.INTEGER:
@@ -191,9 +215,9 @@ public class TypeMetadata {
 
     /**
      * @return The radix of numerical precision (either {@code 2} or {@code 10}; returns {@code 10} for non-numerical,
-     * non-boolean types.
+     * non-boolean types).
      */
-    public int getRadix() {
+    int getRadix() {
         switch (jdbcType) {
         case Types.FLOAT:
         case Types.DOUBLE:
@@ -208,7 +232,7 @@ public class TypeMetadata {
     /**
      * @return The maximum number of bytes for a character type column, {@code null} otherwise
      */
-    public Integer getCharOctetLength() {
+    Integer getCharOctetLength() {
         if (isCharacterType(type)) {
             return getLength();
         }
@@ -222,7 +246,7 @@ public class TypeMetadata {
      *         Firebird support info
      * @return Builder for type metadata
      */
-    public static Builder builder(FirebirdSupportInfo supportInfo) {
+    static Builder builder(FirebirdSupportInfo supportInfo) {
         return new Builder(supportInfo);
     }
 
@@ -232,7 +256,7 @@ public class TypeMetadata {
      * @param sqlType
      *         Firebird type code as used in the metadata tables
      * @param sqlSubType
-     *         Firebird sub-type code as used in the metadata tables
+     *         Firebird subtype code as used in the metadata tables
      * @param sqlScale
      *         Firebird scale as used in the metadata tables
      * @param characterSetId
@@ -262,7 +286,7 @@ public class TypeMetadata {
      * @param sqlType
      *         Firebird type code as used in the metadata tables
      * @param sqlSubType
-     *         Firebird sub-type code as used in the metadata tables
+     *         Firebird subtype code as used in the metadata tables
      * @param sqlScale
      *         Firebird scale as used in the metadata tables
      * @return JDBC/SQL type name
@@ -356,12 +380,12 @@ public class TypeMetadata {
         return sqlType == char_type || sqlType == varchar_type || sqlType == cstring_type;
     }
 
-    public enum TypeBehaviour {
+    enum TypeBehaviour {
         FLOAT_DECIMAL_PRECISION,
         FLOAT_BINARY_PRECISION
     }
 
-    public static class Builder {
+    static final class Builder {
 
         private int type;
         private Integer subType;
@@ -372,13 +396,13 @@ public class TypeMetadata {
         private Integer characterLength;
         private final Set<TypeBehaviour> typeBehaviours = EnumSet.noneOf(TypeBehaviour.class);
 
-        public Builder(FirebirdSupportInfo supportInfo) {
+        Builder(FirebirdSupportInfo supportInfo) {
             typeBehaviours.add(supportInfo.supportsFloatBinaryPrecision()
                     ? TypeBehaviour.FLOAT_BINARY_PRECISION
                     : TypeBehaviour.FLOAT_DECIMAL_PRECISION);
         }
 
-        public TypeMetadata build() {
+        TypeMetadata build() {
             if (type == 0) {
                 throw new IllegalStateException("type must be set");
             }
@@ -393,19 +417,19 @@ public class TypeMetadata {
          *         Field type code
          * @return this builder
          */
-        public Builder withType(int type) {
+        Builder withType(int type) {
             this.type = type;
             return this;
         }
 
         /**
-         * Sets the field sub type code ({@code RDB$FIELD_SUB_TYPE}).
+         * Sets the field sub-type code ({@code RDB$FIELD_SUB_TYPE}).
          *
          * @param subType
-         *         Field sub type code
+         *         Field subtype code
          * @return this builder
          */
-        public Builder withSubType(Integer subType) {
+        Builder withSubType(Integer subType) {
             this.subType = subType;
             return this;
         }
@@ -417,7 +441,7 @@ public class TypeMetadata {
          *         Field precision
          * @return this builder
          */
-        public Builder withPrecision(Integer precision) {
+        Builder withPrecision(Integer precision) {
             this.precision = precision;
             return this;
         }
@@ -429,7 +453,7 @@ public class TypeMetadata {
          *         Field scale
          * @return this builder
          */
-        public Builder withScale(Integer scale) {
+        Builder withScale(Integer scale) {
             this.scale = scale;
             return this;
         }
@@ -441,7 +465,7 @@ public class TypeMetadata {
          *         Character set id
          * @return this builder
          */
-        public Builder withCharacterSetId(Integer characterSetId) {
+        Builder withCharacterSetId(Integer characterSetId) {
             this.characterSetId = characterSetId;
             return this;
         }
@@ -453,7 +477,7 @@ public class TypeMetadata {
          *         Field length
          * @return this builder
          */
-        public Builder withFieldLength(Integer fieldLength) {
+        Builder withFieldLength(Integer fieldLength) {
             this.fieldLength = fieldLength;
             return this;
         }
@@ -465,11 +489,40 @@ public class TypeMetadata {
          *         Character length
          * @return this builder
          */
-        public Builder withCharacterLength(Integer characterLength) {
+        Builder withCharacterLength(Integer characterLength) {
             this.characterLength = characterLength;
             return this;
         }
 
+        /**
+         * Populate this builder from the current row of a {@code ResultSet}.
+         * <p>
+         * The result set should have the following column labels:
+         * </p>
+         * <ul>
+         *     <li>{@code FIELD_TYPE} - type</li>
+         *     <li>{@code FIELD_SUB_TYPE} - sub-type</li>
+         *     <li>{@code FIELD_PRECISION} - precision</li>
+         *     <li>{@code FIELD_SCALE} - scale</li>
+         *     <li>{@code FIELD_LENGTH} - length (in bytes)</li>
+         *     <li>{@code CHAR_LEN} - character length (or {@code null})</li>
+         *     <li>{@code CHARSET_ID} - character set id (or {@code null})</li>
+         * </ul>
+         *
+         * @param resultSet
+         *         Result set positioned on a row with the required columns
+         * @return this builder
+         * @throws SQLException
+         *         For errors retrieving data, including absence of required columns
+         */
+        Builder fromCurrentRow(ResultSet resultSet) throws SQLException {
+            return withType(resultSet.getObject(FIELD_TYPE, Integer.class))
+                    .withSubType(resultSet.getObject(FIELD_SUB_TYPE, Integer.class))
+                    .withPrecision(resultSet.getObject(FIELD_PRECISION, Integer.class))
+                    .withScale(resultSet.getObject(FIELD_SCALE, Integer.class))
+                    .withFieldLength(resultSet.getObject(FIELD_LENGTH, Integer.class))
+                    .withCharacterLength(resultSet.getObject(CHAR_LEN, Integer.class))
+                    .withCharacterSetId(resultSet.getObject(CHARSET_ID, Integer.class));
+        }
     }
-
 }

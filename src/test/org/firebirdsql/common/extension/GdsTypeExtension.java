@@ -20,9 +20,9 @@ package org.firebirdsql.common.extension;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.FbOOEmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.FbOONativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.nativeoo.FbOONativeGDSFactoryPlugin;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -39,7 +39,7 @@ import static org.hamcrest.Matchers.not;
 /**
  * An extension that allows for verifying assumptions of the test (GDS) types required (or excluded) for a test class.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class GdsTypeExtension implements BeforeAllCallback {
@@ -52,8 +52,7 @@ public class GdsTypeExtension implements BeforeAllCallback {
 
     @Override
     public void beforeAll(ExtensionContext context) {
-        String gdsType = FBTestProperties.GDS_TYPE;
-        assumeThat("Test type not supported, test ignored", gdsType, testTypeMatcher);
+        assumeThat("Test type not supported, test ignored", FBTestProperties.GDS_TYPE, testTypeMatcher);
     }
 
     /**

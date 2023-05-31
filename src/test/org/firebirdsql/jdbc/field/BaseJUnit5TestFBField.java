@@ -51,7 +51,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -75,7 +77,7 @@ import static org.mockito.Mockito.when;
  *         FBField implementation under test
  * @param <O>
  *         Object type of FBField implementation under test
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 @ExtendWith(MockitoExtension.class)
 abstract class BaseJUnit5TestFBField<T extends FBField, O> {
@@ -584,6 +586,10 @@ abstract class BaseJUnit5TestFBField<T extends FBField, O> {
      */
     final void verifySetValue(byte[] data) {
         verify(fieldData).setFieldData(data);
+    }
+
+    final void verifyNotSet() {
+        verify(fieldData, never()).setFieldData(any());
     }
 
     /**

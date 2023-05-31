@@ -25,89 +25,17 @@ import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class FBConnectionProperties implements FirebirdConnectionProperties, Serializable, Cloneable {
+public final class FBConnectionProperties implements FirebirdConnectionProperties, Serializable, Cloneable {
 
+    @Serial
     private static final long serialVersionUID = 611228437520889118L;
-
-    @Deprecated
-    public static final String DATABASE_PROPERTY = "database";
-    @Deprecated
-    public static final String TYPE_PROPERTY = "type";
-    /**
-     * @deprecated Use {@link PropertyNames#defaultIsolation}
-     */
-    @Deprecated
-    public static final String ISOLATION_PROPERTY = "isolation";
-    /**
-     * @deprecated Use {@link PropertyNames#defaultIsolation}
-     */
-    @Deprecated
-    public static final String DEFAULT_ISOLATION_PROPERTY = "defaultIsolation";
-
-    @Deprecated
-    public static final String BLOB_BUFFER_SIZE_PROPERTY = PropertyNames.blobBufferSize;
-    /**
-     * @deprecated Use {@link PropertyNames#charSet}
-     */
-    @Deprecated
-    public static final String LOCAL_ENCODING_PROPERTY = "localEncoding";
-    @Deprecated
-    public static final String ENCODING_PROPERTY = PropertyNames.encoding;
-    @Deprecated
-    public static final String ROLE_NAME_PROPERTY = PropertyNames.roleName;
-    @Deprecated
-    public static final String SQL_DIALECT_PROPERTY = PropertyNames.sqlDialect;
-    @Deprecated
-    public static final String USE_STREAM_BLOBS_PROPERTY = PropertyNames.useStreamBlobs;
-    @Deprecated
-    public static final String SOCKET_BUFFER_SIZE_PROPERTY = PropertyNames.socketBufferSize;
-    @Deprecated
-    public static final String TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY = PropertyNames.timestampUsesLocalTimezone;
-    /**
-     * @deprecated Use {@link PropertyNames#user}
-     */
-    @Deprecated
-    public static final String USER_NAME_PROPERTY = "userName";
-    @Deprecated
-    public static final String PASSWORD_PROPERTY = PropertyNames.password;
-    /**
-     * @deprecated Use {@link PropertyNames#pageCacheSize}
-     */
-    @Deprecated
-    public static final String BUFFERS_NUMBER_PROPERTY = "buffersNumber";
-    /**
-     * @deprecated Use {@link PropertyNames#defaultResultSetHoldable}
-     */
-    @Deprecated
-    public static final String DEFAULT_HOLDABLE_RS_PROPERTY = "defaultHoldable";
-    @Deprecated
-    public static final String SO_TIMEOUT = PropertyNames.soTimeout;
-    @Deprecated
-    public static final String CONNECT_TIMEOUT = PropertyNames.connectTimeout;
-    @Deprecated
-    public static final String USE_FIREBIRD_AUTOCOMMIT = PropertyNames.useFirebirdAutocommit;
-    @Deprecated
-    public static final String WIRE_CRYPT_LEVEL = PropertyNames.wireCrypt;
-    @Deprecated
-    public static final String DB_CRYPT_CONFIG = PropertyNames.dbCryptConfig;
-    @Deprecated
-    public static final String AUTH_PLUGINS = PropertyNames.authPlugins;
-    @Deprecated
-    public static final String GENERATED_KEYS_ENABLED = PropertyNames.generatedKeysEnabled;
-    @Deprecated
-    public static final String DATA_TYPE_BIND = PropertyNames.dataTypeBind;
-    @Deprecated
-    public static final String SESSION_TIME_ZONE = PropertyNames.sessionTimeZone;
-    @Deprecated
-    public static final String IGNORE_PROCEDURE_TYPE = PropertyNames.ignoreProcedureType;
-    @Deprecated
-    public static final String WIRE_COMPRESSION = PropertyNames.wireCompression;
 
     private FbConnectionProperties properties;
 
@@ -163,11 +91,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             return true;
         }
 
-        if (!(obj instanceof FBConnectionProperties)) {
+        if (!(obj instanceof FBConnectionProperties that)) {
             return false;
         }
-
-        FBConnectionProperties that = (FBConnectionProperties) obj;
 
         return this.properties.equals(that.properties)
                 && this.customMapping.equals(that.customMapping)

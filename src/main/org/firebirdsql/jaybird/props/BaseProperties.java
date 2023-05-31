@@ -31,7 +31,7 @@ import java.util.Map;
 /**
  * Base of the properties hierarchy; provides common API for setting properties by name.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface BaseProperties {
@@ -133,7 +133,7 @@ public interface BaseProperties {
      * <p>
      * For properties with an explicit default, this method should return the boolean presentation of that default. For
      * implementation simplicity, it is allowed to convert any string property to {@code boolean} instead of checking
-     * if something is actually an {@code int} property
+     * if something is actually a {@code boolean} property
      * </p>
      *
      * @param name

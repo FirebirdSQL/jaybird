@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * required, and we just strip the {oj ...} from the query.
  * <p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class OuterJoinEscapesTest {
 

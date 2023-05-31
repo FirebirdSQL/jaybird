@@ -18,12 +18,14 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jaybird.props.internal.TransactionNameMapping;
 
+import java.io.Serial;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -35,10 +37,11 @@ import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
  * This class is provides mapping capabilities between standard JDBC
  * transaction isolation level and Firebird Transaction Parameters Block (TPB).
  *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author Roman Rokytskyy
  */
-public class FBTpbMapper implements Serializable, Cloneable {
+public final class FBTpbMapper implements Serializable, Cloneable {
 
+    @Serial
     private static final long serialVersionUID = 1690658870275668176L;
 
     public static FBTpbMapper getDefaultMapper() {
@@ -73,8 +76,8 @@ public class FBTpbMapper implements Serializable, Cloneable {
      */
     public static final String TRANSACTION_READ_COMMITTED = TransactionNameMapping.TRANSACTION_READ_COMMITTED;
 
-    private static final List<String> ISOLATION_LEVEL_NAMES = Collections.unmodifiableList(Arrays.asList(
-            TRANSACTION_SERIALIZABLE, TRANSACTION_REPEATABLE_READ, TRANSACTION_READ_COMMITTED));
+    private static final List<String> ISOLATION_LEVEL_NAMES =
+            List.of(TRANSACTION_SERIALIZABLE, TRANSACTION_REPEATABLE_READ, TRANSACTION_READ_COMMITTED);
 
     // read uncommitted actually not supported
     /**
@@ -124,8 +127,6 @@ public class FBTpbMapper implements Serializable, Cloneable {
      */
     public FBTpbMapper() {
         // TODO instance creation should be delegated to FbDatabase or another factory
-        // TODO Should use isc_tpb_mapping.properties
-
         TransactionParameterBuffer serializableTpb = new TransactionParameterBufferImpl();
         serializableTpb.addArgument(isc_tpb_write);
         serializableTpb.addArgument(isc_tpb_wait);
@@ -152,30 +153,30 @@ public class FBTpbMapper implements Serializable, Cloneable {
      *
      * @param stringMapping mapping of JDBC transaction isolation to Firebird
      * mapping. Keys and values of this map must be strings. Keys can have
-     * following values:
+     * the following values:
      * <ul>
-     * <li><code>"TRANSACTION_SERIALIZABLE"</code>
-     * <li><code>"TRANSACTION_REPEATABLE_READ"</code>
-     * <li><code>"TRANSACTION_READ_COMMITTED"</code>
-     * <li><code>"TRANSACTION_READ_UNCOMMITTED"</code>
+     * <li>{@code "TRANSACTION_SERIALIZABLE"}
+     * <li>{@code "TRANSACTION_REPEATABLE_READ"}
+     * <li>{@code "TRANSACTION_READ_COMMITTED"}
+     * <li>{@code "TRANSACTION_READ_UNCOMMITTED"}
      * </ul>
      * Values are specified as comma-separated list of following keywords:
      * <ul>
-     * <li><code>"isc_tpb_consistency"</code>
-     * <li><code>"isc_tpb_concurrency"</code>
-     * <li><code>"isc_tpb_read_committed"</code>
-     * <li><code>"isc_tpb_rec_version"</code>
-     * <li><code>"isc_tpb_no_rec_version"</code>
-     * <li><code>"isc_tpb_wait"</code>
-     * <li><code>"isc_tpb_nowait"</code>
-     * <li><code>"isc_tpb_read"</code>
-     * <li><code>"isc_tpb_write"</code>
-     * <li><code>"isc_tpb_lock_read"</code>
-     * <li><code>"isc_tpb_lock_write"</code>
-     * <li><code>"isc_tpb_shared"</code>
-     * <li><code>"isc_tpb_protected"</code>
+     * <li>{@code "isc_tpb_consistency"}
+     * <li>{@code "isc_tpb_concurrency"}
+     * <li>{@code "isc_tpb_read_committed"}
+     * <li>{@code "isc_tpb_rec_version"}
+     * <li>{@code "isc_tpb_no_rec_version"}
+     * <li>{@code "isc_tpb_wait"}
+     * <li>{@code "isc_tpb_nowait"}
+     * <li>{@code "isc_tpb_read"}
+     * <li>{@code "isc_tpb_write"}
+     * <li>{@code "isc_tpb_lock_read"}
+     * <li>{@code "isc_tpb_lock_write"}
+     * <li>{@code "isc_tpb_shared"}
+     * <li>{@code "isc_tpb_protected"}
      * </ul>
-     * It is also allowed to strip "isc_tpb_" prefix from above shown constans.
+     * It is also allowed to strip "isc_tpb_" prefix from above shown constants.
      * Meaning of these constants and possible combinations you can find in a
      * documentation.
      *
@@ -187,8 +188,8 @@ public class FBTpbMapper implements Serializable, Cloneable {
     }
 
     /**
-     * Process specified string mapping. This method updates default mapping
-     * with values specified in a <code>stringMapping</code>.
+     * Process specified string mapping. This method updates default mapping with values specified in
+     * a {@code stringMapping}.
      *
      * @param stringMapping
      *         mapping to process.
@@ -221,9 +222,8 @@ public class FBTpbMapper implements Serializable, Cloneable {
      *         if resource cannot be loaded or contains incorrect values.
      */
     public FBTpbMapper(String mappingResource, ClassLoader cl) throws SQLException {
-        // TODO The documentation of DatabaseConnectionProperties.setTpbMapping suggests more functionality than
-        //  actually available
-        // Make sure the documented 'res:' protocol works
+        // Make sure the old documented 'res:' protocol works
+        // TODO Remove in Jaybird 7 or later?
         if (mappingResource.startsWith("res:")) {
             mappingResource = mappingResource.substring(4);
         }
@@ -331,7 +331,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
                 }
                 token = parts[0];
             }
-            Integer value = ParameterBufferHelper.getTpbParam(token);
+            Integer value = TpbMapping.getTpbParam(token);
             if (value == null) {
                 // TODO More specific exception, Jaybird error code
                 throw new SQLException("Keyword " + token + " unknown. Please check your mapping.");
@@ -425,11 +425,10 @@ public class FBTpbMapper implements Serializable, Cloneable {
             return true;
         }
 
-        if (!(obj instanceof FBTpbMapper)) {
+        if (!(obj instanceof FBTpbMapper that)) {
             return false;
         }
 
-        FBTpbMapper that = (FBTpbMapper) obj;
         boolean result = this.mapping.equals(that.mapping);
         result &= (this.defaultIsolationLevel == that.defaultIsolationLevel);
 
@@ -455,6 +454,53 @@ public class FBTpbMapper implements Serializable, Cloneable {
             return clone;
         } catch (CloneNotSupportedException ex) {
             throw new Error("Assertion failure: clone not supported"); // Can't happen
+        }
+    }
+
+    private static final class TpbMapping {
+
+        private static final String TPB_PREFIX = "isc_tpb_";
+
+        private static final Map<String, Integer> tpbTypes;
+
+        // Initialize mappings between TPB constant names and their values; should be executed only once.
+        static {
+            final Map<String, Integer> tempTpbTypes = new HashMap<>(64);
+
+            final Field[] fields = TpbItems.class.getFields();
+
+            for (Field field : fields) {
+                final String name = field.getName();
+                if (!(name.startsWith(TPB_PREFIX) && field.getType().equals(int.class))) {
+                    continue;
+                }
+
+                final Integer value;
+                try {
+                    value = field.getInt(null);
+                } catch (IllegalAccessException iaex) {
+                    continue;
+                }
+
+                // put the correct parameter name
+                tempTpbTypes.put(name.substring(TPB_PREFIX.length()), value);
+                // put the full name to tolerate people's mistakes
+                tempTpbTypes.put(name, value);
+            }
+
+            tpbTypes = Collections.unmodifiableMap(tempTpbTypes);
+        }
+
+        /**
+         * Get value of TPB parameter for the specified name. This method tries to match string representation of
+         * the TPB parameter with its value.
+         *
+         * @param name
+         *         string representation of TPB parameter, can have "isc_tpb_" prefix.
+         * @return value corresponding to the specified parameter name or {@code null} if nothing was found.
+         */
+        private static Integer getTpbParam(String name) {
+            return tpbTypes.get(name);
         }
     }
 }

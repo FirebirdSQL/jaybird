@@ -19,18 +19,23 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.BlobConfig;
+import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
+import org.firebirdsql.util.InternalApi;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.*;
@@ -41,51 +46,81 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
+import static java.util.Objects.requireNonNull;
+import static org.firebirdsql.gds.ISCConstants.BLOB_SUB_TYPE_TEXT;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues.isc_bpb_type_segmented;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues.isc_bpb_type_stream;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_source_interp;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_source_type;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_target_interp;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_target_type;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_type;
+
 /**
  * Firebird implementation of {@link java.sql.Blob}.
  */
-public class FBBlob implements FirebirdBlob, TransactionListener {
+public final class FBBlob implements FirebirdBlob, TransactionListener {
 
-    public static final boolean SEGMENTED = true;
-    private static final Logger logger = LoggerFactory.getLogger(FBBlob.class);
+    private static final System.Logger logger = System.getLogger(FBBlob.class.getName());
 
-    /**
-     * The size of the buffer for blob input and output streams,
-     * also used for the BufferedInputStream/BufferedOutputStream wrappers.
-     */
-    private final int bufferLength;
     private boolean isNew;
-    private long blob_id;
+    private long blobId;
     private volatile GDSHelper gdsHelper;
     private FBObjectListener.BlobListener blobListener;
+    private final Config config;
 
     private final Collection<FBBlobInputStream> inputStreams = Collections.synchronizedSet(new HashSet<>());
     private FBBlobOutputStream blobOut = null;
 
-    private FBBlob(GDSHelper c, boolean isNew, FBObjectListener.BlobListener blobListener) {
+    private FBBlob(GDSHelper c, boolean isNew, FBObjectListener.BlobListener blobListener, Config config) {
         gdsHelper = c;
         this.isNew = isNew;
-        bufferLength = c.getBlobBufferLength();
         this.blobListener = blobListener != null ? blobListener : FBObjectListener.NoActionBlobListener.instance();
+        // TODO Replace with requireNonNull once deprecated constructors passing null are removed
+        IConnectionProperties connectionProperties = c.getConnectionProperties();
+        this.config = config != null ? config : createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY,
+                connectionProperties.isUseStreamBlobs(), connectionProperties.getBlobBufferSize(),
+                c.getCurrentDatabase().getDatatypeCoder());
     }
 
     /**
-     * Create new Blob instance. This constructor creates new fresh Blob, only
-     * writing to the Blob is allowed.
+     * Create new Blob instance. This constructor creates new fresh Blob, only writing to the Blob is allowed.
      *
-     * @param c connection that will be used to write data to blob
-     * @param blobListener Blob listener instance
+     * @param c
+     *         connection that will be used to write data to blob
+     * @param blobListener
+     *         Blob listener instance
+     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, FBObjectListener.BlobListener, Config)}
      */
+    @Deprecated
     public FBBlob(GDSHelper c, FBObjectListener.BlobListener blobListener) {
-        this(c, true, blobListener);
+        this(c, true, blobListener, null);
+    }
+
+    /**
+     * Create new Blob instance. This constructor creates new fresh Blob, only writing to the Blob is allowed.
+     *
+     * @param c
+     *         connection that will be used to write data to blob
+     * @param blobListener
+     *         Blob listener instance
+     * @param config
+     *         blob configuration ({@code null} allowed in Jaybird 5, will be disallowed in Jaybird 6)
+     * @since 5
+     */
+    public FBBlob(GDSHelper c, FBObjectListener.BlobListener blobListener, Config config) {
+        this(c, true, blobListener, config);
     }
 
     /**
      * Create new Blob instance. This constructor creates new fresh Blob, only
      * writing to the Blob is allowed.
      *
-     * @param c connection that will be used to write data to blob.
+     * @param c
+     *         connection that will be used to write data to blob.
+     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, FBObjectListener.BlobListener, Config)}
      */
+    @Deprecated
     public FBBlob(GDSHelper c) {
         this(c, null);
     }
@@ -93,26 +128,95 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
     /**
      * Create instance of this class to access existing Blob.
      *
-     * @param c connection that will be used to access Blob.
-     * @param blob_id ID of the Blob.
-     * @param blobListener Blob listener instance
+     * @param c
+     *         connection that will be used to access Blob.
+     * @param blobId
+     *         ID of the Blob.
+     * @param blobListener
+     *         blob listener instance
+     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, long, FBObjectListener.BlobListener, Config)}
      */
-    public FBBlob(GDSHelper c, long blob_id, FBObjectListener.BlobListener blobListener) {
-        this(c, false, blobListener);
-        this.blob_id = blob_id;
+    @Deprecated
+    public FBBlob(GDSHelper c, long blobId, FBObjectListener.BlobListener blobListener) {
+        this(c, blobId, blobListener, null);
     }
 
     /**
      * Create instance of this class to access existing Blob.
      *
-     * @param c connection that will be used to access Blob.
-     * @param blob_id ID of the Blob.
+     * @param c
+     *         connection that will be used to access Blob.
+     * @param blobId
+     *         ID of the Blob.
+     * @param blobListener
+     *         blob listener instance
+     * @param config
+     *         blob configuration ({@code null} allowed in Jaybird 5, will be disallowed in Jaybird 6)
+     * @since 5
      */
-    public FBBlob(GDSHelper c, long blob_id) {
-        this(c, blob_id, null);
+    public FBBlob(GDSHelper c, long blobId, FBObjectListener.BlobListener blobListener, Config config) {
+        this(c, false, blobListener, config);
+        this.blobId = blobId;
     }
 
-    protected final LockCloseable withLock() {
+    /**
+     * Create instance of this class to access existing Blob.
+     *
+     * @param c
+     *         connection that will be used to access Blob.
+     * @param blobId
+     *         ID of the Blob.
+     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, long, FBObjectListener.BlobListener, Config)}
+     */
+    @Deprecated
+    public FBBlob(GDSHelper c, long blobId) {
+        this(c, blobId, null);
+    }
+
+    /**
+     * @return configuration associated with this blob
+     * @since 5
+     */
+    Config config() {
+        return config;
+    }
+
+    /**
+     * Opens a blob handle for reading.
+     *
+     * @return blob handle for reading
+     * @throws SQLException
+     *         For errors opening the blob
+     * @since 5
+     */
+    FbBlob openBlob() throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            checkClosed();
+            if (isNew) {
+                throw new FBSQLException("No Blob ID is available in new Blob object.");
+            }
+            return gdsHelper.openBlob(blobId, config);
+        }
+    }
+
+    /**
+     * Creates a blob handle for writing.
+     *
+     * @return blob handle for writing
+     * @throws SQLException
+     *         For errors creating the blob
+     * @since 5
+     */
+    FbBlob createBlob() throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            checkClosed();
+            // For historic reasons we allow creating an output blob even if this is not a new blob. This may need to
+            // be reconsidered in the future
+            return gdsHelper.createBlob(config);
+        }
+    }
+
+    LockCloseable withLock() {
         GDSHelper gdsHelper = this.gdsHelper;
         if (gdsHelper != null) {
             return gdsHelper.withLock();
@@ -175,7 +279,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
             checkClosed();
             blobListener.executionStarted(this);
             // TODO Does it make sense to close blob here?
-            try (FbBlob blob = gdsHelper.openBlob(blob_id, SEGMENTED)) {
+            try (FbBlob blob = gdsHelper.openBlob(blobId, config)) {
                 return blob.getBlobInfo(items, buffer_length);
             } finally {
                 blobListener.executionCompleted(this);
@@ -218,14 +322,14 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
 
         int dataLength = VaxEncoding.iscVaxInteger(info, 1, 2);
         int type = VaxEncoding.iscVaxInteger(info, 3, dataLength);
-        return type == ISCConstants.isc_bpb_type_segmented;
+        return type == isc_bpb_type_segmented;
     }
 
     @Override
     public FirebirdBlob detach() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkClosed();
-            return new FBBlob(gdsHelper, blob_id, blobListener);
+            return new FBBlob(gdsHelper, blobId, blobListener, config);
         }
     }
 
@@ -235,8 +339,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
             throw new FBSQLException("Blob position should be >= 1");
 
         if (pos > Integer.MAX_VALUE)
-            throw new FBSQLException("Blob position is limited to 2^31 - 1 " +
-                    "due to isc_seek_blob limitations.",
+            throw new FBSQLException("Blob position is limited to 2^31 - 1 due to isc_seek_blob limitations.",
                     SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
 
         try (LockCloseable ignored = withLock()) {
@@ -331,9 +434,9 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
     }
 
     /**
-     * Get the identifier for this <code>Blob</code>
+     * Get the identifier for this {@code Blob}
      *
-     * @return This <code>Blob</code>'s identifier
+     * @return This {@code Blob}'s identifier
      * @throws SQLException if a database access error occurs
      */
     public long getBlobId() throws SQLException {
@@ -341,13 +444,13 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
             if (isNew)
                 throw new FBSQLException("No Blob ID is available in new Blob object.");
 
-            return blob_id;
+            return blobId;
         }
     }
 
-    void setBlobId(long blob_id) {
+    void setBlobId(long blobId) {
         try (LockCloseable ignored = withLock()) {
-            this.blob_id = blob_id;
+            this.blobId = blobId;
             if (isNew && gdsHelper != null) {
                 FbTransaction currentTransaction = gdsHelper.getCurrentTransaction();
                 if (currentTransaction != null) {
@@ -374,11 +477,11 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
      * @return The buffer length
      */
     int getBufferLength() {
-        return bufferLength;
+        return config.blobBufferSize();
     }
 
     /**
-     * Notifies this blob that <code>stream</code> has been closed.
+     * Notifies this blob that {@code stream} has been closed.
      *
      * @param stream
      *         InputStream that has been closed.
@@ -388,16 +491,12 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
     }
 
     /**
-     * @return <code>true</code> when this is an uninitialized output blob, <code>false</code> otherwise.
+     * @return {@code true} when this is an uninitialized output blob, {@code false} otherwise.
      */
     boolean isNew() {
         try (LockCloseable ignored = withLock()) {
             return isNew;
         }
-    }
-
-    public GDSHelper getGdsHelper() {
-        return gdsHelper;
     }
 
     /**
@@ -418,7 +517,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
         }
         try (LockCloseable ignored = withLock();
              OutputStream os = setBinaryStream(1)) {
-            final byte[] buffer = new byte[(int) Math.min(bufferLength, length)];
+            final byte[] buffer = new byte[(int) Math.min(getBufferLength(), length)];
             int chunk;
             while (length > 0
                     && (chunk = inputStream.read(buffer, 0, (int) Math.min(buffer.length, length))) != -1) {
@@ -431,7 +530,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
     }
 
     /**
-     * Copy the contents of an <code>InputStream</code> into this Blob. Unlike
+     * Copy the contents of an {@code InputStream} into this Blob. Unlike
      * the {@link #copyStream(InputStream, long)} method, this one copies bytes
      * until the EOF is reached.
      *
@@ -441,7 +540,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
     public void copyStream(InputStream inputStream) throws SQLException {
         try (LockCloseable ignored = withLock();
              OutputStream os = setBinaryStream(1)) {
-            final byte[] buffer = new byte[bufferLength];
+            final byte[] buffer = new byte[getBufferLength()];
             int chunk;
             while ((chunk = inputStream.read(buffer)) != -1) {
                 os.write(buffer, 0, chunk);
@@ -460,6 +559,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
      * @param reader the source of data to copy
      * @param length The maximum number of bytes to copy, or {@code -1} to read the whole stream
      * @param encoding The encoding used in the character stream
+     * @see #copyCharacterStream(Reader, long)
      */
     public void copyCharacterStream(Reader reader, long length, Encoding encoding) throws SQLException {
         if (length == -1L) {
@@ -470,44 +570,94 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
              OutputStream os = setBinaryStream(1);
              Writer osw = encoding.createWriter(os)) {
 
-            final char[] buffer = new char[(int) Math.min(bufferLength, length)];
-            int chunk;
-            while (length > 0 && (chunk = reader.read(buffer, 0, (int) Math.min(buffer.length, length))) != -1) {
-                osw.write(buffer, 0, chunk);
-                length -= chunk;
-            }
+            copyTo(reader, osw, length);
         } catch (UnsupportedEncodingException ex) {
-            throw new SQLException("Cannot set character stream because " +
-                    "the encoding '" + encoding + "' is unsupported in the JVM. " +
-                    "Please report this to the driver developers."
-            );
+            throw new SQLException("Cannot set character stream because the encoding '" + encoding +
+                    "' is unsupported in the JVM. Please report this to the driver developers.");
+        } catch (IOException ioe) {
+            throw new SQLException(ioe);
+        }
+    }
+
+    private void copyTo(Reader reader, Writer osw, long length) throws IOException {
+        final char[] buffer = new char[(int) Math.min(getBufferLength(), length)];
+        int chunk;
+        while (length > 0 && (chunk = reader.read(buffer, 0, (int) Math.min(buffer.length, length))) != -1) {
+            osw.write(buffer, 0, chunk);
+            length -= chunk;
+        }
+    }
+
+    /**
+     * Copy data from a character stream into this Blob. This method uses the encoding from the blob config (field
+     * character set for subtype TEXT, if known, otherwise connection character set).
+     * <p>
+     * Calling with length {@code -1} is equivalent to calling {@link #copyCharacterStream(Reader)}.
+     * </p>
+     *
+     * @param reader
+     *         the source of data to copy
+     * @param length
+     *         The maximum number of bytes to copy, or {@code -1} to read the whole stream
+     * @since 5
+     */
+    public void copyCharacterStream(Reader reader, long length) throws SQLException {
+        if (length == -1L) {
+            copyCharacterStream(reader);
+            return;
+        }
+        try (LockCloseable ignored = withLock();
+             OutputStream os = setBinaryStream(1);
+             Writer osw = config.createWriter(os)) {
+            copyTo(reader, osw, length);
         } catch (IOException ioe) {
             throw new SQLException(ioe);
         }
     }
 
     /**
-     * Copy data from a character stream into this Blob. Unlike
-     * the {@link #copyCharacterStream(Reader, long, Encoding)} )} method, this one copies bytes
-     * until the EOF is reached.
+     * Copy data from a character stream into this Blob. Unlike the {@link #copyCharacterStream(Reader, long, Encoding)}
+     * method, this one copies bytes until the EOF is reached.
      *
      * @param reader the source of data to copy
      * @param encoding The encoding used in the character stream
+     * @see #copyCharacterStream(Reader)
      */
     public void copyCharacterStream(Reader reader, Encoding encoding) throws SQLException {
         try (LockCloseable ignored = withLock();
              OutputStream os = setBinaryStream(1);
              Writer osw = encoding.createWriter(os)) {
-            final char[] buffer = new char[bufferLength];
-            int chunk;
-            while ((chunk = reader.read(buffer, 0, buffer.length)) != -1) {
-                osw.write(buffer, 0, chunk);
-            }
+            copyTo(reader, osw);
         } catch (UnsupportedEncodingException ex) {
-            throw new SQLException("Cannot set character stream because " +
-                    "the encoding '" + encoding + "' is unsupported in the JVM. " +
-                    "Please report this to the driver developers."
-            );
+            throw new SQLException("Cannot set character stream because the encoding '" + encoding +
+                    "' is unsupported in the JVM. Please report this to the driver developers.");
+        } catch (IOException ioe) {
+            throw new SQLException(ioe);
+        }
+    }
+
+    private void copyTo(Reader reader, Writer osw) throws IOException {
+        final char[] buffer = new char[getBufferLength()];
+        int chunk;
+        while ((chunk = reader.read(buffer, 0, buffer.length)) != -1) {
+            osw.write(buffer, 0, chunk);
+        }
+    }
+
+    /**
+     * Copy data from a character stream into this Blob. Unlike the {@link #copyCharacterStream(Reader, long)} method,
+     * this one copies bytes until the EOF is reached. This method uses the encoding from the blob config (field
+     * character set for subtype TEXT, if known, otherwise connection character set).
+     *
+     * @param reader
+     *         the source of data to copy
+     * @since 5
+     */
+    public void copyCharacterStream(Reader reader) throws SQLException {
+        try (LockCloseable ignored = withLock();
+             OutputStream os = setBinaryStream(1);
+             Writer osw = config.createWriter(os)) {
+            copyTo(reader, osw);
         } catch (IOException ioe) {
             throw new SQLException(ioe);
         }
@@ -522,7 +672,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
             try (LockCloseable ignored = withLock()) {
                 free();
             } catch (SQLException e) {
-                logger.error("Error calling free on blob during transaction end", e);
+                logger.log(System.Logger.Level.ERROR, "Error calling free on blob during transaction end", e);
             }
             break;
         default:
@@ -534,6 +684,130 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
     private void checkClosed() throws SQLException {
         if (gdsHelper == null) {
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_blobClosed).toSQLException();
+        }
+    }
+
+    /**
+     * Creates a blob configuration from a field descriptor and connection properties.
+     *
+     * @param fieldDescriptor
+     *         field descriptor
+     * @param connectionProperties
+     *         connection properties
+     * @return field based blob configuration
+     * @since 5
+     */
+    @InternalApi
+    public static Config createConfig(FieldDescriptor fieldDescriptor,
+            DatabaseConnectionProperties connectionProperties) {
+        return createConfig(fieldDescriptor.getSubType(), connectionProperties.isUseStreamBlobs(),
+                connectionProperties.getBlobBufferSize(), fieldDescriptor.getDatatypeCoder());
+    }
+
+    /**
+     * Creates a blob configuration from a subtype and connection properties and datatype coder.
+     *
+     * @param subType
+     *         blob subtype (e.g. {@link ISCConstants#BLOB_SUB_TYPE_BINARY} or {@link ISCConstants#BLOB_SUB_TYPE_TEXT})
+     * @param connectionProperties
+     *         connection properties
+     * @param datatypeCoder
+     *         data type coder for the connection character set
+     * @return field based blob configuration
+     * @since 5
+     */
+    @InternalApi
+    public static Config createConfig(int subType, DatabaseConnectionProperties connectionProperties,
+            DatatypeCoder datatypeCoder) {
+        return createConfig(subType, connectionProperties.isUseStreamBlobs(), connectionProperties.getBlobBufferSize(),
+                datatypeCoder);
+    }
+
+    /**
+     * Create a blob configuration.
+     *
+     * @param subType
+     *         blob subtype (e.g. {@link ISCConstants#BLOB_SUB_TYPE_BINARY} or {@link ISCConstants#BLOB_SUB_TYPE_TEXT})
+     * @param useStreamBlob
+     *         {@code true} use stream blob, {@code false} use segmented blob
+     * @param blobBufferSize
+     *         blob buffer size
+     * @param datatypeCoder
+     *         data type coder for the connection character set
+     * @return generic blob configuration
+     * @since 5
+     */
+    @InternalApi
+    public static Config createConfig(int subType, boolean useStreamBlob, int blobBufferSize,
+            DatatypeCoder datatypeCoder) {
+        return new Config(subType, useStreamBlob, blobBufferSize, datatypeCoder);
+    }
+
+    /**
+     * Standard configuration for blobs.
+     *
+     * @since 5
+     */
+    @InternalApi
+    public static final class Config implements BlobConfig {
+
+        private final boolean streamBlob;
+        private final int subType;
+        private final int blobBufferSize;
+        private final DatatypeCoder datatypeCoder;
+
+        private Config(int subType, boolean streamBlob, int blobBufferSize, DatatypeCoder datatypeCoder) {
+            this.streamBlob = streamBlob;
+            this.subType = subType;
+            this.blobBufferSize = blobBufferSize;
+            this.datatypeCoder = requireNonNull(datatypeCoder, "datatypeCoder");
+        }
+
+        public int blobBufferSize() {
+            return blobBufferSize;
+        }
+
+        public Reader createReader(InputStream inputStream) {
+            return datatypeCoder.createReader(inputStream);
+        }
+
+        public Writer createWriter(OutputStream outputStream) {
+            return datatypeCoder.createWriter(outputStream);
+        }
+
+        @Override
+        public void writeOutputConfig(BlobParameterBuffer blobParameterBuffer) {
+            blobParameterBuffer.addArgument(isc_bpb_type, streamBlob ? isc_bpb_type_stream : isc_bpb_type_segmented);
+            /*
+             NOTE: Ideally, only target type and interp would need to be written, but that results in errors about
+             missing filters between type 0 and the target type (e.g. for user-defined blob sub_type -1:
+             "filter not found to convert type 0 to type -1")
+            */
+            blobParameterBuffer.addArgument(isc_bpb_source_type, subType);
+            blobParameterBuffer.addArgument(isc_bpb_target_type, subType);
+            if (subType == BLOB_SUB_TYPE_TEXT) {
+                int characterSetId = datatypeCoder.getEncodingDefinition().getFirebirdCharacterSetId();
+                blobParameterBuffer.addArgument(isc_bpb_source_interp, characterSetId);
+                // NOTE: Firebird doesn't seem to store the blob character set id, possibly this causes issues elsewhere
+                blobParameterBuffer.addArgument(isc_bpb_target_interp, characterSetId);
+            }
+        }
+
+        @Override
+        public void writeInputConfig(BlobParameterBuffer blobParameterBuffer) {
+            blobParameterBuffer.addArgument(isc_bpb_type, streamBlob ? isc_bpb_type_stream : isc_bpb_type_segmented);
+            /*
+             NOTE: It shouldn't be necessary to set source_type, but it looks like Firebird somehow ignores the actual
+             blob subtype, which then causes incorrect transliteration as it tries to convert as if it is
+             blob sub_type binary
+            */
+            blobParameterBuffer.addArgument(isc_bpb_source_type, subType);
+            blobParameterBuffer.addArgument(isc_bpb_target_type, subType);
+            if (subType == BLOB_SUB_TYPE_TEXT) {
+                int characterSetId = datatypeCoder.getEncodingDefinition().getFirebirdCharacterSetId();
+                // NOTE: Not writing (source_interp) should result in transliteration from the blob character set
+                blobParameterBuffer.addArgument(isc_bpb_target_interp, characterSetId);
+            }
         }
     }
 }

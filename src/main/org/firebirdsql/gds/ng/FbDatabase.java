@@ -39,22 +39,18 @@ import java.sql.SQLException;
  * from them.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public interface FbDatabase extends FbAttachment {
 
     /**
      * Creates a new database, connection remains attached to database.
-     *
-     * @throws SQLException
      */
     void createDatabase() throws SQLException;
 
     /**
      * Drops (and deletes) the currently attached database.
-     *
-     * @throws SQLException
      */
     void dropDatabase() throws SQLException;
 
@@ -93,7 +89,6 @@ public interface FbDatabase extends FbAttachment {
      *         TransactionParameterBuffer with the required transaction
      *         options
      * @return FbTransaction
-     * @throws SQLException
      */
     FbTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException;
 
@@ -115,9 +110,8 @@ public interface FbDatabase extends FbAttachment {
      * Creates a statement associated with a transaction
      *
      * @param transaction
-     *         FbTransaction to associate with this statement (can be <code>null</code>).
+     *         FbTransaction to associate with this statement (can be {@code null})
      * @return FbStatement
-     * @throws SQLException
      */
     FbStatement createStatement(FbTransaction transaction) throws SQLException;
 
@@ -128,12 +122,50 @@ public interface FbDatabase extends FbAttachment {
      * </p>
      *
      * @param transaction
-     *         Transaction associated with the blob.
+     *         transaction associated with the blob
      * @param blobParameterBuffer
-     *         Blob Parameter Buffer
-     * @return Instance of {@link FbBlob}
+     *         blob parameter buffer
+     * @return instance of {@link FbBlob}
      */
     FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer);
+
+    /**
+     * Creates a blob for write access to a new blob on the server.
+     * <p>
+     * The blob is initially closed.
+     * </p>
+     * <p>
+     * Equivalent to calling {@link #createBlobForOutput(FbTransaction, BlobParameterBuffer)} with {@code null} for
+     * {@code blobParameterBuffer}.
+     * </p>
+     *
+     * @param transaction
+     *         transaction associated with the blob
+     * @return instance of {@link FbBlob}
+     * @since 5
+     */
+    default FbBlob createBlobForOutput(FbTransaction transaction) {
+        return createBlobForOutput(transaction, (BlobParameterBuffer) null);
+    }
+
+    /**
+     * Creates a blob for write access to a new blob on the server.
+     * <p>
+     * The blob is initially closed.
+     * </p>
+     *
+     * @param transaction
+     *         transaction associated with the blob
+     * @param blobConfig
+     *         blob config (cannot be {@code null})
+     * @return instance of {@link FbBlob}
+     * @since 5
+     */
+    default FbBlob createBlobForOutput(FbTransaction transaction, BlobConfig blobConfig) {
+        BlobParameterBuffer blobParameterBuffer = createBlobParameterBuffer();
+        blobConfig.writeOutputConfig(blobParameterBuffer);
+        return createBlobForOutput(transaction, blobParameterBuffer);
+    }
 
     /**
      * Creates a blob for read access to an existing blob on the server.
@@ -142,14 +174,56 @@ public interface FbDatabase extends FbAttachment {
      * </p>
      *
      * @param transaction
-     *         Transaction associated with the blob.
+     *         transaction associated with the blob
      * @param blobParameterBuffer
-     *         Blob Parameter Buffer
+     *         blob parameter buffer
      * @param blobId
-     *         Handle id of the blob
-     * @return Instance of {@link FbBlob}
+     *         id of the blob
+     * @return instance of {@link FbBlob}
      */
     FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId);
+
+    /**
+     * Creates a blob for read access to an existing blob on the server.
+     * <p>
+     * The blob is initially closed.
+     * </p>
+     * <p>
+     * Equivalent to calling {@link #createBlobForInput(FbTransaction, BlobParameterBuffer, long)} with {@code null} for
+     * {@code blobParameterBuffer}.
+     * </p>
+     *
+     * @param transaction
+     *         transaction associated with the blob
+     * @param blobId
+     *         id of the blob
+     * @return instance of {@link FbBlob}
+     * @since 5
+     */
+    default FbBlob createBlobForInput(FbTransaction transaction, long blobId) {
+        return createBlobForInput(transaction, (BlobParameterBuffer) null, blobId);
+    }
+
+    /**
+     * Creates a blob for read access to an existing blob on the server.
+     * <p>
+     * The blob is initially closed.
+     * </p>
+     *
+     * @param transaction
+     *         transaction associated with the blob
+     * @param blobConfig
+     *         blob config (cannot be {@code null})
+     * @param blobId
+     *         handle id of the blob
+     * @return instance of {@link FbBlob}
+     * @since 5
+     */
+    default FbBlob createBlobForInput(FbTransaction transaction, BlobConfig blobConfig, long blobId) {
+        BlobParameterBuffer blobParameterBuffer = createBlobParameterBuffer();
+        blobConfig.writeInputConfig(blobParameterBuffer);
+        return createBlobForInput(transaction, blobParameterBuffer, blobId);
+    }
 
     /**
      * Creates a blob parameter buffer that is usable with {@link #createBlobForInput(FbTransaction,
@@ -191,8 +265,7 @@ public interface FbDatabase extends FbAttachment {
      *         Information items to request
      * @param maxBufferLength
      *         Maximum response buffer length to use
-     * @return The response buffer (note: length is the actual length of the
-     * response, not <code>maxBufferLength</code>
+     * @return The response buffer (note: length is the actual length of the response, not {@code maxBufferLength}
      * @throws SQLException
      *         For errors retrieving the information.
      */
@@ -201,16 +274,16 @@ public interface FbDatabase extends FbAttachment {
     /**
      * Performs an execute immediate of a statement.
      * <p>
-     * A call to this method is the equivalent of a <code>isc_dsql_execute_immediate()</code> without parameters.
+     * A call to this method is the equivalent of a {@code isc_dsql_execute_immediate()} without parameters.
      * </p>
      *
      * @param statementText
      *         Statement text
      * @param transaction
-     *         Transaction (<code>null</code> only allowed if database is not attached!)
+     *         Transaction ({@code null} only allowed if database is not attached!)
      * @throws SQLException
-     *         For errors executing the statement, or if <code>transaction</code> is <code>null</code> when the
-     *         database is attached or not <code>null</code> when the database is not attached
+     *         For errors executing the statement, or if {@code transaction} is {@code null} when the database is
+     *         attached or not {@code null} when the database is not attached
      */
     void executeImmediate(String statementText, FbTransaction transaction) throws SQLException;
 

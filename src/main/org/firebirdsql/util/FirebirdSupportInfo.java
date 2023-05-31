@@ -44,7 +44,7 @@ import java.sql.SQLException;
  * the <a href="https://github.com/FirebirdSQL/jaybird/issues/">Jaybird tracker</a>.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class FirebirdSupportInfo {
@@ -62,7 +62,18 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * Check if the major.minor of this version is equal to or larger than the specified version.
+     * Check if the <em>major</em> of this version is equal to or larger than the specified version.
+     *
+     * @param majorVersion
+     *         Major version
+     * @return {@code true} when current major is equal to or larger than required
+     */
+    public boolean isVersionEqualOrAbove(int majorVersion) {
+        return serverVersion.isEqualOrAbove(majorVersion);
+    }
+
+    /**
+     * Check if the <em>major.minor</em> of this version is equal to or larger than the specified version.
      *
      * @param majorVersion
      *         Major version
@@ -92,7 +103,7 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * Check if the major.minor of this version is below the specified version.
+     * Check if the <em>major.minor</em> of this version is below the specified version.
      * <p>
      * Equivalent to {@code !isVersionEqualOrAbove(majorVersion, minorVersion)}.
      * </p>
@@ -124,14 +135,14 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when the data type BOOLEAN is supported
      */
     public boolean supportsBoolean() {
-        return isVersionEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3);
     }
 
     /**
      * @return {@code true} when the data type DECFLOAT is supported
      */
     public boolean supportsDecfloat() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
     }
 
     /**
@@ -149,7 +160,7 @@ public final class FirebirdSupportInfo {
             return true;
         } else if (precision <= 38) {
             // NOTE: Can result in problems for Firebird 4.0.0.1603 or earlier
-            return isVersionEqualOrAbove(4, 0);
+            return isVersionEqualOrAbove(4);
         }
         return false;
     }
@@ -158,7 +169,7 @@ public final class FirebirdSupportInfo {
      * @return The maximum decimal and numeric precision
      */
     public int maxDecimalPrecision() {
-        if (isVersionEqualOrAbove(4, 0)) {
+        if (isVersionEqualOrAbove(4)) {
             return 38;
         }
         return 18;
@@ -169,21 +180,21 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsInt128() {
         // NOTE: Can result in problems for Firebird 4.0.0.2075 or earlier
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
     }
 
     /**
      * @return {@code true} when the COMMENT statement is supported
      */
     public boolean supportsComment() {
-        return isVersionEqualOrAbove(2, 0);
+        return isVersionEqualOrAbove(2);
     }
 
     /**
      * @return {@code true} when RDB$GET_CONTEXT and RDB$SET_CONTEXT are supported
      */
     public boolean supportsGetSetContext() {
-        return isVersionEqualOrAbove(2, 0);
+        return isVersionEqualOrAbove(2);
     }
 
     /**
@@ -216,7 +227,7 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when INSERT ... RETURNING ... is supported
      */
     public boolean supportsInsertReturning() {
-        return isVersionEqualOrAbove(2, 0);
+        return isVersionEqualOrAbove(2);
     }
 
     /**
@@ -230,14 +241,14 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when {@code RETURNING *} and {@code RETURNING ref.*} is supported.
      */
     public boolean supportsReturningAll() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
     }
 
     /**
      * @return {@code true} when {@code RETURNING} supports multiple rows, {@code false} only singleton results
      */
     public boolean supportsMultiRowReturning() {
-        return isVersionEqualOrAbove(5, 0);
+        return isVersionEqualOrAbove(5);
     }
 
     /**
@@ -259,7 +270,7 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when EXECUTE BLOCK is supported
      */
     public boolean supportsExecuteBlock() {
-        return isVersionEqualOrAbove(2, 0);
+        return isVersionEqualOrAbove(2);
     }
 
     /**
@@ -280,7 +291,7 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when field descriptors contain table alias information
      */
     public boolean supportsTableAlias() {
-        return isVersionEqualOrAbove(2, 0);
+        return isVersionEqualOrAbove(2);
     }
 
     /**
@@ -314,7 +325,7 @@ public final class FirebirdSupportInfo {
         case 12:
             return isVersionEqualOrAbove(2, 5);
         case 13:
-            return isVersionEqualOrAbove(3, 0);
+            return isVersionEqualOrAbove(3);
         case 14:
             // fall-through: Jaybird has only implemented protocol version 14 as part of version 15
         case 15:
@@ -339,7 +350,7 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when parametrized exceptions are supported.
      */
     public boolean supportsParametrizedExceptions() {
-        return isVersionEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3);
     }
 
     /**
@@ -357,7 +368,7 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * @return {@code true} when blobs are fully searchable (eg using `LIKE`).
+     * @return {@code true} when blobs are fully searchable (e.g. using `LIKE`).
      */
     public boolean supportsFullSearchableBlobs() {
         return isVersionEqualOrAbove(2, 1);
@@ -367,14 +378,14 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when identity columns are supported.
      */
     public boolean supportsIdentityColumns() {
-        return isVersionEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3);
     }
 
     /**
      * @return The maximum number of characters in an identifier.
      */
     public int maxIdentifierLengthCharacters() {
-        if (isVersionEqualOrAbove(4, 0)) {
+        if (isVersionEqualOrAbove(4)) {
             // Technically this is configurable
             return 63;
         } else {
@@ -387,7 +398,7 @@ public final class FirebirdSupportInfo {
      * @see #maxReportedIdentifierLengthBytes()
      */
     public int maxIdentifierLengthBytes() {
-        if (isVersionEqualOrAbove(4, 0)) {
+        if (isVersionEqualOrAbove(4)) {
             // Technically this is configurable
             return 4 * 63;
         } else {
@@ -401,7 +412,7 @@ public final class FirebirdSupportInfo {
      * @see #maxIdentifierLengthBytes()
      */
     public int maxReportedIdentifierLengthBytes() {
-        if (isVersionEqualOrAbove(4, 0)) {
+        if (isVersionEqualOrAbove(4)) {
             // Technically this is configurable
             return 4 * 63;
         } else if (reportsByteLengthInDescriptor()) {
@@ -416,7 +427,7 @@ public final class FirebirdSupportInfo {
      * @return The character set id of system metadata
      */
     public int reportedMetadataCharacterSetId() {
-        if (isVersionEqualOrAbove(4, 0)) {
+        if (isVersionEqualOrAbove(4)) {
             return 4; // UTF8
         } else {
             return 3; // UNICODE_FSS
@@ -426,39 +437,39 @@ public final class FirebirdSupportInfo {
     public boolean supportsPageSize(int pageSize) {
         switch (pageSize) {
         case PageSizeConstants.SIZE_1K:
-            return !isVersionEqualOrAbove(2, 1);
         case PageSizeConstants.SIZE_2K:
             return !isVersionEqualOrAbove(2, 1);
         case PageSizeConstants.SIZE_4K:
-            return true;
         case PageSizeConstants.SIZE_8K:
-            return true;
         case PageSizeConstants.SIZE_16K:
-            // TODO check
-            return isVersionEqualOrAbove(2, 0);
+            return true;
         case PageSizeConstants.SIZE_32K:
-            return isVersionEqualOrAbove(4, 0);
+            return isVersionEqualOrAbove(4);
         }
         return false;
     }
 
     public boolean supportsWireEncryption() {
-        return isVersionEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3);
     }
 
     public boolean supportsWireCryptArc4() {
-        return isVersionEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3);
     }
 
     public boolean supportsWireCryptChaCha() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
+    }
+
+    public boolean supportsWireCryptChaCha64() {
+        return isVersionEqualOrAbove(4, 0, 1);
     }
 
     /**
      * @return {@code true} when zlib wire compression is supported
      */
     public boolean supportsWireCompression() {
-        return isVersionEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3);
     }
 
     /**
@@ -472,7 +483,7 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when PSQL functions are supported
      */
     public boolean supportsPsqlFunctions() {
-        return isVersionEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3);
     }
 
     /**
@@ -493,7 +504,7 @@ public final class FirebirdSupportInfo {
         case LegacyAuthenticationPluginSpi.LEGACY_AUTH_NAME:
             return true;
         case SrpAuthenticationPluginSpi.SRP_AUTH_NAME:
-            return isVersionEqualOrAbove(3, 0);
+            return isVersionEqualOrAbove(3);
         case Srp224AuthenticationPluginSpi.SRP_224_AUTH_NAME:
         case Srp256AuthenticationPluginSpi.SRP_256_AUTH_NAME:
         case Srp384AuthenticationPluginSpi.SRP_384_AUTH_NAME:
@@ -508,7 +519,7 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when {@code RDB$RECORD_VERSION} pseudo column is supported
      */
     public boolean supportsRecordVersionPseudoColumn() {
-        return isVersionEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3);
     }
 
     /**
@@ -527,11 +538,11 @@ public final class FirebirdSupportInfo {
             return 40;
         } else if (databaseMajorVersion == 2 && databaseMinorVersion == 5) {
             return 42;
-        } else if (databaseMajorVersion == 3 && databaseMinorVersion == 0) {
+        } else if (databaseMajorVersion == 3) {
             return 50;
-        } else if (databaseMajorVersion == 4 && databaseMinorVersion == 0) {
+        } else if (databaseMajorVersion == 4) {
             return 54;
-        } else if (databaseMajorVersion == 5 && databaseMinorVersion == 0) {
+        } else if (databaseMajorVersion == 5) {
             return 56;
         } else {
             return -1;
@@ -539,45 +550,45 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * @return {@code true} when this Firebird version supports case sensitive user names.
+     * @return {@code true} when this Firebird version supports case-sensitive usernames.
      */
     public boolean supportsCaseSensitiveUserNames() {
-        return isVersionEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3);
     }
 
     /**
      * @return {@code true} when this Firebird version supports explained (detailed) execution plans.
      */
     public boolean supportsExplainedExecutionPlan() {
-        return isVersionEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3);
     }
 
     /**
      * @return {@code true} when this Firebird version supports {@code TIME(STAMP) WITH TIME ZONE}
      */
     public boolean supportsTimeZones() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
     }
 
     /**
      * @return {@code true} when this Firebird version supports packages.
      */
     public boolean supportsPackages() {
-        return isVersionEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3);
     }
 
     /**
      * @return {@code true} when this Firebird version supports FLOAT(p) with binary precision.
      */
     public boolean supportsFloatBinaryPrecision() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
     }
 
     /**
      * @return {@code true} when this Firebird version supports statement timeouts.
      */
     public boolean supportsStatementTimeouts() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
     }
 
     /**
@@ -591,44 +602,105 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when this Firebird version supports NBackup backup with GUID
      */
     public boolean supportsNBackupWithGuid() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
     }
 
     /**
      * @return {@code true} when this Firebird version supports NBackup in-place restore
      */
     public boolean supportsNBackupInPlaceRestore() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
     }
 
     /**
      * @return {@code true} when this Firebird version supports NBackup fixup
      */
     public boolean supportsNBackupFixup() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
     }
 
     /**
      * @return {@code true} when this Firebird version supports NBackup preserve sequence
      */
     public boolean supportsNBackupPreserveSequence() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
     }
 
     /**
-     * @return {@code true} when this Firebird versions supports scrollable cursors. (NOTE: this does not mean
+     * @return {@code true} when this Firebird version supports NBackup clean history
+     */
+    public boolean supportsNBackupCleanHistory() {
+        return isVersionEqualOrAbove(4, 0, 3);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports scrollable cursors. (NOTE: this does not mean
      * the connection supports it, as that depends on the actual protocol (i.e. PURE_JAVA or derivative))
      */
     public boolean supportsScrollableCursors() {
-        return isVersionEqualOrAbove(5, 0);
+        return isVersionEqualOrAbove(5);
     }
 
     /**
-     * @return {@code true} when this Firebird versions supports server-side batch updates. (NOTE: this does not mean
+     * @return {@code true} when this Firebird version supports server-side batch updates. (NOTE: this does not mean
      * the connection supports it, as that depends on the actual protocol (i.e. PURE_JAVA or derivative))
      */
     public boolean supportsServerBatch() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(4);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports custom security databases
+     */
+    public boolean supportsCustomSecurityDb() {
+        return isVersionEqualOrAbove(3);
+    }
+
+    public boolean supportsWnet() {
+        // NOTE: There is probably a lower boundary as well (2.0?), but not checking that
+        return isVersionBelow(5, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports statement texts longer than 64KB
+     */
+    public boolean supportsStatementTextLongerThan64K() {
+        return isVersionEqualOrAbove(3);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports parallel workers
+     */
+    public boolean supportsParallelWorkers() {
+        return isVersionEqualOrAbove(5);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version has the {@code RDB$CONFIG} table
+     */
+    public boolean supportsRDB$CONFIG() {
+        return isVersionEqualOrAbove(4);
+    }
+
+    /**
+     * @return {@code true} if the gfix/service repair option upgrade ODS is supported
+     */
+    public boolean supportsUpgradeOds() {
+        return isVersionEqualOrAbove(5);
+    }
+
+    /**
+     * @return {@code true} if the gfix/service repair option icu (fix ICU) is supported
+     */
+    public boolean supportsFixIcu() {
+        return isVersionEqualOrAbove(3);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version is considered a supported version
+     */
+    public boolean isSupportedVersion() {
+        return isVersionEqualOrAbove(3);
     }
 
     /**
@@ -663,7 +735,7 @@ public final class FirebirdSupportInfo {
     /**
      * @param connection
      *         A database connection (NOTE: {@link java.sql.Connection} is used, but it must be or unwrap to a
-     *         {@link org.firebirdsql.jdbc.FirebirdConnection}.
+     *         {@link org.firebirdsql.jdbc.FirebirdConnection}).
      * @return FirebirdVersionSupport instance
      * @throws java.lang.IllegalArgumentException
      *         When the provided connection is not an instance of or wrapper for

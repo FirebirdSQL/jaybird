@@ -29,7 +29,7 @@ import java.sql.SQLException;
  * This exception always has a {@link java.sql.SQLException} as cause.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public class InvalidPropertyValueException extends IllegalArgumentException {

@@ -41,7 +41,7 @@ import static org.firebirdsql.util.StringUtils.trimToNull;
  * Holds information like name, aliases, default value etc for a Jaybird connection property.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class ConnectionProperty {

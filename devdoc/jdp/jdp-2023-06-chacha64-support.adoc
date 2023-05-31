@@ -1,0 +1,54 @@
+= jdp-2023-06: ChaCha64 Support
+
+== Status
+
+* Published: 2023-05-20
+* Implemented in: Jaybird 6
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+The "`ChaCha`" wire protocol encryption introduced in Firebird 4.0 uses ChaCha20 encryption.
+The way ChaCha20 works is that after 256GiB of data, it needs to be re-keyed to prevent key reuse, which could be exploited for cryptological analysis and (partial) decryption.
+Unfortunately, the Firebird wire protocol has no method to re-key the wire protocol encryption, and instead a new variant of ChaCha was added in Firebird 4.0.1 and Firebird 5.0.0, "`ChaCha64`".
+"`ChaCha64`" uses a 64-bit counter instead of the 32-bit counter used in ChaCha20 as used by the "`ChaCha`" wire protocol encryption.
+See also https://github.com/FirebirdSQL/firebird/issues/7065[Firebird#7065].
+
+ChaCha20 is standardized by https://datatracker.ietf.org/doc/html/rfc7539#section-2.4[RFC 7539^] to use 96-bit nonce and a 32-bit counter.
+ChaCha with 64-bit counter (and 64-bit nonce) is another variant of ChaCha.
+
+Java includes a cipher _ChaCha20_ (since Java 11), which provides the RFC 7539 specified ChaCha variant (with 32-bit counter).
+Java itself does not provide an implementation which supports the 64-bit nonce and 64-bit counter variant.
+
+Bouncy Castle has support for the 64-bit counter variant of ChaCha.
+
+As a project, we like to minimize dependencies of the driver.
+
+The wire protocol plugin encryption support in Jaybird is not complete, and currently relies on hardcoded plugin names instead of the service loader mechanism.
+
+== Decision
+
+Jaybird will add support for "`ChaCha64`" wire protocol encryption using a separate artifact, `org.firebirdsql.jdbc:chacha64-plugin`, as part of the Jaybird source tree (so not a separate repository).
+The implementation will use the Bouncy Castle library.
+
+The plugin JAR will use automatic module name `org.firebirdsql.jaybird.chacha64` in preparation for future modularization.
+Using digits at the end of module names is discouraged, but the alternatives (e.g. `...chachasixfour`) are too ugly, so we'll stick with it.
+
+Selective enabling of encryption plugins (e.g. through a connection property) is *not* part of this JDP.
+
+== Consequences
+
+The main Jaybird dependency -- `org.firebirdsql.jdbc:jaybird` -- will not provide "`ChaCha64`" support.
+Support will only be available when the `org.firebirdsql.jdbc:chacha64-plugin` artifact is on the classpath.
+
+Wire protocol encryption plugin support in Jaybird needs to be completed so plugins can be loaded using the service loader mechanism, with a fallback to the plugins included in the core _jaybird_ artifact.
+
+The plugin JAR will be included in the distribution zip, together with its sources and javadoc JARs.
+Given the javadoc of the plugin is not that interesting, the unpacked javadoc of the plugin will not be included in the `docs` directory.
+
+The main Jaybird tests will -- by default -- depend on the `chacha64-plugin` module.
+This can be disabled by passing `-Ptest.chacha64=disabled` to Gradle, so test will only find "`Arc4`" and "`ChaCha`".
+Excluding the `chacha64-plugin` from the test classpath this way will cause tests to fail when they explicitly expect use of "`ChaCha64`" (i.e. `FBConnectionTest#expectedWireCryptPluginApplied()`).

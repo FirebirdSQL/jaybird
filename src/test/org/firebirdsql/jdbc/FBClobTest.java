@@ -363,6 +363,22 @@ class FBClobTest {
         }
     }
 
+    @Test
+    void testSQLExceptionAfterFree() throws Exception {
+        final String TEST_VALUE = "TEST_STRING";
+        addTestValues(con, 1, TEST_VALUE, PLAIN_BLOB);
+        try (Statement stmt = con.createStatement();
+             ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob")) {
+            resultSet.next();
+            Clob clob = resultSet.getClob(1);
+            clob.free();
+
+            assertThrows(SQLException.class, clob::getCharacterStream);
+            assertThrows(SQLException.class, () -> clob.getCharacterStream(1, 1));
+            assertThrows(SQLException.class, () -> { try (Writer ignored = clob.setCharacterStream(1)) { } });
+        }
+    }
+
     private String readStringViaGetBytes(Connection con, String colName, String javaEncoding) throws SQLException,
             UnsupportedEncodingException {
         try (PreparedStatement selectStmt = con.prepareStatement("SELECT " + colName + " FROM test_clob");

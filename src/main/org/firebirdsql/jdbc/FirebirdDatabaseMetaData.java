@@ -32,7 +32,7 @@ import java.sql.SQLException;
  * Extension of {@link DatabaseMetaData} interface providing access to Firebird
  * specific features.
  * 
- * @author <a href="mailto:mirommail@web.de">Michael Romankiewicz</a>
+ * @author Michael Romankiewicz
  */
 @SuppressWarnings("unused")
 public interface FirebirdDatabaseMetaData extends DatabaseMetaData {

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,7 +23,7 @@ import java.sql.SQLException;
 /**
  * Instances of this field have open resources and must be cleaned up.
  *
- * @author <a href="mailto:vasiliy.yashkov@gmail.com">Vasiliy Yashkov</a>
+ * @author Vasiliy Yashkov
  * @since 5
  */
 public interface FBCloseableField {

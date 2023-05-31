@@ -50,14 +50,10 @@ import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
  * register the extension in a static field.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public abstract class UsesDatabaseExtension {
-
-    // TODO Split into having a UsesDatabaseExtension and a UsesDatabaseForAllExtension or similar to avoid warnings
-    //  when registering non-static "per-test" variant, and having exceptions on cleanup when registering static for
-    //  a "per-test" variant
 
     private final boolean initialCreate;
     private FBManager fbManager = null;
@@ -79,7 +75,11 @@ public abstract class UsesDatabaseExtension {
     }
 
     void sharedAfter() {
+        if (fbManager == null) return;
         try {
+            if (fbManager.getState().equals("Stopped")) {
+                FBTestProperties.configureFBManager(fbManager);
+            }
             for (String databasePath : databasesToDrop) {
                 try {
                     fbManager.dropDatabase(databasePath, FBTestProperties.DB_USER, FBTestProperties.DB_PASSWORD);

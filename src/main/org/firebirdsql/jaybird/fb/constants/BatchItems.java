@@ -27,7 +27,7 @@ package org.firebirdsql.jaybird.fb.constants;
 /**
  * Constants for batch items and values (batch config, blob policy and information items).
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 @SuppressWarnings("unused")

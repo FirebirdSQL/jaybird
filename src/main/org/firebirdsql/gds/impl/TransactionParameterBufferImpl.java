@@ -24,10 +24,15 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
 
+import java.io.Serial;
+
 /**
  * Implementation of the {@link org.firebirdsql.gds.TransactionParameterBuffer} interface.
  */
 public final class TransactionParameterBufferImpl extends ParameterBufferBase implements TransactionParameterBuffer {
+
+    @Serial
+    private static final long serialVersionUID = 7800513617882155482L;
 
     public TransactionParameterBufferImpl() {
         super(TpbMetaData.TPB_VERSION_3);
@@ -35,11 +40,18 @@ public final class TransactionParameterBufferImpl extends ParameterBufferBase im
 
     @Override
     public TransactionParameterBuffer deepCopy() {
-        final TransactionParameterBufferImpl result = new TransactionParameterBufferImpl();
-
-        result.getArgumentsList().addAll(this.getArgumentsList());
-
+        var result = new TransactionParameterBufferImpl();
+        copyTo(result);
         return result;
+    }
+
+    @Override
+    public void copyTo(TransactionParameterBuffer destination) {
+        if (destination instanceof TransactionParameterBufferImpl tpbImpl) {
+            tpbImpl.getArgumentsList().addAll(this.getArgumentsList());
+        } else {
+            TransactionParameterBuffer.super.copyTo(destination);
+        }
     }
 
     public enum TpbMetaData implements ParameterBufferMetaData {

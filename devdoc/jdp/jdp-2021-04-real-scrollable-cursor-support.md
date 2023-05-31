@@ -73,9 +73,10 @@ be enabled explicitly.
 
 - Make server-side scrollable cursors the default.
 
-  Although attractive from a "it-will-get-used" point-of-view, the differences in
-  behaviour for updatable result sets are sufficient to warrant a conservative 
-  approach and make it opt-in. This may be revisited in the future.
+  Although attractive from an "it-will-get-used" point-of-view, the differences 
+  in behaviour for updatable result sets are sufficient to warrant 
+  a conservative approach and make it opt-in. This may be revisited in 
+  the future.
 - Modify behaviour of emulated scrollable cursors to be the same (for updatable
   cursors).
 

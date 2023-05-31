@@ -8,20 +8,30 @@
 :toc: left
 :icons: font
 :sectnums:
+:bc-version: 1.73
+:jna-version: 5.12.1
 
-[#jaybird-5-0-x-changelog]
-== Jaybird 5.0.x changelog
+ifeval::["{version_tag}" != ""]
+[WARNING]
+====
+Jaybird {version_wo_target} is still in development, and intended for testing and evaluation purposes.
+We do not recommend this version for use in production environments.
 
-Changes per Jaybird 5 release.
-See also <<whats-new-in-jaybird-5,What's new in Jaybird 5>>.
-For known issues, consult <<known-issues,Known Issues>>.
+If you come across any issues when using this version, please report them on https://github.com/FirebirdSQL/jaybird/issues.
+====
+endif::[]
 
-...
+[#jaybird-6-0-x-changelog]
+== Jaybird 6.0.x changelog
+
+Changes per Jaybird 6 release.
+See also <<whats-new-in-jaybird-6>>.
+For known issues, consult <<known-issues>>.
 
 [#known-issues]
 == Known issues
 
-* Using a native connection with a Firebird 3 client library to a Firebird 2.5 or older server may be slow to connect.
+* Using a native connection with a Firebird 3.0 or higher client library to a Firebird 2.5 or older server may be slow to connect.
 +
 Possible workarounds:
 +
@@ -49,41 +59,51 @@ See also https://www.firebirdsql.org/file/documentation/drivers_documentation/ja
 
 Jaybird is a JDBC driver suite to connect to Firebird database servers from Java and other Java Virtual Machine (JVM) languages.
 
+This driver does not work on Android, because it uses classes and features not available in Android.
+
 [#about-this-version]
 === About this version
 
-...
+// TODO Describe Jaybird 6
+
+The major changes and new features in Jaybird 5 are:
+
+// TODO List Jaybird 6 changes
+
+Upgrading from Jaybird 5 to 6 should be simple, but please make sure to read <<compatibility-changes>> before using Jaybird 6.
+See also <<upgrading-from-jaybird-5-to-jaybird-6>>.
 
 Bug reports about undocumented changes in behavior are appreciated.
-Feedback can be sent to the Firebird-java mailing list or reported on the issue tracker https://github.com/FirebirdSQL/jaybird/issues/.
+Feedback can be sent to the https://groups.google.com/g/firebird-java[Firebird-java mailing list] or reported on the issue tracker https://github.com/FirebirdSQL/jaybird/issues.
 
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.10, and 4.0.2, but should also support other Firebird versions from 2.5 and up.
+Jaybird {version_wo_target} was tested against Firebird 3.0.10, and 4.0.2 and a recent snapshot of Firebird 5.0, but should also support other Firebird versions from 3.0 and up.
+
+Jaybird 6 will -- by default -- not connect to Firebird 2.5 or older.
 
 This driver does not support InterBase servers due to Firebird-specific changes in the protocol and database attachment parameters that are sent to the server.
 
 [#supported-java-versions]
 === Supported Java versions
 
-Jaybird 5 supports Java 8 (JDBC 4.2), and Java 9 and higher (JDBC 4.3).
+Jaybird 6 supports Java 17 and higher (JDBC 4.3).
 Support for earlier Java versions has been dropped.
 
-Given the limited support period for Java 9 and higher versions, we will limit support on those versions to the most recent LTS version and the latest release.
-Currently, that means we support Java 8, 11 and 17.
+Given the limited support period for Java 9 and higher versions, we limit support to Java 17 and the most recent LTS version after Java 17 and the latest Java release.
+Currently, that means we support Java 17 and 20.
 
 [NOTE]
 ====
-Support for Java 11 will likely be dropped for Java 17 or whatever the Java LTS is at the time of Jaybird 5 release.
+Jaybird 5 will serve as a "`long-term support`" version for Java 8 and 11, with maintenance releases at least until the release of Jaybird 7.
 ====
 
-Jaybird 5 provides libraries for Java 8 and Java 11.
-The Java 8 builds have the same source and all JDBC 4.3 related functionality and can be used on Java 9 and higher as well.
+Jaybird 6 provides libraries for Java Java 17.
 
-Jaybird 5 is not modularized, but all versions declare the automatic module name  `org.firebirdsql.jaybird`.
+Jaybird 6 is not modularized, but all versions declare the automatic module name `org.firebirdsql.jaybird`.
 
-See als <<java-support,Java support>> in <<whats-new-in-jaybird-5,What's new in Jaybird 5>>.
+See also <<java-support>> in <<whats-new-in-jaybird-6>>.
 
 [#specification-support]
 === Specification support
@@ -95,17 +115,14 @@ Jaybird supports the following specifications:
 
 | JDBC 4.3
 | All JDBC 4.3 methods for features supported by Firebird;
-Java 9 and higher supported using the Java 8 or Java 11 driver.
-
-| JDBC 4.2
-| All JDBC 4.2 methods for features supported by Firebird.
+Java 9 and higher supported using the Java 17 driver.
 
 | JTA 1.0.1
 | Implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
 |===
 
-[#getting-jaybird-5]
-== Getting Jaybird 5
+[#getting-jaybird-6]
+== Getting Jaybird 6
 
 [#jaybird-version_wo_target]
 === Jaybird {version_wo_target}
@@ -113,20 +130,19 @@ Java 9 and higher supported using the Java 8 or Java 11 driver.
 [#maven]
 ==== Maven
 
-Jaybird {version_wo_target} is available from Maven central:
+Jaybird {version_wo_target} is available on Maven Central:
 
-Groupid: `org.firebirdsql.jdbc`, +
-Artifactid: `jaybird`, +
-Version: `{version_simple}.javaXX{version_tag}` (where `XX` is `8` or `11`).
+groupId: `org.firebirdsql.jdbc`, +
+artifactId: `jaybird`, +
+version: `{version_wo_target}`
 
-For ease of transition to the new artifact naming, we also provide a Maven relocation artifact with artifact id `jaybird-jdkXX` (with `XX` is `18`).
-However, we recommend switching to the `jaybird` artifact id.
-
-NOTE: SNAPSHOT releases are only available from the Sonatype snapshot  repository, https://oss.sonatype.org/content/repositories/snapshots
+ifeval::["{version_tag}" == "-SNAPSHOT"]
+NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://oss.sonatype.org/content/repositories/snapshots
+endif::[]
 
 For example:
 
-[source,{.xml}]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
@@ -135,41 +151,54 @@ For example:
 </dependency>
 ----
 
-If you want to use Type 2 support (native, local or embedded), you need to  explicitly include JNA 5.12.1 as a dependency:
+To enable the "`ChaCha64`" wire encryption support, also add:
 
-[source,{.xml}]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
-    <groupId>net.java.dev.jna</groupId>
-    <artifactId>jna</artifactId>
-    <version>5.12.1</version>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>chacha64-plugin</artifactId>
+    <version>{version_example}</version>
 </dependency>
 ----
 
-For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient` dependency on your classpath to provide the native libraries for the `native`  and `local` protocol.
+If you want to use Type 2 support (native or embedded), you need to explicitly add `jaybird-native` as a dependency:
+
+[source,xml,subs="verbatim,attributes"]
+----
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-native</artifactId>
+    <version>{version_example}</version>
+</dependency>
+----
+
+For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient` dependency on your classpath to provide the native libraries for the `native` protocol.
 Be aware that this dependency does not support `embedded`.
 
-See also <<type-2-native-and-embedded-driver,Type 2 (native) and embedded driver>>.
+See also <<type-2-native-and-embedded-driver>>.
 
 [#download]
 ==== Download
 
 You can download the latest versions from https://www.firebirdsql.org/en/jdbc-driver/
 
-At minimum Jaybird 5 requires `jaybird-{version_simple}.javaXX{version_tag}.jar`  (where `XX` is `8` or `11`).
+At minimum Jaybird 6 requires `jaybird-{version_wo_target}.jar`.
 
-For native, local or embedded support, you will need to include `jna-5.12.1.jar`  on your classpath.
-See also <<type-2-native-and-embedded-driver,Type 2 (native) and embedded driver>>.
+For "`ChaCha64`" support, also add `chacha64-plugin.jar` and `bcprov-jdk18on-{bc-version}.jar`.
 
-[#upgrading-from-jaybird-4-to-jaybird-5]
-== Upgrading from Jaybird 4 to Jaybird 5
+For native or embedded support, you will need to include `jna-{jna-version}.jar` on your classpath.
+See also <<type-2-native-and-embedded-driver>>.
 
-Please make sure to read <<compatibility-changes,Compatibility changes>> before upgrading to Jaybird 5.
+[#upgrading-from-jaybird-5-to-jaybird-6]
+== Upgrading from Jaybird 5 to Jaybird 6
+
+Please make sure to read <<compatibility-changes,Compatibility changes>> before upgrading to Jaybird 6.
 
 [#maven-2]
 === Maven
 
-Change the version of the dependency to `{version_simple}.javaXX{version_tag}` (where `XX` is your Java version, `8` for Java 8 and `11` for Java 11).
+Change the version of the dependency to `{version_wo_target}`.
 If you're still using the artifact id `jaybird-jdkXX`, change it to `jaybird`.
 
 When your Jaybird dependency defines the exclusion for `javax.resource:connector-api` (see below), you can remove it.
@@ -184,386 +213,370 @@ When your Jaybird dependency defines the exclusion for `javax.resource:connector
 </exclusions>
 ----
 
-For more detailed instructions, see also the information on Maven in <<getting-jaybird-5,Getting Jaybird 5>>.
+For more detailed instructions, see also the information on Maven in <<getting-jaybird-6>>.
+
+If you use native or embedded, you now need to explicitly add `jaybird-native` as a dependency:
+
+[source,xml,subs="verbatim,attributes"]
+----
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-native</artifactId>
+    <version>{version_example}</version>
+</dependency>
+----
+
+If you use native or embedded, make sure to update your JNA dependency to version {jna-version}, or remove it altogether as the dependencies will be pulled in through the `jaybird-native` artifact.
+
+[source,xml,subs="verbatim,attributes"]
+----
+<dependency>
+    <groupId>net.java.dev.jna</groupId>
+    <artifactId>jna</artifactId>
+    <version>{jna-version}</version>
+</dependency>
+----
 
 [#manual-install]
 === Manual install
 
 If you manage your dependencies manually, you need to do the following:
 
-. Replace the Jaybird 4 library with the Jaybird 5 version
- ** `jaybird-4.0.x.jar` with `jaybird-{version_simple}.javaXX{version_tag}.jar` (where `XX` is `8` or `11`)
- ** `jaybird-full-4.0.x.jar` with `jaybird-{version_simple}.javaXX{version_tag}.jar`, the `jaybird-full` library no longer exists
-. Replace the `jna-5.5.0.jar` library with `jna-5.12.1.jar`
-+
-Only needed if you actually use native or embedded connections, otherwise remove JNA (assuming your application itself or other dependencies don't use it).
-. Remove the `connector-api-1.5.jar` library, it is no longer used by Jaybird
-. Remove the `antlr4-runtime-4.7.2.jar` library, it is no longer used by Jaybird
+. Replace the Jaybird 5 library with the Jaybird 6 version
+** `jaybird-5.0.x.<java>.jar` with `jaybird-{version_wo_target}.jar`
+. If you use the NATIVE or EMBEDDED protocols, add the following JARs to the classpath
+** `jaybird-native-{version_wo_target}.jar`
+** `jna-{jna-version}.jar` (if you have an older version of JNA, replace it)
+. To enable "`ChaCha64`" wire encryption support add the following JARs to the classpath
+** `chacha64-plugin-{version_wo_target}.jar`
+** `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip
 
 [#gotchas]
 === Gotcha's
 
-If you find a problem while upgrading, or other bugs: please report it  on https://github.com/FirebirdSQL/jaybird/issues/.
+If you find a problem while upgrading, or other bugs: please report it on https://github.com/FirebirdSQL/jaybird/issues.
 
-For known issues, consult <<known-issues,Known Issues>>.
+For known issues, consult <<known-issues>>.
 
-[#whats-new-in-jaybird-5]
-== What's new in Jaybird 5
+[#whats-new-in-jaybird-6]
+== What's new in Jaybird 6
 
-For a full list of changes, see https://github.com/FirebirdSQL/jaybird/issues?q=label%3A%22fix-version%3A+Jaybird+5%22[Firebird tracker for Jaybird 5].
+For a full list of changes, see https://github.com/FirebirdSQL/jaybird/issues?q=label%3A%22fix-version%3A+Jaybird+6%22[Firebird tracker for Jaybird 6].
+
+[#jaybird-version-numbering]
+=== Changes in version numbering
+
+Jaybird 6 uses Java 17 as the minimum supported version.
+Our expectation is that Java version specific artifacts are no longer needed.
+As a consequence, the Java version has been dropped from the version number.
+The full version and naming convention is documented in https://github.com/FirebirdSQL/jaybird/blob/v5.0.0-beta-1/devdoc/jdp/jdp-2023-01-version-number-and-naming-scheme.md[jdp-2023-01: Version Number and Naming Scheme]
+
+As a result of these new naming conventions, the following has been changed:
+
+* Maven version: `6.0.0` (was `5.0.0.java8`)
+* Distribution zip: `jaybird-6.0.0.zip` (was `jaybird-5.0.0.java8.zip`)
+* Jaybird: `jaybird-6.0.0.jar` (was `jaybird-5.0.0.java8.jar`)
+* Jaybird sources: `jaybird-6.0.0-sources.jar` (was `jaybird-5.0.0.java8-sources.jar`)
+* Jaybird javadoc: `jaybird-6.0.0-javadoc.jar` (was `jaybird-5.0.0.java8-javadoc.jar`)
+
+Furthermore, the client name reported to Firebird 2.5 and higher has been changed from `Jaybird jaybird-5.0.0.java8` to `Jaybird jaybird-6.0.0`.
 
 [#java-support]
 === Java support
 
-[#java-7-support-dropped]
-==== Java 7 support dropped
+[#java-before-17]
+==== Java version before 17 no longer supported
 
-Java 7 is no longer supported.
-See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-02-drop-java-7-support.md[jdp-2020-02 Drop Java 7 support].
+Support of Java versions before Java 17 was dropped.
 
-[#java-8]
-==== Java 8
+See also https://github.com/FirebirdSQL/jaybird/blob/v5.0.0-beta-1/devdoc/jdp/jdp-2022-03-java-17-minimum-version.md[jdp-2022-03: Java 17 minimum version]
 
-The driver supports Java 8.
-Depending on the actual release timeline of Jaybird 5, Java 8 support might be dropped before release.
+[#java-17-and-higher]
+==== Java 17 and higher
 
-[#java-9-and-higher]
-==== Java 9 and higher
+Jaybird 6 supports Java 17 and higher (JDBC 4.3).
+Most of the JDBC 4.3 features have been implemented (in as far as they are supported by Firebird).
 
-Jaybird 5 supports Java 9 and higher (JDBC 4.3) with the Java 8 and 11 version of the driver.
-Most of the JDBC 4.3 features have been implemented (in as far  as they are supported by Firebird).
+Given the limited support period for Java 17 and higher versions, not all Java releases are supported, see <<supported-java-versions>> for details.
 
-You can use the Java 8 driver under Java 9 and higher.
-For Java 11 or higher we recommend using the Java 11 driver, though its sources are identical to the Java 8 driver.
-
-Given the limited support period for Java 9 and higher versions, we limit support on those versions to the most recent LTS version and the latest release.
-Currently, that means we support Java 8, 11 and 17.
-
-[NOTE]
-====
-Support for Java 11 will likely be dropped for Java 17 or whatever the Java LTS is at the time of Jaybird 5 release.
-====
-
-For compatibility with Java 9 modules, Jaybird defines the automatic module name `org.firebirdsql.jaybird`.
+For compatibility with Java 9 modules, Jaybird defines the automatic module name `org.firebirdsql.jaybird`, and the `chacha64-plugin` uses `org.firebirdsql.jaybird.chacha64`.
 This guarantees a stable module name for Jaybird, and allows for future modularization of Jaybird.
 
 [#firebird-support]
 === Firebird support
 
-Firebird versions 2.5, 3.0 and 4.0 are supported.
-Support for Firebird 5.0 is experimental.
+Support for Firebird 2.5 has been dropped.
+See also <<support-for-firebird-25-dropped>>.
 
-Jaybird 5 is the last version to support Firebird 2.5.
+Jaybird 6 supports Firebird version 3.0, 4.0, and provides tentative support for Firebird 5.0.
 
-[#wirecrypt-chacha]
-=== ChaCha wire protocol encryption support
+[#native-plugin]
+=== NATIVE and EMBEDDED support moved to separate artifact
 
-The Firebird wire protocol encryption plugin `ChaCha` -- introduced in Firebird 4.0 -- is now supported by the PURE_JAVA and OOREMOTE protocol implementations.
-Support is only available on Java 11 and higher using a Jaybird built for Java 11 or higher.
+The NATIVE (JDBC URL prefix `++jdbc:firebird[sql]:native:++`) and EMBEDDED (JDBC URL prefix `++jdbc:firebird[sql]:embedded:++`) protocol implementations have been moved to a separate artifact, `org.firebirdsql.jdbc:jaybird-native`.
 
-The implementation relies on the `ChaCha20` cipher introduced by https://openjdk.java.net/jeps/329[JEP 329^].
+If you use native or embedded connections using Jaybird, you will need to explicitly add the appropriate Maven dependency (or `jaybird-native-{version_wo_target}.jar` and `jna-{jna-version}.jar`) to your classpath.
 
-[#properties-changed]
-==== Changes to properties
+See also <<getting-jaybird-6>>.
 
-The handling of connection properties for `DriverManager`, data sources and Jaybird internals was rewritten.
-The change is also documented in https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-10-propagation-of-connection-properties.md[jdp-2020-10] and https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2021-01-unified-database-coordinates.md[jdp-2021-01].
-This change has the following user-visible effects:
+[#ooremote-removed]
+=== OOREMOTE (OpenOffice/LibreOffice driver) removed
 
-. Jaybird-specific connection properties no longer have an alias with prefix `isc_dpb_`.
-Aliases with prefix `isc_dpb_` are now only available for actual Firebird connection properties.
+The OOREMOTE protocol (JDBC URL prefix `++jdbc:firebird[sql]:oo:++`) has been removed in Jaybird 6.
+
+See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal^].
+
+The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
+
+[#report-actual-pid]
+=== Report actual process ID (pid)
+
+The pure Java implementation will now report the actual process ID (pid) in connection property `isc_dpb_process_id`.
+The native implementation already did this.
+
+For pure Java connections, the reported process ID can be overridden using the connection property `processId` or the system property `org.firebirdsql.jdbc.pid`.
+This feature is retained for backwards compatibility.
+
+When a `SecurityManager` is installed, the entire call-chain needs to have the `RuntimePermission("manageProcess")` to obtain the process ID in pure Java connections.
+If this permission check fails, Jaybird will silently ignore it and not set the `isc_dpb_process_id` based on the actual process ID.
+
+[#wire-buffer-sizes]
+=== Configurable buffer sizes for the wire protocol
+
+The sizes of a number of buffers used in the wire protocol were increased from 512 bytes to 8192 bytes.
+This specifically concerns:
+
+* wire compression -- deflate (compression)
+* wire compression -- inflate (decompression)
+* wire encryption -- decrypt
 +
-If you used connection properties starting with `isc_dpb_` the solution is to remove `isc_dpb_` from the property name.
-. A number of connection properties getter/setter pairs on data sources and management APIs have been deprecated -- for removal in Jaybird 6 -- in favour of a new name for consistency or better naming.
+There is no such buffer for the reverse (encryption), as this is already handled by the general output buffer.
+
+This change might not be desirable in all situations as it increases the total amount of memory per connection, or there can be reasons to further increase these buffers.
+To address this, we have added _system properties_ to configure a number of buffers which were previously not configurable:
+
+`org.firebirdsql.wire.deflateBufferSize`::
+Buffer size in bytes for deflate (compression).
+Has a minimum size of 512 and a default value of 8192.
+
+`org.firebirdsql.wire.inflateBufferSize`::
+Buffer size in bytes for inflate (decompression).
+Has a minimum size of 512 and a default value of 8192.
+
+`org.firebirdsql.wire.decryptBufferSize`::
+Buffer size in bytes for decryption.
+Has a minimum size of 512 and a default value 8192.
 +
-* `get/setDatabase` -- use `get/setDatabaseName` (see also <<#unify-db-address>>).
-* `get/setPort` -- use `get/setPortNumber`  (see also <<#unify-db-address>>).
-* `get/setHost` -- use `get/setServerName`  (see also <<#unify-db-address>>).
-* `get/setUserName` -- use `get/setUser`, only deprecated, will not be removed in Jaybird 6
-* `get/setConnectionDialect()` -- use `get/setSqlDialect()`.
-* `get/setBuffersNumber` -- use `get/setPageCacheSize`.
-* `get/setBlobBufferLength` -- use `get/setBlobBufferSize`.
-* `getNonStandardProperty(String)/setNonStandardProperty(String,String)` -- use `getProperty(String)/setProperty(String,String)`.
-. The various interfaces defining connection properties (e.g. for data sources) now all share a common interface `org.firebirdsql.jaybird.props.DatabaseConnectionProperties` (for database connections) or `org.firebirdsql.jaybird.props.ServiceConnectionProperties` (for service connections).
-. Type of `get/setWireCrypt` was changed from `WireCrypt` to `String` -- use `get/setWireCryptAsEnum` to be able to use `WireCrypt`.
+[NOTE]
+====
+As the decryption input buffer determines the size of the decryption output buffer, the actual allocation is up to twice the specified value.
+====
 
-[#unify-db-address]
-=== Unification of database and service addressing
-
-The properties used to configure the 'address' (or 'coordinates') of a database or service have been unified and standardized.
-
-Connections to a database are identified by a triplet of properties (`serverName`, `portNumber`, `databaseName`), and to a service with a triplet of properties (`serverName`, `portNumber`, `serviceName`).
-
-The `databaseName`/`serviceName` property serves a dual purpose: if `serverName` is `null`, its value is handled as a connection URL which may or may not contain a server name and port number, otherwise it is only the database path or alias or service name.
-The syntax of `databaseName` as a connection URL is the same as the JDBC URL syntax, but without the `++jdbc:firebird[sql][:sub-protocol]:++` prefix and without connection properties.
-The exact supported syntax of connection URLs and their interpretation is determined by the protocol implementation (`type`).
-
-When `serverName` is `null`, the `portNumber` will be ignored unless the protocol requires a hostname, and `databaseName` doesn't contain one.
-In that situation `serverName` is assumed to be `localhost` and `portNumber` is used.
-
-Some examples that all identify the same database:
-
-* `(serverName = "localhost", portNumber = 3050, databaseName = "/path/to/db.fdb")`
-* `(serverName = null, portNumber = 3050, databaseName = "//localhost//path/to/db.fdb")`
-* `(serverName = null, portNumber = 3050, databaseName = "localhost:/path/to/db.fdb")`
-* `(serverName = null, portNumber = 3050, databaseName = "////path/to/db.fdb")` -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
-* `(serverName = null, portNumber = 3050, databaseName = "/path/to/db.fdb")` -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
-
-Some examples that all identify the same service:
-
-* `(serverName = "localhost", portNumber = 3050, serviceName = "service_mgr")`
-* `(serverName = "localhost", portNumber = 3050, serviceName = null)`
-* `(serverName = null, portNumber = 3050, serviceName = "//localhost")`
-* `(serverName = null, portNumber = 3050, serviceName = "//localhost/")`
-* `(serverName = null, portNumber = 3050, serviceName = "//localhost/service_mgr")`
-* `(serverName = null, portNumber = 3050, serviceName = "///service_mgr")`  -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
-* `(serverName = null, portNumber = 3050, serviceName = "//")`  -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
-* `(serverName = null, portNumber = 3050, serviceName = "service_mgr")`  -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
-* `(serverName = null, portNumber = 3050, serviceName = null)`  -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
-* `(serverName = null, portNumber = 3050, serviceName = "host/3050:")` -- for PURE_JAVA the `:` is required, otherwise `host/3050` is taken as the service name, for NATIVE and EMBEDDED behaviour will depend on the client version and connected Firebird version
-
-These changes apply to `FBConnectionPoolDataSource`, `FBSimpleDataSource`, `FBXADataSource`, `FirebirdConnectionProperties` implementations, `ServiceManager` implementations, `EventManager` implementations, and -- with some caveats -- JDBC URLs.
-
-The property `database` that existed on some of these interfaces and classes is now an alias for `databaseName` and deprecated for removal in Jaybird 6.
-The exception is `database` in `ServiceManager`.
-The `database` property on `ServiceManager` is still *only* a database path or alias and serves -- for some `ServiceManager` implementations -- as the database the service operation applies to (e.g. backup, restore).
-
-The property `host` that existed on some of these interfaces and classes is now an alias for `serverName` and deprecated for removal in Jaybird 6.
-The same goes for `port` which is now an alias for `portNumber`.
-
-[#jdbc-url-syntax]
-=== Changes to JDBC URL syntax
-
-As a result of <<#unify-db-address>> and URL parser changes, JDBC URLs now allow:
-
-. More lenient syntax
-. NATIVE (and EMBEDDED) now supports new Firebird 3.0+ URL formats
-. Specification of part or entire database address through connection properties
-
-[#jdbc-url-syntax-lenient]
-==== More lenient syntax
-
-The syntax of JDBC URLs is now more lenient.
-
-* In the standard syntax (starting with "```++jdbc:firebird[sql][:sub-protocol]://++```"), specifying server name and port number are now optional, but server name must be specified if a port number is specified.
-For example, `jdbc:firebird:////path/to/db.fdb` or `jdbc:firebird:///C:\path\to\db.fdb` is now allowed and connects to localhost port 3050, database `/path/to/db.fdb` or `C:\path\to\db.fdb`.
-* For PURE_JAVA, localhost and port 3050 are used as defaults, for other protocol implementations the behaviour will vary.
-For example, for NATIVE it will depend on the version of `fbclient` and the configured providers in its `firebird.conf`.
-* For PURE_JAVA, in the legacy syntax, server name and port number are now optional as well.
-For example, `jdbc:firebird:/path/to/db.fdb` is now allowed and connects to localhost port 3050, database `/path/to/db.fdb`.
-* JDBC URLs that only contain a Windows path will no longer interpret the driver letter as a server name.
-For example, `jdbc:firebird:C:\path\to\db.fdb` and `jdbc:firebird:C:/path/to/db.fdb` is now allowed and connects to localhost port 3050, database `C:\path\to\db.fdb` or `C:/path/to/db.fdb`.
+`org.firebirdsql.wire.inputBufferSize`::
+Buffer size in bytes for reading data from the socket.
+Has a minimum size of 1024 and a default value of 16384.
 +
-In theory, this results in a minor backwards incompatibility for URLs with the legacy syntax using single character server names.
-The solution is to use the standard syntax (with "```//```").
-* If the database address is specified through connection properties (see also below), the URL can consist only of the JDBC URL prefix.
-For example, `jdbc:firebird:` is now a legal URL, if at least `databaseName` is specified as a connection property in the `Properties` object passed to `DriverManager.getConnection(String, Properties)`.
+[CAUTION]
+====
+This property should not be confused with the socket buffer size (configurable with the `socketBufferSize` _connection property_).
+Setting this value higher than `socketBufferSize` is unlikely to have any benefits.
+====
 
-[#jdbc-url-syntax-native-fb3]
-==== NATIVE (and EMBEDDED) now supports new Firebird 3.0+ URL formats
+`org.firebirdsql.wire.outputBufferSize`::
+Buffer size in bytes for writing data.
+Has a minimum size of 1024 and a default value of 32767.
++
+[CAUTION]
+====
+This property should not be confused with the socket buffer size (configurable with the `socketBufferSize` _connection property_).
+Contrary to the input buffer size, setting it higher than `socketBufferSize` might have performance benefits.
+====
 
-The NATIVE protocol implementation (and technically the EMBEDDED protocol as well), now support the Firebird 3.0 and higher URL formats.
-The reason is that for the NATIVE protocol, Jaybird now only parses standard syntax URLs (those that start with "```//```"), and passes all other values to `fbclient` without further interpretation or parsing.
+These properties need to be set before Jaybird is loaded and used (e.g. on the commandline with `-D<propertyName>=<propertyValue`).
 
-Some examples that are now valid (assuming a Firebird 3.0 or higher `fbclient` is used):
+[NOTE]
+====
+The minimum sizes and default values should be considered an implementation detail and might change in a future major version.
 
-* `jdbc:firebird:native:inet://myserver//path/to/db.fdb`
-* `jdbc:firebird:native:inet4://myserver//path/to/db.fdb` -- Use IPv4 only
-* `jdbc:firebird:native:inet6://myserver//path/to/db.fdb` -- Use IPv6 only
-* `jdbc:firebird:native:xnet://C:\path\to\db.fdb` -- Windows only
-* `jdbc:firebird:native:wnet://C:\path\to\db.fdb` -- Windows only
-* `jdbc:firebird:native:wnet://myserver/C:\path\to\db.fdb` -- Windows only
-* `jdbc:firebird:native:wnet://myserver:fb_db/C:\path\to\db.fdb` -- Windows only
+The "`deflate`" and "`inflate`" buffers are only used when wire compression is enabled.
+The "`decrypt`" buffer is only applied when wire encryption is used (the default with Firebird 3.0 and higher).
+====
 
-[#jdbc-url-syntax-props]
-==== Specification of part or entire database address through connection properties
+The order of buffers for input is as follows:
 
-The JDBC URL after the protocol prefix up to the '```?```' or -- if no properties are defined in the URL -- the end of the URL defines the `databaseName` property.
-It is now possible to specify some or all of the address of the database (`serverName`, `portNumber`, `databaseName`) through connection properties.
-When `databaseName` is also specified as a connection property, it overwrites the value derived from the URL itself.
-When `serverName` is specified as a connection property, the `databaseName` value (derived from the URL or explicitly set) will be used as the database path or alias.
-When `portNumber` is specified as a connection property, it will only be used when `serverName` is specified, or if `databaseName` doesn't seem to contain a server name and the protocol implementation falls back to localhost.
+[subs="normal"]
+----
+Jaybird <= [inflate <=] [decrypt <=] input <= socket
+----
 
-Some examples:
+The order of buffers for output is as follows:
 
-* `jdbc:firebird:?serverName=localhost&portNumber=3050&databaseName=/path/to/db.fdb`
-* `jdbc:firebird:` with `Properties` with `"serverName" = "localhost"`, `"portNumber" = "3050"`, `"databaseName" = "/path/to/db.fdb"`, and user and password as required
-* `jdbc:firebird:/path/to/db.fdb?serverName=localhost&portNumber=3050`
-* `jdbc:firebird:?databaseName=//localhost//path/to/db.fdb`
-* `jdbc:firebird://localhost//path/to/db.fdb?serverName=myserver` -- this will attempt to connect to database `//localhost//path/to/db.fdb` on server `myserver` (which will likely fail)
-* `jdbc:firebird://localhost//path/to/db.fdb?databaseName=//myserver//path/to/other.fdb` -- this will connect as if you had used `jdbc:firebird://myserver//path/to/other.fdb`
+[subs="normal"]
+----
+Jaybird => output [=> deflate] => socket
+----
+
+A future version may introduce connection properties to control this per connection.
+
+[#event-manager-broken-connection]
+=== Broken connection detection for event manager
+
+The event manager now attempts to detect if the underlying database connection is broken.
+Once a broken connection is detected, the event manager will attempt to close or forcibly disconnect itself and report itself as not _connected_.
+
+For proper detection of some types of network problems in a timely manner, it may be necessary to configure the `soTimeout` of the event manager _before_ connecting.
+When the `createFor(Connection)` method has been used, this can be configured through the `soTimeout` connection property, or -- for pure Java connections only -- the `setNetworkTimeout` method of the `Connection` object.
+
+This detection depends on actual activity, like an event posting a new count, or a new event registration.
+
+[#unsupported-protocol]
+=== Pure Java will not connect to unsupported Firebird version by default
+
+The pure Java protocol will by default no longer try the wire protocol versions of unsupported Firebird versions.
+This means that -- by default -- only protocol version 13 -- 18 are tried (if there is an implementation of such version).
+Attempts to connect to Firebird 2.5 or earlier will result in error _"`connection rejected by remote interface`"_ (`335544421` or `isc_connect_reject`).
+
+As a workaround, the connection property `enableProtocol` can enable unsupported protocols, assuming a suitable protocol implementation is available on the classpath.
+
+This connection property can have the following values:
+
+* A comma-separated list of additional protocol versions to try (e.g. `"11,12"`).
+The listed versions are tried in addition to the supported protocol versions.
+Non-integer values or unknown protocol versions are silently ignored.
++
+It is possible to use the "`masked`" protocol version (e.g. `"32780"` for protocol version 12).
+However, we recommend using the unmasked version (e.g. `"12"` for protocol version 12).
+* `"*"` -- enable all available protocol versions
+* `null` or empty string (`++""++`) -- default behaviour, only use supported protocols
+
+[WARNING]
+====
+Given these protocol versions and their Firebird version are not supported, there is no guarantee that the driver will function correctly when an unsupported protocol is enabled this way.
+Especially things like database metadata could use features that are not supported by older Firebird versions.
+We recommend upgrading your Firebird version, or downgrading to a Jaybird version which still supports your Firebird version.
+
+For maximum compatibility, it is recommended to either use `"*"`, or to make sure to include the maximum protocol version of your Firebird version.
+
+Unsupported protocol versions may be removed in future releases of Jaybird.
+====
+
+.Firebird versions and protocol versions
+[cols="1,1",options="header",]
+|===
+|Firebird version
+|Maximum protocol
+
+|1.0 -- 2.0
+|10
+
+|2.1
+|11
+
+|2.5
+|12
+
+|3.0
+|15footnote:[since Firebird 3.0.2, version 13 for 3.0.0 and 3.0.1]footnote:[Jaybird has no protocol 14 implementation]
+
+|4.0
+|16footnote:[Jaybird no protocol 17 implementation]
+
+|5.0
+|18
+
+|===
+
+[#logging]
+=== Logging facade removed
+
+The package `org.firebirdsql.logging` has been removed.
+The logging facade from this package has been replaced with the Java Platform Logging API (https://openjdk.org/jeps/264[JEP 264^]).
+
+The Java Platform Logging API by default logs to `java.util.logging`, but it is possible to plugin different logging platforms.
+For example, Log4j provides the `log4j-jpl` dependency which will replace the default binding to `java.util.logging` with one to Log4j.
+
+With this change, Jaybird no longer provides an option to specify a custom logger implementation, so the system property `org.firebirdsql.jdbc.loggerImplementation` is no longer supported.
+If you need a custom logger, you will need to implement `java.lang.System.Logger` and `java.lang.System.LogFinder` and provide the necessary service loader definition (see the Java documentation for details).
+
+The system properties `org.firebirdsql.jdbc.forceConsoleLogger` and `org.firebirdsql.jdbc.disableLogging` are also no longer supported.
+Equivalent behaviour is achieved by configuring the active logging library
+
+[#chacha64]
+=== Support for ChaCha64 wire encryption
+
+Support for the "`ChaCha64`" wire encryption -- introduced in Firebird 4.0.1 -- was added for the `PURE_JAVA` protocol.
+Given this requires a dependency on the Bouncy Castle provider (`bcprov-jdk18on`), the plugin is made available as a separate artifact: `org.firebirdsql.jdbc:chacha64-plugin` on Maven or `chacha64-plugin-{version_wo_target}.jar` in the distribution zip.
+
+When deploying manually, please make sure to also include the `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip on the class path.
+
+.Limitations of ChaCha lead to introduction of ChaCha64
+[sidebar]
+****
+The "`ChaCha`" wire encryption introduced in Firebird 4.0 and Jaybird 5 uses a 96-bit nonce and 32-bit counter.
+This 32-bit counter limits the amount of data you can transfer to a maximum of 256GiB.
+As the Firebird wire protocol doesn't support "`re-keying`" the encryption plugin, this means the connection breaks if 256GiB has been sent or received.
+This breaking is done to prevent key re-use, which could make the data stream vulnerable to certain types of cryptological analysis.
+
+To address this, Firebird 4.0.1 added the "`ChaCha64`" wire encryption, which uses a 64-bit nonce and 64-bit counter.
+****
+
+As part of this change, Jaybird is now capable of loading `EncryptionPluginSpi` instances using the service loader mechanism.
+The API of `EncryptionPluginSpi` and `EncryptionPlugin` and other classes and interfaces in package `org.firebirdsql.gds.ng.wire.crypt` should still be considered unstable and internal API, so use it at your own risk to implement your own plugins.
+If you want to use it for implementing your own encryption plugins, let us know on https://groups.google.com/g/firebird-java[firebird-java^].
+We can then look at stabilizing the API and considering it formally a public API.
+
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-06-chacha64-support.adoc[jdp-2023-06: ChaCha64 Support^]
+
+[#native-library-path]
+=== Connection Property to Specify Native Library Path
+
+A connection property `nativeLibraryPath` was added to specify the _directory_ where `fbclient` (for native connections), or `fbembed` or `fbclient` (for embedded connections) can be loaded.
+If a file path is used instead of a directory path, the parent directory will be used for the search path.
+In other words, it is not possible to use it load a differently named library.
 
 [CAUTION]
 ====
-*Just because you can do this, doesn't mean you should!*
-
-We recommend not to specify `serverName`, `portNumber` and `databaseName` as explicit connection properties when using `DriverManager`, but instead only use the URL itself to define the address of the database.
-
-The behaviour defined in this section is the result of unification and simplification of connection property handling across JDBC URLs, data sources and internals of Jaybird.
+This property comes with a very important caveat: it only works for the first native or embedded connection (to a database or service) made within a JVM.
+Once any library is loaded, that library is used for all subsequent native and embedded connections.
 ====
 
-[#local-protocol-removed]
-=== Removal of LOCAL protocol implementation
+This property is only exposed as a JDBC property.
+For data sources, it needs to be set with `setProperty(String, String)` or `setNonStandardProperty(String)`.
 
-The LOCAL protocol implementation (`LocalGDSFactoryPlugin`) has been removed.
-For backwards compatibility, the type-name `LOCAL` and the JDBC URL prefixes `jdbc:firebird:local:` and `jdbc:firebirdsql:local:` have been mapped to the NATIVE protocol implementation.
-This type name and these JDBC protocol prefixes should be considered deprecated and may be removed in a future Jaybird version.
+The primary use case for this property is for situations where configuring the system property `jna.library.path` is not easy to do (e.g. in third-party applications).
 
-The LOCAL protocol implementation was never really a local protocol, but -- depending on `fbclient` version, its `firebird.conf` and platform -- could also establish a TCP/IP, WNET or embedded connection to the database.
+For embedded connections, if there is a valid `FirebirdEmbeddedProvider` on the classpath, it will be used instead of the location specified by `nativeLibraryPath`.
 
-Establishing a local IPC connection to a database is only possible on Windows, using a Firebird 3.0 or higher `fbclient` with the `databaseName` `xnet://C:\path\to\db.fdb` or JDBC URL `jdbc:firebird:native:xnet//C:\path\to\db.fdb`.
-For earlier versions of `fbclient`, the recommended URL is `jdbc:firebird:native:C:\path\to\db.fdb`, but this will not necessarily use a local IPC connection.
-
-[#stream-blobs-default]
-=== Stream blobs are now the default
-
-Jaybird now defaults to creating stream blobs instead of segmented blobs.
-See https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2021-02-stream-blobs-by-default.md[jdp-2021-02 Stream blobs by default] for more information.
-
-To use segmented blobs, specify connection property `useStreamBlobs` with value `false`.
-
-[#generated-keys-parser-replaced]
-==== New parser for generated keys handling
-
-The '`generated keys`' parser has been replaced.
-This parser is used to detect statement types, the table name, and presence or absence of a `RETURNING` clause.
-The new parser has no external dependencies, so Jaybird no longer depends on the ANTLR runtime (`org.antlr:antlr4-runtime`).
-
-As a result of this change, it is possible that detection of some statements has changed, especially detection of the presence of a `RETURNING` clause.
-Please report any incorrect changes in detection on https://groups.google.com/g/firebird-java[the firebird-java list] or on https://github.com/FirebirdSQL/jaybird/issues.
-
-If you were relying on disabling generated keys support by excluding the antlr4-runtime library from the classpath, you will now need to explicitly disable it.
-Disabling generated keys can be done using the connection property `generatedKeysEnabled` with value `disabled`, or `ignored` if you don't want an exception thrown when calling a generated-keys-related execute or prepare method.
-
-[#server-batch-updates]
-=== Firebird 4.0 server-side batch updates
-
-Jaybird supports server-side batch updates introduced in Firebird 4.0.
-
-This feature is only available on pure-java connections, and only on prepared statements (but not callable statements).
-Support is only available in pure-java, as the bindings for native and embedded use the legacy fbclient API, and batch updates are not (fully) exposed in the legacy fbclient API.
-
-Two new properties have been added for this feature:
-
-* `useServerBatch` -- a Boolean property to enable or disable server-side batch, default is `true`.
-When set to `false`, emulated batch behaviour (comparable to the behaviour of previous Jaybird versions) will be used.
-+
-When server-side batch support is not available, Jaybird will fall back to the emulated batch behaviour.
-* `serverBatchBufferSize` -- size in bytes of the server-side batch buffer, default is `0`.
-+
-This property supports the following value ranges:
-+
---
-[horizontal]
-`< 0`:: use server-side default (16MB as of Firebird 4.0)
-`0`:: (default) use server-side maximum (256MB as of Firebird 4.0)
-`> 0`:: use specified size, capped at server-side maximum
---
-+
-Too small buffer sizes will use 128KB or the size necessary for two rows (whichever is bigger).
-Too large buffer sizes will use the server-side maximum (256MB as of Firebird 4.0).
-
-This support comes with a number of limitations:
-
-* Only supported on the pure-java protocol, not on native or embedded.
-* Only supported on `PreparedStatement`.
-** The `Statement` batch behaviour is not supported by server-side batch updates.
-** The `CallableStatement` implementation is more complex than prepared statement, so the decision was made not to reimplement this using server-side batch updates.
-The implementation might be rewritten in a future Jaybird version, if there is sufficient interest.
-As a workaround, use `execute procedure` or `++{call procedure_name(...)}++` from a `PreparedStatement`.
-* Requesting generated-keys will fall back to emulated behaviour as server-side batches do not support returning values produced by the `RETURNING` clause.
-* Firebird 4.0 has additional facilities to send `BLOB` values as part of the batch update, but this is not yet used by Jaybird.
-
-When server-side batch support is unavailable, either because the server doesn't support it, or because of above limitations, or if the connection property `useServerBatch` is `false`, Jaybird will fall back to the emulated behaviour.
-
-By default, Jaybird will request the maximum server-side batch buffer size (256MB as of Firebird 4.0).
-A smaller buffer can be requested with connection property `serverBatchBufferSize` (value in bytes).
-Jaybird does not track the available size of the server-side batch buffer.
-Attempting to execute a batch larger than this buffer will fail with error "`Internal buffer overflow - batch too big`" (`isc_batch_too_big`, error code `335545198`).
-The 256MB buffer used with Jaybird defaults on Firebird 4.0 is sufficient to accommodate several thousand rows at maximum row size (a naive calculation says around 4000 rows, but this doesn't account for all overhead of a row).
-
-[#multirow-returning]
-=== Firebird 5.0 multi-row RETURNING support
-
-Jaybird supports multi-row `RETURNING` introduced in Firebird 5.0.
-
-The entire generated keys result set is retrieved immediately on execute.
-So, if the statement inserts, updates or deletes a significant number of rows, this can consume a lot of memory in Jaybird.
-
-[#scrollable-cursors]
-=== Firebird 5.0 scrollable cursor support
-
-Jaybird supports server-side scrollable cursors introduced in Firebird 5.0.
-
-This feature is only available on pure-java connections, and only when explicitly enabled with connection property `scrollableCursor`.
-Support is only available in pure-java, as the bindings for native and embedded use the legacy fbclient API, and scrollable cursors are not exposed in the legacy fbclient API.
-
-The connection property `scrollableCursor` has the following values (case-insensitive):
-
-`EMULATED`::
-(default) Use client-side cached result set;
-this is the same behaviour as previous Jaybird versions used
-`SERVER`::
-Use server-side scrollable cursors, if possible
-
-If a connection does not support scrollable cursors, or if holdable cursors are requested, the behaviour will silently fall back to _emulated_ scrollable cursors.
-
-Compared to emulated scrollable cursor, server-side scrollable cursors exhibit slightly different behaviour (we may change the behaviour of _emulated_ later in Jaybird 5 or in a future Jaybird release):
-
-* New rows are inserted at the end of the cursor, where in _emulated_ they are inserted before the current row
-* Deleted rows are visible with an all-null marker row, where in _emulated_, the deleted row is removed from the result set
-* Result sets now report `true` for `rowUpdated()`, `rowDeleted()` and `rowInserted()` for rows updated, deleted or inserted through the result set.
-+
-This is not yet reflected in `updatesAreDetected()`, `deletesAreDetected()` and `insertsAreDetected()` of `DatabaseMetaData`.
-This will be corrected when we retrofit the new behaviour for _emulated_ as well.
-
-See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md.md[jdp-2021-04].
+// TODO add major changes
 
 [#potentially-breaking-changes]
 === Potentially breaking changes
 
-Jaybird 5 contains a number of changes that might break existing applications.
+Jaybird 6 contains a number of changes that might break existing applications.
 
-See also <<compatibility-changes,Compatibility changes>> for details.
+See also <<compatibility-changes>> for details.
 
 [#other-fixes-and-changes]
 === Other fixes and changes
 
-* Fixed: changes to the transaction configuration (transaction parameter buffer configuration) of one connection are no longer propagated to other connections with the same connection properties (https://github.com/FirebirdSQL/jaybird/issues/428[jaybird#428])
+* Improvement: Setting oversized strings on `CHAR` or `VARCHAR` parameters with character set UTF8 will now throw a `DataTruncation` exception on `setString` (and not set a value) instead of a `SQLException` with a "`string right truncation`" error on execute (https://github.com/FirebirdSQL/jaybird/issues/396[jaybird#396])
 +
-Backported to Jaybird 3.0.9 and 4.0.1.
-* Changed: build migrated from Ant to Gradle (https://github.com/FirebirdSQL/jaybird/issues/461[jaybird#461])
-* Improvement: Optimization of `ResultSet.next()` (https://github.com/FirebirdSQL/jaybird/issues/663[jaybird#663])
+With this change, the behaviour for UTF8 is now consistent with that of single-byte character sets.
+For UTF8, the `DataTruncation` reports the transfer size and data size in Unicode codepoints.
+For other multibyte character sets, the `DataTruncation` reports those sizes in bytes.
+This change is not applied to UNICODE_FSS, as Firebird 3.0 and earlier do not enforce character length limits for this character set, only byte length limits.
 +
-This change was contributed by https://github.com/vasiliy-yashkov[Vasiliy Yashkov].
-* Improvement: add `setForceWrite`/`getForceWrite` to `FBManager` to allow disabling force write on database creation (https://github.com/FirebirdSQL/jaybird/issues/671[jaybird#671])
-* Improvement: Attempts to connect without user name and password with pure-java protocol will now result in error `isc_login` ("`Your user name and password are not defined. Ask your database administrator to set up a Firebird login.`") instead of `isc_connect_reject` ("`connection rejected by remote interface`") (https://github.com/FirebirdSQL/jaybird/issues/583[jaybird#583])
-* Improvement: Don't send cursor close to server when closing `ResultSet` in response to `Statement` close (https://github.com/FirebirdSQL/jaybird/issues/669[jaybird#669])
+The `setBytes` method on `CHAR` and `VARCHAR` parameters only check the byte length limit.
+* Changed: `DatabaseMetaData.getTypeInfo()` column `FIXED_PREC_SCALE` (column 11) now returns `false` for all data types except `NUMERIC` and `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/551[jaybird#551])
 +
-This provides a small performance increase in cases where a result set was not already closed (e.g. no explicit `ResultSet.close()` or result set not fully read) before the statement close.
-* New feature: Support for NBackup GUID-based backup and in-place restore (https://github.com/FirebirdSQL/jaybird/issues/672[jaybird#672])
-+
-The `org.firebirdsql.management.NBackupManager` interface has two new methods: `setBackupGuid(String)` expecting the brace-enclosed GUID of a previous backup to use as the starting point for this backup, and `setInPlaceRestore(boolean)` to enable (or disable) in-place restore.
-These options require Firebird 4.0 or higher.
-+
-This feature was also backported to Jaybird 4.0.4.
-* New feature: Support for NBackup fixup and preserve sequence (https://github.com/FirebirdSQL/jaybird/issues/673[jaybird#673])
-+
-The `org.firebirdsql.management.NBackupManager` interface has two new methods: `fixupDatabase()` to "`fixup`" a database (switch back to 'normal' state without merging the delta file), and `setPreserveSequence(boolean)` to preserve the current database GUID and replication sequence on fixup or restore.
-These options require Firebird 4.0 or higher.
-* Improvement: The `charSet` connection property now also has an alias `charset` (URL property, not as get/set pair).
-* Improvement: The `dbCryptConfig` connection property now supports _base64url_ (the "`URL and Filename safe`" Base 64 Alphabet) with the `base64url:` prefix (https://github.com/FirebirdSQL/jaybird/issues/677[jaybird#677])
-* Fix: `FBStatement` allowed retrieval of update count after error, while `FBPreparedStatement` -- correctly -- did not (https://github.com/FirebirdSQL/jaybird/issues/681[jaybird#681])
-+
-Now, after an exception, attempting to retrieve the update count with `getUpdateCount()` will return `-1`.
-* Improvement: Renamed `NativeResourceUnloadWebListener` to `NativeResourceUnloadWebListenerJavaX` and added its twin `NativeResourceUnloadWebListenerJakarta` using the `jakarta.servlet` namespace to support native resource unloading on Jakarta EE 9 and higher (https://github.com/FirebirdSQL/jaybird/issues/684[jaybird#684])
-* Improvement: `Connection.isValid(int)` now asynchronously checks validity of connections, allowing the timeout to also be honoured for native connections (https://github.com/FirebirdSQL/jaybird/issues/685[jaybird#685])
-* Change: Removed finalization from `FBConnection` and `FBStatement` (https://github.com/FirebirdSQL/jaybird/issues/699[jaybird#699])
-* Fix: XAResource checks at most 10 records for forget or recovery operations (https://github.com/FirebirdSQL/jaybird/issues/701[jaybird#701])
-+
-As part of this change, queries were changed to convert the `RDB$TRANSACTION_DESCRIPTION` to an octets varchar field (to avoid additional roundtrips for blob fields), and -- when applicable -- only query transactions that have a transaction description written by Jaybird
-+
-As a result of this change, Xid forget and recovery no longer work on Firebird 2.1 or earlier (these versions were already not supported by Jaybird).
+This was done because of the stated requirement "`__can it be a money value__`".
+Previously almost all types returned `true` (including -- for example -- `BOOLEAN` and `TIMESTAMP`, which are definitely not money types).
+* Consistent use of `BigDecimal.valueOf(double)` instead of a combination of `new BigDecimal(double)` and `BigDecimal.valueOf(double)` (https://github.com/FirebirdSQL/jaybird/issues/553[jaybird#553])
+* Removed `finalize()` methods and -- where it made sense -- replaced them with use of `Cleaner` (https://github.com/FirebirdSQL/jaybird/issues/727[jaybird#727])
+* Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DEICMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (https://github.com/FirebirdSQL/jaybird/issues/731[jaybird#731])
+* Optimized the query to retrieve extended field info for `ResultSetMetaData.getPrecision` to only retrieve columns of type `NUMERIC` or `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/732[jaybird#732])
+* Added methods `List<String> getTypeAliasList()` and `List<String> getSupportedProtocolList()` to `GDSFactoryPlugin`, and deprecated `String[] getTypeAliases()` and `String[] getSupportedProtocols()` for removal in Jaybird 7 or later
+* Fixed formatting of `isc_formatted_exception` to not repeat the original parameters of the exception (https://github.com/FirebirdSQL/jaybird/issues/749[jaybird#749])
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
@@ -573,345 +586,287 @@ See <<removal-of-deprecated-classes-packages-and-methods,Removal of deprecated c
 [#compatibility-changes]
 == Compatibility changes
 
-Jaybird 5 introduces some changes in compatibility and announces future breaking changes.
+Jaybird 6 introduces some changes in compatibility and announces future breaking changes.
 
-*The list might not be complete, if you notice a difference in behavior that is not listed, please report it as bug.* It might have been a change we forgot to document, but it could just as well be an implementation bug.
+*The list might not be complete, if you notice a difference in behavior that is not listed, please https://github.com/FirebirdSQL/jaybird/issues[report it as bug].*
+It might have been a change we forgot to document, but it could just as well be an implementation bug.
 
-[#support-for-java-7-dropped]
-=== Support for Java 7 dropped
+[#support-for-firebird-25-dropped]
+=== Support for Firebird 2.5 dropped
 
-Jaybird 5 does not support Java 7.
-You will need to upgrade to Java 8 or higher, or remain on Jaybird 4.
+Jaybird 6 has dropped support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support^]).
+In general, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
 
-[#removal-of-javaeejakartaee-connector-architecture-jca]
-=== Removal of JavaEE/JakartaEE Connector Architecture (JCA)
+[[unsupported-protocols-disabled]]
+=== Unsupported protocol version disabled by default
 
-The JavaEE/JakartaEE Connector Architecture (JCA) implementation that was the core of Jaybird has been removed.
-The package `org.firebirdsql.jca` no longer exists, and it is no longer possible to use Jaybird as a JCA connector (Resource Adapter).
+The wire protocol versions for Firebird 2.5 and earlier are disabled by default to disallow connection for the pure Java protocol.
+Attempts to connect to Firebird 2.5 or earlier will result in error _"`connection rejected by remote interface`"_ (`335544421` or `isc_connect_reject`).
+You can use connection property `enableProtocol=*` or -- for example -- `enableProtocol=10,11,12` to re-enable these protocols, or use the native protocol to connect instead.
 
-From its inception, Jaybird has been built around the - then new - JCA specification.
-Unfortunately, this had the side-effect that Jaybird required the JCA api (`connector-api`) as a dependency.
-As far as we know, Jaybird was hardly used as a JCA connector, while at the same time it hindered development, as the JCA implementation was central to Jaybird.
-Lack of testing as a JCA connector also meant it was unclear if Jaybird actually functioned correctly as such.
+See also <<unsupported-protocol>>.
 
-To reduce development overhead, we have decided to remove support for JCA from Jaybird.
-A lot of classes previously in the `org.firebirdsql.jca` package are now in the package `org.firebirdsql.jaybird.xca`.
-This new package is marked as internal API and is not binary compatible with the old JCA implementation.
-Be aware that the API and implementation of the classes in this package can change in any point release.
+[#support-for-java-before-17-dropped]
+=== Support for Java versions before Java 17 dropped
 
-If there turns out to be actual demand for JCA support in Jaybird after all, we will consider creating new support for JCA in a way that does not require JCA when using Jaybird as a JDBC driver.
-Contact us on the firebird-java mailing list if you're interested in such a solution.
+Jaybird 5 does not support Java versions before Java 17.
+You will need to upgrade to Java 17 or higher, or remain on Jaybird 5.
 
-As a result of this change, `org.firebirdsql.jdbc.FBDataSource` is now considered internal API as well.
-For normal data sources, look at the classes in the package `org.firebirdsql.ds`.
+Jaybird 5 will serve as a form of "`long-term support`" for Java 8 and 11, with maintenance releases at least until the release of Jaybird 7.
 
-[#changes-connection-props]
-=== Changes to connection properties
+[#support-native-embedded]
+=== Native and embedded require extra artifact
 
-The handling of connection properties was refactored significantly to remove a lot of code duplication and other forms of repetition.
-As a result of this, a number of incompatibilities arise:
+The main `jaybird` artifact no longer provides native and embedded support.
+Add the `jaybird-native` artifact if you use native or embedded (JDBC URL prefix `++jdbc:firebird[sql]:native:++` or `++jdbc:firebird[sql]:embedded:++`).
 
-. Jaybird specific connection properties no longer have an alias of the form `isc_dpb_<name>`.
-Only shorter aliases (camel-case and underscored) are still supported.
-For example `isc_dpb_use_stream_blobs` no longer exists, but `use_stream_blobs` and `useStreamBlobs` do.
-+
-This does not apply to Firebird connection properties, which still support the `isc_dpb_` prefix.
-. The Jaybird specific connection properties no longer have a constant `isc_dpb_<name>` in `org.firebirdsql.gds.ISCConstants`.
-. Previously a `FBSQLException` was thrown if multiple aliases of the same property where used through `DriverManager`.
-This is now silently allowed, and the last property 'wins', however the ordering of properties is not deterministic.
-+
-The behaviour of `FBDriver.normalizeProperties` no longer matches with the behaviour of connecting through `DriverManager` as that still throws the exception.
-. `FBDriver.normalizeProperties` normalizes to a different property name than previous versions, the shorter camel-case name, instead of the longer, underscored `isc_dpb_` alias.
-For example, `charSet` instead of `isc_dpb_local_encoding`.
+See also <<native-plugin>>.
 
-[#changes-set-non-standard-string]
-==== Changes to setNonStandardString(String)
+[#support-ooremote-dropped]
+=== Support for jdbc:firebirdsql:oo: (OpenOffice/LibreOffice driver) dropped
 
-The `FirebirdConnectionProperties.setNonStandardString(String)` (implemented by a number of data sources) is documented as accepting strings with the format `propertyName[=propertyValue]`.
-However, the actual implementation was far more lenient, allowing odd values like `"++ =:propertyName :==: propertyValue++"` and `"propertyName propertyValue"`.
+The OOREMOTE protocol (JDBC URL prefix `++jdbc:firebird[sql]:oo:++`) has been removed in Jaybird 6.
 
-This has been rectified, and now we split on the first '```=```', everything before the '```=```' -- or the entire string if there is no '```=```' -- is the property name, and everything after -- or an empty string if there is no '```=```' -- is the property value.
-Leading and trailing whitespace is trimmed from the property name and value.
+The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
 
-This has the effect that previously valid options will now configure a different property or -- for a limited number of cases -- throw an `IllegalArgumentException`.
-Some examples:
-
-* `"a:=b"` used to set name `"a"` with value `"b"`, but now sets name `"a:"` with value `"b"`.
-* `"a b"` used to do the same, but now sets name `"a b"` with value empty string.
-* `"=a=b"` used to set the same, but now throws an `IllegalArgumentException.
-
-These cases need to be replaced with `"a=b"`.
-
-[#generated-keys-always]
-=== Generated keys support always available
-
-Previously, support for generated keys depended on the presence of the antlr4-runtime library on the classpath.
-With <<generated-keys-parser-replaced>>, generated keys support is now always available.
-
-See <<generated-keys-parser-replaced>> for information on disabling or ignoring generated keys support if you relied on this behaviour.
-
-[#batch-too-big]
-=== Batch execution error "`Internal buffer overflow - batch too big`"
-
-With the introduction of server-side batch updates, it is possible that execution of a very large batch fails with error "`Internal buffer overflow - batch too big`" (`isc_batch_too_big`, `335545198`).
-
-There are two possible solutions for this error:
-
-. Reduce the size of the batch, by executing when the batch has accumulated a few hundred to a few thousand rows.
-. Disable server-side batch updates by setting connection property `useServerBatch` to `false`.
-
-The maximum server-side batch buffer should be sufficient to have a batch of around 4000 rows with the maximum row size (around 64KB), more rows are possible for smaller row sizes.
+// TODO Document compatibility issues
 
 [#removal-of-classes-packages-and-methods-without-deprecation]
 === Removal of classes, packages and methods without deprecation
 
+[#removal-of-packages-without-deprecation]
+==== Removal of packages without deprecation
+
+The following packages have been removed in Jaybird 6 without deprecation:
+
+* `org.firebirdsql.logging`;
+there is no replacement
+
 [#removal-of-methods-without-deprecation]
 ==== Removal of methods without deprecation
 
-// TODO Consider if some of these changes need to be moved to GDS-ng/internal breaking changes
+The following methods have been removed in Jaybird 6 without deprecation:
 
-The following methods have been removed in Jaybird 5:
-
-* `FirebirdConnectionProperties.getDatabaseParameterBuffer()`;
-there is no direct replacement, though `BaseProperties.connectionPropertyValues()` can be considered its successor.
-* `FBConnection.getDatabaseParameterBuffer()`;
-there is no direct replacement, though `FBConnection.connectionProperties()` can be considered its successor.
-* `FBStatement`
-** `toArray(Collection<Long> updateCounts)` -- use `org.firebirdsql.util.Primitives.toIntArray(List<? extends Number>)`
-** `toLargeArray(Collection<Long> updateCounts)` -- use `org.firebirdsql.util.Primitives.toLongArray(List<? extends Number>)`
-** `forgetResultSet()`;
+* `FBConnection.prepareMetaDataStatement(String, int,int)`;
+use `prepareStatement(String, int, int, int, boolean, boolean)`
+* `JaybirdSystemProperties`
+** `isForceConsoleLogger()`;
 there is no replacement
-** `isExecuteProcedureStatement(String sql);
+** `isDisableLogging()`;
 there is no replacement
-* `FBRowUpdater`, parameter `Synchronizable syncProvider` was removed from constructor
-* `GDSHelper.getDatabaseParameterBuffer()`, the significant refactoring of Jaybird's internals resulted in this method no longer making any sense.
-There is no direct replacement, though `GDSHelper.getConnectionProperties()` can be considered its successor.
-* `IConnectionProperties.getExtraDatabaseParameters`;
-there is no direct replacement, though `BaseProperties.connectionPropertyValues()` can be considered its successor for read-only access.
-* `FbConnectionProperties.fromDpb(DatabaseParameterBuffer)`;
-there is no replacement.
-* `ParameterBufferHelper`
-** `getDpbKey(String)`;
-there is no replacement.
-** `getDpbParameterType(String)`;
-there is no replacement.
-** `getDpbMap()`;
-there is no replacement.
-** `parseDpbString(String, Object)`;
-there is no replacement.
-This method was previously deprecated, but not for removal.
-** `parseDpbString(String, String)`;
-there is no replacement.
-* `AbstractParameterConverter.populateNonStandardProperties`;
-there is no direct replacement.
-The new way of adding non-standard properties is setting the appropriate properties by name (e.g. using `BaseProperty.setProperty(String, String)`) before `ParameterConverter.toDatabaseParameterBuffer` is called.
-* `FBConnectionRequestInfo.deepCopy()` (internal API);
-if a replacement is needed, use `new FBConnectionRequestInfo(instance.asIConnectionProperties.asNewMutable())`.
-* `WireCrypt getWireCrypt()` in `ServiceManager`, `EventManager` and `IAttachProperties`;
-replacement is `WireCrypt getWireCryptAsEnum()` or `String getWireCrypt()`.
-* `setWireCrypt(WireCrypt)` in `ServiceManager`, `EventManager` and `IAttachProperties`;
-replacement is `setWireCryptAsEnum(WireCrypt)` or `setWireCrypt(String)`.
-* `getServerName()`, `getPortNumber()` and `getAttachObjectName()` in `org.firebirdsql.gds.ng.AbstractConnection`;
-handling of database coordinates is now considered internal to the protocol implementation.
-There is no direct equivalent beyond accessing the properties with the same name in the attachment properties (though keep in mind that the meaning of those properties has changed in Jaybird 5, see also jdp-2021-01).
-* `DatatypeCoder` (and implementations; these are informally considered internal implementation artifacts)
-// TODO Some of the replacement methods might get removed as well later on
-** `encodeTimestamp(Timestamp, Calendar)` -- use `encodeTimestamp(Timestamp, Calendar, boolean)`
-** `encodeTimestamp(Timestamp)` -- use `encodeTimestampCalendar(Timestamp, Calendar)`
-** `decodeTimestamp(Timestamp, Calendar)` -- use `decodeTimestamp(Timestamp, Calendar, boolean)`
-** `decodeTimestamp(byte[]`) -- use `decodeTimestampCalendar(byte[], Calendar)`
-** `encodeTime(Time)` -- use `encodeTimeCalendar(Time, Calendar)`
-** `decodeTime(byte[])` -- use `decodeTimeCalendar(byte[], Calendar)`
-** `encodeDate(Date)` -- use `encodeDateCalendar(Date, Calendar)`
-** `decodeDate(byte[])` -- use `decodeDateCalendar(byte[], Calendar)`
-** `encodeLocalTime(int, int, int, int)` -- use `encodeLocalTime(LocalTime)`
-** `encodeLocalDate(int, int, int)` -- use `encodeLocalDate(LocalDate)`
-** `encodeLocalDateTime(int, int, int, int, int, int, int)` -- use `encodeLocalDateTime(LocalDateTime)`
-* `V10Statement` (this is internal implementation, but might be used by custom protocol implementations)
-** `sendInfoSql(byte[], int)` -- use `getInfo(int, byte[], int)` (which sends and receives)
-** `processInfoSqlResponse(GenericResponse)` -- use `GenericResponse.getData()`
-** `writeSqlData(RowDescriptor, RowValue)` -- use `writeSqlData(RowDescriptor, RowValue, boolean)`, with the third parameter `true` for the equivalent behaviour
-* `StatementListener.allRowsFetched(FbStatement)` -- use `afterLast(FbStatement)`
-* `AbstractFbStatement` (this is internal implementation, but might be used by custom protocol implementations)
-** `setAllRowsFetched(boolean)` -- use `setAfterLast()`
-** `isAllRowsFetched()` -- `isAfterLast()`
-* `FbWireOperations.readSingleResponse` -- use `FbWireOperations.readResponse`
-+
-Contrary to `readSingleResponse`, `readResponse` throws the `SQLException` reported in a `GenericResponse`
+** `getLoggerImplementation()`;
+there is no replacement
 
-The following methods had their visibility reduced:
-
-* `FBTpbMapper.getDefaultTransactionIsolation()` to default access.
-* `FBTpbMapper.setDefaultTransactionIsolation(int)` to default access.
-
+[#removal-of-classes-without-deprecation]
 ==== Removal of classes without deprecation
 
-The following classes have been removed in Jaybird 5:
+The following classes have been removed in Jaybird 6 without deprecation:
 
-* `ParameterBufferHelper.DpbParameterType`
-* `ParameterBufferHelper.DpbValueType`
-* `DatabaseParameterBufferExtension`
-* `Base64Decoder` and `Base64DecoderImpl`, these classes were internal API, but not marked as such.
-* `JdbcVersionSupport` and implementations, `JdbcVersionSupportHolder`.
-These were implementation artifacts to support multiple JDBC versions.
-* `AbstractPreparedStatement`, `AbstractCallableStatement` and `AbstractResultSet`.
-These were implementation artifacts to support multiple JDBC versions.
-* `Synchronizable`, it is no longer possible to synchronize on the lock object of JDBC classes.
-Thread safety and locking is now an internal implementation detail.
-+
-For maintainers of derived drivers, usage of `synchronized (getSynchronizationObject()) ++{ .. } ++` need to be replaced with `try (LockCloseable ignored = withLock()) ++{ .. }++`.
+* `FbLocalDatabaseFactory` -- unused since removal of LOCAL protocol implementation in Jaybird 5.
 
-The following classes are no longer accessible in Jaybird 5:
+The following classes are no longer accessible in Jaybird 6:
 
-* `FBUpdatableCursorFetcher` is now package private.
-* `FBRowUpdater` is now package private and final.
+* `RowValueBuilder` is now package private.
 
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation
 
-The following constants have been removed in Jaybird 5:
+The following constants have been removed in Jaybird 6 without deprecation:
 
-* `TIME_WITH_TIMEZONE` and `TIMESTAMP_WITH_TIMEZONE` from `org.firebirdsql.jdbc.JaybirdTypeCodes`.
-Use the constants with the same name from `java.sql.Types`.
-* `ParameterBufferHelper.DPB_PREFIX`
-* `ISCConstants`
-** `isc_dpb_{asterisk}` of Jaybird-specific connection properties, Firebird-specific connection properties have been deprecated for removal in Jaybird 6.
-** `jaybirdMinIscDpbValue`
-** `jaybirdMaxIscDpbValue`
-* `IAttachProperties.DEFAULT_PORT`
-* `IAttachProperties.DEFAULT_SERVER_NAME`
+* `JaybirdSystemProperties`
+** `FORCE_CONSOLE_LOGGER_PROP`;
+there is no replacement
+** `DISABLE_LOGGING_PROP`;
+there is no replacement
+** `LOGGER_IMPLEMENTATION_PROP`;
+there is no replacement
 
 [#removal-of-deprecated-classes-packages-and-methods]
 === Removal of deprecated classes, packages and methods
 
+[#removal-of-deprecated-packages]
+==== Removal of deprecated packages
+
+The following packages have been removed in Jaybird 6:
+
+* `org.firebirdsql.gds.impl.oo`
+* `org.firebirdsql.jdbc.oo`
+
 [#removal-of-deprecated-methods]
 ==== Removal of deprecated methods
 
-The following methods have been removed in Jaybird 5:
+The following methods have been removed in Jaybird 6:
 
-* `MaintenanceManager.listLimboTransactions()`, use `MaintenanceManager.limboTransactionsAsList()` or  `MaintenanceManager.getLimboTransactions()` instead.
-* `TraceManager.loadConfigurationFromFile(String)`, use standard Java  functionality like `new String(Files.readAllBytes(Paths.get(fileName)), <charset>)`
-* `FBDatabaseMetaData.hasNoWildcards(String pattern)`
-* `FBDatabaseMetaData.stripEscape(String pattern)`
-* `StatementParser.parseInsertStatement(String sql)`, use  `StatementParser.parseStatement(String sql)`
-* `FbStatement.getFieldDescriptor()`, use `FbStatement.getRowDescriptor()`
-* `AbstractFbStatement.setFieldDescriptor(RowDescriptor fieldDescriptor)`,  use `AbstractFbStatement.setRowDescriptor(RowDescriptor rowDescriptor)`
-* `FBField.isType(FieldDescriptor, int)`, use  `JdbcTypeConverter.isJdbcType(FieldDescriptor, int)`
+* `FirebirdConnectionProperties` +
+Changes to the `FirebirdConnectionProperties` interface affect the data source implementations in `org.firebirdsql.ds`, and `FBManagedConnectionFactory`.
+** `getDatabase()` and all its implementations, use `DatabaseConnectionProperties.getDatabaseName()`
+** `setDatabase(String)` and all its implementations, use `DatabaseConnectionProperties.setDatabaseName(String)`
+** `getNonStandardProperty(String)` and all its implementations, use `BaseProperties.getProperty(String)`
+** `setNonStandardProperty(String,String)` and all its implementations, use `BaseProperties.setProperty(String,String)`
+** `getBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.getPageCacheSize`
+** `setBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.setPageCacheSize`
+* `IConnectionProperties`
+** `short getConnectionDialect()` and all its implementations, use `int DatabaseConnectionProperties.getSqlDialect()`
+** `setConnectionDialect(short)`, and all its implementations, use `DatabaseConnectionProperties.setSqlDialect(int)`
+* `FBSimpleDataSource.get/setBlobBufferLength`, use `get/setBlobBufferSize`
+* `EventManager`
+** `get/setHost`, use `get/setServerName`
+** `get/setPort`, use `get/setPortNumber`
+** `get/setDatabase`, use `get/setDatabaseName`
+* `GDSFactory.getJdbcUrl(GDSType, String)`, use `GDSFactory.getJdbcUrl(GDSType, DatabaseConnectionProperties)`
+* `FBManagedConnection.getDatabase()`, there is no direct replacement, but the information can be obtained from the connection properties
+* `GDSHelper.getIscEncoding()`;
+there is no replacement
+* `FirebirdConnection.getIscEncoding`;
+there is no replacement
 
 [#removal-of-deprecated-classes]
 ==== Removal of deprecated classes
 
-The following classes have been removed in Jaybird 5:
+The following classes have been removed in Jaybird 6:
 
-* `FBMissingParameterException`, exception is no longer used.
+* `org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener` -- implementing `DatabaseListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
+* `org.firebirdsql.gds.ng.listeners.DefaultStatementListener` -- implementing `StatementListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
+* `org.firebirdsql.jdbc.FBConnectionDefaults`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants`, is considered internal API
 
 [#removal-of-deprecated-constants]
 ==== Removal of deprecated constants
 
-The following constants have been removed in Jaybird 5:
+The following constants have been removed in Jaybird 6:
 
-* All `SQL_STATE_*` constants in `FBSQLParseException`.
-Use equivalent constants in `org.firebirdsql.jdbc.SQLStateConstants`.
-
-[#removal-of-udf-support-for-jdbc-escapes]
-=== Removal of UDF support for JDBC escapes
-
-Given recent Firebird versions have significantly improved support for built-in functions, and UDFs are now deprecated, the support to map JDBC function escapes to UDFs from `ib_udf` instead of built-in functions using the boolean connection property `useStandarUdf`[sic] has been removed.
-
-As a result, the following methods, constants, properties and others are no longer available:
-
-* Connection property `useStandarUdf`[sic] and its alias `use_standard_udf`
-* `isUseStandardUdf()` and `setUseStandardUdf(boolean useStandardUdf)` in `FirebirdConnectionProperties` and in implementations of `DataSource` and other classes
-* Constants `FBConnectionProperties.USE_STANDARD_UDF_PROPERTY`,  `DatabaseParameterBufferExtension.USE_STANDARD_UDF`, `ISCConstants.isc_dpb_use_standard_udf`
-* Enum `EscapeParserMode` and its usages in `FBEscapedCallParser` and `FBEscapedParser`
-* Public classes in package are now marked as internal-api
+* All public String constants in `FBDriver`.
+The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement.
+* `ISCConstants.isc_dpb_{asterisk}` that are DPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.DpbItems`.
+* `ISCConstants.isc_tpb_{asterisk}` that are TPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.TpbItems`.
+* `ISCConstants.isc_spb_{asterisk}` that are SPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.SpbItems`.
+* `ISCConstants.isc_bpb_{asterisk}` that are BPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.BpbItems`.
+* `ISCConstants.isc_bpb_type_segmented` and `ISCConstants.isc_bpb_type_stream`, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues`
+* All constants in `DatabaseParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.DpbItems`.
+* All constants in `TransactionParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.TpbItems`.
+* All constants in `ServiceParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.SpbItems`.
+* All constants in `BlobParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.BpbItems` and `org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues`.
+* All `TPB_{asterisk}` constants in `FirebirdConnection`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.TpbItems`.
+* All public String constants in `org.firebirdsql.jdbc.FBConnectionProperties`.
+The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement.
+* `GDSHelper.DEFAULT_BLOB_BUFFER_SIZE`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE`, is considered internal API.
+* All constants in `IConnectionProperties`, use the equivalent constant from `org.firebirdsql.jaybird.props.PropertyConstants`, though this class is considered internal API.
 
 [#breaking-changes-internal-api]
 === Breaking changes internal API
 
 The following breaking changes were made to the internal API, like the GDS-ng API in `org.firebirdsql.gds.ng` and sub-packages.
-These changes are primarily interesting for implementers of custom GDS-ng implementations, or people using this low-level API directly.
+These changes are primarily interesting for implementers of custom GDS-ng implementations or forks of Jaybird, or people using these low-level APIs directly.
 
-- constructor `AbstractStatement(Object syncObject)` was replaced with a no-arg constructor.
-- `ProtocolDescriptor.createWireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback, Object syncObject)` was replaced with `ProtocolDescriptor.createWireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback)`
-- The third parameter, `Object syncObject`, of constructor `AbstractWireOperations` (and its subclasses) was removed
-- Method `getSynchronizationObject()` was removed from various interface, replace use in `synchronized` blocks with `try (LockCloseable ignored = withLock()) ++{ .. }++`
-  - `FbAttachment`
-  - `FbBlob`
-  - `AbstractFbStatement`
-  - `AbstractFbTransaction`
-  - `AbstractWireOperations`
-- Class `SyncObject` has been removed
+[NOTE]
+====
+Only changes we think are relevant to driver implementers or (internal) API users are documented.
+This means there may be undocumented changes to internal API.
+If you are confronted with such a change, let us know on https://groups.google.com/g/firebird-java[firebird-java], so we can take this into account when documenting future changes.
+====
 
-[#breaking-changes-statement-state]
-==== Additional statement state `PREPARING`
+* `AbstractFbWireStatement.close()` is now final
+* `AsynchronousChannelListener.Event` was converted to a record, so it is now final, and its getters (`getEventId()` and `getEventCount()`) have been replaced by accessor methods (`eventId()` and `eventCount()`)
+* `DbAttachInfo` was converted to a record, so its getters (`getServerName()`, `getPortNumber()` and `getAttachObjectName()`) have been replaced by accessor methods (`serverName()`, `portNumber()`, `attachObjectName()`)
+* `XdrInputStream`
+** `skipPadding` return type was changed to `void` as the return values was never used in Jaybird code
+** `skipFully` was removed, use standard Java `InputStream.skipNBytes` instead
+** `readShort` was removed as it was unused
+* The no-arg constructor of `FBXAException` was removed
+* `FBResultSet.close(boolean)` was removed;
+use `close(boolean, CompletionReason)`
+* `UnixCrypt` was replaced by `LegacyHash`, which only performs the password hash specific to Firebird legacy authentication
+* `GDSFactoryPlugin.getDatabasePath(String, Integer, String)` and `getDatabasePath(String)` no longer throw `GDSException`, but instead throw `SQLException`
+* `GDSFactory.getDatabasePath(...)` no longer throw `GDSException`, but instead throw `SQLException`
+* `GDSServerVersionException` no longer extends `GDSException`, but instead extends `SQLNonTransientException`
+* `GDSException` was significantly modified and deprecated for future removal.
+Most of its implementation was removed, and it now extends `SQLException`.
+Only the constructors `GDSException(int)`, `GDSException(int, Throwable)` and `GDSException(String)` were retained.
+All other constructors and methods have been removed.
+* `WireGDSFactoryPlugin`, `NativeGDSFactoryPlugin` and `EmbeddedGDSFactoryPlugin` are now final
+* `FbEmbeddedDatabaseFactory` is now final
+* `FbClientDatabaseFactory` and `FbEmbeddedDatabaseFactory` now have a private constructor;
+use their static `getInstance()` method to obtain an instance
+* `DefaultDatatypeCoder.intToBytes(int)` was removed;
+use `encodeInt(int)`
+* `ChaChaEncryptionPlugin` and `ChaChaEncryptionPluginSpi` are now final
+* `CryptSessionConfig`, the JavaBeans-style accessors have been replaced with record-style accessors:
+** `getEncryptionIdentifier()` -> `encryptionIdentifier()`
+** `getEncryptKey()` -> `encryptKey()`
+** `getDecryptKey()` -> `decryptKey()`
+** `getSpecificData()` -> `specificData()`
+* `EncryptionIdentifier`, some JavaBeans-style accessors have been replaced with record-style accessors:
+** `getType()` -> `type()`
+** `getPluginName()` -> `pluginName()`
+* `KnownServerKey.PluginSpecificData`, the JavaBeans-style accessors have been replaced with record-style accessors:
+** `getEncryptionIdentifier()` -> `encryptionIdentifier()`
+** `getSpecificData()` -> `specificData()`
+* `EncryptionPlugin` and `EncryptionPluginSpi`, the JavaBeans-style accessor has been replaced with a record-style accessor:
+** `getEncryptionIdentifier()` -> `encryptionIdentifier()`
 
-To be able to detect preparing a new statement text on a statement handle, the state `PREPARING` has been added to `org.firebirdsql.gds.ng.StatementState`.
-The state transition `ALLOCATED` -> `PREPARED` is no longer valid, and must now be `ALLOCATED` -> `PREPARING` -> `PREPARED`.
+[#breaking-changes-unlikely]
+=== Unlikely breaking changes
 
-Custom statement implementations need to add a state transition to `PREPARING` before preparing a new statement text.
+The following changes might cause issues, though we think this is unlikely:
 
-[#breaking-changes-for-jaybird-6]
-=== Breaking changes for Jaybird 6
+[#breaking-finalization]
+==== Removal of finalization
 
-With Jaybird 6 the following breaking changes will be introduced.
+With the removal of finalization, the replacement cleanup has been simplified, and in some cases left out entirely.
 
-[#dropping-support-firebird-25]
-==== Dropping support for Firebird 2.5
+Possible effects include:
 
-Jaybird 6 will drop support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03]).
-In general, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
+* If a close/cleanup is performed by the `Cleaner`, listeners will not get notified.
+Given it is unlikely there will not be strong reference to an object if something is still interested in its listener events, we think this is acceptable.
+* The closing of a pure Java connection is now simply a socket close handled by the cleanup action of the socket itself.
+Server-side this may result in delayed cleanup of a connection and its resources, and occurrences of "`connection reset by peer`" (e.g. error 10054 on Windows).
+If you see an increase of these errors, we recommend you hunt for connection leaks in your application.
 
-[#removal-of-deprecated-classes-packages-and-methods-6]
+[#breaking-double-bigdecimal]
+==== Conversion from double to BigDecimal
+
+Conversions from `double` to `java.math.BigDecimal` now always use `BigDecimal.valueOf(double)`.
+Previously, a combination of `new BigDecimal(double)` and `BigDecimal.valueOf(double)` was used.
+
+This change may result in minor differences in precision or rounding of values.
+
+[#breaking-changes-for-jaybird-7]
+=== Breaking changes for Jaybird 7
+
+With Jaybird 7 the following breaking changes will be introduced.
+
+[#removal-of-deprecated-classes-packages-and-methods-7]
 ==== Removal of deprecated classes, packages and methods
 
-[#removal-of-deprecated-methods-6]
+[#removal-of-deprecated-methods-7]
 ===== Removal of deprecated methods
 
-The following methods will be removed in Jaybird 6:
+The following methods will be removed in Jaybird 7:
 
-* `FirebirdConnectionProperties.getDatabase()` and all its implementations, use `DatabaseConnectionProperties.getDatabaseName()`
-* `FirebirdConnectionProperties.setDatabase(String)` and all its implementations, use `DatabaseConnectionProperties.setDatabaseName(String)`
-* `FirebirdConnectionProperties.getNonStandardProperty(String)` and all its implementations, use `BaseProperties.getProperty(String)`.
-* `FirebirdConnectionProperties.setNonStandardProperty(String,String)` and all its implementations, use `BaseProperties.setProperty(String,String)`.
-* `short FirebirdConnectionProperties.getConnectionDialect()` and all its implementations, use `int DatabaseConnectionProperties.getSqlDialect()`.
-* `IConnectionProperties.setConnectionDialect(short)`, and all its implementations, use `DatabaseConnectionProperties.setSqlDialect(int)`.
-* `FirebirdConnectionProperties.getBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.getPageCacheSize`.
-* `FirebirdConnectionProperties.setBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.setPageCacheSize`.
-* `FBSimpleDataSource.get/setBlobBufferLength`, use `get/setBlobBufferSize`
-* `EventManager.get/setHost`, use `get/setServerName`
-* `EventManager.get/setPort`, use `get/setPortNumber`
-* `GDSFactory.getJdbcUrl(GDSType, String)`, use `GDSFactory.getJdbcUrl(GDSType, DatabaseConnectionProperties)`
-* `ManagedConnection.getDatabase()`, there is no direct replacement, but the information can be obtained from the connection properties
+* `GDSFactoryPlugin`
+** `getTypeAliases()` -- use `getTypeAliasList()`.
+It may get removed in Jaybird 7 or later.
+** `getSupportedProtocols` -- use `getSupportedProtocolList()`.
+It may get removed in Jaybird 7 or later.
 
-Changes to the `FirebirdConnectionProperties` interface affect the data source implementations in `org.firebirdsql.ds`, and `FBManagedConnectionFactory`.
-
-[#removal-of-deprecated-classes-6]
+[#removal-of-deprecated-classes-7]
 ===== Removal of deprecated classes
 
-The following classes have been deprecated and will be removed in Jaybird 6:
+The following classes have been deprecated and will be removed in Jaybird 7:
 
-* `org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener` -- implementing `DatabaseListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
-* `org.firebirdsql.gds.ng.listeners.DefaultStatementListener` -- implementing `StatementListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
+* `GDSException` -- use `SQLException` or one of its (normal) subclasses.
+Previous versions of `GDSFactoryPlugin` declared `throws GDSException` for some methods, but now `throws SQLException`.
+To retain some semblance of backwards-compatibility, this class was retrofitted to extend `SQLException`.
+It may get removed in Jaybird 7 or later.
 
-[#removal-of-deprecated-constants-6]
+[#removal-of-deprecated-constants-7]
 ==== Removal of deprecated constants
 
-The following constants have been deprecated and will be removed in Jaybird 6:
+The following constants have been deprecated and will be removed in Jaybird 7:
 
-* All public String constants in `FBDriver`.
-The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be
-removed without replacement.
-* `ISCConstants.isc_dpb_{asterisk}` that are DPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.param.DpbItems`.
-* `ISCConstants.isc_tpb_{asterisk}` that are TPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.param.TpbItems`.
-* `ISCConstants.isc_spb_{asterisk}` that are SPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.param.SpbItems`.
-* All constants in `DatabaseParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.param.DpbItems`.
-* All constants in `TransactionParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.param.TpbItems`.
-* All constants in `ServiceParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.param.SpbItems`.
-* All `TPB_{asterisk}` constants in `FirebirdConnection`, use the equivalent constant from `org.firebirdsql.jaybird.param.TpbItems`.
-* All public String constants in `org.firebirdsql.jdbc.FBConnectionProperties`.
-The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be
-removed without replacement.
+* `ISCConstants`
+** `isc_isc_sql_dialect_conflict_num` (was already deprecated, now for removal);
+use `isc_sql_dialect_conflict_num`
+** `isc_err_max` -- there is no replacement
 
 [#compatibility-notes]
 == Compatibility notes
@@ -919,32 +874,33 @@ removed without replacement.
 [#type-2-native-and-embedded-driver]
 === Type 2 (native) and embedded driver
 
-Jaybird uses JNA to access the client library.
-If you want to use the Type 2  driver, or Firebird embedded, then you need to include `jna-5.12.1.jar` on the  classpath.
+Since Jaybird 6, the native and embedded part of the driver has been moved to a separate artifact, `jaybird-native`.
+The Jaybird Native GDS Factory plugin uses JNA to access the client library.
+If you want to use the Type 2 driver, or Firebird embedded, then you need to include `jaybird-native-{version_example}` and `jna-{jna-version}.jar` on the classpath.
 
-When using Maven, you need to specify the dependency on JNA yourself, as we  don't depend on it by default (it is specified as an optional dependency):
+When using Maven, you need to specify the dependency on `jaybird-native`:
 
-[source,{.xml}]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
-    <groupId>net.java.dev.jna</groupId>
-    <artifactId>jna</artifactId>
-    <version>5.12.1</artifactId>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-native</artifactId>
+    <version>{version_example}</version>
 </dependency>
 ----
 
-The `fbclient.dll`, `fbembed.dll`, `libfbclient.so`, or `libfbembed.so` need to be on the path, or the location needs to be specified in the system property  `jna.library.path` (as an absolute or relative path to the directory/directories containing the library file(s)).
+The `fbclient.dll`, `fbembed.dll`, `libfbclient.so`, or `libfbembed.so` need to be on the path, or the location needs to be specified in the system property `jna.library.path` (as an absolute or relative path to the directory/directories containing the library file(s)).
 
-For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient` dependency on your classpath to provide the native libraries for the `native`  and `local` protocol.
+For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient` dependency on your classpath to provide the native libraries for the `native` and `local` protocol.
 Be aware that this dependency does not support `embedded`.
 
-[source,{.xml}]
+[source,xml]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>fbclient</artifactId>
-    <version>3.0.5.1</artifactId>
+    <version>4.0.2.0</artifactId>
 </dependency>
 ----
 
-In the future we will move the Type 2 support to a separate library and provide  JNA-compatible jars that provide the embedded libraries of a specific Firebird  version.
+In the future we may provide JARs with the embedded libraries of a specific Firebird version.

@@ -32,7 +32,7 @@ import java.util.Set;
  * Factory to create appropriate {@code GeneratedKeysSupport} based on the configuration, Firebird version and parser
  * availability.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 final class GeneratedKeysSupportFactory {

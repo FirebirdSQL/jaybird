@@ -33,7 +33,7 @@ import java.sql.SQLException;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_crypt_key_callback;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 4.0
  */
 public class V15WireOperations extends V13WireOperations {

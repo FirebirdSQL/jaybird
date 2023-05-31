@@ -27,7 +27,7 @@ import java.math.BigInteger;
 /**
  * An IEEE-754 Decimal128.
  *
- * @author <a href="mailto:mark@lawinegevaar.nl">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class Decimal128 extends Decimal<Decimal128> {
 

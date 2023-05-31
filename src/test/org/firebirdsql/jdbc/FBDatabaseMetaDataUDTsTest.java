@@ -35,7 +35,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 /**
  * Tests for {@link FBDatabaseMetaData} for UDT related metadata.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataUDTsTest {
 

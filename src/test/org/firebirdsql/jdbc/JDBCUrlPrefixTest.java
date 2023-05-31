@@ -21,10 +21,9 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.FbOOEmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.FbOONativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.nativeoo.FbOONativeGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -48,21 +47,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for alternative JDBC URLs supported.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 class JDBCUrlPrefixTest {
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
+    @SuppressWarnings("deprecation")
     static Stream<Arguments> parameters() {
         return Stream.of(
                 testCase("jdbc:firebirdsql:", WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME),
                 testCase("jdbc:firebirdsql:java:", WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME),
                 testCase("jdbc:firebird:", WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME),
                 testCase("jdbc:firebird:java:", WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME),
-                testCase("jdbc:firebirdsql:oo:", OOGDSFactoryPlugin.TYPE_NAME),
-                testCase("jdbc:firebird:oo:", OOGDSFactoryPlugin.TYPE_NAME),
                 testCase("jdbc:firebirdsql:embedded:", EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME),
                 testCase("jdbc:firebird:embedded:", EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME),
                 testCase("jdbc:firebirdsql:fboo:embedded:", FbOOEmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME),
