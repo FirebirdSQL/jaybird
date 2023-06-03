@@ -36,7 +36,6 @@ import java.util.*;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.WARNING;
-import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
@@ -964,6 +963,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return 32765;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * NOTE: This method reports the standard maximum length, and does not take into account restrictions configured
+     * through {@code MaxIdentifierByteLength} or {@code MaxIdentifierCharLength}.
+     * </p>
+     */
     @Override
     public int getMaxColumnNameLength() throws SQLException {
         return getMaxObjectNameLength();
@@ -971,11 +978,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public int getMaxObjectNameLength() {
-        if (gdsHelper.compareToVersion(4, 0) < 0) {
-            return OBJECT_NAME_LENGTH_BEFORE_V4_0;
-        } else {
-            return OBJECT_NAME_LENGTH_V4_0;
-        }
+        return versionMetaData.maxIdentifierLength();
     }
 
     @Override
@@ -1027,6 +1030,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return 0; //No schemas
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * NOTE: This method reports the standard maximum length, and does not take into account restrictions configured
+     * through {@code MaxIdentifierByteLength} or {@code MaxIdentifierCharLength}.
+     * </p>
+     */
     @Override
     public int getMaxProcedureNameLength() throws SQLException {
         return getMaxObjectNameLength();
@@ -1074,6 +1085,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * NOTE: This method reports the standard maximum length, and does not take into account restrictions configured
+     * through {@code MaxIdentifierByteLength} or {@code MaxIdentifierCharLength}.
+     * </p>
+     */
     @Override
     public int getMaxTableNameLength() throws SQLException {
         return getMaxObjectNameLength();
@@ -1085,6 +1104,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * NOTE: This method reports the standard maximum length, and does not take into account restrictions configured
+     * through {@code MaxIdentifierByteLength} or {@code MaxIdentifierCharLength}.
+     * </p>
+     */
     @Override
     public int getMaxUserNameLength() throws SQLException {
         return getMaxObjectNameLength();

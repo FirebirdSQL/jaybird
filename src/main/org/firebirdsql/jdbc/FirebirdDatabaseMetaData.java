@@ -128,6 +128,10 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
 
     /***
      * The default maximum identifier length.
+     * <p>
+     * NOTE: This method reports the standard maximum length, and does not take into account restrictions configured
+     * through {@code MaxIdentifierByteLength} or {@code MaxIdentifierCharLength}.
+     * </p>
      *
      * @return the (default) maximum identifier length
      */
