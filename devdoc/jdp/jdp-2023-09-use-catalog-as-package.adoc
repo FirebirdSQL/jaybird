@@ -2,8 +2,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 6
+* Published: 2023-06-03
+* Implemented in: Jaybird 6
 
 == Type
 
@@ -64,16 +64,19 @@ As mentioned earlier, we think it is more likely that Firebird will introduce _s
 When `useCatalogAsPackage` is enabled, `DatabaseMetaData` will exhibit the following behaviour:
 
 * `getCatalogs()` lists packages, with package names in `TABLE_CAT`.
-* `getFunctions`, `getFunctionColumns`, `getProcedures`, and `getProcedureColumns` include information on procedures and functions in packages
-** Normal (non-packaged) procedures and functions report their catalog as empty string instead of `null` (because of the following rule)
-** If `catalog` is ``""`` (empty string), only normal stored procedures and stored functions are reported.
-** If `catalog` is `null`, both packaged and normal stored procedures and stored functions are reported.
-** If `catalog` is not `null` and not an empty string, these metadata methods will only return procedures, functions, or their columns of the specified package (exact match, case-sensitive, not a `LIKE` pattern)
+* `getFunctions`, `getFunctionColumns`, `getProcedures`, and `getProcedureColumns` include information on procedures or functions in packages
+** Columns `FUNCTION_CAT`/`PROCEDURE_CAT` will report:
+*** For packaged procedures and functions -- the package name
+*** For normal (non-package) procedures and functions -- an empty string instead of `null` (because of the following rule)
+** If parameter `catalog` is `++""++` (empty string), only normal stored procedures or stored functions are reported.
+** If parameter `catalog` is `null`, both packaged and normal stored procedures or stored functions are reported.
+** For other values of parameter `catalog`, these metadata methods will only return procedures, functions, or their columns of the specified package (exact match, case-sensitive; not a `LIKE` pattern)
+** For normal (non-package) procedures and functions, the `SPECIFIC_NAME` column will be the unquoted function or procedure name (same as when `useCatalogAsPackage` is not enabled), and for packaged procedures and functions, it will be `__quoted-package-name__ + '.' + __quoted-routine-name__` (e.g. ``"SOME_PACKAGE"."SOME_FUNCTION"``)
 * `getCatalogSeparator()` returns `"."` (string with period).
-* `getCatalogTerm` returns `"PACKAGE"`.
+* `getCatalogTerm()` returns `"PACKAGE"`.
 * `isCatalogAtStart()` returns `true`.
 * `getMaxCatalogNameLength()` returns 31 or 63 depending on the max identifier length of the database.
-* `supportsCatalogsInDataManipulation()` returns `true` (i.e. access selectable stored procedures and functions).
+* `supportsCatalogsInDataManipulation()` returns `true` (i.e. access selectable stored procedures and functions from packages).
 * `supportsCatalogsInProcedureCalls()` returns `true`.
 * The other `supportsCatalogsIn__type__()` methods continue to return `false`.
 * Other metadata methods with a `catalog` parameter continue to ignore it, just like they do when `useCatalogAsPackage` is disabled.

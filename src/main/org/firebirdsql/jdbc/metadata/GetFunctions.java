@@ -27,11 +27,13 @@ import org.firebirdsql.util.InternalApi;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import static java.sql.DatabaseMetaData.functionNoTable;
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
+import static org.firebirdsql.jdbc.metadata.NameHelper.toSpecificName;
 
 /**
  * Provides the implementation for {@link java.sql.DatabaseMetaData#getFunctions(String, String, String)}.
@@ -50,7 +52,8 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
                     // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
                     .at(3).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "FUNCTIONS").addField()
                     .at(4).simple(SQL_SHORT, 0, "FUNCTION_TYPE", "FUNCTIONS").addField()
-                    .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "FUNCTIONS").addField()
+                    // space for quoted package name, ".", quoted function name (assuming no double quotes in name)
+                    .at(5).simple(SQL_VARYING, 2 * OBJECT_NAME_LENGTH + 5, "SPECIFIC_NAME", "FUNCTIONS").addField()
                     // non-standard extensions
                     .at(6).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "JB_FUNCTION_SOURCE", "FUNCTIONS").addField()
                     .at(7).simple(SQL_VARYING, 4, "JB_FUNCTION_KIND", "FUNCTIONS").addField()
@@ -66,25 +69,27 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
     /**
      * @see java.sql.DatabaseMetaData#getFunctions(String, String, String)
      */
-    public final ResultSet getFunctions(String functionNamePattern) throws SQLException {
+    public final ResultSet getFunctions(String catalog, String functionNamePattern) throws SQLException {
         if ("".equals(functionNamePattern)) {
             // Matching function name not possible
             return createEmpty();
         }
 
-        MetadataQuery metadataQuery = createGetFunctionsQuery(functionNamePattern);
+        MetadataQuery metadataQuery = createGetFunctionsQuery(catalog, functionNamePattern);
         return createMetaDataResultSet(metadataQuery);
     }
 
     @Override
     final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
+        String catalog = rs.getString("FUNCTION_CAT");
+        String functionName = rs.getString("FUNCTION_NAME");
         return valueBuilder
-                .at(0).set(null)
+                .at(0).setString(catalog)
                 .at(1).set(null)
-                .at(2).setString(rs.getString("FUNCTION_NAME"))
+                .at(2).setString(functionName)
                 .at(3).setString(rs.getString("REMARKS"))
                 .at(4).setShort(functionNoTable)
-                .at(5).setString(rs.getString("FUNCTION_NAME"))
+                .at(5).setString(toSpecificName(catalog, functionName))
                 .at(6).setString(rs.getString("JB_FUNCTION_SOURCE"))
                 .at(7).setString(rs.getString("JB_FUNCTION_KIND"))
                 .at(8).setString(rs.getString("JB_MODULE_NAME"))
@@ -93,7 +98,7 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
                 .toRowValue(false);
     }
 
-    abstract MetadataQuery createGetFunctionsQuery(String functionNamePattern);
+    abstract MetadataQuery createGetFunctionsQuery(String catalog, String functionNamePattern);
 
     /**
      * Creates an instance of {@code GetFunctions}.
@@ -105,7 +110,10 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
     public static GetFunctions create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(3, 0)) {
+        if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
+            if (mediator.isUseCatalogAsPackage()) {
+                return FB3CatalogAsPackage.createInstance(mediator);
+            }
             return FB3.createInstance(mediator);
         } else {
             return FB2_5.createInstance(mediator);
@@ -117,21 +125,20 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
      */
     private static final class FB2_5 extends GetFunctions {
 
-        //@formatter:off
-        private static final String GET_FUNCTIONS_FRAGMENT_2_5 =
-                "select\n"
-                + "  RDB$FUNCTION_NAME as FUNCTION_NAME,\n"
-                + "  RDB$DESCRIPTION as REMARKS,\n"
-                + "  cast(null as blob sub_type text) as JB_FUNCTION_SOURCE,\n"
-                + "  'UDF' as JB_FUNCTION_KIND,\n"
-                + "  trim(trailing from RDB$MODULE_NAME) as JB_MODULE_NAME,\n"
-                + "  trim(trailing from RDB$ENTRYPOINT) as JB_ENTRYPOINT,\n"
-                + "  cast(null as varchar(255)) as JB_ENGINE_NAME\n"
-                + "from RDB$FUNCTIONS\n";
-        //@formatter:on
+        private static final String GET_FUNCTIONS_FRAGMENT_2_5 = """
+                select
+                  null as FUNCTION_CAT,
+                  RDB$FUNCTION_NAME as FUNCTION_NAME,
+                  RDB$DESCRIPTION as REMARKS,
+                  cast(null as blob sub_type text) as JB_FUNCTION_SOURCE,
+                  'UDF' as JB_FUNCTION_KIND,
+                  trim(trailing from RDB$MODULE_NAME) as JB_MODULE_NAME,
+                  trim(trailing from RDB$ENTRYPOINT) as JB_ENTRYPOINT,
+                  cast(null as varchar(255)) as JB_ENGINE_NAME
+                from RDB$FUNCTIONS""";
 
-        private static final String GET_FUNCTIONS_ORDER_BY_2_5 =
-                "order by RDB$FUNCTION_NAME";
+        private static final String GET_FUNCTIONS_ORDER_BY_2_5 = "\norder by RDB$FUNCTION_NAME";
+
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
@@ -142,10 +149,10 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionsQuery(String functionNamePattern) {
+        MetadataQuery createGetFunctionsQuery(String catalog, String functionNamePattern) {
             Clause functionNameClause = new Clause("RDB$FUNCTION_NAME", functionNamePattern);
             String queryText = GET_FUNCTIONS_FRAGMENT_2_5
-                    + functionNameClause.getCondition("where ", "\n")
+                    + functionNameClause.getCondition("\nwhere ", "")
                     + GET_FUNCTIONS_ORDER_BY_2_5;
             return new MetadataQuery(queryText, Clause.parameters(functionNameClause));
         }
@@ -156,27 +163,25 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
      */
     private static final class FB3 extends GetFunctions {
 
-        //@formatter:off
-        private static final String GET_FUNCTIONS_FRAGMENT_3 =
-                "select\n"
-                + "  trim(trailing from RDB$FUNCTION_NAME) as FUNCTION_NAME,\n"
-                + "  RDB$DESCRIPTION as REMARKS,\n"
-                + "  RDB$FUNCTION_SOURCE as JB_FUNCTION_SOURCE,\n"
-                + "  case\n"
-                + "    when RDB$LEGACY_FLAG = 1 then 'UDF'\n"
-                + "    when RDB$ENGINE_NAME is not null then 'UDR'\n"
-                + "    else 'PSQL'\n"
-                + "  end as JB_FUNCTION_KIND,\n"
-                + "  trim(trailing from RDB$MODULE_NAME) as JB_MODULE_NAME,\n"
-                + "  trim(trailing from RDB$ENTRYPOINT) as JB_ENTRYPOINT,\n"
-                + "  trim(trailing from RDB$ENGINE_NAME) as JB_ENGINE_NAME\n"
-                + "from RDB$FUNCTIONS\n"
-                + "where RDB$PACKAGE_NAME is null\n";
-        //@formatter:on
-        
+        private static final String GET_FUNCTIONS_FRAGMENT_3 = """
+                select
+                  null as FUNCTION_CAT,
+                  trim(trailing from RDB$FUNCTION_NAME) as FUNCTION_NAME,
+                  RDB$DESCRIPTION as REMARKS,
+                  RDB$FUNCTION_SOURCE as JB_FUNCTION_SOURCE,
+                  case
+                    when RDB$LEGACY_FLAG = 1 then 'UDF'
+                    when RDB$ENGINE_NAME is not null then 'UDR'
+                    else 'PSQL'
+                  end as JB_FUNCTION_KIND,
+                  trim(trailing from RDB$MODULE_NAME) as JB_MODULE_NAME,
+                  trim(trailing from RDB$ENTRYPOINT) as JB_ENTRYPOINT,
+                  trim(trailing from RDB$ENGINE_NAME) as JB_ENGINE_NAME
+                from RDB$FUNCTIONS
+                where RDB$PACKAGE_NAME is null""";
+
         // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort
-        private static final String GET_FUNCTIONS_ORDER_BY_3 =
-                "order by RDB$PACKAGE_NAME, RDB$FUNCTION_NAME";
+        private static final String GET_FUNCTIONS_ORDER_BY_3 = "\norder by RDB$PACKAGE_NAME, RDB$FUNCTION_NAME";
 
         private FB3(DbMetadataMediator mediator) {
             super(mediator);
@@ -187,12 +192,66 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionsQuery(String functionNamePattern) {
+        MetadataQuery createGetFunctionsQuery(String catalog, String functionNamePattern) {
             Clause functionNameClause = new Clause("RDB$FUNCTION_NAME", functionNamePattern);
             String queryText = GET_FUNCTIONS_FRAGMENT_3
-                    + functionNameClause.getCondition("and ", "\n")
+                    + functionNameClause.getCondition("\nand ", "")
                     + GET_FUNCTIONS_ORDER_BY_3;
             return new MetadataQuery(queryText, Clause.parameters(functionNameClause));
+        }
+    }
+
+    private static final class FB3CatalogAsPackage extends GetFunctions {
+
+        private static final String GET_FUNCTIONS_FRAGMENT_3_W_PKG = """
+                select
+                  coalesce(trim(trailing from RDB$PACKAGE_NAME), '') as FUNCTION_CAT,
+                  trim(trailing from RDB$FUNCTION_NAME) as FUNCTION_NAME,
+                  RDB$DESCRIPTION as REMARKS,
+                  RDB$FUNCTION_SOURCE as JB_FUNCTION_SOURCE,
+                  case
+                    when RDB$LEGACY_FLAG = 1 then 'UDF'
+                    when RDB$ENGINE_NAME is not null then 'UDR'
+                    else 'PSQL'
+                  end as JB_FUNCTION_KIND,
+                  trim(trailing from RDB$MODULE_NAME) as JB_MODULE_NAME,
+                  trim(trailing from RDB$ENTRYPOINT) as JB_ENTRYPOINT,
+                  trim(trailing from RDB$ENGINE_NAME) as JB_ENGINE_NAME
+                from RDB$FUNCTIONS""";
+
+        private static final String GET_FUNCTIONS_ORDER_BY_3_W_PKG =
+                "\norder by RDB$PACKAGE_NAME nulls first, RDB$FUNCTION_NAME";
+
+        private FB3CatalogAsPackage(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetFunctions createInstance(DbMetadataMediator mediator) {
+            return new FB3CatalogAsPackage(mediator);
+        }
+
+        @Override
+        MetadataQuery createGetFunctionsQuery(String catalog, String functionNamePattern) {
+            var clauses = new ArrayList<Clause>(2);
+            if (catalog != null) {
+                // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
+                // should not be used to narrow the search
+                if (catalog.isEmpty()) {
+                    clauses.add(Clause.isNullClause("RDB$PACKAGE_NAME"));
+                } else {
+                    // Exact matches only
+                    clauses.add(Clause.equalsClause("RDB$PACKAGE_NAME", catalog));
+                }
+            }
+            clauses.add(new Clause("RDB$FUNCTION_NAME", functionNamePattern));
+            //@formatter:off
+            String sql = GET_FUNCTIONS_FRAGMENT_3_W_PKG
+                    + (Clause.anyCondition(clauses)
+                    ? "\nwhere " + Clause.conjunction(clauses)
+                    : "")
+                    + GET_FUNCTIONS_ORDER_BY_3_W_PKG;
+            //@formatter:on
+            return new MetadataQuery(sql, Clause.parameters(clauses));
         }
     }
 }

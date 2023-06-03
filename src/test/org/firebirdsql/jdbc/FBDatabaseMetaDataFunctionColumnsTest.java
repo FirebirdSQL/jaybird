@@ -19,13 +19,15 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.*;
@@ -33,10 +35,13 @@ import java.util.*;
 
 import static java.util.Collections.singletonList;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.jdbc.FBDatabaseMetaDataFunctionsTest.isIgnoredFunction;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
@@ -130,39 +135,41 @@ class FBDatabaseMetaDataFunctionColumnsTest {
             + " returns cstring(100)"
             + "entry_point 'UDF$EXAMPLE$3' module_name 'module_1'";
 
-    private static final String CREATE_PACKAGE_WITH_FUNCTION = "create package WITH$FUNCTION\n"
-            + "as\n"
-            + "begin\n"
-            + "  function IN$PACKAGE(PARAM1 integer) returns INTEGER;\n"
-            + "end";
+    private static final String CREATE_PACKAGE_WITH_FUNCTION = """
+            create package WITH$FUNCTION
+            as
+            begin
+              function IN$PACKAGE(PARAM1 integer) returns INTEGER;
+            end""";
 
-    private static final String CREATE_PACKAGE_BODY_WITH_FUNCTION = "create package body WITH$FUNCTION\n"
-            + "as\n"
-            + "begin\n"
-            + "  function IN$PACKAGE(PARAM1 integer) returns INTEGER\n"
-            + "  as\n"
-            + "  begin\n"
-            + "    return PARAM1 + 1;\n"
-            + "  end\n"
-            + "end";
+    private static final String CREATE_PACKAGE_BODY_WITH_FUNCTION = """
+            create package body WITH$FUNCTION
+            as
+            begin
+              function IN$PACKAGE(PARAM1 integer) returns INTEGER
+              as
+              begin
+                return PARAM1 + 1;
+              end
+            end""";
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
             getCreateStatements());
 
-    private static final MetaDataTestSupport<FunctionColumnMetaData> metaDataTestSupport =
-            new MetaDataTestSupport<>(FunctionColumnMetaData.class, EnumSet.allOf(FunctionColumnMetaData.class));
-    // Skipping RDB$GET_CONTEXT and RDB$SET_CONTEXT as that seems to be an implementation artifact:
-    // present in FB 2.5, absent in FB 3.0
-    private static final Set<String> FUNCTIONS_TO_IGNORE = Collections.unmodifiableSet(new HashSet<>(
-            Arrays.asList("RDB$GET_CONTEXT", "RDB$SET_CONTEXT")));
+    private static final MetadataResultSetDefinition getFunctionColumnsDefinition =
+            new MetadataResultSetDefinition(FunctionColumnMetaData.class);
 
     private static Connection con;
-    private static DatabaseMetaData dbmd;
+    private DatabaseMetaData dbmd;
 
     @BeforeAll
     static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
+    }
+
+    @BeforeEach
+    void setup() throws SQLException {
         dbmd = con.getMetaData();
     }
 
@@ -172,7 +179,6 @@ class FBDatabaseMetaDataFunctionColumnsTest {
             con.close();
         } finally {
             con = null;
-            dbmd = null;
         }
     }
 
@@ -207,7 +213,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
     @Test
     void testFunctionColumnMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getFunctionColumns(null, null, "doesnotexist", "doesnotexist")) {
-            metaDataTestSupport.validateResultSetColumns(columns);
+            getFunctionColumnsDefinition.validateResultSetColumns(columns);
         }
     }
 
@@ -302,41 +308,126 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         validateNoRows("%IN$PACKAGE%", "%");
     }
 
+    @Test
+    void testFunctionColumnMetaData_useCatalogAsPackage_everything() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+            var expectedColumns = new ArrayList<>(getPsqlExample1Columns());
+            if (supportInfo.isVersionEqualOrAbove(4)) {
+                expectedColumns.addAll(getPsqlExample2Columns());
+            }
+            expectedColumns.addAll(getUdfExample1Columns());
+            expectedColumns.addAll(getUdfExample2Columns());
+            expectedColumns.add(createStringType(Types.VARCHAR, UDF_EXAMPLE_3, "PARAM_0", 0, 100, false));
+            withCatalog("", expectedColumns);
+            expectedColumns.addAll(getWithFunctionInPackageColumns());
+            validateExpectedFunctionColumns(null, null, null, expectedColumns);
+        }
+    }
+
+    @Test
+    void testFunctionColumnMetaData_useCatalogAsPackage_specificPackage() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+            List<Map<FunctionColumnMetaData, Object>> expectedColumns = getWithFunctionInPackageColumns();
+            validateExpectedFunctionColumns("WITH$FUNCTION", null, null, expectedColumns);
+        }
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "WITH$FUNCTION")
+    void testFunctionColumnMetaData_useCatalogAsPackage_specificPackageProcedure(String catalog) throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+            List<Map<FunctionColumnMetaData, Object>> expectedColumns = getWithFunctionInPackageColumns();
+            validateExpectedFunctionColumns(catalog, "IN$PACKAGE", null, expectedColumns);
+        }
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "WITH$FUNCTION")
+    void testFunctionColumnMetaData_useCatalogAsPackage_specificPackageProcedureColumn(String catalog)
+            throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+            List<Map<FunctionColumnMetaData, Object>> expectedColumns = withCatalog("WITH$FUNCTION",
+                    withSpecificName("\"WITH$FUNCTION\".\"IN$PACKAGE\"",
+                            List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM1", 1, 10, 0, true))));
+            validateExpectedFunctionColumns(catalog, "IN$PACKAGE", "PARAM1", expectedColumns);
+        }
+    }
+
+    @Test
+    void testFunctionColumnMetaData_useCatalogAsPackage_nonPackagedOnly() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+            var expectedColumns = new ArrayList<>(getPsqlExample1Columns());
+            if (supportInfo.isVersionEqualOrAbove(4)) {
+                expectedColumns.addAll(getPsqlExample2Columns());
+            }
+            expectedColumns.addAll(getUdfExample1Columns());
+            expectedColumns.addAll(getUdfExample2Columns());
+            expectedColumns.add(createStringType(Types.VARCHAR, UDF_EXAMPLE_3, "PARAM_0", 0, 100, false));
+            withCatalog("", expectedColumns);
+            validateExpectedFunctionColumns("", null, null, expectedColumns);
+        }
+    }
+
     private void validateExpectedFunctionColumns(String functionNamePattern, String columnNamePattern,
             List<Map<FunctionColumnMetaData, Object>> expectedColumns) throws Exception {
-        try (ResultSet columns = dbmd.getFunctionColumns(null, null, functionNamePattern, columnNamePattern)) {
-            //noinspection ForLoopReplaceableByForEach
-            for (int i = 0; i < expectedColumns.size(); i++) {
-                expectNextFunction(columns);
-                // System.out.println("Position: " + i);
-                Map<FunctionColumnMetaData, Object> expectedColumn = expectedColumns.get(i);
-                metaDataTestSupport.validateRowValues(columns, expectedColumn);
+        validateExpectedFunctionColumns(null, functionNamePattern, columnNamePattern, expectedColumns);
+    }
+
+    private void validateExpectedFunctionColumns(String catalog, String functionNamePattern, String columnNamePattern,
+            List<Map<FunctionColumnMetaData, Object>> expectedColumns) throws Exception {
+        try (ResultSet columns = dbmd.getFunctionColumns(catalog, null, functionNamePattern, columnNamePattern)) {
+            for (Map<FunctionColumnMetaData, Object> expectedColumn : expectedColumns) {
+                expectNextFunctionColumn(columns);
+                getFunctionColumnsDefinition.validateRowValues(columns, expectedColumn);
             }
             expectNoMoreRows(columns);
         }
     }
 
-    private void expectNextFunction(ResultSet rs) throws SQLException {
-        assertTrue(rs.next(), "Expected a row");
-        while (FUNCTIONS_TO_IGNORE.contains(rs.getString("FUNCTION_NAME"))) {
+    private static void expectNextFunctionColumn(ResultSet rs) throws SQLException {
+        do {
             assertTrue(rs.next(), "Expected a row");
-        }
+        } while (isIgnoredFunction(rs.getString("SPECIFIC_NAME")));
     }
 
-    private void expectNoMoreRows(ResultSet rs) throws SQLException {
-        boolean hasRow;
-        //noinspection AssignmentUsedAsCondition
-        while ((hasRow = rs.next())) {
-            if (!FUNCTIONS_TO_IGNORE.contains(rs.getString("FUNCTION_NAME"))) {
-                break;
+    private static void expectNoMoreRows(ResultSet rs) throws SQLException {
+        while (rs.next()) {
+            if (!isIgnoredFunction(rs.getString("SPECIFIC_NAME"))) {
+                fail("Expected no more rows");
             }
         }
-        assertFalse(hasRow, "Expected no more rows");
     }
 
     private static List<Map<FunctionColumnMetaData, Object>> getPsqlExample1Columns() {
-        return Arrays.asList(
-                createReturnColumnPsqlExample1(),
+        return List.of(
+                withColumnTypeFunctionReturn(createStringType(Types.VARCHAR, PSQL_EXAMPLE_1, "PARAM_0", 0, 100, true)),
                 createFloat(PSQL_EXAMPLE_1, "C$01$FLOAT", 1, false),
                 createDouble(PSQL_EXAMPLE_1, "C$02$DOUBLE", 2, true),
                 createStringType(Types.CHAR, PSQL_EXAMPLE_1, "C$03$CHAR10", 3, 10, true),
@@ -361,12 +452,10 @@ class FBDatabaseMetaDataFunctionColumnsTest {
     }
 
     private static List<Map<FunctionColumnMetaData, Object>> getPsqlExample2Columns() {
-        return Arrays.asList(
-                createReturnColumnPsqlExample2(),
-                createDateTime(Types.TIME_WITH_TIMEZONE, PSQL_EXAMPLE_2, "C$01$TIME_WITH_TIME_ZONE", 1,
-                        true),
-                createDateTime(Types.TIMESTAMP_WITH_TIMEZONE, PSQL_EXAMPLE_2,
-                        "C$02$TIMESTAMP_WITH_TIME_ZONE", 2, true),
+        return List.of(
+                withColumnTypeFunctionReturn(createStringType(Types.VARCHAR, PSQL_EXAMPLE_2, "PARAM_0", 0, 100, false)),
+                createDateTime(Types.TIME_WITH_TIMEZONE, PSQL_EXAMPLE_2, "C$01$TIME_WITH_TIME_ZONE", 1, true),
+                createDateTime(Types.TIMESTAMP_WITH_TIMEZONE, PSQL_EXAMPLE_2, "C$02$TIMESTAMP_WITH_TIME_ZONE", 2, true),
                 createDecfloat(PSQL_EXAMPLE_2, "C$03$DECFLOAT", 3, 34, true),
                 createDecfloat(PSQL_EXAMPLE_2, "C$04$DECFLOAT16", 4, 16, true),
                 createDecfloat(PSQL_EXAMPLE_2, "C$05$DECFLOAT34", 5, 34, true),
@@ -375,8 +464,8 @@ class FBDatabaseMetaDataFunctionColumnsTest {
     }
 
     private static List<Map<FunctionColumnMetaData, Object>> getUdfExample1Columns() {
-        return Arrays.asList(
-                createReturnColumnUdfExample1(),
+        return List.of(
+                withColumnTypeFunctionReturn(createStringType(Types.VARCHAR, UDF_EXAMPLE_1, "PARAM_0", 0, 100, false)),
                 createFloat(UDF_EXAMPLE_1, "PARAM_1", 1, true),
                 createDouble(UDF_EXAMPLE_1, "PARAM_2", 2, false),
                 createStringType(Types.CHAR, UDF_EXAMPLE_1, "PARAM_3", 3, 10, false),
@@ -390,8 +479,8 @@ class FBDatabaseMetaDataFunctionColumnsTest {
     }
 
     private static List<Map<FunctionColumnMetaData, Object>> getUdfExample2Columns() {
-        return Arrays.asList(
-                createReturnColumnUdfExample2(),
+        return List.of(
+                withColumnTypeFunctionReturn(createStringType(Types.VARCHAR, UDF_EXAMPLE_2, "PARAM_0", 0, 100, true)),
                 createNumericalType(Types.NUMERIC, UDF_EXAMPLE_2, "PARAM_1", 1, 9, 3, false),
                 createNumericalType(Types.NUMERIC, UDF_EXAMPLE_2, "PARAM_2", 2, 4, 3, false),
                 createNumericalType(Types.DECIMAL, UDF_EXAMPLE_2, "PARAM_3", 3, 18, 2, false),
@@ -402,31 +491,34 @@ class FBDatabaseMetaDataFunctionColumnsTest {
                 createDateTime(Types.TIMESTAMP, UDF_EXAMPLE_2, "PARAM_8", 8, false));
     }
 
-    private static Map<FunctionColumnMetaData, Object> createReturnColumnPsqlExample1() {
-        Map<FunctionColumnMetaData, Object> rules =
-                createStringType(Types.VARCHAR, PSQL_EXAMPLE_1, "PARAM_0", 0, 100, true);
+    private static List<Map<FunctionColumnMetaData, Object>> getWithFunctionInPackageColumns() {
+        return withCatalog("WITH$FUNCTION",
+                withSpecificName("\"WITH$FUNCTION\".\"IN$PACKAGE\"",
+                        List.of(
+                                withColumnTypeFunctionReturn(
+                                        createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM_0", 0, 10, 0, true)),
+                                createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM1", 1, 10, 0, true))));
+    }
+
+    private static Map<FunctionColumnMetaData, Object> withColumnTypeFunctionReturn(
+            Map<FunctionColumnMetaData, Object> rules) {
         rules.put(FunctionColumnMetaData.COLUMN_TYPE, DatabaseMetaData.functionReturn);
         return rules;
     }
 
-    private static Map<FunctionColumnMetaData, Object> createReturnColumnPsqlExample2() {
-        Map<FunctionColumnMetaData, Object> rules =
-                createStringType(Types.VARCHAR, PSQL_EXAMPLE_2, "PARAM_0", 0, 100, false);
-        rules.put(FunctionColumnMetaData.COLUMN_TYPE, DatabaseMetaData.functionReturn);
+    private static List<Map<FunctionColumnMetaData, Object>> withCatalog(String catalog,
+            List<Map<FunctionColumnMetaData, Object>> rules) {
+        for (Map<FunctionColumnMetaData, Object> rowRule : rules) {
+            rowRule.put(FunctionColumnMetaData.FUNCTION_CAT, catalog);
+        }
         return rules;
     }
 
-    private static Map<FunctionColumnMetaData, Object> createReturnColumnUdfExample1() {
-        Map<FunctionColumnMetaData, Object> rules =
-                createStringType(Types.VARCHAR, UDF_EXAMPLE_1, "PARAM_0", 0, 100, false);
-        rules.put(FunctionColumnMetaData.COLUMN_TYPE, DatabaseMetaData.functionReturn);
-        return rules;
-    }
-
-    private static Map<FunctionColumnMetaData, Object> createReturnColumnUdfExample2() {
-        Map<FunctionColumnMetaData, Object> rules =
-                createStringType(Types.VARCHAR, UDF_EXAMPLE_2, "PARAM_0", 0, 100, true);
-        rules.put(FunctionColumnMetaData.COLUMN_TYPE, DatabaseMetaData.functionReturn);
+    private static List<Map<FunctionColumnMetaData, Object>> withSpecificName(String specificName,
+            List<Map<FunctionColumnMetaData, Object>> rules) {
+        for (Map<FunctionColumnMetaData, Object> rowRule : rules) {
+            rowRule.put(FunctionColumnMetaData.SPECIFIC_NAME, specificName);
+        }
         return rules;
     }
 
@@ -448,19 +540,11 @@ class FBDatabaseMetaDataFunctionColumnsTest {
             String columnName, int ordinalPosition, int length, boolean nullable) {
         Map<FunctionColumnMetaData, Object> rules = createColumn(functionName, columnName, ordinalPosition, nullable);
         rules.put(FunctionColumnMetaData.DATA_TYPE, jdbcType);
-        String typeName;
-        switch (jdbcType) {
-        case Types.CHAR:
-        case Types.BINARY:
-            typeName = "CHAR";
-            break;
-        case Types.VARCHAR:
-        case Types.VARBINARY:
-            typeName = "VARCHAR";
-            break;
-        default:
-            throw new IllegalArgumentException("Wrong type code for createStringType: " + jdbcType);
-        }
+        String typeName = switch (jdbcType) {
+            case Types.CHAR, Types.BINARY -> "CHAR";
+            case Types.VARCHAR, Types.VARBINARY -> "VARCHAR";
+            default -> throw new IllegalArgumentException("Wrong type code for createStringType: " + jdbcType);
+        };
         rules.put(FunctionColumnMetaData.TYPE_NAME, typeName);
         rules.put(FunctionColumnMetaData.PRECISION, length);
         rules.put(FunctionColumnMetaData.LENGTH, length);
@@ -475,28 +559,27 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         String typeName;
         int length;
         switch (jdbcType) {
-        case Types.BIGINT:
+        case Types.BIGINT -> {
             typeName = "BIGINT";
             length = 8;
-            break;
-        case Types.INTEGER:
+        }
+        case Types.INTEGER -> {
             typeName = "INTEGER";
             length = 4;
-            break;
-        case Types.SMALLINT:
+        }
+        case Types.SMALLINT -> {
             typeName = "SMALLINT";
             length = 2;
-            break;
-        case Types.NUMERIC:
+        }
+        case Types.NUMERIC -> {
             typeName = "NUMERIC";
             length = precision > 5 ? (precision > 9 ? (precision > 18 ? 16 : 8) : 4) : 2;
-            break;
-        case Types.DECIMAL:
+        }
+        case Types.DECIMAL -> {
             typeName = "DECIMAL";
             length = precision > 9 ? (precision > 18 ? 16 : 8) : 4;
-            break;
-        default:
-            throw new IllegalArgumentException("Wrong type code for createNumericalType: " + jdbcType);
+        }
+        default -> throw new IllegalArgumentException("Wrong type code for createNumericalType: " + jdbcType);
         }
         rules.put(FunctionColumnMetaData.TYPE_NAME, typeName);
         rules.put(FunctionColumnMetaData.PRECISION, precision);
@@ -513,33 +596,32 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         int precision;
         int length;
         switch (jdbcType) {
-        case Types.DATE:
+        case Types.DATE -> {
             typeName = "DATE";
             precision = DATE_PRECISION;
             length = 4;
-            break;
-        case Types.TIME:
+        }
+        case Types.TIME -> {
             typeName = "TIME";
             precision = TIME_PRECISION;
             length = 4;
-            break;
-        case Types.TIMESTAMP:
+        }
+        case Types.TIMESTAMP -> {
             typeName = "TIMESTAMP";
             precision = TIMESTAMP_PRECISION;
             length = 8;
-            break;
-        case Types.TIME_WITH_TIMEZONE:
+        }
+        case Types.TIME_WITH_TIMEZONE -> {
             typeName = "TIME WITH TIME ZONE";
             precision = TIME_WITH_TIMEZONE_PRECISION;
             length = 8; // TODO Possibly 6
-            break;
-        case Types.TIMESTAMP_WITH_TIMEZONE:
+        }
+        case Types.TIMESTAMP_WITH_TIMEZONE -> {
             typeName = "TIMESTAMP WITH TIME ZONE";
             precision = TIMESTAMP_WITH_TIMEZONE_PRECISION;
             length = 12; // TODO Possibly 10
-            break;
-        default:
-            throw new IllegalArgumentException("Wrong type code for createNumericalType: " + jdbcType);
+        }
+        default -> throw new IllegalArgumentException("Wrong type code for createNumericalType: " + jdbcType);
         }
         rules.put(FunctionColumnMetaData.TYPE_NAME, typeName);
         rules.put(FunctionColumnMetaData.PRECISION, precision);
@@ -659,11 +741,6 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         @Override
         public Class<?> getColumnClass() {
             return columnClass;
-        }
-
-        @Override
-        public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<>(this);
         }
     }
 

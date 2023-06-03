@@ -68,8 +68,8 @@ class FBDatabaseMetaDataPseudoColumnsTest {
             + " on commit delete rows ";
     //@formatter:on
 
-    private static final MetaDataTestSupport<PseudoColumnMetaData> metaDataTestSupport =
-            new MetaDataTestSupport<>(PseudoColumnMetaData.class);
+    private static final MetadataResultSetDefinition getPseudoColumnsDefinition =
+            new MetadataResultSetDefinition(PseudoColumnMetaData.class);
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
@@ -109,7 +109,7 @@ class FBDatabaseMetaDataPseudoColumnsTest {
     @Test
     void testPseudoColumnsMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getPseudoColumns(null, null, "doesnotexist", null)) {
-            metaDataTestSupport.validateResultSetColumns(columns);
+            getPseudoColumnsDefinition.validateResultSetColumns(columns);
         }
     }
 
@@ -302,8 +302,8 @@ class FBDatabaseMetaDataPseudoColumnsTest {
             while (pseudoColumns.next()) {
                 if (columnCount < expectedPseudoColumns.size()) {
                     Map<PseudoColumnMetaData, Object> rules = expectedPseudoColumns.get(columnCount);
-                    metaDataTestSupport.checkValidationRulesComplete(rules);
-                    metaDataTestSupport.validateRowValues(pseudoColumns, rules);
+                    getPseudoColumnsDefinition.checkValidationRulesComplete(rules);
+                    getPseudoColumnsDefinition.validateRowValues(pseudoColumns, rules);
                 }
                 columnCount++;
             }
@@ -357,7 +357,7 @@ class FBDatabaseMetaDataPseudoColumnsTest {
     /**
      * Columns defined for the getPseudoColumns() metadata.
      */
-    private enum PseudoColumnMetaData implements MetaDataValidator.MetaDataInfo {
+    private enum PseudoColumnMetaData implements MetaDataInfo {
         TABLE_CAT(1, String.class),
         TABLE_SCHEM(2, String.class),
         TABLE_NAME(3, String.class),
@@ -368,19 +368,14 @@ class FBDatabaseMetaDataPseudoColumnsTest {
         NUM_PREC_RADIX(8, Integer.class),
         COLUMN_USAGE(9, String.class),
         REMARKS(10, String.class) {
-            @Override
-            public MetaDataValidator<PseudoColumnMetaData> getValidator() {
-                return new MetaDataValidator<PseudoColumnMetaData>(this) {
-                    // We're not going to validate the actual remark value, just that it is present when expected.
-                    public void assertColumnValue(ResultSet rs, Object expectedValue) throws SQLException {
-                        String remarkValue = rs.getString(getPosition());
-                        if (expectedValue == null) {
-                            assertNull(remarkValue, "Expected null remark value");
-                        } else {
-                            assertNotNull(remarkValue, "Expected non-null remark value");
-                        }
-                    }
-                };
+            // We're not going to validate the actual remark value, just that it is present when expected.
+            public void assertColumnValue(ResultSet rs, Object expectedValue) throws SQLException {
+                String remarkValue = rs.getString(getPosition());
+                if (expectedValue == null) {
+                    assertNull(remarkValue, "Expected null remark value");
+                } else {
+                    assertNotNull(remarkValue, "Expected non-null remark value");
+                }
             }
         },
         CHAR_OCTET_LENGTH(11, Integer.class),
@@ -402,11 +397,6 @@ class FBDatabaseMetaDataPseudoColumnsTest {
         @Override
         public Class<?> getColumnClass() {
             return columnClass;
-        }
-
-        @Override
-        public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<>(this);
         }
     }
 }

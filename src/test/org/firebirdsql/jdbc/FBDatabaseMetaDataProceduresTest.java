@@ -19,21 +19,32 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.BiFunction;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure related metadata.
@@ -42,52 +53,72 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class FBDatabaseMetaDataProceduresTest {
 
-    //@formatter:off
-    private static final String CREATE_NORMAL_PROC_NO_RETURN =
-            "CREATE PROCEDURE normal_proc_no_return\n" +
-            " ( param1 VARCHAR(100))\n" +
-            "AS\n" +
-            "DECLARE VARIABLE dummy INTEGER;\n" +
-            "BEGIN\n" +
-            "  dummy = 1 + 1;\n" +
-            "END";
+    private static final String CREATE_NORMAL_PROC_NO_RETURN = """
+            CREATE PROCEDURE normal_proc_no_return
+             ( param1 VARCHAR(100))
+            AS
+            DECLARE VARIABLE dummy INTEGER;
+            BEGIN
+              dummy = 1 + 1;
+            END""";
 
-    private static final String CREATE_NORMAL_PROC_WITH_RETURN =
-            "CREATE PROCEDURE normal_proc_with_return\n" +
-            " ( param1 VARCHAR(100))\n" +
-            "RETURNS (return1 VARCHAR(200), return2 INTEGER)\n" +
-            "AS\n" +
-            "BEGIN\n" +
-            "  return1 = param1 || param1;\n" +
-            "  return2 = 1;\n" +
-            "END";
+    private static final String CREATE_NORMAL_PROC_WITH_RETURN = """
+            CREATE PROCEDURE normal_proc_with_return
+             ( param1 VARCHAR(100))
+            RETURNS (return1 VARCHAR(200), return2 INTEGER)
+            AS
+            BEGIN
+              return1 = param1 || param1;
+              return2 = 1;
+            END""";
 
-    private static final String CREATE_QUOTED_PROC_NO_RETURN =
-            "CREATE PROCEDURE \"quoted_proc_no_return\"\n" +
-            " ( param1 VARCHAR(100))\n" +
-            "AS\n" +
-            "DECLARE VARIABLE dummy INTEGER;\n" +
-            "BEGIN\n" +
-            "  dummy = 1 + 1;\n" +
-            "END";
+    private static final String CREATE_QUOTED_PROC_NO_RETURN = """
+            CREATE PROCEDURE "quoted_proc_no_return"
+             ( param1 VARCHAR(100))
+            AS
+            DECLARE VARIABLE dummy INTEGER;
+            BEGIN
+              dummy = 1 + 1;
+            END""";
 
     private static final String ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN =
             "COMMENT ON PROCEDURE normal_proc_with_return IS 'Some comment'";
-    //@formatter:on
 
-    private static final MetaDataTestSupport<ProcedureMetaData> metaDataTestSupport =
-            new MetaDataTestSupport<>(ProcedureMetaData.class);
+    private static final String CREATE_PACKAGE_WITH_PROCEDURE = """
+            create package WITH$PROCEDURE
+            as
+            begin
+              procedure IN$PACKAGE(PARAM1 integer) returns (return1 INTEGER);
+            end""";
+
+    private static final String CREATE_PACKAGE_BODY_WITH_PROCEDURE = """
+            create package body WITH$PROCEDURE
+            as
+            begin
+              procedure IN$PACKAGE(PARAM1 integer) returns (RETURN1 integer)
+              as
+              begin
+                RETURN1 = PARAM1 * PARAM1;
+              end
+            end""";
+
+    private static final MetadataResultSetDefinition getProceduresDefinition =
+            new MetadataResultSetDefinition(ProcedureMetaData.class);
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
             getCreateStatements());
 
     private static Connection con;
-    private static DatabaseMetaData dbmd;
+    private DatabaseMetaData dbmd;
 
     @BeforeAll
     static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
+    }
+
+    @BeforeEach
+    void setup() throws SQLException {
         dbmd = con.getMetaData();
     }
 
@@ -97,14 +128,16 @@ class FBDatabaseMetaDataProceduresTest {
             con.close();
         } finally {
             con = null;
-            dbmd = null;
         }
     }
 
     private static List<String> getCreateStatements() {
-        List<String> createDDL = new ArrayList<>();
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        var createDDL = new ArrayList<String>();
         for (ProcedureTestData testData : ProcedureTestData.values()) {
-            createDDL.addAll(testData.getCreateDDL());
+            if (testData.include(supportInfo)) {
+                createDDL.addAll(testData.getCreateDDL());
+            }
         }
         return createDDL;
     }
@@ -116,7 +149,7 @@ class FBDatabaseMetaDataProceduresTest {
     @Test
     void testProcedureMetaDataColumns() throws Exception {
         try (ResultSet procedures = dbmd.getProcedures(null, null, "doesnotexist")) {
-            metaDataTestSupport.validateResultSetColumns(procedures);
+            getProceduresDefinition.validateResultSetColumns(procedures);
         }
     }
 
@@ -138,7 +171,7 @@ class FBDatabaseMetaDataProceduresTest {
 
     private void validateProcedureMetaData_everything(String procedureNamePattern) throws Exception {
         ResultSet procedures = dbmd.getProcedures(null, null, procedureNamePattern);
-        List<ProcedureTestData> expectedProcedures = Arrays.asList(
+        var expectedProcedures = List.of(
                 ProcedureTestData.NORMAL_PROC_NO_RETURN, 
                 ProcedureTestData.NORMAL_PROC_WITH_RETURN, 
                 ProcedureTestData.QUOTED_PROC_NO_RETURN);
@@ -154,8 +187,7 @@ class FBDatabaseMetaDataProceduresTest {
      */
     @Test
     void testProcedureMetaData_specificProcedure() throws Exception {
-        List<ProcedureTestData> expectedProcedures =
-                Collections.singletonList(ProcedureTestData.NORMAL_PROC_WITH_RETURN);
+        var expectedProcedures = List.of(ProcedureTestData.NORMAL_PROC_WITH_RETURN);
         ResultSet procedures = dbmd.getProcedures(null, null, expectedProcedures.get(0).getName());
         validateProcedures(procedures, expectedProcedures);
     }
@@ -165,9 +197,90 @@ class FBDatabaseMetaDataProceduresTest {
      */
     @Test
     void testProcedureMetaData_specificProcedureQuoted() throws Exception {
-        List<ProcedureTestData> expectedProcedures = Collections.singletonList(ProcedureTestData.QUOTED_PROC_NO_RETURN);
+        var expectedProcedures = List.of(ProcedureTestData.QUOTED_PROC_NO_RETURN);
         ResultSet procedures = dbmd.getProcedures(null, null, expectedProcedures.get(0).getName());
         validateProcedures(procedures, expectedProcedures);
+    }
+
+    @Test
+    void testProcedureMetaData_useCatalogAsPackage_everything() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+
+            var expectedProcedures = List.of(
+                    ProcedureTestData.NORMAL_PROC_NO_RETURN,
+                    ProcedureTestData.NORMAL_PROC_WITH_RETURN,
+                    ProcedureTestData.QUOTED_PROC_NO_RETURN,
+                    ProcedureTestData.PROCEDURE_IN_PACKAGE);
+
+            ResultSet procedures = dbmd.getProcedures(null, null, null);
+
+            validateProcedures(procedures, expectedProcedures,
+                    FBDatabaseMetaDataProceduresTest::modifyForUseCatalogAsPackage);
+        }
+    }
+
+    @Test
+    void testProcedureMetaData_useCatalogAsPackage_specificPackage() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+
+            var expectedProcedures = List.of(ProcedureTestData.PROCEDURE_IN_PACKAGE);
+
+            ResultSet procedures = dbmd.getProcedures("WITH$PROCEDURE", null, null);
+
+            validateProcedures(procedures, expectedProcedures,
+                    FBDatabaseMetaDataProceduresTest::modifyForUseCatalogAsPackage);
+        }
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "WITH$PROCEDURE")
+    void testProcedureMetaData_useCatalogAsPackage_specificPackageProcedure(String catalog) throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+
+            var expectedProcedures = List.of(ProcedureTestData.PROCEDURE_IN_PACKAGE);
+
+            ResultSet procedures = dbmd.getProcedures(catalog, null, "IN$PACKAGE");
+
+            validateProcedures(procedures, expectedProcedures,
+                    FBDatabaseMetaDataProceduresTest::modifyForUseCatalogAsPackage);
+        }
+    }
+
+    @Test
+    void testProcedureMetaData_useCatalogAsPackage_nonPackagedOnly() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+
+            var expectedProcedures = List.of(
+                    ProcedureTestData.NORMAL_PROC_NO_RETURN,
+                    ProcedureTestData.NORMAL_PROC_WITH_RETURN,
+                    ProcedureTestData.QUOTED_PROC_NO_RETURN);
+
+            ResultSet procedures = dbmd.getProcedures("", null, null);
+
+            validateProcedures(procedures, expectedProcedures,
+                    FBDatabaseMetaDataProceduresTest::modifyForUseCatalogAsPackage);
+        }
     }
     
     // TODO Add tests for more complex patterns
@@ -179,14 +292,22 @@ class FBDatabaseMetaDataProceduresTest {
      * @param expectedProcedures List of expected procedures (in expected order)
      */
     private void validateProcedures(ResultSet procedures, List<ProcedureTestData> expectedProcedures) throws Exception {
+        validateProcedures(procedures, expectedProcedures, (p, m) -> m);
+    }
+
+    private void validateProcedures(ResultSet procedures, List<ProcedureTestData> expectedProcedures,
+            BiFunction<ProcedureTestData, Map<ProcedureMetaData, Object>, Map<ProcedureMetaData, Object>> transform)
+            throws Exception {
         try {
             int procedureCount = 0;
             while(procedures.next()) {
+                if (isIgnoredProcedure(procedures.getString("SPECIFIC_NAME"))) continue;
                 if (procedureCount < expectedProcedures.size()) {
                     ProcedureTestData expectedProcedure = expectedProcedures.get(procedureCount);
-                    Map<ProcedureMetaData, Object> rules = expectedProcedure.getSpecificValidationRules(getDefaultValueValidationRules());
-                    metaDataTestSupport.checkValidationRulesComplete(rules);
-                    metaDataTestSupport.validateRowValues(procedures, rules);
+                    Map<ProcedureMetaData, Object> rules = transform.apply(expectedProcedure,
+                            expectedProcedure.getSpecificValidationRules(getDefaultValueValidationRules()));
+                    getProceduresDefinition.checkValidationRulesComplete(rules);
+                    getProceduresDefinition.validateRowValues(procedures, rules);
                 }
                 procedureCount++;
             }
@@ -194,6 +315,23 @@ class FBDatabaseMetaDataProceduresTest {
         } finally {
             closeQuietly(procedures);
         }
+    }
+
+    static boolean isIgnoredProcedure(String specificName) {
+        class Ignored {
+            // Skipping procedures from system packages (when testing with useCatalogAsPackage=true)
+            private static final List<String> PREFIXES_TO_IGNORE =
+                    List.of("\"RDB$BLOB_UTIL\".", "\"RDB$PROFILER\".", "\"RDB$TIME_ZONE_UTIL\".");
+        }
+        return Ignored.PREFIXES_TO_IGNORE.stream().anyMatch(specificName::startsWith);
+    }
+
+    static Map<ProcedureMetaData, Object> modifyForUseCatalogAsPackage(ProcedureTestData procedureTestData,
+            Map<ProcedureMetaData, Object> rules) {
+        if (!procedureTestData.isInPackage()) {
+            rules.put(ProcedureMetaData.PROCEDURE_CAT, "");
+        }
+        return rules;
     }
 
     private static final Map<ProcedureMetaData, Object> DEFAULT_COLUMN_VALUES;
@@ -245,17 +383,10 @@ class FBDatabaseMetaDataProceduresTest {
         public Class<?> getColumnClass() {
             return columnClass;
         }
-
-        @Override
-        public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<>(this);
-        }
     }
 
     private enum ProcedureTestData {
-        NORMAL_PROC_NO_RETURN("normal_proc_no_return",
-                Collections.singletonList(CREATE_NORMAL_PROC_NO_RETURN)) {
-
+        NORMAL_PROC_NO_RETURN("normal_proc_no_return", List.of(CREATE_NORMAL_PROC_NO_RETURN)) {
             @Override
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "NORMAL_PROC_NO_RETURN");
@@ -265,8 +396,7 @@ class FBDatabaseMetaDataProceduresTest {
             }
         },
         NORMAL_PROC_WITH_RETURN("NORMAL_PROC_WITH_RETURN",
-                Arrays.asList(CREATE_NORMAL_PROC_WITH_RETURN, ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN)) {
-
+                List.of(CREATE_NORMAL_PROC_WITH_RETURN, ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN)) {
             @Override
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "NORMAL_PROC_WITH_RETURN");
@@ -275,11 +405,9 @@ class FBDatabaseMetaDataProceduresTest {
                 rules.put(ProcedureMetaData.SPECIFIC_NAME, "NORMAL_PROC_WITH_RETURN");
                 return rules;
             }
-        
-        },
-        QUOTED_PROC_NO_RETURN("quoted_proc_no_return",
-                Collections.singletonList(CREATE_QUOTED_PROC_NO_RETURN)) {
 
+        },
+        QUOTED_PROC_NO_RETURN("quoted_proc_no_return", List.of(CREATE_QUOTED_PROC_NO_RETURN)) {
             @Override
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "quoted_proc_no_return");
@@ -287,8 +415,28 @@ class FBDatabaseMetaDataProceduresTest {
                 rules.put(ProcedureMetaData.SPECIFIC_NAME, "quoted_proc_no_return");
                 return rules;
             }
-        }
-        ;
+        },
+        PROCEDURE_IN_PACKAGE("WITH$PROCEDURE.IN$PACKAGE",
+                List.of(CREATE_PACKAGE_WITH_PROCEDURE, CREATE_PACKAGE_BODY_WITH_PROCEDURE)) {
+            @Override
+            Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
+                rules.put(ProcedureMetaData.PROCEDURE_CAT, "WITH$PROCEDURE");
+                rules.put(ProcedureMetaData.PROCEDURE_NAME, "IN$PACKAGE");
+                rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureReturnsResult);
+                rules.put(ProcedureMetaData.SPECIFIC_NAME, "\"WITH$PROCEDURE\".\"IN$PACKAGE\"");
+                return rules;
+            }
+
+            @Override
+            boolean include(FirebirdSupportInfo supportInfo) {
+                return supportInfo.supportsPackages();
+            }
+
+            @Override
+            boolean isInPackage() {
+                return true;
+            }
+        };
 
         private final String originalProcedureName;
         private final List<String> createDDL;
@@ -299,8 +447,7 @@ class FBDatabaseMetaDataProceduresTest {
         }
 
         /**
-         * @return Name of the procedure in as defined in the DDL script
-         *         (including case and quotation).
+         * @return Name of the procedure in as defined in the DDL script (including case).
          */
         String getName() {
             return originalProcedureName;
@@ -314,7 +461,26 @@ class FBDatabaseMetaDataProceduresTest {
         }
 
         /**
-         * @param rules The default validation rules (to be modified by this method)
+         * Check if the definition should be included for the current Firebird server.
+         *
+         * @param supportInfo
+         *         Firebird support info of the current Firebird server
+         * @return {@code true} if this procedure should be included, {@code false} if it should be excluded
+         */
+        boolean include(FirebirdSupportInfo supportInfo) {
+            return true;
+        }
+
+        /**
+         * @return {@code true} if this is a packaged procedure, otherwise {@code false}
+         */
+        boolean isInPackage() {
+            return false;
+        }
+
+        /**
+         * @param rules
+         *         The default validation rules (to be modified by this method)
          * @return Map of validation rules specific to this procedure
          */
         abstract Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules);

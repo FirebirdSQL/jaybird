@@ -20,7 +20,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -68,8 +66,8 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
             "grant select on \"tbl2\" to \"user2\" with grant option",
             "grant references (COL1) on \"tbl2\" to USER1");
 
-    private static final MetaDataTestSupport<ColumnPrivilegesMetadata> metaDataTestSupport =
-            new MetaDataTestSupport<>(ColumnPrivilegesMetadata.class, EnumSet.allOf(ColumnPrivilegesMetadata.class));
+    private static final MetadataResultSetDefinition getColumnPrivilegesDefinition =
+            new MetadataResultSetDefinition(ColumnPrivilegesMetadata.class);
 
     private static Connection con;
     private static DatabaseMetaData dbmd;
@@ -98,7 +96,7 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
     @Test
     void testColumnPrivilegesMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getColumnPrivileges(null, null, "doesnotexist", null)) {
-            metaDataTestSupport.validateResultSetColumns(columns);
+            getColumnPrivilegesDefinition.validateResultSetColumns(columns);
         }
     }
 
@@ -220,8 +218,8 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
             while (columnPrivileges.next()) {
                 if (privilegeCount < expectedColumnPrivileges.size()) {
                     Map<ColumnPrivilegesMetadata, Object> rules = expectedColumnPrivileges.get(privilegeCount);
-                    metaDataTestSupport.checkValidationRulesComplete(rules);
-                    metaDataTestSupport.validateRowValues(columnPrivileges, rules);
+                    getColumnPrivilegesDefinition.checkValidationRulesComplete(rules);
+                    getColumnPrivilegesDefinition.validateRowValues(columnPrivileges, rules);
                 }
                 privilegeCount++;
             }
@@ -269,11 +267,6 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
         @Override
         public Class<?> getColumnClass() {
             return String.class;
-        }
-
-        @Override
-        public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<>(this);
         }
     }
 }

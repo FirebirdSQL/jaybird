@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * @since 4.0
  */
 @InternalApi
-public abstract class MetadataPatternMatcher {
+public abstract sealed class MetadataPatternMatcher {
 
     private MetadataPatternMatcher() {
         // Only allow derivation in nested classes
@@ -50,18 +50,14 @@ public abstract class MetadataPatternMatcher {
      * @return Matcher for {@code metadataPattern}
      */
     public static MetadataPatternMatcher fromPattern(MetadataPattern metadataPattern) {
-        switch (metadataPattern.getConditionType()) {
-        case NONE:
-            return AllMatcher.INSTANCE;
-        case SQL_EQUALS:
-            return new EqualsMatcher(metadataPattern.getConditionValue());
-        case SQL_STARTING_WITH:
-            return new StartingWithMatcher(metadataPattern.getConditionValue());
-        case SQL_LIKE:
-            return new LikeMatcher(metadataPattern.getConditionValue());
-        default:
-            throw new AssertionError("Unexpected condition type " + metadataPattern.getConditionType());
-        }
+        return switch (metadataPattern.getConditionType()) {
+            case NONE -> AllMatcher.INSTANCE;
+            case SQL_EQUALS -> new EqualsMatcher(metadataPattern.getConditionValue());
+            case SQL_STARTING_WITH -> new StartingWithMatcher(metadataPattern.getConditionValue());
+            case SQL_LIKE -> new LikeMatcher(metadataPattern.getConditionValue());
+            case SQL_IS_NULL -> NullMatcher.INSTANCE;
+            default -> throw new AssertionError("Unexpected condition type " + metadataPattern.getConditionType());
+        };
     }
 
     /**
@@ -134,6 +130,18 @@ public abstract class MetadataPatternMatcher {
             regexMatcher.reset(value);
             return regexMatcher.matches();
         }
+
+    }
+
+    private static final class NullMatcher extends MetadataPatternMatcher {
+
+        private static final NullMatcher INSTANCE = new NullMatcher();
+
+        @Override
+        public boolean matches(String value) {
+            return value == null;
+        }
+
     }
 
     /**

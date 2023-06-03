@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -58,54 +57,52 @@ class FBDatabaseMetaDataTablesTest {
     private static final String SYSTEM_TABLE = "SYSTEM TABLE";
     private static final String GLOBAL_TEMPORARY = "GLOBAL TEMPORARY";
 
-    //@formatter:off
-    private static final String CREATE_NORMAL_TABLE =
-            "CREATE TABLE test_normal_table (" + 
-            "    id INTEGER PRIMARY KEY," + 
-            "    varchar_field VARCHAR(100)" + 
-            ")";
+    private static final String CREATE_NORMAL_TABLE = """
+            CREATE TABLE test_normal_table (
+                id INTEGER PRIMARY KEY,
+                varchar_field VARCHAR(100)
+            )""";
 
-    private static final String CREATE_QUOTED_NORMAL_TABLE =
-            "CREATE TABLE \"test_quoted_normal_table\" (\r\n" + 
-            "    id INTEGER PRIMARY KEY,\r\n" + 
-            "    varchar_field VARCHAR(100)\r\n" + 
-            ")";
+    private static final String CREATE_QUOTED_NORMAL_TABLE = """
+            CREATE TABLE "test_quoted_normal_table" (
+                id INTEGER PRIMARY KEY,
+                varchar_field VARCHAR(100)
+            )""";
 
-    private static final String CREATE_QUOTED_WITH_SLASH_NORMAL_TABLE =
-            "CREATE TABLE \"testquotedwith\\table\" (\r\n" +
-                    "    id INTEGER PRIMARY KEY,\r\n" +
-                    "    varchar_field VARCHAR(100)\r\n" +
-                    ")";
+    private static final String CREATE_QUOTED_WITH_SLASH_NORMAL_TABLE = """
+            CREATE TABLE "testquotedwith\\table" (
+                id INTEGER PRIMARY KEY,
+                varchar_field VARCHAR(100)
+            )""";
 
-    private static final String CREATE_NORMAL_VIEW =
-            "CREATE VIEW test_normal_view (id, varchar_1, varchar_2) " + 
-            "AS " + 
-            "SELECT t1.id, t1.varchar_field, t2.varchar_field " + 
-            "FROM test_normal_table t1 " + 
-            "INNER JOIN \"test_quoted_normal_table\" t2 ON t1.id = t2.id";
+    private static final String CREATE_NORMAL_VIEW = """
+            CREATE VIEW test_normal_view (id, varchar_1, varchar_2)
+            AS
+            SELECT t1.id, t1.varchar_field, t2.varchar_field
+            FROM test_normal_table t1
+            INNER JOIN "test_quoted_normal_table" t2 ON t1.id = t2.id""";
 
-    private static final String CREATE_QUOTED_NORMAL_VIEW =
-            "CREATE VIEW \"test_quoted_normal_view\" (id, varchar_1, varchar_2) " + 
-            "AS " + 
-            "SELECT t1.id, t1.varchar_field, t2.varchar_field " + 
-            "FROM test_normal_table t1 " + 
-            "INNER JOIN \"test_quoted_normal_table\" t2 ON t1.id = t2.id";
+    private static final String CREATE_QUOTED_NORMAL_VIEW = """
+            CREATE VIEW "test_quoted_normal_view" (id, varchar_1, varchar_2)
+            AS
+            SELECT t1.id, t1.varchar_field, t2.varchar_field
+            FROM test_normal_table t1
+            INNER JOIN "test_quoted_normal_table" t2 ON t1.id = t2.id""";
 
-    private static final String CREATE_GTT_ON_COMMIT_DELETE =
-            "create global temporary table test_gtt_on_commit_delete (" +
-            "    id INTEGER PRIMARY KEY," +
-            "    varchar_field VARCHAR(100)" +
-            ") on commit delete rows";
+    private static final String CREATE_GTT_ON_COMMIT_DELETE = """
+            create global temporary table test_gtt_on_commit_delete (
+                id INTEGER PRIMARY KEY,
+                varchar_field VARCHAR(100)
+            ) on commit delete rows""";
 
-    private static final String CREATE_GTT_ON_COMMIT_PRESERVE =
-            "create global temporary table test_gtt_on_commit_preserve (" +
-            "    id INTEGER PRIMARY KEY," +
-            "    varchar_field VARCHAR(100)" +
-            ") on commit delete rows";
-    //@formatter:on
+    private static final String CREATE_GTT_ON_COMMIT_PRESERVE = """
+            create global temporary table test_gtt_on_commit_preserve (
+                id INTEGER PRIMARY KEY,
+                varchar_field VARCHAR(100)
+            ) on commit delete rows""";
 
-    private static final MetaDataTestSupport<TableMetaData> metaDataTestSupport =
-            new MetaDataTestSupport<>(TableMetaData.class);
+    private static final MetadataResultSetDefinition getTablesDefinition =
+            new MetadataResultSetDefinition(TableMetaData.class);
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
@@ -151,7 +148,7 @@ class FBDatabaseMetaDataTablesTest {
     @Test
     void testTableMetaDataColumns() throws Exception {
         try (ResultSet tables = dbmd.getTables(null, null, "doesnotexist", null)) {
-            metaDataTestSupport.validateResultSetColumns(tables);
+            getTablesDefinition.validateResultSetColumns(tables);
         }
     }
 
@@ -210,7 +207,7 @@ class FBDatabaseMetaDataTablesTest {
 
                 updateTableRules(tableName, rules);
 
-                metaDataTestSupport.validateRowValues(tables, rules);
+                getTablesDefinition.validateRowValues(tables, rules);
             }
 
             assertThat("getTables() did not return some expected tables", expectedTables, is(empty()));
@@ -262,7 +259,7 @@ class FBDatabaseMetaDataTablesTest {
                 assertThat("Only expect table names starting with RDB$, MON$ or SEC$",
                         tableName, anyOf(startsWith("RDB$"), startsWith("MON$"), startsWith("SEC$")));
 
-                metaDataTestSupport.validateRowValues(tables, rules);
+                getTablesDefinition.validateRowValues(tables, rules);
             }
 
             assertThat("getTables() did not return some expected tables", expectedTables, is(empty()));
@@ -314,7 +311,7 @@ class FBDatabaseMetaDataTablesTest {
                 assertThat("Only expect normal tables, not starting with RDB$, MON$ or SEC$",
                         tableName, not(anyOf(startsWith("RDB$"), startsWith("MON$"), startsWith("SEC$"))));
 
-                metaDataTestSupport.validateRowValues(tables, rules);
+                getTablesDefinition.validateRowValues(tables, rules);
             }
 
             assertEquals(expectedNormalTables, retrievedTables, "getTables() did not return expected tables");
@@ -365,7 +362,7 @@ class FBDatabaseMetaDataTablesTest {
                 assertThat("Only expect views, not starting with RDB$, MON$ or SEC$",
                         tableName, not(anyOf(startsWith("RDB$"), startsWith("MON$"), startsWith("SEC$"))));
 
-                metaDataTestSupport.validateRowValues(tables, rules);
+                getTablesDefinition.validateRowValues(tables, rules);
             }
 
             assertEquals(expectedViews, retrievedTables, "getTables() did not return expected tables");
@@ -466,10 +463,10 @@ class FBDatabaseMetaDataTablesTest {
     private void validateTableMetaDataSingleRow(String tableNamePattern, String[] types,
             Map<TableMetaData, Object> validationRules) throws Exception {
 
-        metaDataTestSupport.checkValidationRulesComplete(validationRules);
+        getTablesDefinition.checkValidationRulesComplete(validationRules);
         try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types)) {
             assertTrue(tables.next(), "Expected row in table metadata");
-            metaDataTestSupport.validateRowValues(tables, validationRules);
+            getTablesDefinition.validateRowValues(tables, validationRules);
             assertFalse(tables.next(), "Expected only one row in result set");
         }
     }
@@ -515,7 +512,7 @@ class FBDatabaseMetaDataTablesTest {
                 assertThat("TABLE_NAME is not allowed to be null or empty", tableName, not(emptyString()));
                 retrievedTables.add(tableName);
 
-                metaDataTestSupport.validateRowValues(tables, rules);
+                getTablesDefinition.validateRowValues(tables, rules);
             }
 
             assertEquals(expectedGtt, retrievedTables, "getTables() did not return expected tables");
@@ -543,7 +540,7 @@ class FBDatabaseMetaDataTablesTest {
                 Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
                 updateTableRules(expectedTableName, rules);
 
-                metaDataTestSupport.validateRowValues(tables, rules);
+                getTablesDefinition.validateRowValues(tables, rules);
             }
 
             assertEquals(expectedTables.size(), indexExpected, "getTables() did not return some expected tables");
@@ -598,7 +595,7 @@ class FBDatabaseMetaDataTablesTest {
         defaults.put(TableMetaData.SELF_REFERENCING_COL_NAME, null);
         defaults.put(TableMetaData.REF_GENERATION, null);
         defaults.put(TableMetaData.OWNER_NAME, "SYSDBA");
-        defaults.put(TableMetaData.JB_RELATION_ID, MetaDataValidator.IGNORE_DURING_VALIDATION);
+        defaults.put(TableMetaData.JB_RELATION_ID, MetaDataInfo.IGNORE_DURING_VALIDATION);
 
         DEFAULT_COLUMN_VALUES = Collections.unmodifiableMap(defaults);
     }
@@ -641,11 +638,6 @@ class FBDatabaseMetaDataTablesTest {
         @Override
         public Class<?> getColumnClass() {
             return columnClass;
-        }
-
-        @Override
-        public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<>(this);
         }
     }
 }

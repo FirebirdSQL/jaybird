@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,8 +38,8 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
  */
 class FBDatabaseMetaDataUDTsTest {
 
-    private static final MetaDataTestSupport<UDTMetaData> metaDataTestSupport =
-            new MetaDataTestSupport<>(UDTMetaData.class);
+    private static final MetadataResultSetDefinition getUDTsDefinition =
+            new MetadataResultSetDefinition(UDTMetadata.class);
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
@@ -70,7 +69,7 @@ class FBDatabaseMetaDataUDTsTest {
     @Test
     void testUDTMetaDataColumns() throws Exception {
         try (ResultSet udts = dbmd.getUDTs(null, null, null, null)) {
-            metaDataTestSupport.validateResultSetColumns(udts);
+            getUDTsDefinition.validateResultSetColumns(udts);
         }
     }
 
@@ -79,7 +78,7 @@ class FBDatabaseMetaDataUDTsTest {
     /**
      * Columns defined for the getUDTs() metadata.
      */
-    private enum UDTMetaData implements MetaDataInfo {
+    private enum UDTMetadata implements MetaDataInfo {
         TYPE_CAT(1, String.class),
         TYPE_SCHEM(2, String.class),
         TYPE_NAME(3, String.class),
@@ -91,7 +90,7 @@ class FBDatabaseMetaDataUDTsTest {
         private final int position;
         private final Class<?> columnClass;
 
-        UDTMetaData(int position, Class<?> columnClass) {
+        UDTMetadata(int position, Class<?> columnClass) {
             this.position = position;
             this.columnClass = columnClass;
         }
@@ -105,11 +104,5 @@ class FBDatabaseMetaDataUDTsTest {
         public Class<?> getColumnClass() {
             return columnClass;
         }
-
-        @Override
-        public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<>(this);
-        }
-
     }
 }

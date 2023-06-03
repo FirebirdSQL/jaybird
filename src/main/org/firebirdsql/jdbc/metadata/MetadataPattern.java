@@ -41,6 +41,7 @@ public final class MetadataPattern {
     private static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
     private static final MetadataPattern ALL_PATTERN = new MetadataPattern(ConditionType.NONE, null);
     private static final MetadataPattern EMPTY_PATTERN = new MetadataPattern(ConditionType.SQL_EQUALS, "");
+    private static final MetadataPattern IS_NULL = new MetadataPattern(ConditionType.SQL_IS_NULL, null);
     private static final Pattern METADATA_SPECIALS = Pattern.compile("([\\\\_%])");
 
     private final ConditionType conditionType;
@@ -67,7 +68,7 @@ public final class MetadataPattern {
     }
 
     /**
-     * @return Value for the condition; {@code null} signals no condition
+     * @return Value for the condition; {@code null} signals no value
      */
     public String getConditionValue() {
         return conditionValue;
@@ -120,6 +121,15 @@ public final class MetadataPattern {
      */
     static MetadataPattern equalsCondition(String value) {
         return new MetadataPattern(ConditionType.SQL_EQUALS, value);
+    }
+
+    /**
+     * Creates a {@code MetadataPattern} for an {@code IS NULL} condition
+     *
+     * @return MetadataPattern of type {@code SQL_IS_NULL}
+     */
+    static MetadataPattern isNullCondition() {
+        return IS_NULL;
     }
 
     /**
@@ -252,6 +262,12 @@ public final class MetadataPattern {
             @Override
             String renderCondition(String columnName) {
                 return columnName + " starting with cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) ";
+            }
+        },
+        SQL_IS_NULL {
+            @Override
+            String renderCondition(String columnName) {
+                return columnName + " is null ";
             }
         };
 

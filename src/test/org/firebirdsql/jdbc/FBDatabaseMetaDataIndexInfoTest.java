@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -41,50 +40,48 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataIndexInfoTest {
-    
-    //@formatter:off
-    private static final String CREATE_INDEX_TEST_TABLE_1 =
-            "CREATE TABLE index_test_table_1 (\n" + 
-            "    id INTEGER CONSTRAINT pk_idx_test_1_id PRIMARY KEY,\n" + 
-            "    column1 VARCHAR(10),\n" + 
-            "    column2 INTEGER,\n" + 
-            "    column3 INTEGER CONSTRAINT uq_idx_test_1_column3 UNIQUE\n" + 
-            ")";
-    
+
+    private static final String CREATE_INDEX_TEST_TABLE_1 = """
+            CREATE TABLE index_test_table_1 (
+                id INTEGER CONSTRAINT pk_idx_test_1_id PRIMARY KEY,
+                column1 VARCHAR(10),
+                column2 INTEGER,
+                column3 INTEGER CONSTRAINT uq_idx_test_1_column3 UNIQUE
+            )""";
+
     private static final String CREATE_COMPUTED_IDX_TBL_1 =
             "CREATE INDEX cmp_idx_test_table_1 ON index_test_table_1 COMPUTED BY (UPPER(column1))";
-    
+
     private static final String CREATE_UQ_COMPUTED_IDX_TBL_1 =
             "CREATE UNIQUE INDEX uq_comp_idx_tbl1 ON index_test_table_1 COMPUTED BY (column2 + column3)";
-    
+
     private static final String CREATE_ASC_IDX_TBL_1_COLUMN2 =
             "CREATE ASCENDING INDEX idx_asc_idx_tbl_1_column2 ON index_test_table_1 (column2)";
-    
-    private static final String CREATE_INDEX_TEST_TABLE_2 =
-            "CREATE TABLE index_test_table_2 (\n" + 
-            "    id INTEGER,\n" + 
-            "    column1 VARCHAR(10),\n" + 
-            "    column2 INTEGER,\n" + 
-            "    column3 INTEGER,\n" + 
-            "    CONSTRAINT pk_idx_test_2_id PRIMARY KEY (id),\n" + 
-            "    CONSTRAINT fk_idx_test_2_column2_test_1 FOREIGN KEY (column2) REFERENCES index_test_table_1 (id)\n" + 
-            ")";
-    
+
+    private static final String CREATE_INDEX_TEST_TABLE_2 = """
+            CREATE TABLE index_test_table_2 (
+                id INTEGER,
+                column1 VARCHAR(10),
+                column2 INTEGER,
+                column3 INTEGER,
+                CONSTRAINT pk_idx_test_2_id PRIMARY KEY (id),
+                CONSTRAINT fk_idx_test_2_column2_test_1 FOREIGN KEY (column2) REFERENCES index_test_table_1 (id)
+            )""";
+
     private static final String CREATE_DESC_IDX_TBL_2_ID =
             "CREATE DESCENDING INDEX idx_desc_idx_tbl2_id ON index_test_table_2 (id)";
-    
+
     private static final String CREATE_IDX_TBL_2_COL1_AND_2 =
             "CREATE INDEX idx_tbl_2_col1_col2 ON index_test_table_2 (column1, column2)";
-    
+
     private static final String CREATE_DESC_COMPUTED_IDX_TBL_2 =
             "CREATE DESCENDING INDEX cmp_idx_desc_test_table2 ON index_test_table_2 COMPUTED BY (UPPER(column1))";
-    
+
     private static final String CREATE_UQ_DESC_IDX_TBL_2_COL3_AND_COL2 =
             "CREATE UNIQUE DESCENDING INDEX uq_desc_idx_tbl2_col3_col2 ON index_test_table_2 (column3, column2)";
-    //@formatter:on
 
-    private static final MetaDataTestSupport<IndexInfoMetaData> metaDataTestSupport =
-            new MetaDataTestSupport<>(IndexInfoMetaData.class);
+    private static final MetadataResultSetDefinition getIndexInfoDefinition =
+            new MetadataResultSetDefinition(IndexInfoMetaData.class);
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
@@ -124,7 +121,7 @@ class FBDatabaseMetaDataIndexInfoTest {
     @Test
     public void testIndexInfoMetaDataColumns() throws Exception {
         try (ResultSet indexInfo = dbmd.getIndexInfo(null, null, "doesnotexist", false, true)) {
-            metaDataTestSupport.validateResultSetColumns(indexInfo);
+            getIndexInfoDefinition.validateResultSetColumns(indexInfo);
         }
     }
     
@@ -219,8 +216,8 @@ class FBDatabaseMetaDataIndexInfoTest {
             while (indexInfo.next()) {
                 if (columnCount < expectedIndexInfo.size()) {
                     Map<IndexInfoMetaData, Object> rules = expectedIndexInfo.get(columnCount);
-                    metaDataTestSupport.checkValidationRulesComplete(rules);
-                    metaDataTestSupport.validateRowValues(indexInfo, rules);
+                    getIndexInfoDefinition.checkValidationRulesComplete(rules);
+                    getIndexInfoDefinition.validateRowValues(indexInfo, rules);
                 }
                 columnCount++;
             }
@@ -294,11 +291,6 @@ class FBDatabaseMetaDataIndexInfoTest {
         @Override
         public Class<?> getColumnClass() {
             return columnClass;
-        }
-
-        @Override
-        public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<>(this);
         }
     }
 }

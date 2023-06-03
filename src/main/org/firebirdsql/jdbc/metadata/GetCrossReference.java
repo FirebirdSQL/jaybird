@@ -70,8 +70,7 @@ public final class GetCrossReference extends AbstractKeysMethod {
         Clause primaryTableClause = Clause.equalsClause("PK.RDB$RELATION_NAME", primaryTable);
         Clause foreignTableCause = Clause.equalsClause("FK.RDB$RELATION_NAME", foreignTable);
         String sql = GET_CROSS_KEYS_START
-                + primaryTableClause.getCondition()
-                + foreignTableCause.getCondition(false)
+                + Clause.conjunction(primaryTableClause, foreignTableCause)
                 + GET_CROSS_KEYS_END;
         MetadataQuery metadataQuery = new MetadataQuery(sql, Clause.parameters(primaryTableClause, foreignTableCause));
         return createMetaDataResultSet(metadataQuery);

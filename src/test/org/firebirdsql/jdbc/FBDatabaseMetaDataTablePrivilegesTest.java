@@ -32,7 +32,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -64,8 +63,8 @@ class FBDatabaseMetaDataTablePrivilegesTest {
             "grant select on \"tbl2\" to \"user2\" with grant option",
             "grant references (COL1) on \"tbl2\" to USER1");
 
-    private static final MetaDataTestSupport<TablePrivilegesMetadata> metaDataTestSupport =
-            new MetaDataTestSupport<>(TablePrivilegesMetadata.class, EnumSet.allOf(TablePrivilegesMetadata.class));
+    private static final MetadataResultSetDefinition getTablePrivilegesDefinition =
+            new MetadataResultSetDefinition(TablePrivilegesMetadata.class);
 
     private static Connection con;
     private static DatabaseMetaData dbmd;
@@ -94,7 +93,7 @@ class FBDatabaseMetaDataTablePrivilegesTest {
     @Test
     void testTablePrivilegesMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getTablePrivileges(null, null, "doesnotexist")) {
-            metaDataTestSupport.validateResultSetColumns(columns);
+            getTablePrivilegesDefinition.validateResultSetColumns(columns);
         }
     }
 
@@ -148,8 +147,8 @@ class FBDatabaseMetaDataTablePrivilegesTest {
             while (tablePrivileges.next()) {
                 if (privilegeCount < expectedTablePrivileges.size()) {
                     Map<TablePrivilegesMetadata, Object> rules = expectedTablePrivileges.get(privilegeCount);
-                    metaDataTestSupport.checkValidationRulesComplete(rules);
-                    metaDataTestSupport.validateRowValues(tablePrivileges, rules);
+                    getTablePrivilegesDefinition.checkValidationRulesComplete(rules);
+                    getTablePrivilegesDefinition.validateRowValues(tablePrivileges, rules);
                 }
                 privilegeCount++;
             }
@@ -172,7 +171,7 @@ class FBDatabaseMetaDataTablePrivilegesTest {
         return new EnumMap<>(DEFAULT_TABLE_PRIVILEGES_VALUES);
     }
 
-    private enum TablePrivilegesMetadata implements MetaDataValidator.MetaDataInfo {
+    private enum TablePrivilegesMetadata implements MetaDataInfo {
         TABLE_CAT(1),
         TABLE_SCHEM(2),
         TABLE_NAME(3),
@@ -196,11 +195,6 @@ class FBDatabaseMetaDataTablePrivilegesTest {
         @Override
         public Class<?> getColumnClass() {
             return String.class;
-        }
-
-        @Override
-        public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<>(this);
         }
     }
 }
