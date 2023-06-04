@@ -233,7 +233,7 @@ class FBBlobTest {
 
         SQLException exception = assertThrows(SQLException.class, () -> blob.setBinaryStream(0));
         assertThat(exception, allOf(
-                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE)),
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH)),
                 message(containsString("before the beginning"))));
     }
 
@@ -244,7 +244,7 @@ class FBBlobTest {
 
         SQLException exception = assertThrows(SQLException.class, () -> blob.setBinaryStream(2));
         assertThat(exception, allOf(
-                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE)),
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH)),
                 message(containsString("must start at position 1"))));
     }
 
@@ -268,7 +268,7 @@ class FBBlobTest {
         FBBlob blob = (FBBlob) conn.createBlob();
 
         SQLException exception = assertThrows(SQLException.class, blob::getBlobId);
-        assertThat(exception, message(equalTo("No Blob ID is available in new Blob object.")));
+        assertThat(exception, message(equalTo("No Blob ID is available in new Blob object")));
     }
 
     @Test
@@ -321,8 +321,8 @@ class FBBlobTest {
 
         SQLException exception = assertThrows(SQLException.class, () -> blob.getBytes(Integer.MAX_VALUE + 1L, 4));
         assertThat(exception, allOf(
-                message(equalTo("Blob position is limited to 2^31 - 1 due to isc_seek_blob limitations.")),
-                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE))));
+                message(equalTo("Blob position is limited to 2^31 - 1 due to isc_seek_blob limitations")),
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH))));
     }
 
     /**

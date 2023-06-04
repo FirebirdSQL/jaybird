@@ -56,7 +56,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     public static final String METHOD_NOT_SUPPORTED =
             "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
-    private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported.";
+    private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported";
 
     private final boolean metaDataQuery;
     
@@ -197,7 +197,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             notifyStatementStarted();
             try {
                 if (internalExecute(isExecuteProcedureStatement) && !isGeneratedKeyQuery()) {
-                    throw new FBSQLException("Update statement returned results.");
+                    throw new FBSQLException("Update statement returned result set");
                 }
                 return getUpdateCountMinZero();
             } finally {
@@ -353,7 +353,8 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     protected FBField getField(int columnIndex) throws SQLException {
         checkValidity();
         if (columnIndex > fields.length) {
-            throw new SQLException("Invalid column index: " + columnIndex, SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+            throw new SQLException("Invalid column index: " + columnIndex,
+                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
         }
 
         return fields[columnIndex - 1];
@@ -538,7 +539,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
 
             if (!hasResultSet)
-                throw new FBSQLException("No result set is available.");
+                throw new FBSQLException("No result set is available");
 
             return getResultSet(true);
         }

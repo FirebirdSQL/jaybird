@@ -185,7 +185,8 @@ public class FBProcedureCall implements Cloneable {
         if (compatibilityMode) {
             return index;
         } else {
-            throw new FBSQLException("Specified parameter does not exist.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+            throw new FBSQLException("Specified parameter does not exist",
+                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
         }
     }
 
@@ -299,8 +300,8 @@ public class FBProcedureCall implements Cloneable {
         }
 
         if (param == null || param == NullParam.NULL_PARAM) {
-            throw new SQLException("Cannot find parameter with the specified position.",
-                    SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+            throw new SQLException("Cannot find parameter with the specified position",
+                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
         }
 
         param.setType(type);
@@ -361,7 +362,7 @@ public class FBProcedureCall implements Cloneable {
                         && outputParams.size() > 0
                         && outputParams.get(param.getPosition()) == null)
                     throw new FBSQLException("Value of parameter " + param.getIndex() + " not set and "
-                            + "it was not registered as output parameter.",
+                            + "it was not registered as output parameter",
                             SQLStateConstants.SQL_STATE_WRONG_PARAM_NUM);
             }
         }
@@ -405,18 +406,18 @@ public class FBProcedureCall implements Cloneable {
 
         @Override
         public void setValue(Object value) throws SQLException {
-            throw new FBSQLException("You cannot set value of a non-existing parameter.",
-                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+            throw new FBSQLException("You cannot set value of a non-existing parameter",
+                    SQLStateConstants.SQL_STATE_ATT_CANNOT_SET_NOW);
         }
 
         @Override
         public void setIndex(int index) {
-            throw new UnsupportedOperationException("You cannot set index of a non-existing parameter.");
+            throw new UnsupportedOperationException("You cannot set index of a non-existing parameter");
         }
 
         @Override
         public void setType(int type) {
-            throw new UnsupportedOperationException("You cannot set type of a non-existing parameter.");
+            throw new UnsupportedOperationException("You cannot set type of a non-existing parameter");
         }
     }
 }

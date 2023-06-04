@@ -104,7 +104,7 @@ class FBCachedBlobTest {
         SQLException exception = assertThrows(SQLException.class, () -> blob.getBytes(0, 0));
         assertThat(exception, allOf(
                 message(equalTo("Expected value of pos > 0, got 0")),
-                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE))));
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH))));
     }
 
     /**
@@ -120,7 +120,7 @@ class FBCachedBlobTest {
         SQLException exception = assertThrows(SQLException.class, () -> blob.getBytes(1, -1));
         assertThat(exception, allOf(
                 message(equalTo("Expected value of length >= 0, got -1")),
-                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE))));
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH))));
     }
 
     /**

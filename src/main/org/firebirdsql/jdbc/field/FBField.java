@@ -48,7 +48,7 @@ import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
  */
 public abstract class FBField {
 
-    static final String SQL_TYPE_NOT_SUPPORTED = "SQL type for this field is not yet supported.";
+    static final String SQL_TYPE_NOT_SUPPORTED = "SQL type for this field is not yet supported";
     static final String SQL_ARRAY_NOT_SUPPORTED = "Types.ARRAY: " + FBField.SQL_TYPE_NOT_SUPPORTED;
 
     static final byte BYTE_NULL_VALUE = 0;
@@ -84,8 +84,8 @@ public abstract class FBField {
 
     FBField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         if (fieldDescriptor == null) {
-            throw new FBSQLException("Cannot create FBField instance with fieldDescriptor null.",
-                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+            throw new FBSQLException("Cannot create FBField instance with fieldDescriptor null",
+                    SQLStateConstants.SQL_STATE_INVALID_USE_NULL);
         }
 
         this.fieldDescriptor = fieldDescriptor;

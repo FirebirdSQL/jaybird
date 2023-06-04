@@ -476,7 +476,7 @@ public class FBConnection implements FirebirdConnection {
     @Override
     public boolean isValid(int timeout) throws SQLException {
         if (timeout < 0) {
-            throw new SQLException("Timeout should be >= 0", SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+            throw new SQLException("Timeout should be >= 0", SQLStateConstants.SQL_STATE_INVALID_ATTR_VALUE);
         }
         if (isLockedByCurrentThread()) {
             // Trying to async check validity will not work (this shouldn't normally happen, except maybe when Jaybird

@@ -78,11 +78,11 @@ public final class FBCachedBlob implements FirebirdBlob {
     public byte[] getBytes(long pos, int length) throws SQLException {
         if (pos < 1) {
             throw new SQLException("Expected value of pos > 0, got " + pos,
-                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+                    SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
         }
         if (length < 0) {
             throw new SQLException("Expected value of length >= 0, got " + length,
-                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+                    SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
         }
         checkClosed();
         if (blobData == null) return null;

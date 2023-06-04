@@ -715,6 +715,23 @@ there is no replacement
 there is no replacement
 ** `LOGGER_IMPLEMENTATION_PROP`;
 there is no replacement
+* `SQLStateConstants`
+** `SQL_STATE_INVALID_CONN_ATTR` (`01S00`) -- it was unused;
+there is no replacement
+** `SQL_STATE_INVALID_COLUMN` (`HY002`);
+replaced by `SQL_STATE_INVALID_DESC_FIELD_ID` (`HY091`)
+** `SQL_STATE_INVALID_ARG_VALUE` (`HY009`);
+used with wrong meaning, replaced by multiple other constants (`SQL_STATE_INVALID_USE_NULL` (`HY009`, same value), `SQL_STATE_ATT_CANNOT_SET_NOW` (`HY011`) , `SQL_STATE_INVALID_ATTR_VALUE` (`HY024`), `SQL_STATE_INVALID_STRING_LENGTH` (`HY090`))
+** `SQL_STATE_INVALID_TRANSACTION_STATE` (`25S01`) -- it was unused;
+there is no replacement
+** `SQL_STATE_TRANSACTION_ACTIVE` (`25S02`) -- it was unused;
+there is no replacement
+** `SQL_STATE_TRANSACTION_ROLLED_BACK` (`25S03`) -- it was unused;
+there is no replacement
+** `SQL_STATE_CONNECTION_FAILURE_IN_TX` (`08007`) -- it was unused;
+there is no replacement
+** `SQL_STATE_COMM_LINK_FAILURE` (`08S01`) -- it was unused;
+there is no replacement
 
 [#removal-of-deprecated-classes-packages-and-methods]
 === Removal of deprecated classes, packages and methods

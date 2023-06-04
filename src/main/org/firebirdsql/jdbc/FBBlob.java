@@ -193,7 +193,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
         try (LockCloseable ignored = withLock()) {
             checkClosed();
             if (isNew) {
-                throw new FBSQLException("No Blob ID is available in new Blob object.");
+                throw new FBSQLException("No Blob ID is available in new Blob object");
             }
             return gdsHelper.openBlob(blobId, config);
         }
@@ -307,7 +307,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      */
     long interpretLength(byte[] info, int position) throws SQLException {
         if (info[position] != ISCConstants.isc_info_blob_total_length)
-            throw new FBSQLException("Length is not available.");
+            throw new FBSQLException("Length is not available");
 
         int dataLength = VaxEncoding.iscVaxInteger(info, position + 1, 2);
         return VaxEncoding.iscVaxLong(info, position + 3, dataLength);
@@ -339,8 +339,8 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
             throw new FBSQLException("Blob position should be >= 1");
 
         if (pos > Integer.MAX_VALUE)
-            throw new FBSQLException("Blob position is limited to 2^31 - 1 due to isc_seek_blob limitations.",
-                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+            throw new FBSQLException("Blob position is limited to 2^31 - 1 due to isc_seek_blob limitations",
+                    SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
 
         try (LockCloseable ignored = withLock()) {
             blobListener.executionStarted(this);
@@ -412,21 +412,21 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
             blobListener.executionStarted(this);
 
             if (blobOut != null)
-                throw new FBSQLException("OutputStream already open. Only one blob output stream can be open at a time.");
+                throw new FBSQLException("OutputStream already open. Only one blob output stream can be open at a time");
 
             if (pos < 1)
                 throw new FBSQLException("You can't start before the beginning of the blob",
-                        SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+                        SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
 
             if (isNew && pos > 1)
                 throw new FBSQLException("Previous value was null, you must start at position 1",
-                        SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+                        SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
 
             blobOut = new FBBlobOutputStream(this);
             if (pos > 1) {
                 //copy pos bytes from input to output
                 //implement this later
-                throw new FBDriverNotCapableException("Offset start positions are not yet supported.");
+                throw new FBDriverNotCapableException("Offset start positions are not yet supported");
             }
 
             return blobOut;
@@ -442,7 +442,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     public long getBlobId() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (isNew)
-                throw new FBSQLException("No Blob ID is available in new Blob object.");
+                throw new FBSQLException("No Blob ID is available in new Blob object");
 
             return blobId;
         }

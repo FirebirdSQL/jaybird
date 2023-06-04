@@ -156,10 +156,10 @@ public final class FBClob implements Clob, NClob {
 	public Writer setCharacterStream(long pos) throws SQLException {
 		if (pos < 1) {
 			throw new SQLNonTransientException("You can't start before the beginning of the blob",
-					SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+					SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
 		}
 		if (pos > 1) {
-			throw new FBDriverNotCapableException("Offset start positions are not supported.");
+			throw new FBDriverNotCapableException("Offset start positions are not supported");
 		}
 		return wrappedBlob.config().createWriter(
 				wrappedBlob.setBinaryStream(1));

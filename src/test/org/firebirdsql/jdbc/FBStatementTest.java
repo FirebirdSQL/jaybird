@@ -281,7 +281,7 @@ class FBStatementTest {
     void testSetMaxFieldSize_negativeValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class, () -> stmt.setMaxFieldSize(-1));
-            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
+            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH));
         }
     }
 
@@ -321,7 +321,7 @@ class FBStatementTest {
     void testSetMaxRows_negativeValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class, () -> stmt.setMaxRows(-1));
-            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
+            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ATTR_VALUE));
         }
     }
 
@@ -486,7 +486,7 @@ class FBStatementTest {
     void testGetLastExecutionPlan_noStatement() throws SQLException {
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class, stmt::getLastExecutionPlan);
-            assertThat(exception, message(equalTo("No statement was executed, plan cannot be obtained.")));
+            assertThat(exception, message(equalTo("No statement was executed, plan cannot be obtained")));
         }
     }
 
@@ -520,7 +520,7 @@ class FBStatementTest {
     void testGetLastExplainedExecutionPlan_noStatement() throws SQLException {
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class, stmt::getLastExplainedExecutionPlan);
-            assertThat(exception, message(equalTo("No statement was executed, detailed plan cannot be obtained.")));
+            assertThat(exception, message(equalTo("No statement was executed, detailed plan cannot be obtained")));
         }
     }
 
@@ -641,7 +641,7 @@ class FBStatementTest {
     void testSetFetchSize_negativeValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class, () -> stmt.setFetchSize(-1));
-            assertThat(exception, sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE)));
+            assertThat(exception, sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ATTR_VALUE)));
         }
     }
 

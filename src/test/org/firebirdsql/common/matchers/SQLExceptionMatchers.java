@@ -190,7 +190,7 @@ public class SQLExceptionMatchers {
         return allOf(
                 isA(SQLException.class),
                 sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID)),
-                message(equalTo("Statement is already closed."))
+                message(equalTo("Statement is already closed"))
         );
     }
 
