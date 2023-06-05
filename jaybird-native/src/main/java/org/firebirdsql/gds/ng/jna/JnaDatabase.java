@@ -210,7 +210,9 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public void cancelOperation(int kind) throws SQLException {
         try {
-            checkConnected();
+            if (kind != fb_cancel_abort) {
+                checkConnected();
+            }
             // TODO Test what happens with 2.1 and earlier client library
             // No synchronization, otherwise cancel will never work; might conflict with sync policy of JNA (TODO: find out)
             try {

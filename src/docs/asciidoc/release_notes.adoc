@@ -602,6 +602,14 @@ For other multibyte character sets, the `DataTruncation` reports those sizes in 
 This change is not applied to UNICODE_FSS, as Firebird 3.0 and earlier do not enforce character length limits for this character set, only byte length limits.
 +
 The `setBytes` method on `CHAR` and `VARCHAR` parameters only check the byte length limit.
+* Improvement: Implemented `java.sql.Connection.abort(Executor)` to forcibly abort a connection (https://github.com/FirebirdSQL/jaybird/issues/496[jaybird#496])
++
+The `java.sql.Connection` is marked closed immediately, after which the executor is used to mark client-side statements and result sets as closed, and then closes the actual physical connection.
+The close of the physical connection is not a clean close and may result in "`connection reset by peer`" errors (e.g. error 10054 on Windows, error 104 on Linux) logged in `fiebird.log`.
+Active transactions may not be rolled back immediately;
+this will be delayed until the server detects that the connection was closed.
+It is possible that some listeners are not informed of the connection, statement or result set close.
+When a security manager is active, calling `abort` requires the `SQLPermission` "`callAbort`".
 * Changed: `DatabaseMetaData.getTypeInfo()` column `FIXED_PREC_SCALE` (column 11) now returns `false` for all data types except `NUMERIC` and `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/551[jaybird#551])
 +
 This was done because of the stated requirement "`__can it be a money value__`".

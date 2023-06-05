@@ -34,6 +34,12 @@ public enum CompletionReason {
      * @since 5
      */
     STATEMENT_CLOSE(false, true),
+    /**
+     * Completion was signalled from a connection abort.
+     *
+     * @since 6
+     */
+    CONNECTION_ABORT(true, true),
     OTHER(false, false);
 
     private final boolean transactionEnd;

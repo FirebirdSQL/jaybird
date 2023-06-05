@@ -342,13 +342,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     public void cancelOperation(int kind) throws SQLException {
         try {
             if (kind == ISCConstants.fb_cancel_abort) {
-                try {
-                    // In case of abort we forcibly close the connection
-                    // TODO We may need to do additional cleanup (eg notify statements so they can close etc)
-                    closeConnection();
-                } catch (IOException ioe) {
-                    throw new SQLNonTransientConnectionException("Connection abort failed", ioe);
-                }
+                // In case of abort we forcibly close the connection
+                forceClose();
             } else {
                 throw new SQLFeatureNotSupportedException(
                         String.format("Cancel Operation isn't supported in this version of the wire protocol (%d).",

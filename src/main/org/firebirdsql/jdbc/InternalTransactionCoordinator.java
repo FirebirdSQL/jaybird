@@ -171,6 +171,10 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         coordinator.handleConnectionClose();
     }
 
+    void handleConnectionAbort() throws SQLException {
+        coordinator.handleConnectionAbort();
+    }
+
     private void setCoordinator(AbstractTransactionCoordinator coordinator) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (this.coordinator != null) {
@@ -231,8 +235,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         protected void completeStatements(CompletionReason reason) throws SQLException {
             SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
 
-            // we have to loop through the array, since the 
-            // statement.completeStatement() call causes the 
+            // we have to loop through the array, since the statement.completeStatement() call causes
             // ConcurrentModificationException
             FBStatement[] statementsToComplete = statements.toArray(new FBStatement[0]);
             for (FBStatement statement : statementsToComplete) {
@@ -290,6 +293,10 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         public abstract void rollback() throws SQLException;
 
         abstract void handleConnectionClose() throws SQLException;
+
+        void handleConnectionAbort() throws SQLException {
+            completeStatements(CompletionReason.CONNECTION_ABORT);
+        }
 
         boolean isAutoCommit() throws SQLException {
             return false;

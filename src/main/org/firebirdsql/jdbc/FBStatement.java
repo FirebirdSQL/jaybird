@@ -209,6 +209,14 @@ public class FBStatement implements FirebirdStatement {
             closeResultSet(false, reason);
         }
 
+        if (reason == CompletionReason.CONNECTION_ABORT) {
+            closed = true;
+            completed = true;
+            // NOTE This will not "cleanly" end the statement, it might still have objects registered on listeners,
+            // and those will not get notified
+            fbStatement = null;
+        }
+
         if (!completed)
             notifyStatementCompleted();
     }

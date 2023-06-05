@@ -155,7 +155,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     
     @Override
     public void completeStatement(CompletionReason reason) throws SQLException {
-        if (!metaDataQuery) {
+        if (!metaDataQuery || reason == CompletionReason.CONNECTION_ABORT) {
             super.completeStatement(reason);
         } else if (!completed) {
             notifyStatementCompleted();
