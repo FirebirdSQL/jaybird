@@ -123,7 +123,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
                     final XdrOutputStream xdrOut = getXdrOut();
                     if (isAttached()) {
                         xdrOut.writeInt(op_service_detach);
-                        xdrOut.writeInt(getHandle());
+                        xdrOut.writeInt(0);
                     }
                     xdrOut.writeInt(op_disconnect);
                     xdrOut.flush();
@@ -164,7 +164,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
                 xdrOut.writeInt(op_service_info);
-                xdrOut.writeInt(getHandle());
+                xdrOut.writeInt(0);
                 xdrOut.writeInt(0); // incarnation
                 xdrOut.writeBuffer(serviceParameterBuffer != null ? serviceParameterBuffer.toBytes() : null);
                 xdrOut.writeBuffer(serviceRequestBuffer.toBytes());
@@ -193,7 +193,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
                 xdrOut.writeInt(op_service_start);
-                xdrOut.writeInt(getHandle());
+                xdrOut.writeInt(0);
                 xdrOut.writeInt(0); // incarnation
                 xdrOut.writeBuffer(serviceRequestBuffer.toBytes());
 

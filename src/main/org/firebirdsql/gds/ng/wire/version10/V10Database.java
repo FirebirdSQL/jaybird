@@ -188,7 +188,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                     final XdrOutputStream xdrOut = getXdrOut();
                     if (isAttached()) {
                         xdrOut.writeInt(op_detach);
-                        xdrOut.writeInt(getHandle());
+                        xdrOut.writeInt(0);
                     }
                     xdrOut.writeInt(op_disconnect);
                     xdrOut.flush();
@@ -240,7 +240,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 try {
                     final XdrOutputStream xdrOut = getXdrOut();
                     xdrOut.writeInt(op_drop_database);
-                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeInt(0);
                     xdrOut.flush();
                 } catch (IOException ioex) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex)
@@ -273,7 +273,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
                 xdrOut.writeInt(op_transaction);
-                xdrOut.writeInt(getHandle());
+                xdrOut.writeInt(0);
                 xdrOut.writeTyped(tpb);
                 xdrOut.flush();
             } catch (IOException ioex) {
@@ -301,7 +301,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
                 xdrOut.writeInt(op_reconnect);
-                xdrOut.writeInt(getHandle());
+                xdrOut.writeInt(0);
                 final byte[] transactionIdBuffer = getTransactionIdBuffer(transactionId);
                 xdrOut.writeBuffer(transactionIdBuffer);
                 xdrOut.flush();
@@ -378,7 +378,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                     xdrOut.writeInt(op_exec_immediate);
 
                     xdrOut.writeInt(transaction != null ? transaction.getHandle() : 0);
-                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeInt(0);
                     xdrOut.writeInt(getConnectionDialect());
                     xdrOut.writeString(statementText, getEncoding());
 
@@ -432,7 +432,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 final XdrOutputStream xdrOut = getXdrOut();
                 xdrOut.writeInt(op_connect_request);
                 xdrOut.writeInt(P_REQ_async); // Connection type (p_req_type)
-                xdrOut.writeInt(getHandle()); // p_req_object
+                xdrOut.writeInt(0); // p_req_object
                 xdrOut.writeInt(0); // p_req_partner
                 xdrOut.flush();
             } catch (IOException ex) {

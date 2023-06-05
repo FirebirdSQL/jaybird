@@ -248,7 +248,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             try {
                 final XdrOutputStream dbXdrOut = database.getXdrStreamAccess().getXdrOut();
                 dbXdrOut.writeInt(op_cancel_events);
-                dbXdrOut.writeInt(database.getHandle());
+                dbXdrOut.writeInt(0);
                 dbXdrOut.writeInt(wireEventHandle.getLocalId());
                 dbXdrOut.flush();
             } catch (IOException e) {
@@ -289,7 +289,6 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             // We are only interested in the event count (last 4 bytes of the buffer)
             int eventCount = 0;
             if (bufferLength > 4) {
-                // TODO Isn't this always the case? (old implementation also made this check)
                 eventCount = iscVaxInteger(buffer, bufferLength - 4, 4);
             }
 

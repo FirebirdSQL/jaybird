@@ -580,7 +580,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     protected void sendAllocate() throws SQLException, IOException {
         final XdrOutputStream xdrOut = getXdrOut();
         xdrOut.writeInt(WireProtocolConstants.op_allocate_statement);
-        xdrOut.writeInt(getDatabase().getHandle());
+        xdrOut.writeInt(0);
     }
 
     /**
