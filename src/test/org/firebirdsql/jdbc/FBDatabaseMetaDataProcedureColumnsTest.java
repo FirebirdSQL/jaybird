@@ -19,13 +19,16 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jdbc.metadata.FbMetadataConstants;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.*;
@@ -33,11 +36,15 @@ import java.util.*;
 
 import static java.util.Collections.singletonList;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.jdbc.FBDatabaseMetaDataProceduresTest.isIgnoredProcedure;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure columns related metadata.
@@ -49,65 +56,85 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     // TODO This test will need to be expanded with version dependent features 
     // (eg TYPE OF <domain> (2.1), TYPE OF COLUMN <table.column> (2.5), NOT NULL (2.1), DEFAULT <value> (2.0)
 
-    //@formatter:off
-    private static final String CREATE_NORMAL_PROC_NO_ARG_NO_RETURN =
-            "CREATE PROCEDURE proc_no_arg_no_return\n" + 
-            "AS\n" + 
-            "DECLARE VARIABLE dummy INTEGER;\n" + 
-            "BEGIN\n" + 
-            "  dummy = 1 + 1;\n" + 
-            "END";
+    private static final String CREATE_NORMAL_PROC_NO_ARG_NO_RETURN = """
+            CREATE PROCEDURE proc_no_arg_no_return
+            AS
+            DECLARE VARIABLE dummy INTEGER;
+            BEGIN
+              dummy = 1 + 1;
+            END""";
     
-    private static final String CREATE_NORMAL_PROC_NO_RETURN =
-            "CREATE PROCEDURE normal_proc_no_return\n" +
-            " ( param1 VARCHAR(100),\n" +
-            "   \"param2\" INTEGER)\n" +
-            "AS\n" +
-            "DECLARE VARIABLE dummy INTEGER;\n" +
-            "BEGIN\n" +
-            "  dummy = 1 + 1;\n" +
-            "END";
+    private static final String CREATE_NORMAL_PROC_NO_RETURN = """
+            CREATE PROCEDURE normal_proc_no_return
+             ( param1 VARCHAR(100),
+               "param2" INTEGER)
+            AS
+            DECLARE VARIABLE dummy INTEGER;
+            BEGIN
+              dummy = 1 + 1;
+            END""";
 
-    private static final String CREATE_NORMAL_PROC_WITH_RETURN =
-            "CREATE PROCEDURE normal_proc_with_return\n" +
-            " ( param1 VARCHAR(100),\n" +
-            "   param2 DECIMAL(18,2),\n" +
-            "   param3 NUMERIC(4,3),\n" +
-            "   param4 TIMESTAMP)\n" +
-            "RETURNS (return1 VARCHAR(200), return2 INTEGER, \"return3\" DOUBLE PRECISION)\n" +
-            "AS\n" +
-            "BEGIN\n" +
-            "  return1 = param1 || param1;\n" +
-            "  return2 = 1;\n" +
-            "END";
+    private static final String CREATE_NORMAL_PROC_WITH_RETURN = """
+            CREATE PROCEDURE normal_proc_with_return
+             ( param1 VARCHAR(100),
+               param2 DECIMAL(18,2),
+               param3 NUMERIC(4,3),
+               param4 TIMESTAMP)
+            RETURNS (return1 VARCHAR(200), return2 INTEGER, "return3" DOUBLE PRECISION)
+            AS
+            BEGIN
+              return1 = param1 || param1;
+              return2 = 1;
+            END""";
 
-    private static final String CREATE_QUOTED_PROC_NO_RETURN =
-            "CREATE PROCEDURE \"quoted_proc_no_return\"\n" +
-            " ( param1 VARCHAR(100),\n" +
-            "   param2 VARCHAR(100) default 'param2 default')\n" +
-            "AS\n" +
-            "DECLARE VARIABLE dummy INTEGER;\n" +
-            "BEGIN\n" +
-            "  dummy = 1 + 1;\n" +
-            "END";
+    private static final String CREATE_QUOTED_PROC_NO_RETURN = """
+            CREATE PROCEDURE "quoted_proc_no_return"
+             ( param1 VARCHAR(100),
+               param2 VARCHAR(100) default 'param2 default')
+            AS
+            DECLARE VARIABLE dummy INTEGER;
+            BEGIN
+              dummy = 1 + 1;
+            END""";
     
     private static final String ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN_PARAM2 =
             "COMMENT ON PARAMETER normal_proc_with_return.param2 IS 'Some comment'";
-    //@formatter:on
 
-    private static final MetaDataTestSupport<ProcedureColumnMetaData> metaDataTestSupport =
-            new MetaDataTestSupport<>(ProcedureColumnMetaData.class);
+    private static final String CREATE_PACKAGE_WITH_PROCEDURE = """
+            create package WITH$PROCEDURE
+            as
+            begin
+              procedure IN$PACKAGE(PARAM1 integer) returns (return1 INTEGER);
+            end""";
+
+    private static final String CREATE_PACKAGE_BODY_WITH_PROCEDURE = """
+            create package body WITH$PROCEDURE
+            as
+            begin
+              procedure IN$PACKAGE(PARAM1 integer) returns (RETURN1 integer)
+              as
+              begin
+                RETURN1 = PARAM1 * PARAM1;
+              end
+            end""";
+
+    private static final MetadataResultSetDefinition getProcedureColumnsDefinition =
+            new MetadataResultSetDefinition(ProcedureColumnMetaData.class);
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
             getCreateStatements());
 
     private static Connection con;
-    private static DatabaseMetaData dbmd;
+    private DatabaseMetaData dbmd;
 
     @BeforeAll
     static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
+    }
+
+    @BeforeEach
+    void setup() throws SQLException {
         dbmd = con.getMetaData();
     }
 
@@ -117,18 +144,22 @@ class FBDatabaseMetaDataProcedureColumnsTest {
             con.close();
         } finally {
             con = null;
-            dbmd = null;
         }
     }
 
     private static List<String> getCreateStatements() {
-        List<String> statements = new ArrayList<>(Arrays.asList(
+        var statements = new ArrayList<>(Arrays.asList(
                 CREATE_NORMAL_PROC_NO_ARG_NO_RETURN,
                 CREATE_NORMAL_PROC_NO_RETURN,
                 CREATE_NORMAL_PROC_WITH_RETURN,
                 CREATE_QUOTED_PROC_NO_RETURN));
-        if (getDefaultSupportInfo().supportsComment()) {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        if (supportInfo.supportsComment()) {
             statements.add(ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN_PARAM2);
+        }
+        if (supportInfo.supportsPackages()) {
+            statements.add(CREATE_PACKAGE_WITH_PROCEDURE);
+            statements.add(CREATE_PACKAGE_BODY_WITH_PROCEDURE);
         }
         return statements;
     }
@@ -140,7 +171,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     @Test
     void testProcedureColumnsMetaDataColumns() throws Exception {
         try (ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "doesnotexist", "%")) {
-            metaDataTestSupport.validateResultSetColumns(procedureColumns);
+            getProcedureColumnsDefinition.validateResultSetColumns(procedureColumns);
         }
     }
     
@@ -159,14 +190,18 @@ class FBDatabaseMetaDataProcedureColumnsTest {
      */
     @Test
     void testProcedureColumns_normalProc_noReturn_allPattern() throws Exception {
-        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = Arrays.asList(
+        var expectedColumns = getNormalProcNoReturn_allColumns();
+        
+        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "NORMAL_PROC_NO_RETURN", "%");
+        validate(procedureColumns, expectedColumns);        
+    }
+
+    private static List<Map<ProcedureColumnMetaData, Object>> getNormalProcNoReturn_allColumns() {
+        return List.of(
                 createStringType(Types.VARCHAR, "NORMAL_PROC_NO_RETURN", "PARAM1", 1, 100, true,
                         DatabaseMetaData.procedureColumnIn),
                 createNumericalType(Types.INTEGER, "NORMAL_PROC_NO_RETURN", "param2", 2, INTEGER_PRECISION, 0, true,
                         DatabaseMetaData.procedureColumnIn));
-        
-        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "NORMAL_PROC_NO_RETURN", "%");
-        validate(procedureColumns, expectedColumns);        
     }
 
     /**
@@ -175,7 +210,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     @ParameterizedTest
     @ValueSource(strings = { "param2", "%2", "param_" })
     void testProcedureColumns_normalProc_noReturn_secondColumn(String columnNamePattern) throws Exception {
-        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = singletonList(
+        var expectedColumns = List.of(
                 createNumericalType(Types.INTEGER, "NORMAL_PROC_NO_RETURN", "param2", 2, INTEGER_PRECISION, 0, true,
                         DatabaseMetaData.procedureColumnIn));
 
@@ -188,7 +223,14 @@ class FBDatabaseMetaDataProcedureColumnsTest {
      */
     @Test
     void testProcedureColumns_normalProc_withReturn_allPattern() throws Exception {
-        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = Arrays.asList(
+        var expectedColumns = getNormalProcWithReturn_allColumns();
+        
+        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "NORMAL_PROC_WITH_RETURN", "%");
+        validate(procedureColumns, expectedColumns); 
+    }
+
+    private static List<Map<ProcedureColumnMetaData, Object>> getNormalProcWithReturn_allColumns() {
+        return List.of(
                 // TODO Having result columns first might be against JDBC spec
                 // TODO Describing result columns as procedureColumnOut might be against JDBC spec
                 createStringType(Types.VARCHAR, "NORMAL_PROC_WITH_RETURN", "RETURN1", 1, 200, true,
@@ -205,25 +247,26 @@ class FBDatabaseMetaDataProcedureColumnsTest {
                         3, true, DatabaseMetaData.procedureColumnIn),
                 createDateTime(Types.TIMESTAMP, "NORMAL_PROC_WITH_RETURN", "PARAM4", 4, true,
                         DatabaseMetaData.procedureColumnIn));
-        
-        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "NORMAL_PROC_WITH_RETURN", "%");
-        validate(procedureColumns, expectedColumns); 
     }
-    
+
     /**
      * Tests getProcedureColumn with quoted_proc_no_return using all columnPattern, expecting result set with all defined rows.
      */
     @Test
     void testProcedureColumns_quotedProc_noReturn_allPattern() throws Exception {
-        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = Arrays.asList(
-                createStringType(Types.VARCHAR, "quoted_proc_no_return", "PARAM1", 1, 100, true,
-                        DatabaseMetaData.procedureColumnIn),
-                createStringType(Types.VARCHAR, "quoted_proc_no_return", "PARAM2", 2, 100, true,
-                        DatabaseMetaData.procedureColumnIn));
-        expectedColumns.get(1).put(ProcedureColumnMetaData.COLUMN_DEF, "'param2 default'");
+        var expectedColumns = getQuotedProcNoReturn_allColumns();
         
         ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "quoted_proc_no_return", "%");
         validate(procedureColumns, expectedColumns);        
+    }
+
+    private static List<Map<ProcedureColumnMetaData, Object>> getQuotedProcNoReturn_allColumns() {
+        return List.of(
+                createStringType(Types.VARCHAR, "quoted_proc_no_return", "PARAM1", 1, 100, true,
+                        DatabaseMetaData.procedureColumnIn),
+                withDefault("'param2 default'",
+                        createStringType(Types.VARCHAR, "quoted_proc_no_return", "PARAM2", 2, 100, true,
+                                DatabaseMetaData.procedureColumnIn)));
     }
 
     @Test
@@ -234,6 +277,113 @@ class FBDatabaseMetaDataProcedureColumnsTest {
                 singletonList(createDateTime(Types.TIMESTAMP, "NORMAL_PROC_WITH_RETURN", "PARAM4", 4, true,
                         DatabaseMetaData.procedureColumnIn)));
     }
+
+    @Test
+    void testProcedureColumns_useCatalogAsPackage_everything() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+
+            var expectedColumns = new ArrayList<>(getNormalProcNoReturn_allColumns());
+            expectedColumns.addAll(getNormalProcWithReturn_allColumns());
+            expectedColumns.addAll(getQuotedProcNoReturn_allColumns());
+            withCatalog("", expectedColumns);
+            expectedColumns.addAll(getInPackage_allColumns());
+
+            ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, null, null);
+            validate(procedureColumns, expectedColumns);
+        }
+    }
+
+    @Test
+    void testProcedureColumns_useCatalogAsPackage_specificPackage() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+
+            List<Map<ProcedureColumnMetaData, Object>> expectedColumns = getInPackage_allColumns();
+
+            ResultSet procedureColumns = dbmd.getProcedureColumns("WITH$PROCEDURE", null, null, null);
+            validate(procedureColumns, expectedColumns);
+        }
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "WITH$PROCEDURE")
+    void testProcedureColumns_useCatalogAsPackage_specificPackageProcedure(String catalog) throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+
+            List<Map<ProcedureColumnMetaData, Object>> expectedColumns = getInPackage_allColumns();
+
+            ResultSet procedureColumns = dbmd.getProcedureColumns(catalog, null, "IN$PACKAGE", null);
+            validate(procedureColumns, expectedColumns);
+        }
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "WITH$PROCEDURE")
+    void testProcedureColumns_useCatalogAsPackage_specificPackageProcedureColumn(String catalog) throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+
+            List<Map<ProcedureColumnMetaData, Object>> expectedColumns =
+                    withCatalog("WITH$PROCEDURE",
+                            withSpecificName("\"WITH$PROCEDURE\".\"IN$PACKAGE\"",
+                                    List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "RETURN1", 1, 10, 0, true,
+                                                    DatabaseMetaData.procedureColumnOut))));
+
+            ResultSet procedureColumns = dbmd.getProcedureColumns(catalog, null, "IN$PACKAGE", "RETURN1");
+            validate(procedureColumns, expectedColumns);
+        }
+    }
+
+    @Test
+    void testProcedureColumns_useCatalogAsPackage_nonPackagedOnly() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            dbmd = connection.getMetaData();
+
+            var expectedColumns = new ArrayList<>(getNormalProcNoReturn_allColumns());
+            expectedColumns.addAll(getNormalProcWithReturn_allColumns());
+            expectedColumns.addAll(getQuotedProcNoReturn_allColumns());
+            withCatalog("", expectedColumns);
+
+            ResultSet procedureColumns = dbmd.getProcedureColumns("", null, null, null);
+            validate(procedureColumns, expectedColumns);
+        }
+    }
+
+    private static List<Map<ProcedureColumnMetaData, Object>> getInPackage_allColumns() {
+        return withCatalog("WITH$PROCEDURE",
+                withSpecificName("\"WITH$PROCEDURE\".\"IN$PACKAGE\"",
+                        // TODO Having result columns first might be against JDBC spec
+                        // TODO Describing result columns as procedureColumnOut might be against JDBC spec
+                        List.of(
+                                createNumericalType(Types.INTEGER, "IN$PACKAGE", "RETURN1", 1, 10, 0, true,
+                                        DatabaseMetaData.procedureColumnOut),
+                                createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM1", 1, 10, 0, true,
+                                        DatabaseMetaData.procedureColumnIn))));
+    }
     
     // TODO Add tests for more complex patterns for procedure and column
     
@@ -242,10 +392,11 @@ class FBDatabaseMetaDataProcedureColumnsTest {
         try {
             int parameterCount = 0;
             while(procedureColumns.next()) {
+                if (isIgnoredProcedure(procedureColumns.getString("SPECIFIC_NAME"))) continue;
                 if (parameterCount < expectedColumns.size()) {
                     Map<ProcedureColumnMetaData, Object> rules = expectedColumns.get(parameterCount);
-                    metaDataTestSupport.checkValidationRulesComplete(rules);
-                    metaDataTestSupport.validateRowValues(procedureColumns, rules);
+                    getProcedureColumnsDefinition.checkValidationRulesComplete(rules);
+                    getProcedureColumnsDefinition.validateRowValues(procedureColumns, rules);
                 }
                 parameterCount++;
             }
@@ -276,19 +427,11 @@ class FBDatabaseMetaDataProcedureColumnsTest {
         Map<ProcedureColumnMetaData, Object> rules =
                 createColumn(procedureName, columnName, ordinalPosition, nullable, columnType);
         rules.put(ProcedureColumnMetaData.DATA_TYPE, jdbcType);
-        String typeName;
-        switch (jdbcType) {
-        case Types.CHAR:
-        case Types.BINARY:
-            typeName = "CHAR";
-            break;
-        case Types.VARCHAR:
-        case Types.VARBINARY:
-            typeName = "VARCHAR";
-            break;
-        default:
-            throw new IllegalArgumentException("Wrong type code for createStringType: " + jdbcType);
-        }
+        String typeName = switch (jdbcType) {
+            case Types.CHAR, Types.BINARY -> "CHAR";
+            case Types.VARCHAR, Types.VARBINARY -> "VARCHAR";
+            default -> throw new IllegalArgumentException("Wrong type code for createStringType: " + jdbcType);
+        };
         rules.put(ProcedureColumnMetaData.TYPE_NAME, typeName);
         rules.put(ProcedureColumnMetaData.PRECISION, length);
         rules.put(ProcedureColumnMetaData.LENGTH, length);
@@ -305,28 +448,27 @@ class FBDatabaseMetaDataProcedureColumnsTest {
         String typeName;
         int length;
         switch (jdbcType) {
-        case Types.BIGINT:
+        case Types.BIGINT -> {
             typeName = "BIGINT";
             length = 8;
-            break;
-        case Types.INTEGER:
+        }
+        case Types.INTEGER -> {
             typeName = "INTEGER";
             length = 4;
-            break;
-        case Types.SMALLINT:
+        }
+        case Types.SMALLINT -> {
             typeName = "SMALLINT";
             length = 2;
-            break;
-        case Types.NUMERIC:
+        }
+        case Types.NUMERIC -> {
             typeName = "NUMERIC";
             length = precision > 5 ? (precision > 9 ? (precision > 18 ? 16 : 8) : 4) : 2;
-            break;
-        case Types.DECIMAL:
+        }
+        case Types.DECIMAL -> {
             typeName = "DECIMAL";
             length = precision > 9 ? (precision > 18 ? 16 : 8) : 4;
-            break;
-        default:
-            throw new IllegalArgumentException("Wrong type code for createNumericalType: " + jdbcType);
+        }
+        default -> throw new IllegalArgumentException("Wrong type code for createNumericalType: " + jdbcType);
         }
         rules.put(ProcedureColumnMetaData.TYPE_NAME, typeName);
         rules.put(ProcedureColumnMetaData.PRECISION, precision);
@@ -345,33 +487,32 @@ class FBDatabaseMetaDataProcedureColumnsTest {
         int precision;
         int length;
         switch (jdbcType) {
-        case Types.DATE:
+        case Types.DATE -> {
             typeName = "DATE";
             precision = DATE_PRECISION;
             length = 4;
-            break;
-        case Types.TIME:
+        }
+        case Types.TIME -> {
             typeName = "TIME";
             precision = TIME_PRECISION;
             length = 4;
-            break;
-        case Types.TIMESTAMP:
+        }
+        case Types.TIMESTAMP -> {
             typeName = "TIMESTAMP";
             precision = TIMESTAMP_PRECISION;
             length = 8;
-            break;
-        case Types.TIME_WITH_TIMEZONE:
+        }
+        case Types.TIME_WITH_TIMEZONE -> {
             typeName = "TIME WITH TIME ZONE";
             precision = TIME_WITH_TIMEZONE_PRECISION;
             length = 8; // TODO Possibly 6
-            break;
-        case Types.TIMESTAMP_WITH_TIMEZONE:
+        }
+        case Types.TIMESTAMP_WITH_TIMEZONE -> {
             typeName = "TIMESTAMP WITH TIME ZONE";
             precision = TIMESTAMP_WITH_TIMEZONE_PRECISION;
             length = 12; // TODO Possibly 10
-            break;
-        default:
-            throw new IllegalArgumentException("Wrong type code for createNumericalType: " + jdbcType);
+        }
+        default -> throw new IllegalArgumentException("Wrong type code for createNumericalType: " + jdbcType);
         }
         rules.put(ProcedureColumnMetaData.TYPE_NAME, typeName);
         rules.put(ProcedureColumnMetaData.PRECISION, precision);
@@ -401,6 +542,28 @@ class FBDatabaseMetaDataProcedureColumnsTest {
             String remark) {
         column.put(ProcedureColumnMetaData.REMARKS, remark);
         return column;
+    }
+
+    private static Map<ProcedureColumnMetaData, Object> withDefault(String defaultDefinition,
+            Map<ProcedureColumnMetaData, Object> rules) {
+        rules.put(ProcedureColumnMetaData.COLUMN_DEF, defaultDefinition);
+        return rules;
+    }
+
+    private static List<Map<ProcedureColumnMetaData, Object>> withCatalog(
+            String catalog, List<Map<ProcedureColumnMetaData, Object>> rules) {
+        for (Map<ProcedureColumnMetaData, Object> rowRule : rules) {
+            rowRule.put(ProcedureColumnMetaData.PROCEDURE_CAT, catalog);
+        }
+        return rules;
+    }
+
+    private static List<Map<ProcedureColumnMetaData, Object>> withSpecificName(
+            String specificName, List<Map<ProcedureColumnMetaData, Object>> rules) {
+        for (Map<ProcedureColumnMetaData, Object> rowRule : rules) {
+            rowRule.put(ProcedureColumnMetaData.SPECIFIC_NAME, specificName);
+        }
+        return rules;
     }
     
     private static final Map<ProcedureColumnMetaData, Object> DEFAULT_COLUMN_VALUES;
@@ -465,10 +628,6 @@ class FBDatabaseMetaDataProcedureColumnsTest {
 
         public Class<?> getColumnClass() {
             return columnClass;
-        }
-
-        public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<>(this);
         }
     }
 }

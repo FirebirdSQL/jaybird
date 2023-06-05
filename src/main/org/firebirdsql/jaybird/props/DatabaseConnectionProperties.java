@@ -26,6 +26,8 @@ package org.firebirdsql.jaybird.props;
 
 import org.firebirdsql.jdbc.FirebirdCallableStatement;
 
+import java.sql.DatabaseMetaData;
+
 /**
  * Properties for database connections.
  *
@@ -570,6 +572,60 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      */
     default void setServerBatchBufferSize(int serverBatchBufferSize) {
         setIntProperty(PropertyNames.serverBatchBufferSize, serverBatchBufferSize);
+    }
+
+    /**
+     * @return {@code true} database metadata uses catalogs to report packages, {@code false} (default) no catalogs, and
+     * packages and their procedures and functions are not accessible
+     * @see #setUseCatalogAsPackage(boolean)
+     */
+    default boolean isUseCatalogAsPackage() {
+        return getBooleanProperty(PropertyNames.useCatalogAsPackage, PropertyConstants.DEFAULT_USE_CATALOG_AS_PACKAGE);
+    }
+
+    /**
+     * Sets whether to use catalogs to report packages in database metadata.
+     * <p>
+     * When set to {@code true}, database metadata will return the names of packages from
+     * {@link DatabaseMetaData#getCatalogs()}, and {@link DatabaseMetaData#getFunctions(String, String, String)},
+     * {@link DatabaseMetaData#getFunctionColumns(String, String, String, String)},
+     * {@link DatabaseMetaData#getProcedures(String, String, String)}, and
+     * {@link DatabaseMetaData#getProcedureColumns(String, String, String, String)} will include information on
+     * packaged procedures and functions.
+     * </p>
+     * <p>
+     * The behaviour of the input parameter {@code catalog} of these methods is modified compared to the default
+     * behaviour:
+     * </p>
+     * <ul>
+     * <li>{@code null}: both packaged and top-level procedures/functions are searched</li>
+     * <li>{@code ""} (empty string): only top-level procedures/functions are searched</li>
+     * <lI>non-empty string: only procedures/functions in the named package are searched (NOTE: exact match,
+     * case-sensitive)</lI>
+     * </ul>
+     * <p>
+     * The returned result set is modified compared to the default behaviour:
+     * </p>
+     * <ul>
+     * <li>{@code PROCEDURE_CAT}/{@code FUNCTION_CAT}: for top-level procedures/functions, its value is {@code ""}
+     * (empty string) &mdash; not {@code null} &mdash; to account for behaviour of parameter {@code package} when
+     * searching metadata</li>
+     * <li>{@code SPECIFIC_NAME}: for packaged procedures/functions will report
+     * {@code <quoted-package-name>.<quoted-routine-name>}</li>
+     * </ul>
+     * <p>
+     * Return values of other metadata methods are changed to match: {@link DatabaseMetaData#getCatalogSeparator()},
+     * {@link DatabaseMetaData#getCatalogTerm()}, {@link DatabaseMetaData#isCatalogAtStart()},
+     * {@link DatabaseMetaData#getMaxCatalogNameLength()}, {@link DatabaseMetaData#supportsCatalogsInDataManipulation()},
+     * {@link DatabaseMetaData#supportsCatalogsInProcedureCalls()}
+     * </p>
+     *
+     * @param useCatalogAsPackage
+     *         {@code true} database metadata uses catalogs to report packages, {@code false} (default) no catalogs, and
+     *         packages and their procedures and functions are not accessible
+     */
+    default void setUseCatalogAsPackage(boolean useCatalogAsPackage) {
+        setBooleanProperty(PropertyNames.useCatalogAsPackage, useCatalogAsPackage);
     }
 
 }

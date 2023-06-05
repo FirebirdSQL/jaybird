@@ -20,13 +20,14 @@ package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
-import org.firebirdsql.jdbc.FBResultSet;
+import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
-import static java.util.Collections.emptyList;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 
@@ -36,21 +37,57 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  * @author Mark Rotteveel
  * @since 5
  */
-public final class GetCatalogs {
+public sealed class GetCatalogs extends AbstractMetadataMethod {
 
     private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(1, DbMetadataMediator.datatypeCoder)
             .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLECATALOGS").addField()
             .toRowDescriptor();
 
-    private GetCatalogs() {
+    private GetCatalogs(DbMetadataMediator mediator) {
+        super(ROW_DESCRIPTOR, mediator);
     }
 
     public ResultSet getCatalogs() throws SQLException {
-        return new FBResultSet(ROW_DESCRIPTOR, emptyList());
+        return createEmpty();
     }
 
-    @SuppressWarnings("unused")
     public static GetCatalogs create(DbMetadataMediator mediator) {
-        return new GetCatalogs();
+        if (mediator.isUseCatalogAsPackage()) {
+            return CatalogAsPackage.createInstance(mediator);
+        } else {
+            return new GetCatalogs(mediator);
+        }
+    }
+
+    @Override
+    RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
+        throw new AssertionError("should not get called");
+    }
+
+    private static final class CatalogAsPackage extends GetCatalogs {
+
+        private CatalogAsPackage(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetCatalogs createInstance(DbMetadataMediator mediator) {
+            return new CatalogAsPackage(mediator);
+        }
+
+        @Override
+        public ResultSet getCatalogs() throws SQLException {
+            var metadataQuery = new MetadataQuery("""
+                    select trim(trailing from RDB$PACKAGE_NAME) as PACKAGE_NAME
+                    from RDB$PACKAGES
+                    order by RDB$PACKAGE_NAME""", List.of());
+            return createMetaDataResultSet(metadataQuery);
+        }
+
+        @Override
+        RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
+            return valueBuilder
+                    .at(0).setString(rs.getString("PACKAGE_NAME"))
+                    .toRowValue(false);
+        }
     }
 }

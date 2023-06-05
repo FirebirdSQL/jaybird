@@ -697,6 +697,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} if PSQL parameterized exceptions are supported ({@code exception ... using (...)})
+     */
+    public boolean supportsParameterizedExceptions() {
+        return isVersionEqualOrAbove(3);
+    }
+
+    /**
      * @return {@code true} when this Firebird version is considered a supported version
      */
     public boolean isSupportedVersion() {

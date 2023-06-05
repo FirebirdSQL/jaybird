@@ -52,7 +52,7 @@ import java.util.Map;
 @SuppressWarnings("RedundantThrows")
 public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListener.FetcherListener {
 
-    private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported.";
+    private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported";
 
     private final FBStatement fbStatement;
     private FBFetcher fbFetcher;
@@ -451,10 +451,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public boolean wasNull() throws SQLException {
         if (!wasNullValid) {
-            throw new SQLException("Look at a column before testing null.");
+            throw new SQLException("Get a column before testing null");
         }
         if (row == null) {
-            throw new SQLException("No row available for wasNull.");
+            throw new SQLException("No row available for wasNull");
         }
         return wasNull;
     }
@@ -616,7 +616,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         }
 
         if (columnIndex > rowDescriptor.getCount()) {
-            throw new SQLException("Invalid column index: " + columnIndex, SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+            throw new SQLException("Invalid column index: " + columnIndex,
+                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
         }
 
         if (rowUpdater != null) {
@@ -641,7 +642,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         }
 
         if (columnName == null) {
-            throw new SQLException("Column identifier must be not null.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+            throw new SQLException("Column identifier must be not null",
+                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
         }
 
         Integer fieldNum = colNames.get(columnName);
@@ -830,7 +832,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public int findColumn(String columnName) throws SQLException {
         if (columnName == null || columnName.equals("")) {
-            throw new SQLException("Empty string does not identify column.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+            throw new SQLException("Empty string does not identify a column",
+                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
         }
         if (columnName.startsWith("\"") && columnName.endsWith("\"")) {
             columnName = columnName.substring(1, columnName.length() - 1);
@@ -864,8 +867,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             return findColumn("DB_KEY");
         }
 
-        throw new SQLException("Column name " + columnName + " not found in result set.",
-                SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+        throw new SQLException("Column name " + columnName + " not found in result set",
+                SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
     }
 
     @Override
@@ -1001,7 +1004,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     public void setFetchSize(int rows) throws SQLException {
         checkOpen();
         if (rows < 0) {
-            throw new SQLException("Can't set negative fetch size.", SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+            throw new SQLException("Can't set negative fetch size", SQLStateConstants.SQL_STATE_INVALID_ATTR_VALUE);
         }
         fbFetcher.setFetchSize(rows);
     }

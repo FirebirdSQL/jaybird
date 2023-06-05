@@ -274,7 +274,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                  * throw exception if we want to pass the test suite
                  * 
                  * if (internalExecute(true)) throw new FBSQLException(
-                 * "Update statement returned results.");
+                 * "Update statement returned result set");
                  */
 
                 boolean hasResults = internalExecute(!isSelectableProcedure());
@@ -1091,7 +1091,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      */
     protected void assertHasData(ResultSet rs) throws SQLException {
         if (rs == null) {
-            throw new SQLException("Current statement has no data to return.",
+            throw new SQLException("Current statement has no data to return",
                     SQLStateConstants.SQL_STATE_NO_RESULT_SET);
         }
         // check if we have a row, and try to move to the first position.
@@ -1103,7 +1103,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
         // check if we still have no row and throw an exception in this case.
         if (rs.getRow() == 0) {
-            throw new SQLException("Current statement has no data to return.",
+            throw new SQLException("Current statement has no data to return",
                     SQLStateConstants.SQL_STATE_NO_RESULT_SET);
         }
     }

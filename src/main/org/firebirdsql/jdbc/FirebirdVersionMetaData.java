@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.jdbc.metadata.FbMetadataConstants;
 
 import java.sql.SQLException;
 
@@ -41,6 +42,11 @@ enum FirebirdVersionMetaData {
                     + "RDB$SYSTEM_PRIVILEGE,RECORD_VERSION,RECREATE,RESETTING,RETURNING_VALUES,ROW_COUNT,SQLCODE,"
                     + "UNBOUNDED,UPDATING,VARBINARY,VARIABLE,VIEW,WHILE";
         }
+
+        @Override
+        int maxIdentifierLength() {
+            return FbMetadataConstants.OBJECT_NAME_LENGTH_V4_0;
+        }
     },
     FIREBIRD_4_0(4, 0) {
         @Override
@@ -50,6 +56,11 @@ enum FirebirdVersionMetaData {
                     + "RDB$GET_CONTEXT,RDB$GET_TRANSACTION_CN,RDB$RECORD_VERSION,RDB$ROLE_IN_USE,RDB$SET_CONTEXT,"
                     + "RDB$SYSTEM_PRIVILEGE,RECORD_VERSION,RECREATE,RESETTING,RETURNING_VALUES,ROW_COUNT,SQLCODE,"
                     + "UNBOUNDED,UPDATING,VARBINARY,VARIABLE,VIEW,WHILE";
+        }
+
+        @Override
+        int maxIdentifierLength() {
+            return FbMetadataConstants.OBJECT_NAME_LENGTH_V4_0;
         }
     },
     FIREBIRD_3_0(3, 0) {
@@ -115,6 +126,20 @@ enum FirebirdVersionMetaData {
      * @see java.sql.DatabaseMetaData#getSQLKeywords()
      */
     abstract String getSqlKeywords();
+
+    /**
+     * Returns the default maximum identifier length.
+     * <p>
+     * NOTE: For Firebird 3.0 and earlier, the actual limit is 31 characters <b>and</b> 31 bytes {@code UNICODE_FSS},
+     * whichever is shorter! For Firebird 4.0 and higher, it is possible to limit the identifier length through
+     * configuration. The runtime configuration is ignored here, and the default maximum length is reported.
+     * </p>
+     *
+     * @return maximum identifier length.
+     */
+    int maxIdentifierLength() {
+        return FbMetadataConstants.OBJECT_NAME_LENGTH_BEFORE_V4_0;
+    }
 
     static FirebirdVersionMetaData getVersionMetaDataFor(GDSServerVersion version) {
         for (FirebirdVersionMetaData versionMetaData : values()) {

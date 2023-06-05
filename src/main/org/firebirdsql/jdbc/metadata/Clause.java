@@ -21,9 +21,12 @@ package org.firebirdsql.jdbc.metadata;
 import org.firebirdsql.util.InternalApi;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * Condition clause for constructing metadata query conditions.
@@ -65,6 +68,17 @@ public final class Clause {
      */
     static Clause equalsClause(String columnName, String value) {
         return new Clause(columnName, MetadataPattern.equalsCondition(value));
+    }
+
+    /**
+     * Creates an {@code IS NULL} clause.
+     *
+     * @param columnName
+     *         column name or expression resulting in a null value
+     * @return clause for SQL {@code IS NULL} condition
+     */
+    static Clause isNullClause(String columnName) {
+        return new Clause(columnName, MetadataPattern.isNullCondition());
     }
 
     /**
@@ -122,6 +136,10 @@ public final class Clause {
         return condition.isEmpty();
     }
 
+    private boolean hasValue() {
+        return value != null;
+    }
+
     public static boolean anyCondition(Clause clause1, Clause clause2) {
         return clause1.hasCondition() || clause2.hasCondition();
     }
@@ -135,44 +153,63 @@ public final class Clause {
         return false;
     }
 
+    public static boolean anyCondition(List<Clause> clauses) {
+        for (Clause clause : clauses) {
+            if (clause.hasCondition()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean anyParameter(Clause clause1, Clause clause2) {
+        return clause1.hasCondition() && clause1.hasValue() || clause2.hasCondition() && clause2.hasValue();
+    }
+
     public static List<String> parameters(Clause clause1) {
-        if (clause1.hasCondition()) {
+        if (clause1.hasCondition() && clause1.hasValue()) {
             return Collections.singletonList(clause1.getValue());
         }
         return Collections.emptyList();
     }
 
     public static List<String> parameters(Clause clause1, Clause clause2) {
-        if (!anyCondition(clause1, clause2)) {
+        if (!anyParameter(clause1, clause2)) {
             return Collections.emptyList();
         }
         List<String> list = new ArrayList<>(2);
-        if (clause1.hasCondition()) {
+        if (clause1.hasCondition() && clause1.hasValue()) {
             list.add(clause1.getValue());
         }
-        if (clause2.hasCondition()) {
+        if (clause2.hasCondition() && clause2.hasValue()) {
             list.add(clause2.getValue());
         }
         return list;
     }
 
     public static List<String> parameters(Clause... clauses) {
-        List<String> list = new ArrayList<>(clauses.length);
+        return parameters(Arrays.asList(clauses));
+    }
+
+    public static List<String> parameters(List<Clause> clauses) {
+        List<String> list = new ArrayList<>(clauses.size());
         for (Clause clause : clauses) {
-            if (clause.hasCondition()) {
+            if (clause.hasCondition() && clause.hasValue()) {
                 list.add(clause.getValue());
             }
         }
         return list;
     }
 
-    public static List<String> parameters(List<Clause> clauses) {
-        List<String> list = new ArrayList<>(clauses.size());
-        for (Clause clause : clauses) {
-            if (clause.hasCondition()) {
-                list.add(clause.getValue());
-            }
-        }
-        return list;
+    public static String conjunction(Clause... clauses) {
+        return conjunction(Arrays.asList(clauses));
     }
+
+    public static String conjunction(List<Clause> clauses) {
+        return clauses.stream()
+                .filter(Clause::hasCondition)
+                .map(clause -> clause.getCondition(false))
+                .collect(joining("\nand "));
+    }
+
 }

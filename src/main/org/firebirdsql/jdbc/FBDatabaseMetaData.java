@@ -36,7 +36,6 @@ import java.util.*;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.WARNING;
-import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
@@ -57,6 +56,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int STATEMENT_CACHE_SIZE = 12;
     private final Map<String, FBPreparedStatement> statements = new LruPreparedStatementCache(STATEMENT_CACHE_SIZE);
     private final FirebirdVersionMetaData versionMetaData;
+    private CatalogMetadataInfo catalogMetadataInfo;
 
     protected FBDatabaseMetaData(FBConnection c) throws SQLException {
         this.gdsHelper = c.getGDSHelper();
@@ -776,28 +776,36 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * {@inheritDoc}
      *
-     * @return the vendor term, always {@code null} because catalogs are not supported by database server (see JDBC CTS
-     * for details).
+     * @return the vendor term for catalog, normally {@code null} because catalogs are not supported by database server
+     * (see JDBC CTS for details), or {@code "PACKAGE"} when {@code useCatalogAsPackage = true} and packages are
+     * supported.
      */
     @Override
     public String getCatalogTerm() throws SQLException {
-        return null;
+        return getCatalogMetadata().getCatalogTerm();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * Will report {@code true} when {@code useCatalogAsPackage = true} and packages are supported.
+     * </p>
+     */
     @Override
     public boolean isCatalogAtStart() throws SQLException {
-        return false;
+        return getCatalogMetadata().isCatalogAtStart();
     }
 
     /**
      * {@inheritDoc}
      *
      * @return the separator string, always {@code null} because catalogs are not supported by database server (see
-     * JDBC CTS for details).
+     * JDBC CTS for details), or {@code "."} when {@code useCatalogAsPackage = true} and packages are supported.
      */
     @Override
     public String getCatalogSeparator() throws SQLException {
-        return null;
+        return getCatalogMetadata().getCatalogSeparator();
     }
 
     @Override
@@ -825,29 +833,43 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * Will report {@code true} when {@code useCatalogAsPackage = true} and packages are supported.
+     * </p>
+     */
     @Override
     public boolean supportsCatalogsInDataManipulation() throws SQLException {
-        return false;
+        return getCatalogMetadata().supportsCatalogsInDataManipulation();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * Will report {@code true} when {@code useCatalogAsPackage = true} and packages are supported.
+     * </p>
+     */
     @Override
     public boolean supportsCatalogsInProcedureCalls() throws SQLException {
-        return false;
+        return getCatalogMetadata().supportsCatalogsInProcedureCalls();
     }
 
     @Override
     public boolean supportsCatalogsInTableDefinitions() throws SQLException {
-        return false;
+        return getCatalogMetadata().supportsCatalogsInTableDefinitions();
     }
 
     @Override
     public boolean supportsCatalogsInIndexDefinitions() throws SQLException {
-        return false;
+        return getCatalogMetadata().supportsCatalogsInIndexDefinitions();
     }
 
     @Override
     public boolean supportsCatalogsInPrivilegeDefinitions() throws SQLException {
-        return false;
+        return getCatalogMetadata().supportsCatalogsInPrivilegeDefinitions();
     }
 
     @Override
@@ -941,17 +963,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return 32765;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * NOTE: This method reports the standard maximum length, and does not take into account restrictions configured
+     * through {@code MaxIdentifierByteLength} or {@code MaxIdentifierCharLength}.
+     * </p>
+     */
     @Override
     public int getMaxColumnNameLength() throws SQLException {
         return getMaxObjectNameLength();
     }
 
-    private int getMaxObjectNameLength() {
-        if (gdsHelper.compareToVersion(4, 0) < 0) {
-            return OBJECT_NAME_LENGTH_BEFORE_V4_0;
-        } else {
-            return OBJECT_NAME_LENGTH_V4_0;
-        }
+    @Override
+    public int getMaxObjectNameLength() {
+        return versionMetaData.maxIdentifierLength();
     }
 
     @Override
@@ -1003,14 +1030,29 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return 0; //No schemas
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * NOTE: This method reports the standard maximum length, and does not take into account restrictions configured
+     * through {@code MaxIdentifierByteLength} or {@code MaxIdentifierCharLength}.
+     * </p>
+     */
     @Override
     public int getMaxProcedureNameLength() throws SQLException {
         return getMaxObjectNameLength();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * Will normally report {@code 0}, but non-zero when {@code useCatalogAsPackage = true} and packages are supported.
+     * </p>
+     */
     @Override
     public int getMaxCatalogNameLength() throws SQLException {
-        return 0; //No catalogs
+        return getCatalogMetadata().getMaxCatalogNameLength();
     }
 
     @Override
@@ -1043,6 +1085,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * NOTE: This method reports the standard maximum length, and does not take into account restrictions configured
+     * through {@code MaxIdentifierByteLength} or {@code MaxIdentifierCharLength}.
+     * </p>
+     */
     @Override
     public int getMaxTableNameLength() throws SQLException {
         return getMaxObjectNameLength();
@@ -1054,6 +1104,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * NOTE: This method reports the standard maximum length, and does not take into account restrictions configured
+     * through {@code MaxIdentifierByteLength} or {@code MaxIdentifierCharLength}.
+     * </p>
+     */
     @Override
     public int getMaxUserNameLength() throws SQLException {
         return getMaxObjectNameLength();
@@ -1123,17 +1181,55 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * By default, this method does not return procedures defined in packages. To also return procedures in packages,
+     * set connection property {@code useCatalogAsPackage} to {@code true}. When enabled, this method has the following
+     * differences in behaviour:
+     * </p>
+     * <ul>
+     * <li>The {@code catalog} parameter will return normal and packaged procedures when {@code null}, only normal
+     * (non-packaged) procedures when empty string ({@code ""}), and procedures from a specific package (exact
+     * case-sensitive match!) for other non-{@code null} values</li>
+     * <li>Column {@code PROCEDURE_CAT} for normal procedures is empty string ({@code ""}) instead of {@code null},
+     * for packaged procedures it is the package name</li>
+     * <li>Column {@code SPECIFIC_NAME} for packaged procedures will report
+     * {@code <quoted-package-name>.<quoted-procedure-name>} (normal procedures will report the same as column
+     * {@code PROCEDURE_NAME}, the unquoted name)</li></li>
+     * </ul>
+     */
     @Override
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
             throws SQLException {
-        return GetProcedures.create(getDbMetadataMediator()).getProcedures(procedureNamePattern);
+        return GetProcedures.create(getDbMetadataMediator()).getProcedures(catalog, procedureNamePattern);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * By default, this method does not return columns of procedures defined in packages. To also return columns of
+     * procedures in packages, set connection property {@code useCatalogAsPackage} to {@code true}. When enabled, this
+     * method has the following differences in behaviour:
+     * </p>
+     * <ul>
+     * <li>The {@code catalog} parameter will return normal and packaged procedures when {@code null}, only normal
+     * (non-packaged) procedures when empty string ({@code ""}), and procedures from a specific package (exact
+     * case-sensitive match!) for other non-{@code null} values</li>
+     * <li>Column {@code PROCEDURE_CAT} for normal procedures is empty string ({@code ""}) instead of {@code null},
+     * for packaged procedures it is the package name</li>
+     * <li>Column {@code SPECIFIC_NAME} for packaged procedures will report
+     * {@code <quoted-package-name>.<quoted-procedure-name>} (normal procedures will report the same as column
+     * {@code PROCEDURE_NAME}, the unquoted name)</li></li>
+     * </ul>
+     */
     @Override
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
             String columnNamePattern) throws SQLException {
         return GetProcedureColumns.create(getDbMetadataMediator())
-                .getProcedureColumns(procedureNamePattern, columnNamePattern);
+                .getProcedureColumns(catalog, procedureNamePattern, columnNamePattern);
     }
 
     public static final String TABLE = "TABLE";
@@ -1166,6 +1262,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return getSchemas(null, null);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * When {@code useCatalogAsPackage = true} and packages are supported, this method will return the package names in
+     * column {@code TABLE_CAT}.
+     * </p>>
+     */
     @Override
     public ResultSet getCatalogs() throws SQLException {
         return GetCatalogs.create(getDbMetadataMediator()).getCatalogs();
@@ -1570,14 +1673,26 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      *
      * <p>
-     * This method does not return columns of functions defined in packages.
+     * By default, this method does not return columns of functions defined in packages. To also return columns of
+     * functions in packages, set connection property {@code useCatalogAsPackage} to {@code true}. When enabled, this
+     * method has the following differences in behaviour:
      * </p>
+     * <ul>
+     * <li>The {@code catalog} parameter will return normal and packaged functions when {@code null}, only normal
+     * (non-packaged) function when empty string ({@code ""}), and functions from a specific package (exact
+     * case-sensitive match!) for other non-{@code null} values</li>
+     * <li>Column {@code FUNCTION_CAT} for normal functions is empty string ({@code ""}) instead of {@code null},
+     * for packaged functions it is the package name</li>
+     * <li>Column {@code SPECIFIC_NAME} for packaged functions will report
+     * {@code <quoted-package-name>.<quoted-function-name>} (normal functions will report the same as column
+     * {@code FUNCTION_NAME}, the unquoted name)</li></li>
+     * </ul>
      */
     @Override
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
             String columnNamePattern) throws SQLException {
         return GetFunctionColumns.create(getDbMetadataMediator())
-                .getFunctionColumns(functionNamePattern, columnNamePattern);
+                .getFunctionColumns(catalog, functionNamePattern, columnNamePattern);
     }
 
     /**
@@ -1597,13 +1712,25 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </ol>
      * </p>
      * <p>
-     * This method does not return functions defined in packages.
+     * By default, this method does not return functions defined in packages. To also return functions in packages,
+     * set connection property {@code useCatalogAsPackage} to {@code true}. When enabled, this method has the following
+     * differences in behaviour:
      * </p>
+     * <ul>
+     * <li>The {@code catalog} parameter will return normal and packaged functions when {@code null}, only normal
+     * (non-packaged) function when empty string ({@code ""}), and functions from a specific package (exact
+     * case-sensitive match!) for other non-{@code null} values</li>
+     * <li>Column {@code FUNCTION_CAT} for normal functions is empty string ({@code ""}) instead of {@code null},
+     * for packaged functions it is the package name</li>
+     * <li>Column {@code SPECIFIC_NAME} for packaged functions will report
+     * {@code <quoted-package-name>.<quoted-function-name>} (normal functions will report the same as column
+     * {@code FUNCTION_NAME}, the unquoted name)</li></li>
+     * </ul>
      */
     @Override
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
             throws SQLException {
-        return GetFunctions.create(getDbMetadataMediator()).getFunctions(functionNamePattern);
+        return GetFunctions.create(getDbMetadataMediator()).getFunctions(catalog, functionNamePattern);
     }
 
     @Override
@@ -1775,6 +1902,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return RowIdLifetime.ROWID_VALID_TRANSACTION;
     }
 
+    private CatalogMetadataInfo getCatalogMetadata() {
+        CatalogMetadataInfo catalogMetadataInfo = this.catalogMetadataInfo;
+        if (catalogMetadataInfo == null) {
+            catalogMetadataInfo = this.catalogMetadataInfo = CatalogMetadataInfo.create(getDbMetadataMediator());
+        }
+        return catalogMetadataInfo;
+    }
+
     static final int JDBC_MAJOR_VERSION = 4;
     static final int JDBC_MINOR_VERSION;
     static {
@@ -1851,7 +1986,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new DbMetadataMediatorImpl();
     }
 
-    private class DbMetadataMediatorImpl extends DbMetadataMediator {
+    private final class DbMetadataMediatorImpl extends DbMetadataMediator {
 
         @Override
         protected FirebirdSupportInfo getFirebirdSupportInfo() {
@@ -1871,6 +2006,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         @Override
         protected GDSType getGDSType() {
             return FBDatabaseMetaData.this.getGDSType();
+        }
+
+        @Override
+        protected boolean isUseCatalogAsPackage() {
+            return gdsHelper.getConnectionProperties().isUseCatalogAsPackage()
+                   && firebirdSupportInfo.supportsPackages();
         }
     }
 }

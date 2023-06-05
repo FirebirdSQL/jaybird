@@ -76,6 +76,12 @@ public abstract class DbMetadataMediator {
     protected abstract GDSType getGDSType();
 
     /**
+     * @return value of the {@code useCatalogAsPackage} connection property if packages are supported, otherwise
+     * {@code false}
+     */
+    protected abstract boolean isUseCatalogAsPackage();
+
+    /**
      * Holder class for query text and parameters.
      */
     @InternalApi

@@ -125,4 +125,16 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @since 4.0
      */
     String[] getTableTypeNames() throws SQLException;
+
+    /***
+     * The default maximum identifier length.
+     * <p>
+     * NOTE: This method reports the standard maximum length, and does not take into account restrictions configured
+     * through {@code MaxIdentifierByteLength} or {@code MaxIdentifierCharLength}.
+     * </p>
+     *
+     * @return the (default) maximum identifier length
+     */
+    int getMaxObjectNameLength() throws SQLException;
+
 }

@@ -446,6 +446,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setParallelWorkers(parallelWorkers);
     }
 
+    @Override
+    public boolean isUseCatalogAsPackage() {
+        return FirebirdConnectionProperties.super.isUseCatalogAsPackage();
+    }
+
+    @Override
+    public void setUseCatalogAsPackage(boolean useCatalogAsPackage) {
+        FirebirdConnectionProperties.super.setUseCatalogAsPackage(useCatalogAsPackage);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated
     @Override

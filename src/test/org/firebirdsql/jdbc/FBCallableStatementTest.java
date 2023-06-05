@@ -1085,7 +1085,7 @@ class FBCallableStatementTest {
                 cstmt.registerOutParameter(1, java.sql.Types.VARCHAR);
                 cstmt.execute();
                 var exception = assertThrows(SQLException.class, () -> cstmt.getString("MSG"));
-                assertThat(exception, message(equalTo("Current statement has no data to return.")));
+                assertThat(exception, message(equalTo("Current statement has no data to return")));
             }
         }
     }

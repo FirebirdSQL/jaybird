@@ -20,7 +20,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -101,11 +100,8 @@ class FBDatabaseMetaDataColumnsTest {
     private static final String ADD_COMMENT_ON_COLUMN =
             "COMMENT ON COLUMN test_column_metadata.col_integer IS 'Some comment'";
 
-    private static final Set<ColumnMetaData> JDBC_41_COLUMN_METADATA = Collections.unmodifiableSet(
-            EnumSet.allOf(ColumnMetaData.class));
-
-    private static final MetaDataTestSupport<ColumnMetaData> metaDataTestSupport =
-            new MetaDataTestSupport<>(ColumnMetaData.class, getRequiredMetaData());
+    private static final MetadataResultSetDefinition getColumnsDefinition =
+            new MetadataResultSetDefinition(ColumnMetaData.class);
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
@@ -128,10 +124,6 @@ class FBDatabaseMetaDataColumnsTest {
             con = null;
             dbmd = null;
         }
-    }
-
-    private static Set<ColumnMetaData> getRequiredMetaData() {
-        return EnumSet.copyOf(JDBC_41_COLUMN_METADATA);
     }
 
     private static List<String> getCreateStatements() {
@@ -177,7 +169,7 @@ class FBDatabaseMetaDataColumnsTest {
     @Test
     void testColumnMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getColumns(null, null, "doesnotexist", null)) {
-            metaDataTestSupport.validateResultSetColumns(columns);
+            getColumnsDefinition.validateResultSetColumns(columns);
         }
     }
 
@@ -971,11 +963,11 @@ class FBDatabaseMetaDataColumnsTest {
     private void validate(String tableName, String columnName, Map<ColumnMetaData, Object> validationRules) throws Exception {
         validationRules.put(ColumnMetaData.TABLE_NAME, tableName);
         validationRules.put(ColumnMetaData.COLUMN_NAME, columnName);
-        metaDataTestSupport.checkValidationRulesComplete(validationRules);
+        getColumnsDefinition.checkValidationRulesComplete(validationRules);
 
         try (ResultSet columns = dbmd.getColumns(null, null, tableName, columnName)) {
             assertTrue(columns.next(), "Expected row in column metadata");
-            metaDataTestSupport.validateRowValues(columns, validationRules);
+            getColumnsDefinition.validateRowValues(columns, validationRules);
             assertFalse(columns.next(), "Expected only one row in resultset");
         }
     }
@@ -1058,11 +1050,6 @@ class FBDatabaseMetaDataColumnsTest {
         @Override
         public Class<?> getColumnClass() {
             return columnClass;
-        }
-
-        @Override
-        public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<>(this);
         }
     }
 }

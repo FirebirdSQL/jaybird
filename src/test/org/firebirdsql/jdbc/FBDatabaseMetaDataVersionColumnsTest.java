@@ -68,8 +68,8 @@ class FBDatabaseMetaDataVersionColumnsTest {
             + " on commit delete rows ";
     //@formatter:on
 
-    private static final MetaDataTestSupport<VersionColumnMetaData> metaDataTestSupport =
-            new MetaDataTestSupport<>(VersionColumnMetaData.class);
+    private static final MetadataResultSetDefinition getVersionColumnsDefinition =
+            new MetadataResultSetDefinition(VersionColumnMetaData.class);
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
@@ -108,7 +108,7 @@ class FBDatabaseMetaDataVersionColumnsTest {
     @Test
     void testPseudoColumnsMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getVersionColumns(null, null, "doesnotexist")) {
-            metaDataTestSupport.validateResultSetColumns(columns);
+            getVersionColumnsDefinition.validateResultSetColumns(columns);
         }
     }
 
@@ -219,8 +219,8 @@ class FBDatabaseMetaDataVersionColumnsTest {
             while (pseudoColumns.next()) {
                 if (columnCount < expectedPseudoColumns.size()) {
                     Map<VersionColumnMetaData, Object> rules = expectedPseudoColumns.get(columnCount);
-                    metaDataTestSupport.checkValidationRulesComplete(rules);
-                    metaDataTestSupport.validateRowValues(pseudoColumns, rules);
+                    getVersionColumnsDefinition.checkValidationRulesComplete(rules);
+                    getVersionColumnsDefinition.validateRowValues(pseudoColumns, rules);
                 }
                 columnCount++;
             }
@@ -269,7 +269,7 @@ class FBDatabaseMetaDataVersionColumnsTest {
     /**
      * Columns defined for the getPseudoColumns() metadata.
      */
-    private enum VersionColumnMetaData implements MetaDataValidator.MetaDataInfo {
+    private enum VersionColumnMetaData implements MetaDataInfo {
         SCOPE(1, Short.class),
         COLUMN_NAME(2, String.class),
         DATA_TYPE(3, Integer.class),
@@ -295,11 +295,6 @@ class FBDatabaseMetaDataVersionColumnsTest {
         @Override
         public Class<?> getColumnClass() {
             return columnClass;
-        }
-
-        @Override
-        public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<>(this);
         }
     }
 
