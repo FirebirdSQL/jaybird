@@ -69,7 +69,7 @@ public class FBConnection implements FirebirdConnection {
               rdb$set_context('USER_SESSION', ?, ?) session_context
             FROM rdb$database""";
 
-    private static final String PERMISSION_SET_NETWORK_TIMEOUT = "setNetworkTimeout";
+    private static final SQLPermission PERMISSION_SET_NETWORK_TIMEOUT = new SQLPermission("setNetworkTimeout");
 
     protected FBManagedConnection mc;
 
@@ -1220,11 +1220,7 @@ public class FBConnection implements FirebirdConnection {
 
     @Override
     public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
-        SecurityManager securityManager = System.getSecurityManager();
-        if (securityManager != null) {
-            SQLPermission sqlPermission = new SQLPermission(PERMISSION_SET_NETWORK_TIMEOUT);
-            securityManager.checkPermission(sqlPermission);
-        }
+        PERMISSION_SET_NETWORK_TIMEOUT.checkGuard(this);
         if (executor == null) {
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidExecutor).toSQLException();
         }
