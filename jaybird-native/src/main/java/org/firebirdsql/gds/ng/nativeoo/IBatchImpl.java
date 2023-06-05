@@ -86,7 +86,7 @@ public class IBatchImpl extends AbstractFbBatch {
      * If batch is created from a database,
      * it is necessary to initialize it to obtain metadata.
      *
-     * @throws SQLException
+     * @throws SQLException For errors when initializing batch
      */
     private void init() throws SQLException {
         try (LockCloseable ignored = withLock()) {
@@ -117,7 +117,7 @@ public class IBatchImpl extends AbstractFbBatch {
     /**
      * Build batch message from field values.
      *
-     * @throws SQLException
+     * @throws SQLException For errors when adding field values to batch
      */
     @Override
     public void addBatch() throws SQLException {
@@ -143,7 +143,7 @@ public class IBatchImpl extends AbstractFbBatch {
     /**
      * Build batch message from field values.
      *
-     * @throws SQLException
+     * @throws SQLException For errors when adding fields values to batch
      */
     @Override
     public void addBatch(RowValue fieldValues) throws SQLException {

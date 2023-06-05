@@ -28,10 +28,6 @@ import java.util.List;
  */
 public abstract class AbstractFbBatch implements FbBatch {
 
-    public static final String METHOD_NOT_SUPPORTED =
-            "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
-    private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported.";
-
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final BatchParameterBuffer batchParameterBuffer;
     protected FbTransaction transaction;
@@ -85,7 +81,8 @@ public abstract class AbstractFbBatch implements FbBatch {
     /**
      * Creating a string descriptor from metadata.
      *
-     * @throws SQLException
+     * @throws SQLException For errors when preparing batch
+     *
      */
     protected void prepareBatch() throws SQLException {
 
@@ -257,21 +254,6 @@ public abstract class AbstractFbBatch implements FbBatch {
      */
     public final void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
         setBinaryStream(parameterIndex, x);
-    }
-
-    /**
-     * Method is no longer supported since Jaybird 3.0.
-     * <p>
-     * For old behavior use {@link #setBinaryStream(int, InputStream, int)}. For JDBC suggested behavior,
-     * use {@link #setCharacterStream(int, Reader, int)}.
-     * </p>
-     *
-     * @throws SQLFeatureNotSupportedException Always
-     * @deprecated
-     */
-    @Deprecated
-    public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
-        throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
 
     /**
