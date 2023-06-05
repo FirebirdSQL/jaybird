@@ -225,7 +225,8 @@ public abstract class AbstractFbBatch implements FbBatch {
      */
     protected FBField getField(int columnIndex) throws SQLException {
         if (columnIndex > fields.length) {
-            throw new SQLException("Invalid column index: " + columnIndex, SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+            throw new SQLException("Invalid column index: " + columnIndex,
+                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
         }
 
         return fields[columnIndex - 1];
