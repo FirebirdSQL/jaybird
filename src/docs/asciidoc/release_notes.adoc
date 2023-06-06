@@ -810,6 +810,12 @@ there is no replacement
 use `FBSQLException(String)` or `FBSQLException(String, String)` followed by `setNextException(SQLException)`
 ** `getInternalException()`;
 use `getCause()`
+** `executeServicesOperation(ServiceRequestBuffer)`;
+use `executeServicesOperation(FbService, ServiceRequestBuffer)`
+* `FirebirdDriver` (and `FBDriver`)
+** `newConnectionProperties()` -- was not previously deprecated, see next method
+** `connect(FirebirdConnectionProperties)`;
+use `FBSimpleDataSource` for programmatic access to connection properties and connection creation
 
 [#removal-of-deprecated-classes]
 ==== Removal of deprecated classes
@@ -841,6 +847,7 @@ The replacement for most constants can be found in `org.firebirdsql.jaybird.prop
 The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement.
 * `GDSHelper.DEFAULT_BLOB_BUFFER_SIZE`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE`, is considered internal API.
 * All constants in `IConnectionProperties`, use the equivalent constant from `org.firebirdsql.jaybird.props.PropertyConstants`, though this class is considered internal API.
+* All constants in `IServiceProperties`, use the equivalent constant from `org.firebirdsql.jaybird.props.PropertyConstants`, though this class is considered internal API.
 * `PropertyNames.timestampUsesLocalTimezone`;
 there is no replacement
 
@@ -895,6 +902,9 @@ use `encodeInt(int)`
 ** `getSpecificData()` -> `specificData()`
 * `EncryptionPlugin` and `EncryptionPluginSpi`, the JavaBeans-style accessor has been replaced with a record-style accessor:
 ** `getEncryptionIdentifier()` -> `encryptionIdentifier()`
+* `StringArgument`
+** constructor `StringArgument(int, ArgumentType, String)`;
+use `StringArgument(int, ArgumentType, String, Encoding)`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

@@ -132,24 +132,6 @@ public class FBDriver implements FirebirdDriver {
     }
 
     @Override
-    public FirebirdConnection connect(FirebirdConnectionProperties properties) throws SQLException {
-        GDSType type = GDSType.getType(properties.getType());
-        if (type == null) {
-            type = GDSFactory.getDefaultGDSType();
-        }
-
-        FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type, (FBConnectionProperties) properties)
-                .canonicalize();
-        FBDataSource dataSource = createDataSource(mcf);
-        return (FirebirdConnection) dataSource.getConnection(mcf.getUser(), mcf.getPassword());
-    }
-
-    @Override
-    public FirebirdConnectionProperties newConnectionProperties() {
-        return new FBConnectionProperties();
-    }
-
-    @Override
     public boolean acceptsURL(String url) throws SQLException {
         if (url == null) {
             throw new SQLException("url is null");

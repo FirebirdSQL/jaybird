@@ -24,7 +24,6 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
 
 /**
@@ -34,9 +33,6 @@ import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
  * @since 3.0
  */
 public interface IServiceProperties extends IAttachProperties<IServiceProperties>, ServiceConnectionProperties {
-
-    @Deprecated
-    String DEFAULT_SERVICE_NAME = PropertyConstants.DEFAULT_SERVICE_NAME;
 
     /**
      * @return An immutable version of this instance as an implementation of {@link IServiceProperties}

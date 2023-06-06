@@ -399,27 +399,16 @@ public class FBServiceManager implements ServiceManager {
     }
 
     /**
-     * Execute a Services API operation in the database. All output from the
-     * operation is sent to this <code>ServiceManager</code>'s logger.
+     * Execute a Services API operation in the database. All output from the operation is sent to
+     * this {@code ServiceManager}'s logger.
      *
+     * @param service
+     *         service instance to execute on
      * @param srb
      *         The buffer containing the task request
      * @throws SQLException
-     *         if a database access error occurs or
-     *         incorrect parameters are supplied
-     * @deprecated Use {@link #executeServicesOperation(FbService, ServiceRequestBuffer)}.
+     *         if a database access error occurs or incorrect parameters are supplied
      */
-    @SuppressWarnings("unused")
-    @Deprecated
-    protected void executeServicesOperation(ServiceRequestBuffer srb) throws SQLException {
-        try (FbService service = attachServiceManager()) {
-            service.startServiceAction(srb);
-            queueService(service);
-        } catch (IOException ioe) {
-            throw new SQLException(ioe);
-        }
-    }
-
     protected final void executeServicesOperation(FbService service, ServiceRequestBuffer srb) throws SQLException {
         try {
             service.startServiceAction(srb);

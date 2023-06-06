@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.impl.argument;
 
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ParameterBuffer;
 
 import java.io.IOException;
@@ -40,11 +39,6 @@ public final class StringArgument extends TypedArgument {
     private final String value;
     private final byte[] asBytes;
     private final Encoding encoding;
-
-    @Deprecated
-    public StringArgument(int type, ArgumentType argumentType, String value) {
-        this(type, argumentType, value, EncodingFactory.getPlatformEncoding());
-    }
 
     public StringArgument(int type, ArgumentType argumentType, String value, Encoding encoding) {
         super(type, argumentType);
