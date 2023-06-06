@@ -467,7 +467,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     /**
      * @return {@code true} if the Jaybird 1.0 handling of the calendar in corresponding setters. This is also
      * compatible with MySQL calendar treatment.
-     * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)
+     * @deprecated This property has unclear semantics and will be removed in Jaybird 6
      */
     @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated
@@ -482,7 +482,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @param timestampUsesLocalTimezone
      *         {@code true} if the Jaybird 1.0 handling of the calendar in corresponding setters. This is also
      *         compatible with MySQL calendar treatment.
-     * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)
+     * @deprecated This property has unclear semantics and will be removed in Jaybird 6
      */
     @Deprecated
     default void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {

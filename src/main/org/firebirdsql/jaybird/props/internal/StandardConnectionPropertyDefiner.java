@@ -108,7 +108,7 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder(scrollableCursor).choices(SCROLLABLE_CURSOR_EMULATED, SCROLLABLE_CURSOR_SERVER),
                 builder(useServerBatch).type(BOOLEAN),
                 builder(serverBatchBufferSize).type(INT),
-                // TODO Property should be considered deprecated, remove in Jaybird 6 or later
+                // TODO Property should be considered deprecated, remove in Jaybird 6
                 builder("timestampUsesLocalTimezone").type(BOOLEAN).aliases("timestamp_uses_local_timezone"),
 
                 // TODO Consider removing this property, otherwise formally add it to PropertyNames

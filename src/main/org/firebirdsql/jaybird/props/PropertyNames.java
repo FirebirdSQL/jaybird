@@ -85,7 +85,7 @@ public final class PropertyNames {
     public static final String expectedDb = "expectedDb";
 
     /**
-     * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)
+     * @deprecated This property has unclear semantics and will be removed in Jaybird 6
      */
     @Deprecated
     public static final String timestampUsesLocalTimezone = "timestampUsesLocalTimezone";
