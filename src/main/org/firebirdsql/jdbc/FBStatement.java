@@ -787,10 +787,9 @@ public class FBStatement implements FirebirdStatement {
 
     private void executeSingleForBatch(List<Long> responses, String sql) throws SQLException {
         if (internalExecute(sql)) {
-            // TODO SQL state?
             throw createBatchUpdateException(
                     "Statements executed as batch should not produce a result set",
-                    SQLStateConstants.SQL_STATE_GENERAL_ERROR, 0, Primitives.toLongArray(responses), null);
+                    SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE, 0, Primitives.toLongArray(responses), null);
         } else {
             responses.add(getLargeUpdateCountMinZero());
         }
