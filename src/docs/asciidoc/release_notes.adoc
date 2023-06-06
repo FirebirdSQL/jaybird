@@ -805,6 +805,11 @@ use `FBBlob(GDSHelper, long, FBObjectListener.BlobListener, Config)`
 * `DatabaseConnectionProperties`
 ** `isTimestampUsesLocalTimezone`/`setTimestampUsesLocalTimezone(boolean)`;
 there is no replacement
+* `FBSQLException`
+** constructor `FBSQLException(String, SQLException)`;
+use `FBSQLException(String)` or `FBSQLException(String, String)` followed by `setNextException(SQLException)`
+** `getInternalException()`;
+use `getCause()`
 
 [#removal-of-deprecated-classes]
 ==== Removal of deprecated classes
