@@ -779,6 +779,11 @@ Changes to the `FirebirdConnectionProperties` interface affect the data source i
 there is no replacement
 * `FirebirdConnection.getIscEncoding`;
 there is no replacement
+* `FBBlob`
+** constructors `FBBlob(GDSHelper)` and `FBBlob(GDSHelper, FBObjectListener.BlobListener)`;
+use `FBBlob(GDSHelper, FBObjectListener.BlobListener, Config)`
+** constructors `FBBlob(GDSHelper c, long blobId)` and `FBBlob(GDSHelper c, long blobId, FBObjectListener.BlobListener blobListener)`;
+use `FBBlob(GDSHelper, long, FBObjectListener.BlobListener, Config)`
 
 [#removal-of-deprecated-classes]
 ==== Removal of deprecated classes
