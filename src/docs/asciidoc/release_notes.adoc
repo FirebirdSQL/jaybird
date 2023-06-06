@@ -672,6 +672,15 @@ The OOREMOTE protocol (JDBC URL prefix `++jdbc:firebird[sql]:oo:++`) has been re
 
 The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
 
+[#removed-prop-timestampuseslocaltmezone]
+=== Removed connection property timestampUsesLocalTimezone
+
+The connection property `timestampUsesLocalTimezone` has been removed.
+The exact semantics and usage of this property were unclear.
+It was previously deprecated in Jaybird 5 for removal in Jaybird 6 or later.
+
+Other code associated with this property was also removed.
+
 // TODO Document compatibility issues
 
 [#removal-of-classes-packages-and-methods-without-deprecation]
@@ -699,6 +708,15 @@ there is no replacement
 there is no replacement
 ** `getLoggerImplementation()`;
 there is no replacement
+* `DatatypeCoder`
+** `encodeTimestamp(Timestamp, Calendar, boolean)`;
+use `encodeTimestamp(Timestamp, Calendar)`
+** `decodeTimestamp(Timestamp, Calendar, boolean)`
+use `decodeTimestamp(Timestamp, Calendar)`
+** `encodeTime(Time, Calendar, boolean)`;
+use `encodeTime(Time, Calendar)`
+** `decodeTime(Time, Calendar, boolean)`;
+use `decodeTime(Time, Calendar)`
 
 [#removal-of-classes-without-deprecation]
 ==== Removal of classes without deprecation
@@ -784,6 +802,9 @@ there is no replacement
 use `FBBlob(GDSHelper, FBObjectListener.BlobListener, Config)`
 ** constructors `FBBlob(GDSHelper c, long blobId)` and `FBBlob(GDSHelper c, long blobId, FBObjectListener.BlobListener blobListener)`;
 use `FBBlob(GDSHelper, long, FBObjectListener.BlobListener, Config)`
+* `DatabaseConnectionProperties`
+** `isTimestampUsesLocalTimezone`/`setTimestampUsesLocalTimezone(boolean)`;
+there is no replacement
 
 [#removal-of-deprecated-classes]
 ==== Removal of deprecated classes
@@ -815,6 +836,8 @@ The replacement for most constants can be found in `org.firebirdsql.jaybird.prop
 The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement.
 * `GDSHelper.DEFAULT_BLOB_BUFFER_SIZE`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE`, is considered internal API.
 * All constants in `IConnectionProperties`, use the equivalent constant from `org.firebirdsql.jaybird.props.PropertyConstants`, though this class is considered internal API.
+* `PropertyNames.timestampUsesLocalTimezone`;
+there is no replacement
 
 [#breaking-changes-internal-api]
 === Breaking changes internal API

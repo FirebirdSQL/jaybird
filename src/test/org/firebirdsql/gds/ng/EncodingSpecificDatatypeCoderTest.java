@@ -249,19 +249,15 @@ class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    void encodeTimestamp_calendar_boolean() {
+    void encodeTimestamp_calendar() {
         final Calendar calendar = Calendar.getInstance();
         final Timestamp value = new Timestamp(System.currentTimeMillis());
-        final Timestamp response1 = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
-        final Timestamp response2 = new Timestamp(System.currentTimeMillis() + 60 * 60 * 1000);
-        when(parentCoder.encodeTimestamp(value, calendar, false)).thenReturn(response1);
-        when(parentCoder.encodeTimestamp(value, calendar, true)).thenReturn(response2);
+        final Timestamp response = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
+        when(parentCoder.encodeTimestamp(value, calendar)).thenReturn(response);
 
-        Timestamp result1 = coder.encodeTimestamp(value, calendar, false);
-        Timestamp result2 = coder.encodeTimestamp(value, calendar, true);
+        Timestamp result = coder.encodeTimestamp(value, calendar);
 
-        assertSame(response1, result1);
-        assertSame(response2, result2);
+        assertSame(response, result);
     }
 
     @Test
@@ -288,19 +284,15 @@ class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    void decodeTimestamp_calendar_boolean() {
+    void decodeTimestamp_calendar() {
         final Calendar calendar = Calendar.getInstance();
         final Timestamp value = new Timestamp(System.currentTimeMillis());
-        final Timestamp response1 = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
-        final Timestamp response2 = new Timestamp(System.currentTimeMillis() + 60 * 60 * 1000);
-        when(parentCoder.decodeTimestamp(value, calendar, false)).thenReturn(response1);
-        when(parentCoder.decodeTimestamp(value, calendar, true)).thenReturn(response2);
+        final Timestamp response = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
+        when(parentCoder.decodeTimestamp(value, calendar)).thenReturn(response);
 
-        Timestamp result1 = coder.decodeTimestamp(value, calendar, false);
-        Timestamp result2 = coder.decodeTimestamp(value, calendar, true);
+        Timestamp result = coder.decodeTimestamp(value, calendar);
 
-        assertSame(response1, result1);
-        assertSame(response2, result2);
+        assertSame(response, result);
     }
 
     @Test
@@ -327,19 +319,15 @@ class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    void encodeTime_calendar_boolean() {
+    void encodeTime_calendar() {
         final Calendar calendar = Calendar.getInstance();
         final Time value = new Time(System.currentTimeMillis());
-        final Time response1 = new Time(System.currentTimeMillis() - 60 * 60 * 1000);
-        final Time response2 = new Time(System.currentTimeMillis() + 60 * 60 * 1000);
-        when(parentCoder.encodeTime(value, calendar, false)).thenReturn(response1);
-        when(parentCoder.encodeTime(value, calendar, true)).thenReturn(response2);
+        final Time response = new Time(System.currentTimeMillis() - 60 * 60 * 1000);
+        when(parentCoder.encodeTime(value, calendar)).thenReturn(response);
 
-        Time result1 = coder.encodeTime(value, calendar, false);
-        Time result2 = coder.encodeTime(value, calendar, true);
+        Time result = coder.encodeTime(value, calendar);
 
-        assertSame(response1, result1);
-        assertSame(response2, result2);
+        assertSame(response, result);
     }
 
     @Test
@@ -366,19 +354,15 @@ class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    void decodeTime_calendar_boolean() {
+    void decodeTime_calendar() {
         final Calendar calendar = Calendar.getInstance();
         final Time value = new Time(System.currentTimeMillis());
-        final Time response1 = new Time(System.currentTimeMillis() - 60 * 60 * 1000);
-        final Time response2 = new Time(System.currentTimeMillis() + 60 * 60 * 1000);
-        when(parentCoder.decodeTime(value, calendar, false)).thenReturn(response1);
-        when(parentCoder.decodeTime(value, calendar, true)).thenReturn(response2);
+        final Time response = new Time(System.currentTimeMillis() - 60 * 60 * 1000);
+        when(parentCoder.decodeTime(value, calendar)).thenReturn(response);
 
-        Time result1 = coder.decodeTime(value, calendar, false);
-        Time result2 = coder.decodeTime(value, calendar, true);
+        Time result = coder.decodeTime(value, calendar);
 
-        assertSame(response1, result1);
-        assertSame(response2, result2);
+        assertSame(response, result);
     }
 
     @Test

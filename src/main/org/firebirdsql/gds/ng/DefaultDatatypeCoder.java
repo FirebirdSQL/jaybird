@@ -229,19 +229,15 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     // times,dates...
 
     @Override
-    public Timestamp encodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone) {
+    public Timestamp encodeTimestamp(Timestamp val, Calendar c) {
         if (c == null) {
             return val;
-        } else {
-            long time = val.getTime() + calculateOffset(c, invertTimeZone);
-
-            return new Timestamp(time);
         }
+        return new Timestamp(val.getTime() + calculateOffset(c));
     }
 
-    private int calculateOffset(Calendar cal, boolean invertTimeZone) {
-        return (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() -
-                                            Calendar.getInstance().getTimeZone().getRawOffset());
+    private int calculateOffset(Calendar cal) {
+        return cal.getTimeZone().getRawOffset() - Calendar.getInstance().getTimeZone().getRawOffset();
     }
 
     @Override
@@ -263,14 +259,11 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Timestamp decodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone) {
+    public Timestamp decodeTimestamp(Timestamp val, Calendar c) {
         if (c == null) {
             return val;
-        } else {
-            long time = val.getTime() - calculateOffset(c, invertTimeZone);
-
-            return new Timestamp(time);
         }
+        return new Timestamp(val.getTime() - calculateOffset(c));
     }
 
     @Override
@@ -286,14 +279,11 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Time encodeTime(Time val, Calendar c, boolean invertTimeZone) {
+    public Time encodeTime(Time val, Calendar c) {
         if (c == null) {
             return val;
-        } else {
-            long time = val.getTime() + calculateOffset(c, invertTimeZone);
-
-            return new Time(time);
         }
+        return new Time(val.getTime() + calculateOffset(c));
     }
 
     @Override
@@ -307,14 +297,11 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Time decodeTime(Time val, Calendar c, boolean invertTimeZone) {
+    public Time decodeTime(Time val, Calendar c) {
         if (c == null) {
             return val;
-        } else {
-            long time = val.getTime() - calculateOffset(c, invertTimeZone);
-
-            return new Time(time);
         }
+        return new Time(val.getTime() - calculateOffset(c));
     }
 
     @Override

@@ -252,7 +252,7 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public Time getTime(Calendar cal) throws SQLException {
         if (isNull()) return null;
-        return getDatatypeCoder().decodeTime(getTime(), cal, isInvertTimeZone());
+        return getDatatypeCoder().decodeTime(getTime(), cal);
     }
 
     @Override
@@ -268,7 +268,7 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (isNull()) return null;
-        return getDatatypeCoder().decodeTimestamp(getTimestamp(), cal, isInvertTimeZone());
+        return getDatatypeCoder().decodeTimestamp(getTimestamp(), cal);
     }
 
     @Override
@@ -462,7 +462,7 @@ class FBStringField extends FBField implements TrimmableField {
     public void setTime(Time value, Calendar cal) throws SQLException {
         if (setWhenNull(value)) return;
 
-        setTime(getDatatypeCoder().encodeTime(value, cal, isInvertTimeZone()));
+        setTime(getDatatypeCoder().encodeTime(value, cal));
     }
 
     @Override
@@ -479,7 +479,7 @@ class FBStringField extends FBField implements TrimmableField {
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
         if (setWhenNull(value)) return;
 
-        setTimestamp(getDatatypeCoder().encodeTimestamp(value, cal, isInvertTimeZone()));
+        setTimestamp(getDatatypeCoder().encodeTimestamp(value, cal));
     }
 
     @Override
