@@ -282,7 +282,7 @@ If you manage your dependencies manually, you need to do the following:
 ** `jaybird-full-4.0.x.<java>.jar` with `jaybird-{version_simple}.<java>{version_tag}.jar`, the `jaybird-full` library no longer exists
 . Replace the `jna-5.5.0.jar` library with `jna-5.12.1.jar`
 +
-Only needed if you actually use native or embedded connections, otherwise remove JNA (assuming your application itself or other dependencies don't use it).
+This library is only needed if you actually use native or embedded connections, otherwise remove JNA (assuming your application itself or other dependencies don't use it).
 . Remove the `connector-api-1.5.jar` library, it is no longer used by Jaybird
 . Remove the `antlr4-runtime-4.7.2.jar` library, it is no longer used by Jaybird
 
@@ -354,6 +354,7 @@ Support is only available on Java 11 and higher using a Jaybird built for Java 1
 The implementation relies on the `ChaCha20` cipher introduced by https://openjdk.java.net/jeps/329[JEP 329^].
 
 Jaybird does not support the `ChaCha64` wire protocol encryption.
+Support for `ChaCha64` will be introduced in Jaybird 6.
 
 [#properties-changed]
 === Changes to properties
@@ -503,7 +504,7 @@ The LOCAL protocol implementation (`LocalGDSFactoryPlugin`) has been removed.
 For backwards compatibility, the type-name `LOCAL` and the JDBC URL prefixes `jdbc:firebird:local:` and `jdbc:firebirdsql:local:` have been mapped to the NATIVE protocol implementation.
 This type name and these JDBC protocol prefixes should be considered deprecated and may be removed in a future Jaybird version.
 
-The LOCAL protocol implementation was never really a local protocol, but -- depending on `fbclient` version, its `firebird.conf` and platform -- could also establish a TCP/IP, WNET or embedded connection to the database.
+The LOCAL protocol implementation was never really a local protocol, but -- depending on `fbclient` version, its `firebird.conf` and platform -- could also establish a TCP/IP, XNET, WNET or embedded connection to the database.
 
 Establishing a local IPC connection to a database is only possible on Windows, using a Firebird 3.0 or higher `fbclient` with the `databaseName` `xnet://C:\path\to\db.fdb` or JDBC URL `jdbc:firebird:native:xnet://C:\path\to\db.fdb`.
 For earlier versions of `fbclient`, the recommended URL is `jdbc:firebird:native:C:\path\to\db.fdb`, but this will not necessarily use a local IPC connection.
@@ -762,7 +763,7 @@ Where possible, classes in this package have been declared final.
 Be aware that the API and implementation of the classes in this package can change in any point release.
 
 If there turns out to be actual demand for JCA support in Jaybird after all, we will consider creating new support for JCA in a way that does not require JCA when using Jaybird as a JDBC driver.
-Contact us on the firebird-java mailing list if you're interested in such a solution.
+Contact us on the https://groups.google.com/g/firebird-java[firebird-java list] if you're interested in such a solution.
 
 As a result of this change, `org.firebirdsql.jdbc.FBDataSource` is now considered internal API as well.
 For normal data sources, look at the classes in the package `org.firebirdsql.ds`.
@@ -1004,7 +1005,10 @@ As a result, the following methods, constants, properties and others are no long
 
 * Connection property `useStandarUdf`[sic] and its alias `use_standard_udf`
 * `isUseStandardUdf()` and `setUseStandardUdf(boolean useStandardUdf)` in `FirebirdConnectionProperties` and in implementations of `DataSource` and other classes
-* Constants `FBConnectionProperties.USE_STANDARD_UDF_PROPERTY`,  `DatabaseParameterBufferExtension.USE_STANDARD_UDF`, `ISCConstants.isc_dpb_use_standard_udf`
+* Constants
+** `FBConnectionProperties.USE_STANDARD_UDF_PROPERTY`
+** `DatabaseParameterBufferExtension.USE_STANDARD_UDF`
+** `ISCConstants.isc_dpb_use_standard_udf`
 * Enum `EscapeParserMode` and its usages in `FBEscapedCallParser` and `FBEscapedParser`
 * Public classes in package `org.firebirdsql.jdbc.escape` are now marked as internal API
 
@@ -1088,7 +1092,7 @@ This change can have two potentially breaking effects:
 +
 . Values from metadata queries can now have leading spaces, where previously those were removed
 . Some -- but not all -- metadata ``ResultSet``s would previously return the untrimmed value through `getObject(..)`, but now return the trimmed value.
-* `CallableStatement.getString` (in Jaybird 3, 4.0.0 - 4.0.8, and 5.0.0) and `CallableStatement.getObject` (in Jaybird 5.0.0) would incorrectly trim string values.
+* `CallableStatement.getString` -- in Jaybird 3, 4.0.0 - 4.0.8, and 5.0.0 -- and `CallableStatement.getObject` -- in Jaybird 5.0.0 -- would incorrectly trim string values.
 * Setting a string on a `PreparedStatement`, or updatable `ResultSet`, had a weird boundary check that tried to exploit a benign buffer overflow if the value started and/or ended with "```%```", and was one or two bytes too long.
 This odd boundary check has been removed, and will now throw a `DataTruncation` if the byte length is longer than the declared length (in bytes) of the field.
 Previously, in Jaybird 3.0 and 4.0, this had the following effects:
@@ -1106,8 +1110,8 @@ With Jaybird 6 the following breaking changes will be introduced.
 Jaybird 6 will drop support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support^]).
 In general, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
 
-Possibly, wire protocol versions for Firebird 2.5 and earlier will be disabled by default to disallow connection for the pure-java protocol.
-If that happens, an option will be provided to re-enable unsupported wire protocol versions.
+Wire protocol versions for Firebird 2.5 and earlier will be disabled by default to disallow connection for the pure-java protocol.
+An option is available to re-enable unsupported wire protocol versions.
 
 [#dropping-support-for-java-8-11]
 ==== Dropping support for Java 8 and 11
@@ -1220,4 +1224,5 @@ Be aware that this dependency does not support `embedded`.
 </dependency>
 ----
 
-In the future we will move the Type 2 support to a separate library and provide JNA-compatible jars that provide the embedded libraries of a specific Firebird version.
+In Jaybird 6 we will move the Type 2 support to a separate library.
+In the future we may provide JARs with the embedded libraries of a specific Firebird version.
