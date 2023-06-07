@@ -870,13 +870,16 @@ class IBatchImplTest extends AbstractBatchTest {
         GDSHelper h = new GDSHelper(db);
         h.setCurrentTransaction(batch.getTransaction());
 
-        FBBlob b1 = new FBBlob(h, 1);
-        FBBlob b2 = new FBBlob(h, 2);
-        FBBlob b3 = new FBBlob(h, 3);
+        FBBlob.Config config = FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY,
+                db.getConnectionProperties(), db.getDatatypeCoder());
 
-        batch.addBlob(1, b1.getBlobId());
-        batch.addBlob(2, b2.getBlobId());
-        batch.addBlob(3, b3.getBlobId());
+        FBBlob b1 = new FBBlob(h, 1, null, config);
+        FBBlob b2 = new FBBlob(h, 2, null, config);
+        FBBlob b3 = new FBBlob(h, 3, null, config);
+
+        batch.addBlob(1, b1);
+        batch.addBlob(2, b2);
+        batch.addBlob(3, b3);
 
         // blobs
         String d1 = "1111111111111111111";
@@ -932,9 +935,12 @@ class IBatchImplTest extends AbstractBatchTest {
         h.setCurrentTransaction(batch.getTransaction());
 
         // Create blobs
-        FBBlob b1 = new FBBlob(h, 4242);
-        FBBlob b2 = new FBBlob(h, 242);
-        FBBlob b3 = new FBBlob(h, 42);
+        FBBlob.Config config = FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY,
+                db.getConnectionProperties(), db.getDatatypeCoder());
+
+        FBBlob b1 = new FBBlob(h, 4242, null, config);
+        FBBlob b2 = new FBBlob(h, 242, null, config);
+        FBBlob b3 = new FBBlob(h, 42, null, config);
 
         // blobs
         String blobSegment1 = INSERT_QUERY_WITHOUT_BLOBS;
@@ -944,21 +950,21 @@ class IBatchImplTest extends AbstractBatchTest {
         BlobParameterBuffer bpb = new BlobParameterBufferImp();
         bpb.addArgument(BpbItems.isc_bpb_type, BpbItems.TypeValues.isc_bpb_type_segmented);
 
-        batch.addSegmentedBlob(1, b1.getBlobId(), bpb);
+        batch.addSegmentedBlob(1, bpb, b1);
         batch.addBlobSegment(blobSegment1.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment2.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addSegmentedBlob(2, b2.getBlobId(), bpb);
+        batch.addSegmentedBlob(2, bpb, b2);
         batch.addBlobSegment(blobSegment1.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment2.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addSegmentedBlob(3, b3.getBlobId(), bpb);
+        batch.addSegmentedBlob(3, bpb, b3);
         batch.addBlobSegment(blobSegment1.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment2.getBytes(), false);
@@ -1013,9 +1019,12 @@ class IBatchImplTest extends AbstractBatchTest {
         h.setCurrentTransaction(batch.getTransaction());
 
         // Create blobs
-        FBBlob b1 = new FBBlob(h, 4242);
-        FBBlob b2 = new FBBlob(h, 242);
-        FBBlob b3 = new FBBlob(h, 42);
+        FBBlob.Config config = FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY,
+                db.getConnectionProperties(), db.getDatatypeCoder());
+
+        FBBlob b1 = new FBBlob(h, 4242, null, config);
+        FBBlob b2 = new FBBlob(h, 242, null, config);
+        FBBlob b3 = new FBBlob(h, 42, null, config);
 
         // blobs
         String blobSegment1 = INSERT_QUERY_WITHOUT_BLOBS;
@@ -1025,49 +1034,21 @@ class IBatchImplTest extends AbstractBatchTest {
         BlobParameterBuffer bpb = new BlobParameterBufferImp();
         bpb.addArgument(BpbItems.isc_bpb_type, BpbItems.TypeValues.isc_bpb_type_segmented);
 
-        batch.addSegmentedBlob(1, b1.getBlobId(), bpb);
+        batch.addSegmentedBlob(1, bpb, b1);
         batch.addBlobSegment(blobSegment1.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment2.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addSegmentedBlob(2, b2.getBlobId(), bpb);
+        batch.addSegmentedBlob(2, bpb, b2);
         batch.addBlobSegment(blobSegment1.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment2.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addSegmentedBlob(3, b3.getBlobId(), bpb);
-        batch.addBlobSegment(blobSegment1.getBytes(), false);
-        batch.addBlobSegment("\n".getBytes(), false);
-        batch.addBlobSegment(blobSegment2.getBytes(), false);
-        batch.addBlobSegment("\n".getBytes(), false);
-        batch.addBlobSegment(blobSegment3.getBytes(), true);
-
-        batch.addBatch();
-
-        // Create blobs
-        FBBlob b4 = new FBBlob(h, 34242);
-        FBBlob b5 = new FBBlob(h, 3242);
-        FBBlob b6 = new FBBlob(h, 342);
-
-        batch.addSegmentedBlob(1, b4.getBlobId(), bpb);
-        batch.addBlobSegment(blobSegment1.getBytes(), false);
-        batch.addBlobSegment("\n".getBytes(), false);
-        batch.addBlobSegment(blobSegment2.getBytes(), false);
-        batch.addBlobSegment("\n".getBytes(), false);
-        batch.addBlobSegment(blobSegment3.getBytes(), true);
-
-        batch.addSegmentedBlob(2, b5.getBlobId(), bpb);
-        batch.addBlobSegment(blobSegment1.getBytes(), false);
-        batch.addBlobSegment("\n".getBytes(), false);
-        batch.addBlobSegment(blobSegment2.getBytes(), false);
-        batch.addBlobSegment("\n".getBytes(), false);
-        batch.addBlobSegment(blobSegment3.getBytes(), true);
-
-        batch.addSegmentedBlob(3, b6.getBlobId(), bpb);
+        batch.addSegmentedBlob(3, bpb, b3);
         batch.addBlobSegment(blobSegment1.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment2.getBytes(), false);
@@ -1077,25 +1058,53 @@ class IBatchImplTest extends AbstractBatchTest {
         batch.addBatch();
 
         // Create blobs
-        FBBlob b7 = new FBBlob(h, 14242);
-        FBBlob b8 = new FBBlob(h, 1242);
-        FBBlob b9 = new FBBlob(h, 142);
+        FBBlob b4 = new FBBlob(h, 34242, null, config);
+        FBBlob b5 = new FBBlob(h, 3242, null, config);
+        FBBlob b6 = new FBBlob(h, 342, null, config);
 
-        batch.addSegmentedBlob(1, b7.getBlobId(), bpb);
+        batch.addSegmentedBlob(1, bpb, b4);
         batch.addBlobSegment(blobSegment1.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment2.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addSegmentedBlob(2, b8.getBlobId(), bpb);
+        batch.addSegmentedBlob(2, bpb, b5);
         batch.addBlobSegment(blobSegment1.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment2.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addSegmentedBlob(3, b9.getBlobId(), bpb);
+        batch.addSegmentedBlob(3, bpb, b6);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
+
+        batch.addBatch();
+
+        // Create blobs
+        FBBlob b7 = new FBBlob(h, 14242, null, config);
+        FBBlob b8 = new FBBlob(h, 1242, null, config);
+        FBBlob b9 = new FBBlob(h, 142, null, config);
+
+        batch.addSegmentedBlob(1, bpb, b7);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
+
+        batch.addSegmentedBlob(2, bpb, b8);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
+
+        batch.addSegmentedBlob(3, bpb, b9);
         batch.addBlobSegment(blobSegment1.getBytes(), false);
         batch.addBlobSegment("\n".getBytes(), false);
         batch.addBlobSegment(blobSegment2.getBytes(), false);
@@ -1151,19 +1160,17 @@ class IBatchImplTest extends AbstractBatchTest {
         h.setCurrentTransaction(batch.getTransaction());
 
         // Create blobs
-        FBBlob b1 = new FBBlob(h, 4242, null, null);
-        FBBlob b2 = new FBBlob(h, 242, null, null);
-        FBBlob b3 = new FBBlob(h, 42,null, null);
+        final FBBlob.Config config = FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY,
+                db.getConnectionProperties(),
+                db.getDatatypeCoder());
 
-        FbBlob regBlob1 = h.createBlob(FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY,
-                db.getConnectionProperties(),
-                db.getDatatypeCoder()));
-        FbBlob regBlob2 = h.createBlob(FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY,
-                db.getConnectionProperties(),
-                db.getDatatypeCoder()));
-        FbBlob regBlob3 = h.createBlob(FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY,
-                db.getConnectionProperties(),
-                db.getDatatypeCoder()));
+        FBBlob b1 = new FBBlob(h, 4242, null, config);
+        FBBlob b2 = new FBBlob(h, 242, null, config);
+        FBBlob b3 = new FBBlob(h, 42,null, config);
+
+        FbBlob regBlob1 = h.createBlob(config);
+        FbBlob regBlob2 = h.createBlob(config);
+        FbBlob regBlob3 = h.createBlob(config);
 
         regBlob1.putSegment(INSERT_QUERY_WITH_BLOBS.getBytes());
         regBlob1.close();
@@ -1173,9 +1180,9 @@ class IBatchImplTest extends AbstractBatchTest {
         regBlob3.close();
 
         // Register blobs
-        batch.registerBlob(1, regBlob1.getBlobId(), b1.getBlobId());
-        batch.registerBlob(2, regBlob2.getBlobId(), b2.getBlobId());
-        batch.registerBlob(3, regBlob3.getBlobId(), b3.getBlobId());
+        batch.registerBlob(1, regBlob1.getBlobId(), b1);
+        batch.registerBlob(2, regBlob2.getBlobId(), b2);
+        batch.registerBlob(3, regBlob3.getBlobId(), b3);
 
         batch.addBatch();
 

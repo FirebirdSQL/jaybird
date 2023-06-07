@@ -24,7 +24,7 @@ import java.util.List;
 /**
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 6.0
  */
 public abstract class AbstractFbBatch implements FbBatch {
 

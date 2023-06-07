@@ -3,6 +3,7 @@ package org.firebirdsql.gds.ng.nativeoo;
 import com.sun.jna.ptr.LongByReference;
 import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.AbstractFbBatch;
 import org.firebirdsql.gds.ng.FbBatchCompletionState;
@@ -14,6 +15,7 @@ import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.FBBlob;
+import org.firebirdsql.jdbc.FirebirdBlob;
 import org.firebirdsql.jna.fbclient.CloseableMemory;
 import org.firebirdsql.jna.fbclient.FbInterface.IAttachment;
 import org.firebirdsql.jna.fbclient.FbInterface.IBatch;
@@ -175,10 +177,9 @@ public class IBatchImpl extends AbstractFbBatch {
     }
 
     @Override
-    public void addBlob(int index, long blobId) throws SQLException {
-        FBBlob tmpBlob = new FBBlob(new GDSHelper(getDatabase()), blobId);
-        setBlob(index, tmpBlob);
-        tmpBlob.free();
+    public void addBlob(int index, FirebirdBlob blob)
+            throws SQLException {
+        setBlob(index, blob);
     }
 
     /*
@@ -203,20 +204,25 @@ public class IBatchImpl extends AbstractFbBatch {
                 if (buffer == null)
                     batch.addBlob(getStatus(), inBuffer.length, memory, longByReference, 0, null);
                 else
-                    batch.addBlob(getStatus(), inBuffer.length, memory, longByReference, buffer.toBytesWithType().length, buffer.toBytesWithType());
+                    batch.addBlob(getStatus(), inBuffer.length, memory, longByReference,
+                            buffer.toBytesWithType().length, buffer.toBytesWithType());
                 processStatus();
             }
-            IBlobImpl blob = new IBlobImpl(getDatabase(), (ITransactionImpl) transaction, buffer, longByReference.getValue());
-            FBBlob tmpBlob = new FBBlob(new GDSHelper(getDatabase()), blob.getBlobId());
+            IBlobImpl blob = new IBlobImpl(getDatabase(), (ITransactionImpl) transaction, buffer,
+                    longByReference.getValue());
+            FBBlob tmpBlob = new FBBlob(new GDSHelper(getDatabase()), blob.getBlobId(), null,
+                    FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY, getDatabase().getConnectionProperties(),
+                            getDatabase().getDatatypeCoder()));
             setBlob(index, tmpBlob);
             return blob;
         }
     }
 
     @Override
-    public void addSegmentedBlob(int index, long blobId, BlobParameterBuffer buffer) throws SQLException, IOException {
-        messageBuilder.addBlobHeader(blobId, buffer);
-        addBlob(index, blobId);
+    public void addSegmentedBlob(int index, BlobParameterBuffer buffer, FirebirdBlob blob)
+            throws SQLException, IOException {
+        messageBuilder.addBlobHeader(((FBBlob) blob).getBlobId(), buffer);
+        addBlob(index, blob);
     }
 
     @Override
@@ -256,9 +262,9 @@ public class IBatchImpl extends AbstractFbBatch {
     }
 
     @Override
-    public void registerBlob(int index, long existingBlob, long blobId) throws SQLException {
-        addBlob(index, blobId);
-        LongByReference longByReference = new LongByReference(blobId);
+    public void registerBlob(int index, long existingBlob, FirebirdBlob blob) throws SQLException {
+        addBlob(index, blob);
+        LongByReference longByReference = new LongByReference(((FBBlob) blob).getBlobId());
         LongByReference existLong = new LongByReference(existingBlob);
         try (LockCloseable ignored = withLock()) {
             batch.registerBlob(getStatus(), existLong, longByReference);
