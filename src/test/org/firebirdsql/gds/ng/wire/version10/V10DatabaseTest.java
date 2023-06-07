@@ -137,7 +137,6 @@ public class V10DatabaseTest {
                 assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
 
                 db.attach();
-                System.out.println(db.getHandle());
 
                 assertTrue(db.isAttached(), "Expected isAttached() to return true");
                 assertNotNull(db.getServerVersion(), "Expected version string to be not null");

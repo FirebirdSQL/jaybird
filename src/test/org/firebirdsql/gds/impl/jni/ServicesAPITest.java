@@ -18,17 +18,14 @@
  */
 package org.firebirdsql.gds.impl.jni;
 
-import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbService;
-import org.firebirdsql.gds.ng.FbServiceProperties;
-import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
-import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.management.FBManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,17 +36,20 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
+import static org.firebirdsql.common.FBTestProperties.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Initial tests for Services API.
- */
 class ServicesAPITest {
+
+    @RegisterExtension
+    static final RunEnvironmentExtension runEnvironment = RunEnvironmentExtension.builder()
+            .requiresDbOnLocalFileSystem()
+            .build();
 
     @TempDir
     private Path tempDir;
@@ -59,22 +59,16 @@ class ServicesAPITest {
     private String mAbsoluteDatabasePath;
     private String mAbsoluteBackupPath;
     private FBManager fbManager;
-    protected String protocol;
-    protected GDSType gdsType;
-    protected int port = 5066;
     private FbDatabaseFactory dbFactory;
     private Path logFolder;
 
     @BeforeEach
     void setUp() throws Exception {
-        Class.forName(FBDriver.class.getName());
+        GDSType gdsType = getGdsType();
         dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
 
         fbManager = new FBManager(gdsType);
-
-        fbManager.setServer("localhost");
-        fbManager.setPort(port);
-        fbManager.start();
+        configureFBManager(fbManager);
 
         Path dbFolder = tempDir.resolve("db");
         Files.createDirectories(dbFolder);
@@ -85,28 +79,37 @@ class ServicesAPITest {
 
         mAbsoluteDatabasePath = dbFolder.resolve("testES01344.fdb").toString();
 
-        fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
+        fbManager.createDatabase(mAbsoluteDatabasePath, DB_USER, DB_PASSWORD);
     }
 
     @AfterEach
     void tearDown() throws Exception {
-        fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-        fbManager.stop();
+        try {
+            fbManager.dropDatabase(mAbsoluteDatabasePath, DB_USER, DB_PASSWORD);
+        } finally {
+            fbManager.stop();
+        }
     }
 
     @Test
     void testServicesManagerAttachAndDetach() throws SQLException {
-        FbService service = dbFactory.serviceConnect(createServiceProperties());
+        FbService service = dbFactory.serviceConnect(getDefaultServiceProperties());
+        try {
+            assertFalse(service.isAttached(), "Handle should be unattached when created.");
 
-        assertFalse(service.isAttached(), "Handle should be unattached when created.");
+            service.attach();
 
-        service.attach();
+            assertTrue(service.isAttached(), "Handle should be attached when isc_service_attach returns normally.");
 
-        assertTrue(service.isAttached(), "Handle should be attached when isc_service_attach returns normally.");
+            service.close();
 
-        service.close();
-
-        assertFalse(service.isAttached(), "Handle should be detached when isc_service_detach returns normally.");
+            assertFalse(service.isAttached(), "Handle should be detached when isc_service_detach returns normally.");
+        } finally {
+            if (service.isAttached()) {
+                // cannot use try-with-resources: an already closed service object throws an exception (intentionally)
+                service.close();
+            }
+        }
     }
 
     @Test
@@ -124,9 +127,10 @@ class ServicesAPITest {
     }
 
     private void connectToDatabase() throws SQLException {
-        Connection connection = DriverManager.getConnection(
-                protocol + mAbsoluteDatabasePath + "?encoding=NONE", "SYSDBA", "masterkey");
-        connection.close();
+        Properties props = getDefaultPropertiesForConnection();
+        try (var connection = DriverManager.getConnection(getUrl(mAbsoluteDatabasePath), props)) {
+            assertTrue(connection.isValid(5));
+        }
     }
 
     private void restoreDatabase(FbService service) throws Exception {
@@ -153,10 +157,7 @@ class ServicesAPITest {
     }
 
     private void dropDatabase() throws Exception {
-        try (FBManager testFBManager = new FBManager(gdsType)) {
-            testFBManager.start();
-            testFBManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-        }
+        fbManager.dropDatabase(mAbsoluteDatabasePath, DB_USER, DB_PASSWORD);
     }
 
     private void backupDatabase(FbService service) throws Exception {
@@ -211,7 +212,7 @@ class ServicesAPITest {
     }
 
     private FbService attachToServiceManager() throws SQLException {
-        FbService service = dbFactory.serviceConnect(createServiceProperties());
+        FbService service = dbFactory.serviceConnect(getDefaultServiceProperties());
         service.attach();
 
         assertTrue(service.isAttached(), "Handle should be attached when isc_service_attach returns normally.");
@@ -219,11 +220,4 @@ class ServicesAPITest {
         return service;
     }
 
-    private IServiceProperties createServiceProperties() {
-        IServiceProperties serviceProperties = new FbServiceProperties();
-        serviceProperties.setUser("SYSDBA");
-        serviceProperties.setPassword("masterkey");
-
-        return serviceProperties;
-    }
 }

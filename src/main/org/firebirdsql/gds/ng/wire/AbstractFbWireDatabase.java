@@ -283,7 +283,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     public final byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
         try {
             checkAttached();
-            return getInfo(op_info_database, getHandle(), requestItems, maxBufferLength, null);
+            return getInfo(op_info_database, 0, requestItems, maxBufferLength, null);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;

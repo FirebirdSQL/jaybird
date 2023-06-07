@@ -33,7 +33,8 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class OperationMonitor {
 
-    private static final String PERMISSION_INIT_OPERATION_AWARE = "org.firebirdsql.jaybird.initOperationAware";
+    private static final SQLPermission PERMISSION_INIT_OPERATION_AWARE =
+            new SQLPermission("org.firebirdsql.jaybird.initOperationAware");
 
     private static final AtomicReference<OperationAware> instance = new AtomicReference<>(NoOpOperationAware.INSTANCE);
 
@@ -81,11 +82,7 @@ public final class OperationMonitor {
      *         "org.firebirdsql.jaybird.initOperationAware"}
      */
     public static void initOperationAware(OperationAware operationAware) {
-        SecurityManager securityManager = System.getSecurityManager();
-        if (securityManager != null) {
-            SQLPermission permission = new SQLPermission(PERMISSION_INIT_OPERATION_AWARE);
-            securityManager.checkPermission(permission);
-        }
+        PERMISSION_INIT_OPERATION_AWARE.checkGuard(OperationMonitor.class);
         instance.set(operationAware != null
                 ? operationAware
                 : NoOpOperationAware.INSTANCE);

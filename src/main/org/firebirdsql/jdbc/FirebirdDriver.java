@@ -1,6 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver, public Firebird-specific
- * JDBC extensions.
+ * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,34 +25,12 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.Driver;
-import java.sql.SQLException;
 
 /**
- * Extension of the {@link java.sql.Driver} providing methods to set the
- * connection properties programmatically.
+ * Extension of {@link java.sql.Driver} for Jaybird.
+ * <p>
+ * Currently empty, but retained in case we want to add extensions.
+ * </p>
  */
 public interface FirebirdDriver extends Driver {
-
-    /**
-     * Create new instance of {@link FirebirdConnectionProperties} that can
-     * later be used in {@link #connect(FirebirdConnectionProperties)} call.
-     *
-     * @return instance of {@link FirebirdConnectionProperties}.
-     */
-    FirebirdConnectionProperties newConnectionProperties();
-
-    /**
-     * Connect to the specified database using the specified connection
-     * properties.
-     *
-     * @param properties
-     *         instance of {@link FirebirdConnectionProperties} created in {@link #newConnectionProperties()} method.
-     * @return new connection to the Firebird database.
-     * @throws SQLException
-     *         if an error happened while connecting to the database.
-     * @deprecated
-     */
-    @Deprecated
-    FirebirdConnection connect(FirebirdConnectionProperties properties)
-            throws SQLException;
 }

@@ -76,36 +76,18 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
         gdsHelper = c;
         this.isNew = isNew;
         this.blobListener = blobListener != null ? blobListener : FBObjectListener.NoActionBlobListener.instance();
-        // TODO Replace with requireNonNull once deprecated constructors passing null are removed
-        IConnectionProperties connectionProperties = c.getConnectionProperties();
-        this.config = config != null ? config : createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY,
-                connectionProperties.isUseStreamBlobs(), connectionProperties.getBlobBufferSize(),
-                c.getCurrentDatabase().getDatatypeCoder());
+        this.config = requireNonNull(config, "config");
     }
 
     /**
-     * Create new Blob instance. This constructor creates new fresh Blob, only writing to the Blob is allowed.
-     *
-     * @param c
-     *         connection that will be used to write data to blob
-     * @param blobListener
-     *         Blob listener instance
-     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, FBObjectListener.BlobListener, Config)}
-     */
-    @Deprecated
-    public FBBlob(GDSHelper c, FBObjectListener.BlobListener blobListener) {
-        this(c, true, blobListener, null);
-    }
-
-    /**
-     * Create new Blob instance. This constructor creates new fresh Blob, only writing to the Blob is allowed.
+     * Create new Blob instance. This constructor creates a new fresh Blob, only writing to the Blob is allowed.
      *
      * @param c
      *         connection that will be used to write data to blob
      * @param blobListener
      *         Blob listener instance
      * @param config
-     *         blob configuration ({@code null} allowed in Jaybird 5, will be disallowed in Jaybird 6)
+     *         blob configuration (cannot be {@code null})
      * @since 5
      */
     public FBBlob(GDSHelper c, FBObjectListener.BlobListener blobListener, Config config) {
@@ -113,35 +95,6 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     }
 
     /**
-     * Create new Blob instance. This constructor creates new fresh Blob, only
-     * writing to the Blob is allowed.
-     *
-     * @param c
-     *         connection that will be used to write data to blob.
-     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, FBObjectListener.BlobListener, Config)}
-     */
-    @Deprecated
-    public FBBlob(GDSHelper c) {
-        this(c, null);
-    }
-
-    /**
-     * Create instance of this class to access existing Blob.
-     *
-     * @param c
-     *         connection that will be used to access Blob.
-     * @param blobId
-     *         ID of the Blob.
-     * @param blobListener
-     *         blob listener instance
-     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, long, FBObjectListener.BlobListener, Config)}
-     */
-    @Deprecated
-    public FBBlob(GDSHelper c, long blobId, FBObjectListener.BlobListener blobListener) {
-        this(c, blobId, blobListener, null);
-    }
-
-    /**
      * Create instance of this class to access existing Blob.
      *
      * @param c
@@ -151,26 +104,12 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      * @param blobListener
      *         blob listener instance
      * @param config
-     *         blob configuration ({@code null} allowed in Jaybird 5, will be disallowed in Jaybird 6)
+     *         blob configuration (cannot be {@code null})
      * @since 5
      */
     public FBBlob(GDSHelper c, long blobId, FBObjectListener.BlobListener blobListener, Config config) {
         this(c, false, blobListener, config);
         this.blobId = blobId;
-    }
-
-    /**
-     * Create instance of this class to access existing Blob.
-     *
-     * @param c
-     *         connection that will be used to access Blob.
-     * @param blobId
-     *         ID of the Blob.
-     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, long, FBObjectListener.BlobListener, Config)}
-     */
-    @Deprecated
-    public FBBlob(GDSHelper c, long blobId) {
-        this(c, blobId, null);
     }
 
     /**

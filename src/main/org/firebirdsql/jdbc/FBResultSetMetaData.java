@@ -31,8 +31,7 @@ import java.sql.Types;
 import java.util.*;
 
 /**
- * An object that can be used to get information about the types and properties of the columns in
- * a <code>ResultSet</code> object.
+ * Information about the types and properties of the columns in a {@code ResultSet} object.
  *
  * @author David Jencks
  * @author Mark Rotteveel
@@ -43,18 +42,16 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     private final ColumnStrategy columnStrategy;
 
     /**
-     * Creates a new <code>FBResultSetMetaData</code> instance.
+     * Creates a new {@code FBResultSetMetaData} instance.
      *
      * @param rowDescriptor
      *         a row descriptor
      * @param connection
-     *         a <code>FBConnection</code> value
+     *         a {@code FBConnection} value
      * @throws SQLException
      *         if an error occurs
-     *         <p/>
-     *         TODO Need another constructor for metadata from constructed
-     *         result set, where we supply the ext field info.
      */
+    //TODO Need another constructor for metadata from constructed result set, where we supply the ext field info.
     protected FBResultSetMetaData(RowDescriptor rowDescriptor, FBConnection connection) throws SQLException {
         super(rowDescriptor, connection);
 
@@ -82,7 +79,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     /**
      * {@inheritDoc}
      * <p>
-     * The current implementation always returns <code>false</code>.
+     * The current implementation always returns {@code false}.
      * </p>
      */
     @Override
@@ -93,7 +90,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     /**
      * {@inheritDoc}
      * <p>
-     * The current implementation always returns <code>true</code>.
+     * The current implementation always returns {@code true}.
      * </p>
      */
     @Override
@@ -177,8 +174,8 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     /**
      * {@inheritDoc}
      * <p>
-     * <b>NOTE</b> For <code>NUMERIC</code> and <code>DECIMAL</code> we attempt to retrieve the exact precision from the
-     * metadata, if this is not possible (eg the column is dynamically defined in the query), the reported precision is
+     * <b>NOTE</b> For {@code NUMERIC} and {@code DECIMAL} we attempt to retrieve the exact precision from the metadata,
+     * if this is not possible (eg the column is dynamically defined in the query), the reported precision is
      * the maximum precision allowed by the underlying storage data type.
      * </p>
      */
@@ -229,7 +226,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     /**
      * {@inheritDoc}
      * <p>
-     * The current implementation always returns <code>false</code>, except for a DB_KEY column.
+     * The current implementation always returns {@code false}, except for a DB_KEY column.
      * </p>
      */
     @Override
@@ -241,7 +238,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     /**
      * {@inheritDoc}
      * <p>
-     * The current implementation always returns <code>true</code>, except for a DB_KEY column.
+     * The current implementation always returns {@code true}, except for a DB_KEY column.
      * </p>
      */
     @Override

@@ -38,7 +38,7 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @deprecated Use a normal SQLException or subclass, this class may be removed in Jaybird 7 or later
  */
-@Deprecated
+@Deprecated(since = "6", forRemoval = true)
 public class GDSException extends SQLException {
 
     @Serial

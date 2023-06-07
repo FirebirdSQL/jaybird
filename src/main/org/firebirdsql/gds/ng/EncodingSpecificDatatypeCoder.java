@@ -217,8 +217,8 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Timestamp encodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone) {
-        return parentCoder.encodeTimestamp(val, c, invertTimeZone);
+    public Timestamp encodeTimestamp(Timestamp val, Calendar c) {
+        return parentCoder.encodeTimestamp(val, c);
     }
 
     @Override
@@ -232,8 +232,8 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Timestamp decodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone) {
-        return parentCoder.decodeTimestamp(val, c, invertTimeZone);
+    public Timestamp decodeTimestamp(Timestamp val, Calendar c) {
+        return parentCoder.decodeTimestamp(val, c);
     }
 
     @Override
@@ -247,8 +247,8 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Time encodeTime(Time val, Calendar c, boolean invertTimeZone) {
-        return parentCoder.encodeTime(val, c, invertTimeZone);
+    public Time encodeTime(Time val, Calendar c) {
+        return parentCoder.encodeTime(val, c);
     }
 
     @Override
@@ -262,8 +262,8 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Time decodeTime(Time val, Calendar c, boolean invertTimeZone) {
-        return parentCoder.decodeTime(val, c, invertTimeZone);
+    public Time decodeTime(Time val, Calendar c) {
+        return parentCoder.decodeTime(val, c);
     }
 
     @Override

@@ -262,12 +262,9 @@ public interface DatatypeCoder {
      *         value to be encoded
      * @param c
      *         calendar to use for encoding, may be {@code null}
-     * @param invertTimeZone
-     *         if {@code true}, the timezone offset value will be subtracted from the encoded value, otherwise it will
-     *         be added
      * @return encoded {@code Timestamp}
      */
-    Timestamp encodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone);
+    Timestamp encodeTimestamp(Timestamp val, Calendar c);
 
     /**
      * Encode the date and time portions of a raw date time struct as a byte array of 8 bytes.
@@ -296,12 +293,9 @@ public interface DatatypeCoder {
      *         value to be decoded
      * @param c
      *         calendar to use in decoding, may be {@code null}
-     * @param invertTimeZone
-     *         if {@code true}, the timezone offset value will be subtracted from the decoded value, otherwise it will
-     *         be added
      * @return encoded {@code Timestamp}
      */
-    Timestamp decodeTimestamp(Timestamp val, Calendar c, boolean invertTimeZone);
+    Timestamp decodeTimestamp(Timestamp val, Calendar c);
 
     /**
      * Decode the date and time portions of a raw date time struct from {@code buf} from the first 8 bytes.
@@ -332,7 +326,7 @@ public interface DatatypeCoder {
      *         calendar to use in the encoding, may be {@code null}
      * @return encoded {@code Time}
      */
-    Time encodeTime(Time val, Calendar c, boolean invertTimeZone);
+    Time encodeTime(Time val, Calendar c);
 
     /**
      * Encode the time portion of a raw date time struct as a byte array of 4 bytes.
@@ -363,7 +357,7 @@ public interface DatatypeCoder {
      *         calendar to used in the decoding, may be {@code null}
      * @return decoded {@code Time}
      */
-    Time decodeTime(Time val, Calendar c, boolean invertTimeZone);
+    Time decodeTime(Time val, Calendar c);
 
     /**
      * Decode the time portion of a raw date time struct from {@code buf} from the first 4 bytes.

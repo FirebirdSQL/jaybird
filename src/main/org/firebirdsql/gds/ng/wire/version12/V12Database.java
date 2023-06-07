@@ -31,7 +31,6 @@ import org.firebirdsql.gds.ng.wire.version11.V11Database;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientConnectionException;
 
 /**
  * {@link org.firebirdsql.gds.ng.wire.FbWireDatabase} implementation for the version 12 wire protocol.
@@ -59,12 +58,8 @@ public class V12Database extends V11Database {
     public void cancelOperation(int kind) throws SQLException {
         try {
             if (kind == ISCConstants.fb_cancel_abort) {
-                try {
-                    // In case of abort we forcibly close the connection
-                    closeConnection();
-                } catch (IOException ioe) {
-                    throw new SQLNonTransientConnectionException("Connection abort failed", ioe);
-                }
+                // In case of abort we forcibly close the connection
+                forceClose();
             } else {
                 checkConnected();
                 try {

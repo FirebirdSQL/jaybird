@@ -1733,6 +1733,8 @@ public interface ISCConstants {
     int isc_bad_temp_blob_id = 335545284;
     int isc_ods_upgrade_err = 335545285;
     int isc_bad_par_workers = 335545286;
+    int isc_idx_expr_not_found = 335545287;
+    int isc_idx_cond_not_found = 335545288;
     int isc_gfix_db_name = 335740929;
     int isc_gfix_invalid_sw = 335740930;
     int isc_gfix_version = 335740931;

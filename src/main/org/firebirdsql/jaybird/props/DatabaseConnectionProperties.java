@@ -473,31 +473,6 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     }
 
     /**
-     * @return {@code true} if the Jaybird 1.0 handling of the calendar in corresponding setters. This is also
-     * compatible with MySQL calendar treatment.
-     * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)
-     */
-    @SuppressWarnings("DeprecatedIsStillUsed")
-    @Deprecated
-    default boolean isTimestampUsesLocalTimezone() {
-        return getBooleanProperty(
-                PropertyNames.timestampUsesLocalTimezone, PropertyConstants.DEFAULT_TIMESTAMP_USES_LOCAL);
-    }
-
-    /**
-     * Sets the value {@code timestampUsesLocalTimezone}.
-     *
-     * @param timestampUsesLocalTimezone
-     *         {@code true} if the Jaybird 1.0 handling of the calendar in corresponding setters. This is also
-     *         compatible with MySQL calendar treatment.
-     * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)
-     */
-    @Deprecated
-    default void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        setBooleanProperty(PropertyNames.processName, timestampUsesLocalTimezone);
-    }
-
-    /**
      * @return Configuration of scrollable cursors, either {@code EMULATED} (default) or {@code SERVER} (case-insensitive)
      * @see #setScrollableCursor(String)
      */

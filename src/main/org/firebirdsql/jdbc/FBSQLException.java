@@ -36,47 +36,19 @@ public class FBSQLException extends SQLException {
     }
 
     /**
-     *
      * @param message
-     *            Exception message
-     * @param ex
-     *            SQLException that should be set as the 'next exception'
-     * @deprecated In all most all cases use
-     *             {@link #FBSQLException(String, String)} in combination with
-     *             {@link #setNextException(SQLException)}.
-     */
-    @Deprecated
-    public FBSQLException(String message, SQLException ex) {
-        this(message);
-        setNextException(ex);
-    }
-
-    /**
-     *
-     * @param message
-     *            Exception message
+     *         Exception message
      * @param sqlState
-     *            SQL State for this exception. Replaced with
-     *            {@link SQLStateConstants#SQL_STATE_GENERAL_ERROR} if null
+     *         SQL State for this exception. Replaced with {@link SQLStateConstants#SQL_STATE_GENERAL_ERROR} if null
      */
     public FBSQLException(String message, String sqlState) {
         super(message, defaultSQLStateIfNull(sqlState));
     }
 
     /**
-     * @deprecated use {@link #getCause()} instead.
-     */
-    @Deprecated
-    public Exception getInternalException() {
-        return (Exception) getCause();
-    }
-
-    /**
      * @param sqlState
-     *            SQL State value (or null)
-     * @return The passed sqlState or
-     *         {@link SQLStateConstants#SQL_STATE_GENERAL_ERROR} if sqlState is
-     *         null.
+     *         SQL State value (or null)
+     * @return The passed sqlState or {@link SQLStateConstants#SQL_STATE_GENERAL_ERROR} if sqlState is null.
      */
     public static String defaultSQLStateIfNull(String sqlState) {
         return sqlState != null ? sqlState : SQLStateConstants.SQL_STATE_GENERAL_ERROR;

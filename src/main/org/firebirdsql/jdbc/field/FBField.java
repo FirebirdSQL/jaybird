@@ -22,7 +22,6 @@ import org.firebirdsql.extern.decimal.*;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.DatatypeCoder;
-import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.*;
 
@@ -848,14 +847,6 @@ public abstract class FBField {
             conversionException.initCause(e);
             throw conversionException;
         }
-    }
-
-    @SuppressWarnings("deprecation")
-    protected boolean isInvertTimeZone() {
-        if (gdsHelper == null) return false;
-
-        final IConnectionProperties props = gdsHelper.getConnectionProperties();
-        return props.isTimestampUsesLocalTimezone();
     }
 
     final SQLException invalidGetConversion(Class<?> requestedType) {

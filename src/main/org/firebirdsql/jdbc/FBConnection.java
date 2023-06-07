@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
+import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
 
 /**
  * The class {@code FBConnection} is a handle to a {@link FBManagedConnection} and implements {@link Connection}.
@@ -69,7 +70,8 @@ public class FBConnection implements FirebirdConnection {
               rdb$set_context('USER_SESSION', ?, ?) session_context
             FROM rdb$database""";
 
-    private static final String PERMISSION_SET_NETWORK_TIMEOUT = "setNetworkTimeout";
+    private static final SQLPermission PERMISSION_SET_NETWORK_TIMEOUT = new SQLPermission("setNetworkTimeout");
+    private static final SQLPermission PERMISSION_CALL_ABORT = new SQLPermission("callAbort");
 
     protected FBManagedConnection mc;
 
@@ -135,7 +137,7 @@ public class FBConnection implements FirebirdConnection {
      */
     protected void checkValidity() throws SQLException {
         if (isClosed()) {
-            throw new FBSQLException("This connection is closed and cannot be used now.",
+            throw new FBSQLException("This connection is closed and cannot be used now",
                     SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
         }
     }
@@ -1213,18 +1215,48 @@ public class FBConnection implements FirebirdConnection {
 
     @Override
     public void abort(Executor executor) throws SQLException {
-        // TODO Write implementation
-        checkValidity();
-        throw new FBDriverNotCapableException();
+        if (isClosed()) return;
+        PERMISSION_CALL_ABORT.checkGuard(this);
+        if (executor == null) {
+            throw new SQLNonTransientException("executor was null", SQLStateConstants.SQL_STATE_INVALID_USE_NULL);
+        }
+        final FbDatabase fbDatabase;
+        try {
+            fbDatabase = getFbDatabase();
+        } finally {
+            metaData = null;
+            // signals that this connection is closed if queried with isClosed()
+            mc = null;
+        }
+        executor.execute(() -> {
+            try {
+                try {
+                    // Try and close statements and result sets
+                    txCoordinator.handleConnectionAbort();
+                } finally {
+                    try {
+                        // should forcibly close connection
+                        fbDatabase.cancelOperation(fb_cancel_abort);
+                    } catch (SQLException e) {
+                        log.log(DEBUG, "Failed to raise abort on FbDatabase", e);
+                    }
+                }
+            } catch (SQLException e) {
+                log.log(DEBUG, "txCoordinator.handleConnectionAbort() caused an exception", e);
+            } finally {
+                try {
+                    // alternative attempt to forcibly close connection
+                    fbDatabase.forceClose();
+                } catch (SQLException e) {
+                    log.log(DEBUG, "Could not forceClose FbDatabase on abort", e);
+                }
+            }
+        });
     }
 
     @Override
     public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
-        SecurityManager securityManager = System.getSecurityManager();
-        if (securityManager != null) {
-            SQLPermission sqlPermission = new SQLPermission(PERMISSION_SET_NETWORK_TIMEOUT);
-            securityManager.checkPermission(sqlPermission);
-        }
+        PERMISSION_SET_NETWORK_TIMEOUT.checkGuard(this);
         if (executor == null) {
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidExecutor).toSQLException();
         }

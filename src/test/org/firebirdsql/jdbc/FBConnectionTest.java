@@ -978,4 +978,84 @@ class FBConnectionTest {
         }
     }
 
+    @Test
+    void abortClosesConnectionImmediately() throws Exception {
+        var executor = new DelayingExecutor();
+        try (var connection = getConnectionViaDriverManager()) {
+            assertFalse(connection.isClosed(), "Expected open connection");
+            connection.abort(executor);
+            assertTrue(connection.isClosed(), "Expected closed connection immediately after abort");
+            executor.proceedAndAwait();
+        }
+    }
+
+    @Test
+    void abortClosesStatementsAndResultSets() throws Exception {
+        var executor = new DelayingExecutor();
+        try (var connection = getConnectionViaDriverManager();
+             var stmt1 = connection.createStatement();
+             var stmt2 = connection.prepareStatement("select * from RDB$DATABASE")) {
+            connection.setAutoCommit(false);
+            try (var rs1 = stmt1.executeQuery("select * from RDB$DATABASE");
+                 var rs2 = stmt2.executeQuery()) {
+                assertFalse(connection.isClosed(), "Expected open connection");
+                assertFalse(stmt1.isClosed(), "Expected open stmt1");
+                assertFalse(rs1.isClosed(), "Expected open rs1");
+                assertFalse(stmt2.isClosed(), "Expected open stmt2");
+                assertFalse(rs2.isClosed(), "Expected open rs2");
+
+                connection.abort(executor);
+
+                assertTrue(connection.isClosed(), "Expected closed connection");
+                assertFalse(stmt1.isClosed(), "Expected open stmt1");
+                assertFalse(rs1.isClosed(), "Expected open rs1");
+                assertFalse(stmt2.isClosed(), "Expected open stmt2");
+                assertFalse(rs2.isClosed(), "Expected open rs2");
+
+                executor.proceedAndAwait();
+
+                assertTrue(connection.isClosed(), "Expected closed connection");
+                assertTrue(stmt1.isClosed(), "Expected closed stmt1");
+                assertTrue(rs1.isClosed(), "Expected closed rs1");
+                assertTrue(stmt2.isClosed(), "Expected closed stmt2");
+                assertTrue(rs2.isClosed(), "Expected closed rs2");
+            }
+        }
+    }
+
+    /**
+     * Single-use executor, delays the command to be executed until signalled.
+     */
+    private static final class DelayingExecutor implements Executor {
+
+        private final CountDownLatch countDownLatch = new CountDownLatch(1);
+        private volatile Thread thread;
+
+        @Override
+        public void execute(Runnable command) {
+            if (thread != null) throw new IllegalStateException("Can only be used once");
+            thread = new Thread(() -> {
+                try {
+                    countDownLatch.await();
+                    command.run();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            });
+            thread.start();
+        }
+
+        void proceed() {
+            countDownLatch.countDown();
+        }
+
+        /**
+         * Signal the executor to complete the action, and then await completion.
+         */
+        void proceedAndAwait() throws InterruptedException {
+            proceed();
+            thread.join();
+        }
+    }
+
 }

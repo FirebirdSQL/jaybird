@@ -110,8 +110,6 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder(useServerBatch).type(BOOLEAN),
                 builder(serverBatchBufferSize).type(INT),
                 builder(useCatalogAsPackage).type(BOOLEAN),
-                // TODO Property should be considered deprecated, remove in Jaybird 6 or later
-                builder("timestampUsesLocalTimezone").type(BOOLEAN).aliases("timestamp_uses_local_timezone"),
 
                 // TODO Consider removing this property, otherwise formally add it to PropertyNames
                 builder("filename_charset"),

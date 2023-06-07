@@ -459,20 +459,6 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     @SuppressWarnings("deprecation")
     @Deprecated
     @Override
-    public boolean isTimestampUsesLocalTimezone() {
-        return FirebirdConnectionProperties.super.isTimestampUsesLocalTimezone();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Deprecated
-    @Override
-    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        FirebirdConnectionProperties.super.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Deprecated
-    @Override
     public String getUserName() {
         return FirebirdConnectionProperties.super.getUserName();
     }

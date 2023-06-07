@@ -86,12 +86,6 @@ public final class PropertyNames {
     // service connection
     public static final String expectedDb = "expectedDb";
 
-    /**
-     * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)
-     */
-    @Deprecated(since = "5", forRemoval = true)
-    public static final String timestampUsesLocalTimezone = "timestampUsesLocalTimezone";
-
     private PropertyNames() {
         // no instances
     }
