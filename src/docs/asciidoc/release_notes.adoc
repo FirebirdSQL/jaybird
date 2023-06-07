@@ -26,6 +26,11 @@ Changes per Jaybird 5 release.
 See also <<whats-new-in-jaybird-5>>.
 For known issues, consult <<known-issues>>.
 
+[#jaybird-5-0-3-changelog]
+=== Jaybird 5.0.3
+
+The following has been changed or fixed since Jaybird 5.0.2:
+
 [#jaybird-5-0-2-changelog]
 === Jaybird 5.0.2
 
