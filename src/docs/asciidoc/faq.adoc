@@ -7,7 +7,7 @@
 :source-highlighter: prettify
 :toc: left
 :icons: font
-:jaybird5-full-version: 5.0.1
+:jaybird5-full-version: 5.0.2
 :jaybird5-template-version: {jaybird5-full-version}.<java>
 :jaybird5-example-version: {jaybird5-full-version}.java11
 :jaybird4-full-version: 4.0.9
