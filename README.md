@@ -17,8 +17,8 @@ For bugs or improvement, go to our [Issue tracker](https://github.com/FirebirdSQ
 - [Jaybird JDBC Driver Java Programmer’s Manual](https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html)
 - [Issue tracker](https://github.com/FirebirdSQL/jaybird/issues/)
 - [Wiki](https://github.com/FirebirdSQL/jaybird/wiki)
-- [FAQ](src/docs/asciidoc/faq.adoc)
-- [Release notes](src/docs/asciidoc/release_notes.adoc)
+- [FAQ](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html)
+- [Release notes](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/5.0.x/release_notes.html)
 - [How to contribute](CONTRIBUTING.md)
 
 ## License
