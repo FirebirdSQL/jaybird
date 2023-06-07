@@ -135,7 +135,9 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     @Override
     public void cancelOperation(int kind) throws SQLException {
         try {
-            checkConnected();
+            if (kind != fb_cancel_abort) {
+                checkConnected();
+            }
             // No synchronization, otherwise cancel will never work
             try {
                 attachment.cancelOperation(getStatus(), kind);
