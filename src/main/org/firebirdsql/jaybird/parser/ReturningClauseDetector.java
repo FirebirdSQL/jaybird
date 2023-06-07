@@ -187,43 +187,59 @@ class ReturningClauseDetector extends AbstractTokenVisitor {
                 if (token instanceof GenericToken && token.equalsIgnoreCase("returning")
                         && detector.isReturningClausePossible()) {
                     return IN_RETURNING;
-                } else if (token instanceof ParenthesisOpen) {
-                    detector.pushParserState(this);
-                    return NESTED;
+                } else if (token instanceof OpenToken openToken) {
+                    return nextForOpenToken(openToken, detector);
                 }
-                // TODO Also handle {} (JDBC escapes) nesting?
                 // returning not yet found
-                return FIND_RETURNING;
+                return this;
             }
         },
         IN_RETURNING {
             @Override
             ParserState next0(Token token, ReturningClauseDetector detector) {
-                if (token instanceof ParenthesisOpen) {
-                    detector.pushParserState(this);
-                    return NESTED;
+                if (token instanceof OpenToken openToken) {
+                    return nextForOpenToken(openToken, detector);
                 } else if (detector.cannotOccurInReturning(token)) {
                     detector.resetReturningClauseTokens();
                     return FIND_RETURNING;
                 }
                 detector.incrementReturningClauseTokenCount();
-                return IN_RETURNING;
+                return this;
             }
         },
-        NESTED {
+        NESTED_PARENTHESIS {
             @Override
             ParserState next0(Token token, ReturningClauseDetector detector) {
-                if (token instanceof ParenthesisOpen) {
-                    detector.pushParserState(this);
-                    return NESTED;
+                if (token instanceof OpenToken openToken) {
+                    return nextForOpenToken(openToken, detector);
                 } else if (token instanceof ParenthesisClose) {
-                    ParserState restoredState = detector.popParserState();
-                    if (restoredState == IN_RETURNING) {
-                        detector.incrementReturningClauseTokenCount();
-                    }
-                    return restoredState;
+                    return nextForCloseToken(detector);
                 } else {
-                    return NESTED;
+                    return this;
+                }
+            }
+        },
+        NESTED_CURLY_BRACE {
+            @Override
+            ParserState next0(Token token, ReturningClauseDetector detector) {
+                if (token instanceof OpenToken openToken) {
+                    return nextForOpenToken(openToken, detector);
+                } else if (token instanceof CurlyBraceClose) {
+                    return nextForCloseToken(detector);
+                } else {
+                    return this;
+                }
+            }
+        },
+        NESTED_SQUARE_BRACKET {
+            @Override
+            ParserState next0(Token token, ReturningClauseDetector detector) {
+                if (token instanceof OpenToken openToken) {
+                    return nextForOpenToken(openToken, detector);
+                } else if (token instanceof SquareBracketClose) {
+                    return nextForCloseToken(detector);
+                } else {
+                    return this;
                 }
             }
         };
@@ -241,6 +257,33 @@ class ReturningClauseDetector extends AbstractTokenVisitor {
 
         abstract ParserState next0(Token token, ReturningClauseDetector detector);
 
+        final ParserState nextForOpenToken(OpenToken token, ReturningClauseDetector detector) {
+            // Assume we find a known open token and push the state
+            detector.pushParserState(this);
+            if (token instanceof ParenthesisOpen) {
+                return NESTED_PARENTHESIS;
+            } else if (token instanceof CurlyBraceOpen) {
+                return NESTED_CURLY_BRACE;
+            } else if (token instanceof SquareBracketOpen) {
+                return NESTED_SQUARE_BRACKET;
+            } else {
+                // Unrecognized open token, restore state and treat as "normal" token
+                if (detector.popParserState() == IN_RETURNING) {
+                    detector.incrementReturningClauseTokenCount();
+                }
+                return this;
+            }
+        }
+
+        // NOTE: Caller is responsible for checking if it is appropriate to close (i.e. is it balanced with
+        // a previous open of the same type)
+        final ParserState nextForCloseToken(ReturningClauseDetector detector) {
+            ParserState restoredState = detector.popParserState();
+            if (restoredState == IN_RETURNING) {
+                detector.incrementReturningClauseTokenCount();
+            }
+            return restoredState;
+        }
     }
 
 }
