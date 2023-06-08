@@ -48,7 +48,14 @@ public final class FbExceptionBuilder {
     private static final String SQLSTATE_CONNECTION_ERROR_PREFIX = "08";
 
     private final List<ExceptionInformation> exceptionInfo = new ArrayList<>();
-    private ExceptionInformation current = null;
+    private ExceptionInformation current;
+
+    public FbExceptionBuilder() {
+    }
+
+    private FbExceptionBuilder(Type type, int errorCode) {
+        setNextExceptionInformation(type, errorCode);
+    }
 
     /**
      * The (next) exception is an exception.
@@ -79,7 +86,7 @@ public final class FbExceptionBuilder {
      * @return FbExceptionBuilder initialized with the specified error code
      */
     public static FbExceptionBuilder forException(int errorCode) {
-        return new FbExceptionBuilder().exception(errorCode);
+        return new FbExceptionBuilder(Type.EXCEPTION, errorCode);
     }
 
     /**
@@ -94,7 +101,7 @@ public final class FbExceptionBuilder {
      * @since 6
      */
     public static FbExceptionBuilder forTimeoutException(int errorCode) {
-        return new FbExceptionBuilder().timeoutException(errorCode);
+        return new FbExceptionBuilder(Type.TIMEOUT, errorCode);
     }
 
     /**
@@ -109,7 +116,7 @@ public final class FbExceptionBuilder {
      * @since 6
      */
     public static FbExceptionBuilder forNonTransientException(int errorCode) {
-        return new FbExceptionBuilder().nonTransientException(errorCode);
+        return new FbExceptionBuilder(Type.NON_TRANSIENT, errorCode);
     }
 
     /**
@@ -124,7 +131,7 @@ public final class FbExceptionBuilder {
      * @since 6
      */
     public static FbExceptionBuilder forNonTransientConnectionException(int errorCode) {
-        return new FbExceptionBuilder().nonTransientConnectionException(errorCode);
+        return new FbExceptionBuilder(Type.NON_TRANSIENT_CONNECT, errorCode);
     }
 
     /**
@@ -139,7 +146,7 @@ public final class FbExceptionBuilder {
      * @since 6
      */
     public static FbExceptionBuilder forTransientException(int errorCode) {
-        return new FbExceptionBuilder().transientException(errorCode);
+        return new FbExceptionBuilder(Type.TRANSIENT, errorCode);
     }
 
     /**
@@ -153,7 +160,7 @@ public final class FbExceptionBuilder {
      * @return FbExceptionBuilder initialized with the specified error code
      */
     public static FbExceptionBuilder forWarning(int errorCode) {
-        return new FbExceptionBuilder().warning(errorCode);
+        return new FbExceptionBuilder(Type.WARNING, errorCode);
     }
 
     /**
@@ -167,7 +174,7 @@ public final class FbExceptionBuilder {
     public static SQLException ioWriteError(IOException e) {
         class Holder {
             // Cache message and SQLSTATE to avoid constructing through builder every time
-            static final CachedMessage IO_WRITE_ERROR = CachedMessage.of(isc_net_write_err);
+            private static final CachedMessage IO_WRITE_ERROR = CachedMessage.of(isc_net_write_err);
         }
         return new SQLNonTransientConnectionException(
                 Holder.IO_WRITE_ERROR.message, Holder.IO_WRITE_ERROR.sqlState, Holder.IO_WRITE_ERROR.errorCode, e);
@@ -184,7 +191,7 @@ public final class FbExceptionBuilder {
     public static SQLException ioReadError(IOException e) {
         class Holder {
             // Cache message and SQLSTATE to avoid constructing through builder every time
-            static final CachedMessage IO_READ_ERROR = CachedMessage.of(isc_net_read_err);
+            private static final CachedMessage IO_READ_ERROR = CachedMessage.of(isc_net_read_err);
         }
         return new SQLNonTransientConnectionException(
                 Holder.IO_READ_ERROR.message, Holder.IO_READ_ERROR.sqlState, Holder.IO_READ_ERROR.errorCode, e);
@@ -224,6 +231,7 @@ public final class FbExceptionBuilder {
      * @return this FbExceptionBuilder
      * @see #exception(int)
      */
+    @SuppressWarnings("unused")
     public FbExceptionBuilder nonTransientException(int errorCode) {
         setNextExceptionInformation(Type.NON_TRANSIENT, errorCode);
         return this;
@@ -237,6 +245,7 @@ public final class FbExceptionBuilder {
      * @return this FbExceptionBuilder
      * @see #exception(int)
      */
+    @SuppressWarnings("unused")
     public FbExceptionBuilder nonTransientConnectionException(int errorCode) {
         setNextExceptionInformation(Type.NON_TRANSIENT_CONNECT, errorCode);
         return this;
@@ -250,6 +259,7 @@ public final class FbExceptionBuilder {
      * @return this FbExceptionBuilder
      * @see #exception(int)
      */
+    @SuppressWarnings("unused")
     public FbExceptionBuilder transientException(int errorCode) {
         setNextExceptionInformation(Type.TRANSIENT, errorCode);
         return this;
@@ -516,6 +526,7 @@ public final class FbExceptionBuilder {
      *         If the first exception created with this builder is not of the specified type
      * @see #toFlatSQLException()
      */
+    @SuppressWarnings("unused")
     public <T extends SQLException> T toFlatSQLException(Class<T> type) throws ClassCastException {
         return type.cast(toFlatSQLException());
     }
@@ -546,15 +557,6 @@ public final class FbExceptionBuilder {
         exceptionInfo.add(current);
     }
 
-    private static final int[] NON_TRANSIENT_CODES = { isc_wirecrypt_incompatible, isc_miss_wirecrypt,
-            isc_wirecrypt_key, isc_wirecrypt_plugin, jb_cryptNoCryptKeyAvailable, jb_cryptAlgorithmNotAvailable,
-            jb_cryptInvalidKey, isc_login, isc_net_write_err, isc_net_read_err, isc_network_error };
-    private static final int[] TIMEOUT_CODES = { isc_cfg_stmt_timeout, isc_att_stmt_timeout, isc_req_stmt_timeout };
-    static {
-        Arrays.sort(NON_TRANSIENT_CODES);
-        Arrays.sort(TIMEOUT_CODES);
-    }
-
     /**
      * Checks if a more specific exception type is possible (known and compatible) for the specified error code.
      *
@@ -563,19 +565,33 @@ public final class FbExceptionBuilder {
      * @return Upgrade exception type (e.g. {@code (EXCEPTION, isc_login)} will upgrade to {@code NON_TRANSIENT})
      */
     private static Type upgradeType(final Type type, final int errorCode) {
-        switch (type) {
-        case EXCEPTION:
-            if (Arrays.binarySearch(NON_TRANSIENT_CODES, errorCode) >= 0) {
+        enum TypeUpgrades {
+            NON_TRANSIENT(isc_wirecrypt_incompatible, isc_miss_wirecrypt, isc_wirecrypt_key, isc_wirecrypt_plugin,
+                    jb_cryptNoCryptKeyAvailable, jb_cryptAlgorithmNotAvailable, jb_cryptInvalidKey, isc_login,
+                    isc_net_write_err, isc_net_read_err, isc_network_error),
+            TIMEOUT(isc_cfg_stmt_timeout, isc_att_stmt_timeout, isc_req_stmt_timeout);
+
+            private final int[] errorCodes;
+
+            TypeUpgrades(int... errorCodes) {
+                Arrays.sort(errorCodes);
+                this.errorCodes = errorCodes;
+            }
+
+            boolean contains(int errorCode) {
+                return Arrays.binarySearch(errorCodes, errorCode) >= 0;
+            }
+        }
+
+        if (type == Type.EXCEPTION) {
+            if (TypeUpgrades.NON_TRANSIENT.contains(errorCode)) {
                 return Type.NON_TRANSIENT;
             }
-            if (Arrays.binarySearch(TIMEOUT_CODES, errorCode) >= 0) {
+            if (TypeUpgrades.TIMEOUT.contains(errorCode)) {
                 return Type.TIMEOUT;
             }
-            return type;
-        case WARNING:
-        default:
-            return type;
         }
+        return type;
     }
 
     /**
@@ -769,27 +785,22 @@ public final class FbExceptionBuilder {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 // TODO We probably want these specific exception types also for 'normal' exceptions
-                switch (errorCode) {
-                case isc_wirecrypt_incompatible:
-                case isc_miss_wirecrypt:
-                case isc_wirecrypt_key:
-                case isc_wirecrypt_plugin:
-                case jb_cryptNoCryptKeyAvailable:
-                case jb_cryptAlgorithmNotAvailable:
-                case jb_cryptInvalidKey:
-                    return new FBSQLEncryptException(message, sqlState, errorCode);
-                case isc_login:
-                    return new SQLInvalidAuthorizationSpecException(message, sqlState, errorCode);
-                default:
+                return switch (errorCode) {
+                case isc_wirecrypt_incompatible, isc_miss_wirecrypt, isc_wirecrypt_key, isc_wirecrypt_plugin,
+                        jb_cryptNoCryptKeyAvailable, jb_cryptAlgorithmNotAvailable, jb_cryptInvalidKey ->
+                        new FBSQLEncryptException(message, sqlState, errorCode);
+                case isc_login -> new SQLInvalidAuthorizationSpecException(message, sqlState, errorCode);
+                default -> {
                     if (sqlState != null) {
                         if (sqlState.startsWith(SQLSTATE_SYNTAX_ERROR_PREFIX)) {
-                            return new SQLSyntaxErrorException(message, sqlState, errorCode);
+                            yield new SQLSyntaxErrorException(message, sqlState, errorCode);
                         } else if (sqlState.startsWith(SQLSTATE_CONNECTION_ERROR_PREFIX)) {
-                            return new SQLNonTransientConnectionException(message, sqlState, errorCode);
+                            yield new SQLNonTransientConnectionException(message, sqlState, errorCode);
                         }
                     }
-                    return new SQLNonTransientException(message, sqlState, errorCode);
+                    yield new SQLNonTransientException(message, sqlState, errorCode);
                 }
+                };
             }
         },
         /**
