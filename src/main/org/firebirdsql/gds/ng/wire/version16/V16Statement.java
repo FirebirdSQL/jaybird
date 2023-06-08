@@ -31,9 +31,11 @@ import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.BatchCompletionResponse;
+import org.firebirdsql.gds.ng.wire.DeferredAction;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.version13.V13Statement;
 
@@ -41,6 +43,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
 
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
@@ -116,23 +119,26 @@ public class V16Statement extends V13Statement {
     public void deferredBatchSend(Collection<RowValue> rowValues, DeferredResponse<Void> onResponse) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
+            DeferredAction deferredAction = wrapDeferredResponse(onResponse, r -> null);
             try {
-                sendBatchMsg(rowValues);
+                RowDescriptor parameterDescriptor = getParameterDescriptor();
+                XdrOutputStream xdrOut = getXdrOut();
+                registerBlobs(xdrOut, parameterDescriptor, rowValues, deferredAction);
+                sendBatchMsg(xdrOut, parameterDescriptor, rowValues);
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
             }
-            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
+            getDatabase().enqueueDeferredAction(deferredAction);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
     }
 
-    protected void sendBatchMsg(Collection<RowValue> rowValues) throws SQLException, IOException {
+    protected void sendBatchMsg(XdrOutputStream xdrOut, RowDescriptor parameterDescriptor,
+            Collection<RowValue> rowValues) throws SQLException, IOException {
         BlrCalculator blrCalculator = getBlrCalculator();
-        RowDescriptor parameterDescriptor = getParameterDescriptor();
-        XdrOutputStream xdrOut = getXdrOut();
         xdrOut.writeInt(WireProtocolConstants.op_batch_msg);
         xdrOut.writeInt(getHandle()); // p_batch_statement
         xdrOut.writeInt(rowValues.size());
@@ -147,6 +153,33 @@ public class V16Statement extends V13Statement {
             xdrOut.writeZeroPadding((4 - rowBytes.length) & 3);
         }
         xdrOut.flush();
+    }
+
+    private void registerBlobs(XdrOutputStream xdrOut, RowDescriptor parameterDescriptor,
+            Collection<RowValue> rowValues, DeferredAction deferredAction) throws SQLException, IOException {
+        List<Integer> blobPositions = blobPositions(parameterDescriptor);
+        if (blobPositions.isEmpty()) return;
+        FbWireDatabase db = getDatabase();
+        for (RowValue rowValue : rowValues) {
+            for (int position : blobPositions) {
+                byte[] fieldData = rowValue.getFieldData(position);
+                if (fieldData == null) continue;
+                xdrOut.writeInt(WireProtocolConstants.op_batch_regblob);
+                xdrOut.writeInt(getHandle()); // p_batch_statement
+                // register as itself
+                xdrOut.write(fieldData); // p_batch_exist_id
+                xdrOut.write(fieldData); // p_batch_blob_id
+                db.enqueueDeferredAction(deferredAction);
+            }
+        }
+        xdrOut.flush();
+    }
+
+    private List<Integer> blobPositions(RowDescriptor parameterDescriptor) {
+        return parameterDescriptor.getFieldDescriptors().stream()
+                .filter(f -> f.isFbType(ISCConstants.SQL_BLOB))
+                .map(FieldDescriptor::getPosition)
+                .toList();
     }
 
     @Override

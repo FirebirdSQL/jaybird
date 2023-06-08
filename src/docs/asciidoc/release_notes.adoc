@@ -615,6 +615,7 @@ When a security manager is active, calling `abort` requires the `SQLPermission` 
 This was done because of the stated requirement "`__can it be a money value__`".
 Previously almost all types returned `true` (including -- for example -- `BOOLEAN` and `TIMESTAMP`, which are definitely not money types).
 * Consistent use of `BigDecimal.valueOf(double)` instead of a combination of `new BigDecimal(double)` and `BigDecimal.valueOf(double)` (https://github.com/FirebirdSQL/jaybird/issues/553[jaybird#553])
+* Switched blob identification in message BLR from `blr_quad` to `blr_blob2` (https://github.com/FirebirdSQL/jaybird/issues/726[jaybird#726])
 * Removed `finalize()` methods and -- where it made sense -- replaced them with use of `Cleaner` (https://github.com/FirebirdSQL/jaybird/issues/727[jaybird#727])
 * Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DEICMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (https://github.com/FirebirdSQL/jaybird/issues/731[jaybird#731])
 * Optimized the query to retrieve extended field info for `ResultSetMetaData.getPrecision` to only retrieve columns of type `NUMERIC` or `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/732[jaybird#732])
@@ -905,6 +906,10 @@ use `encodeInt(int)`
 * `StringArgument`
 ** constructor `StringArgument(int, ArgumentType, String)`;
 use `StringArgument(int, ArgumentType, String, Encoding)`
+* `FbWireDatabase`
+** `enqueueDeferredAction(DeferredAction)` now throws `SQLException` to be able to handle exceptions for sync actions if there are a lot of deferred packets
+* `FbWireOperations`
+** `enqueueDeferredAction(DeferredAction)` now throws `SQLException` (see also `FbWireDatabase` above)
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

@@ -28,6 +28,8 @@ import org.firebirdsql.gds.BatchParameterBuffer;
 
 import java.util.stream.IntStream;
 
+import static org.firebirdsql.jaybird.fb.constants.BatchItems.BLOB_ID_USER;
+import static org.firebirdsql.jaybird.fb.constants.BatchItems.TAG_BLOB_POLICY;
 import static org.firebirdsql.jaybird.fb.constants.BatchItems.TAG_BUFFER_BYTES_SIZE;
 import static org.firebirdsql.jaybird.fb.constants.BatchItems.TAG_DETAILED_ERRORS;
 import static org.firebirdsql.jaybird.fb.constants.BatchItems.TAG_MULTIERROR;
@@ -151,7 +153,7 @@ public interface FbBatchConfig {
      *         batch parameter buffer to populate.
      */
     default void populateBatchParameterBuffer(BatchParameterBuffer batchPb) {
-        IntStream.of(TAG_MULTIERROR, TAG_RECORD_COUNTS, TAG_DETAILED_ERRORS, TAG_BUFFER_BYTES_SIZE)
+        IntStream.of(TAG_MULTIERROR, TAG_RECORD_COUNTS, TAG_DETAILED_ERRORS, TAG_BUFFER_BYTES_SIZE, TAG_BLOB_POLICY)
                 .forEach(batchPb::removeArgument);
         if (multiError()) {
             batchPb.addArgument(TAG_MULTIERROR, 1);
@@ -165,6 +167,10 @@ public interface FbBatchConfig {
         if (batchBufferSize() >= 0) {
             batchPb.addArgument(TAG_BUFFER_BYTES_SIZE, batchBufferSize());
         }
+        // Doesn't seem to make a difference in current implementation;
+        // in practice we register existing blobs under their own id (see registerBlobs in V16Statement)
+        // TODO Might need to change when implementing batching of blobs
+        batchPb.addArgument(TAG_BLOB_POLICY, BLOB_ID_USER);
     }
 
     /**

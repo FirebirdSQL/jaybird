@@ -27,8 +27,8 @@ import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.gds.ng.wire.version10.V10WireOperations;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Mark Rotteveel
@@ -39,23 +39,50 @@ public class V11WireOperations extends V10WireOperations {
     /**
      * Actions on this object need to be locked on {@link #withLock()}.
      */
-    private final List<DeferredAction> deferredActions = new ArrayList<>();
+    private final ArrayList<DeferredAction> deferredActions = new ArrayList<>();
 
     public V11WireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback) {
         super(connection, defaultWarningMessageCallback);
     }
 
     @Override
-    public final void enqueueDeferredAction(DeferredAction deferredAction) {
+    public final void enqueueDeferredAction(DeferredAction deferredAction) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             deferredActions.add(deferredAction);
+            afterEnqueueDeferredAction();
         }
+    }
+
+    /**
+     * Action to perform after the deferred action has been queued in {@link #enqueueDeferredAction(DeferredAction)}.
+     * <p>
+     * This method should only be called by {@link #enqueueDeferredAction(DeferredAction)}, and can be used to implement
+     * forcing processing of deferred actions if too many are queued.
+     * </p>
+     *
+     * @throws SQLException
+     *         for errors forcing handling of oversized queue using {@code op_ping} (or {@code op_batch_sync})
+     */
+    protected void afterEnqueueDeferredAction() throws SQLException {
+        // do nothing
+    }
+
+    /**
+     * The number of deferred actions currently waiting.
+     * <p>
+     * This method should be called when locked on {@link #withLock()}.
+     * </p>
+     *
+     * @return number of deferred actions
+     */
+    protected final int deferredActionCount() {
+        return deferredActions.size();
     }
 
     @Override
     public final void processDeferredActions() {
         try (LockCloseable ignored = withLock()) {
-            if (deferredActions.size() == 0) return;
+            if (deferredActions.isEmpty()) return;
 
             final DeferredAction[] actions = deferredActions.toArray(new DeferredAction[0]);
             deferredActions.clear();
@@ -69,6 +96,27 @@ public class V11WireOperations extends V10WireOperations {
                     action.onException(ex);
                 }
             }
+            afterProcessDeferredActions(actions.length);
+        }
+    }
+
+    /**
+     * Can be used for additional actions after processing deferred actions (e.g. trim a large deferred actions list to
+     * its default capacity).
+     * <p>
+     * This implementation trims if {@code processedDeferredActions > 10}. When overridden, it is recommend to call this
+     * method through {@code super} to still trim (e.g. in a more limited set of circumstances) and perform any other
+     * actions this method may perform. If the overridden method wants to forgo trimming, it should pass {@code -1} for
+     * {@code processedDeferredActions}.
+     * </p>
+     *
+     * @param processedDeferredActions
+     *         number of processed deferred actions, or {@code -1} to ensure no trim is performed
+     */
+    protected void afterProcessDeferredActions(int processedDeferredActions) {
+        // NOTE: The value is more or less chosen based on the default capacity of an ArrayList in Java 17
+        if (processedDeferredActions > 10) {
+            deferredActions.trimToSize();
         }
     }
 }

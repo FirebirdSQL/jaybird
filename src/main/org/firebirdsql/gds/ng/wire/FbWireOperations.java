@@ -133,8 +133,10 @@ public interface FbWireOperations {
      *
      * @param deferredAction
      *         Deferred action
+     * @throws SQLException
+     *         for errors forcing handling of oversized queue using {@code op_ping} (or {@code op_batch_sync})
      */
-    default void enqueueDeferredAction(DeferredAction deferredAction) {
+    default void enqueueDeferredAction(DeferredAction deferredAction) throws SQLException {
         throw new UnsupportedOperationException("enqueueDeferredAction is not supported in " + getClass().getName());
     }
 

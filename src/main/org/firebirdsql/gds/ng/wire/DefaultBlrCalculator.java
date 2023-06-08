@@ -161,9 +161,13 @@ public class DefaultBlrCalculator implements BlrCalculator {
             bout.write(blr_timestamp);
             break;
         case SQL_BLOB:
-            // TODO Use blr_blob2 instead; added in 2.5
-            bout.write(blr_quad);
-            bout.write(0); // scale?
+            bout.write(blr_blob2);
+            bout.write(field.getSubType());
+            bout.write(field.getSubType() >> 8);
+            // characterSetId, but not using field.getCharacterSetId() to avoid CS_OCTETS used for subtype <> 1
+            bout.write(field.getScale());
+            // Formally bout.write(field.getScale() >> 8);, but that would be the collation id, which is not relevant
+            bout.write(0);
             break;
         case SQL_ARRAY:
             bout.write(blr_quad);

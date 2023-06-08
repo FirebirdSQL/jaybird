@@ -18,8 +18,11 @@
  */
 package org.firebirdsql.gds.ng.wire.version16;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
+import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.BatchCompletion;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.BatchCompletionResponse;
 import org.firebirdsql.gds.ng.wire.WireConnection;
@@ -30,14 +33,52 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_ping;
+
 /**
  * @author Mark Rotteveel
  * @since 5
  */
 public class V16WireOperations extends V15WireOperations {
 
+    protected static final int BATCH_LIMIT = 64;
+
     public V16WireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback) {
         super(connection, defaultWarningMessageCallback);
+    }
+
+    @Override
+    protected void afterEnqueueDeferredAction() throws SQLException {
+        if (deferredActionCount() < BATCH_LIMIT) return;
+        try {
+            XdrOutputStream xdrOut = getXdrOut();
+            xdrOut.writeInt(getBatchSyncOperation());
+            xdrOut.flush();
+        } catch (IOException e) {
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+        }
+        try {
+            readResponse(null);
+        } catch (IOException e) {
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+        }
+    }
+
+    /**
+     * @return operation code that synchronizes deferred batch operations ({@code op_ping} or {@code op_batch_sync})
+     */
+    protected int getBatchSyncOperation() {
+        // op_batch_sync was introduced in v17, ping also works, but also checks for errors server side
+        // v18 implementation returns op_batch_sync
+        return op_ping;
+    }
+
+    @Override
+    protected void afterProcessDeferredActions(int processedDeferredActions) {
+        /* If we reached BATCH_LIMIT, then likely we will receive more deferred actions; trimming now would be a waste
+           (of memory and CPU) due to GC and reallocation of the list. This may result in the trim never occurring if
+           we ever reach BATCH_LIMIT, but any subsequent processing never exceeds 10; we accept that limitation. */
+        super.afterProcessDeferredActions(processedDeferredActions < BATCH_LIMIT ? processedDeferredActions : -1);
     }
 
     protected BatchCompletionResponse readBatchCompletionResponse(XdrInputStream xdrIn) throws SQLException, IOException {

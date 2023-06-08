@@ -86,9 +86,12 @@ public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
      * {@link java.lang.UnsupportedOperationException}
      * </p>
      *
-     * @param deferredAction Deferred action
+     * @param deferredAction
+     *         Deferred action
+     * @throws SQLException
+     *         for errors forcing handling of oversized queue using {@code op_ping} (or {@code op_batch_sync})
      */
-    void enqueueDeferredAction(DeferredAction deferredAction);
+    void enqueueDeferredAction(DeferredAction deferredAction) throws SQLException;
 
     /**
      * Consumes packets notifying for warnings, but ignoring exceptions thrown from the packet.

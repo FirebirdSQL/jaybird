@@ -217,7 +217,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     @Override
-    public final void enqueueDeferredAction(DeferredAction deferredAction) {
+    public final void enqueueDeferredAction(DeferredAction deferredAction) throws SQLException {
         wireOperations.enqueueDeferredAction(deferredAction);
     }
 

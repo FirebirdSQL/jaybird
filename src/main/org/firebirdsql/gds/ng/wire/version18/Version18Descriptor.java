@@ -37,7 +37,6 @@ import org.firebirdsql.gds.ng.wire.version10.V10OutputBlob;
 import org.firebirdsql.gds.ng.wire.version10.V10Service;
 import org.firebirdsql.gds.ng.wire.version10.V10Transaction;
 import org.firebirdsql.gds.ng.wire.version13.V13ParameterConverter;
-import org.firebirdsql.gds.ng.wire.version16.V16WireOperations;
 
 /**
  * The {@link ProtocolDescriptor} for the Firebird version 18 protocol. This version
@@ -123,6 +122,6 @@ public final class Version18Descriptor extends AbstractProtocolDescriptor implem
     @Override
     public FbWireOperations createWireOperations(WireConnection<?, ?> connection,
             WarningMessageCallback defaultWarningMessageCallback) {
-        return new V16WireOperations(connection, defaultWarningMessageCallback);
+        return new V18WireOperations(connection, defaultWarningMessageCallback);
     }
 }
