@@ -535,12 +535,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     protected void writeColumnData(XdrOutputStream xdrOut, int len, byte[] buffer, FieldDescriptor fieldDescriptor)
             throws IOException {
-        final int tempType = fieldDescriptor.getType() & ~1;
+        // Nothing to write for SQL_NULL (except null indicator, which happens at end in writeSqlData)
+        if (fieldDescriptor.isFbType(ISCConstants.SQL_NULL)) return;
 
-        // TODO Correctly pad with 0x00 instead of 0x20 for octets.
-        if (tempType == ISCConstants.SQL_NULL) {
-            // Nothing to write for SQL_NULL (except null indicator, which happens at end in writeSqlData)
-        } else if (len == 0) {
+        if (len == 0) {
             if (buffer != null) {
                 len = buffer.length;
                 xdrOut.writeInt(len);
@@ -556,8 +554,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 xdrOut.writeZeroPadding(-len);
             }
         } else {
-            // decrement length because it was incremented before
-            // increment happens in BlrCalculator.calculateIoLength
+            // decrement length because it was incremented before; increment happens in BlrCalculator.calculateIoLength
             len--;
             if (buffer != null) {
                 final int buflen = buffer.length;
