@@ -89,7 +89,7 @@ public class V16Statement extends V13Statement {
                 sendBatchCreate(batchConfig);
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
         } catch (SQLException e) {
@@ -127,7 +127,7 @@ public class V16Statement extends V13Statement {
                 sendBatchMsg(xdrOut, parameterDescriptor, rowValues);
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             getDatabase().enqueueDeferredAction(deferredAction);
         } catch (SQLException e) {
@@ -196,7 +196,7 @@ public class V16Statement extends V13Statement {
                 xdrOut.flush();
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 BatchCompletionResponse response = (BatchCompletionResponse) getDatabase()
@@ -204,7 +204,7 @@ public class V16Statement extends V13Statement {
                 return response.batchCompletion();
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -222,13 +222,13 @@ public class V16Statement extends V13Statement {
                 xdrOut.flush();
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 getDatabase().readResponse(getStatementWarningCallback());
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.forException(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioReadError(e);
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -247,7 +247,7 @@ public class V16Statement extends V13Statement {
                 xdrOut.flush();
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
         } catch (SQLException e) {

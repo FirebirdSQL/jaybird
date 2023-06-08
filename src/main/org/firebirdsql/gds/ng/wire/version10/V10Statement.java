@@ -65,15 +65,15 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             try {
                 doFreePacket(option);
                 getXdrOut().flush();
-            } catch (IOException ex) {
+            } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 processFreeResponse(getDatabase().readResponse(getStatementWarningCallback()));
-            } catch (IOException ex) {
+            } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                throw FbExceptionBuilder.ioReadError(e);
             }
         }
     }
@@ -129,16 +129,16 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 try {
                     sendAllocate();
                     getXdrOut().flush();
-                } catch (IOException ex) {
+                } catch (IOException e) {
                     switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                    throw FbExceptionBuilder.ioWriteError(e);
                 }
                 try {
                     processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
                     switchState(StatementState.ALLOCATED);
-                } catch (IOException ex) {
+                } catch (IOException e) {
                     switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    throw FbExceptionBuilder.ioReadError(e);
                 } catch (SQLException e) {
                     forceState(StatementState.NEW);
                     throw e;
@@ -150,15 +150,15 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             try {
                 sendPrepare(statementText);
                 getXdrOut().flush();
-            } catch (IOException ex) {
+            } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
-            } catch (IOException ex) {
+            } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                throw FbExceptionBuilder.ioReadError(e);
             } catch (SQLException e) {
                 switchState(StatementState.ALLOCATED);
                 throw e;
@@ -211,16 +211,16 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding());
                 xdrOut.writeInt(0); // Cursor type
                 xdrOut.flush();
-            } catch (IOException ex) {
+            } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 // TODO Do we need to do anything else with this response?
                 getDatabase().readGenericResponse(getStatementWarningCallback());
-            } catch (IOException ex) {
+            } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                throw FbExceptionBuilder.ioReadError(e);
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -258,9 +258,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                             parameters);
                     expectedResponseCount++;
                     getXdrOut().flush();
-                } catch (IOException ex) {
+                } catch (IOException e) {
                     switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                    throw FbExceptionBuilder.ioWriteError(e);
                 }
 
                 final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
@@ -308,9 +308,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     if (getState() != StatementState.ERROR) {
                         switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
                     }
-                } catch (IOException ex) {
+                } catch (IOException e) {
                     switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    throw FbExceptionBuilder.ioReadError(e);
                 }
             }
         } catch (SQLException e) {
@@ -384,7 +384,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
             if (!getState().isCursorOpen()) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
+                throw FbExceptionBuilder.forException(ISCConstants.isc_cursor_not_open).toSQLException();
             }
             if (isAfterLast()) return;
 
@@ -396,15 +396,15 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 try {
                     sendFetch(fetchSize);
                     getXdrOut().flush();
-                } catch (IOException ex) {
+                } catch (IOException e) {
                     switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                    throw FbExceptionBuilder.ioWriteError(e);
                 }
                 try {
                     processFetchResponse(FetchDirection.FORWARD);
-                } catch (IOException ex) {
+                } catch (IOException e) {
                     switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    throw FbExceptionBuilder.ioReadError(e);
                 }
             }
         } catch (SQLException e) {

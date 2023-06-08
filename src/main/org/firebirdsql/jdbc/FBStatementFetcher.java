@@ -316,7 +316,7 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     private void notScrollable() throws SQLException {
-        throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
+        throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
                 .toSQLException();
     }
 

@@ -719,7 +719,7 @@ class FBConnectionTest {
                             .toSQLException();
                 }
                 if ((info[0] & 0xFF) != fb_info_wire_crypt) {
-                    throw new FbExceptionBuilder().exception(JaybirdErrorCodes.jb_unexpectedInfoResponse)
+                    throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unexpectedInfoResponse)
                             .messageParameter(
                                     "transaction", "fb_info_wire_crypt", ISCConstants.fb_info_wire_crypt, info[0])
                             .toSQLException();

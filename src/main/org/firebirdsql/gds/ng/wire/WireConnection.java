@@ -263,12 +263,12 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
             socket.connect(new InetSocketAddress(getServerName(), getPortNumber()), socketConnectTimeout);
         } catch (SocketTimeoutException ste) {
-            throw new FbExceptionBuilder().timeoutException(ISCConstants.isc_network_error)
+            throw FbExceptionBuilder.forTimeoutException(ISCConstants.isc_network_error)
                     .messageParameter(getServerName())
                     .cause(ste)
                     .toSQLException();
         } catch (IOException ioex) {
-            throw new FbExceptionBuilder().nonTransientConnectionException(ISCConstants.isc_network_error)
+            throw FbExceptionBuilder.forNonTransientConnectionException(ISCConstants.isc_network_error)
                     .messageParameter(getServerName())
                     .cause(ioex)
                     .toSQLException();
@@ -379,12 +379,12 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                         AbstractWireOperations wireOperations = getDefaultWireOperations();
                         wireOperations.processResponse(wireOperations.processOperation(operation));
                     } else if (operation == op_reject) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_connect_reject)
+                        throw FbExceptionBuilder.forException(ISCConstants.isc_connect_reject)
                                 .messageParameter(REJECTION_POSSIBLE_REASON).toSQLException();
                     }
                     log.log(DEBUG, "Reached end of identify without error or connection, last operation: {0}", operation);
                     // If we reach here, authentication failed (or never authenticated for lack of username and password)
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toSQLException();
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_login).toSQLException();
                 } finally {
                     try {
                         close();
@@ -394,10 +394,10 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 }
             }
         } catch (SocketTimeoutException ste) {
-            throw new FbExceptionBuilder().timeoutException(ISCConstants.isc_network_error)
+            throw FbExceptionBuilder.forTimeoutException(ISCConstants.isc_network_error)
                     .messageParameter(getServerName()).cause(ste).toSQLException();
         } catch (IOException ioex) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_network_error)
+            throw FbExceptionBuilder.forException(ISCConstants.isc_network_error)
                     .messageParameter(getServerName()).cause(ioex).toSQLException();
         }
     }

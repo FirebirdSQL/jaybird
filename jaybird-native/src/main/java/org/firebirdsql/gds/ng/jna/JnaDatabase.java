@@ -105,8 +105,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
                 throw ex;
             } catch (Exception ex) {
                 // TODO Replace with specific error (eg native client error)
-                throw new FbExceptionBuilder()
-                        .exception(ISCConstants.isc_network_error)
+                throw FbExceptionBuilder.forException(ISCConstants.isc_network_error)
                         .messageParameter(connection.getAttachUrl())
                         .cause(ex)
                         .toSQLException();
@@ -153,8 +152,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             } catch (Exception ex) {
                 safelyDetach();
                 // TODO Replace with specific error (eg native client error)
-                throw new FbExceptionBuilder()
-                        .exception(ISCConstants.isc_network_error)
+                throw FbExceptionBuilder.forException(ISCConstants.isc_network_error)
                         .messageParameter(connection.getAttachUrl())
                         .cause(ex)
                         .toSQLException();
@@ -383,12 +381,11 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     }
 
     protected JnaEventHandle validateEventHandle(EventHandle eventHandle) throws SQLException {
-        if (!(eventHandle instanceof JnaEventHandle)) {
+        if (!(eventHandle instanceof JnaEventHandle jnaEventHandle)) {
             // TODO SQLState and/or Firebird specific error
             throw new SQLNonTransientException(format("Invalid event handle type: %s, expected: %s",
                     eventHandle.getClass(), JnaEventHandle.class));
         }
-        JnaEventHandle jnaEventHandle = (JnaEventHandle) eventHandle;
         if (jnaEventHandle.getSize() == -1) {
             // TODO SQLState and/or Firebird specific error
             throw new SQLTransientException("Event handle hasn't been initialized");

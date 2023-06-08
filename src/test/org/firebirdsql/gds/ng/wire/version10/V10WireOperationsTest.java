@@ -123,7 +123,8 @@ public class V10WireOperationsTest {
     public void testProcessResponseWarnings_exception() throws Exception {
         AbstractWireOperations wire = createDummyWireOperations();
 
-        SQLException exception = new FbExceptionBuilder().exception(ISCConstants.isc_numeric_out_of_range).toSQLException();
+        SQLException exception = FbExceptionBuilder.forException(ISCConstants.isc_numeric_out_of_range)
+                .toSQLException();
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, exception);
         wire.processResponseWarnings(genericResponse, null);
 
@@ -139,7 +140,8 @@ public class V10WireOperationsTest {
     public void testProcessResponseWarnings_warning() throws Exception {
         AbstractWireOperations wire = createDummyWireOperations();
 
-        SQLWarning warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException(SQLWarning.class);
+        SQLWarning warning = FbExceptionBuilder.forWarning(ISCConstants.isc_numeric_out_of_range)
+                .toSQLException(SQLWarning.class);
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, warning);
         wire.processResponseWarnings(genericResponse, null);
 

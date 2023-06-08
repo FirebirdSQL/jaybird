@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version11;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
@@ -80,8 +79,8 @@ public class V11Database extends V10Database {
                 // however we only expect calls for op_close_blob and op_cancel_blob
                 throw new IllegalArgumentException(String.format("Unexpected operation in V11Databsase.releaseObject: %d", operation));
             }
-        } catch (IOException ex) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioWriteError(e);
         }
     }
 }

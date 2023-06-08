@@ -91,8 +91,8 @@ public class V13WireOperations extends V11WireOperations {
                 switch (operation) {
                 case op_trusted_auth -> {
                     xdrIn.skipNBytes(4); // skip int: p_trau_data
-                    throw new FbExceptionBuilder()
-                            .nonTransientConnectionException(JaybirdErrorCodes.jb_receiveTrustedAuth_NotSupported)
+                    throw FbExceptionBuilder
+                            .forNonTransientConnectionException(JaybirdErrorCodes.jb_receiveTrustedAuth_NotSupported)
                             .toSQLException();
                 }
                 case op_cont_auth -> {
@@ -168,14 +168,14 @@ public class V13WireOperations extends V11WireOperations {
         }
 
         // If we have exited from the cycle, this mean auth failed
-        throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toSQLException();
+        throw FbExceptionBuilder.forException(ISCConstants.isc_login).toSQLException();
     }
 
     private CryptSessionConfig getCryptSessionConfig(EncryptionIdentifier encryptionIdentifier, byte[] specificData)
             throws SQLException {
         ClientAuthBlock clientAuthBlock = getClientAuthBlock();
         if (!clientAuthBlock.supportsEncryption() || !encryptionIdentifier.isTypeSymmetric()) {
-            throw new FbExceptionBuilder().nonTransientException(jb_cryptNoCryptKeyAvailable)
+            throw FbExceptionBuilder.forNonTransientException(jb_cryptNoCryptKeyAvailable)
                     .messageParameter(encryptionIdentifier.toString())
                     .toSQLException();
         }
@@ -216,8 +216,8 @@ public class V13WireOperations extends V11WireOperations {
 
         if (!initializedEncryption
                 && getAttachProperties().getWireCryptAsEnum() == WireCrypt.REQUIRED) {
-            FbExceptionBuilder exceptionBuilder = new FbExceptionBuilder()
-                    .nonTransientException(ISCConstants.isc_wirecrypt_incompatible);
+            FbExceptionBuilder exceptionBuilder =
+                    FbExceptionBuilder.forNonTransientException(ISCConstants.isc_wirecrypt_incompatible);
             if (chainBuilder.hasException()) {
                 exceptionBuilder.cause(chainBuilder.getException());
             }
@@ -286,7 +286,7 @@ public class V13WireOperations extends V11WireOperations {
         try {
             return new DbCryptData(pluginData, Integer.MIN_VALUE);
         } catch (RuntimeException e) {
-            throw new FbExceptionBuilder().nonTransientConnectionException(JaybirdErrorCodes.jb_dbCryptDataError)
+            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_dbCryptDataError)
                     .cause(e)
                     .toSQLException();
         }

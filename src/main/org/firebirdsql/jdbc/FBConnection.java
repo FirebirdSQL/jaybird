@@ -1081,7 +1081,7 @@ public class FBConnection implements FirebirdConnection {
     public GDSHelper getGDSHelper() throws SQLException {
         if (mc == null)
             // TODO Right error code?
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_req_no_trans).toSQLException();
+            throw FbExceptionBuilder.forException(ISCConstants.isc_req_no_trans).toSQLException();
 
         return mc.getGDSHelper();
     }

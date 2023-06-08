@@ -262,7 +262,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             throws SQLException {
         // TODO Evaluate if we need to share more implementation with constructor above
         this.connection = connection;
-        gdsHelper = connection != null ? connection.getGDSHelper() : null;;
+        gdsHelper = connection != null ? connection.getGDSHelper() : null;
         fbStatement = null;
         this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
         cursorName = null;
@@ -348,7 +348,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     protected void checkScrollable() throws SQLException {
         if (rsType == ResultSet.TYPE_FORWARD_ONLY) {
-            throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
                     .toSQLException();
         }
     }

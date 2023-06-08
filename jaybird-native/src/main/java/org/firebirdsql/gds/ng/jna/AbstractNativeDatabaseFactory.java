@@ -54,8 +54,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
                     filterProperties(connectionProperties));
             return jnaDatabaseConnection.identify();
         } catch (NativeLibraryLoadException e) {
-            throw new FbExceptionBuilder()
-                    .nonTransientConnectionException(JaybirdErrorCodes.jb_failedToLoadNativeLibrary)
+            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_failedToLoadNativeLibrary)
                     .cause(e)
                     .toSQLException();
         }
@@ -69,8 +68,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
                     filterProperties(serviceProperties));
             return jnaServiceConnection.identify();
         } catch (NativeLibraryLoadException e) {
-            throw new FbExceptionBuilder()
-                    .nonTransientConnectionException(JaybirdErrorCodes.jb_failedToLoadNativeLibrary)
+            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_failedToLoadNativeLibrary)
                     .cause(e)
                     .toSQLException();
         }

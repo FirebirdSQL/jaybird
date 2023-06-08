@@ -573,8 +573,7 @@ public abstract class AbstractFbStatement implements FbStatement {
             checkStatementValid();
             if (getState() == StatementState.CURSOR_OPEN && !isAfterLast()) {
                 // We disallow fetching count when we haven't fetched all rows yet.
-                throw new FbExceptionBuilder()
-                        .nonTransientException(JaybirdErrorCodes.jb_closeCursorBeforeCount)
+                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_closeCursorBeforeCount)
                         .toSQLException();
             }
         } catch (SQLException e) {
@@ -610,15 +609,14 @@ public abstract class AbstractFbStatement implements FbStatement {
         final int expectedSize = parameterDescriptor != null ? parameterDescriptor.getCount() : 0;
         final int actualSize = parameters.getCount();
         if (actualSize != expectedSize) {
-            throw new FbExceptionBuilder()
-                    .nonTransientException(JaybirdErrorCodes.jb_invalidParameterCount)
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidParameterCount)
                     .messageParameter(expectedSize, actualSize)
                     .toSQLException();
         }
         for (int fieldIndex = 0; fieldIndex < actualSize; fieldIndex++) {
             if (!parameters.isInitialized(fieldIndex)) {
                 // Communicating 1-based index, so it doesn't cause confusion when JDBC user sees this.
-                throw new FbExceptionBuilder().transientException(JaybirdErrorCodes.jb_parameterNotSet)
+                throw FbExceptionBuilder.forTransientException(JaybirdErrorCodes.jb_parameterNotSet)
                         .messageParameter(fieldIndex + 1)
                         .toSQLException();
             }
@@ -662,17 +660,14 @@ public abstract class AbstractFbStatement implements FbStatement {
     protected final void checkStatementValid() throws SQLException {
         switch (getState()) {
         case NEW:
-            throw new FbExceptionBuilder()
-                    .nonTransientException(JaybirdErrorCodes.jb_stmtNotAllocated)
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_stmtNotAllocated)
                     .toSQLException();
         case CLOSING:
         case CLOSED:
-            throw new FbExceptionBuilder()
-                    .nonTransientException(JaybirdErrorCodes.jb_stmtClosed)
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_stmtClosed)
                     .toSQLException();
         case ERROR:
-            throw new FbExceptionBuilder()
-                    .nonTransientException(JaybirdErrorCodes.jb_stmtInErrorRequireCLose)
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_stmtInErrorRequireCLose)
                     .toSQLException();
         default:
             // Valid state, continue
@@ -744,8 +739,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     public void setTimeout(long statementTimeout) throws SQLException {
         try {
             if (statementTimeout < 0) {
-                throw new FbExceptionBuilder()
-                        .nonTransientException(JaybirdErrorCodes.jb_invalidTimeout)
+                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidTimeout)
                         .toSQLException();
             }
             try (LockCloseable ignored = withLock()) {

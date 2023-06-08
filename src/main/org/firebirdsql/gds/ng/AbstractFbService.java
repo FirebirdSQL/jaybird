@@ -148,7 +148,7 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
                     log.log(System.Logger.Level.DEBUG, "Received isc_info_truncated");
                     return AbstractFbService.this;
                 }
-                default -> throw new FbExceptionBuilder().exception(isc_infunk).toSQLException();
+                default -> throw FbExceptionBuilder.forException(isc_infunk).toSQLException();
                 }
             }
             return AbstractFbService.this;

@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
@@ -75,7 +74,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
                 connection.close();
             }
         } catch (IOException e) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+            throw FbExceptionBuilder.ioWriteError(e);
         } finally {
             serviceListenerDispatcher.detached(this);
             serviceListenerDispatcher.shutdown();

@@ -312,8 +312,8 @@ final class GeneratedKeysQueryBuilder {
         for (int indexToAdd : columnIndexes) {
             String columnName = columnByIndex.get(indexToAdd);
             if (columnName == null) {
-                throw new FbExceptionBuilder()
-                        .nonTransientException(JaybirdErrorCodes.jb_generatedKeysInvalidColumnPosition)
+                throw FbExceptionBuilder
+                        .forNonTransientException(JaybirdErrorCodes.jb_generatedKeysInvalidColumnPosition)
                         .messageParameter(indexToAdd)
                         .messageParameter(tableName)
                         .toSQLException();
@@ -327,8 +327,7 @@ final class GeneratedKeysQueryBuilder {
             FirebirdDatabaseMetaData databaseMetaData) throws SQLException {
         try (ResultSet rs = databaseMetaData.getColumns(null, null, normalizeObjectName(tableName), null)) {
             if (!rs.next()) {
-                throw new FbExceptionBuilder()
-                        .nonTransientException(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound)
+                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound)
                         .messageParameter(tableName)
                         .toSQLException();
             }

@@ -38,13 +38,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
 class FbExceptionBuilderTest {
 
+    private final FbExceptionBuilder builder = new FbExceptionBuilder();
+
     /**
      * Test simple use of {@link FbExceptionBuilder#exception(int)}.
      */
     @Test
     void exception_Simple() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         SQLException result = builder.exception(isc_req_wrong_db).toSQLException();
 
         assertNotNull(result);
@@ -61,8 +61,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void warning_Simple() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         SQLException result = builder.warning(isc_unavailable).toSQLException();
 
         assertNotNull(result);
@@ -79,8 +77,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void timeoutException_Simple() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         SQLException result = builder.timeoutException(isc_net_connect_err).toSQLException();
 
         assertNotNull(result);
@@ -99,8 +95,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void exception_featureNotSupported() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         SQLException result = builder.exception(isc_wish_list).toSQLException();
 
         assertNotNull(result);
@@ -118,8 +112,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void exception_parameterSubstitution() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         builder.exception(isc_wrong_ods).messageParameter("the filename");
         builder.messageParameter(11).messageParameter(2);
         builder.messageParameter(10).messageParameter(0);
@@ -137,8 +129,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void exception_parameterIncompleteSubstitution() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         builder.exception(isc_wrong_ods).messageParameter("the filename");
         builder.messageParameter(11).messageParameter(2);
 
@@ -154,7 +144,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void exception_cause() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
         Throwable throwable = new IOException("the message");
 
         builder.exception(isc_req_wrong_db);
@@ -170,8 +159,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void exception_overrideSQLState_valid() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         builder.exception(isc_req_wrong_db).toSQLException();
         // isc_req_wrong_db defaults to SQLState HY000
         builder.sqlState("42000");
@@ -188,8 +175,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void exception_overrideSQLState_null() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         builder.exception(isc_req_wrong_db).toSQLException();
         // isc_req_wrong_db defaults to SQLState HY000
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> builder.sqlState(null));
@@ -202,8 +187,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void exception_overrideSQLState_not5Characters() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         builder.exception(isc_req_wrong_db).toSQLException();
         // isc_req_wrong_db defaults to SQLState HY000
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -216,8 +199,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void exception_chaining() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         // Exception one
         builder.exception(isc_req_wrong_db);
         // Exception two
@@ -244,8 +225,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void toSQLException_withCasting_valid() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         builder.warning(isc_req_wrong_db);
 
         SQLWarning warning = builder.toSQLException(SQLWarning.class);
@@ -258,8 +237,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void toSQLException_withCasting_invalid() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
-
         builder.exception(isc_req_wrong_db);
 
         assertThrows(ClassCastException.class, () -> builder.toSQLException(SQLWarning.class));
@@ -271,7 +248,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void SQLState_ThrowsIllegalState() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
         assertIllegalStateForUninitializedExceptionType(() -> builder.sqlState("0A000"));
     }
 
@@ -281,7 +257,6 @@ class FbExceptionBuilderTest {
      */
     @Test
     void messageParameter_int_ThrowsIllegalState() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
         assertIllegalStateForUninitializedExceptionType(() -> builder.messageParameter(5));
     }
 
@@ -291,19 +266,16 @@ class FbExceptionBuilderTest {
      */
     @Test
     void messageParameter_String_ThrowsIllegalState() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
         assertIllegalStateForUninitializedExceptionType(() -> builder.messageParameter(""));
     }
 
     @Test
     void toSQLException_empty_throwsIllegalState() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
         assertIllegalStateForEmptyBuilder(builder::toSQLException);
     }
 
     @Test
     void toFlatSQLException_empty_throwsIllegalState() {
-        FbExceptionBuilder builder = new FbExceptionBuilder();
         assertIllegalStateForEmptyBuilder(builder::toFlatSQLException);
     }
 

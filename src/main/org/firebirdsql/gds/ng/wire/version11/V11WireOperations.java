@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version11;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
@@ -89,11 +88,10 @@ public class V11WireOperations extends V10WireOperations {
             for (DeferredAction action : actions) {
                 try {
                     action.processResponse(readResponse(action.getWarningMessageCallback()));
-                } catch (IOException ex) {
-                    action.onException(FbExceptionBuilder.forException(ISCConstants.isc_net_read_err).cause(ex)
-                            .toSQLException());
-                } catch (Exception ex) {
-                    action.onException(ex);
+                } catch (IOException e) {
+                    action.onException(FbExceptionBuilder.ioReadError(e));
+                } catch (Exception e) {
+                    action.onException(e);
                 }
             }
             afterProcessDeferredActions(actions.length);

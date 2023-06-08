@@ -76,9 +76,9 @@ public class V11Statement extends V10Statement {
                 expectedResponseCount++;
 
                 getXdrOut().flush();
-            } catch (IOException ex) {
+            } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
 
             try {
@@ -103,9 +103,9 @@ public class V11Statement extends V10Statement {
                 } finally {
                     db.consumePackets(expectedResponseCount, getStatementWarningCallback());
                 }
-            } catch (IOException ex) {
+            } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                throw FbExceptionBuilder.ioReadError(e);
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -137,9 +137,9 @@ public class V11Statement extends V10Statement {
                         return getStatementWarningCallback();
                     }
                 });
-            } catch (IOException ex) {
+            } catch (IOException e) {
                 switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
         }
     }

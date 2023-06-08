@@ -79,7 +79,7 @@ public final class ChaChaEncryptionPlugin implements EncryptionPlugin {
 
     private byte[] toChaChaKey(byte[] key) throws SQLException {
         if (key.length < 16) {
-            throw new FbExceptionBuilder().nonTransientException(jb_cryptInvalidKey)
+            throw FbExceptionBuilder.forNonTransientException(jb_cryptInvalidKey)
                     .messageParameter(encryptionIdentifier())
                     .messageParameter("Key too short")
                     .toSQLException();
@@ -88,7 +88,7 @@ public final class ChaChaEncryptionPlugin implements EncryptionPlugin {
             var md = MessageDigest.getInstance("SHA-256");
             return md.digest(key);
         } catch (NoSuchAlgorithmException e) {
-            throw new FbExceptionBuilder().nonTransientException(jb_cryptAlgorithmNotAvailable)
+            throw FbExceptionBuilder.forNonTransientException(jb_cryptAlgorithmNotAvailable)
                     .messageParameter(encryptionIdentifier())
                     .cause(e)
                     .toSQLException();
@@ -101,12 +101,12 @@ public final class ChaChaEncryptionPlugin implements EncryptionPlugin {
             chaChaCipher.init(mode, new SecretKeySpec(key, CHA_CHA_20_CIPHER_NAME), iv.toParameterSpec());
             return chaChaCipher;
         } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
-            throw new FbExceptionBuilder().nonTransientException(jb_cryptAlgorithmNotAvailable)
+            throw FbExceptionBuilder.forNonTransientException(jb_cryptAlgorithmNotAvailable)
                     .messageParameter(encryptionIdentifier())
                     .cause(e)
                     .toSQLException();
         } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
-            throw new FbExceptionBuilder().nonTransientException(jb_cryptInvalidKey)
+            throw FbExceptionBuilder.forNonTransientException(jb_cryptInvalidKey)
                     .messageParameter(encryptionIdentifier())
                     .cause(e)
                     .toSQLException();
@@ -123,7 +123,7 @@ public final class ChaChaEncryptionPlugin implements EncryptionPlugin {
         ChaChaIV() throws SQLException {
             byte[] iv = cryptSessionConfig.specificData();
             if (iv == null || !(iv.length == 12 || iv.length == 16)) {
-                throw new FbExceptionBuilder().nonTransientException(jb_cryptInvalidKey)
+                throw FbExceptionBuilder.forNonTransientException(jb_cryptInvalidKey)
                         .messageParameter(encryptionIdentifier())
                         .messageParameter("Wrong IV length, needs 12 or 16 bytes")
                         .toSQLException();

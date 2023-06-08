@@ -71,7 +71,7 @@ public final class ExecutionPlanProcessor implements InfoProcessor<String> {
 
         if (buffer[0] != ISCConstants.isc_info_sql_get_plan && buffer[0] != ISCConstants.isc_info_sql_explain_plan) {
             // We only expect isc_info_sql_get_plan or isc_info_sql_explain_plan
-            throw new FbExceptionBuilder().exception(JaybirdErrorCodes.jb_unexpectedInfoResponse)
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unexpectedInfoResponse)
                     .messageParameter("sql", "isc_info_sql_get_plan or isc_info_sql_explain_plan",
                             ISCConstants.isc_info_sql_get_plan + " or " + ISCConstants.isc_info_sql_explain_plan,
                             buffer[0])

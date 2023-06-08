@@ -56,7 +56,8 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
     protected final void setBlobId(long blobId) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (getBlobId() != FbBlob.NO_BLOB_ID) {
-                throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_blobIdAlreadySet).toSQLException();
+                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_blobIdAlreadySet)
+                        .toSQLException();
             }
             this.blobId = blobId;
         }
@@ -69,22 +70,16 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
 
     @Override
     public final byte[] getSegment(int sizeRequested) throws SQLException {
-        try {
-            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
-        } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
-            throw e;
-        }
+        SQLException e = FbExceptionBuilder.forNonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
+        exceptionListenerDispatcher.errorOccurred(e);
+        throw e;
     }
 
     @Override
     public final void seek(int offset, SeekMode seekMode) throws SQLException {
-        try {
-            // This assumes seeks are not (nor in the future) supported on output blobs
-            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
-        } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
-            throw e;
-        }
+        // This assumes seeks are not (nor in the future) supported on output blobs
+        SQLException e = FbExceptionBuilder.forNonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
+        exceptionListenerDispatcher.errorOccurred(e);
+        throw e;
     }
 }

@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -70,7 +69,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                 xdrOut.writeLong(getBlobId());
                 xdrOut.flush();
             } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 final GenericResponse genericResponse = database.readGenericResponse(null);
@@ -78,7 +77,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                 setOpen(true);
                 resetEof();
             } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioReadError(e);
             }
             // TODO Request information on the blob?
         } catch (SQLException e) {
@@ -91,7 +90,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
     public byte[] getSegment(final int sizeRequested) throws SQLException {
         try {
             if (sizeRequested <= 0) {
-                throw new FbExceptionBuilder().exception(jb_blobGetSegmentNegative)
+                throw FbExceptionBuilder.forException(jb_blobGetSegmentNegative)
                         .messageParameter(sizeRequested)
                         .toSQLException();
             }
@@ -112,7 +111,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                     xdrOut.writeInt(0); // length of segment send buffer (always 0 in get)
                     xdrOut.flush();
                 } catch (IOException e) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                    throw FbExceptionBuilder.ioWriteError(e);
                 }
                 try {
                     response = database.readGenericResponse(null);
@@ -122,7 +121,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                         setEof();
                     }
                 } catch (IOException e) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+                    throw FbExceptionBuilder.ioReadError(e);
                 }
 
                 final byte[] responseBuffer = response.getData();
@@ -161,13 +160,13 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                 xdrOut.writeInt(offset);
                 xdrOut.flush();
             } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 database.readResponse(null);
                 // object handle in response is the current position in the blob (see .NET provider source)
             } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioReadError(e);
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);

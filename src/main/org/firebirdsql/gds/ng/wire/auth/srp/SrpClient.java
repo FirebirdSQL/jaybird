@@ -230,10 +230,10 @@ public final class SrpClient {
 
     byte[] clientProof(String user, String password, byte[] authData) throws SQLException {
         if (authData == null || authData.length == 0) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_auth_data).toSQLException();
+            throw FbExceptionBuilder.forException(ISCConstants.isc_auth_data).toSQLException();
         }
         if (authData.length > EXPECTED_AUTH_DATA_LENGTH) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_auth_datalength)
+            throw FbExceptionBuilder.forException(ISCConstants.isc_auth_datalength)
                     .messageParameter(authData.length)
                     .messageParameter(EXPECTED_AUTH_DATA_LENGTH)
                     .messageParameter("data")
@@ -242,7 +242,7 @@ public final class SrpClient {
 
         final int saltLength = VaxEncoding.iscVaxInteger2(authData, 0);
         if (saltLength > SRP_SALT_SIZE * 2) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_auth_datalength)
+            throw FbExceptionBuilder.forException(ISCConstants.isc_auth_datalength)
                     .messageParameter(saltLength)
                     .messageParameter(SRP_SALT_SIZE * 2)
                     .messageParameter("salt")
@@ -253,7 +253,7 @@ public final class SrpClient {
         final int keyLength = VaxEncoding.iscVaxInteger2(authData, saltLength + 2);
         final int serverKeyStart = saltLength + 4;
         if (authData.length - serverKeyStart != keyLength) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_auth_datalength)
+            throw FbExceptionBuilder.forException(ISCConstants.isc_auth_datalength)
                     .messageParameter(keyLength)
                     .messageParameter(authData.length - serverKeyStart)
                     .messageParameter("key")

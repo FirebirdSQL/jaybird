@@ -73,7 +73,7 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
             clientData = srpClient.getPublicKeyHex().getBytes(StandardCharsets.ISO_8859_1);
             return AuthStatus.AUTH_MORE_DATA;
         } else if (srpClient.getSessionKey() != null) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_random)
+            throw FbExceptionBuilder.forException(ISCConstants.isc_random)
                     .messageParameter("Auth sync failure - SRP's authenticate called more times than supported")
                     .toSQLException();
         }

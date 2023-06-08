@@ -68,6 +68,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
     /**
      * Create a new instance of {@code FBMaintenanceManager} based on the default GDSType.
      */
+    @SuppressWarnings("unused")
     public FBMaintenanceManager() {
         super();
     }
@@ -78,6 +79,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
+    @SuppressWarnings("unused")
     public FBMaintenanceManager(String gdsType) {
         super(gdsType);
     }
@@ -319,8 +321,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
                 idx += length;
                 break;
             default:
-                throw new FbExceptionBuilder()
-                        .exception(isc_fbsvcmgr_info_err)
+                throw FbExceptionBuilder.forException(isc_fbsvcmgr_info_err)
                         .messageParameter(output[idx - 1] & 0xFF)
                         .toSQLException();
             }

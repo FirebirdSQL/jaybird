@@ -57,7 +57,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
             checkBlobClosed();
 
             if (getBlobId() != FbBlob.NO_BLOB_ID) {
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
+                throw FbExceptionBuilder.forNonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
             }
 
             final FbWireDatabase database = getDatabase();
@@ -74,7 +74,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
                 xdrOut.writeLong(FbBlob.NO_BLOB_ID);
                 xdrOut.flush();
             } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 final GenericResponse genericResponse = database.readGenericResponse(null);
@@ -82,7 +82,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
                 setBlobId(genericResponse.getBlobId());
                 setOpen(true);
             } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioReadError(e);
             }
             // TODO Request information on the blob?
         } catch (SQLException e) {
@@ -95,11 +95,11 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
     public void putSegment(byte[] segment) throws SQLException {
         try {
             if (segment.length == 0) {
-                throw new FbExceptionBuilder().exception(jb_blobPutSegmentEmpty).toSQLException();
+                throw FbExceptionBuilder.forException(jb_blobPutSegmentEmpty).toSQLException();
             }
             // TODO Handle by performing multiple puts?
             if (segment.length > getMaximumSegmentSize()) {
-                throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
+                throw FbExceptionBuilder.forException(jb_blobPutSegmentTooLong).toSQLException();
             }
             try (LockCloseable ignored = withLock()) {
                 checkDatabaseAttached();
@@ -115,12 +115,12 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
                     xdrOut.writeBuffer(segment);
                     xdrOut.flush();
                 } catch (IOException e) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                    throw FbExceptionBuilder.ioWriteError(e);
                 }
                 try {
                     database.readResponse(null);
                 } catch (IOException e) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+                    throw FbExceptionBuilder.ioReadError(e);
                 }
             }
         } catch (SQLException e) {

@@ -75,8 +75,7 @@ public final class WireDatabaseConnection extends WireConnection<IConnectionProp
         }
 
         if (!dbAttachInfo.hasAttachObjectName()) {
-            throw new FbExceptionBuilder()
-                    .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
                     .messageParameter(initialDbAttachInfo.attachObjectName())
                     .messageParameter("null or empty database name in connection string")
                     .toSQLException();

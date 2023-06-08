@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version16;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.BatchCompletion;
@@ -55,12 +54,12 @@ public class V16WireOperations extends V15WireOperations {
             xdrOut.writeInt(getBatchSyncOperation());
             xdrOut.flush();
         } catch (IOException e) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+            throw FbExceptionBuilder.ioWriteError(e);
         }
         try {
             readResponse(null);
         } catch (IOException e) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 

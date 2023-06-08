@@ -176,8 +176,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                 // transactions
                 // In the case of wire protocol we could ignore this and simply close, but that would be
                 // inconsistent with fbclient
-                throw new FbExceptionBuilder()
-                        .exception(isc_open_trans)
+                throw FbExceptionBuilder.forException(isc_open_trans)
                         .messageParameter(activeTransactionCount)
                         .toSQLException();
             }
@@ -388,7 +387,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                     log.log(System.Logger.Level.DEBUG, "Received isc_info_truncated");
                     return AbstractFbDatabase.this;
                 }
-                default -> throw new FbExceptionBuilder().exception(isc_infunk).toSQLException();
+                default -> throw FbExceptionBuilder.forException(isc_infunk).toSQLException();
                 }
             }
             return AbstractFbDatabase.this;

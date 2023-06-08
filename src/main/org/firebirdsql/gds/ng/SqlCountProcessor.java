@@ -86,7 +86,7 @@ public final class SqlCountProcessor implements InfoProcessor<SqlCountHolder> {
             // TODO Return all -1 instead?
             return new SqlCountHolder(0, 0, 0, 0);
         } else {
-            throw new FbExceptionBuilder().exception(JaybirdErrorCodes.jb_unexpectedInfoResponse)
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unexpectedInfoResponse)
                     .messageParameter("sql", "isc_info_sql_records or isc_info_end",
                             ISCConstants.isc_info_sql_records + " or " + ISCConstants.isc_info_end, infoResponse[0])
                     .toSQLException();

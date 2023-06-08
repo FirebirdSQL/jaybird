@@ -78,12 +78,12 @@ public final class Arc4EncryptionPlugin implements EncryptionPlugin {
             rc4Cipher.init(mode, new SecretKeySpec(key, ARCFOUR_CIPHER_NAME));
             return rc4Cipher;
         } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
-            throw new FbExceptionBuilder().nonTransientException(jb_cryptAlgorithmNotAvailable)
+            throw FbExceptionBuilder.forNonTransientException(jb_cryptAlgorithmNotAvailable)
                     .messageParameter(encryptionIdentifier())
                     .cause(e)
                     .toSQLException();
         } catch (InvalidKeyException e) {
-            throw new FbExceptionBuilder().nonTransientException(jb_cryptInvalidKey)
+            throw FbExceptionBuilder.forNonTransientException(jb_cryptInvalidKey)
                     .messageParameter(encryptionIdentifier())
                     .cause(e)
                     .toSQLException();

@@ -24,6 +24,7 @@ import org.firebirdsql.jdbc.FBSQLExceptionInfo;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 
@@ -58,7 +59,7 @@ public final class FbExceptionBuilder {
      * </p>
      *
      * @param errorCode
-     *         The Firebird error code
+     *         Firebird error code
      * @return this FbExceptionBuilder
      * @see #warning(int)
      */
@@ -70,15 +71,75 @@ public final class FbExceptionBuilder {
     /**
      * Creates an exception builder with the specified error code.
      * <p>
-     * Equivalent to calling: {@code new FbExceptionBuilder().error(errorCode); }
+     * Equivalent to calling: {@code new FbExceptionBuilder().exception(errorCode); }
      * </p>
      *
      * @param errorCode
-     *         The Firebird error code
+     *         Firebird error code
      * @return FbExceptionBuilder initialized with the specified error code
      */
     public static FbExceptionBuilder forException(int errorCode) {
         return new FbExceptionBuilder().exception(errorCode);
+    }
+
+    /**
+     * Creates an exception builder for timeout exceptions with the specified error code.
+     * <p>
+     * Equivalent to calling: {@code new FbExceptionBuilder().timeoutException(errorCode); }
+     * </p>
+     *
+     * @param errorCode
+     *         Firebird error code
+     * @return FbExceptionBuilder initialized with the specified error code
+     * @since 6
+     */
+    public static FbExceptionBuilder forTimeoutException(int errorCode) {
+        return new FbExceptionBuilder().timeoutException(errorCode);
+    }
+
+    /**
+     * Creates an exception builder for non-transient exceptions with the specified error code.
+     * <p>
+     * Equivalent to calling: {@code new FbExceptionBuilder().nonTransientException(errorCode); }
+     * </p>
+     *
+     * @param errorCode
+     *         Firebird error code
+     * @return FbExceptionBuilder initialized with the specified error code
+     * @since 6
+     */
+    public static FbExceptionBuilder forNonTransientException(int errorCode) {
+        return new FbExceptionBuilder().nonTransientException(errorCode);
+    }
+
+    /**
+     * Creates an exception builder for non-transient connection exceptions with the specified error code.
+     * <p>
+     * Equivalent to calling: {@code new FbExceptionBuilder().nonTransientConnectionException(errorCode); }
+     * </p>
+     *
+     * @param errorCode
+     *         Firebird error code
+     * @return FbExceptionBuilder initialized with the specified error code
+     * @since 6
+     */
+    public static FbExceptionBuilder forNonTransientConnectionException(int errorCode) {
+        return new FbExceptionBuilder().nonTransientConnectionException(errorCode);
+    }
+
+    /**
+     * Creates an exception builder for transient exceptions with the specified error code.
+     * <p>
+     * Equivalent to calling: {@code new FbExceptionBuilder().transientException(errorCode); }
+     * </p>
+     *
+     * @param errorCode
+     *         Firebird error code
+     * @return FbExceptionBuilder initialized with the specified error code
+     * @since 6
+     */
+    public static FbExceptionBuilder forTransientException(int errorCode) {
+        return new FbExceptionBuilder().transientException(errorCode);
     }
 
     /**
@@ -88,7 +149,7 @@ public final class FbExceptionBuilder {
      * </p>
      *
      * @param errorCode
-     *         The Firebird error code
+     *         Firebird error code
      * @return FbExceptionBuilder initialized with the specified error code
      */
     public static FbExceptionBuilder forWarning(int errorCode) {
@@ -96,10 +157,44 @@ public final class FbExceptionBuilder {
     }
 
     /**
+     * Creates an I/O write error ({@link org.firebirdsql.gds.ISCConstants#isc_net_write_err}).
+     *
+     * @param e
+     *         exception cause
+     * @return SQLException instance
+     * @since 6
+     */
+    public static SQLException ioWriteError(IOException e) {
+        class Holder {
+            // Cache message and SQLSTATE to avoid constructing through builder every time
+            static final CachedMessage IO_WRITE_ERROR = CachedMessage.of(isc_net_write_err);
+        }
+        return new SQLNonTransientConnectionException(
+                Holder.IO_WRITE_ERROR.message, Holder.IO_WRITE_ERROR.sqlState, Holder.IO_WRITE_ERROR.errorCode, e);
+    }
+
+    /**
+     * Creates an I/O write error ({@link org.firebirdsql.gds.ISCConstants#isc_net_read_err}).
+     *
+     * @param e
+     *         exception cause
+     * @return SQLException instance
+     * @since 6
+     */
+    public static SQLException ioReadError(IOException e) {
+        class Holder {
+            // Cache message and SQLSTATE to avoid constructing through builder every time
+            static final CachedMessage IO_READ_ERROR = CachedMessage.of(isc_net_read_err);
+        }
+        return new SQLNonTransientConnectionException(
+                Holder.IO_READ_ERROR.message, Holder.IO_READ_ERROR.sqlState, Holder.IO_READ_ERROR.errorCode, e);
+    }
+
+    /**
      * The (next) exception is a warning.
      *
      * @param errorCode
-     *         The Firebird error code
+     *         Firebird error code
      * @return this FbExceptionBuilder
      * @see #exception(int)
      */
@@ -112,7 +207,7 @@ public final class FbExceptionBuilder {
      * Force the next exception to be a {@link java.sql.SQLTimeoutException}.
      *
      * @param errorCode
-     *         The Firebird error code
+     *         Firebird error code
      * @return this FbExceptionBuilder
      * @see #exception(int)
      */
@@ -125,7 +220,7 @@ public final class FbExceptionBuilder {
      * Force the next exception to be a {@link java.sql.SQLNonTransientException}.
      *
      * @param errorCode
-     *         The Firebird error code
+     *         Firebird error code
      * @return this FbExceptionBuilder
      * @see #exception(int)
      */
@@ -138,7 +233,7 @@ public final class FbExceptionBuilder {
      * Force the next exception to be a {@link java.sql.SQLNonTransientConnectionException}.
      *
      * @param errorCode
-     *         The Firebird error code
+     *         Firebird error code
      * @return this FbExceptionBuilder
      * @see #exception(int)
      */
@@ -151,7 +246,7 @@ public final class FbExceptionBuilder {
      * Force the next exception to be a {@link java.sql.SQLTransientException}.
      *
      * @param errorCode
-     *         The Firebird error code
+     *         Firebird error code
      * @return this FbExceptionBuilder
      * @see #exception(int)
      */
@@ -451,10 +546,10 @@ public final class FbExceptionBuilder {
         exceptionInfo.add(current);
     }
 
-    private static final int[] NON_TRANSIENT_CODES = {isc_wirecrypt_incompatible, isc_miss_wirecrypt, isc_wirecrypt_key,
-            isc_wirecrypt_plugin, jb_cryptNoCryptKeyAvailable, jb_cryptAlgorithmNotAvailable, jb_cryptInvalidKey,
-            isc_login };
-    private static final int[] TIMEOUT_CODES = {isc_cfg_stmt_timeout, isc_att_stmt_timeout, isc_req_stmt_timeout };
+    private static final int[] NON_TRANSIENT_CODES = { isc_wirecrypt_incompatible, isc_miss_wirecrypt,
+            isc_wirecrypt_key, isc_wirecrypt_plugin, jb_cryptNoCryptKeyAvailable, jb_cryptAlgorithmNotAvailable,
+            jb_cryptInvalidKey, isc_login, isc_net_write_err, isc_net_read_err, isc_network_error };
+    private static final int[] TIMEOUT_CODES = { isc_cfg_stmt_timeout, isc_att_stmt_timeout, isc_req_stmt_timeout };
     static {
         Arrays.sort(NON_TRANSIENT_CODES);
         Arrays.sort(TIMEOUT_CODES);
@@ -591,6 +686,36 @@ public final class FbExceptionBuilder {
                     "; MessageParameters: " + getMessageParameters() +
                     "; Cause: " + cause;
         }
+    }
+
+    /**
+     * Caches the rendered message, SQLSTATE and error code of an exception; used for internal optimization purposes.
+     *
+     * @param message
+     *         rendered message string
+     * @param sqlState
+     *         SQLSTATE
+     * @param errorCode
+     *         vendor error code
+     * @since 6
+     */
+    private record CachedMessage(String message, String sqlState, int errorCode) {
+
+        /**
+         * Renders the exception using {@code #toSQLException} and stores the resulting message and SQLSTATE, and
+         * {@code errorCode}.
+         * <p>
+         * Do not use
+         * </p>
+         *
+         * @param errorCode Firebird/Jaybird error code
+         * @return cached message with the message, SQLSTATE from the generated exception, and {@code errorCode}
+         */
+        private static CachedMessage of(int errorCode) {
+            SQLException exception = forException(errorCode).toSQLException();
+            return new CachedMessage(exception.getMessage(), exception.getSQLState(), errorCode);
+        }
+
     }
 
     /**

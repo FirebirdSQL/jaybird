@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
@@ -110,13 +109,13 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             xdrOut.writeInt(commitOrRollback);
             xdrOut.writeInt(handle);
             xdrOut.flush();
-        } catch (IOException ioex) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioWriteError(e);
         }
         try {
             getDatabase().readResponse(null);
-        } catch (IOException ioex) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 
@@ -135,13 +134,13 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                     xdrOut.writeInt(handle);
                 }
                 xdrOut.flush();
-            } catch (IOException ioex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+            } catch (IOException e) {
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 getDatabase().readResponse(null);
-            } catch (IOException ioex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
+            } catch (IOException e) {
+                throw FbExceptionBuilder.ioReadError(e);
             }
             switchState(TransactionState.PREPARED);
         } catch (SQLException e) {

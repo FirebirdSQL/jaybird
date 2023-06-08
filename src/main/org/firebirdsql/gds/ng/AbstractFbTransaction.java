@@ -135,7 +135,7 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         // TODO As separate class?
         return getTransactionInfo(new byte[] { ISCConstants.isc_info_tra_id }, 16, infoResponse -> {
             if (infoResponse[0] != ISCConstants.isc_info_tra_id) {
-                throw new FbExceptionBuilder().exception(JaybirdErrorCodes.jb_unexpectedInfoResponse)
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unexpectedInfoResponse)
                         .messageParameter(
                                 "transaction", "isc_info_tra_id", ISCConstants.isc_info_tra_id, infoResponse[0])
                         .toSQLException();

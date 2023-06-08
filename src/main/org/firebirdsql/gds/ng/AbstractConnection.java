@@ -131,8 +131,7 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
             final String dbCryptConfig = getAttachProperties().getDbCryptConfig();
             return DEFAULT_DB_CRYPT_CALLBACK_SPI.createDbCryptCallback(dbCryptConfig);
         } catch (RuntimeException e) {
-            throw new FbExceptionBuilder()
-                    .nonTransientConnectionException(jb_dbCryptCallbackInitError)
+            throw FbExceptionBuilder.forNonTransientConnectionException(jb_dbCryptCallbackInitError)
                     .cause(e)
                     .toSQLException();
         }

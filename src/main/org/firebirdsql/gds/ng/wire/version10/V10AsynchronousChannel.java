@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.EventHandle;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbDatabase;
@@ -109,8 +108,8 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             SocketAddress socketAddress = new InetSocketAddress(hostName, portNumber);
             socketChannel.connect(socketAddress);
             socketChannel.configureBlocking(false);
-        } catch (IOException ex) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioWriteError(e);
         }
     }
 
@@ -227,13 +226,13 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
                 dbXdrOut.writeInt(localId);
                 dbXdrOut.flush();
             } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 final GenericResponse response = database.readGenericResponse(null);
                 wireEventHandle.setEventId(response.getObjectHandle());
             } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
         }
     }
@@ -252,12 +251,12 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
                 dbXdrOut.writeInt(wireEventHandle.getLocalId());
                 dbXdrOut.flush();
             } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 database.readGenericResponse(null);
             } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+                throw FbExceptionBuilder.ioReadError(e);
             }
         }
     }

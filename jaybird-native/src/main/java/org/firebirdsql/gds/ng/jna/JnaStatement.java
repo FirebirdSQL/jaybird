@@ -394,7 +394,7 @@ public class JnaStatement extends AbstractFbStatement {
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
             if (!getState().isCursorOpen()) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
+                throw FbExceptionBuilder.forException(ISCConstants.isc_cursor_not_open).toSQLException();
             }
             if (isAfterLast()) return;
 

@@ -76,7 +76,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
                 connection.close();
             }
         } catch (IOException e) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+            throw FbExceptionBuilder.ioWriteError(e);
         } finally {
             databaseListenerDispatcher.detached(this);
             databaseListenerDispatcher.shutdown();
@@ -255,8 +255,8 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
                 if (channel != null) {
                     AsynchronousProcessor.getInstance().unregisterAsynchronousChannel(channel);
                 }
-                throw new FbExceptionBuilder()
-                        .nonTransientException(JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected)
+                throw FbExceptionBuilder
+                        .forNonTransientException(JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected)
                         .toSQLException();
             }
             channel.cancelEvent(eventHandle);
@@ -306,14 +306,14 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
                 xdrOut.writeBuffer(requestItems);
                 xdrOut.writeInt(maxBufferLength);
                 xdrOut.flush();
-            } catch (IOException ex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+            } catch (IOException e) {
+                throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
                 final GenericResponse genericResponse = readGenericResponse(null);
                 return genericResponse.getData();
-            } catch (IOException ex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+            } catch (IOException e) {
+                throw FbExceptionBuilder.ioReadError(e);
             }
         }
     }

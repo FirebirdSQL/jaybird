@@ -284,8 +284,7 @@ public class FBDriver implements FirebirdDriver {
             return URLDecoder.decode(encodedValue, StandardCharsets.UTF_8);
         } catch (RuntimeException e) {
             // NOTE: The UnsupportedEncodingException shouldn't occur because UTF-8 support is required in Java
-            throw new FbExceptionBuilder()
-                    .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
                     .messageParameter(url)
                     .messageParameter(e.toString())
                     .cause(e)

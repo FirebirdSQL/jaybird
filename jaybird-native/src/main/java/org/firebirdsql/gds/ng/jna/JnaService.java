@@ -154,8 +154,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
                 } catch (Exception ex) {
                     safelyDetach();
                     // TODO Replace with specific error (eg native client error)
-                    throw new FbExceptionBuilder()
-                            .exception(ISCConstants.isc_network_error)
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_network_error)
                             .messageParameter(connection.getAttachUrl())
                             .cause(ex)
                             .toSQLException();
@@ -195,8 +194,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
             throw ex;
         } catch (Exception ex) {
             // TODO Replace with specific error (eg native client error)
-            throw new FbExceptionBuilder()
-                    .exception(ISCConstants.isc_network_error)
+            throw FbExceptionBuilder.forException(ISCConstants.isc_network_error)
                     .messageParameter(connection.getAttachUrl())
                     .cause(ex)
                     .toSQLException();

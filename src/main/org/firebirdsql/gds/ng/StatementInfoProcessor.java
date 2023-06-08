@@ -79,7 +79,7 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
 
             default:
                 log.log(System.Logger.Level.DEBUG, "Unexpected item type %d", info.currentItem);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_dsql_sqlda_err).toSQLException();
+                throw FbExceptionBuilder.forException(ISCConstants.isc_dsql_sqlda_err).toSQLException();
             }
         }
         return info;
@@ -223,7 +223,7 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
 
             default:
                 log.log(System.Logger.Level.DEBUG, "Unexpected item type %d", info.currentItem);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_dsql_sqlda_err).toSQLException();
+                throw FbExceptionBuilder.forException(ISCConstants.isc_dsql_sqlda_err).toSQLException();
             }
         }
     }

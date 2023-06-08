@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
@@ -138,8 +137,8 @@ public abstract class AbstractWireOperations implements FbWireOperations {
                 default -> builder.messageParameter(xdrIn.readInt());
                 }
             }
-        } catch (IOException ioe) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioe).toSQLException();
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 
@@ -190,7 +189,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
             case op_sql_response -> new SqlResponse(xdrIn.readInt());
             case op_batch_cs -> readBatchCompletionResponse(xdrIn);
             default ->
-                    throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_unexpectedOperationCode)
+                    throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_unexpectedOperationCode)
                             .messageParameter(operation)
                             .messageParameter("processOperation")
                             .toSQLException();

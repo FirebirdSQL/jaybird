@@ -173,8 +173,7 @@ final class GeneratedKeysSupportFactory {
                         .create(sql, supportedQueryTypes)
                         .forReturnGeneratedKeysOption(fbDatabaseMetaData);
             default:
-                throw new FbExceptionBuilder()
-                        .nonTransientException(JaybirdErrorCodes.jb_invalidGeneratedKeysOption)
+                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidGeneratedKeysOption)
                         .toSQLException();
             }
         }
@@ -231,8 +230,7 @@ final class GeneratedKeysSupportFactory {
             case Statement.RETURN_GENERATED_KEYS:
                 throw disabled();
             default:
-                throw new FbExceptionBuilder()
-                        .nonTransientException(JaybirdErrorCodes.jb_invalidGeneratedKeysOption)
+                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidGeneratedKeysOption)
                         .toSQLException();
             }
         }

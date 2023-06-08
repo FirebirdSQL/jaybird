@@ -50,7 +50,7 @@ public class V15WireOperations extends V13WireOperations {
         try {
             return new DbCryptData(pluginData, replySize);
         } catch (RuntimeException e) {
-            throw new FbExceptionBuilder().nonTransientConnectionException(JaybirdErrorCodes.jb_dbCryptDataError)
+            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_dbCryptDataError)
                     .cause(e)
                     .toSQLException();
         }

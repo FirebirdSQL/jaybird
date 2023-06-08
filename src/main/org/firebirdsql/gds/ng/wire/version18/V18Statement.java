@@ -65,7 +65,7 @@ public class V18Statement extends V16Statement {
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
             if (!getState().isCursorOpen()) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
+                throw FbExceptionBuilder.forException(ISCConstants.isc_cursor_not_open).toSQLException();
             }
 
             try (OperationCloseHandle operationCloseHandle = signalFetch()) {
@@ -78,15 +78,15 @@ public class V18Statement extends V16Statement {
                     int actualFetchSize = fetchType.supportsBatch() ? fetchSize : Math.min(1, fetchSize);
                     sendFetchScroll(fetchType, actualFetchSize, position);
                     getXdrOut().flush();
-                } catch (IOException ex) {
+                } catch (IOException e) {
                     switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                    throw FbExceptionBuilder.ioWriteError(e);
                 }
                 try {
                     processFetchResponse(fetchType.direction(position));
-                } catch (IOException ex) {
+                } catch (IOException e) {
                     switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    throw FbExceptionBuilder.ioReadError(e);
                 }
             }
         }
@@ -108,7 +108,7 @@ public class V18Statement extends V16Statement {
         if (!hasFetched()) {
             // Attempting to retrieve cursor information when cursor is not open causes SQLDA errors on fetch.
             // This is an attempt to protect against that problem by disallowing such requests.
-            throw new FbExceptionBuilder().transientException(ISCConstants.isc_cursor_not_open).toSQLException();
+            throw FbExceptionBuilder.forTransientException(ISCConstants.isc_cursor_not_open).toSQLException();
         }
         return getInfo(WireProtocolConstants.op_info_cursor, requestItems, bufferLength);
     }

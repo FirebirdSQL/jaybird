@@ -215,7 +215,7 @@ public class DefaultBlrCalculator implements BlrCalculator {
             bout.write(blr_ex_time_tz);
             break;
         default:
-            throw new FbExceptionBuilder().exception(isc_dsql_sqlda_value_err).toSQLException();
+            throw FbExceptionBuilder.forException(isc_dsql_sqlda_value_err).toSQLException();
         }
 
         bout.write(blr_short); // Null indicator
@@ -256,7 +256,7 @@ public class DefaultBlrCalculator implements BlrCalculator {
         case SQL_BOOLEAN:
             return 1 + 1;
         default:
-            throw new FbExceptionBuilder().exception(isc_dsql_datatype_err).toSQLException();
+            throw FbExceptionBuilder.forException(isc_dsql_datatype_err).toSQLException();
         }
     }
 
@@ -316,7 +316,7 @@ public class DefaultBlrCalculator implements BlrCalculator {
                 align = 8;
                 break;
             default:
-                throw new FbExceptionBuilder().exception(isc_dsql_datatype_err).toSQLException();
+                throw FbExceptionBuilder.forException(isc_dsql_datatype_err).toSQLException();
             }
             if (align > 1) {
                 length = blrAlign(length, align);

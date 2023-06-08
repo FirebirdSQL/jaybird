@@ -71,9 +71,8 @@ public class V12Database extends V11Database {
                         xdr.writeInt(kind);
                     }
                     wireOperations.writeDirect(out.toByteArray());
-                } catch (IOException ioe) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioe)
-                            .toSQLException();
+                } catch (IOException e) {
+                    throw FbExceptionBuilder.ioWriteError(e);
                 }
             }
         } catch (SQLException ex) {

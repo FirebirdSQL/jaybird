@@ -46,7 +46,7 @@ public final class BlobLengthProcessor implements InfoProcessor<Long> {
                     .toSQLException();
         }
         if (infoResponse[0] != ISCConstants.isc_info_blob_total_length) {
-            throw new FbExceptionBuilder().exception(JaybirdErrorCodes.jb_unexpectedInfoResponse)
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unexpectedInfoResponse)
                     .messageParameter("transaction", "isc_info_blob_total_length",
                             ISCConstants.isc_info_blob_total_length, infoResponse[0])
                     .toSQLException();
