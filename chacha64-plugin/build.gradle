@@ -46,7 +46,6 @@ javadoc {
     options.windowTitle = "$project.capitalizedName ChaCha64 ${project.'version.maven'} "
     options.docTitle = "$project.capitalizedName ChaCha64 ${project.'version.maven'}"
     options.bottom = "Copyright &copy; 2023-${project.YEAR} Jaybird (Firebird JDBC) team. All rights reserved."
-    def currentJavaVersion = JavaVersion.current()
     options.addBooleanOption('html5', true)
     options.addBooleanOption('Xdoclint:none', true)
 }
