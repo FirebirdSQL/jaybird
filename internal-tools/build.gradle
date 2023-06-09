@@ -1,0 +1,16 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.firebirdsql.jdbc'
+version = project.'version.maven'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // NOTE: ':' represents the root module, which contains the main Jaybird driver
+    // Could be dropped if MessageDump is removed (no longer needs DB connection)
+    runtimeOnly project(':')
+}

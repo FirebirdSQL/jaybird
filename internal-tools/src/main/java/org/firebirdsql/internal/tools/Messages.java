@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.internal.tools;
 
 /**
  * Helper class for extracting and transforming messages as defined in Firebird.

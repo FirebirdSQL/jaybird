@@ -75,13 +75,6 @@ sourceSets {
             srcDirs = ['src/test_resources']
         }
     }
-    tools {
-        java {
-            srcDirs = ['src/messages']
-            compileClasspath += main.output
-            runtimeClasspath += main.output
-        }
-    }
 }
 
 processResources {

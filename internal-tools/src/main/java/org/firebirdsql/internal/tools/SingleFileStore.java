@@ -16,14 +16,14 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.internal.tools;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static org.firebirdsql.util.Messages.toJaybirdMessageFormat;
+import static org.firebirdsql.internal.tools.Messages.toJaybirdMessageFormat;
 
 /**
  * Uses a single file for error messages, and a single file for SQLstates.

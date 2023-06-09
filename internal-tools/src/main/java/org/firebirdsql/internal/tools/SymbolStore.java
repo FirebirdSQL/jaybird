@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.internal.tools;
 
 import java.io.IOException;
 import java.nio.file.Files;

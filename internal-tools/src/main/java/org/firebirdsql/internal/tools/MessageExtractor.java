@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.internal.tools;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -27,7 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static org.firebirdsql.util.Messages.unescapeSource;
+import static org.firebirdsql.internal.tools.Messages.unescapeSource;
 
 /**
  * Utility class for generating the property files containing the error codes and error messages from
