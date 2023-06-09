@@ -35,15 +35,23 @@ enum OutputFormat {
      * Per facility a file for messages and a file for SQLSTATE.
      */
     PER_FACILITY(PerFacilityStore::new),
+    /**
+     * CSV used by Firebird Language Reference.
+     * <p>
+     * Specifically, appendix 2, <em>Exception Codes and Messages</em>, section <em>SQLCODE and GDSCODE Error Codes and
+     * Descriptions</em>.
+     * </p>
+     */
+    LANG_REF_CSV(LangRefCsvStore::new),
     ;
 
-    private final Supplier<MessageStore> messageStoreSupplier;
+    private final Supplier<FirebirdErrorStore> messageStoreSupplier;
 
-    OutputFormat(Supplier<MessageStore> messageStoreSupplier) {
+    OutputFormat(Supplier<FirebirdErrorStore> messageStoreSupplier) {
         this.messageStoreSupplier = messageStoreSupplier;
     }
 
-    MessageStore createMessageStore() {
+    FirebirdErrorStore createMessageStore() {
         return messageStoreSupplier.get();
     }
 }

@@ -23,7 +23,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static org.firebirdsql.internal.tools.Messages.toJaybirdMessageFormat;
+import static org.firebirdsql.internal.tools.MessageConverter.toJaybirdMessageFormat;
 
 /**
  * Uses a single file for error messages, and a single file for SQLstates.
@@ -38,7 +38,7 @@ class SingleFileStore extends MessageStore {
     private final SymbolStore symbolStore = new SymbolStore();
 
     @Override
-    void reset() {
+    public void reset() {
         messages.clear();
         sqlStates.clear();
         symbolStore.reset();
@@ -60,7 +60,7 @@ class SingleFileStore extends MessageStore {
     }
 
     @Override
-    void save() throws IOException {
+    public void save() throws IOException {
         store(messages, Path.of("isc_error_msg.properties"));
         store(sqlStates, Path.of("isc_error_sqlstates.properties"));
         symbolStore.save();

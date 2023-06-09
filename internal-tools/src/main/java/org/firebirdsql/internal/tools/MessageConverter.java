@@ -24,9 +24,9 @@ package org.firebirdsql.internal.tools;
  * @author Mark Rotteveel
  * @since 5
  */
-final class Messages {
+final class MessageConverter {
 
-    private Messages() {
+    private MessageConverter() {
         // no instances
     }
 

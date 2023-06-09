@@ -23,11 +23,12 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static org.firebirdsql.internal.tools.Messages.unescapeSource;
+import static org.firebirdsql.internal.tools.MessageConverter.unescapeSource;
 
 /**
  * Utility class for generating the property files containing the error codes and error messages from
@@ -39,7 +40,7 @@ import static org.firebirdsql.internal.tools.Messages.unescapeSource;
 public class MessageExtractor {
 
     private final Path messageRoot;
-    private final MessageStore messageStore;
+    private final FirebirdErrorStore messageStore;
 
     public MessageExtractor(Path messageRoot, OutputFormat outputFormat) {
         this.messageRoot = messageRoot;
@@ -75,6 +76,7 @@ public class MessageExtractor {
 
     public static void main(String[] args) {
         String messageRootString = null;
+        OutputFormat outputFormat = OutputFormat.SINGLE;
         for (int idx = 0; idx < args.length; idx++) {
             if (args[idx].equals("--message-root")) {
                 if (++idx < args.length) {
@@ -82,46 +84,58 @@ public class MessageExtractor {
                 } else {
                     System.err.println("Option --message-root misses requires path");
                 }
+            } else if (args[idx].equals("--format")) {
+                if (++idx < args.length) {
+                    try {
+                        outputFormat = OutputFormat.valueOf(args[idx]);
+                    } catch (IllegalArgumentException e) {
+                        System.err.printf("Option --format: unexpected value '%s', expected one of %s; using default%n",
+                                args[idx], Arrays.toString(OutputFormat.values()));
+                    }
+                } else {
+                    System.err.println("Option --format expects a value; using default");
+                }
             }
+
         }
         if (messageRootString == null || messageRootString.isEmpty()) {
             System.err.println("Option --message-root <path> with path the Firebird error messages files required");
             System.exit(1);
         }
-        // Contrary to MessageDump, we're not implementing "--format" (to split errors per facility), as that was
-        // an experiment which will likely never surface in actual Jaybird use
 
-        MessageExtractor extractor = new MessageExtractor(Path.of(messageRootString), OutputFormat.SINGLE);
+        var extractor = new MessageExtractor(Path.of(messageRootString), outputFormat);
         extractor.run();
     }
 
     private enum MessageFormat {
-        FB_IMPL_MSG("^FB_IMPL_MSG\\(([^,]+), (\\d+), ([^,]+), -?\\d+, \"([^\"]{2})\", \"([^\"]{3})\", \"(.*?)\"\\)$",
-                1, 2, 3, 4, 5, 6),
-        FB_IMPL_MSG_SYMBOL("^FB_IMPL_MSG_SYMBOL\\(([^,]+), (\\d+), ([^,]+), \"(.*?)\"\\)$", 1, 2, 3, -1, -1, 4),
-        FB_IMPL_MSG_NO_SYMBOL("^FB_IMPL_MSG_NO_SYMBOL\\(([^,]+), (\\d+), \"(.*?)\"\\)$", 1, 2, -1, -1, -1, 3);
+        FB_IMPL_MSG("^FB_IMPL_MSG\\(([^,]+), (\\d+), ([^,]+), (-?\\d+), \"([^\"]{2})\", \"([^\"]{3})\", \"(.*?)\"\\)$",
+                1, 2, 3, 4, 5, 6, 7),
+        FB_IMPL_MSG_SYMBOL("^FB_IMPL_MSG_SYMBOL\\(([^,]+), (\\d+), ([^,]+), \"(.*?)\"\\)$", 1, 2, 3, -1, -1, -1, 4),
+        FB_IMPL_MSG_NO_SYMBOL("^FB_IMPL_MSG_NO_SYMBOL\\(([^,]+), (\\d+), \"(.*?)\"\\)$", 1, 2, -1, -1, -1, -1, 3);
 
         private final String prefix = name() + "(";
         private final Pattern messagePattern;
         private final int facilityGroup;
         private final int numberGroup;
         private final int symbolGroup;
+        private final int sqlCodeGroup;
         private final int sqlStateClassGroup;
         private final int sqlStateSubclassGroup;
         private final int messageGroup;
 
-        MessageFormat(String pattern, int facilityGroup, int numberGroup, int symbolGroup, int sqlStateClassGroup,
-                int sqlStateSubclassGroup, int messageGroup) {
+        MessageFormat(String pattern, int facilityGroup, int numberGroup, int symbolGroup, int sqlCodeGroup,
+                int sqlStateClassGroup, int sqlStateSubclassGroup, int messageGroup) {
             messagePattern = Pattern.compile(pattern);
             this.facilityGroup = facilityGroup;
             this.numberGroup = numberGroup;
             this.symbolGroup = symbolGroup;
+            this.sqlCodeGroup = sqlCodeGroup;
             this.sqlStateClassGroup = sqlStateClassGroup;
             this.sqlStateSubclassGroup = sqlStateSubclassGroup;
             this.messageGroup = messageGroup;
         }
 
-        static void parseLine(String line, MessageStore messageStore) {
+        static void parseLine(String line, FirebirdErrorStore messageStore) {
             for (MessageFormat messageFormat : values()) {
                 if (line.startsWith(messageFormat.prefix)) {
                     messageFormat.parseLine0(line, messageStore);
@@ -130,23 +144,42 @@ public class MessageExtractor {
             }
         }
 
-        private void parseLine0(String line, MessageStore messageStore) {
+        private void parseLine0(String line, FirebirdErrorStore messageStore) {
             Matcher matcher = messagePattern.matcher(line);
             if (!matcher.matches()) return;
+            messageStore.addFirebirdError(firebirdError(matcher));
+        }
 
-            Facility facility = Facility.valueOf(matcher.group(facilityGroup));
-            int number = Integer.parseInt(matcher.group(numberGroup));
-            String message = unescapeSource(matcher.group(messageGroup));
-            messageStore.addMessage(facility, number, message);
-            if (sqlStateClassGroup != -1 && sqlStateSubclassGroup != -1) {
-                String sqlState = Messages.toSqlState(
-                        matcher.group(sqlStateClassGroup), matcher.group(sqlStateSubclassGroup));
-                messageStore.addSqlState(facility, number, sqlState);
-            }
-            if (symbolGroup != -1) {
-                String symbolName = matcher.group(symbolGroup);
-                messageStore.addSymbol(facility, number, symbolName);
-            }
+        private FirebirdError firebirdError(Matcher matcher) {
+            return new FirebirdError(facility(matcher), number(matcher), symbol(matcher), sqlCode(matcher),
+                    sqlState(matcher), message(matcher));
+        }
+
+        private Facility facility(Matcher matcher) {
+            return Facility.valueOf(matcher.group(facilityGroup));
+        }
+
+        private int number(Matcher matcher) {
+            return Integer.parseInt(matcher.group(numberGroup));
+        }
+
+        private String symbol(Matcher matcher) {
+            if (symbolGroup == -1) return null;
+            return matcher.group(symbolGroup).trim();
+        }
+
+        private Integer sqlCode(Matcher matcher) {
+            if (sqlCodeGroup == -1) return null;
+            return Integer.valueOf(matcher.group(sqlCodeGroup));
+        }
+
+        private String sqlState(Matcher matcher) {
+            if (sqlStateClassGroup == -1 || sqlStateSubclassGroup == -1) return null;
+            return MessageConverter.toSqlState(matcher.group(sqlStateClassGroup), matcher.group(sqlStateSubclassGroup));
+        }
+
+        private String message(Matcher matcher) {
+            return unescapeSource(matcher.group(messageGroup));
         }
     }
 }

@@ -29,14 +29,20 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 /**
  * API for storing messages.
  */
-abstract class MessageStore {
+abstract class MessageStore implements FirebirdErrorStore {
 
     private static final String SPECIAL_SAVE_CHARS = "=: \t\r\n\f#!";
 
-    /**
-     * Resets this message store, clearing currently stored messages.
-     */
-    abstract void reset();
+    @Override
+    public void addFirebirdError(FirebirdError firebirdError) {
+        addMessage(firebirdError.facility(), firebirdError.numberInFacility(), firebirdError.message());
+        if (firebirdError.hasSqlState()) {
+            addSqlState(firebirdError.facility(), firebirdError.numberInFacility(), firebirdError.sqlState());
+        }
+        if (firebirdError.hasSymbolName()) {
+            addSymbol(firebirdError.facility(), firebirdError.numberInFacility(), firebirdError.symbolName());
+        }
+    }
 
     /**
      * Add a message.
@@ -103,14 +109,6 @@ abstract class MessageStore {
      *         symbol name without the {@code isc_} prefix, i.e. as listed in the msg header files
      */
     abstract void addSymbol(Facility facility, int number, String symbolName);
-
-    /**
-     * Saves the messages to disk.
-     *
-     * @throws IOException
-     *         For failures to write the files.
-     */
-    abstract void save() throws IOException;
 
     final void store(Map<Integer, String> data, Path filePath) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, ISO_8859_1)) {

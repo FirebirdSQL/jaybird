@@ -26,7 +26,7 @@ import java.util.TreeMap;
 import java.util.function.Function;
 
 import static java.lang.String.format;
-import static org.firebirdsql.internal.tools.Messages.toJaybirdMessageFormat;
+import static org.firebirdsql.internal.tools.MessageConverter.toJaybirdMessageFormat;
 
 /**
  * Uses a file for error messages and a file for SQLstates per facility.
@@ -46,7 +46,7 @@ class PerFacilityStore extends MessageStore {
     private final SymbolStore symbolStore = new SymbolStore();
 
     @Override
-    void reset() {
+    public void reset() {
         messagesPerFacility.clear();
         sqlStatesPerFacility.clear();
     }
@@ -73,7 +73,7 @@ class PerFacilityStore extends MessageStore {
     }
 
     @Override
-    void save() throws IOException {
+    public void save() throws IOException {
         save(messagesPerFacility, code -> format("error_messages_%d.properties", code));
         save(sqlStatesPerFacility, code -> format("sql_states_%d.properties", code));
         symbolStore.save();
