@@ -186,10 +186,9 @@ class FBPreparedStatementMetaDataTest {
                 create(15, "java.sql.Date", parameterModeIn, DATE, "DATE", 10, 0, parameterNullable, false, "date_field"),
                 create(16, "java.sql.Time", parameterModeIn, TIME, "TIME", 8, 0, parameterNullable, false, "time_field"),
                 create(17, "java.sql.Timestamp", parameterModeIn, TIMESTAMP, "TIMESTAMP", 19, 0, parameterNullable, false, "timestamp_field"),
-                create(18, "[B", parameterModeIn, LONGVARBINARY, "BLOB SUB_TYPE 0", 0, 0, parameterNullable, false, "blob_field"),
-                create(19, "java.lang.String", parameterModeIn, LONGVARCHAR, "BLOB SUB_TYPE 1", 0, 0, parameterNullable, false, "blob_text_field"),
-                // TODO Report actual subtype value
-                create(20, "java.sql.Blob", parameterModeIn, BLOB, "BLOB SUB_TYPE <0", 0, 0, parameterNullable, false, "blob_minus_one")
+                create(18, "[B", parameterModeIn, LONGVARBINARY, "BLOB SUB_TYPE BINARY", 0, 0, parameterNullable, false, "blob_field"),
+                create(19, "java.lang.String", parameterModeIn, LONGVARCHAR, "BLOB SUB_TYPE TEXT", 0, 0, parameterNullable, false, "blob_text_field"),
+                create(20, "java.sql.Blob", parameterModeIn, BLOB, "BLOB SUB_TYPE -1", 0, 0, parameterNullable, false, "blob_minus_one")
         ));
         final FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         if (supportInfo.supportsBoolean()) {
@@ -218,7 +217,7 @@ class FBPreparedStatementMetaDataTest {
     @MethodSource("testData")
     void testGetParameterClassName(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getClassName(), parameterMetaData.getParameterClassName(parameterIndex),
+        assertEquals(expectedMetaData.className(), parameterMetaData.getParameterClassName(parameterIndex),
                 "getParameterClassName");
     }
 
@@ -226,7 +225,7 @@ class FBPreparedStatementMetaDataTest {
     @MethodSource("testData")
     void testGetParameterMode(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getMode(), parameterMetaData.getParameterMode(parameterIndex),
+        assertEquals(expectedMetaData.mode(), parameterMetaData.getParameterMode(parameterIndex),
                 "getParameterMode");
     }
 
@@ -234,7 +233,7 @@ class FBPreparedStatementMetaDataTest {
     @MethodSource("testData")
     void testGetParameterType(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getType(), parameterMetaData.getParameterType(parameterIndex),
+        assertEquals(expectedMetaData.type(), parameterMetaData.getParameterType(parameterIndex),
                 "getParameterType");
     }
 
@@ -242,7 +241,7 @@ class FBPreparedStatementMetaDataTest {
     @MethodSource("testData")
     void testGetParameterTypeName(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getTypeName(), parameterMetaData.getParameterTypeName(parameterIndex),
+        assertEquals(expectedMetaData.typeName(), parameterMetaData.getParameterTypeName(parameterIndex),
                 "getParameterTypeName");
     }
 
@@ -250,26 +249,26 @@ class FBPreparedStatementMetaDataTest {
     @MethodSource("testData")
     void testGetPrecision(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getPrecision(), parameterMetaData.getPrecision(parameterIndex), "getPrecision");
+        assertEquals(expectedMetaData.precision(), parameterMetaData.getPrecision(parameterIndex), "getPrecision");
     }
 
     @ParameterizedTest(name = "Column {0} ({2})")
     @MethodSource("testData")
     void testGetScale(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored) throws Exception {
-        assertEquals(expectedMetaData.getScale(), parameterMetaData.getScale(parameterIndex), "getScale");
+        assertEquals(expectedMetaData.scale(), parameterMetaData.getScale(parameterIndex), "getScale");
     }
 
     @ParameterizedTest(name = "Column {0} ({2})")
     @MethodSource("testData")
     void testIsNullable(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.isNullable(), parameterMetaData.isNullable(parameterIndex), "isNullable");
+        assertEquals(expectedMetaData.nullable(), parameterMetaData.isNullable(parameterIndex), "isNullable");
     }
 
     @ParameterizedTest(name = "Column {0} ({2})")
     @MethodSource("testData")
     void testIsSigned(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored) throws Exception {
-        assertEquals(expectedMetaData.isSigned(), parameterMetaData.isSigned(parameterIndex), "isSigned");
+        assertEquals(expectedMetaData.signed(), parameterMetaData.isSigned(parameterIndex), "isSigned");
     }
 
     /**
@@ -299,68 +298,17 @@ class FBPreparedStatementMetaDataTest {
      */
     @SuppressWarnings("SameParameterValue")
     private static Arguments create(int index, String className, int mode, int type, String typeName, int precision,
-                                   int scale, int nullable, boolean signed, String descriptiveName) {
+            int scale, int nullable, boolean signed, String descriptiveName) {
         return Arguments.of(index,
                 new ParameterMetaDataInfo(className, mode, type, typeName, precision, scale, nullable, signed),
                 descriptiveName);
     }
 
     /**
-     * Simple bean with the expected meta data information.
+     * Simple record with the expected metadata information.
      */
-    private static class ParameterMetaDataInfo {
-        private final String className;
-        private final int mode;
-        private final int type;
-        private final String typeName;
-        private final int precision;
-        private final int scale;
-        private final int nullable;
-        private final boolean signed;
-
-        private ParameterMetaDataInfo(String className, int mode, int type, String typeName, int precision, int scale,
-                                      int nullable, boolean signed) {
-
-            this.className = className;
-            this.mode = mode;
-            this.type = type;
-            this.typeName = typeName;
-            this.precision = precision;
-            this.scale = scale;
-            this.nullable = nullable;
-            this.signed = signed;
-        }
-
-        private String getClassName() {
-            return className;
-        }
-
-        private int getMode() {
-            return mode;
-        }
-
-        private int getType() {
-            return type;
-        }
-
-        private String getTypeName() {
-            return typeName;
-        }
-
-        private int getPrecision() {
-            return precision;
-        }
-
-        private int getScale() {
-            return scale;
-        }
-
-        private int isNullable() {
-            return nullable;
-        }
-
-        private boolean isSigned() {
-            return signed;
-        }
+    private record ParameterMetaDataInfo(
+            String className, int mode, int type, String typeName, int precision, int scale, int nullable,
+            boolean signed) {
     }
 }

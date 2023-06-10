@@ -25,6 +25,7 @@ import org.firebirdsql.util.InternalApi;
 
 import java.sql.Types;
 
+import static org.firebirdsql.gds.ISCConstants.BLOB_SUB_TYPE_BINARY;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 
 /**
@@ -86,80 +87,47 @@ public final class JdbcTypeConverter {
     public static int fromFirebirdToJdbcType(int firebirdType, int subtype, int scale) {
         firebirdType = firebirdType & ~1;
 
-        switch (firebirdType) {
-        case ISCConstants.SQL_SHORT:
-        case ISCConstants.SQL_LONG:
-        case ISCConstants.SQL_INT64:
-        case ISCConstants.SQL_DOUBLE:
-        case ISCConstants.SQL_D_FLOAT:
-        case ISCConstants.SQL_INT128:
-            if (subtype == SUBTYPE_NUMERIC || (subtype == 0 && scale < 0)) {
-                return Types.NUMERIC;
-            } else if (subtype == SUBTYPE_DECIMAL) {
-                return Types.DECIMAL;
-            } else {
-                switch (firebirdType) {
-                case ISCConstants.SQL_SHORT:
-                    return Types.SMALLINT;
-                case ISCConstants.SQL_LONG:
-                    return Types.INTEGER;
-                case ISCConstants.SQL_INT64:
-                    return Types.BIGINT;
-                case ISCConstants.SQL_DOUBLE:
-                case ISCConstants.SQL_D_FLOAT:
-                    return Types.DOUBLE;
-                case ISCConstants.SQL_INT128:
-                    // We map INT128 to JDBC type NUMERIC to simplify usage
-                    return Types.NUMERIC;
+        return switch (firebirdType) {
+            case ISCConstants.SQL_SHORT, ISCConstants.SQL_LONG, ISCConstants.SQL_INT64, ISCConstants.SQL_DOUBLE,
+                    ISCConstants.SQL_D_FLOAT, ISCConstants.SQL_INT128 -> {
+                if (subtype == SUBTYPE_DECIMAL) {
+                    yield Types.DECIMAL;
+                } else if (subtype == SUBTYPE_NUMERIC || scale < 0) {
+                    yield Types.NUMERIC;
                 }
+                yield switch (firebirdType) {
+                    case ISCConstants.SQL_SHORT -> Types.SMALLINT;
+                    case ISCConstants.SQL_LONG -> Types.INTEGER;
+                    case ISCConstants.SQL_INT64 -> Types.BIGINT;
+                    case ISCConstants.SQL_DOUBLE, ISCConstants.SQL_D_FLOAT -> Types.DOUBLE;
+                    // We map INT128 to JDBC type NUMERIC to simplify usage
+                    case ISCConstants.SQL_INT128 -> Types.NUMERIC;
+                    // Already covered by parent case, this is to satisfy the compiler
+                    default -> throw new IllegalStateException("Unexpected value: " + firebirdType);
+                };
             }
-        case ISCConstants.SQL_FLOAT:
-            return Types.FLOAT;
-        case ISCConstants.SQL_DEC16:
-        case ISCConstants.SQL_DEC34:
-            return JaybirdTypeCodes.DECFLOAT;
-        case ISCConstants.SQL_TEXT:
-            if (subtype == ISCConstants.CS_BINARY) {
-                return Types.BINARY;
-            } else {
-                return Types.CHAR;
+            case ISCConstants.SQL_FLOAT -> Types.FLOAT;
+            case ISCConstants.SQL_DEC16, ISCConstants.SQL_DEC34 -> JaybirdTypeCodes.DECFLOAT;
+            case ISCConstants.SQL_TEXT -> subtype == ISCConstants.CS_BINARY ? Types.BINARY : Types.CHAR;
+            case ISCConstants.SQL_VARYING -> subtype == ISCConstants.CS_BINARY ? Types.VARBINARY : Types.VARCHAR;
+            case ISCConstants.SQL_TIMESTAMP -> Types.TIMESTAMP;
+            case ISCConstants.SQL_TYPE_TIME -> Types.TIME;
+            case ISCConstants.SQL_TYPE_DATE -> Types.DATE;
+            case ISCConstants.SQL_TIMESTAMP_TZ, ISCConstants.SQL_TIMESTAMP_TZ_EX -> Types.TIMESTAMP_WITH_TIMEZONE;
+            case ISCConstants.SQL_TIME_TZ, ISCConstants.SQL_TIME_TZ_EX -> Types.TIME_WITH_TIMEZONE;
+            case ISCConstants.SQL_BLOB -> {
+                if (subtype < 0) {
+                    yield Types.BLOB;
+                } else if (subtype == ISCConstants.BLOB_SUB_TYPE_TEXT) {
+                    yield Types.LONGVARCHAR;
+                }
+                yield Types.LONGVARBINARY;
             }
-        case ISCConstants.SQL_VARYING:
-            if (subtype == ISCConstants.CS_BINARY) {
-                return Types.VARBINARY;
-            } else {
-                return Types.VARCHAR;
-            }
-        case ISCConstants.SQL_TIMESTAMP:
-            return Types.TIMESTAMP;
-        case ISCConstants.SQL_TYPE_TIME:
-            return Types.TIME;
-        case ISCConstants.SQL_TYPE_DATE:
-            return Types.DATE;
-        case ISCConstants.SQL_TIMESTAMP_TZ:
-        case ISCConstants.SQL_TIMESTAMP_TZ_EX:
-            return Types.TIMESTAMP_WITH_TIMEZONE;
-        case ISCConstants.SQL_TIME_TZ:
-        case ISCConstants.SQL_TIME_TZ_EX:
-            return Types.TIME_WITH_TIMEZONE;
-        case ISCConstants.SQL_BLOB:
-            if (subtype < 0) {
-                return Types.BLOB;
-            } else if (subtype == ISCConstants.BLOB_SUB_TYPE_TEXT) {
-                return Types.LONGVARCHAR;
-            } else { // if (subtype == 0 || subtype > 1)
-                return Types.LONGVARBINARY;
-            }
-        case ISCConstants.SQL_BOOLEAN:
-            return Types.BOOLEAN;
-        case ISCConstants.SQL_NULL:
-            return Types.NULL;
-        case ISCConstants.SQL_ARRAY:
-            return Types.ARRAY;
-        case ISCConstants.SQL_QUAD:
-        default:
-            return Types.OTHER;
-        }
+            case ISCConstants.SQL_BOOLEAN -> Types.BOOLEAN;
+            case ISCConstants.SQL_NULL -> Types.NULL;
+            case ISCConstants.SQL_ARRAY -> Types.ARRAY;
+            default -> Types.OTHER;
+        };
     }
 
     /**
@@ -185,55 +153,71 @@ public final class JdbcTypeConverter {
      * @return Firebird type value
      */
     public static int fromMetaDataToFirebirdType(int metaDataType) {
-        switch (metaDataType) {
-        case smallint_type:
-            return ISCConstants.SQL_SHORT;
-        case integer_type:
-            return ISCConstants.SQL_LONG;
-        case int64_type:
-            return ISCConstants.SQL_INT64;
-        case dec16_type:
-            return ISCConstants.SQL_DEC16;
-        case dec34_type:
-            return ISCConstants.SQL_DEC34;
-        case int128_type:
-            return ISCConstants.SQL_INT128;
-        case quad_type:
-            return ISCConstants.SQL_QUAD;
-        case float_type:
-            return ISCConstants.SQL_FLOAT;
-        case double_type:
-            return ISCConstants.SQL_DOUBLE;
-        case d_float_type:
-            return ISCConstants.SQL_D_FLOAT;
-        case date_type:
-            return ISCConstants.SQL_TYPE_DATE;
-        case time_type:
-            return ISCConstants.SQL_TYPE_TIME;
-        case timestamp_type:
-            return ISCConstants.SQL_TIMESTAMP;
-        case time_tz_type:
-            return ISCConstants.SQL_TIME_TZ;
-        case timestamp_tz_type:
-            return ISCConstants.SQL_TIMESTAMP_TZ;
-        case ex_time_tz_type:
+        return switch (metaDataType) {
+            case smallint_type -> ISCConstants.SQL_SHORT;
+            case integer_type -> ISCConstants.SQL_LONG;
+            case int64_type -> ISCConstants.SQL_INT64;
+            case dec16_type -> ISCConstants.SQL_DEC16;
+            case dec34_type -> ISCConstants.SQL_DEC34;
+            case int128_type -> ISCConstants.SQL_INT128;
+            case quad_type -> ISCConstants.SQL_QUAD;
+            case float_type -> ISCConstants.SQL_FLOAT;
+            case double_type -> ISCConstants.SQL_DOUBLE;
+            case d_float_type -> ISCConstants.SQL_D_FLOAT;
+            case date_type -> ISCConstants.SQL_TYPE_DATE;
+            case time_type -> ISCConstants.SQL_TYPE_TIME;
+            case timestamp_type -> ISCConstants.SQL_TIMESTAMP;
+            case time_tz_type -> ISCConstants.SQL_TIME_TZ;
+            case timestamp_tz_type -> ISCConstants.SQL_TIMESTAMP_TZ;
             // Shouldn't occur as metadata data type, mapping for consistency
-            return ISCConstants.SQL_TIME_TZ_EX;
-        case ex_timestamp_tz_type:
+            case ex_time_tz_type -> ISCConstants.SQL_TIME_TZ_EX;
             // Shouldn't occur as metadata data type, mapping for consistency
-            return ISCConstants.SQL_TIMESTAMP_TZ_EX;
-        case char_type:
-            return ISCConstants.SQL_TEXT;
-        case cstring_type:
-        case varchar_type:
-            return ISCConstants.SQL_VARYING;
-        case blob_type:
-            return ISCConstants.SQL_BLOB;
-        case boolean_type:
-            return ISCConstants.SQL_BOOLEAN;
-        default:
+            case ex_timestamp_tz_type -> ISCConstants.SQL_TIMESTAMP_TZ_EX;
+            case char_type -> ISCConstants.SQL_TEXT;
+            case cstring_type, varchar_type -> ISCConstants.SQL_VARYING;
+            case blob_type -> ISCConstants.SQL_BLOB;
+            case boolean_type -> ISCConstants.SQL_BOOLEAN;
             // TODO Throw illegal arg / unsupported instead?
-            return ISCConstants.SQL_NULL;
-        }
+            default -> ISCConstants.SQL_NULL;
+        };
+    }
+
+    public static String getTypeName(int jdbcType, int firebirdType, int subtype, int scale) {
+        return switch (jdbcType) {
+            case Types.SMALLINT -> "SMALLINT";
+            case Types.INTEGER -> "INTEGER";
+            case Types.BIGINT -> "BIGINT";
+            case Types.DOUBLE -> "DOUBLE PRECISION";
+            case JaybirdTypeCodes.DECFLOAT -> "DECFLOAT";
+            case Types.FLOAT -> "FLOAT";
+            case Types.DECIMAL -> "DECIMAL";
+            case Types.NUMERIC -> {
+                if (firebirdType == ISCConstants.SQL_INT128 && subtype == 0 && scale == 0) {
+                    yield "INT128";
+                }
+                yield "NUMERIC";
+            }
+            // Reporting CHAR for Types.BINARY, otherwise need the Firebird version (i.e. 4.0 or higher)
+            case Types.CHAR, Types.BINARY -> "CHAR";
+            // Reporting VARCHAR for Types.VARBINARY, otherwise need the Firebird version (i.e. 4.0 or higher)
+            case Types.VARCHAR, Types.VARBINARY -> "VARCHAR";
+            // NOTE In practice CLOB and NCLOB are not used in this way; adding them for completeness
+            case Types.LONGVARCHAR, Types.CLOB, Types.NCLOB -> "BLOB SUB_TYPE TEXT";
+            case Types.LONGVARBINARY ->
+                    subtype == BLOB_SUB_TYPE_BINARY ? "BLOB SUB_TYPE BINARY" : "BLOB SUB_TYPE " + subtype;
+            case Types.BLOB -> "BLOB SUB_TYPE " + subtype;
+            case Types.TIMESTAMP -> "TIMESTAMP";
+            case Types.TIME -> "TIME";
+            case Types.DATE -> "DATE";
+            case Types.TIMESTAMP_WITH_TIMEZONE -> "TIMESTAMP WITH TIME ZONE";
+            case Types.TIME_WITH_TIMEZONE -> "TIME WITH TIME ZONE";
+            case Types.BOOLEAN -> "BOOLEAN";
+            // Cannot practically occur as a type name
+            case Types.NULL -> "NULL";
+            // Arrays not supported
+            case Types.ARRAY -> "ARRAY";
+            // NOTE: Previously reported NULL
+            default -> "OTHER";
+        };
     }
 }

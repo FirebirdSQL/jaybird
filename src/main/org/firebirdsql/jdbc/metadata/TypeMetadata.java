@@ -117,70 +117,44 @@ public final class TypeMetadata {
      * @return The column size as defined in {@link java.sql.DatabaseMetaData}, or {@code null}.
      */
     Integer getColumnSize() {
-        switch (jdbcType) {
-        case Types.FLOAT:
-            return isFloatBinaryPrecision() ? FLOAT_BINARY_PRECISION : FLOAT_DECIMAL_PRECISION;
-        case Types.DOUBLE:
-            return isFloatBinaryPrecision() ? DOUBLE_BINARY_PRECISION : DOUBLE_DECIMAL_PRECISION;
-        case Types.CHAR:
-        case Types.VARCHAR:
-        case Types.BINARY:
-        case Types.VARBINARY:
-            return characterLength;
-        case Types.BIGINT:
-            return BIGINT_PRECISION;
-        case Types.INTEGER:
-            return INTEGER_PRECISION;
-        case Types.SMALLINT:
-            return SMALLINT_PRECISION;
-        case Types.BOOLEAN:
-            return BOOLEAN_BINARY_PRECISION;
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            switch (type) {
-            case double_type:
-            case d_float_type:
-            case int64_type:
-                return coalesce(precision, NUMERIC_BIGINT_PRECISION);
-            case integer_type:
-                return coalesce(precision, NUMERIC_INTEGER_PRECISION);
-            case smallint_type:
-                return coalesce(precision, NUMERIC_SMALLINT_PRECISION);
-            case int128_type:
-                if (precision == 0) {
-                    // INT128 (precision reported as 38, not 39 to avoid issues with tools using type name as NUMERIC)
-                    return NUMERIC_INT128_PRECISION;
+        return switch (jdbcType) {
+            case Types.FLOAT -> isFloatBinaryPrecision() ? FLOAT_BINARY_PRECISION : FLOAT_DECIMAL_PRECISION;
+            case Types.DOUBLE -> isFloatBinaryPrecision() ? DOUBLE_BINARY_PRECISION : DOUBLE_DECIMAL_PRECISION;
+            case Types.CHAR, Types.VARCHAR, Types.BINARY, Types.VARBINARY -> characterLength;
+            case Types.BIGINT -> BIGINT_PRECISION;
+            case Types.INTEGER -> INTEGER_PRECISION;
+            case Types.SMALLINT -> SMALLINT_PRECISION;
+            case Types.BOOLEAN -> BOOLEAN_BINARY_PRECISION;
+            case Types.NUMERIC, Types.DECIMAL -> switch (type) {
+                case double_type, d_float_type, int64_type -> coalesce(precision, NUMERIC_BIGINT_PRECISION);
+                case integer_type -> coalesce(precision, NUMERIC_INTEGER_PRECISION);
+                case smallint_type -> coalesce(precision, NUMERIC_SMALLINT_PRECISION);
+                case int128_type -> {
+                    if (precision == 0) {
+                        // INT128 (precision reported as 38, not 39 to avoid issues with tools using type name as NUMERIC)
+                        yield NUMERIC_INT128_PRECISION;
+                    }
+                    yield coalesce(precision, NUMERIC_INT128_PRECISION);
                 }
-                return coalesce(precision, NUMERIC_INT128_PRECISION);
-            default:
-                throw new IllegalStateException(String.format(
+                default -> throw new IllegalStateException(String.format(
                         "Incorrect derivation of NUMERIC/DECIMAL precision for jdbcType %d, type %d, subType %d, scale %d",
                         jdbcType, type, subType, scale));
-            }
-        case Types.DATE:
-            return DATE_PRECISION;
-        case Types.TIME:
-            return TIME_PRECISION;
-        case Types.TIMESTAMP:
-            return TIMESTAMP_PRECISION;
-        case Types.TIME_WITH_TIMEZONE:
-            return TIME_WITH_TIMEZONE_PRECISION;
-        case Types.TIMESTAMP_WITH_TIMEZONE:
-            return TIMESTAMP_WITH_TIMEZONE_PRECISION;
-        case JaybirdTypeCodes.DECFLOAT:
-            switch (type) {
-            case dec16_type:
-                return DECFLOAT_16_PRECISION;
-            case dec34_type:
-                return DECFLOAT_34_PRECISION;
-            default:
-                throw new IllegalStateException(String.format(
+            };
+            case Types.DATE -> DATE_PRECISION;
+            case Types.TIME -> TIME_PRECISION;
+            case Types.TIMESTAMP -> TIMESTAMP_PRECISION;
+            case Types.TIME_WITH_TIMEZONE -> TIME_WITH_TIMEZONE_PRECISION;
+            case Types.TIMESTAMP_WITH_TIMEZONE -> TIMESTAMP_WITH_TIMEZONE_PRECISION;
+            case JaybirdTypeCodes.DECFLOAT -> switch (type) {
+                case dec16_type -> DECFLOAT_16_PRECISION;
+                case dec34_type -> DECFLOAT_34_PRECISION;
+                default -> throw new IllegalStateException(String.format(
                         "Incorrect derivation of DECFLOAT precision for jdbcType %d, type %d, subType %d, scale %d",
                         jdbcType, type, subType, scale));
-            }
-        }
-        // If we have non-default, non-zero precision, report it
-        return coalesce(precision, 0) != 0 ? precision : null;
+            };
+            // If we have non-default, non-zero precision, report it
+            default -> coalesce(precision, 0) != 0 ? precision : null;
+        };
     }
 
     /**
@@ -200,17 +174,12 @@ public final class TypeMetadata {
      * @return The scale of a field, or {@code null}.
      */
     Integer getScale() {
-        switch (jdbcType) {
-        case Types.BIGINT:
-        case Types.INTEGER:
-        case Types.SMALLINT:
-            return 0;
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            return -1 * coalesce(scale, 0);
-        }
-        // If we have non-default, non-zero scale, report it
-        return coalesce(scale, 0) != 0 ? scale : null;
+        return switch (jdbcType) {
+            case Types.BIGINT, Types.INTEGER, Types.SMALLINT -> 0;
+            case Types.NUMERIC, Types.DECIMAL -> -1 * coalesce(scale, 0);
+            // If we have non-default, non-zero scale, report it
+            default -> coalesce(scale, 0) != 0 ? scale : null;
+        };
     }
 
     /**
@@ -218,15 +187,11 @@ public final class TypeMetadata {
      * non-boolean types).
      */
     int getRadix() {
-        switch (jdbcType) {
-        case Types.FLOAT:
-        case Types.DOUBLE:
-            return isFloatBinaryPrecision() ? RADIX_BINARY : RADIX_DECIMAL;
-        case Types.BOOLEAN:
-            return RADIX_BINARY;
-        default:
-            return RADIX_DECIMAL;
-        }
+        return switch (jdbcType) {
+            case Types.FLOAT, Types.DOUBLE -> isFloatBinaryPrecision() ? RADIX_BINARY : RADIX_DECIMAL;
+            case Types.BOOLEAN -> RADIX_BINARY;
+            default -> RADIX_DECIMAL;
+        };
     }
 
     /**
@@ -292,76 +257,9 @@ public final class TypeMetadata {
      * @return JDBC/SQL type name
      */
     public static String getDataTypeName(int sqlType, int sqlSubType, int sqlScale) {
-        // TODO Unify with AbstractFieldMetadata
-        // TODO Map using JDBC type code (except maybe blob exceptions)?
-        switch (sqlType) {
-        case smallint_type:
-        case integer_type:
-        case int64_type:
-        case double_type:
-        case d_float_type:
-        case int128_type:
-            if (sqlSubType == SUBTYPE_NUMERIC || (sqlSubType == 0 && sqlScale < 0)) {
-                return "NUMERIC";
-            } else if (sqlSubType == SUBTYPE_DECIMAL) {
-                return "DECIMAL";
-            } else {
-                switch (sqlType) {
-                case smallint_type:
-                    return "SMALLINT";
-                case integer_type:
-                    return "INTEGER";
-                case int64_type:
-                    return "BIGINT";
-                case double_type:
-                case d_float_type:
-                    return "DOUBLE PRECISION";
-                case int128_type:
-                    return "INT128";
-                default:
-                    throw new IllegalStateException(String.format(
-                            "Incorrect derivation of type name in getDataTypeName(%d, %d, %d)",
-                            sqlType, sqlSubType, sqlScale));
-                }
-            }
-        case float_type:
-            return "FLOAT";
-        case char_type:
-            return "CHAR";
-        case varchar_type:
-        case cstring_type:
-            return "VARCHAR";
-        case timestamp_type:
-            return "TIMESTAMP";
-        case time_type:
-            return "TIME";
-        case date_type:
-            return "DATE";
-        case time_tz_type:
-        case ex_time_tz_type:
-            return "TIME WITH TIME ZONE";
-        case timestamp_tz_type:
-        case ex_timestamp_tz_type:
-            return "TIMESTAMP WITH TIME ZONE";
-        case blob_type:
-            if (sqlSubType == BLOB_SUB_TYPE_BINARY) {
-                return "BLOB SUB_TYPE BINARY";
-            } else if (sqlSubType == BLOB_SUB_TYPE_TEXT) {
-                return "BLOB SUB_TYPE TEXT";
-            } else {
-                // In the past implementations returned BLOB SUB_TYPE < 0 for negative subtypes
-                return "BLOB SUB_TYPE " + sqlSubType;
-            }
-        case quad_type:
-            return "ARRAY";
-        case boolean_type:
-            return "BOOLEAN";
-        case dec16_type:
-        case dec34_type:
-            return "DECFLOAT";
-        default:
-            return "NULL";
-        }
+        int firebirdType = JdbcTypeConverter.fromMetaDataToFirebirdType(sqlType);
+        int jdbcType = JdbcTypeConverter.fromFirebirdToJdbcType(firebirdType, sqlSubType, sqlScale);
+        return JdbcTypeConverter.getTypeName(jdbcType, firebirdType, sqlSubType, sqlScale);
     }
 
     private boolean isFloatBinaryPrecision() {

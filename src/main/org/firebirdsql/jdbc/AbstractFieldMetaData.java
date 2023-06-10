@@ -43,9 +43,6 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  */
 public abstract class AbstractFieldMetaData implements Wrapper {
 
-    private static final int SUBTYPE_NUMERIC = 1;
-    private static final int SUBTYPE_DECIMAL = 2;
-
     private final RowDescriptor rowDescriptor;
     private final FBConnection connection;
     private Map<FieldKey, ExtendedFieldInfo> extendedInfo;
@@ -57,12 +54,12 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     }
 
     @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+    public final boolean isWrapperFor(Class<?> iface) throws SQLException {
         return iface != null && iface.isAssignableFrom(getClass());
     }
 
     @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
+    public final <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
             throw new SQLException("Unable to unwrap to class " + iface.getName());
 
@@ -77,7 +74,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     }
 
     /**
-     * Retrieves the number of fields in the object for which this <code>AbstractFieldMetaData</code> object contains
+     * Retrieves the number of fields in the object for which this {@code AbstractFieldMetaData} object contains
      * information.
      *
      * @return the number of fields
@@ -87,7 +84,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     }
 
     /**
-     * The {@link org.firebirdsql.gds.ng.fields.FieldDescriptor} of the field with index <code>fieldIndex</code>.
+     * The {@link FieldDescriptor} of the field with index {@code fieldIndex}.
      *
      * @param fieldIndex
      *         1-based index of a field in this metadata object
@@ -102,28 +99,22 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      *
      * @param field
      *         the first field is 1, the second is 2, ...
-     * @return <code>true</code> if so; <code>false</code> otherwise
+     * @return {@code true} if so; {@code false} otherwise
      */
     protected final boolean isSignedInternal(int field) {
-        switch (getFieldDescriptor(field).getType() & ~1) {
-        case ISCConstants.SQL_SHORT:
-        case ISCConstants.SQL_LONG:
-        case ISCConstants.SQL_FLOAT:
-        case ISCConstants.SQL_DOUBLE:
-        case ISCConstants.SQL_D_FLOAT:
-        case ISCConstants.SQL_INT64:
-        case ISCConstants.SQL_DEC16:
-        case ISCConstants.SQL_DEC34:
-        case ISCConstants.SQL_INT128:
-            return true;
-        default:
-            return false;
-        }
+        return switch (getFieldDescriptor(field).getType() & ~1) {
+            case ISCConstants.SQL_SHORT, ISCConstants.SQL_LONG, ISCConstants.SQL_FLOAT, ISCConstants.SQL_DOUBLE,
+                    ISCConstants.SQL_D_FLOAT, ISCConstants.SQL_INT64, ISCConstants.SQL_DEC16, ISCConstants.SQL_DEC34,
+                    ISCConstants.SQL_INT128 -> true;
+            default -> false;
+        };
     }
 
     /**
      * Retrieves the designated field's number of digits to right of the decimal point.
+     * <p>
      * 0 is returned for data types where the scale is not applicable.
+     * </p>
      *
      * @param field
      *         the first field is 1, the second is 2, ...
@@ -134,174 +125,53 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     }
 
     protected final String getFieldClassName(int field) throws SQLException {
-        switch (getFieldType(field)) {
-        case Types.CHAR:
-        case Types.VARCHAR:
-        case Types.LONGVARCHAR:
-            return STRING_CLASS_NAME;
-
-        case Types.SMALLINT:
-        case Types.INTEGER:
-            return INTEGER_CLASS_NAME;
-
-        case Types.FLOAT:
-        case Types.DOUBLE:
-            return DOUBLE_CLASS_NAME;
-
-        case Types.TIMESTAMP:
-            return TIMESTAMP_CLASS_NAME;
-
-        case Types.BLOB:
-            return BLOB_CLASS_NAME;
-
-        case Types.CLOB:
-            return CLOB_CLASS_NAME;
-
-        case Types.BINARY:
-        case Types.VARBINARY:
-        case Types.LONGVARBINARY:
-            return BYTE_ARRAY_CLASS_NAME;
-
-        case Types.ARRAY:
-            return ARRAY_CLASS_NAME;
-
-        case Types.BIGINT:
-            return LONG_CLASS_NAME;
-
-        case Types.TIME:
-            return TIME_CLASS_NAME;
-
-        case Types.DATE:
-            return SQL_DATE_CLASS_NAME;
-
-        case Types.TIME_WITH_TIMEZONE:
-            return OFFSET_TIME_CLASS_NAME;
-
-        case Types.TIMESTAMP_WITH_TIMEZONE:
-            return OFFSET_DATE_TIME_CLASS_NAME;
-
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-        case JaybirdTypeCodes.DECFLOAT:
-            return BIG_DECIMAL_CLASS_NAME;
-
-        case Types.BOOLEAN:
-            return BOOLEAN_CLASS_NAME;
-
-        case Types.NULL:
-        case Types.OTHER:
-            return OBJECT_CLASS_NAME;
-
-        case Types.ROWID:
-            return ROW_ID_CLASS_NAME;
-
-        default:
-            throw new FBSQLException("Unknown SQL type.", SQLStateConstants.SQL_STATE_INVALID_PARAM_TYPE);
-        }
+        return switch (getFieldType(field)) {
+            case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR -> STRING_CLASS_NAME;
+            case Types.SMALLINT, Types.INTEGER -> INTEGER_CLASS_NAME;
+            case Types.FLOAT, Types.DOUBLE -> DOUBLE_CLASS_NAME;
+            case Types.TIMESTAMP -> TIMESTAMP_CLASS_NAME;
+            case Types.BLOB -> BLOB_CLASS_NAME;
+            case Types.CLOB -> CLOB_CLASS_NAME;
+            case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> BYTE_ARRAY_CLASS_NAME;
+            case Types.ARRAY -> ARRAY_CLASS_NAME;
+            case Types.BIGINT -> LONG_CLASS_NAME;
+            case Types.TIME -> TIME_CLASS_NAME;
+            case Types.DATE -> SQL_DATE_CLASS_NAME;
+            case Types.TIME_WITH_TIMEZONE -> OFFSET_TIME_CLASS_NAME;
+            case Types.TIMESTAMP_WITH_TIMEZONE -> OFFSET_DATE_TIME_CLASS_NAME;
+            case Types.NUMERIC, Types.DECIMAL, JaybirdTypeCodes.DECFLOAT -> BIG_DECIMAL_CLASS_NAME;
+            case Types.BOOLEAN -> BOOLEAN_CLASS_NAME;
+            case Types.NULL, Types.OTHER -> OBJECT_CLASS_NAME;
+            case Types.ROWID -> ROW_ID_CLASS_NAME;
+            default -> throw new FBSQLException(
+                    "Field %d has unknown JDBC SQL type: %s".formatted(field, getFieldType(field)),
+                    SQLStateConstants.SQL_STATE_INVALID_PARAM_TYPE);
+        };
     }
 
     protected final String getFieldTypeName(int field) {
         // Must return the same value as DatabaseMetaData getColumns Type_Name
-        // TODO Reduce duplication with FBDatabaseMetaData
-        int sqlType = getFieldDescriptor(field).getType() & ~1;
-        int sqlScale = getFieldDescriptor(field).getScale();
-        int sqlSubtype = getFieldDescriptor(field).getSubType();
-
-        switch (sqlType) {
-        case ISCConstants.SQL_SHORT:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0)) {
-                return "NUMERIC";
-            } else if (sqlSubtype == SUBTYPE_DECIMAL) {
-                return "DECIMAL";
-            } else {
-                return "SMALLINT";
-            }
-        case ISCConstants.SQL_LONG:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0)) {
-                return "NUMERIC";
-            } else if (sqlSubtype == SUBTYPE_DECIMAL) {
-                return "DECIMAL";
-            } else {
-                return "INTEGER";
-            }
-        case ISCConstants.SQL_INT64:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0)) {
-                return "NUMERIC";
-            } else if (sqlSubtype == SUBTYPE_DECIMAL) {
-                return "DECIMAL";
-            } else {
-                return "BIGINT";
-            }
-        case ISCConstants.SQL_DOUBLE:
-        case ISCConstants.SQL_D_FLOAT:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0)) {
-                return "NUMERIC";
-            } else if (sqlSubtype == SUBTYPE_DECIMAL) {
-                return "DECIMAL";
-            } else {
-                return "DOUBLE PRECISION";
-            }
-        case ISCConstants.SQL_DEC16:
-        case ISCConstants.SQL_DEC34:
-            return "DECFLOAT";
-        case ISCConstants.SQL_INT128:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0)) {
-                return "NUMERIC";
-            } else if (sqlSubtype == SUBTYPE_DECIMAL) {
-                return "DECIMAL";
-            } else {
-                return "INT128";
-            }
-        case ISCConstants.SQL_FLOAT:
-            return "FLOAT";
-        case ISCConstants.SQL_TEXT:
-            return "CHAR";
-        case ISCConstants.SQL_VARYING:
-            return "VARCHAR";
-        case ISCConstants.SQL_TIMESTAMP:
-            return "TIMESTAMP";
-        case ISCConstants.SQL_TYPE_TIME:
-            return "TIME";
-        case ISCConstants.SQL_TYPE_DATE:
-            return "DATE";
-        case ISCConstants.SQL_TIMESTAMP_TZ:
-        case ISCConstants.SQL_TIMESTAMP_TZ_EX:
-            return "TIMESTAMP WITH TIME ZONE";
-        case ISCConstants.SQL_TIME_TZ:
-        case ISCConstants.SQL_TIME_TZ_EX:
-            return "TIME WITH TIME ZONE";
-        case ISCConstants.SQL_BLOB:
-            if (sqlSubtype < 0) {
-                return "BLOB SUB_TYPE <0"; // TODO report actual subtype
-            } else if (sqlSubtype == ISCConstants.BLOB_SUB_TYPE_BINARY) {
-                return "BLOB SUB_TYPE 0";
-            } else if (sqlSubtype == ISCConstants.BLOB_SUB_TYPE_TEXT) {
-                return "BLOB SUB_TYPE 1";
-            } else {
-                return "BLOB SUB_TYPE " + sqlSubtype;
-            }
-        case ISCConstants.SQL_QUAD:
-            return "ARRAY"; // TODO Inconsistent with getFieldType
-        case ISCConstants.SQL_BOOLEAN:
-            return "BOOLEAN";
-        default:
-            return "NULL";
-        }
+        FieldDescriptor fieldDescriptor = getFieldDescriptor(field);
+        int sqlType = fieldDescriptor.getType() & ~1;
+        int sqlScale = fieldDescriptor.getScale();
+        int sqlSubtype = fieldDescriptor.getSubType();
+        int jdbcType = JdbcTypeConverter.fromFirebirdToJdbcType(sqlType, sqlSubtype, sqlScale);
+        return JdbcTypeConverter.getTypeName(jdbcType, sqlType, sqlSubtype, sqlScale);
     }
 
-    protected int getFieldType(int field) {
+    protected final int getFieldType(int field) {
         return JdbcTypeConverter.toJdbcType(getFieldDescriptor(field));
     }
 
     /**
      * Retrieves the designated parameter's specified column size.
-     * <p/>
-     * <P>The returned value represents the maximum column size for the given parameter.
-     * For numeric data, this is the maximum precision.  For character data, this is the length in characters.
-     * For datetime datatypes, this is the length in characters of the String representation (assuming the
-     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.
-     * For the ROWID datatype, this is the length in bytes. 0 is returned for data types where the column size is not
-     * applicable.
+     * <p>
+     * The returned value represents the maximum column size for the given parameter. For numeric data, this is
+     * the maximum precision.  For character data, this is the length in characters. For datetime datatypes, this is
+     * the length in characters of the String representation (assuming the maximum allowed precision of the fractional
+     * seconds component). For binary data, this is the length in bytes. For the ROWID datatype, this is the length in
+     * bytes. 0 is returned for data types where the column size is not applicable.
+     * </p>
      *
      * @param field
      *         the first field is 1, the second is 2, ...
@@ -309,102 +179,65 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      * @throws SQLException
      *         if a database access error occurs
      */
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     protected final int getPrecisionInternal(int field) throws SQLException {
-        final int colType = getFieldType(field);
-
-        switch (colType) {
-        case Types.DECIMAL:
-        case Types.NUMERIC: {
+        return switch (getFieldType(field)) {
+        case Types.DECIMAL, Types.NUMERIC -> {
             final ExtendedFieldInfo fieldInfo = getExtFieldInfo(field);
-            return fieldInfo == null || fieldInfo.fieldPrecision == 0
+            yield fieldInfo == null || fieldInfo.fieldPrecision == 0
                     ? estimateFixedPrecision(field)
                     : fieldInfo.fieldPrecision;
         }
-
-        case JaybirdTypeCodes.DECFLOAT: {
-            final FieldDescriptor var = getFieldDescriptor(field);
-            switch (var.getType() & ~1) {
-            case ISCConstants.SQL_DEC16:
-                return 16;
-            case ISCConstants.SQL_DEC34:
-                return 34;
-            default:
-                return 0;
-            }
-        }
-
-        case Types.CHAR:
-        case Types.VARCHAR: {
+        case JaybirdTypeCodes.DECFLOAT -> switch (getFieldDescriptor(field).getType() & ~1) {
+            case ISCConstants.SQL_DEC16 -> 16;
+            case ISCConstants.SQL_DEC34 -> 34;
+            default -> 0;
+        };
+        case Types.CHAR, Types.VARCHAR -> {
             final FieldDescriptor var = getFieldDescriptor(field);
             final EncodingDefinition encodingDefinition =
                     var.getEncodingFactory().getEncodingDefinitionByCharacterSetId(var.getSubType());
             final int charSetSize = encodingDefinition != null ? encodingDefinition.getMaxBytesPerChar() : 1;
-            return var.getLength() / charSetSize;
+            yield var.getLength() / charSetSize;
         }
-
-        case Types.BINARY:
-        case Types.VARBINARY: {
-            final FieldDescriptor var = getFieldDescriptor(field);
-            return var.getLength();
-        }
-
-        case Types.FLOAT: {
+        case Types.BINARY, Types.VARBINARY -> getFieldDescriptor(field).getLength();
+        case Types.FLOAT -> {
             if (connection == null || supportInfoFor(connection).supportsFloatBinaryPrecision()) {
-                return 24;
+                yield 24;
             } else {
-                return 7;
+                yield 7;
             }
         }
-        case Types.DOUBLE: {
+        case Types.DOUBLE -> {
             if (connection == null || supportInfoFor(connection).supportsFloatBinaryPrecision()) {
-                return 53;
+                yield 53;
             } else {
-                return 15;
+                yield 15;
             }
         }
-        case Types.INTEGER:
-            return 10;
-        case Types.BIGINT:
-            return 19;
-        case Types.SMALLINT:
-            return 5;
-        case Types.DATE:
-            return 10;
-        case Types.TIME:
-            return 8;
-        case Types.TIMESTAMP:
-            return 19;
-        case Types.TIMESTAMP_WITH_TIMEZONE:
-            return 30;
-        case Types.TIME_WITH_TIMEZONE:
-            return 19;
-        case Types.BOOLEAN:
-            return 1;
-        default:
-            return 0;
-        }
+        case Types.INTEGER -> 10;
+        case Types.BIGINT -> 19;
+        case Types.SMALLINT -> 5;
+        case Types.DATE -> 10;
+        case Types.TIME -> 8;
+        case Types.TIMESTAMP -> 19;
+        case Types.TIMESTAMP_WITH_TIMEZONE -> 30;
+        case Types.TIME_WITH_TIMEZONE -> 19;
+        case Types.BOOLEAN -> 1;
+        default -> 0;
+        };
     }
 
     protected final int estimateFixedPrecision(int fieldIndex) {
-        final int sqltype = getFieldDescriptor(fieldIndex).getType() & ~1;
-        switch (sqltype) {
-        case ISCConstants.SQL_SHORT:
-            return 4;
-        case ISCConstants.SQL_LONG:
-            return 9;
-        case ISCConstants.SQL_INT64:
-            return 18;
-        case ISCConstants.SQL_DOUBLE:
-            return 18;
-        case ISCConstants.SQL_DEC16:
-            return 16;
-        case ISCConstants.SQL_DEC34:
-            return 34;
-        case ISCConstants.SQL_INT128:
-            return 38;
-        default:
-            return 0;
-        }
+        return switch (getFieldDescriptor(fieldIndex).getType() & ~1) {
+            case ISCConstants.SQL_SHORT -> 4;
+            case ISCConstants.SQL_LONG -> 9;
+            case ISCConstants.SQL_INT64, ISCConstants.SQL_DOUBLE -> 18;
+            case ISCConstants.SQL_DEC16 -> 16;
+            case ISCConstants.SQL_DEC34 -> 34;
+            case ISCConstants.SQL_INT128 -> 38;
+            default -> 0;
+        };
     }
 
     protected final ExtendedFieldInfo getExtFieldInfo(int columnIndex) throws SQLException {

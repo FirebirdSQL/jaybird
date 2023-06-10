@@ -184,10 +184,10 @@ class FBResultSetMetaDataParametrizedTest {
                 create(15, "java.sql.Date", 10, "DATE_FIELD", "DATE_FIELD", DATE, "DATE", 10, 0, TABLE_NAME, columnNullable, true, false),
                 create(16, "java.sql.Time", 8, "TIME_FIELD", "TIME_FIELD", TIME, "TIME", 8, 0, TABLE_NAME, columnNullable, true, false),
                 create(17, "java.sql.Timestamp", 19, "TIMESTAMP_FIELD", "TIMESTAMP_FIELD", TIMESTAMP, "TIMESTAMP", 19, 0, TABLE_NAME, columnNullable, true, false),
-                create(18, "[B", 0, "BLOB_FIELD", "BLOB_FIELD", LONGVARBINARY, "BLOB SUB_TYPE 0", 0, 0, TABLE_NAME, columnNullable, false, false),
-                create(19, "java.lang.String", 0, "BLOB_TEXT_FIELD", "BLOB_TEXT_FIELD", LONGVARCHAR, "BLOB SUB_TYPE 1", 0, 0, TABLE_NAME, columnNullable, false, false),
+                create(18, "[B", 0, "BLOB_FIELD", "BLOB_FIELD", LONGVARBINARY, "BLOB SUB_TYPE BINARY", 0, 0, TABLE_NAME, columnNullable, false, false),
+                create(19, "java.lang.String", 0, "BLOB_TEXT_FIELD", "BLOB_TEXT_FIELD", LONGVARCHAR, "BLOB SUB_TYPE TEXT", 0, 0, TABLE_NAME, columnNullable, false, false),
                 // TODO Report actual subtype value
-                create(20, "java.sql.Blob", 0, "BLOB_MINUS_ONE", "BLOB_MINUS_ONE", BLOB, "BLOB SUB_TYPE <0", 0, 0, TABLE_NAME, columnNullable, false, false)
+                create(20, "java.sql.Blob", 0, "BLOB_MINUS_ONE", "BLOB_MINUS_ONE", BLOB, "BLOB SUB_TYPE -1", 0, 0, TABLE_NAME, columnNullable, false, false)
         ));
         final FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         if (supportInfo.supportsBoolean()) {
@@ -222,55 +222,55 @@ class FBResultSetMetaDataParametrizedTest {
     @MethodSource("testData")
     void testGetColumnClassName(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getClassName(), rsmd.getColumnClassName(columnIndex), "getColumnClassName");
+        assertEquals(expectedMetaData.className(), rsmd.getColumnClassName(columnIndex), "getColumnClassName");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
     @MethodSource("testData")
     void testGetColumnDisplaySize(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getDisplaySize(), rsmd.getColumnDisplaySize(columnIndex), "getColumnDisplaySize");
+        assertEquals(expectedMetaData.displaySize(), rsmd.getColumnDisplaySize(columnIndex), "getColumnDisplaySize");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
     @MethodSource("testData")
     void testGetColumnLabel(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getLabel(), rsmd.getColumnLabel(columnIndex), "getColumnLabel");
+        assertEquals(expectedMetaData.label(), rsmd.getColumnLabel(columnIndex), "getColumnLabel");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
     @MethodSource("testData")
     void testGetColumnName(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getName(), rsmd.getColumnName(columnIndex), "getColumnName");
+        assertEquals(expectedMetaData.name(), rsmd.getColumnName(columnIndex), "getColumnName");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
     @MethodSource("testData")
     void testGetColumnType(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getType(), rsmd.getColumnType(columnIndex), "getColumnType");
+        assertEquals(expectedMetaData.type(), rsmd.getColumnType(columnIndex), "getColumnType");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
     @MethodSource("testData")
     void testGetColumnTypeName(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getTypeName(), rsmd.getColumnTypeName(columnIndex), "getColumnTypeName");
+        assertEquals(expectedMetaData.typeName(), rsmd.getColumnTypeName(columnIndex), "getColumnTypeName");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
     @MethodSource("testData")
     void testGetPrecision(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getPrecision(), rsmd.getPrecision(columnIndex), "getPrecision");
+        assertEquals(expectedMetaData.precision(), rsmd.getPrecision(columnIndex), "getPrecision");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
     @MethodSource("testData")
     void testGetScale(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored) throws Exception {
-        assertEquals(expectedMetaData.getScale(), rsmd.getScale(columnIndex), "getScale");
+        assertEquals(expectedMetaData.scale(), rsmd.getScale(columnIndex), "getScale");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
@@ -283,7 +283,7 @@ class FBResultSetMetaDataParametrizedTest {
     @MethodSource("testData")
     void testGetTableName(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.getTableName(), rsmd.getTableName(columnIndex), "getTableName");
+        assertEquals(expectedMetaData.tableName(), rsmd.getTableName(columnIndex), "getTableName");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
@@ -314,7 +314,7 @@ class FBResultSetMetaDataParametrizedTest {
     @ParameterizedTest(name = "Index {0} ({2})")
     @MethodSource("testData")
     void testIsNullable(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored) throws Exception {
-        assertEquals(expectedMetaData.getNullable(), rsmd.isNullable(columnIndex), "isNullable");
+        assertEquals(expectedMetaData.nullable(), rsmd.isNullable(columnIndex), "isNullable");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
@@ -327,13 +327,13 @@ class FBResultSetMetaDataParametrizedTest {
     @MethodSource("testData")
     void testIsSearchable(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
             throws Exception {
-        assertEquals(expectedMetaData.isSearchable(), rsmd.isSearchable(columnIndex), "isSearchable");
+        assertEquals(expectedMetaData.searchable(), rsmd.isSearchable(columnIndex), "isSearchable");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
     @MethodSource("testData")
     void testIsSigned(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored) throws Exception {
-        assertEquals(expectedMetaData.isSigned(), rsmd.isSigned(columnIndex), "isSigned");
+        assertEquals(expectedMetaData.signed(), rsmd.isSigned(columnIndex), "isSigned");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
@@ -352,84 +352,8 @@ class FBResultSetMetaDataParametrizedTest {
                 label);
     }
 
-    private static class ResultSetMetaDataInfo {
-        private final String className;
-        private final int displaySize;
-        private final String label;
-        private final String name;
-        private final int type;
-        private final String typeName;
-        private final int precision;
-        private final int scale;
-        private final String tableName;
-        private final int nullable;
-        private final boolean searchable;
-        private final boolean signed;
-
-        private ResultSetMetaDataInfo(String className, int displaySize, String label, String name, int type,
-                String typeName, int precision, int scale, String tableName, int nullable, boolean searchable,
-                boolean signed) {
-
-            this.className = className;
-            this.displaySize = displaySize;
-            this.label = label;
-            this.name = name;
-            this.type = type;
-            this.typeName = typeName;
-            this.precision = precision;
-            this.scale = scale;
-            this.tableName = tableName;
-            this.nullable = nullable;
-            this.searchable = searchable;
-            this.signed = signed;
-        }
-
-        private String getClassName() {
-            return className;
-        }
-
-        private int getDisplaySize() {
-            return displaySize;
-        }
-
-        private String getLabel() {
-            return label;
-        }
-
-        private String getName() {
-            return name;
-        }
-
-        private int getType() {
-            return type;
-        }
-
-        private String getTypeName() {
-            return typeName;
-        }
-
-        private int getPrecision() {
-            return precision;
-        }
-
-        private int getScale() {
-            return scale;
-        }
-
-        private String getTableName() {
-            return tableName;
-        }
-
-        private int getNullable() {
-            return nullable;
-        }
-
-        private boolean isSearchable() {
-            return searchable;
-        }
-
-        private boolean isSigned() {
-            return signed;
-        }
+    private record ResultSetMetaDataInfo(
+            String className, int displaySize, String label, String name, int type, String typeName, int precision,
+            int scale, String tableName, int nullable, boolean searchable, boolean signed) {
     }
 }
