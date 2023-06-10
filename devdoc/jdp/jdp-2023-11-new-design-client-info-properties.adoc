@@ -1,0 +1,183 @@
+= jdp-2023-11: New design client info properties
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+
+== Context
+
+JDBC 4.0 introduced "`client info properties`", and methods to get and set these properties.
+The introduced methods are:
+
+* `DatabaseMetaData`
+** `ResultSet getClientInfoProperties()` -- returns supported properties
+* `Connection`
+** `setClientInfo(String name, String value)` -- sets individual property (`null` clears current value)
+** `setClientInfo(Properties properties)` -- sets the client info properties to the specified values, absent properties names should be cleared
+** `String getClientInfo(String)` -- gets a specific property by name, returns `null` if not set, unknown or unsupported
+** `Properties getClientInfo()` -- returns supported properties and their values
+
+There are no required properties, but JDBC does specify the following, and these names should be used for equivalent features:
+
+[horizontal]
+`ApplicationName`::
+The name of the application currently utilizing the connection
+`ClientUser`::
+The name of the user that the application using the connection is performing work for.
+This may not be the same as the username that was used in establishing the connection.
+`ClientHostname`::
+The hostname of the computer the application using the connection is running on.
+
+Semantics of `ClientUser` and `ClientHostname` are not clear.
+We think there are (at least) two incompatible interpretations: the effective user of the DB connection and its client IP address (i.e. `RDB$GET_CONTEXT('SYSTEM', 'EFFECTIVE_USER')` (or maybe ``'CURRENT_USER'``) and `RDB$GET_CONTEXT('SYSTEM', 'CLIENT_HOST')` (or maybe ``'CLIENT_ADDRESS'``)), or application-specific data to track an application user and their connection (e.g. for a web API, the authenticated user of the HTTP request and the source IP address of the request).
+
+Firebird has the ability to retrieve and store an equivalent of client info properties with `RDB$GET_CONTEXT` and `RDB$SET_CONTEXT`.
+These properties are split over three contexts: `SYSTEM`, `USER_TRANSACTION` and `USER_SESSION` (four if you count PSQL trigger context `DDL_TRIGGER`).
+Only `USER_TRANSACTION` and `USER_SESSION` are modifiable, but for these contexts all properties are user-defined (so, no "`known`" properties).
+Only `SYSTEM` (and `DDL_TRIGGER`) have known properties names, but are not modifiable.
+
+Attempts to retrieve a non-existent variable from `SYSTEM` results in `isc_ctx_var_not_found` (`335544843`), for the user-contexts it returns `NULL`.
+
+Executing `ALTER SESSION RESET` will clear the user contexts.
+
+Properties in `USER_TRANSACTION` and `USER_SESSION` can be queried from `MON$CONTEXT_VARIABLES`.
+However, given this is a monitoring table, its view is fixed at the point the _first_ monitoring table was queried in the transaction.
+In addition, querying monitoring tables is relatively expensive because of the full monitoring snapshot.
+
+Since Jaybird 2.2, Jaybird has an implementation of JDBC client info properties (with some deficiencies):
+
+`Properties getClientInfo()`::
+Attempts to retrieve "`known`" client info property names, but given none are defined this always returns an empty `Properties` object.
+`String getClientInfo(String name)`::
+Retrieves the value of `name` in `USER_TRANSACTION` and `USER_SESSION`, returning the first non-null value.
+`setClientInfo(String name, String value)`::
+Sets `value` of `name` in `USER_SESSION`.
+`setClientInfo(Properties properties)`::
+Sets all listed properties to their value in `USER_SESSION`, absent properties are *not* removed.
+`DatabaseMetaData.getClientInfoProperties()`::
+Always returns an empty result set.
+
+The current implementation has the following limitations:
+
+* It is not possible to _get_ a name from `USER_SESSION` if it is also defined in `USER_TRANSACTION`
+* It is not possible to discern if a value was retrieved from `USER_SESSION` or `USER_TRANSACTION`
+* It is only possible to _set_ a name in `USER_SESSION`, not in `USER_TRANSACTION`
+* It is not possible to _get_ a name from `SYSTEM`
+* Querying all properties is never possible given the implementation of `getClientInfo()`
+
+Given the definition in JDBC, read/write of `USER_SESSION` should be sufficient.
+Access to the other contexts is not really necessary, but could be nice to have
+
+== Decision
+
+=== Allow access to all DSQL contexts
+
+We're going to distinguish to types of variable names:
+
+* With context -- for example `ApplicationName@USER_SESSION`
++
+Variable names with context end in `@SYSTEM`, `@USER_TRANSACTION` and `@USER_SESSION`.
+Everything else is considered a variable name without context.
+* Without context -- for example `ApplicationName`
+
+When the API receives a variable name (as a parameter, or in a `Properties`) it is converted to a tuple of context name and variable name without context.
+If a received name is without context, it is considered in context `USER_SESSION`.
+For example:
+
+* `ApplicationName` -> (`USER_SESSION`, `ApplicationName`)
+* `ApplicationName@USER_SESSION` -> (`USER_SESSION`, `ApplicationName`)
+* `ApplicationName@USER_TRANSACTION` -> (`USER_TRANSACTION`, `ApplicationName`)
+* `CLIENT_HOST@SYSTEM` -> (`SYSTEM`, `CLIENT_HOST`)
+
+When returning a `Properties` object, variables in `USER_SESSION` are *always* reported as variables names without context, while variables from other contexts are always reported as variable names with context.
+
+Implementing _get_ from `SYSTEM` should take appropriate steps to recover from error `isc_ctx_var_not_found` (i.e. return `null` as if it doesn't exist).
+
+Attempts to set variables in `SYSTEM` result in the following behaviour:
+
+* explicit set with `setClientInfo(String, String)` -> throws a `SQLClientInfoException`
+* implicit set with `setClientInfo(Properties)` -> silently ignored
+
+=== Handling "`known`" properties
+
+Each connection maintains a list of "`known`" properties to be used when populating the `Properties` object returned by `Properties getClientInfo()`.
+Jaybird will not query the database to establish a list of known properties (e.g. by querying `MON$CONTEXT_VARIABLES`).
+By default, it will only consider the JDBC-specified properties `ApplicationName`, `ClientUser` and `ClientHostname` as known properties (from `USER_SESSION`).
+No variables from the `SYSTEM` or `USER_TRANSACTION` context are registered as _default_ known properties.
+Any properties set or queried through `getClientInfo(String)`, `setClientInfo(String, String)` and `setClientInfo(Properties)` will be registered as known properties for the _current_ connection and used for subsequent calls to `Properties getClientInfo()` on that connection.
+In the case of `SYSTEM` properties, only properties which did not result in `isc_ctx_var_not_found` will be registered.
+
+For _get_ of `ApplicationName`, a fallback to `CLIENT_PROCESS@SYSTEM` or (`SYSTEM`, `CLIENT_PROCESS`) will be applied if not explicitly set in `USER_SESSION`.
+Unless explicitly requested with `getClientInfo(String)`, `CLIENT_PROCESS@SYSTEM` is _not_ registered as a known property.
+The `ClientUser` and `ClientHostname` properties are considered application-specific properties and will *not* fall back to variables from the `SYSTEM` context.
+
+The `DatabaseMetaData.getClientInfoProperties()` method will only report `ApplicationName`, `ClientUser` and `ClientHostname`.
+It will *not* report additional names registered as described above.
+If it is deemed useful, this may change in the future.
+
+=== Auto-commit and `USER_TRANSACTION`
+
+For connections in auto-commit mode, setting or getting values from context `USER_TRANSACTION` is silently ignored for individual _get_ (return `null`) and _set_ (do nothing).
+
+=== Clearing properties
+
+If a "`known`" property (from `USER_SESSION` or `USER_TRANSACTION`) of the current connection is absent from the `Properties` object passed to `setClientInfo(Properties)`, it will be cleared.
+
+Context properties which are unknown to the connection will not be cleared.
+
+=== Optimization by using `EXECUTE BLOCK`
+
+Instead of the repeated querying/updating done for each individual property in the existing implementation, the new implementation will generate an `EXECUTE BLOCK` on the fly when setting or retrieving multiple properties at once.
+
+=== Rejected options
+
+* Retaining existing implementation.
++
+The existing implementation is incomplete (e.g. `Properties getClientInfo()` effectively does nothing), and inconsistent (e.g. _get_ falls back from `USER_TRANSACTION` to `USER_SESSION`, while _set_ only writes to `USER_SESSION`).
+Addressing both problems at once, while also improving other aspects has our preference.
+* Implementing `Properties getClientInfo()` by querying all known system context variables, and `MON$CONTEXT_VARIABLES` for the current session and transaction using a similar solution as shown in https://stackoverflow.com/questions/76433664/how-can-i-retrieve-all-context-variables-of-a-firebird-database-connection[How can I retrieve all context variables of a Firebird database connection^].
++
+. Doubtful if applications are interested in any of the `SYSTEM` context variables.
+. Doubtful if applications are interested in properties they did not set themselves.
+. The overhead of creating a monitoring snapshot may make this too expensive if requested often.
+. The snapshot for monitoring tables will result in missing or outdated values if requested multiple times in the same transaction.
+. Creation of the monitoring snapshot by JDBC functionality may interfere with "`recency`" requirements of users querying monitoring tables.
+This could be addressed by querying in a separate transaction (or in an autonomous transaction from `EXECUTE BLOCK`).
+* Populating list of "`known`" properties from `MON$CONTEXT_VARIABLES` on first use of client info properties on a connection.
++
+. Doubtful if applications are interested in properties they did not set themselves.
+. Creation of the monitoring snapshot by JDBC functionality may interfere with "`recency`" requirements of users querying monitoring tables.
+This could be addressed by querying in a separate transaction (or in an autonomous transaction from `EXECUTE BLOCK`).
+* Populating list of "`known`" properties from `SYSTEM`.
++
+Doubtful if applications are interested in any of the `SYSTEM` context variables.
+* Only provide access to `USER_SESSION`.
++
+Although access to `USER_TRANSACTION` and `SYSTEM` will be a niche feature, exposing it is simple to do, especially since the internal implementation needs access to `SYSTEM` anyway for the proposed fallback for `ApplicationName`.
+* Retain fallback from `USER_TRANSACTION` to `USER_SESSION`.
++
+The current implementation can only set in `USER_SESSION`, and this results in inconsistent behaviour (e.g. _set_ followed by _get_ may not see the updated value, because it retrieves it from `USER_TRANSACTION`).
+Such inconsistency cannot be resolved with the proposed new implementation (nor do we see an alternative, other than setting in `USER_SESSION` and also setting in `USER_TRANSACTION` if it is currently defined there, which seems inefficient, and potentially incorrect).
+* Apply mapping (or falling back) from `ClientUser` to `CURRENT_USER@SYSTEM` or `EFFECTIVE_USER@SYSTEM`.
++
+Unclear if this interpretation is correct, leaving as application-specific keeps the option open to change it in the future.
+* Apply mapping (or falling back) from `ClientHostname` to `CLIENT_HOST@SYSTEM` or `CLIENT_ADDRESS@SYSTEM`.
++
+Unclear if this interpretation is correct, leaving as application-specific keeps the option open to change it in the future.
+* Do not apply fallback from `ApplicationName` to `CLIENT_PROCESS@SYSTEM`.
++
+This fallback seems appropriate given the definition in JDBC, while allowing to "`overwrite`" it in the `USER_SESSION` will retain flexibility for application-specific needs.
+
+== Consequences
+
+The current implementation of client properties will be replaced as described in <<_decision>>.
+
+This change will result in two incompatibilities:
+
+. `getClientInfo(String name)` will no longer report the value of `name` from `USER_TRANSACTION`, but only from `USER_SESSION`.
+To query values from `USER_TRANSACTION`, use `<name>@USER_TRANSACTION`.
+. `setClientInfo(Properties)` will now clear _known_ properties from `USER_SESSION` and `USER_TRANSACTION` if they are not specified in the `Properties` object.
+Known properties are the default `ApplicationName`, `ClientUser` and `ClientHostname`, and any other property made known to the _current_ connection through `getClientInfo(String)`, `setClientInfo(String, String)` or `setClientInfo(Properties)`.
+
+Although not a direct consequence of this JDP, we'll also add the aliases `ApplicationName` and `applicationName` for the connection property `processName`.
