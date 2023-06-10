@@ -69,6 +69,7 @@ The current implementation has the following limitations:
 Given the definition in JDBC, read/write of `USER_SESSION` should be sufficient.
 Access to the other contexts is not really necessary, but could be nice to have
 
+[#decision]
 == Decision
 
 === Allow access to all DSQL contexts
@@ -171,7 +172,7 @@ This fallback seems appropriate given the definition in JDBC, while allowing to 
 
 == Consequences
 
-The current implementation of client properties will be replaced as described in <<_decision>>.
+The current implementation of client properties will be replaced as described in <<decision>>.
 
 This change will result in two incompatibilities:
 
