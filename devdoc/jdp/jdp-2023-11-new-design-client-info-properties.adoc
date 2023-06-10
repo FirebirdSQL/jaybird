@@ -74,7 +74,7 @@ Access to the other contexts is not really necessary, but could be nice to have
 
 === Allow access to all DSQL contexts
 
-We're going two distinguish to types of variable names:
+We're going to distinguish two types of variable names:
 
 * With context -- for example `ApplicationName@USER_SESSION`
 +
