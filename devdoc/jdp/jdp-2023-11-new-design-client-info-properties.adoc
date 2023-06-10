@@ -39,7 +39,7 @@ Only `SYSTEM` (and `DDL_TRIGGER`) have known properties names, but are not modif
 
 Attempts to retrieve a non-existent variable from `SYSTEM` results in `isc_ctx_var_not_found` (`335544843`), for the user-contexts it returns `NULL`.
 
-Executing `ALTER SESSION RESET` will clear the user contexts.
+Executing `ALTER SESSION RESET` will clear the user-contexts.
 
 Properties in `USER_TRANSACTION` and `USER_SESSION` can be queried from `MON$CONTEXT_VARIABLES`.
 However, given this is a monitoring table, its view is fixed at the point the _first_ monitoring table was queried in the transaction.
@@ -73,7 +73,7 @@ Access to the other contexts is not really necessary, but could be nice to have
 
 === Allow access to all DSQL contexts
 
-We're going to distinguish to types of variable names:
+We're going two distinguish to types of variable names:
 
 * With context -- for example `ApplicationName@USER_SESSION`
 +
@@ -96,8 +96,8 @@ Implementing _get_ from `SYSTEM` should take appropriate steps to recover from e
 
 Attempts to set variables in `SYSTEM` result in the following behaviour:
 
-* explicit set with `setClientInfo(String, String)` -> throws a `SQLClientInfoException`
-* implicit set with `setClientInfo(Properties)` -> silently ignored
+* Explicit _set_ with `setClientInfo(String, String)` -> throws a `SQLClientInfoException`
+* Implicit _set_ with `setClientInfo(Properties)` -> silently ignored
 
 === Handling "`known`" properties
 
@@ -105,7 +105,7 @@ Each connection maintains a list of "`known`" properties to be used when populat
 Jaybird will not query the database to establish a list of known properties (e.g. by querying `MON$CONTEXT_VARIABLES`).
 By default, it will only consider the JDBC-specified properties `ApplicationName`, `ClientUser` and `ClientHostname` as known properties (from `USER_SESSION`).
 No variables from the `SYSTEM` or `USER_TRANSACTION` context are registered as _default_ known properties.
-Any properties set or queried through `getClientInfo(String)`, `setClientInfo(String, String)` and `setClientInfo(Properties)` will be registered as known properties for the _current_ connection and used for subsequent calls to `Properties getClientInfo()` on that connection.
+Any properties set or queried through `getClientInfo(String)`, `setClientInfo(String, String)` and `setClientInfo(Properties)` will be registered as known properties for the _current_ connection and used for subsequent calls to `Properties getClientInfo()` and `setClientInfo(Properties)` on that connection.
 In the case of `SYSTEM` properties, only properties which did not result in `isc_ctx_var_not_found` will be registered.
 
 For _get_ of `ApplicationName`, a fallback to `CLIENT_PROCESS@SYSTEM` or (`SYSTEM`, `CLIENT_PROCESS`) will be applied if not explicitly set in `USER_SESSION`.
@@ -179,5 +179,8 @@ This change will result in two incompatibilities:
 To query values from `USER_TRANSACTION`, use `<name>@USER_TRANSACTION`.
 . `setClientInfo(Properties)` will now clear _known_ properties from `USER_SESSION` and `USER_TRANSACTION` if they are not specified in the `Properties` object.
 Known properties are the default `ApplicationName`, `ClientUser` and `ClientHostname`, and any other property made known to the _current_ connection through `getClientInfo(String)`, `setClientInfo(String, String)` or `setClientInfo(Properties)`.
+
+If an application attempts to get or set a large number properties, this may result in the generated `EXECUTE BLOCK` exceeding implementations limits.
+Given we think this will be a rare event, we will currently not attempt to address this (e.g. by breaking it up into multiple blocks).
 
 Although not a direct consequence of this JDP, we'll also add the aliases `ApplicationName` and `applicationName` for the connection property `processName`.
