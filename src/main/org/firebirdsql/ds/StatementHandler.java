@@ -23,9 +23,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.sql.Statement;
 
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdStatement;
 import org.firebirdsql.jdbc.SQLStateConstants;
 
@@ -34,8 +34,8 @@ import static org.firebirdsql.util.ReflectionHelper.*;
 /**
  * InvocationHandler for statements.
  * <p>
- * Using an InvocationHandler together with a Proxy removes the need to create
- * wrappers for every individual JDBC version.
+ * Using an InvocationHandler together with a Proxy removes the need to create wrappers for every individual JDBC
+ * version.
  * </p>
  * 
  * @author Mark Rotteveel
@@ -49,11 +49,11 @@ class StatementHandler implements InvocationHandler {
 
     /**
      * Constructor for StatementHandler.
-     * 
+     *
      * @param owner
-     *            The PooledConnectionHandler which owns the Statement
+     *         The PooledConnectionHandler which owns the Statement
      * @param stmt
-     *            Statement to proxy
+     *         Statement to proxy
      */
     StatementHandler(PooledConnectionHandler owner, Statement stmt) {
         this.owner = owner;
@@ -88,11 +88,12 @@ class StatementHandler implements InvocationHandler {
         }
 
         // Methods of statement and subinterfaces
-        if (method.equals(STATEMENT_IS_CLOSED) || method.equals(FIREBIRDSTATEMENT_IS_CLOSED)) {
+        if (method.equals(STATEMENT_IS_CLOSED) || method.equals(FIREBIRD_STATEMENT_IS_CLOSED)) {
             return isClosed();
         }
         if (isClosed() && !method.equals(STATEMENT_CLOSE)) {
-            throw new FBSQLException("Statement is already closed", SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID);
+            throw new SQLNonTransientException("Statement is already closed",
+                    SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID);
         }
         
         try {
@@ -110,8 +111,8 @@ class StatementHandler implements InvocationHandler {
             return method.invoke(stmt, args);
         } catch (InvocationTargetException ite) {
             Throwable inner = ite.getTargetException();
-            if (inner instanceof SQLException) {
-                owner.statementErrorOccurred(this, (SQLException) inner);
+            if (inner instanceof SQLException se) {
+                owner.statementErrorOccurred(this, se);
             }
             throw inner;
         } catch (SQLException se) {
@@ -130,9 +131,9 @@ class StatementHandler implements InvocationHandler {
     /**
      * Handle {@link Statement#close()} method. This method closes the wrapped
      * Statement and notifies the owner it can forget the statement.
-     * 
+     *
      * @throws SQLException
-     *             If closing the statement threw an Exception
+     *         If closing the statement threw an Exception
      */
     private void handleClose() throws SQLException {
         if (isClosed()) {
@@ -155,23 +156,21 @@ class StatementHandler implements InvocationHandler {
     }
 
     /**
-     * @return <code>true</code> when this handler is closed
+     * @return {@code true} when this handler is closed
      */
     public boolean isClosed() {
         return proxy == null || stmt == null;
     }
 
     // Statement methods
-    private final static Method STATEMENT_IS_CLOSED = findMethod(Statement.class, "isClosed",
-            new Class[0]);
-    private final static Method FIREBIRDSTATEMENT_IS_CLOSED = findMethod(FirebirdStatement.class, "isClosed", 
+    private final static Method STATEMENT_IS_CLOSED = findMethod(Statement.class, "isClosed", new Class[0]);
+    private final static Method FIREBIRD_STATEMENT_IS_CLOSED = findMethod(FirebirdStatement.class, "isClosed",
             new Class[0]);
     private final static Method STATEMENT_CLOSE = findMethod(Statement.class, "close", new Class[0]);
     private final static Method GET_CONNECTION = findMethod(Statement.class, "getConnection", new Class[0]);
 
     // Object Methods
     private final static Method TO_STRING = findMethod(Object.class, "toString", new Class[0]);
-    private final static Method EQUALS = findMethod(Object.class, "equals",
-            new Class[] { Object.class });
+    private final static Method EQUALS = findMethod(Object.class, "equals", new Class[] { Object.class });
     private final static Method HASH_CODE = findMethod(Object.class, "hashCode", new Class[0]);
 }

@@ -19,7 +19,6 @@
 package org.firebirdsql.ds;
 
 import org.firebirdsql.gds.ng.LockCloseable;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
@@ -30,6 +29,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientConnectionException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,8 +41,8 @@ import static org.firebirdsql.util.ReflectionHelper.getAllInterfaces;
 /**
  * InvocationHandler for the logical connection returned by FBPooledConnection.
  * <p>
- * Using an InvocationHandler together with a Proxy removes the need to create
- * wrappers for every individual JDBC version.
+ * Using an InvocationHandler together with a Proxy removes the need to create rappers for every individual JDBC
+ * version.
  * </p>
  * 
  * @author Mark Rotteveel
@@ -51,7 +51,8 @@ import static org.firebirdsql.util.ReflectionHelper.getAllInterfaces;
 class PooledConnectionHandler implements InvocationHandler {
 
     protected static final String CLOSED_MESSAGE = "Logical connection already closed";
-    protected static final String FORCIBLY_CLOSED_MESSAGE = "Logical connection was forcibly closed by the connection pool";
+    protected static final String FORCIBLY_CLOSED_MESSAGE =
+            "Logical connection was forcibly closed by the connection pool";
     protected final FBPooledConnection owner;
     protected volatile Connection connection;
     protected volatile Connection proxy;
@@ -96,7 +97,7 @@ class PooledConnectionHandler implements InvocationHandler {
         }
         if (isClosed() && !method.equals(CONNECTION_CLOSE)) {
             String message = forcedClose ? FORCIBLY_CLOSED_MESSAGE : CLOSED_MESSAGE;
-            throw new FBSQLException(message, SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
+            throw new SQLNonTransientConnectionException(message, SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
         }
 
         try {
@@ -122,8 +123,8 @@ class PooledConnectionHandler implements InvocationHandler {
             return method.invoke(connection, args);
         } catch (InvocationTargetException ite) {
             Throwable inner = ite.getTargetException();
-            if (inner instanceof SQLException) {
-                owner.fireConnectionError((SQLException) inner);
+            if (inner instanceof SQLException se) {
+                owner.fireConnectionError(se);
             }
             throw inner;
         } catch (SQLException se) {
@@ -138,25 +139,22 @@ class PooledConnectionHandler implements InvocationHandler {
      * NOTE: This method is not involved in rollback decisions for calls to the proxy.
      * </p>
      * 
-     * @return <code>true</code> when calling rollback is allowed
+     * @return {@code true} when calling rollback is allowed
      */
     protected boolean isRollbackAllowed() throws SQLException {
         return !connection.getAutoCommit();
     }
 
     /**
-     * Handle {@link Connection#close()} method. This implementation closes the
-     * connection and associated statements.
-     * 
+     * Handle {@link Connection#close()} method. This implementation closes the connection and associated statements.
+     *
      * @param notifyOwner
-     *            <code>true</code> when connection owner should be notified of
-     *            closure.
-     * 
+     *         {@code true} when connection owner should be notified of closure.
      * @throws SQLException
-     *             if underlying connection threw an exception.
+     *         if underlying connection threw an exception.
      */
     protected void handleClose(boolean notifyOwner) throws SQLException {
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder<>();
         try {
             closeStatements();
         } catch (SQLException ex) {
@@ -207,17 +205,15 @@ class PooledConnectionHandler implements InvocationHandler {
     }
 
     /**
-     * Closes this PooledConnectionHandler. Intended to be called by the
-     * ConnectionPoolDataSource when it wants to forcibly close the logical
-     * connection to reuse it.
+     * Closes this PooledConnectionHandler. Intended to be called by the ConnectionPoolDataSource when it wants to
+     * forcibly close the logical connection to reuse it.
      */
     protected void close() throws SQLException {
-        if (!isClosed()) {
-            try {
-                handleClose(false);
-            } finally {
-                forcedClose = true;
-            }
+        if (isClosed()) return;
+        try {
+            handleClose(false);
+        } finally {
+            forcedClose = true;
         }
     }
 
@@ -236,7 +232,7 @@ class PooledConnectionHandler implements InvocationHandler {
     }
 
     protected void closeStatements() throws SQLException {
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder<>();
         try (LockCloseable ignored = owner.withLock()) {
             // Make copy as the StatementHandler close will remove itself from openStatements
             for (StatementHandler stmt : new ArrayList<>(openStatements)) {
@@ -244,8 +240,8 @@ class PooledConnectionHandler implements InvocationHandler {
                     stmt.close();
                 } catch (SQLException ex) {
                     chain.append(ex);
-                } catch (Throwable t) {
-                    // ignore
+                } catch (RuntimeException e) {
+                    chain.append(new SQLException("Runtime exception on statement close", e));
                 }
             }
             openStatements.clear();
