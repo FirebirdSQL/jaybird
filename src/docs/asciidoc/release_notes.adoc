@@ -700,8 +700,13 @@ there is no replacement
 
 The following methods have been removed in Jaybird 6 without deprecation:
 
-* `FBConnection.prepareMetaDataStatement(String, int,int)`;
+* `FBConnection`
+** `prepareMetaDataStatement(String, int,int)`;
 use `prepareStatement(String, int, int, int, boolean, boolean)`
+** `getStatementListener()`;
+there is no replacement
+** `inTransaction()`;
+there is no replacement
 * `JaybirdSystemProperties`
 ** `isForceConsoleLogger()`;
 there is no replacement

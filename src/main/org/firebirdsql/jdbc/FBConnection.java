@@ -73,7 +73,7 @@ public class FBConnection implements FirebirdConnection {
     private static final SQLPermission PERMISSION_SET_NETWORK_TIMEOUT = new SQLPermission("setNetworkTimeout");
     private static final SQLPermission PERMISSION_CALL_ABORT = new SQLPermission("callAbort");
 
-    protected FBManagedConnection mc;
+    protected volatile FBManagedConnection mc;
 
     private FBLocalTransaction localTransaction;
     private FBDatabaseMetaData metaData;
@@ -106,10 +106,6 @@ public class FBConnection implements FirebirdConnection {
         resultSetHoldability = props.isDefaultResultSetHoldable()
                 ? ResultSet.HOLD_CURSORS_OVER_COMMIT
                 : ResultSet.CLOSE_CURSORS_AT_COMMIT;
-    }
-
-    public FBObjectListener.StatementListener getStatementListener() {
-        return txCoordinator;
     }
 
     @Override
@@ -192,6 +188,7 @@ public class FBConnection implements FirebirdConnection {
      *         The FBManagedConnection around which this connection is based
      */
     public void setManagedConnection(FBManagedConnection mc) {
+        if (mc == null && this.mc == null) return;
         try (LockCloseable ignored = withLock()) {
             //close any prepared statements we may have executed.
             if (this.mc != mc && metaData != null) {
@@ -222,7 +219,6 @@ public class FBConnection implements FirebirdConnection {
      * @return immutable instance of {@link DatabaseConnectionProperties}.
      */
     public DatabaseConnectionProperties connectionProperties() {
-        // TODO Do we need mutability?
         // TODO Obtain elsewhere than from getConnectionRequestInfo()
         return mc != null ? mc.getConnectionRequestInfo().asIConnectionProperties().asImmutable() : null;
     }
@@ -429,10 +425,11 @@ public class FBConnection implements FirebirdConnection {
      */
     @Override
     public void close() throws SQLException {
+        if (isClosed()) return;
         if (log.isLoggable(TRACE)) {
             log.log(TRACE, "Connection closed requested at", new RuntimeException("Connection close logging"));
         }
-        SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
+        var chainBuilder = new SQLExceptionChainBuilder<>();
         try (LockCloseable ignored = withLock()) {
             try {
                 if (metaData != null) metaData.close();
@@ -441,6 +438,7 @@ public class FBConnection implements FirebirdConnection {
                 chainBuilder.append(e);
             } finally {
                 metaData = null;
+                FBManagedConnection mc = this.mc;
                 if (mc != null) {
                     // leave managed transactions alone, they are normally
                     // committed after the Connection handle is closed.
@@ -461,7 +459,6 @@ public class FBConnection implements FirebirdConnection {
                     }
 
                     mc.close(this);
-                    mc = null;
                 }
             }
         }
@@ -1043,13 +1040,6 @@ public class FBConnection implements FirebirdConnection {
         return null;
     }
 
-    /**
-     * Check if this connection is currently involved in a transaction
-     */
-    public boolean inTransaction() throws SQLException {
-        return getGDSHelper().inTransaction();
-    }
-
     public void addWarning(SQLWarning warning) {
         try (LockCloseable ignored = withLock()) {
             // TODO: Find way so this method can be protected (or less visible) again.
@@ -1215,18 +1205,23 @@ public class FBConnection implements FirebirdConnection {
 
     @Override
     public void abort(Executor executor) throws SQLException {
+        // NOTE: None of these operations are performed under lock (except maybe very late in the cleanup)
         if (isClosed()) return;
         PERMISSION_CALL_ABORT.checkGuard(this);
         if (executor == null) {
-            throw new SQLNonTransientException("executor was null", SQLStateConstants.SQL_STATE_INVALID_USE_NULL);
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidExecutor).toSQLException();
         }
         final FbDatabase fbDatabase;
         try {
             fbDatabase = getFbDatabase();
         } finally {
             metaData = null;
-            // signals that this connection is closed if queried with isClosed()
-            mc = null;
+            FBManagedConnection mc = this.mc;
+            if (mc != null) {
+                // Avoid lock in Connection.setManagedConnection during mc.close
+                this.mc = null;
+                mc.close(this);
+            }
         }
         executor.execute(() -> {
             try {
