@@ -21,6 +21,7 @@ package org.firebirdsql.ds;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -114,7 +115,7 @@ public class FBPooledConnection implements PooledConnection {
                 try {
                     connection.close();
                 } catch (SQLException se) {
-                    // We want the exception of closing the physical connection to be the first
+                    // We want the exception from closing the physical connection to be the first
                     if (receivedException != null) {
                         se.setNextException(receivedException);
                     }
@@ -130,8 +131,7 @@ public class FBPooledConnection implements PooledConnection {
     }
 
     /**
-     * Helper method to fire the connectionErrorOccurred event. To be used with
-     * fatal (connection) errors only.
+     * Helper method to fire the connectionErrorOccurred event. To be used with fatal (connection) errors only.
      * 
      * @param ex
      *            The exception
@@ -146,8 +146,7 @@ public class FBPooledConnection implements PooledConnection {
     /**
      * Helper method to fire the connectionErrorOccurred event.
      * <p>
-     * This method will decide which errors warrant a connectionErrorOccurred
-     * event to be reported or not.
+     * This method will decide which errors warrant a connectionErrorOccurred event to be reported or not.
      * </p>
      * 
      * @param ex
@@ -169,34 +168,34 @@ public class FBPooledConnection implements PooledConnection {
      * 
      * @param sqlState
      *            SQL State value
-     * @return <code>true</code> if the SQL state is considered fatal
+     * @return {@code true} if the SQL state is considered fatal
      */
-    private boolean isFatalState(String sqlState) {
+    private static boolean isFatalState(String sqlState) {
+        final class Holder {
+            // TODO double check firebird and Jaybird implementation for other states or state classes
+            private static final Set<String> FATAL_SQL_STATE_CLASSES = Set.of(
+                    "08", // Connection errors
+                    "XX" // Internal errors
+            );
+
+            private static final Set<String> FATAL_SQL_STATES = Set.of(
+                    "01002", // Disconnect error
+                    "01S00", // Invalid connection string attribute
+                    "2D000", // Invalid transaction termination
+                    "2E000", // Invalid connection name
+                    "HY000", // General error
+                    "HY001", // Memory allocation error
+                    "HYT00", // Timeout expired
+                    "HYT01"  // Connection timeout expired
+            );
+        }
         if (sqlState == null || sqlState.length() < 2) {
             // No SQL State or no class specified, assume it's fatal
             return true;
         }
-        for (String fatalSqlStateClass : FATAL_SQL_STATE_CLASSES) {
-            if (sqlState.startsWith(fatalSqlStateClass)) {
-                return true;
-            }
-        }
-        return false;
+        return Holder.FATAL_SQL_STATES.contains(sqlState)
+               || Holder.FATAL_SQL_STATE_CLASSES.contains(sqlState.substring(0, 2));
     }
-
-    private static final String[] FATAL_SQL_STATE_CLASSES = {
-            // TODO double check firebird and Jaybird implementation for other states
-            "08", // Connection errors
-            "XX", // Internal errors
-            "01002", // Disconnect error
-            "01S00", // Invalid connection string attribute
-            "2D000", // Invalid transaction termination
-            "2E000", // Invalid connection name
-            "HY000", // General error (TODO: maybe too general?)
-            "HY001", // Memory allocation error
-            "HYT00", // Timeout expired
-            "HYT01", // Connection timeout expired
-    };
 
     /**
      * Helper method to fire the connectionClosed event.
@@ -209,7 +208,7 @@ public class FBPooledConnection implements PooledConnection {
     }
     
     /**
-     * Releases the current handler if it is equal to the handler passed in <code>pch</code>.
+     * Releases the current handler if it is equal to the handler passed in {@code pch}.
      * <p>
      * To be called by the PooledConnectionHandler when it has been closed.
      * </p>
@@ -232,11 +231,23 @@ public class FBPooledConnection implements PooledConnection {
         connectionEventListeners.remove(listener);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The current implementation does nothing.
+     * </p>
+     */
     public void addStatementEventListener(StatementEventListener listener) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        // TODO Implement statement events
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The current implementation does nothing.
+     * </p>
+     */
     public void removeStatementEventListener(StatementEventListener listener) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        // TODO Implement statement events
     }
 }
