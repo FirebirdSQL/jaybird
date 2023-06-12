@@ -53,7 +53,6 @@ public class ChaCha64EncryptionPluginSpi implements EncryptionPluginSpi {
     }
 
     private static Provider createProvider() {
-        // TODO Maybe create a reduced provider which only provides Bouncy Castle's ChaCha implementation?
         return new BouncyCastleProvider();
     }
 

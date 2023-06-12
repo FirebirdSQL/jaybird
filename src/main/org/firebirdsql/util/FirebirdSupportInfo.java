@@ -212,8 +212,6 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * TODO: Check if this is for all types or only for metadata.
-     *
      * @return {@code true} when the length of the field descriptor reports the byte length (max byte per char *
      * char length)
      */

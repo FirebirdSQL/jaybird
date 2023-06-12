@@ -56,7 +56,6 @@ public final class ConnectionProperty {
     private final DpbType pbType;
     private final int dpbItem;
     private final int spbItem;
-    // TODO Add dpbMappingFunction like in r2dbc-firebird?
     /*
      NOTE: We currently do not provide an option to set a custom validator as there didn't seem to be suitable
      use cases, except maybe encoding and charset, which might result in too much inflexibility, and maybe

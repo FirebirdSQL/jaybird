@@ -62,7 +62,7 @@ public interface ServiceConnectionProperties extends AttachmentProperties {
      * <li>service_mgr &mdash; NATIVE, EMBEDDED, PURE_JAVA (PURE_JAVA will use localhost
      * as {@code serverName}, depending on the Firebird version and platform, NATIVE may use Firebird Embedded)</li>
      * <li>xnet://service_mgr &mdash; NATIVE (EMBEDDED will behave as NATIVE, protocols like PURE_JAVA may
-     * attempt to connect to a server called {@code xnet}) TODO: Check if actually valid</li>
+     * attempt to connect to a server called {@code xnet})</li>
      * <li>other Firebird {@code fbclient} connection URLs &mdash; NATIVE, (EMBEDDED will behave as NATIVE, protocols
      * like PURE_JAVA may interpret the protocol name as a host name</li>
      * <li>Custom {@code type} implementations may support other URL formats</li>
@@ -77,7 +77,7 @@ public interface ServiceConnectionProperties extends AttachmentProperties {
      * </p>
      * <ul>
      * <li>service_mgr</li>
-     * <li>empty string TODO verify if that works</li>
+     * <li>empty string</li>
      * <li>{@code null}</li>
      * </ul>
      *
