@@ -114,6 +114,11 @@ public final class SQLStateConstants {
     public static final String SQL_STATE_INVALID_STATEMENT_ID = "26000";
 
     /**
+     * ISO-9075-2: SQLSTATE class connection exception => 08
+     */
+    public static final String SQLSTATE_CLASS_CONNECTION_ERROR = "08";
+
+    /**
      * ISO-9075-2: connection exception => 08000.
      */
     public static final String SQL_STATE_CONNECTION_ERROR = "08000";

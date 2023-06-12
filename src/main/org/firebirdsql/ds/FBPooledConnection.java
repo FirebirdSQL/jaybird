@@ -22,7 +22,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -154,47 +153,12 @@ public class FBPooledConnection implements PooledConnection {
     protected void fireConnectionError(SQLException ex) {
         SQLException currentException = ex;
         while (currentException != null) {
-            String sqlState = currentException.getSQLState();
-            if (isFatalState(sqlState) || FatalErrorHelper.isFatal(currentException)) {
+            if (FatalErrorHelper.isFatal(currentException)) {
                 fireFatalConnectionError(ex);
                 return;
             }
             currentException = ex.getNextException();
         }
-    }
-
-    /**
-     * Decides if the given SQLSTATE is a fatal connection error.
-     *
-     * @param sqlState
-     *         SQLSTATE value
-     * @return {@code true} if the SQLSTATE is considered fatal
-     */
-    private static boolean isFatalState(String sqlState) {
-        final class Holder {
-            // TODO double check firebird and Jaybird implementation for other states or state classes
-            private static final Set<String> FATAL_SQL_STATE_CLASSES = Set.of(
-                    "08", // Connection errors
-                    "XX" // Internal errors
-            );
-
-            private static final Set<String> FATAL_SQL_STATES = Set.of(
-                    "01002", // Disconnect error
-                    "01S00", // Invalid connection string attribute
-                    "2D000", // Invalid transaction termination
-                    "2E000", // Invalid connection name
-                    "HY001", // Memory allocation error
-                    "HYT00", // Timeout expired
-                    "HYT01"  // Connection timeout expired
-            );
-        }
-        // Don't consider absence of SQLSTATE as a sign of fatal error (we did in the past);
-        // there are still exceptions in Jaybird without SQLSTATE, and most of them are not fatal.
-        if (sqlState == null) return false;
-        // Invalid SQLSTATE specified, assume it's fatal
-        if (sqlState.length() != 5) return true;
-        return Holder.FATAL_SQL_STATES.contains(sqlState)
-               || Holder.FATAL_SQL_STATE_CLASSES.contains(sqlState.substring(0, 2));
     }
 
     /**
