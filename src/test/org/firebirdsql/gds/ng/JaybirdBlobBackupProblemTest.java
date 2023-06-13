@@ -23,17 +23,13 @@
  * Portions created by Alejandro Alberola are Copyright (C) 2001
  * Boix i Oltra, S.L. All Rights Reserved.
  */
-package org.firebirdsql.gds.impl.jni;
+package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.ng.FbDatabaseFactory;
-import org.firebirdsql.gds.ng.FbService;
-import org.firebirdsql.gds.ng.FbServiceProperties;
-import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.management.FBManager;
 import org.junit.jupiter.api.AfterEach;
@@ -42,15 +38,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.*;
+import java.util.Properties;
 
+import static org.firebirdsql.common.FBTestProperties.*;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /*
@@ -99,39 +96,35 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class JaybirdBlobBackupProblemTest {
 
     @RegisterExtension
-    static final GdsTypeExtension testTypes = GdsTypeExtension.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+    static final RunEnvironmentExtension runEnvironment = RunEnvironmentExtension.builder()
+            .requiresDbOnLocalFileSystem()
+            .build();
 
     @TempDir
     private Path tempDir;
 
-    private String mAbsoluteDatabasePath = null;
-    private String mAbsoluteBackupPath = null;
-    private FBManager fbManager = null;
+    private Path absoluteDatabasePath;
+    private Path absoluteBackupPath;
+    private FBManager fbManager;
     private FbDatabaseFactory dbFactory;
 
     @BeforeEach
     void setUp() throws Exception {
-        GDSType gdsType = FBTestProperties.getGdsType();
         dbFactory = FBTestProperties.getFbDatabaseFactory();
-        fbManager = new FBManager(gdsType);
-
-        fbManager.setServer("localhost");
-        fbManager.setPort(5066);
-        fbManager.start();
+        fbManager = configureFBManager(createFBManager());
 
         Path dbFolder = tempDir.resolve("db");
         Files.createDirectories(dbFolder);
 
-        mAbsoluteBackupPath = dbFolder.resolve("testES01344.fbk").toString();
+        absoluteBackupPath = dbFolder.resolve("testES01344.fbk");
+        absoluteDatabasePath = dbFolder.resolve("testES01344.fdb");
 
-        mAbsoluteDatabasePath = dbFolder.resolve("testES01344.fdb").toString();
-
-        fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
+        fbManager.createDatabase(absoluteDatabasePath.toString(), DB_USER, DB_PASSWORD);
     }
 
     @AfterEach
     void tearDown() throws Exception {
-        fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
+        fbManager.dropDatabase(absoluteDatabasePath.toString(), DB_USER, DB_PASSWORD);
         fbManager.stop();
     }
 
@@ -151,8 +144,9 @@ class JaybirdBlobBackupProblemTest {
     }
 
     private void writeSomeBlobData() throws SQLException {
-        try (Connection connection = DriverManager.getConnection(
-                "jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath + "?encoding=NONE", "SYSDBA", "masterkey")) {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("lc_ctype", "NONE");
+        try (var connection = DriverManager.getConnection(getUrl(absoluteDatabasePath), DB_USER, DB_PASSWORD)) {
             createTheTable(connection);
             writeTheData(connection);
         }
@@ -173,59 +167,41 @@ class JaybirdBlobBackupProblemTest {
     }
 
     private byte[] generateBytes() {
-        final byte[] data = new byte[128 * 1024];
-        for (int i = 0, n = data.length; i < n; i++) {
-            data[i] = (byte) i;
-        }
-        return data;
+        return DataGenerator.createRandomBytes(128 * 1024);
     }
 
-    private void backupDatabase(FbService service, String logFilePostfix) throws Exception {
-        new File(mAbsoluteBackupPath).delete();
+    private void backupDatabase(FbService service, String logFileSuffix) throws Exception {
+        Files.deleteIfExists(absoluteBackupPath);
         Path logFolder = tempDir.resolve("log");
         Files.createDirectories(logFolder);
-        String logfile = logFolder.resolve("backuptest_" + logFilePostfix + ".log").toString();
+        Path logfile = logFolder.resolve("backuptest_" + logFileSuffix + ".log");
 
         startBackup(service);
         queryService(service, logfile);
 
-        assertTrue(new File(mAbsoluteBackupPath).exists(), "Backup file doesn't exist");
+        assertTrue(Files.isRegularFile(absoluteBackupPath), "Backup file doesn't exist");
     }
 
-    private void queryService(FbService service, String outputFilename) throws Exception {
+    private void queryService(FbService service, Path outputPath) throws Exception {
         ServiceRequestBuffer serviceRequestBuffer = service.createServiceRequestBuffer();
         serviceRequestBuffer.addArgument(ISCConstants.isc_info_svc_to_eof);
 
-        final var sb = new StringBuilder();
-        boolean finished = false;
-        try (FileOutputStream file = new FileOutputStream(outputFilename)) {
-            while (!finished) {
-                byte[] buffer = service.getServiceInfo(null, serviceRequestBuffer, 1024);
-
-                final var byteArrayInputStream = new ByteArrayInputStream(buffer);
-
-                // TODO Find out why unused
-                byteArrayInputStream.read();
-
-                int numberOfBytes = (short) ((byteArrayInputStream.read()) + (byteArrayInputStream.read() << 8));
-
+        try (var file = Files.newOutputStream(outputPath)) {
+            do {
+                byte[] buffer = service.getServiceInfo(null, serviceRequestBuffer, 1536);
+                assertEquals(ISCConstants.isc_info_svc_to_eof, buffer[0], "Expected isc_info_svc_to_eof");
+                int numberOfBytes = buffer[1] & 0xff | (buffer[2] & 0xff) << 8;
                 if (numberOfBytes == 0) {
-                    if (byteArrayInputStream.read() != ISCConstants.isc_info_end)
-                        throw new Exception("Expect ISCConstants.isc_info_end here");
-
-                    finished = true;
+                    assertEquals(ISCConstants.isc_info_end, buffer[3], "Expected ISCConstants.isc_info_end");
+                    break;
                 } else {
-                    for (; numberOfBytes >= 0; numberOfBytes--) {
-                        final byte byteToWrite = (byte) byteArrayInputStream.read();
-
-                        file.write(byteToWrite);
-                        sb.append((char) byteToWrite);
-                    }
+                    file.write(buffer, 3, numberOfBytes);
                 }
-            }
+            } while (true);
         }
 
-        assertThat("Looks like the backup failed. See logfile " + outputFilename, sb.toString(),
+        assertThat("Looks like the backup failed. See logfile " + outputPath,
+                Files.readString(outputPath, StandardCharsets.ISO_8859_1),
                 containsString("committing, and finishing."));
     }
 
@@ -234,14 +210,14 @@ class JaybirdBlobBackupProblemTest {
         serviceRequestBuffer.addArgument(ISCConstants.isc_action_svc_backup);
 
         serviceRequestBuffer.addArgument(SpbItems.isc_spb_verbose);
-        serviceRequestBuffer.addArgument(SpbItems.isc_spb_dbname, mAbsoluteDatabasePath);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath);
+        serviceRequestBuffer.addArgument(SpbItems.isc_spb_dbname, absoluteDatabasePath.toString());
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, absoluteBackupPath.toString());
 
         service.startServiceAction(serviceRequestBuffer);
     }
 
     private FbService attachToServiceManager() throws SQLException {
-        FbService service = dbFactory.serviceConnect(createServiceProperties());
+        FbService service = dbFactory.serviceConnect(getDefaultServiceProperties());
         service.attach();
 
         assertTrue(service.isAttached(), "Handle should be attached when isc_service_attach returns normally");
@@ -249,11 +225,4 @@ class JaybirdBlobBackupProblemTest {
         return service;
     }
 
-    private IServiceProperties createServiceProperties() {
-        IServiceProperties serviceProperties = new FbServiceProperties();
-        serviceProperties.setUser("SYSDBA");
-        serviceProperties.setPassword("masterkey");
-
-        return serviceProperties;
-    }
 }

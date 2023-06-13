@@ -16,15 +16,11 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.impl.jni;
+package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.ng.FbDatabaseFactory;
-import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.management.FBManager;
 import org.junit.jupiter.api.AfterEach;
@@ -33,7 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.DriverManager;
@@ -41,6 +36,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -54,38 +50,32 @@ class ServicesAPITest {
     @TempDir
     private Path tempDir;
 
-    private final System.Logger log = System.getLogger(getClass().getName());
-
-    private String mAbsoluteDatabasePath;
-    private String mAbsoluteBackupPath;
+    private Path absoluteDatabasePath;
+    private Path absoluteBackupPath;
     private FBManager fbManager;
     private FbDatabaseFactory dbFactory;
     private Path logFolder;
 
     @BeforeEach
     void setUp() throws Exception {
-        GDSType gdsType = getGdsType();
-        dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
-
-        fbManager = new FBManager(gdsType);
-        configureFBManager(fbManager);
+        dbFactory = getFbDatabaseFactory();
+        fbManager = configureFBManager(createFBManager());
 
         Path dbFolder = tempDir.resolve("db");
         Files.createDirectories(dbFolder);
         logFolder = tempDir.resolve("log");
         Files.createDirectories(logFolder);
 
-        mAbsoluteBackupPath = dbFolder.resolve("testES01344.fbk").toString();
+        absoluteBackupPath = dbFolder.resolve("testES01344.fbk");
+        absoluteDatabasePath = dbFolder.resolve("testES01344.fdb");
 
-        mAbsoluteDatabasePath = dbFolder.resolve("testES01344.fdb").toString();
-
-        fbManager.createDatabase(mAbsoluteDatabasePath, DB_USER, DB_PASSWORD);
+        fbManager.createDatabase(absoluteDatabasePath.toString(), DB_USER, DB_PASSWORD);
     }
 
     @AfterEach
     void tearDown() throws Exception {
         try {
-            fbManager.dropDatabase(mAbsoluteDatabasePath, DB_USER, DB_PASSWORD);
+            fbManager.dropDatabase(absoluteDatabasePath.toString(), DB_USER, DB_PASSWORD);
         } finally {
             fbManager.stop();
         }
@@ -128,7 +118,7 @@ class ServicesAPITest {
 
     private void connectToDatabase() throws SQLException {
         Properties props = getDefaultPropertiesForConnection();
-        try (var connection = DriverManager.getConnection(getUrl(mAbsoluteDatabasePath), props)) {
+        try (var connection = DriverManager.getConnection(getUrl(absoluteDatabasePath), props)) {
             assertTrue(connection.isValid(5));
         }
     }
@@ -136,12 +126,10 @@ class ServicesAPITest {
     private void restoreDatabase(FbService service) throws Exception {
         startRestore(service);
 
-        queryService(service, logFolder.resolve("restoretest.log").toString());
+        queryService(service, logFolder.resolve("restoretest.log"));
 
-        assertTrue(new File(mAbsoluteDatabasePath).exists(), "Database file doesn't exist after restore !");
-        if (!new File(mAbsoluteBackupPath).delete()) {
-            log.log(System.Logger.Level.DEBUG, "Unable to delete file {0}", mAbsoluteBackupPath);
-        }
+        assertTrue(Files.isRegularFile(absoluteDatabasePath), "Database file doesn't exist after restore");
+        Files.deleteIfExists(absoluteBackupPath);
     }
 
     private void startRestore(FbService service) throws SQLException {
@@ -150,53 +138,42 @@ class ServicesAPITest {
 
         serviceRequestBuffer.addArgument(SpbItems.isc_spb_verbose);
         serviceRequestBuffer.addArgument(SpbItems.isc_spb_options, ISCConstants.isc_spb_res_create);
-        serviceRequestBuffer.addArgument(SpbItems.isc_spb_dbname, mAbsoluteDatabasePath);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath);
+        serviceRequestBuffer.addArgument(SpbItems.isc_spb_dbname, absoluteDatabasePath.toString());
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, absoluteBackupPath.toString());
 
         service.startServiceAction(serviceRequestBuffer);
     }
 
     private void dropDatabase() throws Exception {
-        fbManager.dropDatabase(mAbsoluteDatabasePath, DB_USER, DB_PASSWORD);
+        fbManager.dropDatabase(absoluteDatabasePath.toString(), DB_USER, DB_PASSWORD);
     }
 
     private void backupDatabase(FbService service) throws Exception {
-        if (!new File(mAbsoluteBackupPath).delete()) {
-            log.log(System.Logger.Level.DEBUG, "Unable to delete file {0}", mAbsoluteBackupPath);
-        }
+        Files.deleteIfExists(absoluteBackupPath);
 
         startBackup(service);
 
-        queryService(service, logFolder.resolve("backuptest.log").toString());
+        queryService(service, logFolder.resolve("backuptest.log"));
 
-        assertTrue(new File(mAbsoluteBackupPath).exists(), "Backup file doesn't exist!");
+        assertTrue(Files.isRegularFile(absoluteBackupPath), "Backup file doesn't exist");
     }
 
-    private void queryService(FbService service, String outputFilename) throws Exception {
+    private void queryService(FbService service, Path outputPath) throws Exception {
         final ServiceRequestBuffer serviceRequestBuffer = service.createServiceRequestBuffer();
         serviceRequestBuffer.addArgument(ISCConstants.isc_info_svc_to_eof);
 
-        boolean finished = false;
-
-        try (FileOutputStream file = new FileOutputStream(outputFilename)) {
-            while (!finished) {
+        try (var file = Files.newOutputStream(outputPath)) {
+            do {
                 byte[] buffer = service.getServiceInfo(null, serviceRequestBuffer, 1024);
-                final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer);
-
-                // TODO Find out why unused
-                byteArrayInputStream.read();
-
-                int numberOfBytes = (short) ((byteArrayInputStream.read()) + (byteArrayInputStream.read() << 8));
-
+                assertEquals(ISCConstants.isc_info_svc_to_eof, buffer[0], "Expected isc_info_svc_to_eof");
+                int numberOfBytes = buffer[1] & 0xff | (buffer[2] & 0xff) << 8;
                 if (numberOfBytes == 0) {
-                    if (byteArrayInputStream.read() != ISCConstants.isc_info_end)
-                        throw new Exception("Expect ISCConstants.isc_info_end here");
-                    finished = true;
+                    assertEquals(ISCConstants.isc_info_end, buffer[3], "Expected ISCConstants.isc_info_end");
+                    break;
                 } else {
-                    for (; numberOfBytes >= 0; numberOfBytes--)
-                        file.write(byteArrayInputStream.read());
+                    file.write(buffer, 3, numberOfBytes);
                 }
-            }
+            } while (true);
         }
     }
 
@@ -205,8 +182,8 @@ class ServicesAPITest {
         serviceRequestBuffer.addArgument(ISCConstants.isc_action_svc_backup);
 
         serviceRequestBuffer.addArgument(SpbItems.isc_spb_verbose);
-        serviceRequestBuffer.addArgument(SpbItems.isc_spb_dbname, mAbsoluteDatabasePath);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath);
+        serviceRequestBuffer.addArgument(SpbItems.isc_spb_dbname, absoluteDatabasePath.toString());
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, absoluteBackupPath.toString());
 
         service.startServiceAction(serviceRequestBuffer);
     }

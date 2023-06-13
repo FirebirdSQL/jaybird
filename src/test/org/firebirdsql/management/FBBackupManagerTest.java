@@ -114,7 +114,7 @@ class FBBackupManagerTest {
         backupManager.setDatabase(restorePath.toString());
         backupManager.restoreDatabase();
 
-        try (Connection c = DriverManager.getConnection(getUrl(restorePath.toString()), getDefaultPropertiesForConnection())) {
+        try (var c = DriverManager.getConnection(getUrl(restorePath), getDefaultPropertiesForConnection())) {
             assertTrue(c.isValid(0));
         }
     }
@@ -158,7 +158,7 @@ class FBBackupManagerTest {
         backupManager.setRestoreReadOnly(true);
         backupManager.restoreDatabase();
 
-        try (Connection conn = DriverManager.getConnection(getUrl(restorePath1.toString()), getDefaultPropertiesForConnection());
+        try (var conn = DriverManager.getConnection(getUrl(restorePath1), getDefaultPropertiesForConnection());
              Statement stmt = conn.createStatement()) {
             SQLException exception = assertThrows(SQLException.class,
                     () -> stmt.executeUpdate("INSERT INTO TEST VALUES (2)"),
@@ -174,7 +174,7 @@ class FBBackupManagerTest {
         backupManager.setRestoreReplace(true);
         backupManager.restoreDatabase();
 
-        try (Connection conn = DriverManager.getConnection(getUrl(restorePath2.toString()), getDefaultPropertiesForConnection());
+        try (var conn = DriverManager.getConnection(getUrl(restorePath2), getDefaultPropertiesForConnection());
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("INSERT INTO TEST VALUES (3)");
         }

@@ -558,7 +558,7 @@ class FBMaintenanceManagerTest {
         var testDb = tempDir.resolve("tempdb.fdb").toAbsolutePath();
         Files.copy(fb4DbPath, testDb);
         maintenanceManager.setDatabase(testDb.toString());
-        String jdbcUrl = getUrl(testDb.toString());
+        String jdbcUrl = getUrl(testDb);
         Properties props = getDefaultPropertiesForConnection();
 
         // Verify ODS before upgrade
