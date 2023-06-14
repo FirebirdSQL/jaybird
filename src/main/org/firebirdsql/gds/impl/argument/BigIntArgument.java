@@ -45,7 +45,6 @@ public final class BigIntArgument extends TypedArgument {
         if (!SUPPORTED_ARGUMENT_TYPES.contains(argumentType)) {
             throw new IllegalArgumentException("Invalid argument type: " + argumentType);
         }
-        // TODO Check if value fits if it is an IntSpb?
         this.value = value;
     }
 
