@@ -468,15 +468,11 @@ class FBDatabaseMetaDataTest {
             while (rs.next()) {
                 count++;
                 for (int i = 1; i <= 18; i++) {
-                    Object o = rs.getObject(i);
-                    if (o == null) {
-                        o = "null";
-                    }
-                    out.append(o);
+                    out.append(rs.getObject(i));
                 }
                 out.append(getProperty("line.separator"));
             }
-            System.out.println("getTypeInfo returned: " + out);
+            System.getLogger(getClass().getName()).log(System.Logger.Level.TRACE, "getTypeInfo returned: {0}", out);
             assertThat("Not enough TypeInfo rows fetched", count, greaterThanOrEqualTo(15));
         }
     }
@@ -624,37 +620,6 @@ class FBDatabaseMetaDataTest {
                         + " (INP INTEGER) AS BEGIN exit; END");
             }
         }
-    }
-
-    // TODO Test does not actually check results
-    @Test
-    void testCatalogsAndSchema() throws Exception {
-        try (ResultSet rs = dmd.getSchemas()) {
-            while (rs.next()) {
-                String sn = rs.getString(1);
-                System.out.println(".getAllTables() schema=" + sn);
-            }
-        }
-
-        try (ResultSet rs = dmd.getCatalogs()) {
-            while (rs.next()) {
-                String sn = rs.getString(1);
-                System.out.println(".getAllTables() catalogs=" + sn);
-            }
-        }
-
-        try (ResultSet rs = dmd.getTables(null, null, "%", new String[] { "TABLE" })) {
-            System.out.println(".getAllTables() rs=" + rs);
-
-            while (rs.next()) {
-                String tn = rs.getString("TABLE_NAME");
-                String tt = rs.getString("TABLE_TYPE");
-                String remarks = rs.getString("REMARKS");
-
-                System.out.println(".getAllTables() found table" + tn + ", type=" + tt + ", remarks=" + remarks);
-            }
-        }
-
     }
 
     @Test
