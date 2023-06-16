@@ -146,7 +146,7 @@ class JaybirdBlobBackupProblemTest {
     private void writeSomeBlobData() throws SQLException {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("lc_ctype", "NONE");
-        try (var connection = DriverManager.getConnection(getUrl(absoluteDatabasePath), DB_USER, DB_PASSWORD)) {
+        try (var connection = DriverManager.getConnection(getUrl(absoluteDatabasePath), props)) {
             createTheTable(connection);
             writeTheData(connection);
         }
