@@ -40,7 +40,6 @@ import org.firebirdsql.jaybird.util.Cleaners;
 import java.io.IOException;
 import java.lang.ref.Cleaner;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.function.Function;
@@ -53,7 +52,7 @@ import static java.util.Objects.requireNonNull;
  */
 public abstract class AbstractFbWireStatement extends AbstractFbStatement implements FbWireStatement {
 
-    private final Map<RowDescriptor, byte[]> blrCache = Collections.synchronizedMap(new WeakHashMap<>());
+    private final Map<RowDescriptor, byte[]> blrCache = new WeakHashMap<>();
     private volatile int handle = WireProtocolConstants.INVALID_OBJECT;
     private final FbWireDatabase database;
     private Cleaner.Cleanable cleanable = Cleaners.getNoOp();
