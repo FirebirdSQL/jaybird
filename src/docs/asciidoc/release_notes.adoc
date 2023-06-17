@@ -597,14 +597,14 @@ _get_/_set_ _without_ that suffix in the specified context.
 Properties with multiple contexts (e.g. `property@SYSTEM@USER_SESSION`) are not allowed to prevent ambiguity.
 Everything else is a property without context.
 
-A property named `<name>@USER_SESSION` is handled identical to `<name>`;
-the "`without context`" name is preferred and recommended for `USER_SESSION` properties, and `Connection.getClientInfo()` will use the "`without context`" name as the key for `USER_SESSION` properties.
+A property named `<name>@USER_SESSION` is handled identical to `<name>`.
+The "`without context`" name is preferred and recommended for `USER_SESSION` properties, and `Connection.getClientInfo()` will use the "`without context`" name as the key for `USER_SESSION` properties.
 
 A property named `<name>@USER_TRANSACTION` is _set_ and _get_ as `<name>` in context `USER_TRANSACTION`.
 When a connection is in auto-commit mode, attempts to _set_ or _get_ `USER_TRANSACTION` properties are ignored (nothing is stored, and `null` is returned without accessing the database).
 
 A property named `<name>@SYSTEM` is retrieved as `<name>` in the context `SYSTEM`.
-Properties in the `SYSTEM` context are read-only.
+Properties in the `SYSTEM` context are read-only, so they cannot be _set_.
 For `Connection.setClientInfo(String, String)`, attempts to _set_ a `SYSTEM` property result in a `SQLClientInfoException`, for `Connection.setClientInfo(Properties)`, `SYSTEM` properties are silently ignored.
 
 Attempts to retrieve non-existent properties, even from `SYSTEM` will return `null` and will not result in an exception.
@@ -623,7 +623,7 @@ it will not report the additional properties registered for the current connecti
 
 The JDBC-specified properties are:
 
-[quote,JDBC API documentation of java.sql.Connection]
+[quote,,JDBC API documentation of java.sql.Connection]
 ____
 `ApplicationName`::
 The name of the application currently utilizing the connection
@@ -634,7 +634,7 @@ This may not be the same as the user name that was used in establishing the conn
 The hostname of the computer the application using the connection is running on.
 ____
 
-All JDBC-specified properties _get_/_set_ in `USER_SESSION`.
+All JDBC-specified properties are _get_ and _set_ in `USER_SESSION`.
 On _get_ of `ApplicationName`, if this property is not currently set in `USER_SESSION`, it falls back to _get_ the value from `CLIENT_PROCESS@SYSTEM`.
 The `CLIENT_PROCESS@SYSTEM` value can be specified using the connection property `processName` or system property `org.firebirdsql.jdbc.processName`.
 The `ClientUser` and `ClientHostname` properties are considered application-specific and have no default value or fallback.
@@ -654,7 +654,10 @@ the previous implementation always returned an empty result set.
 
 .Connection pools and known connection properties
 ****
-If you use a connection pool populated from `org.firebirdsql.ds.FBConnectionPoolDataSource` or `org.firebirdsql.ds.FBXADataSource`, the known properties are reset each time the connection is handed out by the pool (assuming the pool uses `getConnection()` from `PooledConnection`/`XAConnection` each time it hands out the connection).
+If you use a connection pool populated from `org.firebirdsql.ds.FBConnectionPoolDataSource` or `org.firebirdsql.ds.FBXADataSource`, the known properties are reset each time the connection is handed out by the pool.
+This assumes the pool uses `getConnection()` from `PooledConnection`/`XAConnection` each time it hands out the connection.
+This reset only removes the property name from the list of known properties, it does not clear the property values from `USER_SESSION`.
+If properties contain _sensitive_ values you will need to explicitly clear them.
 
 This reset is not applied when using a connection pool which is populated by different means (e.g. from `DriverManager` or from a normal `javax.sql.DataSource` like `org.firebirdsql.ds.FBSimpleDataSource`).
 If your connection pool implementation supports custom code to reset a connection, and you need known properties to reset when a connection is reused, make it call `FirebirdConnection.resetKnownClientInfoProperties()`, or call it yourself:
