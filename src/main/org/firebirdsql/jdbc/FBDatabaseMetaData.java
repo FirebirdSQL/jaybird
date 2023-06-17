@@ -36,6 +36,7 @@ import java.util.*;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.WARNING;
+import static java.util.Collections.emptyList;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
@@ -2012,6 +2013,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         protected boolean isUseCatalogAsPackage() {
             return gdsHelper.getConnectionProperties().isUseCatalogAsPackage()
                    && firebirdSupportInfo.supportsPackages();
+        }
+
+        @Override
+        protected Collection<String> getClientInfoPropertyNames() {
+            if (firebirdSupportInfo.supportsGetSetContext()) {
+                try {
+                    return connection.getClientInfoProvider().getDefaultClientInfoPropertyNames();
+                } catch (SQLException e) {
+                    log.log(DEBUG,
+                            "ignored exception in getDefaultClientInfoPropertyNames, falling back to no names", e);
+                }
+            }
+            return emptyList();
         }
     }
 }

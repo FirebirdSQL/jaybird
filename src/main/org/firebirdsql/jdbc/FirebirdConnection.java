@@ -36,6 +36,7 @@ import java.sql.SQLException;
  * Extension of {@link Connection} interface providing access to Firebird specific features.
  *
  * @author Roman Rokytskyy
+ * @since 1.5
  */
 public interface FirebirdConnection extends Connection {
 
@@ -69,6 +70,7 @@ public interface FirebirdConnection extends Connection {
      * @return instance of {@link TransactionParameterBuffer} containing current transaction parameters.
      * @throws SQLException
      *         if error occurred obtaining transaction parameters.
+     * @since 2
      */
     TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException;
 
@@ -78,21 +80,22 @@ public interface FirebirdConnection extends Connection {
      * @return empty instance of {@link TransactionParameterBuffer}.
      * @throws SQLException
      *         if error occurred during this operation.
+     * @since 2
      */
     TransactionParameterBuffer createTransactionParameterBuffer() throws SQLException;
 
     /**
      * Set transaction parameters for the specified transaction isolation level.
      * <p>
-     * This method replaces the default TPB mapping with the specified one,
-     * changes will be effective from the next transaction start.
+     * This method replaces the default TPB mapping with the specified one, changes will be effective from the next
+     * transaction start.
      * </p>
      *
      * @param tpb
-     *         instance of {@link TransactionParameterBuffer} with parameters
-     *         to set.
+     *         instance of {@link TransactionParameterBuffer} with parameters to set.
      * @throws SQLException
      *         if error occurred during this operation.
+     * @since 2
      */
     void setTransactionParameters(int isolationLevel, TransactionParameterBuffer tpb) throws SQLException;
 
@@ -107,15 +110,16 @@ public interface FirebirdConnection extends Connection {
      * </p>
      *
      * @param tpb
-     *         instance of {@link TransactionParameterBuffer} with new
-     *         transaction parameters.
+     *         instance of {@link TransactionParameterBuffer} with new transaction parameters.
      * @throws SQLException
      *         if method is called within a transaction.
+     * @since 2
      */
     void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException;
 
     /**
      * @return {@code true} if this connection is configured to use {@code isc_tpb_autocommit} when in auto commit.
+     * @since 3
      */
     boolean isUseFirebirdAutoCommit();
 
@@ -126,8 +130,21 @@ public interface FirebirdConnection extends Connection {
      * </p>
      *
      * @return The low-level connection handle.
+     * @since 3
      */
     @InternalApi
     FbDatabase getFbDatabase() throws SQLException;
+
+    /**
+     * Resets the known client info properties of this connection to the defaults. This does not reset the values of
+     * those properties on the server, but only resets the list of known properties held by this connection
+     * <p>
+     * If this connection is closed, this is effectively a no-op. Primary use-case for this method is to reset a
+     * connection held in a connection pool.
+     * </p>
+     *
+     * @since 6
+     */
+    void resetKnownClientInfoProperties();
 
 }

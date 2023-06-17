@@ -33,6 +33,7 @@ import javax.sql.StatementEventListener;
 
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.xca.FatalErrorHelper;
+import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
@@ -86,6 +87,10 @@ public class FBPooledConnection implements PooledConnection {
 
     protected void resetConnection(Connection connection) throws SQLException {
         connection.setAutoCommit(true);
+        if (connection.isWrapperFor(FirebirdConnection.class)) {
+            connection.unwrap(FirebirdConnection.class)
+                    .resetKnownClientInfoProperties();
+        }
     }
 
     /**

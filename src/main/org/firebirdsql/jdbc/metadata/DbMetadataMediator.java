@@ -29,6 +29,7 @@ import org.firebirdsql.util.InternalApi;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -78,8 +79,15 @@ public abstract class DbMetadataMediator {
     /**
      * @return value of the {@code useCatalogAsPackage} connection property if packages are supported, otherwise
      * {@code false}
+     * @since 6
      */
     protected abstract boolean isUseCatalogAsPackage();
+
+    /**
+     * @return the client info properties to report for {@link FBDatabaseMetaData#getClientInfoProperties()}.
+     * @since 6
+     */
+    protected abstract Collection<String> getClientInfoPropertyNames();
 
     /**
      * Holder class for query text and parameters.

@@ -91,9 +91,16 @@ class PooledConnectionHandler implements InvocationHandler {
             }
         }
 
-        // Methods from Connection
+        // Methods from Connection or FirebirdConnection
         if (method.equals(CONNECTION_IS_CLOSED)) {
             return isClosed();
+        }
+        if (method.equals(RESET_KNOWN_CLIENT_INFO_PROPERTIES)) {
+            try {
+                method.invoke(connection, args);
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
         }
         if (isClosed() && !method.equals(CONNECTION_CLOSE)) {
             String message = forcedClose ? FORCIBLY_CLOSED_MESSAGE : CLOSED_MESSAGE;
@@ -251,15 +258,19 @@ class PooledConnectionHandler implements InvocationHandler {
         }
     }
 
+    // FirebirdConnection methods
+    private static final Method RESET_KNOWN_CLIENT_INFO_PROPERTIES =
+            findMethod(FirebirdConnection.class, "resetKnownClientInfoProperties", new Class[0]);
+
     // Connection methods
-    private final static Method CONNECTION_IS_CLOSED = findMethod(Connection.class, "isClosed", new Class[0]);
-    private final static Method CONNECTION_CLOSE = findMethod(Connection.class, "close", new Class[0]);
+    private static final Method CONNECTION_IS_CLOSED = findMethod(Connection.class, "isClosed", new Class[0]);
+    private static final Method CONNECTION_CLOSE = findMethod(Connection.class, "close", new Class[0]);
     
     private static final Set<String> STATEMENT_CREATION_METHOD_NAMES =
             Set.of("createStatement", "prepareCall", "prepareStatement");
 
     // Object Methods
-    private final static Method TO_STRING = findMethod(Object.class, "toString", new Class[0]);
-    private final static Method EQUALS = findMethod(Object.class, "equals", new Class[] { Object.class });
-    private final static Method HASH_CODE = findMethod(Object.class, "hashCode", new Class[0]);
+    private static final Method TO_STRING = findMethod(Object.class, "toString", new Class[0]);
+    private static final Method EQUALS = findMethod(Object.class, "equals", new Class[] { Object.class });
+    private static final Method HASH_CODE = findMethod(Object.class, "hashCode", new Class[0]);
 }

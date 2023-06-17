@@ -702,6 +702,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} if database triggers are supported ({@code ON { CONNECT | DISCONNECT | TRANSACTION {START | COMMIT | ROLLBACK } }})
+     */
+    public boolean supportsDatabaseTriggers() {
+        return isVersionEqualOrAbove(2, 5);
+    }
+
+    /**
      * @return {@code true} when this Firebird version is considered a supported version
      */
     public boolean isSupportedVersion() {

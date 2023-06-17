@@ -21,15 +21,17 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.ISCConstants;
 
 /**
- * Strategy for quoting objects (or no quoting in the case of dialect 1).
+ * Strategy for quoting object names and literals (or no quoting of object names in the case of dialect 1).
  *
  * @since 2.2
  */
 public enum QuoteStrategy {
     /**
-     * Dialect 1 doesn't support quoting of object names.
+     * Dialect 1 doesn't support quoting of object names, and uses double quotes for literals.
+     *
+     * @since 6
      */
-    NO_QUOTES {
+    DIALECT_1 {
         @Override
         public StringBuilder appendQuoted(final String objectName, final StringBuilder sb) {
             return sb.append(objectName);
@@ -39,30 +41,76 @@ public enum QuoteStrategy {
         public String quoteObjectName(String objectName) {
             return objectName;
         }
+
+        @Override
+        public StringBuilder appendLiteral(String value, StringBuilder sb) {
+            // Quoting literals in dialect 1 works as quoting object names in dialect 3
+            return DIALECT_3.appendQuoted(value, sb);
+        }
     },
     /**
-     * Dialect 3 (and 2) supports quoting of object names.
+     * Dialect 3 (and 2) supports quoting of object names, and uses single quotes for literals.
+     *
+     * @since 6
      */
-    QUOTES {
+    DIALECT_3 {
         @Override
         public StringBuilder appendQuoted(final String objectName, final StringBuilder sb) {
-            sb.append('"');
-            for (int i = 0; i < objectName.length(); i++) {
-                char currentChar = objectName.charAt(i);
-                // we have to double quote quotes
-                if (currentChar == '"') {
-                    sb.append('"');
-                }
-
-                sb.append(currentChar);
-            }
-            sb.append('"');
-            return sb;
+            return appendWithQuoteEscaped('"', objectName, sb);
         }
 
         @Override
         public String quoteObjectName(String objectName) {
             return appendQuoted(objectName, new StringBuilder(objectName.length() + 2)).toString();
+        }
+
+        @Override
+        public StringBuilder appendLiteral(String value, StringBuilder sb) {
+            return appendWithQuoteEscaped('\'', value, sb);
+        }
+    },
+    /**
+     * Basically an alias for {@link #DIALECT_1} for backwards compatibility.
+     *
+     * @deprecated Will be removed in Jaybird 7, use {@link #DIALECT_1} instead
+     */
+    @Deprecated(since = "6", forRemoval = true)
+    NO_QUOTES {
+        @Override
+        public StringBuilder appendQuoted(String objectName, StringBuilder sb) {
+            return DIALECT_1.appendQuoted(objectName, sb);
+        }
+
+        @Override
+        public String quoteObjectName(String objectName) {
+            return DIALECT_1.quoteObjectName(objectName);
+        }
+
+        @Override
+        public StringBuilder appendLiteral(String value, StringBuilder sb) {
+            return DIALECT_1.appendLiteral(value, sb);
+        }
+    },
+    /**
+     * Basically an alias for {@link #DIALECT_3} for backwards compatibility.
+     *
+     * @deprecated Will be removed in Jaybird 7, use {@link #DIALECT_3} instead
+     */
+    @Deprecated(since = "6", forRemoval = true)
+    QUOTES {
+        @Override
+        public StringBuilder appendQuoted(String objectName, StringBuilder sb) {
+            return DIALECT_3.appendQuoted(objectName, sb);
+        }
+
+        @Override
+        public String quoteObjectName(String objectName) {
+            return DIALECT_3.quoteObjectName(objectName);
+        }
+
+        @Override
+        public StringBuilder appendLiteral(String value, StringBuilder sb) {
+            return DIALECT_3.appendLiteral(value, sb);
         }
     };
 
@@ -82,10 +130,58 @@ public enum QuoteStrategy {
      *
      * @param objectName
      *         The object name
-     * @return The transformed object name.
+     * @return The transformed object name
      * @since 3.0.6
      */
     public abstract String quoteObjectName(String objectName);
+
+    /**
+     * Appends {@code value} as a CHAR literal with the right quotes and escaping for this quote strategy to {@code sb}.
+     *
+     * @param value
+     *         The value to append as a literal
+     * @param sb
+     *         StringBuilder for appending
+     * @return The StringBuilder for method chaining
+     * @since 6
+     */
+    public abstract StringBuilder appendLiteral(String value, StringBuilder sb);
+
+    /**
+     * Returns {@code value} as a CHAR literal with the right quotes and escaping for this quote strategy.
+     *
+     * @param value
+     *         The value to append as a literal
+     * @return The transformed value as a literal
+     * @since 6
+     */
+    public String quoteLiteral(String value) {
+        return appendLiteral(value, new StringBuilder(value.length() + 2)).toString();
+    }
+
+    /**
+     * Appends {@code value} to {@code sb}, enclosing it in {@code quoteChar} and escaping occurrences of
+     * {@code quoteChar} by doubling it.
+     *
+     * @param quoteChar quote character
+     * @param value value to append quoted and escaped
+     * @param sb string builder to append to
+     * @return {@code sb} (for method chaining)
+     * @since 6
+     */
+    StringBuilder appendWithQuoteEscaped(char quoteChar, String value, StringBuilder sb) {
+        sb.append(quoteChar);
+        for (int i = 0; i < value.length(); i++) {
+            char currentChar = value.charAt(i);
+            // we have to double quote quotes
+            if (currentChar == quoteChar) {
+                sb.append(quoteChar);
+            }
+
+            sb.append(currentChar);
+        }
+        return sb.append(quoteChar);
+    }
 
     /**
      * Obtain the {@link QuoteStrategy} for the specified dialect.
@@ -95,9 +191,6 @@ public enum QuoteStrategy {
      * @return Appropriate {@link QuoteStrategy}
      */
     public static QuoteStrategy forDialect(final int dialect) {
-        if (dialect == ISCConstants.SQL_DIALECT_V5) {
-            return NO_QUOTES;
-        }
-        return QUOTES;
+        return dialect == ISCConstants.SQL_DIALECT_V5 ? DIALECT_1 : DIALECT_3;
     }
 }

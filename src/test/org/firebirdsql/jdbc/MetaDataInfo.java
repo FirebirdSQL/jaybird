@@ -31,7 +31,14 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public interface MetaDataInfo {
 
+    /**
+     * Marker value to ignore the column during validation
+     */
     Object IGNORE_DURING_VALIDATION = new Object();
+    /**
+     * Marker value to only check if the column is non-null during validation
+     */
+    Object ANY_NON_NULL_VALUE = new Object();
 
     /**
      * Position of this metadata column in the resul set
@@ -101,7 +108,11 @@ public interface MetaDataInfo {
     private void assertObjectColumnValue(ResultSet rs, Object expectedValue) throws SQLException {
         if (expectedValue == IGNORE_DURING_VALIDATION) return;
         Object value = rs.getObject(name());
-        assertEquals(expectedValue, value, () -> format("Unexpected value for %s", name()));
+        if (expectedValue == ANY_NON_NULL_VALUE) {
+            assertNotNull(value, format("Expected non-null value for %s, but was null", name()));
+        } else {
+            assertEquals(expectedValue, value, () -> format("Unexpected value for %s", name()));
+        }
     }
 
     private void assertShortColumnValue(ResultSet rs, Short expectedValue) throws SQLException {

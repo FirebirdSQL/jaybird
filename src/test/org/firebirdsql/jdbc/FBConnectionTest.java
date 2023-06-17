@@ -44,6 +44,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.*;
 
@@ -74,22 +75,22 @@ import static org.junit.jupiter.api.Assumptions.*;
  */
 class FBConnectionTest {
 
+    private static final String CREATE_TABLE = """
+            CREATE TABLE test (
+              col1 INTEGER
+            )""";
+
     @RegisterExtension
-    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            List.of(CREATE_TABLE));
     
     private static final String IGNORE_PROCESS_NAME = "##IGNORE_PROCESS_NAME##";
 
     @RegisterExtension
     final DatabaseUserExtension databaseUser = DatabaseUserExtension.withDatabaseUser();
 
-    //@formatter:off
-    private static final String CREATE_TABLE =
-            "CREATE TABLE test (" +
-            "  col1 INTEGER" +
-            ")";
-
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
-    //@formatter:on
+    private static final String CLEAR_DATA = "DELETE FROM test";
 
     /**
      * Test if {@link FirebirdConnection#setTransactionParameters(int, int[])} method works correctly.
@@ -99,9 +100,10 @@ class FBConnectionTest {
     @ValueSource(booleans = { true, false })
     void testTpbMapping(boolean useTpbOption) throws Exception {
         try (Connection conA = getConnectionViaDriverManager()) {
-            executeCreateTable(conA, CREATE_TABLE);
-
             conA.setAutoCommit(false);
+            try (var stmt = conA.createStatement()) {
+                stmt.execute(CLEAR_DATA);
+            }
 
             PreparedStatement ps = conA.prepareStatement(INSERT_DATA);
             ps.setInt(1, 1);
@@ -432,16 +434,6 @@ class FBConnectionTest {
             IConnectionProperties connectionProperties =
                     con.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
             assertEquals("WIN1254", connectionProperties.getEncoding(), "Unexpected connection encoding");
-        }
-    }
-
-    @Test
-    void testClientInfo() throws Exception {
-        assumeTrue(getDefaultSupportInfo().supportsGetSetContext(), "Test requires GET_CONTEXT/SET_CONTEXT support");
-        try (FBConnection connection = (FBConnection) getConnectionViaDriverManager()) {
-            connection.setClientInfo("TestProperty", "testValue");
-            String checkValue = connection.getClientInfo("TestProperty");
-            assertEquals("testValue", checkValue);
         }
     }
 

@@ -42,10 +42,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import java.util.function.Function;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
+import static java.util.stream.Collectors.toMap;
 import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
 
 /**
@@ -58,17 +60,6 @@ import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
 public class FBConnection implements FirebirdConnection {
 
     private static final System.Logger log = System.getLogger(FBConnection.class.getName());
-
-    private static final String GET_CLIENT_INFO_SQL = """
-            SELECT
-              rdb$get_context('USER_SESSION', ?) session_context,
-              rdb$get_context('USER_TRANSACTION', ?) tx_context
-            FROM rdb$database""";
-
-    private static final String SET_CLIENT_INFO_SQL = """
-            SELECT
-              rdb$set_context('USER_SESSION', ?, ?) session_context
-            FROM rdb$database""";
 
     private static final SQLPermission PERMISSION_SET_NETWORK_TIMEOUT = new SQLPermission("setNetworkTimeout");
     private static final SQLPermission PERMISSION_CALL_ABORT = new SQLPermission("callAbort");
@@ -90,6 +81,7 @@ public class FBConnection implements FirebirdConnection {
 
     private StoredProcedureMetaData storedProcedureMetaData;
     private GeneratedKeysSupport generatedKeysSupport;
+    private ClientInfoProvider clientInfoProvider;
 
     /**
      * Create a new FBConnection instance based on a {@link FBManagedConnection}.
@@ -129,11 +121,11 @@ public class FBConnection implements FirebirdConnection {
      * executing any action in this class.
      *
      * @throws SQLException
-     *         if this connection has been closed and cannot be used anymore.
+     *         if this connection has been closed and cannot be used anymore
      */
     protected void checkValidity() throws SQLException {
         if (isClosed()) {
-            throw new FBSQLException("This connection is closed and cannot be used now",
+            throw new SQLNonTransientConnectionException("This connection is closed and cannot be used now",
                     SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
         }
     }
@@ -836,8 +828,6 @@ public class FBConnection implements FirebirdConnection {
         throw new FBDriverNotCapableException();
     }
 
-    private final Set<String> clientInfoPropNames = new HashSet<>();
-
     private static final AtomicIntegerFieldUpdater<FBConnection> SAVEPOINT_COUNTER_UPDATE =
             AtomicIntegerFieldUpdater.newUpdater(FBConnection.class, "savepointCounter");
     private volatile int savepointCounter;
@@ -1083,123 +1073,153 @@ public class FBConnection implements FirebirdConnection {
     }
 
     /**
-     * Checks if client info is supported.
+     * Returns, and if necessary creates, an instance of ClientInfoProvider for this connection.
      *
+     * @return client info provider instance
+     * @throws SQLFeatureNotSupportedException
+     *         if {@code connection} is to a Firebird version which does not support RDB$GET/SET_CONTEXT
      * @throws SQLException
-     *         If the client info is not supported, or if there is no database connection.
+     *         if {@code connection} is not valid (e.g. closed)
      */
-    protected void checkClientInfoSupport() throws SQLException {
-        if (!getFbDatabase().getServerVersion().isEqualOrAbove(2, 0)) {
-            throw new FBDriverNotCapableException(
-                    "Required functionality (RDB$SET_CONTEXT()) only available in Firebird 2.0 or higher");
+    ClientInfoProvider getClientInfoProvider() throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            checkValidity();
+            ClientInfoProvider clientInfoProvider = this.clientInfoProvider;
+            if (clientInfoProvider != null) return clientInfoProvider;
+            return this.clientInfoProvider = new ClientInfoProvider(this);
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Retrieves the known properties of this connection. The initial known properties are {@code ApplicationName} (with
+     * fallback to {@code CLIENT_PROCESS@SYSTEM}), {@code ClientUser} (no default value or fallback), and
+     * {@code ClientHostname} (no default value or fallback). Successful retrieval or storing of properties with
+     * {@link #getClientInfo(String)}, {@link #setClientInfo(String, String)} and {@link #setClientInfo(Properties)}
+     * will register that property as a known property <em>for this connection only</em>.
+     * </p>
+     * <p>
+     * When auto-commit is enabled, known properties in context {@code USER_TRANSACTION} are skipped, and not included
+     * in the returned {@code Properties} object.
+     * </p>
+     * <p>
+     * Properties which were registered with suffix {@code @USER_SESSION} are included in the returned
+     * {@code Properties} object <strong>without</strong> that suffix. Known properties with value {@code null} are not
+     * included in the returned {@code Properties} object.
+     * </p>
+     *
+     * @see #getClientInfo(String)
+     * @see #setClientInfo(Properties)
+     */
     @Override
     public Properties getClientInfo() throws SQLException {
-        checkValidity();
-        checkClientInfoSupport();
-
-        Properties result = new Properties();
-        try (PreparedStatement stmt = prepareStatement(GET_CLIENT_INFO_SQL)) {
-            for (String propName : clientInfoPropNames) {
-                result.put(propName, getClientInfo(stmt, propName));
-            }
+        try (LockCloseable ignored = withLock()) {
+            return getClientInfoProvider().getClientInfo();
         }
-
-        return result;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Retrieves properties from context {@code USER_SESSION} or an explicitly specified context with
+     * {@code RDB$GET_CONTEXT}. Names ending in {@code @USER_SESSION}, {@code @USER_TRANSACTION} or {@code @SYSTEM} are
+     * handled as {@code <property-name>@<context-name>}, and the property is retrieved from that context. Bare names
+     * are handled the same as {@code name + "@USER_SESSION"}, unknown or unsupported context suffixes are handled as a
+     * property name in {@code USER_SESSION} (that is {@code DDL_EVENT@DDL_TRIGGER} is handled as a property with that
+     * name in {@code USER_SESSION}, and not as a property DDL_EVENT in context DDL_TRIGGER, which only exists in
+     * PSQL DDL triggers).
+     * </p>
+     * <p>
+     * When auto-commit is enabled, properties in context {@code USER_TRANSACTION} will always return {@code null},
+     * and no attempts are made to retrieve the property.
+     * </p>
+     * <p>
+     * Successful retrieval of a property will register it as a known property <em>for this connection only</em> for use
+     * with {@link #getClientInfo()} (i.e. known properties will be retrieved) and {@link #setClientInfo(Properties)}
+     * (i.e. if a known property is not included, it will be cleared).
+     * </p>
+     */
     @Override
     public String getClientInfo(String name) throws SQLException {
-        checkValidity();
-        checkClientInfoSupport();
-
-        try (PreparedStatement stmt = prepareStatement(GET_CLIENT_INFO_SQL)) {
-            return getClientInfo(stmt, name);
+        try (LockCloseable ignored = withLock()) {
+            return getClientInfoProvider().getClientInfo(name);
         }
     }
 
-    protected String getClientInfo(PreparedStatement stmt, String name) throws SQLException {
-        stmt.clearParameters();
-
-        stmt.setString(1, name);
-        stmt.setString(2, name);
-
-        try (ResultSet rs = stmt.executeQuery()) {
-            if (!rs.next()) {
-                return null;
-            }
-
-            String sessionContext = rs.getString(1);
-            String transactionContext = rs.getString(2);
-
-            if (transactionContext != null) {
-                return transactionContext;
-            } else {
-                return sessionContext;
-            }
-        }
-
-    }
-
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Sets the properties in {@code properties} in context {@code USER_SESSION} or an explicitly specified user context
+     * with {@code RDB$SET_CONTEXT}. See also {@link #getClientInfo(String)} for handling of property names. Absent, but
+     * known properties are cleared. Contrary to {@link #setClientInfo(String, String)}, properties in the
+     * {@code SYSTEM} context are <strong>silently ignored</strong> as they are read-only.
+     * </p>
+     * <p>
+     * When auto-commit is enabled, properties in context {@code USER_TRANSACTION} are silently ignored (they are not
+     * set nor cleared).
+     * </p>
+     * <p>
+     * Successful setting of properties will register it as a known property <em>for this connection only</em> for use
+     * with {@link #getClientInfo()} (i.e. known properties will be retrieved) and {@link #setClientInfo(Properties)}
+     * (i.e. if a known property is not included, it will be cleared).
+     * </p>
+     */
     @Override
     public void setClientInfo(Properties properties) throws SQLClientInfoException {
-        SQLExceptionChainBuilder<SQLClientInfoException> chain = new SQLExceptionChainBuilder<>();
-        try {
-            checkValidity();
-            checkClientInfoSupport();
-
-            try (PreparedStatement stmt = prepareStatement(SET_CLIENT_INFO_SQL)) {
-                for (String propName : properties.stringPropertyNames()) {
-                    String propValue = properties.getProperty(propName);
-
-                    try {
-                        setClientInfo(stmt, propName, propValue);
-                    } catch (SQLClientInfoException ex) {
-                        chain.append(ex);
-                    }
-                }
-            }
-
-        } catch (SQLException ex) {
-            throw new SQLClientInfoException(ex.getMessage(), ex.getSQLState(), null, ex);
+        try (LockCloseable ignored = withLock()) {
+            getClientInfoProvider().setClientInfo(properties);
+        } catch (SQLClientInfoException e) {
+            throw e;
+        } catch (SQLException e) {
+            Map<String, ClientInfoStatus> failedProperties = properties.stringPropertyNames().stream()
+                    .collect(toMap(Function.identity(), name -> ClientInfoStatus.REASON_UNKNOWN));
+            throw new SQLClientInfoException(e.getMessage(), e.getSQLState(), e.getErrorCode(), failedProperties, e);
         }
+    }
 
-        if (chain.hasException())
-            throw chain.getException();
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Sets properties in context {@code USER_SESSION} or an explicitly specified user context with
+     * {@code RDB$SET_CONTEXT}. See also {@link #getClientInfo(String)} for handling of property names.
+     * </p>
+     * <p>
+     * When auto-commit is enabled, properties in context {@code USER_TRANSACTION} will not be set.
+     * </p>
+     * <p>
+     * Successful storing of a property will register it as a known property <em>for this connection only</em> for use
+     * with {@link #getClientInfo()} (i.e. known properties will be retrieved) and {@link #setClientInfo(Properties)}
+     * (i.e. if a known property is not included, it will be cleared).
+     * </p>
+     *
+     * @param name
+     *         name of the client info property to set (cannot be a name ending in {@code @SYSTEM} as those are
+     *         read-only)
+     * @throws SQLClientInfoException
+     *         if {@code name} is {@code null} or ends in {@code @SYSTEM}, or for database access errors
+     * @see #getClientInfo(String)
+     */
+    @Override
+    public void setClientInfo(String name, String value) throws SQLClientInfoException {
+        try (LockCloseable ignored = withLock()) {
+            getClientInfoProvider().setClientInfo(name, value);
+        } catch (SQLClientInfoException e) {
+            throw e;
+        } catch (SQLException e) {
+            throw new SQLClientInfoException(e.getMessage(), e.getSQLState(), e.getErrorCode(),
+                    Map.of(name, ClientInfoStatus.REASON_UNKNOWN), e);
+        }
     }
 
     @Override
-    public void setClientInfo(String name, String value) throws SQLClientInfoException {
-        try {
-            checkValidity();
-            checkClientInfoSupport();
-
-            try (PreparedStatement stmt = prepareStatement(SET_CLIENT_INFO_SQL)) {
-                setClientInfo(stmt, name, value);
+    public void resetKnownClientInfoProperties() {
+        try (LockCloseable ignored = withLock()) {
+            if (isClosed()) return;
+            ClientInfoProvider clientInfoProvider = this.clientInfoProvider;
+            if (clientInfoProvider != null) {
+                clientInfoProvider.resetKnownProperties();
             }
-        } catch (SQLException ex) {
-            throw new SQLClientInfoException(ex.getMessage(), ex.getSQLState(), null, ex);
-        }
-    }
-
-    protected void setClientInfo(PreparedStatement stmt, String name, String value) throws SQLException {
-        try {
-            stmt.clearParameters();
-            stmt.setString(1, name);
-            stmt.setString(2, value);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (!rs.next()) {
-                    throw new FBDriverConsistencyCheckException("Expected result from RDB$SET_CONTEXT call");
-                }
-
-                // needed, since the value is set on fetch!!!
-                rs.getInt(1);
-            }
-        } catch (SQLException ex) {
-            throw new SQLClientInfoException(null, ex);
         }
     }
 

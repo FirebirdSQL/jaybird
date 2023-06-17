@@ -188,7 +188,9 @@ final class GeneratedKeysQueryBuilder {
      * Generates the query using {@code RETURNING *}
      */
     private GeneratedKeysSupport.Query useReturningAll() {
-        return addColumnsByNameImpl(Collections.singletonList("*"), QuoteStrategy.NO_QUOTES);
+        // NOTE: Using DIALECT_1 strategy as it doesn't quote object names ("*" is interpreted as an object name, and we
+        // don't want to quote it)
+        return addColumnsByNameImpl(Collections.singletonList("*"), QuoteStrategy.DIALECT_1);
     }
 
     /**
@@ -253,7 +255,8 @@ final class GeneratedKeysQueryBuilder {
                     .messageParameter("columnNames")
                     .toSQLException();
         } else if (isSupportedType()) {
-            return addColumnsByNameImpl(Arrays.asList(columnNames), QuoteStrategy.NO_QUOTES);
+            // NOTE: Using DIALECT_1 strategy as it doesn't quote object names (currently assumes already quoted)
+            return addColumnsByNameImpl(Arrays.asList(columnNames), QuoteStrategy.DIALECT_1);
         } else {
             // Unsupported type, ignore column names
             return new GeneratedKeysSupport.Query(false, originalSql);

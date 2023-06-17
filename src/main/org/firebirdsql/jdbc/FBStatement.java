@@ -1197,7 +1197,7 @@ public class FBStatement implements FirebirdStatement {
             return identifier;
         }
         QuoteStrategy quoteStrategy = connection.getQuoteStrategy();
-        if (quoteStrategy == QuoteStrategy.NO_QUOTES) {
+        if (quoteStrategy == QuoteStrategy.DIALECT_1) {
             throw new SQLFeatureNotSupportedException("Quoted identifiers not supported in dialect 1");
         }
         if (identifier.matches("^\".+\"$")) {

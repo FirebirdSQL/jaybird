@@ -53,7 +53,7 @@ public class FBXAConnection extends FBPooledConnection implements XAConnection {
     @Override
     protected void resetConnection(Connection connection) throws SQLException {
         if (!inDistributedTransaction()) {
-            connection.setAutoCommit(true);
+            super.resetConnection(connection);
         }
     }
 

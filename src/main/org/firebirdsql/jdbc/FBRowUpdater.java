@@ -100,7 +100,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];
 
-        quoteStrategy = QuoteStrategy.forDialect(gdsHelper.getDialect());
+        quoteStrategy = connection.getQuoteStrategy();
 
         newRow = rowDescriptor.createDefaultFieldValues();
         updatedFlags = new boolean[rowDescriptor.getCount()];

@@ -21,7 +21,10 @@ package org.firebirdsql.jdbc.metadata;
 import org.firebirdsql.jdbc.QuoteStrategy;
 
 /**
+ * Helper methods for generating object names.
+ *
  * @author Mark Rotteveel
+ * @since 6
  */
 final class NameHelper {
 
@@ -46,10 +49,10 @@ final class NameHelper {
         if (catalog == null || catalog.isEmpty()) {
             return routineName;
         }
-        var quoteStrategy = QuoteStrategy.QUOTES;
+        var quoteStrategy = QuoteStrategy.DIALECT_3;
+        // 5: 4 quotes + 1 separator
         var sb = new StringBuilder(catalog.length() + routineName.length() + 5);
-        quoteStrategy.appendQuoted(catalog, sb);
-        sb.append('.');
+        quoteStrategy.appendQuoted(catalog, sb).append('.');
         quoteStrategy.appendQuoted(routineName, sb);
         return sb.toString();
     }

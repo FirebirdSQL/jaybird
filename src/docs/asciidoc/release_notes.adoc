@@ -269,7 +269,7 @@ For a full list of changes, see https://github.com/FirebirdSQL/jaybird/issues?q=
 Jaybird 6 uses Java 17 as the minimum supported version.
 Our expectation is that Java version specific artifacts are no longer needed.
 As a consequence, the Java version has been dropped from the version number.
-The full version and naming convention is documented in https://github.com/FirebirdSQL/jaybird/blob/v5.0.0-beta-1/devdoc/jdp/jdp-2023-01-version-number-and-naming-scheme.md[jdp-2023-01: Version Number and Naming Scheme]
+The full version and naming convention is documented in https://github.com/FirebirdSQL/jaybird/blob/v5.0.0-beta-1/devdoc/jdp/jdp-2023-01-version-number-and-naming-scheme.md[jdp-2023-01: Version Number and Naming Scheme^]
 
 As a result of these new naming conventions, the following has been changed:
 
@@ -289,7 +289,7 @@ Furthermore, the client name reported to Firebird 2.5 and higher has been change
 
 Support of Java versions before Java 17 was dropped.
 
-See also https://github.com/FirebirdSQL/jaybird/blob/v5.0.0-beta-1/devdoc/jdp/jdp-2022-03-java-17-minimum-version.md[jdp-2022-03: Java 17 minimum version]
+See also https://github.com/FirebirdSQL/jaybird/blob/v5.0.0-beta-1/devdoc/jdp/jdp-2022-03-java-17-minimum-version.md[jdp-2022-03: Java 17 minimum version^]
 
 [#java-17-and-higher]
 ==== Java 17 and higher
@@ -582,6 +582,96 @@ This feature may be discontinued and removed in the future if Jaybird needs to i
 
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-09-use-catalog-as-package.adoc[jdp-2023-08: Use Catalog as Package^]
 
+[#client-info]
+=== Rewritten client info properties support
+
+Client info properties were introduced in JDBC 4.0 and implemented in Jaybird 2.2.
+This support has been rewritten to correct some limitations and problems with the previous implementation.
+
+The new implementation discerns two types of property names:
+
+. without context;
+_get_/_set_ in `USER_SESSION` context of `RDB$GET/SET_CONTEXT`
+. with context, when the name ends in `@USER_SESSION`, `@USER_TRANSACTION` or `@SYSTEM`;
+_get_/_set_ _without_ that suffix in the specified context.
+Properties with multiple contexts (e.g. `property@SYSTEM@USER_SESSION`) are not allowed to prevent ambiguity.
+Everything else is a property without context.
+
+A property named `<name>@USER_SESSION` is handled identical to `<name>`;
+the "`without context`" name is preferred and recommended for `USER_SESSION` properties, and `Connection.getClientInfo()` will use the "`without context`" name as the key for `USER_SESSION` properties.
+
+A property named `<name>@USER_TRANSACTION` is _set_ and _get_ as `<name>` in context `USER_TRANSACTION`.
+When a connection is in auto-commit mode, attempts to _set_ or _get_ `USER_TRANSACTION` properties are ignored (nothing is stored, and `null` is returned without accessing the database).
+
+A property named `<name>@SYSTEM` is retrieved as `<name>` in the context `SYSTEM`.
+Properties in the `SYSTEM` context are read-only.
+For `Connection.setClientInfo(String, String)`, attempts to _set_ a `SYSTEM` property result in a `SQLClientInfoException`, for `Connection.setClientInfo(Properties)`, `SYSTEM` properties are silently ignored.
+
+Attempts to retrieve non-existent properties, even from `SYSTEM` will return `null` and will not result in an exception.
+
+A connection registers properties known to that specific connection.
+By default, only the JDBC-specified properties `ApplicationName`, `ClientUser` and `ClientHostName` (see also below) are known.
+A successful _get_ or _set_ of a property will register that property as a known property for the current connection only.
+
+The method `Connection.getClientInfo()` will retrieve only known properties (the default properties and those registered for the current connection).
+It will not attempt to query or identify other variables registered in any context.
+
+The method `Connection.setClientInfo(Properties)` clears (sets to `NULL`) known properties in `USER_SESSION` and -- if not in auto-commit -- `USER_TRANSACTION` if they are not included in the `Properties` object.
+
+`DatabaseMetaData.getClientInfoProperties()` reports the JDBC-specified properties only;
+it will not report the additional properties registered for the current connection.
+
+The JDBC-specified properties are:
+
+[quote,JDBC API documentation of java.sql.Connection]
+____
+`ApplicationName`::
+The name of the application currently utilizing the connection
+`ClientUser`::
+The name of the user that the application using the connection is performing work for.
+This may not be the same as the user name that was used in establishing the connection.
+`ClientHostname`::
+The hostname of the computer the application using the connection is running on.
+____
+
+All JDBC-specified properties _get_/_set_ in `USER_SESSION`.
+On _get_ of `ApplicationName`, if this property is not currently set in `USER_SESSION`, it falls back to _get_ the value from `CLIENT_PROCESS@SYSTEM`.
+The `CLIENT_PROCESS@SYSTEM` value can be specified using the connection property `processName` or system property `org.firebirdsql.jdbc.processName`.
+The `ClientUser` and `ClientHostname` properties are considered application-specific and have no default value or fallback.
+
+Compared to the previous implementation, the important differences are:
+
+* `Connection.getClientInfo()` now reports properties;
+the previous implementation always returned an empty `Properties` object.
+* `Connection.getClientInfo(String)` with a property name without context now queries only `USER_SESSION`;
+the previous implementation queried `USER_TRANSACTION`, and if not set, fell back to the value from `USER_SESSION`.
+To retrieve from `USER_TRANSACTION` in the new implementation, use `<name>@USER_TRANSACTION`.
+* `Connection.setClientInfo(Properties)` now clears known properties not included in the `Properties` object;
+the previous implementation only _set_ the included properties.
+* Successful _get_ or _set_ of a property registers it as known property of the connection and influences behaviour of subsequent calls to `getClientInfo()` and `setClientInfo(Properties)` on that connection
+* `DatabaseMetaData.getClientInfoProperties` now reports the JDBC-specified properties, and nothing else;
+the previous implementation always returned an empty result set.
+
+.Connection pools and known connection properties
+****
+If you use a connection pool populated from `org.firebirdsql.ds.FBConnectionPoolDataSource` or `org.firebirdsql.ds.FBXADataSource`, the known properties are reset each time the connection is handed out by the pool (assuming the pool uses `getConnection()` from `PooledConnection`/`XAConnection` each time it hands out the connection).
+
+This reset is not applied when using a connection pool which is populated by different means (e.g. from `DriverManager` or from a normal `javax.sql.DataSource` like `org.firebirdsql.ds.FBSimpleDataSource`).
+If your connection pool implementation supports custom code to reset a connection, and you need known properties to reset when a connection is reused, make it call `FirebirdConnection.resetKnownClientInfoProperties()`, or call it yourself:
+
+[source,java]
+----
+if (connection.isWrapperFor(FirebirdConnection.class)) {
+    connection.unwrap(FirebirdConnection.class)
+            .resetKnownClientInfoProperties();
+}
+----
+
+In the future, Jaybird may be changed to also perform this reset in `Connection.beginRequest()` and/or `Connection.endRequest()`.
+****
+
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-11-new-design-client-info-properties.adoc[jdp-2023-11: New design client info properties^]
+
 // TODO add major changes
 
 [#potentially-breaking-changes]
@@ -682,10 +772,30 @@ It was previously deprecated in Jaybird 5 for removal in Jaybird 6 or later.
 
 Other code associated with this property was also removed.
 
+[#client-info-compat]
+=== Differences in client info property behavior
+
+The rewritten client info properties implementation may result in the following incompatibilities:
+
+* `setClientInfo(Properties)` will now clear all known properties of `USER_SESSION` and -- if not in auto-commit -- `USER_TRANSACTION` which are not included in the `Properties` object;
+Jaybird 5 and earlier only set properties listed in the `Properties` object.
+The recommended approach is to use `getClientInfo()`, modify the returned `Properties` object (update values, add new properties, and remove properties which should be cleared), and call `setClientInfo(Properties)` with that object.
+* Initially, a connection only knows the properties `ApplicationName`, `ClientUser` and `ClientHostname`.
+Other properties are registered _for the current connection_ when getting or setting properties.
+* `getClientInfo(String)` with a name without context will now always return the value from `USER_SESSION`;
+Jaybird 5 and earlier returned the value in `USER_TRANSACTION` and fell back to `USER_SESSION` if the property did not exist in `USER_TRANSACTION`.
+To get the value from `USER_TRANSACTION`, use `<name>@USER_TRANSACTION`.
+* If the property `ApplicationName` in `USER_SESSION` has no value, it falls back to `CLIENT_PROCESS` in `SYSTEM` (which reports the value of the `processName` connection property);
+Jaybird 5 and earlier reported `null` without falling back.
+
+See also <<client-info>>.
+
 // TODO Document compatibility issues
 
 [#removal-of-classes-packages-and-methods-without-deprecation]
 === Removal of classes, packages and methods without deprecation
+
+Below list of removals may look daunting, but if you use Jaybird only as a JDBC driver, through the JDBC API, you're likely unaffected.
 
 [#removal-of-packages-without-deprecation]
 ==== Removal of packages without deprecation
@@ -701,7 +811,7 @@ there is no replacement
 The following methods have been removed in Jaybird 6 without deprecation:
 
 * `FBConnection`
-** `prepareMetaDataStatement(String, int,int)`;
+** `prepareMetaDataStatement(String, int, int)`;
 use `prepareStatement(String, int, int, int, boolean, boolean)`
 ** `getStatementListener()`;
 there is no replacement
@@ -767,6 +877,8 @@ there is no replacement
 
 [#removal-of-deprecated-classes-packages-and-methods]
 === Removal of deprecated classes, packages and methods
+
+Below list of removals may look daunting, but if you use Jaybird only as a JDBC driver, through the JDBC API, you're likely unaffected.
 
 [#removal-of-deprecated-packages]
 ==== Removal of deprecated packages
@@ -915,6 +1027,9 @@ use `StringArgument(int, ArgumentType, String, Encoding)`
 ** `enqueueDeferredAction(DeferredAction)` now throws `SQLException` to be able to handle exceptions for sync actions if there are a lot of deferred packets
 * `FbWireOperations`
 ** `enqueueDeferredAction(DeferredAction)` now throws `SQLException` (see also `FbWireDatabase` above)
+* `FBConnection`
+** `checkClientInfoSupport()` was removed;
+there is no replacement
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
@@ -979,7 +1094,11 @@ The following constants have been deprecated and will be removed in Jaybird 7:
 * `ISCConstants`
 ** `isc_isc_sql_dialect_conflict_num` (was already deprecated, now for removal);
 use `isc_sql_dialect_conflict_num`
-** `isc_err_max` -- there is no replacement
+** `isc_err_max`;
+there is no replacement
+* `QuoteStrategy` -- due to addition of methods `appendLiteral` and `quoteLiteral` the original enum names no longer made sense
+** `NO_QUOTES` -- use `DIALECT_1`
+** `QUOTES` -- use `DIALECT_3`
 
 [#compatibility-notes]
 == Compatibility notes

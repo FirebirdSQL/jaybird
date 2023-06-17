@@ -774,14 +774,6 @@ class FBDatabaseMetaDataTest {
         assertFalse(rs.next(), "Expected no results for getSuperTables");
     }
 
-    @Test
-    void testGetClientInfoProperties() throws Exception {
-        ResultSet rs = dmd.getClientInfoProperties();
-
-        // TODO Extend to verify columns as defined in JDBC
-        assertFalse(rs.next(), "Expected no results for getClientInfoProperties");
-    }
-
     /**
      * Tests if the driver version information is consistent (and doesn't throw exceptions).
      */
