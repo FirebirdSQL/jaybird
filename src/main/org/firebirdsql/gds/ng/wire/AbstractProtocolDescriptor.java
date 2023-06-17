@@ -21,6 +21,7 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ng.ParameterConverter;
+import org.firebirdsql.gds.ng.fields.BlrCalculator;
 
 import java.sql.SQLException;
 import java.util.Objects;
@@ -96,6 +97,11 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
     @Override
     public final int getWeight() {
         return weight;
+    }
+
+    @Override
+    public BlrCalculator createBlrCalculator(FbWireDatabase database) {
+        return DefaultBlrCalculator.of(database.getConnectionDialect(), database.getServerVersion());
     }
 
     /**

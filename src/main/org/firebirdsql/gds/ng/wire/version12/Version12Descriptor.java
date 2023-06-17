@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng.wire.version12;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
@@ -28,9 +27,7 @@ import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
-import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.gds.ng.wire.DefaultBlrCalculator;
 import org.firebirdsql.gds.ng.wire.version10.*;
 import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
 
@@ -83,12 +80,6 @@ public final class Version12Descriptor extends AbstractProtocolDescriptor implem
     @Override
     public FbWireStatement createStatement(final FbWireDatabase database) {
         return new V12Statement(database);
-    }
-
-    @Override
-    public BlrCalculator createBlrCalculator(final FbWireDatabase database) {
-        final short connectionDialect = database.getConnectionDialect();
-        return connectionDialect == ISCConstants.SQL_DIALECT_V6 ? DefaultBlrCalculator.CALCULATOR_DIALECT_3 : new DefaultBlrCalculator(connectionDialect);
     }
 
     @Override
