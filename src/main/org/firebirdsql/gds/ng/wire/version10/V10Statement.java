@@ -420,28 +420,27 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         fetch direction
      */
     protected void processFetchResponse(FetchDirection direction) throws IOException, SQLException {
+        int rowsFetched = 0;
         Response response;
         while ((response = getDatabase().readResponse(getStatementWarningCallback())) instanceof FetchResponse) {
             final FetchResponse fetchResponse = (FetchResponse) response;
             if (fetchResponse.getCount() > 0 && fetchResponse.getStatus() == ISCConstants.FETCH_OK) {
                 queueRowData(readSqlData());
+                rowsFetched++;
             } else if (fetchResponse.getStatus() == ISCConstants.FETCH_NO_MORE_ROWS) {
                 switch (direction) {
-                case IN_PLACE:
+                case IN_PLACE -> {
                     if (isBeforeFirst()) {
                         setBeforeFirst();
                     } else {
                         setAfterLast();
                     }
-                    break;
-                case UNKNOWN:
-                    // Not generally applicable, but handling as after-last
-                case FORWARD:
-                    setAfterLast();
-                    break;
-                case REVERSE:
-                    setBeforeFirst();
-                    break;
+                }
+
+                case FORWARD,
+                        // Not generally applicable, but handling same as FORWARD (as after-last)
+                        UNKNOWN -> setAfterLast();
+                case REVERSE -> setBeforeFirst();
                 }
                 // Note: we are not explicitly 'closing' the cursor here as we might be scrolling
                 // Exit loop
@@ -450,6 +449,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 log.log(System.Logger.Level.DEBUG, "Received unexpected fetch response {0}, ignored", fetchResponse);
                 break;
             }
+        }
+        if (rowsFetched > 0) {
+            statementListenerDispatcher.fetchComplete(this, direction, rowsFetched);
         }
         // TODO Handle other response type?
     }

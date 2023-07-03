@@ -46,7 +46,7 @@ This should not occur in practice given the requirement above to not perform asy
 
 To simplify tracking the number of rows per fetch, `org.firebirdsql.gds.ng.listeners.StatementListener` is extended with one method:
 
-* `fetchComplete(FbStatement sender, FetchType fetchType, int rows)` -- this will be called by the `FbStatement` implementation, for synchronous and asynchronous fetches with the number of rows fetched in a single fetch.
+* `fetchComplete(FbStatement sender, FetchDirection fetchDirection, int rows)` -- this will be called by the `FbStatement` implementation, for synchronous and asynchronous fetches with the number of rows fetched in a single fetch.
 +
 For NATIVE, this will be called with `1` for `rows`, as prefetching happens internally, and each fetch retrieves one row.
 +

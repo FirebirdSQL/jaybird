@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.FetchDirection;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -44,12 +45,18 @@ public class SimpleStatementListener implements StatementListener {
     private Boolean hasResultSet;
     private Boolean hasSingletonResult;
     private SqlCountHolder sqlCounts;
+    private Integer lastFetchCount;
 
     @Override
     public void receivedRow(FbStatement sender, RowValue rowValue) {
         rows.add(rowValue);
         beforeFirst = false;
         afterLast = false;
+    }
+
+    @Override
+    public void fetchComplete(FbStatement sender, FetchDirection fetchDirection, int rows) {
+        lastFetchCount = rows;
     }
 
     @Override
@@ -122,12 +129,17 @@ public class SimpleStatementListener implements StatementListener {
         return new ArrayList<>(warnings);
     }
 
+    public Integer getLastFetchCount() {
+        return lastFetchCount;
+    }
+
     public void clear() {
         beforeFirst = null;
         afterLast = null;
         hasResultSet = null;
         hasSingletonResult = null;
         sqlCounts = null;
+        lastFetchCount = null;
         rows.clear();
         warnings.clear();
     }

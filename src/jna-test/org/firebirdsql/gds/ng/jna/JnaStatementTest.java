@@ -60,9 +60,7 @@ class JnaStatementTest extends AbstractStatementTest {
     @Override
     public void testSelect_NoParameters_Execute_and_Fetch() throws Exception {
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
         final SimpleStatementListener statementListener = new SimpleStatementListener();
         statement.addStatementListener(statementListener);
@@ -90,9 +88,7 @@ class JnaStatementTest extends AbstractStatementTest {
     @Test
     public void testMultipleExecute() throws Exception {
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
         final SimpleStatementListener statementListener = new SimpleStatementListener();
         statement.addStatementListener(statementListener);
@@ -142,9 +138,7 @@ class JnaStatementTest extends AbstractStatementTest {
     @Test
     public void testMultiplePrepare() throws Exception {
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
         final SimpleStatementListener statementListener = new SimpleStatementListener();
         statement.addStatementListener(statementListener);
@@ -170,9 +164,7 @@ class JnaStatementTest extends AbstractStatementTest {
 
         statement.closeCursor();
 
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
         final SimpleStatementListener statementListener2 = new SimpleStatementListener();
         statement.addStatementListener(statementListener2);
@@ -200,10 +192,7 @@ class JnaStatementTest extends AbstractStatementTest {
     public void testSelect_WithParameters_Execute_and_Fetch() throws Exception {
         allocateStatement();
         statement.addStatementListener(listener);
-        statement.prepare(
-                "SELECT a.RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$CHARACTER_SETS a " +
-                        "WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?");
+        statement.prepare(SELECT_CHARSET_BY_ID_OR_SIZE);
 
         final DatatypeCoder coder = db.getDatatypeCoder();
         RowValue rowValue = RowValue.of(
@@ -224,6 +213,7 @@ class JnaStatementTest extends AbstractStatementTest {
 
         assertNotEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to haven't been called yet");
         assertEquals(1, listener.getRows().size(), "Expected a single row to have been fetched");
+        assertEquals(1, listener.getLastFetchCount(), "Expected a single row to have been fetched");
 
         // 100 should be sufficient to fetch all character sets; limit to prevent infinite loop with bugs in fetchRows
         int count = 0;
@@ -235,6 +225,7 @@ class JnaStatementTest extends AbstractStatementTest {
         assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to be set to true");
         // Number is database dependent (unicode_fss + all single byte character sets)
         assertTrue(listener.getRows().size() > 2, "Expected more than two rows");
+        assertEquals(1, listener.getLastFetchCount(), "Expected the last fetch to have been a single row");
 
         assertNull(listener.getSqlCounts(), "expected no SQL counts immediately after retrieving all rows");
 

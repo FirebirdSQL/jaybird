@@ -63,47 +63,40 @@ import static org.junit.jupiter.api.Assumptions.*;
  */
 public abstract class AbstractStatementTest {
 
-    //@formatter:off
-    private static final String CREATE_EXECUTABLE_STORED_PROCEDURE =
-            "CREATE PROCEDURE increment " +
-            " (intvalue INTEGER) " +
-            "RETURNS " +
-            " (outvalue INTEGER) " +
-            "AS " +
-            "BEGIN " +
-            " outvalue = intvalue + 1; " +
-            "END";
+    private static final String CREATE_EXECUTABLE_STORED_PROCEDURE = """
+            CREATE PROCEDURE increment (intvalue INTEGER)
+              RETURNS (outvalue INTEGER)
+            AS
+            BEGIN
+              outvalue = intvalue + 1;
+            END""";
 
-    protected static final String EXECUTE_EXECUTABLE_STORED_PROCEDURE =
-            "EXECUTE PROCEDURE INCREMENT(?)";
+    protected static final String EXECUTE_EXECUTABLE_STORED_PROCEDURE = "EXECUTE PROCEDURE INCREMENT(?)";
 
-    private static final String CREATE_SELECTABLE_STORED_PROCEDURE =
-            "CREATE PROCEDURE range " +
-            " (startvalue INTEGER, rowcount INTEGER) " +
-            "RETURNS " +
-            " (outvalue INTEGER) " +
-            "AS " +
-            "DECLARE VARIABLE actualcount INTEGER; " +
-            "BEGIN " +
-            "  actualcount = 0; " +
-            "  WHILE (actualcount < rowcount) DO " +
-            "  BEGIN " +
-            "    outvalue = startvalue + actualcount; " +
-            "    suspend; " +
-            "    actualcount = actualcount + 1; " +
-            "  END " +
-            "END";
+    private static final String CREATE_SELECTABLE_STORED_PROCEDURE = """
+            CREATE PROCEDURE range (startvalue INTEGER, rowcount INTEGER)
+              RETURNS (outvalue INTEGER)
+            AS
+            DECLARE VARIABLE actualcount INTEGER;
+            BEGIN
+              actualcount = 0;
+              WHILE (actualcount < rowcount) DO
+              BEGIN
+                outvalue = startvalue + actualcount;
+                suspend;
+                actualcount = actualcount + 1;
+              END
+            END""";
 
-    protected static final String EXECUTE_SELECTABLE_STORED_PROCEDURE =
-            "SELECT OUTVALUE FROM RANGE(?, ?)";
+    protected static final String EXECUTE_SELECTABLE_STORED_PROCEDURE = "SELECT OUTVALUE FROM RANGE(?, ?)";
 
-    private static final String CREATE_KEY_VALUE_TABLE =
-            "CREATE TABLE keyvalue ( " +
-            " thekey INTEGER PRIMARY KEY, " +
-            " thevalue VARCHAR(5), " +
-            " theUTFVarcharValue VARCHAR(5) CHARACTER SET UTF8, " +
-            " theUTFCharValue CHAR(5) CHARACTER SET UTF8 " +
-            ")";
+    private static final String CREATE_KEY_VALUE_TABLE = """
+            CREATE TABLE keyvalue (
+              thekey INTEGER PRIMARY KEY,
+              thevalue VARCHAR(5),
+              theUTFVarcharValue VARCHAR(5) CHARACTER SET UTF8,
+              theUTFCharValue CHAR(5) CHARACTER SET UTF8
+            )""";
 
     protected static final String INSERT_RETURNING_KEY_VALUE =
             "INSERT INTO keyvalue (thevalue) VALUES (?) RETURNING thekey";
@@ -113,7 +106,15 @@ public abstract class AbstractStatementTest {
 
     protected static final String SELECT_THEUTFVALUE =
             "SELECT theUTFVarcharValue, theUTFCharValue FROM keyvalue WHERE thekey = ?";
-    //@formatter:on
+
+    protected static final String SELECT_FROM_RDB$DATABASE = """
+            SELECT RDB$DESCRIPTION AS "Description", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME
+            FROM RDB$DATABASE""";
+
+    protected static final String SELECT_CHARSET_BY_ID_OR_SIZE = """
+            SELECT a.RDB$CHARACTER_SET_NAME
+            FROM RDB$CHARACTER_SETS a
+            WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?""";
 
     protected final SimpleStatementListener listener = new SimpleStatementListener();
     protected FbDatabase db;
@@ -146,9 +147,7 @@ public abstract class AbstractStatementTest {
     @Test
     public void testSelect_NoParameters_Describe() throws Exception {
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
         assertEquals(StatementType.SELECT, statement.getType(), "Unexpected StatementType");
 
@@ -177,33 +176,28 @@ public abstract class AbstractStatementTest {
     @Test
     public void testSelect_NoParameters_Execute_and_Fetch() throws Exception {
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
-        final SimpleStatementListener statementListener = new SimpleStatementListener();
-        statement.addStatementListener(statementListener);
+        statement.addStatementListener(listener);
 
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals(Boolean.TRUE, statementListener.hasResultSet(), "Expected hasResultSet to be set to true");
-        assertEquals(Boolean.FALSE, statementListener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
-        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
-        assertEquals(0, statementListener.getRows().size(), "Expected no rows to be fetched yet");
+        assertEquals(Boolean.TRUE, listener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, listener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, listener.getRows().size(), "Expected no rows to be fetched yet");
 
         statement.fetchRows(10);
 
-        assertEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to be set to true");
-        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
+        assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, listener.getRows().size(), "Expected a single row to have been fetched");
+        assertEquals(1, listener.getLastFetchCount(), "Expected a single row to have been fetched");
     }
 
     @Test
     public void testSelect_WithParameters_Describe() throws Exception {
         allocateStatement();
-        statement.prepare(
-                "SELECT a.RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$CHARACTER_SETS a " +
-                        "WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?");
+        statement.prepare(SELECT_CHARSET_BY_ID_OR_SIZE);
 
         assertEquals(StatementType.SELECT, statement.getType(), "Unexpected StatementType");
 
@@ -237,10 +231,7 @@ public abstract class AbstractStatementTest {
     public void testSelect_WithParameters_Execute_and_Fetch() throws Exception {
         allocateStatement();
         statement.addStatementListener(listener);
-        statement.prepare(
-                "SELECT a.RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$CHARACTER_SETS a " +
-                        "WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?");
+        statement.prepare(SELECT_CHARSET_BY_ID_OR_SIZE);
 
         final DatatypeCoder coder = db.getDatatypeCoder();
         RowValue rowValue = RowValue.of(
@@ -261,6 +252,7 @@ public abstract class AbstractStatementTest {
         assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to be set to true");
         // Number is database dependent (unicode_fss + all single byte character sets)
         assertTrue(listener.getRows().size() > 2, "Expected more than two rows");
+        assertTrue(listener.getLastFetchCount() > 2, "Expected more than two rows");
 
         assertNull(listener.getSqlCounts(), "expected no SQL counts immediately after retrieving all rows");
 
@@ -309,6 +301,7 @@ public abstract class AbstractStatementTest {
         assertFalse(listener.hasResultSet(), "Expected no result set for executable stored procedure");
         assertTrue(listener.isAfterLast(), "Expected all rows to have been fetched");
         assertEquals(1, listener.getRows().size(), "Expected 1 row");
+        assertNull(listener.getLastFetchCount(), "Expected no fetch count for EXECUTE PROCEDURE");
         RowValue fieldValues = listener.getRows().get(0);
         assertEquals(1, fieldValues.getCount(), "Expected one field");
         assertEquals(2, db.getDatatypeCoder().decodeInt(fieldValues.getFieldData(0)),
@@ -371,9 +364,7 @@ public abstract class AbstractStatementTest {
     @Test
     public void test_GetExecutionPlan_withStatementPrepared() throws Exception {
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
         String executionPlan = statement.getExecutionPlan();
 
@@ -391,9 +382,7 @@ public abstract class AbstractStatementTest {
     @Test
     public void test_GetExecutionPlan_StatementClosed() throws Exception {
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
         statement.close();
 
         SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExecutionPlan);
@@ -406,9 +395,7 @@ public abstract class AbstractStatementTest {
                 "Test expects explained execution plan not supported");
 
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
         SQLException exception = assertThrows(SQLFeatureNotSupportedException.class,
                 statement::getExplainedExecutionPlan);
@@ -421,9 +408,7 @@ public abstract class AbstractStatementTest {
                 "Test requires explained execution plan support");
 
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
         String executionPlan = statement.getExplainedExecutionPlan();
 
@@ -442,9 +427,7 @@ public abstract class AbstractStatementTest {
     @Test
     public void test_GetExplainedExecutionPlan_StatementClosed() throws Exception {
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
         statement.close();
 
         SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExplainedExecutionPlan);
@@ -491,7 +474,7 @@ public abstract class AbstractStatementTest {
     @Test
     public void test_CloseCursor_State_PREPARED() throws Exception {
         allocateStatement();
-        statement.prepare("SELECT * FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
         assumeThat("Statement state", statement.getState(), equalTo(StatementState.PREPARED));
 
         statement.closeCursor();
@@ -505,7 +488,7 @@ public abstract class AbstractStatementTest {
     @Test
     public void test_CloseCursor_State_CURSOR_OPEN() throws Exception {
         allocateStatement();
-        statement.prepare("SELECT * FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
         statement.execute(RowValue.EMPTY_ROW_VALUE);
         assumeThat("Statement state", statement.getState(), equalTo(StatementState.CURSOR_OPEN));
 
@@ -530,95 +513,85 @@ public abstract class AbstractStatementTest {
     @Test
     public void testMultipleExecute() throws Exception {
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
-        final SimpleStatementListener statementListener = new SimpleStatementListener();
-        statement.addStatementListener(statementListener);
+        statement.addStatementListener(listener);
 
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals(Boolean.TRUE, statementListener.hasResultSet(), "Expected hasResultSet to be set to true");
-        assertEquals(Boolean.FALSE, statementListener.hasSingletonResult(),
-                "Expected hasSingletonResult to be set to false");
-        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
-        assertEquals(0, statementListener.getRows().size(), "Expected no rows to be fetched yet");
+        assertEquals(Boolean.TRUE, listener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, listener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, listener.getRows().size(), "Expected no rows to be fetched yet");
 
         statement.fetchRows(10);
 
-        assertEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to be set to true");
-        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
+        assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, listener.getRows().size(), "Expected a single row to have been fetched");
+        assertEquals(1, listener.getLastFetchCount(), "Expected a single row to have been fetched");
 
         statement.closeCursor();
-        final SimpleStatementListener statementListener2 = new SimpleStatementListener();
-        statement.addStatementListener(statementListener2);
+
+        listener.clear();
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals(Boolean.TRUE, statementListener2.hasResultSet(), "Expected hasResultSet to be set to true");
-        assertEquals(Boolean.FALSE, statementListener2.hasSingletonResult(),
+        assertEquals(Boolean.TRUE, listener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, listener.hasSingletonResult(),
                 "Expected hasSingletonResult to be set to false");
-        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
-        assertEquals(0, statementListener2.getRows().size(), "Expected no rows to be fetched yet");
+        assertNotEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, listener.getRows().size(), "Expected no rows to be fetched yet");
 
         statement.fetchRows(10);
 
-        assertEquals(Boolean.TRUE, statementListener2.isAfterLast(), "Expected afterLast to be set to true");
-        assertEquals(1, statementListener2.getRows().size(), "Expected a single row to have been fetched");
+        assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, listener.getRows().size(), "Expected a single row to have been fetched");
+        assertEquals(1, listener.getLastFetchCount(), "Expected a single row to have been fetched");
     }
 
     @Test
     public void testMultiplePrepare() throws Exception {
         allocateStatement();
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
-        final SimpleStatementListener statementListener = new SimpleStatementListener();
-        statement.addStatementListener(statementListener);
+        statement.addStatementListener(listener);
 
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals(Boolean.TRUE, statementListener.hasResultSet(), "Expected hasResultSet to be set to true");
-        assertEquals(Boolean.FALSE, statementListener.hasSingletonResult(),
-                "Expected hasSingletonResult to be set to false");
-        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
-        assertEquals(0, statementListener.getRows().size(), "Expected no rows to be fetched yet");
+        assertEquals(Boolean.TRUE, listener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, listener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, listener.getRows().size(), "Expected no rows to be fetched yet");
 
         statement.fetchRows(10);
 
-        assertEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to be set to true");
-        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
+        assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, listener.getRows().size(), "Expected a single row to have been fetched");
+        assertEquals(1, listener.getLastFetchCount(), "Expected a single row to have been fetched");
 
         statement.closeCursor();
 
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
-        final SimpleStatementListener statementListener2 = new SimpleStatementListener();
-        statement.addStatementListener(statementListener2);
+        listener.clear();
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals(Boolean.TRUE, statementListener2.hasResultSet(), "Expected hasResultSet to be set to true");
-        assertEquals(Boolean.FALSE, statementListener2.hasSingletonResult(),
-                "Expected hasSingletonResult to be set to false");
-        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
-        assertEquals(0, statementListener2.getRows().size(), "Expected no rows to be fetched yet");
+        assertEquals(Boolean.TRUE, listener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, listener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, listener.getRows().size(), "Expected no rows to be fetched yet");
 
         statement.fetchRows(10);
 
-        assertEquals(Boolean.TRUE, statementListener2.isAfterLast(), "Expected afterLast to be set to true");
-        assertEquals(1, statementListener2.getRows().size(), "Expected a single row to have been fetched");
+        assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, listener.getRows().size(), "Expected a single row to have been fetched");
+        assertEquals(1, listener.getLastFetchCount(), "Expected a single row to have been fetched");
     }
 
     @Test
     public void testSetCursorName() throws Exception {
         allocateStatement();
 
-        statement.prepare(
-                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
-                        "FROM RDB$DATABASE");
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
 
         statement.setCursorName("abc1");
 
@@ -647,13 +620,13 @@ public abstract class AbstractStatementTest {
         final RowDescriptor parametersSelect = statement.getParameterDescriptor();
         final RowValue parameterValuesSelect = RowValue.of(parametersSelect,
                 db.getDatatypeCoder().encodeInt(1));
-        final SimpleStatementListener statementListener = new SimpleStatementListener();
-        statement.addStatementListener(statementListener);
+        statement.addStatementListener(listener);
         statement.execute(parameterValuesSelect);
         statement.fetchRows(1);
 
-        final List<RowValue> rows = statementListener.getRows();
+        final List<RowValue> rows = listener.getRows();
         assertEquals(1, rows.size(), "Expected a row");
+        assertEquals(1, listener.getLastFetchCount(), "Expected a row");
         final RowValue selectResult = rows.get(0);
         final byte[] selectVarcharFieldData = selectResult.getFieldData(0);
         final byte[] selectCharFieldData = selectResult.getFieldData(1);
@@ -689,8 +662,6 @@ public abstract class AbstractStatementTest {
         assertThrows(SQLException.class, () -> statement.execute(rowValue));
 
         statement.addStatementListener(listener);
-
-        listener.clear();
 
         // Insert another value
         RowValue differentRowValue = RowValue.of(

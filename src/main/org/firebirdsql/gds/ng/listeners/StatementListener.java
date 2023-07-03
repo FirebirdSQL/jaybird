@@ -25,6 +25,7 @@
 package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.FetchDirection;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -52,11 +53,34 @@ public interface StatementListener {
      * </p>
      *
      * @param sender
-     *         The {@code FbStatement}that called this method.
+     *         the {@code FbStatement} that called this method
      * @param rowValue
      *         The row values.
      */
     default void receivedRow(FbStatement sender, RowValue rowValue) { }
+
+    /**
+     * Method to be notified of the number of rows fetched in a single {@link FbStatement#fetchRows(int)}.
+     * <p>
+     * This method will not be called if no rows were fetched, as we consider that sufficiently signalled by only
+     * {@link #afterLast(FbStatement)} or {@link #beforeFirst(FbStatement)}. This method will also not be called for
+     * singleton results of statements like {@code EXECUTE PROCEDURE}.
+     * </p>
+     * <p>
+     * When one or more rows were fetched <em>and</em> end of cursor was reached, it is undefined whether this method
+     * will be called first or {@code afterLast/beforeFirst}. Listeners must be prepared to handle either order.
+     * </p>
+     *
+     * @param sender
+     *         the {@code FbStatement} that called this method
+     * @param fetchDirection
+     *         fetch direction of the completed fetch operation
+     * @param rows
+     *         number of rows fetched in the completed fetch operation (NOTE: for native implementations, this will
+     *         always be {@code 1}); will always be {@code >= 1}
+     * @since 6
+     */
+    default void fetchComplete(FbStatement sender, FetchDirection fetchDirection, int rows) { }
 
     /**
      * Method to be notified when the cursor of a statement is positioned before the first row.
@@ -66,7 +90,7 @@ public interface StatementListener {
      * </p>
      *
      * @param sender
-     *         The {@code FbStatement} that called this method.
+     *         the {@code FbStatement} that called this method
      * @see #statementExecuted(FbStatement, boolean, boolean)
      * @see #receivedRow(FbStatement, RowValue)
      * @see #afterLast(FbStatement)
@@ -82,7 +106,7 @@ public interface StatementListener {
      * </p>
      *
      * @param sender
-     *         The {@code FbStatement} that called this method.
+     *         the {@code FbStatement} that called this method
      * @see #statementExecuted(FbStatement, boolean, boolean)
      * @see #receivedRow(FbStatement, RowValue)
      * @see #beforeFirst(FbStatement)
@@ -97,12 +121,12 @@ public interface StatementListener {
      * </p>
      *
      * @param sender
-     *         The {@code FbStatement} that called this method.
+     *         the {@code FbStatement} that called this method
      * @param hasResultSet
      *         {@code true} there is a result set, {@code false} there is no result set
      * @param hasSingletonResult
      *         {@code true} singleton result, {@code false} statement will produce indeterminate number of rows;
-     *         can be ignored when {@code hasResultSet} is {@code false}.
+     *         can be ignored when {@code hasResultSet} is {@code false}
      */
     default void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) { }
 
@@ -110,11 +134,11 @@ public interface StatementListener {
      * Method to be notified when the state of a statement has changed.
      *
      * @param sender
-     *         The {@code FbStatement} that called this method.
+     *         the {@code FbStatement} that called this method
      * @param newState
-     *         The new state of the statement
+     *         new state of the statement
      * @param previousState
-     *         The old state of the statement
+     *         old state of the statement
      */
     default void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) { }
 

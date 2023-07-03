@@ -19,6 +19,8 @@
 package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.FetchDirection;
+import org.firebirdsql.gds.ng.FetchType;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -38,6 +40,11 @@ public final class StatementListenerDispatcher extends AbstractListenerDispatche
     @Override
     public void receivedRow(FbStatement sender, RowValue rowValue) {
         notify(listener -> listener.receivedRow(sender, rowValue), "receivedRow");
+    }
+
+    @Override
+    public void fetchComplete(FbStatement sender, FetchDirection fetchDirection, int rows) {
+        notify(listener -> listener.fetchComplete(sender, fetchDirection, rows), "fetchComplete");
     }
 
     @Override

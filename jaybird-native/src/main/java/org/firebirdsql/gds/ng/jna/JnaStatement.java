@@ -410,6 +410,7 @@ public class JnaStatement extends AbstractFbStatement {
                 int fetchStatusInt = fetchStatus.intValue();
                 if (fetchStatusInt == ISCConstants.FETCH_OK) {
                     queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
+                    statementListenerDispatcher.fetchComplete(this, FetchDirection.FORWARD, 1);
                 } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
                     setAfterLast();
                     // Note: we are not explicitly 'closing' the cursor here
