@@ -70,6 +70,7 @@ public interface StatementListener {
      * @see #statementExecuted(FbStatement, boolean, boolean)
      * @see #receivedRow(FbStatement, RowValue)
      * @see #afterLast(FbStatement)
+     * @since 5
      */
     default void beforeFirst(FbStatement sender) { }
 
@@ -85,6 +86,7 @@ public interface StatementListener {
      * @see #statementExecuted(FbStatement, boolean, boolean)
      * @see #receivedRow(FbStatement, RowValue)
      * @see #beforeFirst(FbStatement)
+     * @since 5
      */
     default void afterLast(FbStatement sender) { }
 
