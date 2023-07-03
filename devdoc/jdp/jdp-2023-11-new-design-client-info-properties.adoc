@@ -5,6 +5,10 @@
 * Published: 2023-06-17
 * Implemented in: Jaybird 6
 
+== Type
+
+* Feature-Specification
+
 == Context
 
 JDBC 4.0 introduced "`client info properties`", and methods to get and set these properties.
