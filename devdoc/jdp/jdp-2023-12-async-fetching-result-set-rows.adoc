@@ -60,7 +60,7 @@ Implementations of `FBFetcher` in Jaybird will be modified appropriately to call
 Async fetch will be added.
 This should be transparent for implementations which do not support async fetch.
 
-It should be possible to implement this in the V10 implementation (the level of the current implementation of `fetchRows` for PURE_JAVA).
+The implementation will be done in V11, as the necessary infrastructure for processing deferred operations is not available in the V10 implementation.
 
 Modification of `FBFetcher` only seems to make sense for `FBStatementFetcher`, but the behaviour of `FBUpdatableCursorFetcher` must be double-checked as it inherits from `FBStatementFetcher`.
 It may also make sense in `FBCachedFetcher`, but this might be harder to do correctly.
