@@ -20,7 +20,6 @@ package org.firebirdsql.gds.ng.wire.version11;
 
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
-import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.DeferredAction;
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.Response;
@@ -60,24 +59,16 @@ public class V11Database extends V10Database {
             doReleaseObjectPacket(operation, objectId);
             // NOTE: Intentionally no flush!
             switch (operation) {
-            case op_close_blob:
-            case op_cancel_blob:
-                enqueueDeferredAction(new DeferredAction() {
-                    @Override
-                    public void processResponse(Response response) {
-                        processReleaseObjectResponse(response);
-                    }
-
-                    @Override
-                    public WarningMessageCallback getWarningMessageCallback() {
-                        return null;
-                    }
-                });
-                return;
-            default:
-                // According to Firebird source code for other operations we need to process response normally,
-                // however we only expect calls for op_close_blob and op_cancel_blob
-                throw new IllegalArgumentException(String.format("Unexpected operation in V11Databsase.releaseObject: %d", operation));
+            case op_close_blob, op_cancel_blob -> enqueueDeferredAction(new DeferredAction() {
+                @Override
+                public void processResponse(Response response) {
+                    processReleaseObjectResponse(response);
+                }
+            });
+            // According to Firebird source code for other operations we need to process response normally,
+            // however we only expect calls for op_close_blob and op_cancel_blob
+            default -> throw new IllegalArgumentException(
+                    "Unexpected operation in V11Databsase.releaseObject: %d".formatted(operation));
             }
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);

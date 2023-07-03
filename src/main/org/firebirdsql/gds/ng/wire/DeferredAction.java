@@ -44,11 +44,21 @@ import static java.lang.System.Logger.Level.DEBUG;
 public interface DeferredAction {
 
     /**
+     * An instance of {@link DeferredAction} which does nothing (uses the default methods of this interface).
+     */
+    DeferredAction NO_OP_INSTANCE = new DeferredAction() { };
+
+    /**
      * Steps to process the deferred response.
+     * <p>
+     * The default implementation does nothing.
+     * </p>
      *
      * @param response Response object.
      */
-    void processResponse(Response response);
+    default void processResponse(Response response) {
+        // do nothing
+    }
 
     /**
      * Exception received when receiving or processing the response.
@@ -67,9 +77,16 @@ public interface DeferredAction {
     }
 
     /**
-     * @return The warning callback to use when executing this deferred action.
+     * Warning message callback.
+     * <p>
+     * The default implementation returns {@code null}.
+     * </p>
+     *
+     * @return warning callback to use when executing this deferred action, {@code null} signals to use the default
      */
-    WarningMessageCallback getWarningMessageCallback();
+    default WarningMessageCallback getWarningMessageCallback() {
+        return null;
+    }
 
     /**
      * Wraps a {@link DeferredResponse} in a {@link DeferredAction}.

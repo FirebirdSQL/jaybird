@@ -29,7 +29,6 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementState;
-import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -251,7 +250,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
             if (newState == StatementState.CLOSING) {
                 FbDatabase database = this.database;
                 if (database != null) {
-                    detaching(database);
+                    release(database);
                 }
                 sender.removeStatementListener(this);
             }
@@ -259,6 +258,10 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
 
         @Override
         public void detaching(FbDatabase database) {
+            release(database);
+        }
+
+        private void release(FbDatabase database) {
             this.database = null;
             database.removeDatabaseListener(this);
         }
@@ -267,7 +270,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         public void run() {
             FbWireDatabase database = this.database;
             if (database == null) return;
-            detaching(database);
+            release(database);
             try (LockCloseable ignored = database.withLock()) {
                 if (!database.isAttached()) return;
                 XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
@@ -275,20 +278,10 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
                 xdrOut.writeInt(handle);
                 xdrOut.writeInt(ISCConstants.DSQL_drop);
                 xdrOut.flush();
-                database.enqueueDeferredAction(new DeferredAction() {
-                    @Override
-                    public void processResponse(Response response) {
-                        // nothing to do
-                    }
-
-                    @Override
-                    public WarningMessageCallback getWarningMessageCallback() {
-                        // Use default callback
-                        return null;
-                    }
-                });
-            } catch (SQLException | IOException ignored) {
-                // nothing we can do here
+                database.enqueueDeferredAction(DeferredAction.NO_OP_INSTANCE);
+            } catch (SQLException | IOException e) {
+                System.getLogger(getClass().getName()).log(System.Logger.Level.TRACE,
+                        "Ignored exception during statement clean up", e);
             }
         }
     }
