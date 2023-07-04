@@ -367,7 +367,7 @@ class BatchUpdatesTest {
             connection.setAutoCommit(false);
 
             // one more than the BATCH_LIMIT
-            final int blobCount = 100;
+            final int blobCount = 65;
             try (var ps = connection.prepareStatement("INSERT INTO batch_updates(id, clob_value) VALUES (?, ?)")) {
                 IntStream.rangeClosed(1, blobCount).forEach(i -> {
                     try {
