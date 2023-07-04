@@ -55,62 +55,58 @@ class FBResultSetTest {
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
-    //@formatter:off
-    private static final String SELECT_STATEMENT =
-        "SELECT " +
-        "  1 AS col1," +
-        "  2 AS \"col1\"," +
-        "  3 AS \"Col1\""  +
-        "FROM rdb$database";
+    private static final String SELECT_STATEMENT = """
+            SELECT
+              1 AS col1,
+              2 AS "col1",
+              3 AS "Col1"
+            FROM rdb$database""";
 
-    private static final String CREATE_TABLE_STATEMENT =
-        "CREATE TABLE test_table(" +
-        "  id INTEGER NOT NULL PRIMARY KEY," +
-        "  str VARCHAR(10)," +
-        "  long_str VARCHAR(255)," +
-        "  very_long_str VARCHAR(20000)," +
-        "  blob_str BLOB SUB_TYPE TEXT," +
-        "  \"CamelStr\" VARCHAR(255)," +
-        "  blob_bin BLOB SUB_TYPE BINARY" +
-        ")";
+    private static final String CREATE_TABLE_STATEMENT = """
+            CREATE TABLE test_table(
+              id INTEGER NOT NULL PRIMARY KEY,
+              str VARCHAR(10),
+              long_str VARCHAR(255),
+              very_long_str VARCHAR(20000),
+              blob_str BLOB SUB_TYPE TEXT,
+              "CamelStr" VARCHAR(255),
+              blob_bin BLOB SUB_TYPE BINARY
+            )""";
 
-    private static final String SELECT_TEST_TABLE =
-        "SELECT id, str FROM test_table";
+    private static final String SELECT_TEST_TABLE = "SELECT id, str FROM test_table";
 
-    private static final String CREATE_TABLE_STATEMENT2 =
-        "CREATE TABLE test_table2(" +
-        "  id INTEGER NOT NULL, " +
-        "  str VARCHAR(10), " +
-        "  long_str VARCHAR(255), " +
-        "  very_long_str VARCHAR(20000), " +
-        "  blob_str BLOB SUB_TYPE 1, " +
-        "  \"CamelStr\" VARCHAR(255)" +
-        ")";
+    private static final String CREATE_TABLE_STATEMENT2 = """
+            CREATE TABLE test_table2(
+              id INTEGER NOT NULL,
+              str VARCHAR(10),
+              long_str VARCHAR(255),
+              very_long_str VARCHAR(20000),
+              blob_str BLOB SUB_TYPE 1,
+              "CamelStr" VARCHAR(255)
+            )""";
 
-    private static final String CREATE_VIEW_STATEMENT =
-        "CREATE VIEW test_empty_string_view(marker, id, empty_char) " +
-        "  AS  " +
-        "  SELECT " +
-        "    CAST('marker' AS VARCHAR(6)), " +
-        "    id, " +
-        "    '' " +
-        "  FROM " +
-        "    test_table";
+    private static final String CREATE_VIEW_STATEMENT = """
+            CREATE VIEW test_empty_string_view(marker, id, empty_char)
+              AS
+              SELECT
+                CAST('marker' AS VARCHAR(6)),
+                id,
+                ''
+              FROM
+                test_table""";
 
-    private static final String CREATE_SUBSTR_FUNCTION =
-        "DECLARE EXTERNAL FUNCTION substr " +
-        "  CSTRING(80), SMALLINT, SMALLINT " +
-        "RETURNS CSTRING(80) FREE_IT " +
-        "ENTRY_POINT 'IB_UDF_substr' MODULE_NAME 'ib_udf'";
+    private static final String CREATE_SUBSTR_FUNCTION = """
+            DECLARE EXTERNAL FUNCTION substr
+              CSTRING(80), SMALLINT, SMALLINT
+            RETURNS CSTRING(80) FREE_IT
+            ENTRY_POINT 'IB_UDF_substr' MODULE_NAME 'ib_udf'""";
 
-    private static final String SELECT_FROM_VIEW_STATEMENT =
-        "SELECT * FROM test_empty_string_view";
+    private static final String SELECT_FROM_VIEW_STATEMENT = "SELECT * FROM test_empty_string_view";
 
     private static final String CURSOR_NAME = "some_cursor";
 
     private static final String UPDATE_TABLE_STATEMENT =
-        "UPDATE test_table SET str = ? WHERE CURRENT OF " + CURSOR_NAME;
-    //@formatter:on
+            "UPDATE test_table SET str = ? WHERE CURRENT OF " + CURSOR_NAME;
 
     /**
      * Test if all columns are found correctly.
@@ -351,17 +347,11 @@ class FBResultSetTest {
             executeCreateTable(connection, CREATE_TABLE_STATEMENT);
             executeDDL(connection, CREATE_SUBSTR_FUNCTION);
 
-            IntFunction<String> rowData = id -> {
-                switch (id) {
-                case 1:
-                    return "aaa";
-                case 2:
-                    return "'more than 80 chars are in hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
-                case 3:
-                    return "more than 80 chars are in hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
-                default:
-                    throw new IllegalArgumentException("Expected values 1, 2 or 3, received: " + id);
-                }
+            IntFunction<String> rowData = id -> switch (id) {
+                case 1 -> "aaa";
+                case 2 -> "'more than 80 chars are in hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+                case 3 -> "more than 80 chars are in hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+                default -> throw new IllegalArgumentException("Expected values 1, 2 or 3, received: " + id);
             };
             createTestData(3, rowData, connection, "long_str");
 
@@ -1382,6 +1372,30 @@ class FBResultSetTest {
         }
     }
 
+    /**
+     * Test with a sufficient number of rows to trigger multiple fetches, including async fetches if supported.
+     */
+    @Test
+    void testRequiringMultipleFetches() throws Exception {
+        try (var connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            createTestData(999, connection);
+            try (var stmt = connection.createStatement()) {
+                // Reduce fetch size to trigger more fetches
+                stmt.setFetchSize(200);
+                try (var rs = stmt.executeQuery(SELECT_TEST_TABLE + " order by id")) {
+                    int expectedId = 0;
+                    while (rs.next()) {
+                        expectedId++;
+                        assertEquals(expectedId, rs.getInt(1));
+                        assertEquals(String.valueOf(expectedId), rs.getString(2));
+                    }
+                    assertEquals(999, expectedId);
+                }
+            }
+        }
+    }
+
     static Stream<String> scrollableCursorPropertyValues() {
         // We are unconditionally emitting SERVER, to check if the value behaves appropriately on versions that do
         // not support server-side scrollable cursors
@@ -1409,8 +1423,9 @@ class FBResultSetTest {
             for (int i = 1; i <= recordCount; i++) {
                 ps.setInt(1, i);
                 ps.setString(2, strValueFunction.apply(i));
-                ps.execute();
+                ps.addBatch();
             }
+            ps.executeBatch();
         } finally {
             if (currentAutoCommit) {
                 connection.setAutoCommit(true);

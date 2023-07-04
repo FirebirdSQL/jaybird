@@ -22,14 +22,16 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.FetchDirection;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+import static org.firebirdsql.util.NumericHelper.firstNonZero;
 
 /**
  * Statement fetcher for read-only case. It differs from updatable cursor case
@@ -37,6 +39,10 @@ import java.util.List;
  * position to point to the next row.
  */
 class FBStatementFetcher implements FBFetcher {
+
+    private static final int NO_ASYNC_FETCH = -1;
+    private static final int MINIMUM_ASYNC_FETCH_ROW_COUNT = 10;
+    private static final float ASYNC_FETCH_PERCENTAGE = 0.3f;
 
     private boolean closed;
     private boolean wasFetched;
@@ -46,16 +52,17 @@ class FBStatementFetcher implements FBFetcher {
 
     protected final int maxRows;
     protected int fetchSize;
+    private int maxActualFetchSize;
+    private int asyncFetchOnRemaining = NO_ASYNC_FETCH;
 
     protected final FbStatement stmt;
 
-    private List<RowValue> rows = new ArrayList<>();
+    private Deque<RowValue> rows;
     private final RowListener rowListener = new RowListener();
     private boolean allRowsFetched;
     protected RowValue _nextRow;
 
     private int rowNum;
-    private int rowPosition;
 
     private boolean isEmpty;
     private boolean isBeforeFirst = true;
@@ -71,6 +78,16 @@ class FBStatementFetcher implements FBFetcher {
         this.fetcherListener = fetcherListener;
         this.maxRows = maxRows;
         this.fetchSize = fetchSize;
+        if (stmth.getClass().getName().equals("org.firebirdsql.gds.ng.jna.JnaStatement")) {
+            // Performs only singular fetches, so only need space for one row
+            rows = new ArrayDeque<>(1);
+        } else {
+            // The default size is 16, pre-sizing it at fetch size would avoid overhead of resizing, but given a lot of
+            // queries will produce only one or a few rows, that would result in unnecessary memory overhead. If a lot
+            // of rows are fetched, the first fetch and possibly the first async fetch will take the hit of resizing,
+            // but then reach a steady state.
+            rows = new ArrayDeque<>();
+        }
     }
 
     protected RowValue getNextRow() throws SQLException {
@@ -169,30 +186,29 @@ class FBStatementFetcher implements FBFetcher {
     public void fetch() throws SQLException {
         try (LockCloseable ignored = stmt.withLock()) {
             checkClosed();
-            int maxRows = 0;
-
-            if (this.maxRows != 0) maxRows = this.maxRows - rowNum;
-
-            int fetchSize = this.fetchSize;
-            if (fetchSize == 0) fetchSize = DEFAULT_FETCH_ROWS;
-
-            if (maxRows != 0 && fetchSize > maxRows) fetchSize = maxRows;
-
-            if (!allRowsFetched && (rows.isEmpty() || rows.size() == rowPosition)) {
-                rows.clear();
-                stmt.fetchRows(fetchSize);
-                rowPosition = 0;
+            if (!allRowsFetched && rows.isEmpty()) {
+                int actualFetchSize = calculateActualFetchSize();
+                if (actualFetchSize > 0) {
+                    stmt.fetchRows(actualFetchSize);
+                }
+            } else if (!allRowsFetched && rows.size() == asyncFetchOnRemaining) {
+                int actualFetchSize = calculateActualFetchSize();
+                if (actualFetchSize > 1) {
+                    // NOTE: Using > 1 instead of > 0 as attempting to async fetch 1 row is ignored anyway
+                    stmt.asyncFetchRows(actualFetchSize);
+                }
             }
 
-            if (rows.size() > rowPosition) {
-                setNextRow(rows.get(rowPosition));
-                // help the garbage collector
-                rows.set(rowPosition, null);
-                rowPosition++;
-            } else {
-                setNextRow(null);
-            }
+            setNextRow(rows.pollFirst());
         }
+    }
+
+    private int calculateActualFetchSize() {
+        int fetchSize = firstNonZero(this.fetchSize, DEFAULT_FETCH_ROWS);
+        if (maxRows == 0) {
+            return fetchSize;
+        }
+        return Math.min(fetchSize, maxRows - rowNum - rows.size());
     }
 
     @Override
@@ -207,7 +223,7 @@ class FBStatementFetcher implements FBFetcher {
             stmt.closeCursor(completionReason.isTransactionEnd() || completionReason.isCompletesStatement());
         } finally {
             stmt.removeStatementListener(rowListener);
-            rows = Collections.emptyList();
+            rows = new ArrayDeque<>(0);
             fetcherListener.fetcherClosed(this);
         }
     }
@@ -323,12 +339,23 @@ class FBStatementFetcher implements FBFetcher {
     private final class RowListener implements StatementListener {
         @Override
         public void receivedRow(FbStatement sender, RowValue rowValue) {
-            rows.add(rowValue);
+            rows.addLast(rowValue);
         }
 
         @Override
         public void afterLast(FbStatement sender) {
             allRowsFetched = true;
+        }
+
+        @Override
+        public void fetchComplete(FbStatement sender, FetchDirection fetchDirection, int rows) {
+            if (rows > maxActualFetchSize) {
+                maxActualFetchSize = rows;
+                if (rows >= MINIMUM_ASYNC_FETCH_ROW_COUNT * 3 / 2 ) {
+                    asyncFetchOnRemaining =
+                            Math.max((int) (rows * ASYNC_FETCH_PERCENTAGE), MINIMUM_ASYNC_FETCH_ROW_COUNT);
+                }
+            }
         }
     }
 }

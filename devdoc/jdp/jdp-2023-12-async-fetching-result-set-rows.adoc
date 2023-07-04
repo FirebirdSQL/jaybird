@@ -2,8 +2,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 6
+* Published: 2023-07-04
+* Implemented in: Jaybird 6
 
 == Type
 
@@ -15,7 +15,7 @@ The result set implementation in Jaybird currently performs a synchronous fetch 
 Introducing an asynchronous fetch, e.g. when there are __X__% or _N_ rows remaining can improve performance.
 Such asynchronous fetching should not occur when using fetch size 1 and/or if a named cursor is set, as that generally indicates use of positioned updates and deletes.
 
-The implementation in fbclient.dll does not allow application controlled asynchronous fetch (though it may perform an asynchronous fetch in the background on its own), so any such feature would be limited to the PURE_JAVA implementation.
+The implementation in fbclient does not allow application controlled asynchronous fetch (though it may perform an asynchronous fetch in the background on its own), so any such feature would be limited to the PURE_JAVA implementation.
 
 == Decision
 
@@ -46,14 +46,13 @@ To simplify tracking the received number of rows per fetch, `org.firebirdsql.gds
 
 * `fetchComplete(FbStatement sender, FetchDirection fetchDirection, int rows)` -- this will be called by the `FbStatement` implementation, for synchronous and asynchronous fetches with the number of rows fetched in a single fetch.
 +
-For NATIVE, this will be called with `1` for `rows`, as prefetching happens internally, and each fetch retrieves one row.
+For NATIVE, this will be called with `0` or `1` for `rows`, as prefetching happens internally, and each fetch retrieves at most one row.
 +
-This method will not be called when no rows were fetched, as that is already signalled by `afterLast`/`beforeFirst`.
+This method will also be called -- with `rows = 0` -- when no rows were fetched, contrary to previous iterations of this JDP.
++
 The order in which `fetchComplete` and `afterLast`/`beforeFirst` are called when one or more rows were fetched when reaching end of cursor is undefined, so listeners must be able to handle either order.
-+
-TODO: Remove previous requirement and also notify fetch of zero rows?
 
-Implementations of `FBFetcher` in Jaybird will be modified appropriately to call `asyncFetch(int)` where it makes sense.
+Implementations of `FBFetcher` in Jaybird will be modified appropriately to call `asyncFetchRows(int)` where it makes sense.
 
 == Consequences
 
@@ -67,9 +66,8 @@ It may also make sense in `FBCachedFetcher`, but this might be harder to do corr
 
 The fetcher implementation will track the "`high-water mark`" of rows (the maximum number of rows returned by a single fetch), and evaluate when to async fetch (on the "`low-water mark`").
 This JDP does not specify exactly _when_ to fetch, but as a starting point, we'll perform an async fetch at 30% of the "`high-water mark`" or 10 rows, whichever is higher.
-If the "`high-water mark`" is less than 10 rows, we'll not perform an async fetch.
-TODO: Evaluate if using a lower limit for the "`low-water mark`" makes more sense, e.g. 2 or more rows (which will automatically avoid the case of `FOR UPDATE` cursors, as those will produce one row at a time).
-This logic may be modified during evaluation and further testing.
+If the "`high-water mark`" is less than 15 rows, we'll not perform an async fetch.
+This logic may be modified during evaluation and further testing, and should be considered an implementation detail, not a specification.
 
 Some internal classes, for example `org.firebirdsql.jaybird.xca.FBManagedConnection.DataProvider` may also benefit from using async fetch.
 This should be evaluated during implementation of this feature.

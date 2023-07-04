@@ -456,9 +456,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 break;
             }
         } while ((response = database.readResponse(getStatementWarningCallback())) instanceof FetchResponse);
-        if (rowsFetched > 0) {
-            statementListenerDispatcher.fetchComplete(this, direction, rowsFetched);
-        }
+        statementListenerDispatcher.fetchComplete(this, direction, rowsFetched);
         // TODO Handle other response type?
     }
 

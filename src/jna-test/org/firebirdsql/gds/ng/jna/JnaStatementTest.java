@@ -225,7 +225,7 @@ class JnaStatementTest extends AbstractStatementTest {
         assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to be set to true");
         // Number is database dependent (unicode_fss + all single byte character sets)
         assertTrue(listener.getRows().size() > 2, "Expected more than two rows");
-        assertEquals(1, listener.getLastFetchCount(), "Expected the last fetch to have been a single row");
+        assertEquals(0, listener.getLastFetchCount(), "Expected the last fetch to have produced no row");
 
         assertNull(listener.getSqlCounts(), "expected no SQL counts immediately after retrieving all rows");
 

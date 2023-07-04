@@ -26,7 +26,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 /**
  * Statement fetcher for updatable cursor case. This fetcher keeps cursor
  * position consistent, however we cannot tell now if we are on the last record.
- * Method {@link #isLast()}throws exception now.
+ * Method {@link #isLast()} throws exception now.
  * 
  * @author Roman Rokytskyy
  * @author Mark Rotteveel

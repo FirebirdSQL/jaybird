@@ -62,13 +62,11 @@ public interface StatementListener {
     /**
      * Method to be notified of the number of rows fetched in a single {@link FbStatement#fetchRows(int)}.
      * <p>
-     * This method will not be called if no rows were fetched, as we consider that sufficiently signalled by only
-     * {@link #afterLast(FbStatement)} or {@link #beforeFirst(FbStatement)}. This method will also not be called for
-     * singleton results of statements like {@code EXECUTE PROCEDURE}.
+     * This method will not be called for singleton results of statements like {@code EXECUTE PROCEDURE}.
      * </p>
      * <p>
-     * When one or more rows were fetched <em>and</em> end of cursor was reached, it is undefined whether this method
-     * will be called first or {@code afterLast/beforeFirst}. Listeners must be prepared to handle either order.
+     * When end of cursor is reached, it is undefined whether this method will be called first or
+     * {@code afterLast/beforeFirst}. Listeners must be prepared to handle either order.
      * </p>
      *
      * @param sender
@@ -77,7 +75,7 @@ public interface StatementListener {
      *         fetch direction of the completed fetch operation
      * @param rows
      *         number of rows fetched in the completed fetch operation (NOTE: for native implementations, this will
-     *         always be {@code 1}); will always be {@code >= 1}
+     *         always be {@code 1} or {@code 0} for end of cursor)
      * @since 6
      */
     default void fetchComplete(FbStatement sender, FetchDirection fetchDirection, int rows) { }
