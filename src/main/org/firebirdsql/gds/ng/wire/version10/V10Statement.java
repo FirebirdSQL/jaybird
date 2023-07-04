@@ -198,33 +198,25 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         switchState(StatementState.PREPARED);
     }
 
-    public void setCursorName(String cursorName) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            checkStatementValid();
-            // TODO Check other statement states?
-
-            try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_set_cursor);
-                xdrOut.writeInt(getHandle());
-                // Null termination is needed due to a quirk of the protocol
-                xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding());
-                xdrOut.writeInt(0); // Cursor type
-                xdrOut.flush();
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
-            try {
-                // TODO Do we need to do anything else with this response?
-                getDatabase().readGenericResponse(getStatementWarningCallback());
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.ioReadError(e);
-            }
-        } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
-            throw e;
+    @Override
+    protected void setCursorNameImpl(String cursorName)throws SQLException {
+        try {
+            final XdrOutputStream xdrOut = getXdrOut();
+            xdrOut.writeInt(WireProtocolConstants.op_set_cursor);
+            xdrOut.writeInt(getHandle());
+            // Null termination is needed due to a quirk of the protocol
+            xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding());
+            xdrOut.writeInt(0); // Cursor type
+            xdrOut.flush();
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioWriteError(e);
+        }
+        try {
+            getDatabase().readGenericResponse(getStatementWarningCallback());
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 
@@ -420,10 +412,24 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         fetch direction
      */
     protected void processFetchResponse(FetchDirection direction) throws IOException, SQLException {
+        processFetchResponse(direction, null);
+    }
+
+    /**
+     * Process the <em>fetch</em> response by reading the returned rows and queuing them.
+     *
+     * @param direction
+     *         fetch direction
+     * @param response initial response, or {@code null} to retrieve initial response
+     */
+    protected void processFetchResponse(FetchDirection direction, Response response) throws IOException, SQLException {
         int rowsFetched = 0;
-        Response response;
-        while ((response = getDatabase().readResponse(getStatementWarningCallback())) instanceof FetchResponse) {
-            final FetchResponse fetchResponse = (FetchResponse) response;
+        FbWireDatabase database = getDatabase();
+        if (response == null) {
+            response = getDatabase().readResponse(getStatementWarningCallback());
+        }
+        do {
+            if (!(response instanceof FetchResponse fetchResponse)) break;
             if (fetchResponse.getCount() > 0 && fetchResponse.getStatus() == ISCConstants.FETCH_OK) {
                 queueRowData(readSqlData());
                 rowsFetched++;
@@ -449,7 +455,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 log.log(System.Logger.Level.DEBUG, "Received unexpected fetch response {0}, ignored", fetchResponse);
                 break;
             }
-        }
+        } while ((response = database.readResponse(getStatementWarningCallback())) instanceof FetchResponse);
         if (rowsFetched > 0) {
             statementListenerDispatcher.fetchComplete(this, direction, rowsFetched);
         }

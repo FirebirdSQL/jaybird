@@ -55,6 +55,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -435,6 +436,28 @@ public class V18StatementTest extends V16StatementTest {
         stmtInfo.clearReceivedRows();
     }
 
+    @Test
+    public void testAsyncFetchRows_noAsyncFetchIfScrollable() throws Exception {
+        allocateStatement();
+        statement.setCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
+        statement.prepare("select RDB$CHARACTER_SET_NAME from RDB$CHARACTER_SETS order by RDB$CHARACTER_SET_NAME");
+        statement.addStatementListener(listener);
+
+        statement.execute(RowValue.EMPTY_ROW_VALUE);
+
+        // async fetch is ignored for scrollable cursor
+        statement.asyncFetchRows(10);
+
+        assertEquals(0, listener.getRows().size(), "Expected no rows to be fetched yet");
+        assertNull(listener.getLastFetchCount(), "Expected no rows to be fetched yet");
+
+        // There is no async fetch pending, so this should fetch 1 row
+        statement.fetchRows(1);
+
+        assertEquals(1, listener.getRows().size(), "Expected 1 row to be fetched");
+        assertEquals(1, listener.getLastFetchCount(), "Expected 1 row to be fetched");
+    }
+
     /**
      * Calls {@link #prepareScrollTest(int, Set)} with only {@link ScrollTestFeature#SCROLLABLE}.
      */
@@ -483,19 +506,17 @@ public class V18StatementTest extends V16StatementTest {
         try (Connection connection = getConnectionViaDriverManager()) {
             DdlHelper.executeDDL(connection, "recreate table scrolltest (id integer primary key)");
             if (numberOfRecords <= 0) return;
-            try (PreparedStatement pstmt = connection.prepareStatement(
-                    // @formatter:off
-                    "execute block (records INTEGER = ?)\n" +
-                    "as\n" +
-                    "  declare id integer = 1;\n" +
-                    "begin\n" +
-                    "  while (id <= records) do\n" +
-                    "  begin\n" +
-                    "    insert into scrolltest (id) values (:id);\n" +
-                    "    id = id + 1;\n" +
-                    "  end\n" +
-                    "end"
-                    // @formatter:on
+            try (PreparedStatement pstmt = connection.prepareStatement("""
+                    execute block (records INTEGER = ?)
+                    as
+                      declare id integer = 1;
+                    begin
+                      while (id <= records) do
+                      begin
+                        insert into scrolltest (id) values (:id);
+                        id = id + 1;
+                      end
+                    end"""
             )) {
                 pstmt.setInt(1, numberOfRecords);
                 pstmt.execute();

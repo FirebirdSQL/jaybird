@@ -794,6 +794,24 @@ Jaybird 5 and earlier reported `null` without falling back.
 
 See also <<client-info>>.
 
+[#operation-aware-type-compat]
+=== New Operation.Type value for async fetch
+
+With the introduction of async fetch, the `org.firebirdsql.gds.ng.monitor.Operation.Type` enum has two new values added:
+
+[horizontal]
+`STATEMENT_ASYNC_FETCH_START`::
+Start of async fetch.
+Covers sending of the fetch request.
+This operation is cancellable.
+`STATEMENT_ASYNC_FETCH_COMPLETE`::
+Completion of async fetch.
+Covers processing the responses of the fetch request.
+This operation is not cancellable.
+Attempts to cancel this operation will throw an exception.
+
+If you're currently using the `OperationAware` interface to monitor and/or cancel fetches, make sure to also process `STATEMENT_ASYNC_FETCH_START` and/or `STATEMENT_ASYNC_FETCH_COMPLETE` as appropriate.
+
 // TODO Document compatibility issues
 
 [#removal-of-classes-packages-and-methods-without-deprecation]
@@ -986,7 +1004,25 @@ This means there may be undocumented changes to internal API.
 If you are confronted with such a change, let us know on https://groups.google.com/g/firebird-java[firebird-java], so we can take this into account when documenting future changes.
 ====
 
-* `AbstractFbWireStatement.close()` is now final
+* `FbWireDatabase`
+** `enqueueDeferredAction(DeferredAction)` now throws `SQLException` to be able to handle exceptions for sync actions if there are a lot of deferred packets
+* `FbWireOperations`
+** `enqueueDeferredAction(DeferredAction)` now throws `SQLException` (see also `FbWireDatabase` above)
+* `AbstractFbStatement`
+** `setCursorName(String)` is now final;
+subclasses need to implement `setCursorNameImpl(String)` to provide the actual implementation.
+These implementations do not need to take out the lock, nor notify the exception listener dispatcher, as that is already handled in the final `setCursorName(String)` method.
+** The most recent cursor name is now accessible with `protected String getCursorName()`.
+Its value is reset to `null` on each prepare.
+* `AbstractFbWireStatement`
+** `close()` is now final
+** `wrapDeferredResponse` received an extra parameter, `boolean requiresSync`.
+This parameter signals if the deferred response requires some form of synchronization action to instruct the server to send the response.
+When in doubt, use `false` to communicate that no such synchronization is required.
+* `DeferredAction`
+** `wrapDeferredResponse` received an extra parameter, `boolean requiresSync`.
+This parameter signals if the deferred response requires some form of synchronization action to instruct the server to send the response.
+When in doubt, use `false` to communicate that no such synchronization is required.
 * `AsynchronousChannelListener.Event` was converted to a record, so it is now final, and its getters (`getEventId()` and `getEventCount()`) have been replaced by accessor methods (`eventId()` and `eventCount()`)
 * `DbAttachInfo` was converted to a record, so its getters (`getServerName()`, `getPortNumber()` and `getAttachObjectName()`) have been replaced by accessor methods (`serverName()`, `portNumber()`, `attachObjectName()`)
 * `XdrInputStream`
@@ -1027,10 +1063,6 @@ use `encodeInt(int)`
 * `StringArgument`
 ** constructor `StringArgument(int, ArgumentType, String)`;
 use `StringArgument(int, ArgumentType, String, Encoding)`
-* `FbWireDatabase`
-** `enqueueDeferredAction(DeferredAction)` now throws `SQLException` to be able to handle exceptions for sync actions if there are a lot of deferred packets
-* `FbWireOperations`
-** `enqueueDeferredAction(DeferredAction)` now throws `SQLException` (see also `FbWireDatabase` above)
 * `FBConnection`
 ** `checkClientInfoSupport()` was removed;
 there is no replacement

@@ -94,6 +94,18 @@ public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
     void enqueueDeferredAction(DeferredAction deferredAction) throws SQLException;
 
     /**
+     * Completes pending deferred actions.
+     * <p>
+     * FbDatabase implementations that do not support deferred actions should simply do nothing.
+     * </p>
+     *
+     * @throws SQLException
+     *         for errors forcing ping/batch sync
+     * @since 6
+     */
+    void completeDeferredActions() throws SQLException;
+
+    /**
      * Consumes packets notifying for warnings, but ignoring exceptions thrown from the packet.
      * <p>
      * This method should only be used inside the implementation if either packets need to be ignored,

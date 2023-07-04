@@ -222,6 +222,11 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     @Override
+    public final void completeDeferredActions() throws SQLException {
+        wireOperations.completeDeferredActions();
+    }
+
+    @Override
     public final EventHandle createEventHandle(String eventName, EventHandler eventHandler) {
         return new WireEventHandle(eventName, eventHandler, getEncoding());
     }

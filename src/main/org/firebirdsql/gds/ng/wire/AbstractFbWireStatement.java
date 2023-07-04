@@ -204,14 +204,16 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
      *         deferred response to wrap
      * @param responseMapper
      *         Function to map a {@link Response} to the response object expected by the deferred response
+     * @param requiresSync
+     *         {@code true} if the deferred response requires a sync action or flush before it can be processed
      * @param <T>
      *         type of deferred response
      * @return deferred action
      */
     protected final <T> DeferredAction wrapDeferredResponse(DeferredResponse<T> deferredResponse,
-            Function<Response, T> responseMapper) {
-        return DeferredAction.wrapDeferredResponse(
-                deferredResponse, responseMapper, getStatementWarningCallback(), this::deferredExceptionHandler);
+            Function<Response, T> responseMapper, boolean requiresSync) {
+        return DeferredAction.wrapDeferredResponse(deferredResponse, responseMapper, getStatementWarningCallback(),
+                this::deferredExceptionHandler, requiresSync);
     }
 
     /**

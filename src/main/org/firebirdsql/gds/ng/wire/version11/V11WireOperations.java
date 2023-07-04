@@ -78,6 +78,39 @@ public class V11WireOperations extends V10WireOperations {
         return deferredActions.size();
     }
 
+    /**
+     * Reports if an explicit sync action is required to complete deferred actions.
+     * <p>
+     * For wire protocol v11 - v15, the only sync action needed is a flush, in v16 and higher an {@code op_ping} or
+     * {@code op_batch_sync} is needed (in some cases, a flush would suffice, but we're considering the worst case
+     * here).
+     * </p>
+     * <p>
+     * Failure to flush or sync (depending on the protocol version) may result in indefinite blocking. The sync action
+     * is not needed when deferred actions are processed as part of a normal request/response cycle (as there the
+     * request will behave as the sync action).
+     * </p>
+     *
+     * @return {@code true} if one or more of the deferred action require an explicit sync action.
+     * @since 6
+     */
+    protected final boolean completeDeferredActionsRequiresSync() {
+        return deferredActions.stream().anyMatch(DeferredAction::requiresSync);
+    }
+
+    @Override
+    public void completeDeferredActions() throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            if (completeDeferredActionsRequiresSync()) {
+                // We sometimes forgo flushing of the request for deferred operations, flush to be able to complete
+                getXdrOut().flush();
+            }
+            processDeferredActions();
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioWriteError(e);
+        }
+    }
+
     @Override
     public final void processDeferredActions() {
         try (LockCloseable ignored = withLock()) {

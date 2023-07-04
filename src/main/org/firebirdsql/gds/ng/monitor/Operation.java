@@ -37,7 +37,7 @@ import java.sql.SQLException;
  *
  * @author Vasiliy Yashkov
  * @author Mark Rotteveel
- * @since 4.0
+ * @since 4
  */
 public interface Operation {
 
@@ -59,6 +59,39 @@ public interface Operation {
      */
     enum Type {
         STATEMENT_EXECUTE,
-        STATEMENT_FETCH
+        /**
+         * Synchronous fetch from statement cursor.
+         */
+        STATEMENT_FETCH,
+        /**
+         * Asynchronous fetch from statement cursor: sending request for rows.
+         *
+         * @since 6
+         */
+        STATEMENT_ASYNC_FETCH_START,
+        /**
+         * Asynchronous fetch from statement cursor: receiving response with rows.
+         * <p>
+         * This operation is not cancellable.
+         * </p>
+         *
+         * @since 6
+         */
+        STATEMENT_ASYNC_FETCH_COMPLETE(false),
+        ;
+
+        private final boolean cancellable;
+
+        Type() {
+            this(true);
+        }
+
+        Type(boolean cancellable) {
+            this.cancellable = cancellable;
+        }
+
+        public boolean isCancellable() {
+            return cancellable;
+        }
     }
 }

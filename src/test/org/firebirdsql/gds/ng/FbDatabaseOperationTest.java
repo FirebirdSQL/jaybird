@@ -20,8 +20,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.ng.OperationMonitorTest.OperationReport;
-import org.firebirdsql.gds.ng.OperationMonitorTest.TestOperationAware;
+import org.firebirdsql.gds.ng.TestOperationAware.OperationReport;
 import org.firebirdsql.gds.ng.monitor.Operation;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;

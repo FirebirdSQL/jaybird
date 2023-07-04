@@ -72,6 +72,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     private volatile RowDescriptor parameterDescriptor;
     private volatile RowDescriptor fieldDescriptor;
     private volatile FbTransaction transaction;
+    private String cursorName;
     private long timeout;
 
     private final TransactionListener transactionListener = new TransactionListener() {
@@ -130,6 +131,14 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     protected final WarningMessageCallback getStatementWarningCallback() {
         return warningCallback;
+    }
+
+    @Override
+    public void asyncFetchRows(int fetchSize) throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            // Async fetch not supported, doing nothing (see javadoc in FbStatement)
+        }
     }
 
     @Override
@@ -764,6 +773,55 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
+     * This method takes out a lock, and checks statement validity, then calls {@link #setCursorNameImpl(String)},
+     * and stores the cursor name on successful completion. Any exceptions will be notified on
+     * {@code exceptionListenerDispatcher}. To override the behaviour of this method, implement/override
+     * {@link #setCursorNameImpl(String)}.
+     * </p>
+     */
+    @Override
+    public final void setCursorName(String cursorName) throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            setCursorNameImpl(cursorName);
+            this.cursorName = cursorName;
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    /**
+     * Implementation of {@link #setCursorName(String)}.
+     * <p>
+     * The caller of this method will take out the lock, check statement validity and call
+     * {@code exceptionListenerDispatcher} for exceptions, so implementations of this method do not need to do so.
+     * </p>
+     *
+     * @param cursorName
+     *         Name of the cursor
+     * @throws SQLException
+     *         If this statement is closed, or if the cursor name is set and {@code cursorName} is different from the
+     *         current cursor name
+     */
+    protected abstract void setCursorNameImpl(String cursorName) throws SQLException;
+
+    /**
+     * Gets the cursor name.
+     * <p>
+     * The cursor name is cleared by a new statement prepare.
+     * </p>
+     *
+     * @return the current cursor name
+     * @since 6
+     */
+    protected final String getCursorName() {
+        return cursorName;
+    }
+
+    /**
      * @return The timeout value, or {@code 0} if the timeout is larger than supported
      * @throws SQLException
      *         If the statement is invalid
@@ -825,6 +883,14 @@ public abstract class AbstractFbStatement implements FbStatement {
         return FbDatabaseOperation.signalFetch(getDatabase(), this::fetchExecuted);
     }
 
+    protected final OperationCloseHandle signalAsyncFetchStart() {
+        return FbDatabaseOperation.signalAsyncFetchStart(getDatabase(), this::fetchExecuted);
+    }
+
+    protected final OperationCloseHandle signalAsyncFetchComplete() {
+        return FbDatabaseOperation.signalAsyncFetchComplete(getDatabase());
+    }
+
     private void fetchExecuted() {
         fetched = true;
     }
@@ -840,16 +906,15 @@ public abstract class AbstractFbStatement implements FbStatement {
                 return;
             }
             switch (ex.getErrorCode()) {
-            case ISCConstants.isc_cfg_stmt_timeout:
-            case ISCConstants.isc_att_stmt_timeout:
-            case ISCConstants.isc_req_stmt_timeout:
-                // Close cursor so statement can be reused
+            // Close cursor so statement can be reused
+            case ISCConstants.isc_cfg_stmt_timeout, ISCConstants.isc_att_stmt_timeout,
+                    ISCConstants.isc_req_stmt_timeout -> {
                 try {
                     closeCursor();
                 } catch (SQLException e) {
                     log.log(System.Logger.Level.ERROR, "Unable to close cursor after statement timeout", e);
                 }
-                break;
+            }
             }
         }
     }
@@ -862,6 +927,9 @@ public abstract class AbstractFbStatement implements FbStatement {
         public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
             // Any statement state change indicates existing 'fetched' information is no longer valid
             fetched = false;
+            if (newState == StatementState.PREPARING) {
+                cursorName = null;
+            }
         }
     }
 }

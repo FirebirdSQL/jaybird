@@ -60,13 +60,18 @@ final class FbDatabaseOperation implements Operation, OperationCloseHandle {
     public void cancel() throws SQLException {
         final FbDatabase current = this.fbDatabase;
         if (current == null) {
-            throw FbExceptionBuilder
-                    .forException(JaybirdErrorCodes.jb_operationClosed)
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_operationClosed)
                     .messageParameter("cancel")
                     .toSQLException();
         }
-        cancelled = true;
-        current.cancelOperation(ISCConstants.fb_cancel_raise);
+        if (type.isCancellable()) {
+            cancelled = true;
+            current.cancelOperation(ISCConstants.fb_cancel_raise);
+        } else {
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_operationNotCancellable)
+                    .messageParameter(type)
+                    .toSQLException();
+        }
     }
 
     @Override
@@ -98,6 +103,14 @@ final class FbDatabaseOperation implements Operation, OperationCloseHandle {
 
     static OperationCloseHandle signalFetch(FbDatabase fbDatabase, Runnable onCompletion) {
         return signalOperation(fbDatabase, Type.STATEMENT_FETCH, onCompletion);
+    }
+
+    static OperationCloseHandle signalAsyncFetchStart(FbDatabase fbDatabase, Runnable onCompletion) {
+        return signalOperation(fbDatabase, Type.STATEMENT_ASYNC_FETCH_START, onCompletion);
+    }
+
+    static OperationCloseHandle signalAsyncFetchComplete(FbDatabase fbDatabase) {
+        return signalOperation(fbDatabase, Type.STATEMENT_ASYNC_FETCH_COMPLETE);
     }
 
     private static OperationCloseHandle signalOperation(FbDatabase fbDatabase, Type type) {

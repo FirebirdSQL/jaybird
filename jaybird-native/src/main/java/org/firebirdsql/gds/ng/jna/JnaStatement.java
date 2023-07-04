@@ -461,20 +461,14 @@ public class JnaStatement extends AbstractFbStatement {
     }
 
     @Override
-    public void setCursorName(String cursorName) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            checkStatementValid();
-            final JnaDatabase db = getDatabase();
-            clientLibrary.isc_dsql_set_cursor_name(statusVector, handle,
-                    // Null termination is needed due to a quirk of the protocol
-                    db.getEncoding().encodeToCharset(cursorName + '\0'),
-                    // Cursor type
-                    (short) 0);
-            processStatusVector();
-        } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
-            throw e;
-        }
+    protected void setCursorNameImpl(String cursorName) throws SQLException {
+        final JnaDatabase db = getDatabase();
+        clientLibrary.isc_dsql_set_cursor_name(statusVector, handle,
+                // Null termination is needed due to a quirk of the protocol
+                db.getEncoding().encodeToCharset(cursorName + '\0'),
+                // Cursor type
+                (short) 0);
+        processStatusVector();
     }
 
     private void updateStatementTimeout() throws SQLException {

@@ -64,6 +64,11 @@ public class V11Database extends V10Database {
                 public void processResponse(Response response) {
                     processReleaseObjectResponse(response);
                 }
+
+                @Override
+                public boolean requiresSync() {
+                    return true;
+                }
             });
             // According to Firebird source code for other operations we need to process response normally,
             // however we only expect calls for op_close_blob and op_cancel_blob

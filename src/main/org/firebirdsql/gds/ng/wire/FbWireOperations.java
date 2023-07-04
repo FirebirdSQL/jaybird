@@ -141,6 +141,20 @@ public interface FbWireOperations {
     }
 
     /**
+     * Completes pending deferred actions.
+     * <p>
+     * Wire protocol implementations that do not support deferred actions should simply do nothing.
+     * </p>
+     *
+     * @throws SQLException
+     *         for errors forcing ping/batch sync
+     * @since 6
+     */
+    default void completeDeferredActions() throws SQLException {
+        // do nothing
+    }
+
+    /**
      * Consumes packets notifying for warnings, but ignoring exceptions thrown from the packet.
      * <p>
      * This method should only be used inside the implementation if either packets need to be ignored,

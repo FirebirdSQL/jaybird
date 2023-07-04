@@ -89,6 +89,20 @@ public interface DeferredAction {
     }
 
     /**
+     * Indicates if this deferred action cannot be processed without an explicit sync action (e.g. {@code op_ping} or
+     * {@code op_batch_sync}). Should also be used for requests which haven't been explicitly flushed.
+     * <p>
+     * Failure to perform such a sync action may result in indefinitely blocking on read.
+     * </p>
+     *
+     * @return {@code true} if this deferred action requires an explicit sync action
+     * @since 6
+     */
+    default boolean requiresSync() {
+        return false;
+    }
+
+    /**
      * Wraps a {@link DeferredResponse} in a {@link DeferredAction}.
      *
      * @param deferredResponse
@@ -106,7 +120,7 @@ public interface DeferredAction {
      */
     static <T> DeferredAction wrapDeferredResponse(DeferredResponse<T> deferredResponse,
             Function<Response, T> responseMapper, WarningMessageCallback warningMessageCallback,
-            Consumer<Exception> exceptionConsumer) {
+            Consumer<Exception> exceptionConsumer, boolean requiresSync) {
         return new DeferredAction() {
             @Override
             public void processResponse(Response response) {
@@ -126,6 +140,13 @@ public interface DeferredAction {
             public WarningMessageCallback getWarningMessageCallback() {
                 return warningMessageCallback;
             }
+
+            @Override
+            public boolean requiresSync() {
+                return requiresSync;
+            }
+
         };
     }
+
 }

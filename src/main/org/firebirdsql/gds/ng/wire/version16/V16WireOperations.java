@@ -22,6 +22,7 @@ import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.BatchCompletion;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.BatchCompletionResponse;
 import org.firebirdsql.gds.ng.wire.WireConnection;
@@ -49,17 +50,30 @@ public class V16WireOperations extends V15WireOperations {
     @Override
     protected void afterEnqueueDeferredAction() throws SQLException {
         if (deferredActionCount() < BATCH_LIMIT) return;
-        try {
-            XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(getBatchSyncOperation());
-            xdrOut.flush();
-        } catch (IOException e) {
-            throw FbExceptionBuilder.ioWriteError(e);
-        }
-        try {
-            readResponse(null);
-        } catch (IOException e) {
-            throw FbExceptionBuilder.ioReadError(e);
+        this.completeDeferredActions();
+    }
+
+    @Override
+    public void completeDeferredActions() throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            if (completeDeferredActionsRequiresSync()) {
+                // Some deferred actions, specifically batch operations, will not send responses unless the server is
+                // forced by a ping or batch sync
+                try {
+                    XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(getBatchSyncOperation());
+                    xdrOut.flush();
+                } catch (IOException e) {
+                    throw FbExceptionBuilder.ioWriteError(e);
+                }
+                try {
+                    readResponse(null);
+                } catch (IOException e) {
+                    throw FbExceptionBuilder.ioReadError(e);
+                }
+            } else {
+                processDeferredActions();
+            }
         }
     }
 

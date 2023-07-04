@@ -20,8 +20,8 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.TestOperationAware.OperationReport;
 import org.firebirdsql.gds.ng.monitor.Operation;
-import org.firebirdsql.gds.ng.monitor.OperationAware;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +32,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
@@ -194,57 +193,6 @@ class OperationMonitorTest {
             Operation.Type operationType) {
         assertEquals(reportType, operationReport.getType(), "operationReport.type");
         assertEquals(operationType, operationReport.getOperation().getType(), "operationReport.operation.type");
-    }
-
-    static class TestOperationAware implements OperationAware {
-
-        private final List<OperationReport> reportedOperations = new ArrayList<>();
-
-        @Override
-        public void startOperation(Operation operation) {
-            reportedOperations.add(OperationReport.start(operation));
-        }
-
-        @Override
-        public void endOperation(Operation operation) {
-            reportedOperations.add(OperationReport.end(operation));
-        }
-
-        List<OperationReport> getReportedOperations() {
-            return reportedOperations;
-        }
-    }
-
-    static class OperationReport {
-
-        private final Type type;
-        private final Operation operation;
-
-        private OperationReport(Type type, Operation operation) {
-            this.type = type;
-            this.operation = operation;
-        }
-
-        public Type getType() {
-            return type;
-        }
-
-        public Operation getOperation() {
-            return operation;
-        }
-
-        static OperationReport start(Operation operation) {
-            return new OperationReport( Type.START, operation);
-        }
-
-        static OperationReport end(Operation operation) {
-            return new OperationReport(Type.END, operation);
-        }
-
-        enum Type {
-            START,
-            END
-        }
     }
 
     private static class DummyOperation implements Operation {

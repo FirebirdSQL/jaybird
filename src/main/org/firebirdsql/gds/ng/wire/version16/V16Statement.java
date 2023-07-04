@@ -91,7 +91,7 @@ public class V16Statement extends V13Statement {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.ioWriteError(e);
             }
-            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
+            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null, true));
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -119,7 +119,7 @@ public class V16Statement extends V13Statement {
     public void deferredBatchSend(Collection<RowValue> rowValues, DeferredResponse<Void> onResponse) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
-            DeferredAction deferredAction = wrapDeferredResponse(onResponse, r -> null);
+            DeferredAction deferredAction = wrapDeferredResponse(onResponse, r -> null, true);
             try {
                 RowDescriptor parameterDescriptor = getParameterDescriptor();
                 XdrOutputStream xdrOut = getXdrOut();
@@ -249,7 +249,7 @@ public class V16Statement extends V13Statement {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.ioWriteError(e);
             }
-            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
+            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null, true));
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;

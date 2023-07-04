@@ -89,7 +89,7 @@ public class V16StatementTest extends V15StatementTest {
     }
 
     @Test
-    void testBatchExecute(
+    public void testBatchExecute(
             @Mock DeferredResponse<Void> createResponse, @Mock DeferredResponse<Void> sendResponse) throws Exception {
         allocateStatement();
         FbTransaction transaction = getOrCreateTransaction();
@@ -135,7 +135,7 @@ public class V16StatementTest extends V15StatementTest {
     }
 
     @Test
-    void testBatchExecuteWithError_singleError(
+    public void testBatchExecuteWithError_singleError(
             @Mock DeferredResponse<Void> createResponse, @Mock DeferredResponse<Void> sendResponse) throws Exception {
         allocateStatement();
         FbTransaction transaction = getOrCreateTransaction();
@@ -177,7 +177,7 @@ public class V16StatementTest extends V15StatementTest {
     }
 
     @Test
-    void testBatchExecuteWithError_multiError(
+    public void testBatchExecuteWithError_multiError(
             @Mock DeferredResponse<Void> createResponse, @Mock DeferredResponse<Void> sendResponse) throws Exception {
         allocateStatement();
         FbTransaction transaction = getOrCreateTransaction();
@@ -228,7 +228,7 @@ public class V16StatementTest extends V15StatementTest {
     }
 
     @Test
-    void testBatchExecuteWithError_multiError_noDetailedErrors(
+    public void testBatchExecuteWithError_multiError_noDetailedErrors(
             @Mock DeferredResponse<Void> createResponse, @Mock DeferredResponse<Void> sendResponse) throws Exception {
         allocateStatement();
         FbTransaction transaction = getOrCreateTransaction();
@@ -276,7 +276,7 @@ public class V16StatementTest extends V15StatementTest {
     }
 
     @Test
-    void testCancelBatchFollowedByExecute(
+    public void testCancelBatchFollowedByExecute(
             @Mock DeferredResponse<Void> createResponse, @Mock DeferredResponse<Void> sendResponse) throws Exception {
         allocateStatement();
         FbTransaction transaction = getOrCreateTransaction();
@@ -311,7 +311,7 @@ public class V16StatementTest extends V15StatementTest {
     }
 
     @Test
-    void testBatchTooLarge(
+    public void testBatchTooLarge(
             @Mock DeferredResponse<Void> createResponse, @Mock DeferredResponse<Void> sendResponse) throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             // table with maximum row size
@@ -350,7 +350,7 @@ public class V16StatementTest extends V15StatementTest {
     }
 
     @Test
-    void testBatchRelease(
+    public void testBatchRelease(
             @Mock DeferredResponse<Void> createResponse, @Mock DeferredResponse<Void> sendResponse,
             @Mock DeferredResponse<Void> releaseResponse) throws Exception {
         allocateStatement();

@@ -96,6 +96,8 @@ public interface JaybirdErrorCodes {
     int jb_infoResponseEmpty        = 337248307;
     int jb_couldNotChangeSoTimeout  = 337248308;
     int jb_localTransactionActive   = 337248309;
+    int jb_invalidFetchSize         = 337248310;
+    int jb_operationNotCancellable  = 337248311;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

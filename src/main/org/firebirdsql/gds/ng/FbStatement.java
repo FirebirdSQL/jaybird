@@ -167,14 +167,19 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
     /**
      * Requests this statement to fetch the next {@code fetchSize} rows.
      * <p>
-     * Fetched rows are not returned from this method, but sent to the registered {@link org.firebirdsql.gds.ng.listeners.StatementListener} instances.
+     * Fetched rows are not returned from this method, but sent to the registered
+     * {@link org.firebirdsql.gds.ng.listeners.StatementListener} instances.
+     * </p>
+     * <p>
+     * If an asynchronous fetch is pending, that pending fetch should be completed instead of performing a new fetch.
      * </p>
      *
      * @param fetchSize
      *         Number of rows to fetch (must be greater than {@code 0})
      * @throws SQLException
      *         For database access errors, when called on a closed statement, when no cursor is open or when the fetch
-     *         size is not greater than {@code 0}.
+     *         size is not greater than {@code 0}
+     * @see #asyncFetchRows(int) 
      */
     void fetchRows(int fetchSize) throws SQLException;
 
@@ -192,6 +197,12 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * a {@code NEXT} or a {@code NEXT} after a {@code PRIOR} will need to reposition with {@code RELATIVE} or
      * {@code ABSOLUTE}, or know how many rows to ignore from the fetched batch.
      * </p>
+     * <p>
+     * If an asynchronous fetch is pending, the behaviour depends on the value of {@code fetchType}:
+     * if {@link FetchType#NEXT}, the fetch should be completed instead of performing a new fetch. For any other value,
+     * a {@code SQLException} should be thrown. Given {@link #asyncFetchRows(int)} should be a no-op for scrollable
+     * cursors, this should not normally happen.
+     * </p>
      *
      * @param fetchType
      *         Fetch type
@@ -205,8 +216,8 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      *         For types other than {@link FetchType#NEXT} if the protocol version or the implementation does not
      *         support scroll fetch
      * @throws SQLException
-     *         For database access errors, when called on a closed statement, when no cursor is open or for server-side
-     *         error conditions
+     *         For database access errors, when called on a closed statement, when no cursor is open, when an async
+     *         fetch is pending and {@code fetchType} is not {@code NEXT}, or for server-side error conditions
      * @see #supportsFetchScroll()
      * @since 5
      */
@@ -217,6 +228,37 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
         }
         throw new FBDriverNotCapableException("implementation does not support fetchScroll");
     }
+
+    /**
+     * Requests the server to perform an asynchronous fetch for {@code fetch size}.
+     * <p>
+     * Asynchronous fetching is an optional feature. If an implementation does not support asynchronous fetching, it
+     * should return immediately and do nothing. Although this interface provides a default implementation which does
+     * nothing, implementations should override it, to throw an exception when called on a closed statement.
+     * </p>
+     * <p>
+     * For implementations which do support async fetching, this call should not do anything if one of the following is
+     * true:
+     * </p>
+     * <ul>
+     * <li>an asynchronous fetch is already pending</li>
+     * <li>{@code fetchSize} is {@code 1} or the statement has a cursor name set</li>
+     * <li>the current statement has a scrollable cursor (flag {@code CURSOR_TYPE_SCROLLABLE} set)</li>
+     * </ul>
+     * <p>
+     * An asynchronous fetch can be completed explicitly by calling {@link #fetchRows(int)}, or implicitly by
+     * other network operations.
+     * </p>
+     *
+     * @param fetchSize
+     *         number of rows to fetch (must be greater than {@code 0})
+     * @throws SQLException
+     *         for database access errors, when called on a closed statement, when no cursor is open or when the fetch
+     *         size is not greater than {@code 0}
+     * @since 6
+     * @see #fetchRows(int)
+     */
+    default void asyncFetchRows(int fetchSize) throws SQLException { }
 
     /**
      * Has at least one fetch been executed on the current cursor?
@@ -396,7 +438,8 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * @param cursorName
      *         Name of the cursor
      * @throws SQLException
-     *         If this statement is closed, TODO: Other reasons (eg cursor open)?
+     *         If this statement is closed, or if the cursor name is set and {@code cursorName} is different from the
+     *         current cursor name
      */
     void setCursorName(String cursorName) throws SQLException;
 
