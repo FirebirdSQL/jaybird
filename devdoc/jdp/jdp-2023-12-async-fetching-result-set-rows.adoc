@@ -3,6 +3,7 @@
 == Status
 
 * Published: 2023-07-04
+* Updated: 2023-07-05
 * Implemented in: Jaybird 6
 
 == Type
@@ -65,7 +66,7 @@ Modification of `FBFetcher` only seems to make sense for `FBStatementFetcher`, b
 It may also make sense in `FBCachedFetcher`, but this might be harder to do correctly.
 
 The fetcher implementation will track the "`high-water mark`" of rows (the maximum number of rows returned by a single fetch), and evaluate when to async fetch (on the "`low-water mark`").
-This JDP does not specify exactly _when_ to fetch, but as a starting point, we'll perform an async fetch at 30% of the "`high-water mark`" or 10 rows, whichever is higher.
+This JDP does not specify exactly _when_ to fetch, but as a starting point, we'll perform an async fetch at ~33% of the "`high-water mark`" or 10 rows, whichever is higher.
 If the "`high-water mark`" is less than 15 rows, we'll not perform an async fetch.
 This logic may be modified during evaluation and further testing, and should be considered an implementation detail, not a specification.
 

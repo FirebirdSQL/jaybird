@@ -678,7 +678,7 @@ See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-
 [#async-fetch]
 === Asynchronous fetching
 
-For pure Java connections, forward-only result sets now support asynchronous fetches.
+For pure Java connections, forward-only result sets now perform asynchronous fetches.
 Asynchronous fetches are implemented for protocol implementation version 11 and higher (i.e. Firebird 2.1 or higher), but are formally only supported for protocol version 13 and higher (i.e. Firebird 3.0 or higher).
 
 In normal usage of a result set, the first fetch will be a normal synchronous fetch.
@@ -697,7 +697,7 @@ In Jaybird 6.0.0, the condition to perform an asynchronous fetch is:
 
 * Size of the row buffer is equal to the "`low-water mark`".
 +
-This "`low-water mark`" is calculated as 30% of the maximum number of rows returned by previous fetches, with a minimum of 10 rows.
+This "`low-water mark`" is calculated as ~33% of the maximum number of rows returned by previous fetches, with a minimum of 10 rows.
 +
 As a consequence of this condition, reducing the fetch size equal to or less than the "`low-water mark`" may cause asynchronous fetches to stop being triggered, as the buffer size may remain smaller than the "`low-water mark`" (this effect may be reduced if there is other activity on the connection after the asynchronous fetch was performed).
 In that case a synchronous fetch is triggered when the buffer is empty.

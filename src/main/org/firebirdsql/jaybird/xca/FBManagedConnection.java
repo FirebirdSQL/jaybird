@@ -798,10 +798,14 @@ public final class FBManagedConnection implements ExceptionListener {
     }
 
     private static final class DataProvider implements StatementListener {
+
+        private static final int NO_ASYNC_FETCH = -1;
+
         private final Deque<RowValue> rows = new ArrayDeque<>();
         private final FbStatement statementHandle;
-        private RowValue currentRow = null;
+        private RowValue currentRow;
         private boolean moreRows = true;
+        private int fetchAsyncAt = NO_ASYNC_FETCH;
 
         private DataProvider(FbStatement statementHandle) {
             this.statementHandle = statementHandle;
@@ -810,6 +814,8 @@ public final class FBManagedConnection implements ExceptionListener {
         boolean hasNext() throws SQLException {
             if (rows.isEmpty() && moreRows) {
                 fetch();
+            } else if (rows.size() == fetchAsyncAt && moreRows) {
+                fetchAsync();
             }
             return !rows.isEmpty();
         }
@@ -827,6 +833,10 @@ public final class FBManagedConnection implements ExceptionListener {
             statementHandle.fetchRows(Integer.MAX_VALUE);
         }
 
+        private void fetchAsync() throws SQLException {
+            statementHandle.asyncFetchRows(Integer.MAX_VALUE);
+        }
+
         @Override
         public void receivedRow(FbStatement sender, RowValue rowValue) {
             rows.add(rowValue);
@@ -835,6 +845,13 @@ public final class FBManagedConnection implements ExceptionListener {
         @Override
         public void afterLast(FbStatement sender) {
             moreRows = false;
+        }
+
+        @Override
+        public void fetchComplete(FbStatement sender, FetchDirection fetchDirection, int rows) {
+            if (fetchAsyncAt * 3 < rows) {
+                fetchAsyncAt = rows >= 15 ? Math.min(rows / 3, 200) : NO_ASYNC_FETCH;
+            }
         }
 
         FieldDataProvider asFieldDataProvider(int fieldPos) {

@@ -42,7 +42,7 @@ class FBStatementFetcher implements FBFetcher {
 
     private static final int NO_ASYNC_FETCH = -1;
     private static final int MINIMUM_ASYNC_FETCH_ROW_COUNT = 10;
-    private static final float ASYNC_FETCH_PERCENTAGE = 0.3f;
+    private static final int ASYNC_FETCH_FACTOR = 3;
 
     private boolean closed;
     private boolean wasFetched;
@@ -353,7 +353,7 @@ class FBStatementFetcher implements FBFetcher {
                 maxActualFetchSize = rows;
                 if (rows >= MINIMUM_ASYNC_FETCH_ROW_COUNT * 3 / 2 ) {
                     asyncFetchOnRemaining =
-                            Math.max((int) (rows * ASYNC_FETCH_PERCENTAGE), MINIMUM_ASYNC_FETCH_ROW_COUNT);
+                            Math.max(rows / ASYNC_FETCH_FACTOR, MINIMUM_ASYNC_FETCH_ROW_COUNT);
                 }
             }
         }
