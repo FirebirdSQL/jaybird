@@ -18,40 +18,35 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
-
 import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceShutdownDisabled;
 
 /**
- * Servlet context listener for {@code javax.servlet} for unloading native libraries if loaded in the current context.
- * <p>
- * Twin of {@link NativeResourceUnloadWebListenerJakarta}.
- * </p>
+ * Abstract listener for native resource unload.
  *
  * @author Mark Rotteveel
- * @since 4.0
+ * @since 6
  */
-@WebListener
-public class NativeResourceUnloadWebListenerJavaX implements ServletContextListener {
+public abstract class NativeResourceUnloadAbstractWebListener<T extends java.util.EventObject> {
 
-    @Override
-    public void contextInitialized(ServletContextEvent servletContextEvent) {
+    protected NativeResourceUnloadAbstractWebListener(){
+    }
+
+    public void contextInitialized(T servletContextEvent) {
         if (!isNativeResourceShutdownDisabled() && jaybirdLoadedInContext(servletContextEvent)) {
             NativeResourceTracker.disableShutdownHook();
         }
     }
 
-    @Override
-    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+    public void contextDestroyed(T servletContextEvent) {
         if (!isNativeResourceShutdownDisabled() && jaybirdLoadedInContext(servletContextEvent)) {
             NativeResourceTracker.shutdownNativeResources();
         }
     }
 
-    private boolean jaybirdLoadedInContext(ServletContextEvent servletContextEvent) {
-        ClassLoader servletContextClassLoader = servletContextEvent.getServletContext().getClassLoader();
+    protected abstract ClassLoader getContextClassLoader(T servletContextEvent);
+
+    private boolean jaybirdLoadedInContext(T servletContextEvent) {
+        ClassLoader servletContextClassLoader = getContextClassLoader(servletContextEvent);
         ClassLoader fbClientDatabaseFactoryClassLoader = FbClientDatabaseFactory.class.getClassLoader();
 
         // TODO Maybe to naive, search parents of fbClientDatabaseFactoryClassLoader as well?

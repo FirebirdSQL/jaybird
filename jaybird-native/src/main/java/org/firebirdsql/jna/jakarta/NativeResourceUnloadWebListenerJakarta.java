@@ -16,45 +16,36 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.jna;
+package org.firebirdsql.jna.jakarta;
 
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
-
-import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceShutdownDisabled;
+import org.firebirdsql.gds.ng.jna.NativeResourceUnloadAbstractWebListener;
 
 /**
  * Servlet context listener for {@code jakarta.servlet} for unloading native libraries if loaded in the current context.
- * <p>
- * Twin of {@link NativeResourceUnloadWebListenerJavaX}.
- * </p>
  *
  * @author Mark Rotteveel
  * @since 5
  */
 @WebListener
-public class NativeResourceUnloadWebListenerJakarta implements ServletContextListener {
+public class NativeResourceUnloadWebListenerJakarta
+        extends NativeResourceUnloadAbstractWebListener<ServletContextEvent> implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
-        if (!isNativeResourceShutdownDisabled() && jaybirdLoadedInContext(servletContextEvent)) {
-            NativeResourceTracker.disableShutdownHook();
-        }
+        super.contextInitialized(servletContextEvent);
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        if (!isNativeResourceShutdownDisabled() && jaybirdLoadedInContext(servletContextEvent)) {
-            NativeResourceTracker.shutdownNativeResources();
-        }
+        super.contextDestroyed(servletContextEvent);
     }
 
-    private boolean jaybirdLoadedInContext(ServletContextEvent servletContextEvent) {
-        ClassLoader servletContextClassLoader = servletContextEvent.getServletContext().getClassLoader();
-        ClassLoader fbClientDatabaseFactoryClassLoader = FbClientDatabaseFactory.class.getClassLoader();
-
-        // TODO Maybe to naive, search parents of fbClientDatabaseFactoryClassLoader as well?
-        return servletContextClassLoader == fbClientDatabaseFactoryClassLoader;
+    @Override
+    protected final ClassLoader getContextClassLoader(ServletContextEvent servletContextEvent) {
+        return servletContextEvent.getServletContext().getClassLoader();
     }
+
 }

@@ -187,7 +187,7 @@ At minimum Jaybird 6 requires `jaybird-{version_wo_target}.jar`.
 
 For "`ChaCha64`" support, also add `chacha64-plugin.jar` and `bcprov-jdk18on-{bc-version}.jar`.
 
-For native or embedded support, you will need to include `jna-{jna-version}.jar` on your classpath.
+For native or embedded support, you will need to include `jna-jpms-{jna-version}.jar` on your classpath or modulepath.
 See also <<type-2-native-and-embedded-driver>>.
 
 [#upgrading-from-jaybird-5-to-jaybird-6]
@@ -232,10 +232,16 @@ If you use native or embedded, make sure to update your JNA dependency to versio
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
-    <artifactId>jna</artifactId>
+    <artifactId>jna-jpms</artifactId>
     <version>{jna-version}</version>
 </dependency>
 ----
+
+[WARNING]
+====
+Previous versions used `artifactId` `jna` instead of `jna-jpms`.
+Although both artifacts are nearly identical, the `jna-jpms` artifact provides a `module-info.class`, while the `jna` artifact does not.
+====
 
 [#manual-install]
 === Manual install
@@ -244,10 +250,10 @@ If you manage your dependencies manually, you need to do the following:
 
 . Replace the Jaybird 5 library with the Jaybird 6 version
 ** `jaybird-5.0.x.<java>.jar` with `jaybird-{version_wo_target}.jar`
-. If you use the NATIVE or EMBEDDED protocols, add the following JARs to the classpath
+. If you use the NATIVE or EMBEDDED protocols, add the following JARs to the classpath or modulepath
 ** `jaybird-native-{version_wo_target}.jar`
-** `jna-{jna-version}.jar` (if you have an older version of JNA, replace it)
-. To enable "`ChaCha64`" wire encryption support add the following JARs to the classpath
+** `jna-jpms-{jna-version}.jar` (if you have an older version of JNA or a `jna-{jna-version}` instead of `jna-jpms-{jna-version}`, replace it)
+. To enable "`ChaCha64`" wire encryption support add the following JARs to the classpath or modulepath
 ** `chacha64-plugin-{version_wo_target}.jar`
 ** `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip
 
@@ -315,7 +321,7 @@ Jaybird 6 supports Firebird version 3.0, 4.0, and provides tentative support for
 
 The NATIVE (JDBC URL prefix `++jdbc:firebird[sql]:native:++`) and EMBEDDED (JDBC URL prefix `++jdbc:firebird[sql]:embedded:++`) protocol implementations have been moved to a separate artifact, `org.firebirdsql.jdbc:jaybird-native`.
 
-If you use native or embedded connections using Jaybird, you will need to explicitly add the appropriate Maven dependency (or `jaybird-native-{version_wo_target}.jar` and `jna-{jna-version}.jar`) to your classpath.
+If you use native or embedded connections using Jaybird, you will need to explicitly add the appropriate Maven dependency (or `jaybird-native-{version_wo_target}.jar` and `jna-jpms-{jna-version}.jar`) to your classpath.
 
 See also <<getting-jaybird-6>>.
 
@@ -705,6 +711,38 @@ In that case a synchronous fetch is triggered when the buffer is empty.
 This may be the configured fetch size, or the fetch size derived taking into account the configured maximum row count.
 
 Native connections do not support this type of asynchronous fetching, but `fbclient` itself provides a different form of internal asynchronous fetching for native connections.
+
+[#modules]
+=== Modularization of Jaybird
+
+Jaybird now uses real Java modules.
+
+The available modules are:
+
+* `org.firebirdsql.jaybird` -- main Jaybird driver
+* `org.firebirdsql.jaybird.chacha64` -- ChaCha64 wire encryption implementation
+* `org.firebirdsql.jna` -- native and embedded protocol implementation using JNA
+
+We've tried to be liberal with exporting the packages from Jaybird, but we have decided not to export some packages because we think they shouldn't normally be accessed by users of Jaybird.
+If you run into problems with packages not being exported, please report this on https://groups.google.com/g/firebird-java[firebird-java^] or on https://github.com/FirebirdSQL/jaybird/issues[GitHub^].
+Please include an explanation why you need to access a specific package.
+As a workaround, you can also add exports yourself with the `--add-exports` commandline option of `java` and `javac` and the `Add-Exports` manifest entry of your application (similar options exist for _opens_).
+
+When the Jaybird JAR files are on the classpath, they should behave as before.
+For modular applications, once added to the modulepath instead of the classpath, they will behave in a more restricted fashion.
+
+If you use Jaybird only as a JDBC driver (through `java.sql.DriverManager`), having the driver on the modulepath and having `requires java.sql` in the `module-info.java` of your application should be sufficient.
+If your code uses classes and other types from Jaybird, use `requires org.firebirdsql.jaybird`.
+
+The ChaCha64 plugin, `org.firebirdsql.jaybird.chacha64`, will just need to be present on the modulepath to be loaded.
+
+The same goes for the native protocol module, `org.firebirdsql.jna`, but only add it to the modulepath if you actually need native or embedded access.
+You also need to replace any `jna-<version>.jar` with `jna-jpms-{jna-version}.jar` (the modular variant of JNA).
+
+If you use `org.firebirdsql.jna` to implement a Firebird embedded provider, you'll need to add `requires org.firebirdsql.jna` and an appropriate `provides org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedProvider with <classname>` in your `module-info.java`.
+For compatibility with use on the classpath, it is recommended to also provide the `META-INF/services/org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedProvider` file.
+
+For more information, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-13-modularization-of-jaybird.adoc[jdp-2023-13: Modularization of Jaybird^].
 
 // TODO add major changes
 
@@ -1175,7 +1213,7 @@ there is no replacement
 
 Since Jaybird 6, the native and embedded part of the driver has been moved to a separate artifact, `jaybird-native`.
 The Jaybird Native GDS Factory plugin uses JNA to access the client library.
-If you want to use the Type 2 driver, or Firebird embedded, then you need to include `jaybird-native-{version_example}` and `jna-{jna-version}.jar` on the classpath.
+If you want to use the Type 2 driver, or Firebird embedded, then you need to include `jaybird-native-{version_example}` and `jna-jpms-{jna-version}.jar` on the classpath.
 
 When using Maven, you need to specify the dependency on `jaybird-native`:
 

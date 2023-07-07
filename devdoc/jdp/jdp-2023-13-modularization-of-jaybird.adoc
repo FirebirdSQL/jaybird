@@ -2,8 +2,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 6
+* Published: 2023-07-07
+* Implemented in: Jaybird 6
 
 == Type
 
@@ -46,6 +46,7 @@ Since Jaybird 2.2.14 and 3.0.3, Jaybird declares the automatic module name `org.
 * `org.firebirdsql.gds.ng.wire.auth.AuthenticationPluginSpi`
 * `org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi`
 * `org.firebirdsql.gds.ng.wire.ProtocolDescriptor`
+* `org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi`
 
 `jaybird` provides the following services
 
@@ -107,6 +108,7 @@ Moving things around will likely break things for users of Jaybird, and the same
 
 The `jaybird-native` library depends on JNA, which uses a separate artifact for its modularized variant.
 It also depends on both Java EE and Jakarta EE servlet APIs (for a servlet listener), but the Java EE servlet API does not have an explicit module name.
+The Jakarta EE web listener may need to be moved to a separate package to be exported.
 
 == Decision
 
@@ -142,6 +144,7 @@ If we misjudge here, users can always work around this by specifying runtime `--
 `org.firebirdsql.encodings`:: exported -- internal API;
 an extension point for adding or overriding encodings
 `org.firebirdsql.event`:: exported -- public API
+`org.firebirdsql.extern.decimal`:: exported -- public API
 `org.firebirdsql.gds`:: exported -- internal API;
 needed for custom plugins and possibly power users
 `org.firebirdsql.gds.impl`:: exported -- internal API;
@@ -178,7 +181,7 @@ useful in use of other exported APIs by power users
 `org.firebirdsql.jaybird.props.def`:: exported -- public API
 `org.firebirdsql.jaybird.props.internal` :: not exported -- for internal use only
 `org.firebirdsql.jaybird.props.spi`:: exported -- public API
-`org.firebirdsql.jaybird.util`:: not exported -- for internal use only
+`org.firebirdsql.jaybird.util`:: only exported to `org.firebirdsql.jna` -- for internal use only
 `org.firebirdsql.jaybird.xca`:: exported -- internal API;
 some types are accepted and returned by public methods in other exported packages (e.g. in `org.firebirdsql.jdbc`)
 `org.firebirdsql.jdbc`:: exported -- public API
@@ -198,6 +201,7 @@ some types are returned by public methods in `org.firebirdsql.jdbc`
 `org.firebirdsql.jna.embedded.classpath`:: exported -- public API; utility classes for embedded providers
 `org.firebirdsql.jna.embedded.spi`:: exported -- public API for embedded providers
 `org.firebirdsql.jna.fbclient`:: not exported -- plugin implementation
+`org.firebirdsql.jna.jakarta`:: exported -- Jakarta web listener, must be exported to be found
 
 === `chacha64-plugin` (module `org.firebirdsql.jaybird.chacha64`)
 

@@ -35,8 +35,7 @@ jar {
                 'Implementation-Url': project.'implementation.url',
                 'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'})",
                 'Implementation-Vendor': project.'implementation.vendor',
-                'Implementation-Vendor-Id': project.'implementation.vendor.id',
-                'Automatic-Module-Name': 'org.firebirdsql.jaybird.chacha64'
+                'Implementation-Vendor-Id': project.'implementation.vendor.id'
         )
     }
 }
