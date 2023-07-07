@@ -83,7 +83,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
      * @return datatype coder, this might be a cached instance
      */
     public static DefaultDatatypeCoder forEncodingFactory(IEncodingFactory encodingFactory) {
-        return encodingFactory.getOrCreateDatatypeCoder(DefaultDatatypeCoder.class);
+        return encodingFactory.getOrCreateDatatypeCoder(DefaultDatatypeCoder.class, DefaultDatatypeCoder::new);
     }
 
     /**

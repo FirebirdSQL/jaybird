@@ -1135,6 +1135,9 @@ use `StringArgument(int, ArgumentType, String, Encoding)`
 * `FBConnection`
 ** `checkClientInfoSupport()` was removed;
 there is no replacement
+* `IEncodingFactory`
+** `<T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T>)` was removed;
+its replacements is `<T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T>, Function<IEncodingFactory, T>)` where the function is a factory for the desired `DatatypeCoder` instance if it doesn't already exist.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

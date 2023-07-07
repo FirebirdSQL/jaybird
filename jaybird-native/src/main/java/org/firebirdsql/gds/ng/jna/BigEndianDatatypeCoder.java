@@ -40,7 +40,7 @@ public final class BigEndianDatatypeCoder extends DefaultDatatypeCoder {
      * @return datatype coder, this might be a cached instance
      */
     public static BigEndianDatatypeCoder forEncodingFactory(IEncodingFactory encodingFactory) {
-        return encodingFactory.getOrCreateDatatypeCoder(BigEndianDatatypeCoder.class);
+        return encodingFactory.getOrCreateDatatypeCoder(BigEndianDatatypeCoder.class, BigEndianDatatypeCoder::new);
     }
 
     /**

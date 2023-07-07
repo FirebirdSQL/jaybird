@@ -24,6 +24,7 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
 import java.nio.charset.Charset;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 /**
  * Implementation of {@link IEncodingFactory} that wraps an {@link EncodingFactory} to
@@ -176,13 +177,11 @@ class ConnectionEncodingFactory implements IEncodingFactory {
         return withDefaultEncodingDefinition(getEncodingDefinitionByCharset(charset));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass) {
-        return (T) datatypeCoderCache.computeIfAbsent(datatypeCoderClass, this::createNewDatatypeCoder);
+    public <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass,
+            Function<IEncodingFactory, T> datatypeCoderFactory) {
+        return datatypeCoderClass.cast(
+                datatypeCoderCache.computeIfAbsent(datatypeCoderClass, clazz -> datatypeCoderFactory.apply(this)));
     }
 
-    private <T extends DatatypeCoder> T createNewDatatypeCoder(Class<T> datatypeCoderClass) {
-        return EncodingFactory.createNewDatatypeCoder(datatypeCoderClass, this);
-    }
 }

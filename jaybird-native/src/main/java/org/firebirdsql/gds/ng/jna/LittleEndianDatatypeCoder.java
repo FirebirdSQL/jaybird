@@ -40,7 +40,8 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
      * @return datatype coder, this might be a cached instance
      */
     public static LittleEndianDatatypeCoder forEncodingFactory(IEncodingFactory encodingFactory) {
-        return encodingFactory.getOrCreateDatatypeCoder(LittleEndianDatatypeCoder.class);
+        return encodingFactory
+                .getOrCreateDatatypeCoder(LittleEndianDatatypeCoder.class, LittleEndianDatatypeCoder::new);
     }
 
     /**

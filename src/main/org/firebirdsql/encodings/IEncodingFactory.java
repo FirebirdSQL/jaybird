@@ -21,6 +21,7 @@ package org.firebirdsql.encodings;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 
 import java.nio.charset.Charset;
+import java.util.function.Function;
 
 /**
  * Interface for the EncodingFactory.
@@ -228,10 +229,15 @@ public interface IEncodingFactory {
      * </p>
      *
      * @param datatypeCoderClass
-     *         Type of datatype coder, needs to have a single-arg constructor accepting an {@code IEncodingFactory}.
+     *         type of datatype coder
+     * @param datatypeCoderFactory
+     *         function for creating the datatype coder if it doesn't already exist
      * @param <T>
-     *         Type parameter of type {@link DatatypeCoder}
+     *         type parameter of type {@link DatatypeCoder}
      * @return New or cached instance of datatype coder
+     * @since 6
      */
-    <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass);
+    <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass,
+            Function<IEncodingFactory, T> datatypeCoderFactory);
+
 }

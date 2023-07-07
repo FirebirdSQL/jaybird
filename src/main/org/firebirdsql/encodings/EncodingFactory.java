@@ -20,16 +20,15 @@ package org.firebirdsql.encodings;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
-import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.jaybird.util.PluginLoader;
 
-import java.lang.reflect.Constructor;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.WARNING;
@@ -314,31 +313,11 @@ public final class EncodingFactory implements IEncodingFactory {
         return withDefaultEncodingDefinition(getEncodingDefinitionByCharset(charset));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass) {
-        return (T) datatypeCoderCache.computeIfAbsent(datatypeCoderClass, this::createNewDatatypeCoder);
-    }
-
-    private <T extends DatatypeCoder> T createNewDatatypeCoder(Class<T> datatypeCoderClass) {
-        return createNewDatatypeCoder(datatypeCoderClass, this);
-    }
-
-    @SuppressWarnings({ "unchecked" })
-    static <T extends DatatypeCoder> T createNewDatatypeCoder(Class<T> datatypeCoderClass,
-            IEncodingFactory encodingFactory) {
-        // Avoid reflection if we can:
-        if (datatypeCoderClass == DefaultDatatypeCoder.class) {
-            return (T) new DefaultDatatypeCoder(encodingFactory);
-        } else {
-            try {
-                Constructor<T> datatypeCoderConstructor = datatypeCoderClass.getConstructor(IEncodingFactory.class);
-                return datatypeCoderConstructor.newInstance(encodingFactory);
-            } catch (ReflectiveOperationException e) {
-                throw new IllegalArgumentException("Type " + datatypeCoderClass +
-                        " has no single arg constructor accepting an IEncodingFactory");
-            }
-        }
+    public <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass,
+            Function<IEncodingFactory, T> datatypeCoderFactory) {
+        return datatypeCoderClass.cast(
+                datatypeCoderCache.computeIfAbsent(datatypeCoderClass, clazz -> datatypeCoderFactory.apply(this)));
     }
 
     /**
