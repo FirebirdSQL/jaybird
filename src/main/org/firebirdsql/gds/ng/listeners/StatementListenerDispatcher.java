@@ -20,7 +20,6 @@ package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FetchDirection;
-import org.firebirdsql.gds.ng.FetchType;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.RowValue;

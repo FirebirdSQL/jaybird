@@ -187,11 +187,6 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
             return next;
         }
 
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("remove");
-        }
-
         private TListener getNextWeakListener() {
             // Be aware we are reverse iterating the listeners, but present it as forward iteration!
             final ListIterator<WeakReference<TListener>> weakIterator = this.weakIterator;
