@@ -106,6 +106,7 @@ For example, some parts of `org.firebirdsql.gds.impl` are most definitely public
 Moving things around will likely break things for users of Jaybird, and the same goes for limiting access too much.
 
 The `jaybird-native` library depends on JNA, which uses a separate artifact for its modularized variant.
+It also depends on both Java EE and Jakarta EE servlet APIs (for a servlet listener), but the Java EE servlet API does not have an explicit module name.
 
 == Decision
 
@@ -123,6 +124,9 @@ On the other hand, for example, the `org.firebirdsql.gds.ng.wire.versionNN` pack
 
 The consequences section lists per package if it will be exported or not.
 If it turns out we're too restrictive (or too open) that may be revised in the future.
+
+Given the lack of an explicit module name in the Java EE servlet API, we will remove the `NativeResourceUnloadWebListenerJavaX`.
+We think this is a small price to pay.
 
 == Consequences
 
