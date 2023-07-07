@@ -126,6 +126,8 @@ If it turns out we're too restrictive (or too open) that may be revised in the f
 
 == Consequences
 
+Given JNA uses separate artifacts for the modularized version, we'll need to switch artifacts.
+
 The following sections lists the packages per module and specifies if it will be exported or not.
 If we misjudge here, users can always work around this by specifying runtime `--add-exports` until it's addressed.
 
