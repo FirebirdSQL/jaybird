@@ -113,7 +113,7 @@ Jaybird will be modularized, using the current automatic module names as the rea
 Given the long history and niche APIs that might be in use by users of Jaybird, we will export most of the existing packages.
 We will not declare the modules as open modules, because we think some parts of the implementation should be shielded from users.
 
-We will not export packages which are clearly internal implementation, and were we think there is no (good) reason for users to have access.
+We will not export packages which are clearly internal implementation, and where we think there is no (good) reason for users to have access.
 
 Although some classes and packages not considered "`public`" API are annotated with `@InternalApi`, that in itself is not sufficient reason to not export a package.
 For example, `org.firebirdsql.gds.ng` is marked with `@InteralApi`, because we think it should not normally be used directly, but it is also needed for plugin implementations like `jaybird-native`.
@@ -168,7 +168,7 @@ exported due to service mechanism and allowing for custom plugins
 `org.firebirdsql.gds.ng.wire.version__NN__`:: not exported -- implementation of wire protocol versions
 `org.firebirdsql.jaybird`:: not exported -- for internal use only
 `org.firebirdsql.jaybird.fb.constants`:: exported -- internal API;
-but useful in use of other exported APIs by power users
+useful in use of other exported APIs by power users
 `org.firebirdsql.jaybird.parser`:: not exported -- for internal use only
 `org.firebirdsql.jaybird.props`:: exported -- public API
 `org.firebirdsql.jaybird.props.def`:: exported -- public API
