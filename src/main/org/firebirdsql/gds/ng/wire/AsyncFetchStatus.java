@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.impl.wire;
+package org.firebirdsql.gds.ng.wire;
 
 import java.sql.SQLException;
 import java.util.Optional;

@@ -20,7 +20,7 @@ package org.firebirdsql.gds.ng.wire.version11;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.impl.wire.AsyncFetchStatus;
+import org.firebirdsql.gds.ng.wire.AsyncFetchStatus;
 import org.firebirdsql.gds.ng.CursorFlag;
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
