@@ -1,0 +1,199 @@
+= jdp-2023-13: Modularization of Jaybird
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+The Java Module System was introduced in Java 9.
+A module can declare its dependencies, in `module-info.java` using the `requires` keyword, so Java can ensure they are available at runtime.
+This in turn allows you to build a reduced JRE (with `jlink`), and may also be used to build native images of an application.
+
+A module also declares which packages it exports, allowing you to reduce the API available to other modules to only those classes which are really intended for public consumption.
+
+Modules also come with a number of restrictions.
+For example, it is not possible to have the same package in multiple modules.
+
+When a module is on the classpath, it behaves as a normal JAR (so its module info is ignored), and can access all classes on the classpath and modulepath (note that here we're conflating the modulepath and runtime available modules, there is a difference in practice).
+When a module is on the modulepath, it behaves as a module, and can only access the classes of the modules it requires.
+
+Normal JARs can also be on the modulepath.
+In that case, they are an _automatic_ module, with a name as specified in the `Automatic-Module-Name` entry in the manifest, or if that is absent, a name derived from its filename.
+Automatic module names derived from the filename should not be used in published modules because of ambiguity and other problems.
+Contrary to normal modules, automatic modules have access to all modules on the modulepath and on the classpath.
+
+The service definition of modules is also part of the configuration in `module-info.javs` using the `provides` keyword, the `META-INF/services` files are -- as I understand it -- for use on classpath only.
+A module using a service must declare it in `module-info.java` using the `uses` keyword.
+This information is used by the module system to decide which service-providing modules to load even if they are not explicitly required.
+
+Module names follow similar naming conventions as packages.
+That is, the name should be made unique, usually by using a reverse domain as the prefix.
+Although not required, it is generally advised to use a common prefix shared with the package names.
+
+Jaybird 6 is exclusively for Java 17 or higher.
+Since Jaybird 2.2.14 and 3.0.3, Jaybird declares the automatic module name `org.firebirdsql.jaybird` in its manifest.
+
+`jaybird` uses the following services:
+
+* `org.firebirdsql.encodings.EncodingSet`
+* `org.firebirdsql.gds.impl.GDSFactoryPlugin`
+* `org.firebirdsql.gds.ng.wire.auth.AuthenticationPluginSpi`
+* `org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi`
+* `org.firebirdsql.gds.ng.wire.ProtocolDescriptor`
+
+`jaybird` provides the following services
+
+* `java.sql.Driver` with class
+** `org.firebirdsql.jdbc.FBDriver`
+* `org.firebirdsql.encodings.EncodingSet` with class
+** `org.firebirdsql.encodings.DefaultEncodingSet`
+* `org.firebirdsql.gds.impl.GDSFactoryPlugin` with class
+** `org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin`
+* `org.firebirdsql.gds.ng.wire.auth.AuthenticationPluginSpi` with classes
+** `org.firebirdsql.gds.ng.wire.auth.legacy.LegacyAuthenticationPluginSpi`
+** `org.firebirdsql.gds.ng.wire.auth.srp.SrpAuthenticationPluginSpi`
+** `org.firebirdsql.gds.ng.wire.auth.srp.Srp224AuthenticationPluginSpi`
+** `org.firebirdsql.gds.ng.wire.auth.srp.Srp256AuthenticationPluginSpi`
+** `org.firebirdsql.gds.ng.wire.auth.srp.Srp384AuthenticationPluginSpi`
+** `org.firebirdsql.gds.ng.wire.auth.srp.Srp512AuthenticationPluginSpi`
+* `org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi` with classes
+** `org.firebirdsql.gds.ng.wire.crypt.arc4.Arc4EncryptionPluginSpi`
+** `org.firebirdsql.gds.ng.wire.crypt.chacha.ChaChaEncryptionPluginSpi`
+* `org.firebirdsql.gds.ng.wire.ProtocolDescriptor` with classes
+** `org.firebirdsql.gds.ng.wire.version10.Version10Descriptor`
+** `org.firebirdsql.gds.ng.wire.version11.Version11Descriptor`
+** `org.firebirdsql.gds.ng.wire.version12.Version12Descriptor`
+** `org.firebirdsql.gds.ng.wire.version13.Version13Descriptor`
+** `org.firebirdsql.gds.ng.wire.version15.Version15Descriptor`
+** `org.firebirdsql.gds.ng.wire.version16.Version16Descriptor`
+** `org.firebirdsql.gds.ng.wire.version18.Version18Descriptor`
+
+The `jaybird-native` library introduced for Jaybird 6 (split off from the main Jaybird artifact) declares the automatic module name `org.firebirdsql.jna`.
+
+`jaybird-native` uses the following services:
+
+* `org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedProvider`
+
+`jaybird-native` provides the following services:
+
+* `org.firebirdsql.gds.impl.GDSFactoryPlugin` with classes:
+** `org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin`
+** `org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin`
+* `org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi` with class
+** `org.firebirdsql.gds.ng.jna.NativeConnectionPropertyDefiner`
+
+The `chacha64-plugin` library introduced for Jaybird 6 declares the automatic module name `org.firebirdsql.jaybird.chacha64`.
+
+`chacha64-plugin` provides the following services:
+
+* `org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi` with class
+** `org.firebirdsql.jaybird.chacha64.ChaCha64EncryptionPluginSpi`
+
+The service SPI must be exported API, but service implementations do not need to be explicitly exported.
+
+Depending on how Jaybird is used, exported access to packages can range from none when used purely as a JDBC driver without needing the extension interfaces in `org.firebirdsql.jdbc`, while using data sources, events and/or management classes requires more access.
+When using the internals of Jaybird (which are considered "`internal`" API, but may be beneficial to power users, even more access is needed.
+
+Jaybird has a long history, and some of its API has rough edges and weirdness.
+For example, some parts of `org.firebirdsql.gds.impl` are most definitely public API while others are not, while the `impl` in its name suggest that it is not supposed to be a public API.
+
+Moving things around will likely break things for users of Jaybird, and the same goes for limiting access too much.
+
+The `jaybird-native` library depends on JNA, which uses a separate artifact for its modularized variant.
+
+== Decision
+
+Jaybird will be modularized, using the current automatic module names as the real module names.
+Given the long history and niche APIs that might be in use by users of Jaybird, we will export most of the existing packages.
+We will not declare the modules as open modules, because we think some parts of the implementation should be shielded from users.
+
+We will not export packages which are clearly internal implementation, and were we think there is no (good) reason for users to have access.
+
+Although some classes and packages not considered "`public`" API are annotated with `@InternalApi`, that in itself is not sufficient reason to not export a package.
+For example, `org.firebirdsql.gds.ng` is marked with `@InteralApi`, because we think it should not normally be used directly, but it is also needed for plugin implementations like `jaybird-native`.
+Though it could be exported selectively only to specific modules, there are also some use cases where escaping to classes or interfaces from this package may be useful for power-users of Jaybird.
+
+On the other hand, for example, the `org.firebirdsql.gds.ng.wire.versionNN` packages are not directly useful nor usable outside Jaybird, so they should not be exported.
+
+The consequences section lists per package if it will be exported or not.
+If it turns out we're too restrictive (or too open) that may be revised in the future.
+
+== Consequences
+
+The following sections lists the packages per module and specifies if it will be exported or not.
+If we misjudge here, users can always work around this by specifying runtime `--add-exports` until it's addressed.
+
+=== Jaybird (module `org.firebirdsql.jaybird`)
+
+[horizontal]
+`org.firebirdsql.ds`:: exported -- public API
+`org.firebirdsql.encodings`:: exported -- internal API;
+an extension point for adding or overriding encodings
+`org.firebirdsql.event`:: exported -- public API
+`org.firebirdsql.gds`:: exported -- internal API;
+needed for custom plugins and possibly power users
+`org.firebirdsql.gds.impl`:: exported -- internal API;
+needed for custom plugins and some types are returned by public methods of other exported packages
+`org.firebirdsql.gds.impl.argument`:: exported -- internal API;
+some types are returned by public methods of `org.firebirdsql.gds.impl`
+`org.firebirdsql.gds.impl.wire`:: exported -- internal API;
+some types are returned by public methods of `org.firebirdsql.gds`
+`org.firebirdsql.gds.ng`:: exported -- internal API;
+needed for custom plugins and possibly power users
+`org.firebirdsql.gds.ng.dbcrypt`:: exported -- internal API (may change to public API in the future) for db encryption plugins;
+accepted by some public methods in `org.firebirdsql.gds.ng.wire`
+`org.firebirdsql.gds.ng.dbcrypt.simple`:: not exported -- implementation of db encryption plugin
+`org.firebirdsql.gds.ng.fields`:: exported -- internal API;
+needed for custom plugins and possibly power users and returned and accepted by public methods of `org.firebirdsql.gds.ng` and others
+`org.firebirdsql.gds.ng.listeners`:: exported -- internal API;
+needed for custom plugins and possibly power users and returned and accepted by public methods of `org.firebirdsql.gds.ng` and others
+`org.firebirdsql.gds.ng.monitor`:: exported -- public but experimental API
+`org.firebirdsql.gds.ng.tz`:: not exported -- for internal use only
+`org.firebirdsql.gds.ng.wire`:: exported -- internal API;
+exported due to service mechanism and allowing for custom plugins
+`org.firebirdsql.gds.ng.wire.auth`:: exported -- public API for authentication plugins
+`org.firebirdsql.gds.ng.wire.auth.legacy`:: not exported -- implementation of authentication plugin
+`org.firebirdsql.gds.ng.wire.auth.srp`:: not exported -- implementation of authentication plugin
+`org.firebirdsql.gds.ng.wire.crypt`:: exported -- internal API (may change to public API in the future) for wire encryption plugins
+`org.firebirdsql.gds.ng.wire.crypt.arc4`:: not exported -- implementation of wire encryption plugin
+`org.firebirdsql.gds.ng.wire.crypt.chacha`:: not exported -- implementation of wire encryption plugin
+`org.firebirdsql.gds.ng.wire.version__NN__`:: not exported -- implementation of wire protocol versions
+`org.firebirdsql.jaybird`:: not exported -- for internal use only
+`org.firebirdsql.jaybird.fb.constants`:: exported -- internal API;
+but useful in use of other exported APIs by power users
+`org.firebirdsql.jaybird.parser`:: not exported -- for internal use only
+`org.firebirdsql.jaybird.props`:: exported -- public API
+`org.firebirdsql.jaybird.props.def`:: exported -- public API
+`org.firebirdsql.jaybird.props.internal` :: not exported -- for internal use only
+`org.firebirdsql.jaybird.props.spi`:: exported -- public API
+`org.firebirdsql.jaybird.util`:: not exported -- for internal use only
+`org.firebirdsql.jaybird.xca`:: exported -- internal API;
+some types are accepted and returned by public methods in other exported packages (e.g. in `org.firebirdsql.jdbc`)
+`org.firebirdsql.jdbc`:: exported -- public API
+`org.firebirdsql.jdbc.escape`:: not exported -- for internal use only
+`org.firebirdsql.jdbc.field`:: exported -- internal API;
+some types are returned by public methods in `org.firebirdsql.jdbc`
+`org.firebirdsql.jdbc.metadata`:: not exported -- for internal use only
+`org.firebirdsql.management`:: exported -- public API
+`org.firebirdsql.util`:: exported -- public API (at least, some classes, others may be should be moved to `org.firebirdsql.jaybird.util`)
+
+=== `jaybird-native` (module `org.firebirdsql.jna`)
+
+[horizontal]
+`org.firebirdsql.gds.impl.jni`:: not exported -- plugin implementation (a possible problem might be constants declared in the plugins used in user code)
+`org.firebirdsql.gds.ng.jna`:: not exported -- plugin implementation
+`org.firebirdsql.jna.embedded`:: not exported -- for internal use only
+`org.firebirdsql.jna.embedded.classpath`:: exported -- public API; utility classes for embedded providers
+`org.firebirdsql.jna.embedded.spi`:: exported -- public API for embedded providers
+`org.firebirdsql.jna.fbclient`:: not exported -- plugin implementation
+
+=== `chacha64-plugin` (module `org.firebirdsql.jaybird.chacha64`)
+
+[horizontal]
+`org.firebirdsql.jaybird.chacha64`:: not exported -- plugin implementation
