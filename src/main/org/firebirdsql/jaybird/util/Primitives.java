@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.jaybird.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +25,8 @@ import java.util.List;
  * Helper methods for conversion to or from primitive values.
  *
  * @author Mark Rotteveel
- * @since 5.
+ * @since 5
  */
-@InternalApi
 public final class Primitives {
 
     private Primitives() {

@@ -28,8 +28,8 @@ import org.firebirdsql.jaybird.parser.LocalStatementType;
 import org.firebirdsql.jaybird.parser.SqlParser;
 import org.firebirdsql.jaybird.parser.StatementDetector;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.util.Primitives;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
-import org.firebirdsql.util.Primitives;
 
 import java.sql.*;
 import java.util.*;

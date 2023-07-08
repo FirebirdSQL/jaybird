@@ -26,7 +26,7 @@ import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jaybird.fb.constants.BatchItems;
-import org.firebirdsql.util.Primitives;
+import org.firebirdsql.jaybird.util.Primitives;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.sql.BatchUpdateException;

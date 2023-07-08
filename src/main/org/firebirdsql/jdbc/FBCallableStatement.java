@@ -20,10 +20,10 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.jaybird.util.Primitives;
 import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConversionException;
-import org.firebirdsql.util.Primitives;
 
 import java.io.InputStream;
 import java.io.Reader;

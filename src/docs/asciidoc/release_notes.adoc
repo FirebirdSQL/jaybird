@@ -1143,6 +1143,7 @@ The new package is not exported from the module.
 ** `ByteArrayHelper`
 ** `ExceptionHelper`
 ** `IOUtils`
+** `Primitives`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
