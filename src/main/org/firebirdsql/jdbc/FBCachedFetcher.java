@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.firebirdsql.jaybird.util.ConditionalHelpers.firstNonZero;
+
 final class FBCachedFetcher implements FBFetcher {
 
     private final boolean forwardOnly;
@@ -56,7 +58,7 @@ final class FBCachedFetcher implements FBFetcher {
         final boolean hasBlobs = determineBlobs(rowDescriptor, isBlob);
 
         // load all rows from statement
-        this.fetchSize = fetchSize != 0 ? fetchSize : DEFAULT_FETCH_ROWS;
+        this.fetchSize = firstNonZero(fetchSize, DEFAULT_FETCH_ROWS);
 
         try {
             RowListener rowListener = new RowListener();

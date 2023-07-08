@@ -34,7 +34,8 @@ public final class NumericHelper {
     /**
      * Returns the int as an unsigned long (no sign extension).
      *
-     * @param intValue Integer value
+     * @param intValue
+     *         Integer value
      * @return {@code intValue} as an unsigned long.
      */
     public static long toUnsignedLong(int intValue) {
@@ -44,41 +45,15 @@ public final class NumericHelper {
     /**
      * Checks if the supplied long would fit in an unsigned 32-bit integer.
      * <p>
-     * In essence this checks if {@code longValue >= 0 && longValue <= 0xffffffffL}
+     * In essence this checks if {@code longValue >= 0 && longValue <= 0xffff_ffffL}
      * </p>
      *
-     * @param longValue Long value to check
+     * @param longValue
+     *         Long value to check
      * @return {@code true} if the long value fits as an unsigned 32 bit value
      */
     public static boolean fitsUnsigned32BitInteger(long longValue) {
-        return longValue >= 0 && longValue <= 0xffffffffL;
-    }
-
-    /**
-     * Returns {@code firstValue} if it is non-zero, otherwise {@code secondValue}.
-     *
-     * @param firstValue first value
-     * @param secondValue second value
-     * @return {@code firstValue} if it is non-zero, otherwise {@code secondValue}
-     */
-    public static int firstNonZero(int firstValue, int secondValue) {
-        if (firstValue != 0) return firstValue;
-        return secondValue;
-    }
-
-    /**
-     * Returns {@code firstValue} if it is non-zero, otherwise {@code secondValue} if it is non-zero, otherwise
-     * {@code thirdValue}.
-     *
-     * @param firstValue first value
-     * @param secondValue second value
-     * @param thirdValue third value
-     * @return {@code firstValue} if it is non-zero, otherwise {@code secondValue} if it is non-zero, otherwise
-     * {@code thirdValue}.
-     */
-    public static int firstNonZero(int firstValue, int secondValue, int thirdValue) {
-        if (firstValue != 0) return firstValue;
-        return firstNonZero(secondValue, thirdValue);
+        return longValue >= 0 && longValue <= 0xffff_ffffL;
     }
 
 }

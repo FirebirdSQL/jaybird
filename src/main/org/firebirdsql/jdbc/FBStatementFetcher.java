@@ -31,7 +31,7 @@ import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import static org.firebirdsql.util.NumericHelper.firstNonZero;
+import static org.firebirdsql.jaybird.util.ConditionalHelpers.firstNonZero;
 
 /**
  * Statement fetcher for read-only case. It differs from updatable cursor case
