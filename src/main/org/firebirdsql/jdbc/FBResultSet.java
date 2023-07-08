@@ -25,11 +25,11 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.field.FBCloseableField;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.jdbc.field.TrimmableField;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.InputStream;
 import java.io.Reader;

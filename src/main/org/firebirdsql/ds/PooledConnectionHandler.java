@@ -19,9 +19,9 @@
 package org.firebirdsql.ds;
 
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;

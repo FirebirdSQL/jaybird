@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.jaybird.util;
 
 import java.sql.SQLException;
 
@@ -32,7 +32,6 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 2.2
  */
-@InternalApi
 public final class SQLExceptionChainBuilder<E extends SQLException> {
 
     private E root;

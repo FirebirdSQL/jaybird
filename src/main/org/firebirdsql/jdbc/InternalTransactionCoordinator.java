@@ -21,9 +21,9 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementType;
+import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.sql.SQLException;
 import java.util.*;

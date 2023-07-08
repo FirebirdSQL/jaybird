@@ -30,8 +30,8 @@ import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
+import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.sql.*;
 import java.util.*;

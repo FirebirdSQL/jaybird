@@ -32,10 +32,10 @@ import javax.sql.PooledConnection;
 import javax.sql.StatementEventListener;
 
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jaybird.xca.FatalErrorHelper;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**
  * PooledConnection implementation for {@link FBConnectionPoolDataSource}

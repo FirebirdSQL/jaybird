@@ -20,9 +20,9 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.GDSExceptionHelper;
 import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
+import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.FBSQLExceptionInfo;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.IOException;
 import java.sql.*;

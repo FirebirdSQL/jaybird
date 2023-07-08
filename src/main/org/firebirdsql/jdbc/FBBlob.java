@@ -34,8 +34,8 @@ import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
+import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.util.InternalApi;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.*;
 import java.sql.Blob;
