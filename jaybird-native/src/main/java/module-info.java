@@ -23,8 +23,9 @@ module org.firebirdsql.jna {
 
     exports org.firebirdsql.jna.embedded.classpath;
     exports org.firebirdsql.jna.embedded.spi;
-    exports org.firebirdsql.jna.fbclient to com.sun.jna;
     exports org.firebirdsql.jna.jakarta;
+
+    opens org.firebirdsql.jna.fbclient to com.sun.jna;
 
     uses org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedProvider;
 
