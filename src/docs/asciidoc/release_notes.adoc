@@ -1201,8 +1201,6 @@ The new package is not exported from the module.
 ** `SQLExceptionChainBuilder`
 ** `StringUtils`
 * `DbMetadataMediator` was moved to package `org.firebirdsql.jdbc` for module accessibility reasons.
-+
-Although uncommon, custom connection implementations may need this to be able to write custom database metadata implementations.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
