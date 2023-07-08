@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.jaybird.util;
 
 import java.util.Base64;
 import java.util.HexFormat;
@@ -27,7 +27,6 @@ import java.util.HexFormat;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@InternalApi
 public final class ByteArrayHelper {
 
     private static final HexFormat HEX_FORMAT = HexFormat.of().withUpperCase();

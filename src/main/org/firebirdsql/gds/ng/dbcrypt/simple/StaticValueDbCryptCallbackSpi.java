@@ -20,7 +20,7 @@ package org.firebirdsql.gds.ng.dbcrypt.simple;
 
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallbackSpi;
-import org.firebirdsql.util.ByteArrayHelper;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 
 import java.nio.charset.StandardCharsets;
 

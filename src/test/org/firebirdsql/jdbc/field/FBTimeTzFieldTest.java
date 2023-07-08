@@ -29,7 +29,7 @@ import java.time.*;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Calendar;
 
-import static org.firebirdsql.util.ByteArrayHelper.fromHexString;
+import static org.firebirdsql.jaybird.util.ByteArrayHelper.fromHexString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;

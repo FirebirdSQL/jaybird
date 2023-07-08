@@ -26,7 +26,7 @@ import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 
-import static org.firebirdsql.util.ByteArrayHelper.toHexString;
+import static org.firebirdsql.jaybird.util.ByteArrayHelper.toHexString;
 
 /**
  * Authentication plugin for authentication with Srp.

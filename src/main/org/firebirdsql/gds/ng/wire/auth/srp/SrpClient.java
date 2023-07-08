@@ -29,7 +29,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.util.ByteArrayHelper;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;

@@ -1138,6 +1138,9 @@ there is no replacement
 * `IEncodingFactory`
 ** `<T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T>)` was removed;
 its replacements is `<T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T>, Function<IEncodingFactory, T>)` where the function is a factory for the desired `DatatypeCoder` instance if it doesn't already exist.
+* The following classes in `org.firebirdsql.util` were moved to `org.firebirdsql.jaybird.util`.
+The new package is not exported from the module.
+** `ByteArrayHelper`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

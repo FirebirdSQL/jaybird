@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire.auth.srp;
 
-import org.firebirdsql.util.ByteArrayHelper;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;

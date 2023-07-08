@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.util.ByteArrayHelper;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 
 import java.sql.RowId;
 import java.util.Arrays;

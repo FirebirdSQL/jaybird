@@ -26,7 +26,7 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.util.ByteArrayHelper;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

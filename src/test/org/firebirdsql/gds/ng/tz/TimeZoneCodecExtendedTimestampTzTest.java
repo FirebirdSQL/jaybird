@@ -22,7 +22,7 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 
 import static org.firebirdsql.gds.ISCConstants.SQL_TIMESTAMP_TZ_EX;
-import static org.firebirdsql.util.ByteArrayHelper.fromHexString;
+import static org.firebirdsql.jaybird.util.ByteArrayHelper.fromHexString;
 
 class TimeZoneCodecExtendedTimestampTzTest extends TimeZoneCodecAbstractTimestampTzTest {
 
