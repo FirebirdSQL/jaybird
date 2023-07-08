@@ -896,6 +896,31 @@ The following packages have been removed in Jaybird 6 without deprecation:
 * `org.firebirdsql.logging`;
 there is no replacement
 
+Due to modularization, the following packages are no longer accessible when Jaybird is used from the modulepath:
+
+===== `jaybird` dependency
+
+* `org.firebirdsql.gds.ng.dbcrypt.simple`
+* `org.firebirdsql.gds.ng.tz`
+* `org.firebirdsql.gds.ng.wire.auth.legacy`
+* `org.firebirdsql.gds.ng.wire.auth.srp`
+* `org.firebirdsql.gds.ng.wire.crypt.arc4`
+* `org.firebirdsql.gds.ng.wire.crypt.chacha`
+* `org.firebirdsql.gds.ng.wire.version__NN__` (with _NN_, is `10`, `11`, `12`, `13`, `15`, `16` and `18`)
+* `org.firebirdsql.jaybird`
+* `org.firebirdsql.jaybird.parser`
+* `org.firebirdsql.jaybird.props.internal`
+* `org.firebirdsql.jaybird.util`
+* `org.firebirdsql.jdbc.escape`
+* `org.firebirdsql.jdbc.meta`
+
+===== `jaybird-native` dependency
+
+* `org.firebirdsql.gds.impl.jni`
+* `org.firebirdsql.gds.ng.jna`
+* `org.firebirdsql.jna.embedded`
+* `org.firebirdsql.jna.fbclient`
+
 [#removal-of-methods-without-deprecation]
 ==== Removal of methods without deprecation
 

@@ -3,6 +3,7 @@
 == Status
 
 * Published: 2023-07-07
+* Updated: 2023-07-08
 * Implemented in: Jaybird 6
 
 == Type
@@ -200,7 +201,7 @@ some types are returned by public methods in `org.firebirdsql.jdbc`
 `org.firebirdsql.jna.embedded`:: not exported -- for internal use only
 `org.firebirdsql.jna.embedded.classpath`:: exported -- public API; utility classes for embedded providers
 `org.firebirdsql.jna.embedded.spi`:: exported -- public API for embedded providers
-`org.firebirdsql.jna.fbclient`:: only exported to `com.sun.jna` -- plugin implementation
+`org.firebirdsql.jna.fbclient`:: only opened to `com.sun.jna` -- plugin implementation
 `org.firebirdsql.jna.jakarta`:: exported -- Jakarta web listener, must be exported to be found
 
 === `chacha64-plugin` (module `org.firebirdsql.jaybird.chacha64`)
