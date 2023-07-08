@@ -41,7 +41,7 @@ import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginRegistry;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
-import org.firebirdsql.util.ExceptionHelper;
+import org.firebirdsql.jaybird.util.ExceptionHelper;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.IOException;

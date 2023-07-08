@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.jaybird.util;
 
 import java.sql.SQLException;
 
@@ -25,7 +25,6 @@ import java.sql.SQLException;
  *
  * @author Mark Rotteveel
  */
-@InternalApi
 public final class ExceptionHelper {
 
     private ExceptionHelper() {

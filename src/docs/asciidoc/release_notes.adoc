@@ -1141,6 +1141,7 @@ its replacements is `<T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<
 * The following classes in `org.firebirdsql.util` were moved to `org.firebirdsql.jaybird.util`.
 The new package is not exported from the module.
 ** `ByteArrayHelper`
+** `ExceptionHelper`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
