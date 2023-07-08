@@ -1146,6 +1146,7 @@ The new package is not exported from the module.
 ** `Primitives`
 ** `ReflectionHelper`
 ** `SQLExceptionChainBuilder`
+** `StringUtils`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.gds.ng.tz;
 
-import org.firebirdsql.util.StringUtils;
+import org.firebirdsql.jaybird.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

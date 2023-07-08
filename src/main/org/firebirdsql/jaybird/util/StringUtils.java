@@ -16,14 +16,13 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.jaybird.util;
 
 /**
  * Helper class for string operations
  *
  * @author Mark Rotteveel
  */
-@InternalApi
 public final class StringUtils {
 
     private StringUtils() {
@@ -34,9 +33,10 @@ public final class StringUtils {
      * Trims {@code value} if non-null, returning the trimmed value, or {@code null} if {@code value} was {@code null}
      * or empty after trimming.
      *
-     * @param value Value to trim
+     * @param value
+     *         Value to trim
      * @return Trimmed string {@code value}, or {@code null} when null, or empty after trim.
-     * @see String#trim() 
+     * @see String#trim()
      */
     public static String trimToNull(String value) {
         if (value != null) {

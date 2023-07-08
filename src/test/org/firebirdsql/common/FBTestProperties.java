@@ -45,7 +45,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
-import static org.firebirdsql.util.StringUtils.trimToNull;
+import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 
 /**
  * Helper class for test properties (database user, password, paths etc)

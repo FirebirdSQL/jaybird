@@ -26,14 +26,14 @@ package org.firebirdsql.jaybird.props.def;
 
 import org.firebirdsql.jaybird.props.DpbType;
 import org.firebirdsql.jaybird.props.InvalidPropertyValueException;
-import org.firebirdsql.util.StringUtils;
+import org.firebirdsql.jaybird.util.StringUtils;
 
 import java.util.*;
 
 import static java.util.Collections.*;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
-import static org.firebirdsql.util.StringUtils.trimToNull;
+import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 
 /**
  * A Jaybird connection property.

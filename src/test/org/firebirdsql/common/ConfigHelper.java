@@ -24,7 +24,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.OptionalInt;
 
-import static org.firebirdsql.util.StringUtils.trimToNull;
+import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 
 /**
  * Helper to retrieve option configuration information from a Firebird server.
