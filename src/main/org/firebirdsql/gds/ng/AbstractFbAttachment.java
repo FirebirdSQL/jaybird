@@ -101,7 +101,7 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     }
 
 
-    protected ServerVersionInformation getServerVersionInformation() {
+    final ServerVersionInformation getServerVersionInformation() {
         return serverVersionInformation;
     }
 
