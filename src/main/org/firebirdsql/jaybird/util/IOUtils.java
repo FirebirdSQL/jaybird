@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.jaybird.util;
 
 import java.io.*;
 
@@ -26,7 +26,6 @@ import java.io.*;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@InternalApi
 public final class IOUtils {
 
     private IOUtils() {
@@ -41,7 +40,7 @@ public final class IOUtils {
         final byte[] buff = new byte[Math.min(4096, length)];
         int counter;
         int toRead = length;
-        while (toRead > 0  && (counter = in.read(buff, 0, Math.min(toRead, buff.length))) != -1) {
+        while (toRead > 0 && (counter = in.read(buff, 0, Math.min(toRead, buff.length))) != -1) {
             out.write(buff, 0, counter);
             toRead -= counter;
         }

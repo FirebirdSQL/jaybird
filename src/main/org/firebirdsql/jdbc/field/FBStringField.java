@@ -21,8 +21,8 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jaybird.util.IOUtils;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
-import org.firebirdsql.util.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

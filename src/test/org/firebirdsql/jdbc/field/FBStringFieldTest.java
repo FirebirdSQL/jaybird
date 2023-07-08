@@ -22,7 +22,7 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.util.IOUtils;
+import org.firebirdsql.jaybird.util.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

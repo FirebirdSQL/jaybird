@@ -19,8 +19,8 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jaybird.util.IOUtils;
 import org.firebirdsql.jdbc.FBRowId;
-import org.firebirdsql.util.IOUtils;
 
 import java.io.*;
 import java.sql.DataTruncation;

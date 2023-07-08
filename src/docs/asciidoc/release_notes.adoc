@@ -1142,6 +1142,7 @@ its replacements is `<T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<
 The new package is not exported from the module.
 ** `ByteArrayHelper`
 ** `ExceptionHelper`
+** `IOUtils`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
