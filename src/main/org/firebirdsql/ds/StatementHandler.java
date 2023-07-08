@@ -29,7 +29,7 @@ import java.sql.Statement;
 import org.firebirdsql.jdbc.FirebirdStatement;
 import org.firebirdsql.jdbc.SQLStateConstants;
 
-import static org.firebirdsql.util.ReflectionHelper.*;
+import static org.firebirdsql.jaybird.util.ReflectionHelper.*;
 
 /**
  * InvocationHandler for statements.

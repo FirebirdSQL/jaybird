@@ -35,8 +35,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.firebirdsql.util.ReflectionHelper.findMethod;
-import static org.firebirdsql.util.ReflectionHelper.getAllInterfaces;
+import static org.firebirdsql.jaybird.util.ReflectionHelper.findMethod;
+import static org.firebirdsql.jaybird.util.ReflectionHelper.getAllInterfaces;
 
 /**
  * InvocationHandler for the logical connection returned by FBPooledConnection.

@@ -1144,6 +1144,7 @@ The new package is not exported from the module.
 ** `ExceptionHelper`
 ** `IOUtils`
 ** `Primitives`
+** `ReflectionHelper`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
