@@ -36,11 +36,11 @@ import org.firebirdsql.jdbc.SQLStateConstants;
  * @author Mark Rotteveel
  * @since 2.2
  */
-public class FBXAConnection extends FBPooledConnection implements XAConnection {
+public final class FBXAConnection extends FBPooledConnection implements XAConnection {
     
     private final WeakReference<FBManagedConnection> mc;
     
-    public FBXAConnection(FBConnection connection) {
+    FBXAConnection(FBConnection connection) {
         super(connection);
         mc = new WeakReference<>(connection.getManagedConnection());
     }
@@ -51,18 +51,18 @@ public class FBXAConnection extends FBPooledConnection implements XAConnection {
     }
 
     @Override
-    protected void resetConnection(Connection connection) throws SQLException {
+    void resetConnection(Connection connection) throws SQLException {
         if (!inDistributedTransaction()) {
             super.resetConnection(connection);
         }
     }
 
     @Override
-    protected PooledConnectionHandler createConnectionHandler(Connection connection) {
+    PooledConnectionHandler createConnectionHandler(Connection connection) {
         return new XAConnectionHandler(connection, this);
     }
     
-    protected boolean inDistributedTransaction() throws SQLException {
+    boolean inDistributedTransaction() throws SQLException {
         return getManagedConnection().inDistributedTransaction();
     }
     
@@ -74,4 +74,5 @@ public class FBXAConnection extends FBPooledConnection implements XAConnection {
         }
         return managedConnection;
     }
+
 }

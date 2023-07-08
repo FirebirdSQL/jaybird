@@ -27,16 +27,16 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 2.2
  */
-public class XAConnectionHandler extends PooledConnectionHandler {
+final class XAConnectionHandler extends PooledConnectionHandler {
     
     private final FBXAConnection xaOwner;
 
-    protected XAConnectionHandler(Connection connection, FBXAConnection owner) {
+    XAConnectionHandler(Connection connection, FBXAConnection owner) {
         super(connection, owner);
         xaOwner = owner;
     }
     
-    protected boolean isRollbackAllowed() throws SQLException {
+    boolean isRollbackAllowed() throws SQLException {
         return !(xaOwner.inDistributedTransaction() || connection.getAutoCommit());
     }
 }

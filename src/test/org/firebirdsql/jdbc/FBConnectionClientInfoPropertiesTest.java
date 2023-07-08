@@ -20,7 +20,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.RequireFeatureExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.ds.FBPooledConnection;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jdbc.ClientInfoProvider.ClientInfoProperty;
 import org.firebirdsql.util.FirebirdSupportInfo;
@@ -34,6 +33,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import javax.sql.PooledConnection;
 import java.sql.ClientInfoStatus;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -420,7 +420,10 @@ class FBConnectionClientInfoPropertiesTest {
             ClientInfoProvider provider = connection.getClientInfoProvider();
             provider.registerKnownProperty(customProperty);
 
-            var pooledConnection = new FBPooledConnection(connection) {};
+            var clazz = Class.forName("org.firebirdsql.ds.FBPooledConnection");
+            var constructor = clazz.getDeclaredConstructor(Connection.class);
+            constructor.setAccessible(true);
+            PooledConnection pooledConnection = (PooledConnection) constructor.newInstance(connection);
             try {
                 try (var ignored = pooledConnection.getConnection()) {
                     // customProperty is no longer registered as a known property

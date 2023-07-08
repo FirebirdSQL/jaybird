@@ -43,7 +43,7 @@ import org.firebirdsql.jdbc.SQLStateConstants;
  * @author Mark Rotteveel
  * @since 2.2
  */
-public class FBPooledConnection implements PooledConnection {
+sealed class FBPooledConnection implements PooledConnection permits FBXAConnection {
 
     private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
 
@@ -52,11 +52,11 @@ public class FBPooledConnection implements PooledConnection {
     private Connection connection;
     private PooledConnectionHandler handler;
 
-    protected FBPooledConnection(Connection connection) {
+    FBPooledConnection(Connection connection) {
         this.connection = connection;
     }
 
-    protected LockCloseable withLock() {
+    LockCloseable withLock() {
         lock.lock();
         return unlock;
     }
@@ -85,7 +85,7 @@ public class FBPooledConnection implements PooledConnection {
         }
     }
 
-    protected void resetConnection(Connection connection) throws SQLException {
+    void resetConnection(Connection connection) throws SQLException {
         connection.setAutoCommit(true);
         if (connection.isWrapperFor(FirebirdConnection.class)) {
             connection.unwrap(FirebirdConnection.class)
@@ -102,7 +102,7 @@ public class FBPooledConnection implements PooledConnection {
      * @param connection Connection
      * @return PooledConnectionHandler
      */
-    protected PooledConnectionHandler createConnectionHandler(Connection connection) {
+    PooledConnectionHandler createConnectionHandler(Connection connection) {
         return new PooledConnectionHandler(connection, this);
     }
 
@@ -139,7 +139,7 @@ public class FBPooledConnection implements PooledConnection {
      * @param ex
      *         The exception
      */
-    protected void fireFatalConnectionError(SQLException ex) {
+    void fireFatalConnectionError(SQLException ex) {
         var evt = new ConnectionEvent(this, ex);
         for (ConnectionEventListener listener : connectionEventListeners) {
             listener.connectionErrorOccurred(evt);
@@ -155,7 +155,7 @@ public class FBPooledConnection implements PooledConnection {
      * @param ex
      *         The exception
      */
-    protected void fireConnectionError(SQLException ex) {
+    void fireConnectionError(SQLException ex) {
         SQLException currentException = ex;
         while (currentException != null) {
             if (FatalErrorHelper.isFatal(currentException)) {
@@ -169,7 +169,7 @@ public class FBPooledConnection implements PooledConnection {
     /**
      * Helper method to fire the connectionClosed event.
      */
-    protected void fireConnectionClosed() {
+    void fireConnectionClosed() {
         var evt = new ConnectionEvent(this);
         for (ConnectionEventListener listener : connectionEventListeners) {
             listener.connectionClosed(evt);
@@ -185,7 +185,7 @@ public class FBPooledConnection implements PooledConnection {
      * @param pch
      *         PooledConnectionHandler to release.
      */
-    protected void releaseConnectionHandler(PooledConnectionHandler pch) {
+    void releaseConnectionHandler(PooledConnectionHandler pch) {
         try (LockCloseable ignored = withLock()) {
             if (handler == pch) {
                 handler = null;
@@ -193,10 +193,12 @@ public class FBPooledConnection implements PooledConnection {
         }
     }
 
+    @Override
     public void addConnectionEventListener(ConnectionEventListener listener) {
         connectionEventListeners.add(listener);
     }
 
+    @Override
     public void removeConnectionEventListener(ConnectionEventListener listener) {
         connectionEventListeners.remove(listener);
     }
@@ -207,6 +209,7 @@ public class FBPooledConnection implements PooledConnection {
      * The current implementation does nothing.
      * </p>
      */
+    @Override
     public void addStatementEventListener(StatementEventListener listener) {
         // TODO Implement statement events
     }
@@ -217,7 +220,9 @@ public class FBPooledConnection implements PooledConnection {
      * The current implementation does nothing.
      * </p>
      */
+    @Override
     public void removeStatementEventListener(StatementEventListener listener) {
         // TODO Implement statement events
     }
+    
 }

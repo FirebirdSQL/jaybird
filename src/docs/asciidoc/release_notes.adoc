@@ -950,6 +950,21 @@ use `encodeTime(Time, Calendar)`
 ** `decodeTime(Time, Calendar, boolean)`;
 use `decodeTime(Time, Calendar)`
 
+The following methods had their visibility reduced:
+
+* `FBPooledConnection`
+** Constructor `FBPooledConnection(Connection)` to package-private
+** Several protected methods were changed to package-private as this class is no longer extensible
+* `FBXAConnection`
+** Constructor `FBXAConnection(Connection)` to package-private
+** Several protected methods were changed to package-private as this class is no longer extensible
+* `PooledConnectionHandler`
+** Constructor `PooledConnectionHandler(Connection, FBPooledConnection)` to package-private
+** Several protected methods were changed to package-private as this class is no longer extensible
+* `XAConnectionHandler`
+** Constructor `XAConnectionHandler(Connection, FBXAConnection)` to package-private
+** Several protected methods were changed to package-private as this class is no longer extensible
+
 [#removal-of-classes-without-deprecation]
 ==== Removal of classes without deprecation
 
@@ -960,6 +975,16 @@ The following classes have been removed in Jaybird 6 without deprecation:
 The following classes are no longer accessible in Jaybird 6:
 
 * `RowValueBuilder` is now package private.
+
+The following classes are no longer extensible in Jaybird 6 as they are now `sealed` or `final`:
+
+* `FBPooledConnection`
+** Visibility was also reduced to package-private
+* `FBXAConnection`
+** Visibility was also reduced to package-private
+* `PooledConnectionHandler`
+* `XAConnectionHandler`
+** Visibility was also reduced to package-private
 
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation
