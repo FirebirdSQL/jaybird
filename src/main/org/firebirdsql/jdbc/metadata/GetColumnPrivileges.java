@@ -19,9 +19,9 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
+import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -44,7 +44,7 @@ import static org.firebirdsql.jdbc.metadata.PrivilegeMapping.mapPrivilege;
  */
 public final class GetColumnPrivileges extends AbstractMetadataMethod {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(9, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(9)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNPRIV").addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "COLUMNPRIV").addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "COLUMNPRIV").addField()

@@ -19,10 +19,10 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.jdbc.FBResultSet;
-import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
 
@@ -59,7 +59,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
 @InternalApi
 public abstract class GetTables extends AbstractMetadataMethod {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(12, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(12)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLES").addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "TABLES").addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "TABLES").addField()
@@ -76,10 +76,9 @@ public abstract class GetTables extends AbstractMetadataMethod {
             .at(11).simple(SQL_SHORT, 0, "JB_RELATION_ID", "TABLES").addField()
             .toRowDescriptor();
 
-    private static final RowDescriptor ROW_DESCRIPTOR_TABLE_TYPES =
-            new RowDescriptorBuilder(1, DbMetadataMediator.datatypeCoder)
-                    .at(0).simple(SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES").addField()
-                    .toRowDescriptor();
+    private static final RowDescriptor ROW_DESCRIPTOR_TABLE_TYPES = DbMetadataMediator.newRowDescriptorBuilder(1)
+            .at(0).simple(SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES").addField()
+            .toRowDescriptor();
 
     private GetTables(DbMetadataMediator mediator) {
         super(ROW_DESCRIPTOR, mediator);
@@ -209,18 +208,16 @@ public abstract class GetTables extends AbstractMetadataMethod {
         }
 
         private static String formatTableQuery(String tableType, String condition) {
-            //@formatter:off
-            return String.format(
-                    "select\n"
-                    + "  RDB$RELATION_NAME as TABLE_NAME,\n"
-                    + "  cast('%s' as varchar(31)) as TABLE_TYPE,\n"
-                    + "  RDB$DESCRIPTION as REMARKS,\n"
-                    + "  RDB$OWNER_NAME as OWNER_NAME,\n"
-                    + "  RDB$RELATION_ID as JB_RELATION_ID\n"
-                    + "from RDB$RELATIONS\n"
-                    + "where %s",
+            return String.format("""
+                            select
+                              RDB$RELATION_NAME as TABLE_NAME,
+                              cast('%s' as varchar(31)) as TABLE_TYPE,
+                              RDB$DESCRIPTION as REMARKS,
+                              RDB$OWNER_NAME as OWNER_NAME,
+                              RDB$RELATION_ID as JB_RELATION_ID
+                            from RDB$RELATIONS
+                            where %s""",
                     tableType, condition);
-            //@formatter:on
         }
     }
 

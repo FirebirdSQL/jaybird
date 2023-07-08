@@ -1990,33 +1990,33 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private final class DbMetadataMediatorImpl extends DbMetadataMediator {
 
         @Override
-        protected FirebirdSupportInfo getFirebirdSupportInfo() {
+        public FirebirdSupportInfo getFirebirdSupportInfo() {
             return firebirdSupportInfo;
         }
 
         @Override
-        protected ResultSet performMetaDataQuery(MetadataQuery metadataQuery) throws SQLException {
+        public ResultSet performMetaDataQuery(MetadataQuery metadataQuery) throws SQLException {
             return doQuery(metadataQuery.getQueryText(), metadataQuery.getParameters(), metadataQuery.isStandalone());
         }
 
         @Override
-        protected FBDatabaseMetaData getMetaData() {
+        public FBDatabaseMetaData getMetaData() {
             return FBDatabaseMetaData.this;
         }
 
         @Override
-        protected GDSType getGDSType() {
+        public GDSType getGDSType() {
             return FBDatabaseMetaData.this.getGDSType();
         }
 
         @Override
-        protected boolean isUseCatalogAsPackage() {
+        public boolean isUseCatalogAsPackage() {
             return gdsHelper.getConnectionProperties().isUseCatalogAsPackage()
                    && firebirdSupportInfo.supportsPackages();
         }
 
         @Override
-        protected Collection<String> getClientInfoPropertyNames() {
+        public Collection<String> getClientInfoPropertyNames() {
             if (firebirdSupportInfo.supportsGetSetContext()) {
                 try {
                     return connection.getClientInfoProvider().getDefaultClientInfoPropertyNames();

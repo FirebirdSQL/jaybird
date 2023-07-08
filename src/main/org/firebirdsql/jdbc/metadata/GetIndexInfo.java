@@ -19,9 +19,9 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
+import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -38,7 +38,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  */
 public final class GetIndexInfo extends AbstractMetadataMethod {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(13, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(13)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "INDEXINFO").addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "INDEXINFO").addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "INDEXINFO").addField()
@@ -55,23 +55,20 @@ public final class GetIndexInfo extends AbstractMetadataMethod {
             .at(12).simple(SQL_VARYING | 1, 31, "FILTER_CONDITION", "INDEXINFO").addField()
             .toRowDescriptor();
 
-    //@formatter:off
-    private static final String GET_INDEX_INFO_START =
-            "select\n"
-            + "  IND.RDB$RELATION_NAME as TABLE_NAME,\n"
-            + "  IND.RDB$UNIQUE_FLAG as UNIQUE_FLAG,\n"
-            + "  IND.RDB$INDEX_NAME as INDEX_NAME,\n"
-            + "  ISE.RDB$FIELD_POSITION + 1 as ORDINAL_POSITION,\n"
-            + "  ISE.RDB$FIELD_NAME as COLUMN_NAME,\n"
-            + "  IND.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE,\n"
-            + "  IND.RDB$INDEX_TYPE as ASC_OR_DESC\n"
-            + "from RDB$INDICES IND\n"
-            + "left join RDB$INDEX_SEGMENTS ISE on IND.RDB$INDEX_NAME = ISE.RDB$INDEX_NAME "
-            + "where ";
+    private static final String GET_INDEX_INFO_START = """
+            select
+              IND.RDB$RELATION_NAME as TABLE_NAME,
+              IND.RDB$UNIQUE_FLAG as UNIQUE_FLAG,
+              IND.RDB$INDEX_NAME as INDEX_NAME,
+              ISE.RDB$FIELD_POSITION + 1 as ORDINAL_POSITION,
+              ISE.RDB$FIELD_NAME as COLUMN_NAME,
+              IND.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE,
+              IND.RDB$INDEX_TYPE as ASC_OR_DESC
+            from RDB$INDICES IND
+            left join RDB$INDEX_SEGMENTS ISE on IND.RDB$INDEX_NAME = ISE.RDB$INDEX_NAME where\s""";
 
     private static final String GET_INDEX_INFO_END =
             "\norder by IND.RDB$UNIQUE_FLAG, IND.RDB$INDEX_NAME, ISE.RDB$FIELD_POSITION";
-    //@formatter:on
 
     private GetIndexInfo(DbMetadataMediator mediator) {
         super(ROW_DESCRIPTOR, mediator);
@@ -112,15 +109,9 @@ public final class GetIndexInfo extends AbstractMetadataMethod {
                     .at(8).setString(columnName);
         }
         switch (rs.getInt("ASC_OR_DESC")) {
-        case 0:
-            valueBuilder.at(9).setString("A");
-            break;
-        case 1:
-            valueBuilder.at(9).setString("D");
-            break;
-        default:
-            valueBuilder.at(9).set(null);
-            break;
+        case 0 -> valueBuilder.at(9).setString("A");
+        case 1 -> valueBuilder.at(9).setString("D");
+        default -> valueBuilder.at(9).set(null);
         }
         // NOTE: We are setting CARDINALITY and PAGES to NULL as we don't have this info; might contravene JDBC spec
         valueBuilder

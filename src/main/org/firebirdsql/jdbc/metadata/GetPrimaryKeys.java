@@ -19,9 +19,9 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
+import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,7 +38,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  */
 public final class GetPrimaryKeys extends AbstractMetadataMethod {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(6, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(6)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNINFO").addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "COLUMNINFO").addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "COLUMNINFO").addField()
@@ -47,22 +47,19 @@ public final class GetPrimaryKeys extends AbstractMetadataMethod {
             .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", "COLUMNINFO").addField()
             .toRowDescriptor();
 
-    //@formatter:off
-    private static final String GET_PRIMARY_KEYS_START =
-            "select\n"
-            + "  RC.RDB$RELATION_NAME as TABLE_NAME,\n"
-            + "  ISGMT.RDB$FIELD_NAME as COLUMN_NAME,\n"
-            + "  ISGMT.RDB$FIELD_POSITION + 1 as KEY_SEQ,\n"
-            + "  RC.RDB$CONSTRAINT_NAME as PK_NAME\n"
-            + "from RDB$RELATION_CONSTRAINTS RC\n"
-            + "inner join RDB$INDEX_SEGMENTS ISGMT\n"
-            + "  on RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME\n"
-            + "where RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY'\n"
-            + "and ";
+    private static final String GET_PRIMARY_KEYS_START = """
+            select
+              RC.RDB$RELATION_NAME as TABLE_NAME,
+              ISGMT.RDB$FIELD_NAME as COLUMN_NAME,
+              ISGMT.RDB$FIELD_POSITION + 1 as KEY_SEQ,
+              RC.RDB$CONSTRAINT_NAME as PK_NAME
+            from RDB$RELATION_CONSTRAINTS RC
+            inner join RDB$INDEX_SEGMENTS ISGMT
+              on RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME
+            where RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY'
+            and\s""";
 
-    private static final String GET_PRIMARY_KEYS_END =
-            "\norder by ISGMT.RDB$FIELD_NAME ";
-    //@formatter:on
+    private static final String GET_PRIMARY_KEYS_END = "\norder by ISGMT.RDB$FIELD_NAME ";
 
     private GetPrimaryKeys(DbMetadataMediator mediator) {
         super(ROW_DESCRIPTOR, mediator);

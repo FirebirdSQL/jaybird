@@ -19,8 +19,8 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jdbc.DbMetadataMediator;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -38,7 +38,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  */
 abstract class AbstractKeysMethod extends AbstractMetadataMethod {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(14, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(14)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PKTABLE_CAT", "COLUMNINFO").addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PKTABLE_SCHEM", "COLUMNINFO").addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_NAME", "COLUMNINFO").addField()
@@ -83,20 +83,14 @@ abstract class AbstractKeysMethod extends AbstractMetadataMethod {
      * @return database metadata constant value
      */
     private static Integer mapAction(String firebirdActionName) {
-        switch (firebirdActionName) {
-        case "RESTRICT":
+        return switch (firebirdActionName) {
             // NOTE: Firebird has no "RESTRICT", however this mapping (to importedKeyNoAction) was also present in
             // the previous implementation, so preserving it just in case.
-        case "NO ACTION":
-            return DatabaseMetaData.importedKeyNoAction;
-        case "CASCADE":
-            return DatabaseMetaData.importedKeyCascade;
-        case "SET NULL":
-            return DatabaseMetaData.importedKeySetNull;
-        case "SET DEFAULT":
-            return DatabaseMetaData.importedKeySetDefault;
-        default:
-            return null;
-        }
+            case "RESTRICT", "NO ACTION" -> DatabaseMetaData.importedKeyNoAction;
+            case "CASCADE" -> DatabaseMetaData.importedKeyCascade;
+            case "SET NULL" -> DatabaseMetaData.importedKeySetNull;
+            case "SET DEFAULT" -> DatabaseMetaData.importedKeySetDefault;
+            default -> null;
+        };
     }
 }

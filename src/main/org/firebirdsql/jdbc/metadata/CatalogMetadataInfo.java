@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc.metadata;
 
+import org.firebirdsql.jdbc.DbMetadataMediator;
+
 /**
  * Metadata information related to catalogs.
  * <p>

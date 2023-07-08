@@ -25,7 +25,8 @@ import java.sql.SQLException;
 /**
  * Instances of this class are able to fetch records from the server.
  */
-interface FBFetcher {
+public sealed interface FBFetcher
+        permits FBCachedFetcher, FBServerScrollFetcher, FBStatementFetcher, FBUpdatableFetcher {
 
     int DEFAULT_FETCH_ROWS = 400;
 

@@ -19,10 +19,10 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.jdbc.FBResultSet;
-import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.sql.PseudoColumnUsage;
@@ -46,7 +46,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  */
 public abstract class GetPseudoColumns {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(12, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(12)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "PSEUDOCOLUMNS").addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "PSEUDOCOLUMNS").addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "PSEUDOCOLUMNS").addField()

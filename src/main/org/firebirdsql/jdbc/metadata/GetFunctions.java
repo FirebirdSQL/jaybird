@@ -19,9 +19,9 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
+import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
 
@@ -44,23 +44,22 @@ import static org.firebirdsql.jdbc.metadata.NameHelper.toSpecificName;
 @InternalApi
 public abstract class GetFunctions extends AbstractMetadataMethod {
 
-    private static final RowDescriptor ROW_DESCRIPTOR =
-            new RowDescriptorBuilder(11, DbMetadataMediator.datatypeCoder)
-                    .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTIONS").addField()
-                    .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTIONS").addField()
-                    .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_NAME", "FUNCTIONS").addField()
-                    // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-                    .at(3).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "FUNCTIONS").addField()
-                    .at(4).simple(SQL_SHORT, 0, "FUNCTION_TYPE", "FUNCTIONS").addField()
-                    // space for quoted package name, ".", quoted function name (assuming no double quotes in name)
-                    .at(5).simple(SQL_VARYING, 2 * OBJECT_NAME_LENGTH + 5, "SPECIFIC_NAME", "FUNCTIONS").addField()
-                    // non-standard extensions
-                    .at(6).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "JB_FUNCTION_SOURCE", "FUNCTIONS").addField()
-                    .at(7).simple(SQL_VARYING, 4, "JB_FUNCTION_KIND", "FUNCTIONS").addField()
-                    .at(8).simple(SQL_VARYING | 1, 255, "JB_MODULE_NAME", "FUNCTIONS").addField()
-                    .at(9).simple(SQL_VARYING | 1, 255, "JB_ENTRYPOINT", "FUNCTIONS").addField()
-                    .at(10).simple(SQL_VARYING | 1, 255, "JB_ENGINE_NAME", "FUNCTIONS").addField()
-                    .toRowDescriptor();
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(11)
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTIONS").addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTIONS").addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_NAME", "FUNCTIONS").addField()
+            // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
+            .at(3).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "FUNCTIONS").addField()
+            .at(4).simple(SQL_SHORT, 0, "FUNCTION_TYPE", "FUNCTIONS").addField()
+            // space for quoted package name, ".", quoted function name (assuming no double quotes in name)
+            .at(5).simple(SQL_VARYING, 2 * OBJECT_NAME_LENGTH + 5, "SPECIFIC_NAME", "FUNCTIONS").addField()
+            // non-standard extensions
+            .at(6).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "JB_FUNCTION_SOURCE", "FUNCTIONS").addField()
+            .at(7).simple(SQL_VARYING, 4, "JB_FUNCTION_KIND", "FUNCTIONS").addField()
+            .at(8).simple(SQL_VARYING | 1, 255, "JB_MODULE_NAME", "FUNCTIONS").addField()
+            .at(9).simple(SQL_VARYING | 1, 255, "JB_ENTRYPOINT", "FUNCTIONS").addField()
+            .at(10).simple(SQL_VARYING | 1, 255, "JB_ENGINE_NAME", "FUNCTIONS").addField()
+            .toRowDescriptor();
 
     private GetFunctions(DbMetadataMediator mediator) {
         super(ROW_DESCRIPTOR, mediator);

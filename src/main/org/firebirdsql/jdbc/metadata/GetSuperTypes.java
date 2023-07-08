@@ -19,7 +19,7 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
+import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.FBResultSet;
 
 import java.sql.ResultSet;
@@ -37,7 +37,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  */
 public final class GetSuperTypes {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(6, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(6)
             .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_CAT", "SUPERTYPES").addField()
             .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_SCHEM", "SUPERTYPES").addField()
             .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "SUPERTYPES").addField()

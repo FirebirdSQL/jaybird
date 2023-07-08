@@ -34,7 +34,7 @@ import org.firebirdsql.util.InternalApi;
  * Interface for the clean separation of the classes between result set and corresponding row updater.
  */
 @InternalApi
-interface FirebirdRowUpdater {
+public sealed interface FirebirdRowUpdater permits FBRowUpdater {
 
     void cancelRowUpdates() throws SQLException;
 

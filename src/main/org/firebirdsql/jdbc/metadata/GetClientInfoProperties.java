@@ -19,8 +19,8 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.FBResultSet;
 
 import java.sql.DatabaseMetaData;
@@ -40,7 +40,7 @@ import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
  */
 public final class GetClientInfoProperties {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(4, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(4)
             .at(0).simple(SQL_VARYING, 80, "NAME", "CLIENTINFO").addField()
             .at(1).simple(SQL_LONG, 0, "MAX_LEN", "CLIENTINFO").addField()
             .at(2).simple(SQL_VARYING | 1, 31, "DEFAULT_VALUE", "CLIENTINFO").addField()

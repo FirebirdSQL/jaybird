@@ -18,7 +18,8 @@
  */
 package org.firebirdsql.jdbc.metadata;
 
-import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
+import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

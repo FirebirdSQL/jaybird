@@ -19,9 +19,9 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
+import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
 
@@ -46,27 +46,26 @@ import static org.firebirdsql.jdbc.metadata.NameHelper.toSpecificName;
 @InternalApi
 public abstract class GetProcedures extends AbstractMetadataMethod {
 
-    private static final RowDescriptor ROW_DESCRIPTOR =
-            new RowDescriptorBuilder(9, DbMetadataMediator.datatypeCoder)
-                    .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", "PROCEDURES").addField()
-                    .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", "ROCEDURES").addField()
-                    .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_NAME", "PROCEDURES").addField()
-                    .at(3).simple(SQL_VARYING, 31, "FUTURE1", "PROCEDURES").addField()
-                    .at(4).simple(SQL_VARYING, 31, "FUTURE2", "PROCEDURES").addField()
-                    .at(5).simple(SQL_VARYING, 31, "FUTURE3", "PROCEDURES").addField()
-                    // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-                    .at(6).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "PROCEDURES").addField()
-                    .at(7).simple(SQL_SHORT, 0, "PROCEDURE_TYPE", "PROCEDURES").addField()
-                    // space for quoted package name, ".", quoted procedure name (assuming no double quotes in name)
-                    .at(8).simple(SQL_VARYING, 2 * OBJECT_NAME_LENGTH + 5, "SPECIFIC_NAME", "PROCEDURES").addField()
-                    .toRowDescriptor();
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(9)
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", "PROCEDURES").addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", "ROCEDURES").addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_NAME", "PROCEDURES").addField()
+            .at(3).simple(SQL_VARYING, 31, "FUTURE1", "PROCEDURES").addField()
+            .at(4).simple(SQL_VARYING, 31, "FUTURE2", "PROCEDURES").addField()
+            .at(5).simple(SQL_VARYING, 31, "FUTURE3", "PROCEDURES").addField()
+            // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
+            .at(6).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "PROCEDURES").addField()
+            .at(7).simple(SQL_SHORT, 0, "PROCEDURE_TYPE", "PROCEDURES").addField()
+            // space for quoted package name, ".", quoted procedure name (assuming no double quotes in name)
+            .at(8).simple(SQL_VARYING, 2 * OBJECT_NAME_LENGTH + 5, "SPECIFIC_NAME", "PROCEDURES").addField()
+            .toRowDescriptor();
 
     private GetProcedures(DbMetadataMediator mediator) {
         super(ROW_DESCRIPTOR, mediator);
     }
 
     /**
-     * @see DatabaseMetaData#getProcedures(String, String, String) 
+     * @see DatabaseMetaData#getProcedures(String, String, String)
      */
     public final ResultSet getProcedures(String catalog, String procedureNamePattern) throws SQLException {
         if ("".equals(procedureNamePattern)) {

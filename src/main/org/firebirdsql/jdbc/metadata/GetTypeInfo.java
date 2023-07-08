@@ -20,8 +20,8 @@ package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.jdbc.JaybirdTypeCodes;
 import org.firebirdsql.util.FirebirdSupportInfo;
@@ -44,7 +44,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
  */
 public final class GetTypeInfo {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(18, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(18)
             .at(0).simple(SQL_VARYING, 31, "TYPE_NAME", "TYPEINFO").addField()
             .at(1).simple(SQL_LONG, 0, "DATA_TYPE", "TYPEINFO").addField()
             .at(2).simple(SQL_LONG, 0, "PRECISION", "TYPEINFO").addField()
@@ -201,7 +201,7 @@ public final class GetTypeInfo {
     private static RowValue row(String typeName, int jdbcType, int precision, String literalPrefix,
             String literalSuffix, String createParams, boolean caseSensitive, int searchable, boolean unsigned,
             boolean fixedPrecScale, int maxScale, int sqlDataType, int numPrecRadix) {
-        DatatypeCoder coder = DbMetadataMediator.datatypeCoder;
+        DatatypeCoder coder = ROW_DESCRIPTOR.getDatatypeCoder();
         return RowValue.of(ROW_DESCRIPTOR, getBytes(typeName), coder.encodeInt(jdbcType), coder.encodeInt(precision),
                 getBytes(literalPrefix), getBytes(literalSuffix), getBytes(createParams),
                 coder.encodeShort(DatabaseMetaData.typeNullable), getCharBoolean(caseSensitive),
@@ -211,7 +211,7 @@ public final class GetTypeInfo {
     }
 
     private static byte[] getBytes(String value) {
-        return value != null ? DbMetadataMediator.datatypeCoder.encodeString(value) : null;
+        return value != null ? ROW_DESCRIPTOR.getDatatypeCoder().encodeString(value) : null;
     }
 
     private static byte[] getCharBoolean(boolean booleanValue) {

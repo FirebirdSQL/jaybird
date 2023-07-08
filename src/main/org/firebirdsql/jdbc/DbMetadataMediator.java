@@ -16,13 +16,13 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jdbc.metadata;
+package org.firebirdsql.jdbc;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
-import org.firebirdsql.jdbc.FBDatabaseMetaData;
+import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
 
@@ -43,15 +43,19 @@ import static java.util.Objects.requireNonNull;
 @InternalApi
 public abstract class DbMetadataMediator {
 
-    static final DatatypeCoder datatypeCoder =
+    private static final DatatypeCoder datatypeCoder =
             DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
+
+    public static RowDescriptorBuilder newRowDescriptorBuilder(int size) {
+        return new RowDescriptorBuilder(size, datatypeCoder);
+    }
 
     /**
      * Provides the {@link FirebirdSupportInfo} for the connection of the associated database metadata.
      *
      * @return Firebird support info object.
      */
-    protected abstract FirebirdSupportInfo getFirebirdSupportInfo();
+    public abstract FirebirdSupportInfo getFirebirdSupportInfo();
 
     /**
      * Executes the provided metadata query on the connection of the associated database metadata.
@@ -62,32 +66,32 @@ public abstract class DbMetadataMediator {
      * @throws SQLException
      *         For failures to execute the query
      */
-    protected abstract ResultSet performMetaDataQuery(MetadataQuery metadataQuery) throws SQLException;
+    public abstract ResultSet performMetaDataQuery(MetadataQuery metadataQuery) throws SQLException;
 
     /**
      * A {@code FBDatabaseMetaData} instance of the connection that created this mediator.
      *
      * @return metadata instance
      */
-    protected abstract FBDatabaseMetaData getMetaData();
+    public abstract FBDatabaseMetaData getMetaData();
 
     /**
      * @return GDSType of the current connection
      */
-    protected abstract GDSType getGDSType();
+    public abstract GDSType getGDSType();
 
     /**
      * @return value of the {@code useCatalogAsPackage} connection property if packages are supported, otherwise
      * {@code false}
      * @since 6
      */
-    protected abstract boolean isUseCatalogAsPackage();
+    public abstract boolean isUseCatalogAsPackage();
 
     /**
      * @return the client info properties to report for {@link FBDatabaseMetaData#getClientInfoProperties()}.
      * @since 6
      */
-    protected abstract Collection<String> getClientInfoPropertyNames();
+    public abstract Collection<String> getClientInfoPropertyNames();
 
     /**
      * Holder class for query text and parameters.

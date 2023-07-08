@@ -19,9 +19,9 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
+import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.sql.ResultSet;
@@ -52,7 +52,7 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
  */
 public abstract class GetColumns extends AbstractMetadataMethod {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(26, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(26)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNINFO").addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "COLUMNINFO").addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "COLUMNINFO").addField()
@@ -135,25 +135,20 @@ public abstract class GetColumns extends AbstractMetadataMethod {
         if (isIdentity) {
             return "YES";
         }
-        switch (typeMetadata.getJdbcType()) {
-        case Types.INTEGER:
-        case Types.TINYINT:
-        case Types.BIGINT:
-        case Types.SMALLINT:
+        return switch (typeMetadata.getJdbcType()) {
             // Could be autoincrement by trigger, but we simply don't know
-            return "";
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            if (Objects.equals(typeMetadata.getScale(), 0) && typeMetadata.getType() != int128_type) {
-                // Could be autoincrement by trigger, but we simply don't know
-                return "";
+            case Types.INTEGER, Types.TINYINT, Types.BIGINT, Types.SMALLINT -> "";
+            case Types.NUMERIC, Types.DECIMAL -> {
+                if (Objects.equals(typeMetadata.getScale(), 0) && typeMetadata.getType() != int128_type) {
+                    // Could be autoincrement by trigger, but we simply don't know
+                    yield "";
+                }
+                // Scaled NUMERIC/DECIMAL or INT128-based: definitely not autoincrement
+                yield "NO";
             }
-            // Scaled NUMERIC/DECIMAL or INT128-based: definitely not autoincrement
-            return "NO";
-        default:
             // All other types are never autoincrement
-            return "NO";
-        }
+            default -> "NO";
+        };
     }
 
     abstract MetadataQuery createGetColumnsQuery(String tableNamePattern, String columnNamePattern);

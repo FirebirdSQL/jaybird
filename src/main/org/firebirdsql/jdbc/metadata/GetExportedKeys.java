@@ -18,7 +18,8 @@
  */
 package org.firebirdsql.jdbc.metadata;
 
-import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
+import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,32 +32,29 @@ import java.sql.SQLException;
  */
 public final class GetExportedKeys extends AbstractKeysMethod {
 
-    //@formatter:on
-    private static final String GET_EXPORTED_KEYS_START =
-            "select\n"
-            + "  PK.RDB$RELATION_NAME as PKTABLE_NAME,\n"
-            + "  ISP.RDB$FIELD_NAME as PKCOLUMN_NAME,\n"
-            + "  FK.RDB$RELATION_NAME as FKTABLE_NAME,\n"
-            + "  ISF.RDB$FIELD_NAME as FKCOLUMN_NAME,\n"
-            + "  ISP.RDB$FIELD_POSITION + 1 as KEY_SEQ,\n"
-            + "  RC.RDB$UPDATE_RULE as UPDATE_RULE,\n"
-            + "  RC.RDB$DELETE_RULE as DELETE_RULE,\n"
-            + "  PK.RDB$CONSTRAINT_NAME as PK_NAME,\n"
-            + "  FK.RDB$CONSTRAINT_NAME as FK_NAME\n"
-            + "from RDB$RELATION_CONSTRAINTS PK\n"
-            + "inner join RDB$REF_CONSTRAINTS RC\n"
-            + "  on PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ\n"
-            + "inner join RDB$RELATION_CONSTRAINTS FK\n"
-            + "  on FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME\n"
-            + "inner join RDB$INDEX_SEGMENTS ISP\n"
-            + "  on ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME\n"
-            + "inner join RDB$INDEX_SEGMENTS ISF\n"
-            + "  on ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION\n"
-            + "where ";
+    private static final String GET_EXPORTED_KEYS_START = """
+            select
+              PK.RDB$RELATION_NAME as PKTABLE_NAME,
+              ISP.RDB$FIELD_NAME as PKCOLUMN_NAME,
+              FK.RDB$RELATION_NAME as FKTABLE_NAME,
+              ISF.RDB$FIELD_NAME as FKCOLUMN_NAME,
+              ISP.RDB$FIELD_POSITION + 1 as KEY_SEQ,
+              RC.RDB$UPDATE_RULE as UPDATE_RULE,
+              RC.RDB$DELETE_RULE as DELETE_RULE,
+              PK.RDB$CONSTRAINT_NAME as PK_NAME,
+              FK.RDB$CONSTRAINT_NAME as FK_NAME
+            from RDB$RELATION_CONSTRAINTS PK
+            inner join RDB$REF_CONSTRAINTS RC
+              on PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ
+            inner join RDB$RELATION_CONSTRAINTS FK
+              on FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME
+            inner join RDB$INDEX_SEGMENTS ISP
+              on ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME
+            inner join RDB$INDEX_SEGMENTS ISF
+              on ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION
+            where\s""";
 
-    private static final String GET_EXPORTED_KEYS_END =
-            "\norder by FK.RDB$RELATION_NAME, ISP.RDB$FIELD_POSITION";
-    //@formatter:off
+    private static final String GET_EXPORTED_KEYS_END = "\norder by FK.RDB$RELATION_NAME, ISP.RDB$FIELD_POSITION";
 
     private GetExportedKeys(DbMetadataMediator mediator) {
         super(mediator);

@@ -19,8 +19,8 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
 import org.firebirdsql.jdbc.FBResultSet;
 
@@ -42,7 +42,7 @@ import static org.firebirdsql.jdbc.metadata.MetadataPattern.escapeWildcards;
  */
 public class GetVersionColumns {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(8, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(8)
             .at(0).simple(SQL_SHORT, 0, "SCOPE", "VERSIONCOL").addField()
             .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "VERSIONCOL").addField()
             .at(2).simple(SQL_LONG, 0, "DATA_TYPE", "VERSIONCOL").addField()

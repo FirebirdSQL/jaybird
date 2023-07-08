@@ -38,7 +38,7 @@ import static org.firebirdsql.jaybird.util.ConditionalHelpers.firstNonZero;
  * by the cursor position after {@link #next()} call. This class changes cursor
  * position to point to the next row.
  */
-class FBStatementFetcher implements FBFetcher {
+sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFetcher {
 
     private static final int NO_ASYNC_FETCH = -1;
     private static final int MINIMUM_ASYNC_FETCH_ROW_COUNT = 10;
