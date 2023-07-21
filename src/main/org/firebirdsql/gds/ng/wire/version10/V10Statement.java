@@ -374,10 +374,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     @Override
     public void fetchRows(int fetchSize) throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkStatementValid();
-            if (!getState().isCursorOpen()) {
-                throw FbExceptionBuilder.forException(ISCConstants.isc_cursor_not_open).toSQLException();
-            }
+            checkStatementHasOpenCursor();
+            checkFetchSize(fetchSize);
             if (isAfterLast()) return;
 
             try (OperationCloseHandle operationCloseHandle = signalFetch()) {

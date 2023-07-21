@@ -146,6 +146,20 @@ public abstract class AbstractFbStatement implements FbStatement {
         return fetched;
     }
 
+    /**
+     * Validates if {@code fetchSize} is positive, otherwise throws an exception.
+     *
+     * @param fetchSize fetch size (must be positive)
+     * @throws SQLException if {@code fetchSize} is smaller than {@code 1}
+     * @since 6
+     */
+    protected final void checkFetchSize(int fetchSize) throws SQLException {
+        if (fetchSize > 0) return;
+        throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidFetchSize)
+                .messageParameter(fetchSize)
+                .toSQLException();
+    }
+
     @Override
     public void close() throws SQLException {
         if (getState() == StatementState.CLOSED) return;
@@ -664,39 +678,49 @@ public abstract class AbstractFbStatement implements FbStatement {
      * {@link StatementState#NEW} or {@link StatementState#ERROR}, and throws an {@code SQLException} if it is.
      *
      * @throws SQLException
-     *         When this statement is closed or in error state.
+     *         when this statement is closed or in error state
      */
     protected final void checkStatementValid() throws SQLException {
+        int errorCode;
         switch (getState()) {
-        case NEW:
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_stmtNotAllocated)
-                    .toSQLException();
-        case CLOSING:
-        case CLOSED:
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_stmtClosed)
-                    .toSQLException();
-        case ERROR:
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_stmtInErrorRequireCLose)
-                    .toSQLException();
-        default:
+        case NEW -> errorCode = JaybirdErrorCodes.jb_stmtNotAllocated;
+        case CLOSING, CLOSED -> errorCode = JaybirdErrorCodes.jb_stmtClosed;
+        case ERROR -> errorCode = JaybirdErrorCodes.jb_stmtInErrorRequireClose;
+        default -> {
             // Valid state, continue
-            break;
+            return;
         }
+        }
+        throw FbExceptionBuilder.forNonTransientException(errorCode).toSQLException();
     }
 
     /**
      * Performs the same check as {@link #checkStatementValid()}, but considers {@code ignoreState} as valid.
      *
      * @param ignoreState
-     *         The invalid state (see {@link #checkStatementValid()} to ignore
+     *         the invalid state (see {@link #checkStatementValid()} to ignore
      * @throws SQLException
-     *         When this statement is closed or in error state.
+     *         when this statement is closed or in error state
      */
     protected final void checkStatementValid(StatementState ignoreState) throws SQLException {
-        if (ignoreState == getState()) {
-            return;
+        if (ignoreState != getState()) {
+            checkStatementValid();
         }
+    }
+
+    /**
+     * Checks if statement is valid with {@link #checkStatementValid()} and then checks if the current statement state
+     * has an open cursor.
+     *
+     * @throws SQLException
+     *         when this statement is closed or in error state, or has no open cursor
+     * @since 6
+     */
+    protected final void checkStatementHasOpenCursor() throws SQLException {
         checkStatementValid();
+        if (!getState().isCursorOpen()) {
+            throw FbExceptionBuilder.forException(ISCConstants.isc_cursor_not_open).toSQLException();
+        }
     }
 
     @Override

@@ -136,15 +136,8 @@ public class V11Statement extends V10Statement {
     @Override
     public final void asyncFetchRows(int fetchSize) throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkStatementValid();
-            if (fetchSize < 1) {
-                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidFetchSize)
-                        .messageParameter(fetchSize)
-                        .toSQLException();
-            }
-            if (!getState().isCursorOpen()) {
-                throw FbExceptionBuilder.forException(ISCConstants.isc_cursor_not_open).toSQLException();
-            }
+            checkStatementHasOpenCursor();
+            checkFetchSize(fetchSize);
             // Conditions for not performing an async fetch
             if (isAfterLast()
                 || asyncFetchStatus.isPending()

@@ -63,10 +63,7 @@ public class V18Statement extends V16Statement {
     @Override
     protected void fetchScrollImpl(FetchType fetchType, int fetchSize, int position) throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkStatementValid();
-            if (!getState().isCursorOpen()) {
-                throw FbExceptionBuilder.forException(ISCConstants.isc_cursor_not_open).toSQLException();
-            }
+            checkStatementHasOpenCursor();
 
             try (OperationCloseHandle operationCloseHandle = signalFetch()) {
                 if (operationCloseHandle.isCancelled()) {

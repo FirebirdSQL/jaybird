@@ -34,6 +34,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.*;
 import java.util.Arrays;
@@ -171,6 +173,17 @@ public abstract class AbstractStatementTest {
         assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
         assertNotNull(statement.getParameterDescriptor(), "Parameters");
         assertEquals(0, statement.getParameterDescriptor().getCount(), "Unexpected parameter count");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 0, -1 })
+    public void testFetchRows_nonPositiveFetchSize_throwsException(int fetchSize) throws Exception {
+        allocateStatement();
+        statement.prepare(SELECT_FROM_RDB$DATABASE);
+        statement.execute(RowValue.EMPTY_ROW_VALUE);
+
+        var exception = assertThrows(SQLException.class, () -> statement.fetchRows(fetchSize));
+        assertThat(exception, errorCodeEquals(JaybirdErrorCodes.jb_invalidFetchSize));
     }
 
     @Test
