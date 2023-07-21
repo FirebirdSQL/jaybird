@@ -7,5 +7,4 @@
  * 
  * @deprecated will be removed in Jaybird 6 without replacement
  */
-@Deprecated
 package org.firebirdsql.logging;
