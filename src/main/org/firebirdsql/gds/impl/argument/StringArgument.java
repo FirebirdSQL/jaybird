@@ -34,11 +34,14 @@ public final class StringArgument extends TypedArgument {
     private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
             EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.StringSpb);
     private static final long serialVersionUID = -7980793147101287101L;
-    
+
     private final String value;
     private final byte[] asBytes;
     private final Encoding encoding;
 
+    /**
+     * @deprecated will be removed in Jaybird 6, use {@link #StringArgument(int, ArgumentType, String, Encoding)}
+     */
     @Deprecated
     public StringArgument(int type, ArgumentType argumentType, String value) {
         this(type, argumentType, value, EncodingFactory.getPlatformEncoding());

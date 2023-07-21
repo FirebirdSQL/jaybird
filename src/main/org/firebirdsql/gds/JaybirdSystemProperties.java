@@ -33,8 +33,20 @@ public final class JaybirdSystemProperties {
 
     // do not include 'sensitive' properties, and only include Jaybird specific properties
 
+    /**
+     * @deprecated will be removed in Jaybird 6 without replacement
+     */
+    @Deprecated
     public static final String FORCE_CONSOLE_LOGGER_PROP = JDBC_PREFIX + "forceConsoleLogger";
+    /**
+     * @deprecated will be removed in Jaybird 6 without replacement
+     */
+    @Deprecated
     public static final String DISABLE_LOGGING_PROP = JDBC_PREFIX + "disableLogging";
+    /**
+     * @deprecated will be removed in Jaybird 6 without replacement
+     */
+    @Deprecated
     public static final String LOGGER_IMPLEMENTATION_PROP = JDBC_PREFIX + "loggerImplementation";
     public static final String SYNC_WRAP_NATIVE_LIBRARY_PROP = COMMON_PREFIX + "jna.syncWrapNativeLibrary";
     public static final String PROCESS_ID_PROP = JDBC_PREFIX + "pid";
@@ -48,14 +60,26 @@ public final class JaybirdSystemProperties {
         // no instances
     }
 
+    /**
+     * @deprecated will be removed in Jaybird 6 without replacement
+     */
+    @Deprecated
     public static boolean isForceConsoleLogger() {
         return getBooleanSystemPropertyPrivileged(FORCE_CONSOLE_LOGGER_PROP);
     }
 
+    /**
+     * @deprecated will be removed in Jaybird 6 without replacement
+     */
+    @Deprecated
     public static boolean isDisableLogging() {
         return getBooleanSystemPropertyPrivileged(DISABLE_LOGGING_PROP);
     }
 
+    /**
+     * @deprecated will be removed in Jaybird 6 without replacement
+     */
+    @Deprecated
     public static String getLoggerImplementation() {
         return getSystemPropertyPrivileged(LOGGER_IMPLEMENTATION_PROP);
     }

@@ -22,7 +22,9 @@ package org.firebirdsql.logging;
  * Logger implementation that writes to the console output.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @deprecated will be removed in Jaybird 6 without replacement
  */
+@Deprecated
 final class ConsoleLogger implements Logger {
     
     private static final boolean debugEnabled = false;

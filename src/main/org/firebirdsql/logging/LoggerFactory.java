@@ -28,7 +28,9 @@ import java.lang.reflect.Constructor;
  * 
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @deprecated will be removed in Jaybird 6 without replacement
  */
+@Deprecated
 @InternalApi
 public final class LoggerFactory {
 

@@ -403,6 +403,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return closed;
     }
 
+    /**
+     * @deprecated use {@link #close(boolean, CompletionReason)}, will be removed in Jaybird 6
+     */
+    @Deprecated
     void close(boolean notifyListener) throws SQLException {
         close(notifyListener, CompletionReason.OTHER);
     }

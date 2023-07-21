@@ -31,6 +31,10 @@ import javax.transaction.xa.XAException;
  */
 public class FBXAException extends XAException {
 
+    /**
+     * @deprecated will be removed in Jaybird 6, use one of the other constructors
+     */
+    @Deprecated
     public FBXAException() {
         super();
     }

@@ -27,7 +27,9 @@ import org.firebirdsql.jna.fbclient.FbClientLibrary;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
+ * @deprecated will be removed in Jaybird 6 without replacement
  */
+@Deprecated
 public class FbLocalDatabaseFactory extends AbstractNativeDatabaseFactory {
 
     private static final FbLocalDatabaseFactory INSTANCE = new FbLocalDatabaseFactory();

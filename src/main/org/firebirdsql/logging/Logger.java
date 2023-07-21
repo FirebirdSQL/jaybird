@@ -26,7 +26,9 @@ import static java.lang.String.format;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @deprecated will be removed in Jaybird 6 without replacement
  */
+@Deprecated
 @SuppressWarnings("unused")
 public interface Logger {
 

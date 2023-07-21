@@ -25,7 +25,9 @@ import java.util.logging.Level;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
+ * @deprecated will be removed in Jaybird 6 without replacement
  */
+@Deprecated
 final class JulLogger implements Logger {
 
     private final java.util.logging.Logger log;

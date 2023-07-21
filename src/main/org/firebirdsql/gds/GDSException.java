@@ -24,6 +24,7 @@
  */
 package org.firebirdsql.gds;
 
+import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
@@ -31,7 +32,9 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @deprecated use a normal SQLException or subclass, this class may be removed in Jaybird 7 or later
  */
+@Deprecated
 public class GDSException extends Exception {
 
     private static final long serialVersionUID = -2993273656432230359L;
@@ -65,7 +68,9 @@ public class GDSException extends Exception {
      *
      * @param message Message for the new instance
      * @param xaErrorCode The <code>XA</code> error code
+     * @deprecated will be removed in Jaybird 6 without replacement
      */
+    @Deprecated
     public static GDSException createWithXAErrorCode(String message, int xaErrorCode) {
         GDSException gdse = new GDSException(message);
         gdse.setXAErrorCode(xaErrorCode);
@@ -79,7 +84,11 @@ public class GDSException extends Exception {
      *        {@link ISCConstants#isc_arg_gds}, otherwise no message will be 
      *        displayed.
      * @param intParam Additional int parameter about the new exception
+     * @deprecated will be removed in Jaybird 6, if you really must use this class, use {@link #GDSException(String)},
+     * {@link #GDSException(int)}, or {@link #GDSException(int,Throwable)}, but keep in mind this class will be removed
+     * in Jaybird 7 or later
      */
+    @Deprecated
     public GDSException(int type, int intParam) {
         this.type = type;
         this.intParam = intParam;
@@ -95,7 +104,11 @@ public class GDSException extends Exception {
      * @param strParam value of the string parameter that will substitute 
      *        <code>{0}</code> entry in error message corresponding to the 
      *        specified error code.
+     * @deprecated will be removed in Jaybird 6, if you really must use this class, use {@link #GDSException(String)},
+     * {@link #GDSException(int)}, or {@link #GDSException(int,Throwable)}, but keep in mind this class will be removed
+     * in Jaybird 7 or later
      */
+    @Deprecated
     public GDSException(int type, String strParam) {
         this.type = type;
         this.strParam = strParam;
@@ -114,7 +127,11 @@ public class GDSException extends Exception {
      * @param strParam value of the string parameter that will substitute 
      * <code>{0}</code> entry in error message corresponding to the specified
      * error code.
+     * @deprecated will be removed in Jaybird 6, if you really must use this class, use {@link #GDSException(String)},
+     * {@link #GDSException(int)}, or {@link #GDSException(int,Throwable)}, but keep in mind this class will be removed
+     * in Jaybird 7 or later
      */
+    @Deprecated
     public GDSException(int type, int fbErrorCode, String strParam) {
         this.type = type;
         this.intParam = fbErrorCode;
@@ -136,7 +153,11 @@ public class GDSException extends Exception {
      * error code.
      * 
      * @param cause Cause of this exception
+     * @deprecated will be removed in Jaybird 6, if you really must use this class, use {@link #GDSException(String)},
+     * {@link #GDSException(int)}, or {@link #GDSException(int,Throwable)}, but keep in mind this class will be removed
+     * in Jaybird 7 or later
      */
+    @Deprecated
     public GDSException(int type, int fbErrorCode, String strParam, Throwable cause) {
         this(type, fbErrorCode, strParam);
         initCause(cause);
@@ -181,7 +202,9 @@ public class GDSException extends Exception {
      * Get the Firebird-specific error code for this exception.
      *
      * @return The Firebird error code
+     * @deprecated will be removed in Jaybird 6 without replacement
      */
+    @Deprecated
     public int getFbErrorCode() {
         switch (type) {
         case ISCConstants.isc_arg_number:
@@ -198,7 +221,9 @@ public class GDSException extends Exception {
      * 
      * @return the SQL state of this exception or <code>null</code> if this 
      * object does not represent an error.
+     * @deprecated will be removed in Jaybird 6, but replaced by {@link SQLException#getSQLState()}
      */
+    @Deprecated
     public String getSQLState() {
         switch (type) {
         case ISCConstants.isc_arg_number:
@@ -213,7 +238,9 @@ public class GDSException extends Exception {
      * Get the <code>int</code> parameter for this exception.
      *
      * @return The <code>int</code> parameter
+     * @deprecated will be removed in Jaybird 6 without replacement
      */
+    @Deprecated
     public int getIntParam() {
         return intParam;
     }
@@ -222,7 +249,9 @@ public class GDSException extends Exception {
     /**
      * Get the XaErrorCode value.
      * @return the XaErrorCode value.
+     * @deprecated will be removed in Jaybird 6 without replacement
      */
+    @Deprecated
     public int getXAErrorCode() {
         return xaErrorCode;
     }
@@ -230,7 +259,9 @@ public class GDSException extends Exception {
     /**
      * Set the XaErrorCode value.
      * @param xaErrorCode The new XaErrorCode value.
+     * @deprecated will be removed in Jaybird 6 without replacement
      */
+    @Deprecated
     public void setXAErrorCode(int xaErrorCode) {
         this.xaErrorCode = xaErrorCode;
     }
@@ -239,7 +270,9 @@ public class GDSException extends Exception {
      * Set the next exception in the chain.
      *
      * @param e The next chained exception
+     * @deprecated will be removed in Jaybird 6 without replacement
      */
+    @Deprecated
     public void setNext(GDSException e) {
         GDSException current = this;
         for(;;) {
@@ -260,7 +293,9 @@ public class GDSException extends Exception {
      * Get the next chained exception.
      *
      * @return The next chained exception
+     * @deprecated will be removed in Jaybird 6 without replacement
      */
+    @Deprecated
     public GDSException getNext() {
         return next;
     }
@@ -270,7 +305,9 @@ public class GDSException extends Exception {
      *
      * @return <code>true</code> if this is a warning, 
      *         <code>false</code> otherwise
+     * @deprecated will be removed in Jaybird 6 without replacement
      */
+    @Deprecated
     public boolean isWarning() {
         return type == ISCConstants.isc_arg_warning;
     }
@@ -315,7 +352,10 @@ public class GDSException extends Exception {
 
     /**
      * Returns the parameter depending on the type of the error code.
+     *
+     * @deprecated will be removed in Jaybird 6 without replacement
      */
+    @Deprecated
     public String getParam() {
         switch (type) {
         case ISCConstants.isc_arg_interpreted:

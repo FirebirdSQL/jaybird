@@ -103,6 +103,10 @@ public class FBConnection implements FirebirdConnection {
                 : ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
+    /**
+     * @deprecated will be removed in Jaybird 6 without replacement
+     */
+    @Deprecated
     public FBObjectListener.StatementListener getStatementListener() {
         return txCoordinator;
     }
@@ -700,7 +704,10 @@ public class FBConnection implements FirebirdConnection {
         return prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability, false, false);
     }
 
-    // TODO Why unused? Remove?
+    /**
+     * @deprecated will be removed in Jaybird 6, use {@link #prepareStatement(String, int, int, int, boolean, boolean)}
+     */
+    @Deprecated
     protected PreparedStatement prepareMetaDataStatement(String sql, int resultSetType, int resultSetConcurrency)
             throws SQLException {
         return prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability, true, false);
@@ -1054,8 +1061,11 @@ public class FBConnection implements FirebirdConnection {
     }
 
     /**
-     * Check if this connection is currently involved in a transaction
+     * Check if this connection is currently involved in a transaction.
+     * 
+     * @deprecated will be removed in Jaybird 6 without replacement
      */
+    @Deprecated
     public boolean inTransaction() throws SQLException {
         return getGDSHelper().inTransaction();
     }
@@ -1113,7 +1123,9 @@ public class FBConnection implements FirebirdConnection {
      *
      * @throws SQLException
      *         If the client info is not supported, or if there is no database connection.
+     * @deprecated will be removed in Jaybird 6 without replacement
      */
+    @Deprecated
     protected void checkClientInfoSupport() throws SQLException {
         if (!getFbDatabase().getServerVersion().isEqualOrAbove(2, 0)) {
             throw new FBDriverNotCapableException(

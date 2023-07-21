@@ -27,12 +27,14 @@ package org.firebirdsql.gds.ng.wire.auth.legacy;
 
 import java.nio.charset.StandardCharsets;
 
-/** Unix Crypt.
- * Implements the one way cryptography used by Unix systems for
- * simple password protection.
+/**
+ * Unix Crypt. Implements the one way cryptography used by Unix systems for simple password protection.
+ * 
  * @version $Id: UnixCrypt.java,v 1.5 2004/10/11 00:28:41 gregwilkins Exp $
  * @author Greg Wilkins (gregw)
+ * @deprecated will be removed in Jaybird 6, and replaced by {@code LegacyHash} which will be introduced in Jaybird 6
  */
+@Deprecated
 public class UnixCrypt {
 
     //@formatter:off

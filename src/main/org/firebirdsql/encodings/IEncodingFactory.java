@@ -232,6 +232,9 @@ public interface IEncodingFactory {
      * @param <T>
      *         Type parameter of type {@link DatatypeCoder}
      * @return New or cached instance of datatype coder
+     * @deprecated will be removed in Jaybird 6 and replaced by
+     * {@code <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T>, Function<IEncodingFactory, T>)}
      */
+    @Deprecated
     <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass);
 }

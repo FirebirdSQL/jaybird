@@ -26,7 +26,9 @@ package org.firebirdsql.logging;
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
+ * @deprecated will be removed in Jaybird 6 without replacement
  */
+@Deprecated
 final class NullLogger implements Logger{
 
 	@Override

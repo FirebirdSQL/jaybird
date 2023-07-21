@@ -107,7 +107,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public byte[] encodeShort(short value) {
-        return intToBytes(value);
+        return encodeInt(value);
     }
 
     @Override
@@ -132,7 +132,9 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public byte[] encodeInt(int value) {
-        return intToBytes(value);
+        byte[] ret = new byte[4];
+        encodeInt(value, ret, 0);
+        return ret;
     }
 
     @Override
@@ -148,16 +150,12 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
      *
      * @param value
      *         The value to be encoded
-     * @return The value of <code>value</code> encoded as a
-     * <code>byte</code> array
+     * @return The value of <code>value</code> encoded as a <code>byte</code> array
+     * @deprecated will be removed in Jaybird 6, use {@link #encodeInt(int)}
      */
+    @Deprecated
     protected byte[] intToBytes(int value) {
-        byte[] ret = new byte[4];
-        ret[0] = (byte) ((value >>> 24) & 0xff);
-        ret[1] = (byte) ((value >>> 16) & 0xff);
-        ret[2] = (byte) ((value >>> 8) & 0xff);
-        ret[3] = (byte) ((value) & 0xff);
-        return ret;
+        return encodeInt(value);
     }
 
     @Override
