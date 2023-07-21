@@ -887,6 +887,7 @@ If you're currently using the `OperationAware` interface to monitor and/or cance
 === Removal of classes, packages and methods without deprecation
 
 Below list of removals may look daunting, but if you use Jaybird only as a JDBC driver, through the JDBC API, you're likely unaffected.
+Although we list them as removed without deprecation, some were marked as deprecated retroactively in Jaybird 5.0.3 or later.
 
 [#removal-of-packages-without-deprecation]
 ==== Removal of packages without deprecation
