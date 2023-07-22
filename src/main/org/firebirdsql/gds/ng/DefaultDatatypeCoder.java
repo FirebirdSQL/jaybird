@@ -24,6 +24,7 @@ import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.extern.decimal.Decimal64;
 import org.firebirdsql.gds.JaybirdSystemProperties;
+import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -366,32 +367,65 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public LocalTime decodeLocalTime(byte[] buf) {
-        return new datetime(buf, -1, 0).toLocalTime();
+        return decodeLocalTime(buf, 0);
+    }
+
+    @Override
+    public LocalTime decodeLocalTime(byte[] buf, int off) {
+        return FbDatetimeConversion.fromFbTimeUnits(decodeInt(buf, off));
     }
 
     @Override
     public byte[] encodeLocalTime(LocalTime val) {
-        return new datetime(null, val).toTimeBytes();
+        return encodeInt(FbDatetimeConversion.toFbTimeUnits(val));
+    }
+
+    @Override
+    public void encodeLocalTime(LocalTime val, byte[] buf, int off) {
+        encodeInt(FbDatetimeConversion.toFbTimeUnits(val), buf, off);
     }
 
     @Override
     public LocalDate decodeLocalDate(byte[] buf) {
-        return new datetime(buf, 0, -1).toLocalDate();
+        return decodeLocalDate(buf, 0);
+    }
+
+    @Override
+    public LocalDate decodeLocalDate(byte[] buf, int off) {
+        return FbDatetimeConversion.fromModifiedJulianDate(decodeInt(buf, off));
     }
 
     @Override
     public byte[] encodeLocalDate(LocalDate val) {
-        return new datetime(val, null).toDateBytes();
+        return encodeInt(FbDatetimeConversion.toModifiedJulianDate(val));
+    }
+
+    @Override
+    public void encodeLocalDate(LocalDate val, byte[] buf, int off) {
+        encodeInt(FbDatetimeConversion.toModifiedJulianDate(val), buf, off);
     }
 
     @Override
     public LocalDateTime decodeLocalDateTime(byte[] buf) {
-        return fromLongBytes(buf).toLocalDateTime();
+        return decodeLocalDateTime(buf, 0);
+    }
+
+    @Override
+    public LocalDateTime decodeLocalDateTime(byte[] buf, int off) {
+        return LocalDateTime.of(decodeLocalDate(buf, off), decodeLocalTime(buf, off + 4));
     }
 
     @Override
     public byte[] encodeLocalDateTime(LocalDateTime val) {
-        return new datetime(val).toTimestampBytes();
+        byte[] buf = new byte[8];
+        encodeLocalDateTime(val, buf, 0);
+        return buf;
+    }
+
+    @Override
+    public void encodeLocalDateTime(LocalDateTime val, byte[] buf, int off) {
+        encodeLocalDate(val.toLocalDate(), buf, off);
+        encodeLocalTime(val.toLocalTime(), buf, off + 4);
     }
 
     /**
@@ -556,21 +590,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
         private final RawDateTimeStruct raw;
 
-        datetime(LocalDateTime localDateTime) {
-            this(new RawDateTimeStruct());
-            raw.updateDateTime(localDateTime);
-        }
-
-        datetime(LocalDate localDate, LocalTime localTime) {
-            this(new RawDateTimeStruct());
-            if (localDate != null) {
-                raw.updateDate(localDate);
-            }
-            if (localTime != null) {
-                raw.updateTime(localTime);
-            }
-        }
-
         datetime(Timestamp value, Calendar cOrig) {
             this(new RawDateTimeStruct());
             Calendar c = (Calendar) cOrig.clone();
@@ -625,18 +644,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
             encodeInt(raw.getEncodedDate(), result, 0);
             encodeInt(raw.getEncodedTime(), result, 4);
             return result;
-        }
-
-        LocalDateTime toLocalDateTime() {
-            return raw.toLocalDateTime();
-        }
-
-        LocalDate toLocalDate() {
-            return raw.toLocalDate();
-        }
-
-        LocalTime toLocalTime() {
-            return raw.toLocalTime();
         }
 
         Time toTime(Calendar cOrig) {

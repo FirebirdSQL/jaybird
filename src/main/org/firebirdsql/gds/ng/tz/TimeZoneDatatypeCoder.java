@@ -20,7 +20,6 @@ package org.firebirdsql.gds.ng.tz;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.DatatypeCoder;
-import org.firebirdsql.gds.ng.DatatypeCoder.RawDateTimeStruct;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
@@ -33,6 +32,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 
+import static java.util.Objects.requireNonNullElseGet;
 import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
@@ -111,32 +111,19 @@ public class TimeZoneDatatypeCoder {
      *         When {@code fieldType} is not a TIME/TIMESTAMP WITH TIME ZONE type
      */
     public TimeZoneCodec getTimeZoneCodecFor(int fieldType) throws SQLException {
-        switch (fieldType & ~1) {
-        case SQL_TIMESTAMP_TZ:
-            if (standardTimestampWithTimeZoneCodec != null) {
-                return standardTimestampWithTimeZoneCodec;
-            }
-            return standardTimestampWithTimeZoneCodec = new TimestampWithTimeZoneCodec(fieldType);
-        case SQL_TIME_TZ:
-            if (standardTimeWithTimeZoneCodec != null) {
-                return standardTimeWithTimeZoneCodec;
-            }
-            return standardTimeWithTimeZoneCodec = new TimeWithTimeZoneCodec(fieldType);
-        case SQL_TIMESTAMP_TZ_EX:
-            if (extendedTimestampWithTimeZoneCodec != null) {
-                return extendedTimestampWithTimeZoneCodec;
-            }
-            return extendedTimestampWithTimeZoneCodec = new TimestampWithTimeZoneCodec(fieldType);
-        case SQL_TIME_TZ_EX:
-            if (extendedTimeWithTimeZoneCodec != null) {
-                return extendedTimeWithTimeZoneCodec;
-            }
-            return extendedTimeWithTimeZoneCodec = new TimeWithTimeZoneCodec(fieldType);
-        default:
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unsupportedFieldType)
+        return switch (fieldType & ~1) {
+            case SQL_TIMESTAMP_TZ -> requireNonNullElseGet(standardTimestampWithTimeZoneCodec,
+                    () -> standardTimestampWithTimeZoneCodec = new TimestampWithTimeZoneCodec(fieldType));
+            case SQL_TIME_TZ -> requireNonNullElseGet(standardTimeWithTimeZoneCodec,
+                    () -> standardTimeWithTimeZoneCodec = new TimeWithTimeZoneCodec(fieldType));
+            case SQL_TIMESTAMP_TZ_EX -> requireNonNullElseGet(extendedTimestampWithTimeZoneCodec,
+                    () -> extendedTimestampWithTimeZoneCodec = new TimestampWithTimeZoneCodec(fieldType));
+            case SQL_TIME_TZ_EX -> requireNonNullElseGet(extendedTimeWithTimeZoneCodec,
+                    () -> extendedTimeWithTimeZoneCodec = new TimeWithTimeZoneCodec(fieldType));
+            default -> throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unsupportedFieldType)
                     .messageParameter(fieldType)
                     .toSQLException();
-        }
+        };
     }
 
     /**
@@ -159,13 +146,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     private Instant decodeTimestampTzAsInstant(byte[] timestampTzBytes) {
-        int encodedDate = datatypeCoder.decodeInt(timestampTzBytes);
-        int encodedTime = datatypeCoder.decodeInt(timestampTzBytes, 4);
-        RawDateTimeStruct raw = new RawDateTimeStruct(encodedDate, true, encodedTime, true);
-
-        LocalDateTime utcDateTime = LocalDateTime
-                .of(raw.year, raw.month, raw.day, raw.hour, raw.minute, raw.second, raw.getFractionsAsNanos());
-        return utcDateTime.toInstant(ZoneOffset.UTC);
+        return datatypeCoder.decodeLocalDateTime(timestampTzBytes).toInstant(ZoneOffset.UTC);
     }
 
     private byte[] encodeOffsetDateTimeToTimestampTz(OffsetDateTime offsetDateTime, int bufferSize) {
@@ -183,18 +164,8 @@ public class TimeZoneDatatypeCoder {
     }
 
     private byte[] encodeTimestampTz(LocalDateTime utcDateTime, int firebirdZoneId, int bufferSize) {
-        RawDateTimeStruct raw = new RawDateTimeStruct();
-        raw.year = utcDateTime.getYear();
-        raw.month = utcDateTime.getMonthValue();
-        raw.day = utcDateTime.getDayOfMonth();
-        raw.hour = utcDateTime.getHour();
-        raw.minute = utcDateTime.getMinute();
-        raw.second = utcDateTime.getSecond();
-        raw.setFractionsFromNanos(utcDateTime.getNano());
-
         byte[] timestampTzBytes = new byte[bufferSize];
-        datatypeCoder.encodeInt(raw.getEncodedDate(), timestampTzBytes, 0);
-        datatypeCoder.encodeInt(raw.getEncodedTime(), timestampTzBytes, 4);
+        datatypeCoder.encodeLocalDateTime(utcDateTime, timestampTzBytes, 0);
         // casting zoneId to short to ensure 'signed' values are written in the network format
         // this is not technically necessary, but is consistent with the values received from Firebird
         datatypeCoder.encodeShort((short) firebirdZoneId, timestampTzBytes, 8);
@@ -203,9 +174,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     private LocalTime decodeTimeTzToUtcLocalTime(byte[] timeTzBytes) {
-        int encodedTime = datatypeCoder.decodeInt(timeTzBytes);
-        RawDateTimeStruct raw = new RawDateTimeStruct(0, false, encodedTime, true);
-        return LocalTime.of(raw.hour, raw.minute, raw.second, raw.getFractionsAsNanos());
+        return datatypeCoder.decodeLocalTime(timeTzBytes);
     }
 
     private OffsetTime decodeTimeTzToOffsetTime(byte[] timeTzBytes) {
@@ -279,14 +248,8 @@ public class TimeZoneDatatypeCoder {
     }
 
     private byte [] encodeTimeTz(LocalTime utcTime, int firebirdZoneId, int bufferSize) {
-        RawDateTimeStruct raw = new RawDateTimeStruct();
-        raw.hour = utcTime.getHour();
-        raw.minute = utcTime.getMinute();
-        raw.second = utcTime.getSecond();
-        raw.setFractionsFromNanos(utcTime.getNano());
-
         byte[] timeTzBytes = new byte[bufferSize];
-        datatypeCoder.encodeInt(raw.getEncodedTime(), timeTzBytes, 0);
+        datatypeCoder.encodeLocalTime(utcTime, timeTzBytes, 0);
         // casting zoneId to short to ensure 'signed' values are written in the network format
         // this is not technically necessary, but is consistent with the values received from Firebird
         datatypeCoder.encodeShort((short) firebirdZoneId, timeTzBytes, 4);

@@ -23,6 +23,7 @@ import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.extern.decimal.Decimal64;
+import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,10 +47,11 @@ import java.util.Calendar;
 public interface DatatypeCoder {
 
     // A fraction is 100 microseconds
-    int NANOSECONDS_PER_FRACTION = 100 * 1000;
+    int NANOSECONDS_PER_FRACTION = (int) FbDatetimeConversion.NANOS_PER_UNIT;
     int FRACTIONS_PER_MILLISECOND = 10;
     int FRACTIONS_PER_SECOND = 1000 * FRACTIONS_PER_MILLISECOND;
     int FRACTIONS_PER_MINUTE = 60 * FRACTIONS_PER_SECOND;
+    @SuppressWarnings("unused")
     int FRACTIONS_PER_HOUR = 60 * FRACTIONS_PER_MINUTE;
 
     /**
@@ -463,11 +465,23 @@ public interface DatatypeCoder {
      * Decode {@code java.time.LocalTime} from {@code buf} from the first 4 bytes.
      *
      * @param buf
-     *         (expected) 4 bytes
+     *         (expected) at least 4 bytes
      * @return {@code LocalTime} decoded from {@code buf}
      * @since 5
      */
     LocalTime decodeLocalTime(byte[] buf);
+
+    /**
+     * Decode {@code java.time.LocalTime} from {@code buf} from the 4 bytes starting at {@code off}.
+     *
+     * @param buf
+     *         (expected) at least 4 bytes from {@code off}
+     * @param off
+     *         offset of the time value in {@code buf}
+     * @return {@code LocalTime} decoded from {@code buf}
+     * @since 6
+     */
+    LocalTime decodeLocalTime(byte[] buf, int off);
 
     /**
      * Encode a {@code java.time.LocalTime} as a byte array of 4 bytes.
@@ -480,14 +494,39 @@ public interface DatatypeCoder {
     byte[] encodeLocalTime(LocalTime val);
 
     /**
+     * Encode a {@code java.time.LocalTime} to a byte array, requiring 4 bytes.
+     *
+     * @param val
+     *         value to encode
+     * @param buf
+     *         byte array with at least 4 bytes starting at {@code off}
+     * @param off
+     *         offset of the time value in {@code buf}
+     * @since 6
+     */
+    void encodeLocalTime(LocalTime val, byte[] buf, int off);
+
+    /**
      * Decode {@code java.time.LocalDate} from {@code buf} from the first 4 bytes.
      *
      * @param buf
-     *         (expected) 4 bytes
+     *         (expected) at least 4 bytes
      * @return {@code LocalDate} decoded from {@code buf}
      * @since 5
      */
     LocalDate decodeLocalDate(byte[] buf);
+
+    /**
+     * Decode {@code java.time.LocalDate} from {@code buf} from the 4 bytes starting at {@code off}.
+     *
+     * @param buf
+     *         (expected) at least 4 bytes from {@code off}
+     * @param off
+     *         offset of the time value in {@code buf}
+     * @return {@code LocalDate} decoded from {@code buf}
+     * @since 6
+     */
+    LocalDate decodeLocalDate(byte[] buf, int off);
 
     /**
      * Encode a {@code java.time.LocalDate} as a byte array of 4 bytes.
@@ -500,14 +539,39 @@ public interface DatatypeCoder {
     byte[] encodeLocalDate(LocalDate val);
 
     /**
+     * Encode a {@code java.time.LocalDate} to a byte array, requiring 4 bytes.
+     *
+     * @param val
+     *         value to encode
+     * @param buf
+     *         byte array with at least 4 bytes starting at {@code off}
+     * @param off
+     *         offset of the date value in {@code buf}
+     * @since 6
+     */
+    void encodeLocalDate(LocalDate val, byte[] buf, int off);
+
+    /**
      * Decode {@code java.time.LocalDateTime} from {@code buf} from the first 8 bytes.
      *
      * @param buf
-     *         (expected) 8 bytes
+     *         (expected) at least 8 bytes
      * @return {@code LocalDateTime} decoded from {@code buf}
      * @since 5
      */
     LocalDateTime decodeLocalDateTime(byte[] buf);
+
+    /**
+     * Decode {@code java.time.LocalDateTime} from {@code buf} from the 8 bytes starting at {@code off}.
+     *
+     * @param buf
+     *         (expected) at least 8 bytes from {@code off}
+     * @param off
+     *         offset of the datetime value in {@code buf}
+     * @return {@code LocalDateTime} decoded from {@code buf}
+     * @since 6
+     */
+    LocalDateTime decodeLocalDateTime(byte[] buf, int off);
 
     /**
      * Encode a {@code java.time.LocalDateTime} as a byte array of 8 bytes.
@@ -518,6 +582,19 @@ public interface DatatypeCoder {
      * @since 5
      */
     byte[] encodeLocalDateTime(LocalDateTime val);
+
+    /**
+     * Encode a {@code java.time.LocalDateTime} to a byte array, requiring 8 bytes.
+     *
+     * @param val
+     *         value to encode
+     * @param buf
+     *         byte array with at least 8 bytes starting at {@code off}
+     * @param off
+     *         offset of the datetime value in {@code buf}
+     * @since 6
+     */
+    void encodeLocalDateTime(LocalDateTime val, byte[] buf, int off);
 
     /**
      * Decodes a decimal64 from a byte array of 8 bytes.
@@ -710,47 +787,11 @@ public interface DatatypeCoder {
          * @since 4.0
          */
         public int getEncodedDate() {
-            int cpMonth = month;
-            int cpYear = year;
-
-            if (cpMonth > 2) {
-                cpMonth -= 3;
-            } else {
-                cpMonth += 9;
-                cpYear -= 1;
-            }
-
-            int c = cpYear / 100;
-            int ya = cpYear - 100 * c;
-
-            return ((146097 * c) / 4 +
-                    (1461 * ya) / 4 +
-                    (153 * cpMonth + 2) / 5 +
-                    day + 1721119 - 2400001);
+            return FbDatetimeConversion.toModifiedJulianDate(toLocalDate());
         }
 
         private void decodeDate(int encodedDate) {
-            int sql_date = encodedDate - 1721119 + 2400001;
-            int century = (4 * sql_date - 1) / 146097;
-            sql_date = 4 * sql_date - 1 - 146097 * century;
-            day = sql_date / 4;
-
-            sql_date = (4 * day + 3) / 1461;
-            day = 4 * day + 3 - 1461 * sql_date;
-            day = (day + 4) / 4;
-
-            month = (5 * day - 3) / 153;
-            day = 5 * day - 3 - 153 * month;
-            day = (day + 5) / 5;
-
-            year = 100 * century + sql_date;
-
-            if (month < 10) {
-                month += 3;
-            } else {
-                month -= 9;
-                year += 1;
-            }
+            updateDate(FbDatetimeConversion.fromModifiedJulianDate(encodedDate));
         }
 
         /**
@@ -760,20 +801,11 @@ public interface DatatypeCoder {
          * @since 4.0
          */
         public int getEncodedTime() {
-            return hour * FRACTIONS_PER_HOUR
-                   + minute * FRACTIONS_PER_MINUTE
-                   + second * FRACTIONS_PER_SECOND
-                   + fractions;
+            return FbDatetimeConversion.toFbTimeUnits(toLocalTime());
         }
 
         private void decodeTime(int encodedTime) {
-            int fractionsInDay = encodedTime;
-            hour = fractionsInDay / FRACTIONS_PER_HOUR;
-            fractionsInDay -= hour * FRACTIONS_PER_HOUR;
-            minute = fractionsInDay / FRACTIONS_PER_MINUTE;
-            fractionsInDay -= minute * FRACTIONS_PER_MINUTE;
-            second = fractionsInDay / FRACTIONS_PER_SECOND;
-            fractions = fractionsInDay - second * FRACTIONS_PER_SECOND;
+            updateTime(FbDatetimeConversion.fromFbTimeUnits(encodedTime));
         }
 
         /**

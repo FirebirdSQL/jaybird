@@ -322,8 +322,18 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public LocalTime decodeLocalTime(byte[] buf, int off) {
+        return parentCoder.decodeLocalTime(buf, off);
+    }
+
+    @Override
     public byte[] encodeLocalTime(LocalTime val) {
         return parentCoder.encodeLocalTime(val);
+    }
+
+    @Override
+    public void encodeLocalTime(LocalTime val, byte[] buf, int off) {
+        parentCoder.encodeLocalTime(val, buf, off);
     }
 
     @Override
@@ -332,8 +342,18 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public LocalDate decodeLocalDate(byte[] buf, int off) {
+        return parentCoder.decodeLocalDate(buf, off);
+    }
+
+    @Override
     public byte[] encodeLocalDate(LocalDate val) {
         return parentCoder.encodeLocalDate(val);
+    }
+
+    @Override
+    public void encodeLocalDate(LocalDate val, byte[] buf, int off) {
+        parentCoder.encodeLocalDate(val, buf, off);
     }
 
     @Override
@@ -342,8 +362,18 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public LocalDateTime decodeLocalDateTime(byte[] buf, int off) {
+        return parentCoder.decodeLocalDateTime(buf, off);
+    }
+
+    @Override
     public byte[] encodeLocalDateTime(LocalDateTime val) {
         return parentCoder.encodeLocalDateTime(val);
+    }
+
+    @Override
+    public void encodeLocalDateTime(LocalDateTime val, byte[] buf, int off) {
+        parentCoder.encodeLocalDateTime(val, buf, off);
     }
 
     @Override
