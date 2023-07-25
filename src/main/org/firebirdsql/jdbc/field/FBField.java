@@ -32,7 +32,6 @@ import java.math.BigInteger;
 import java.sql.*;
 import java.time.*;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -159,57 +158,34 @@ public abstract class FBField {
 
     private static FBField createField(int jdbcType, FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider)
             throws SQLException {
-        switch (jdbcType) {
-        case Types.SMALLINT:
-            return new FBShortField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.INTEGER:
-            return new FBIntegerField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.BIGINT:
-            return new FBLongField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            return new FBBigDecimalField(fieldDescriptor, dataProvider, jdbcType);
-        case JaybirdTypeCodes.DECFLOAT:
-            switch (fieldDescriptor.getType() & ~1) {
-            case ISCConstants.SQL_DEC16:
-                return new FBDecfloatField<>(fieldDescriptor, dataProvider, jdbcType, Decimal64.class);
-            case ISCConstants.SQL_DEC34:
-                return new FBDecfloatField<>(fieldDescriptor, dataProvider, jdbcType, Decimal128.class);
-            default:
-                throw new FBDriverNotCapableException(
+        return switch (jdbcType) {
+            case Types.SMALLINT -> new FBShortField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.INTEGER -> new FBIntegerField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.BIGINT -> new FBLongField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.NUMERIC, Types.DECIMAL -> new FBBigDecimalField(fieldDescriptor, dataProvider, jdbcType);
+            case JaybirdTypeCodes.DECFLOAT -> switch (fieldDescriptor.getType() & ~1) {
+                case ISCConstants.SQL_DEC16 ->
+                        new FBDecfloatField<>(fieldDescriptor, dataProvider, jdbcType, Decimal64.class);
+                case ISCConstants.SQL_DEC34 ->
+                        new FBDecfloatField<>(fieldDescriptor, dataProvider, jdbcType, Decimal128.class);
+                default -> throw new FBDriverNotCapableException(
                         "Unexpected field type for DECFLOAT: " + fieldDescriptor.getType());
-            }
-        case Types.FLOAT:
-            return new FBFloatField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.DOUBLE:
-            return new FBDoubleField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.TIME:
-            return new FBTimeField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.DATE:
-            return new FBDateField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.TIMESTAMP:
-            return new FBTimestampField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.TIMESTAMP_WITH_TIMEZONE:
-            return new FBTimestampTzField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.TIME_WITH_TIMEZONE:
-            return new FBTimeTzField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.CHAR:
-        case Types.VARCHAR:
-            return new FBStringField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.VARBINARY:
-        case Types.BINARY:
-            return new FBBinaryField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.BOOLEAN:
-            return new FBBooleanField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.NULL:
-            return new FBNullField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.ROWID:
-            return new FBRowIdField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.ARRAY:
-            throw new FBDriverNotCapableException(FBField.SQL_ARRAY_NOT_SUPPORTED);
-        default:
-            throw new FBDriverNotCapableException(FBField.SQL_TYPE_NOT_SUPPORTED);
-        }
+            };
+            case Types.FLOAT -> new FBFloatField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.DOUBLE -> new FBDoubleField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.TIME -> new FBTimeField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.DATE -> new FBDateField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.TIMESTAMP -> new FBTimestampField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.TIMESTAMP_WITH_TIMEZONE -> new FBTimestampTzField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.TIME_WITH_TIMEZONE -> new FBTimeTzField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.CHAR, Types.VARCHAR -> new FBStringField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.VARBINARY, Types.BINARY -> new FBBinaryField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.BOOLEAN -> new FBBooleanField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.NULL -> new FBNullField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.ROWID -> new FBRowIdField(fieldDescriptor, dataProvider, jdbcType);
+            case Types.ARRAY -> throw new FBDriverNotCapableException(FBField.SQL_ARRAY_NOT_SUPPORTED);
+            default -> throw new FBDriverNotCapableException(FBField.SQL_TYPE_NOT_SUPPORTED);
+        };
     }
 
     /**
@@ -289,88 +265,54 @@ public abstract class FBField {
         throw new FBDriverNotCapableException();
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T getObject(Class<T> type) throws SQLException {
         if (type == null) {
             throw new SQLNonTransientException("getObject called with type null");
         }
-        switch (type.getName()) {
-        case BOOLEAN_CLASS_NAME:
-            return isNull() ? null : (T) Boolean.valueOf(getBoolean());
-        case BYTE_CLASS_NAME:
-            return isNull() ? null : (T) Byte.valueOf(getByte());
-        case SHORT_CLASS_NAME:
-            return isNull() ? null : (T) Short.valueOf(getShort());
-        case INTEGER_CLASS_NAME:
-            return isNull() ? null : (T) Integer.valueOf(getInt());
-        case LONG_CLASS_NAME:
-            return isNull() ? null : (T) Long.valueOf(getLong());
-        case FLOAT_CLASS_NAME:
-            return isNull() ? null : (T) Float.valueOf(getFloat());
-        case DOUBLE_CLASS_NAME:
-            return isNull() ? null : (T) Double.valueOf(getDouble());
-        case BIG_DECIMAL_CLASS_NAME:
-            return (T) getBigDecimal();
-        case BIG_INTEGER_CLASS_NAME:
-            return (T) getBigInteger();
-        case STRING_CLASS_NAME:
-            return (T) getString();
-        case BYTE_ARRAY_CLASS_NAME: // byte[]
-            return (T) getBytes();
-        case SQL_DATE_CLASS_NAME:
-            return (T) getDate();
-        case LOCAL_DATE_CLASS_NAME:
-            return (T) getLocalDate();
-        case UTIL_DATE_CLASS_NAME:
-        case TIMESTAMP_CLASS_NAME:
-            return (T) getTimestamp();
-        case LOCAL_DATE_TIME_CLASS_NAME:
-            return (T) getLocalDateTime();
-        case TIME_CLASS_NAME:
-            return (T) getTime();
-        case LOCAL_TIME_CLASS_NAME:
-            return (T) getLocalTime();
-        case CALENDAR_CLASS_NAME:
-            if (isNull()) {
-                return null;
-            } else {
-                Timestamp timestamp = getTimestamp();
-                Calendar calendar = GregorianCalendar.getInstance();
-                calendar.setTimeInMillis(timestamp.getTime());
-                return (T) calendar;
+        Object result = switch (type.getName()) {
+            case BOOLEAN_CLASS_NAME -> isNull() ? null : getBoolean();
+            case BYTE_CLASS_NAME -> isNull() ? null : getByte();
+            case SHORT_CLASS_NAME -> isNull() ? null : getShort();
+            case INTEGER_CLASS_NAME -> isNull() ? null : getInt();
+            case LONG_CLASS_NAME -> isNull() ? null : getLong();
+            case FLOAT_CLASS_NAME -> isNull() ? null : getFloat();
+            case DOUBLE_CLASS_NAME -> isNull() ? null : getDouble();
+            case BIG_DECIMAL_CLASS_NAME -> getBigDecimal();
+            case BIG_INTEGER_CLASS_NAME -> getBigInteger();
+            case STRING_CLASS_NAME -> getString();
+            case BYTE_ARRAY_CLASS_NAME -> getBytes();
+            case SQL_DATE_CLASS_NAME -> getDate();
+            case LOCAL_DATE_CLASS_NAME -> getLocalDate();
+            case UTIL_DATE_CLASS_NAME, TIMESTAMP_CLASS_NAME -> getTimestamp();
+            case LOCAL_DATE_TIME_CLASS_NAME -> getLocalDateTime();
+            case TIME_CLASS_NAME -> getTime();
+            case LOCAL_TIME_CLASS_NAME -> getLocalTime();
+            case CALENDAR_CLASS_NAME -> {
+                if (isNull()) {
+                    yield null;
+                } else {
+                    Timestamp timestamp = getTimestamp();
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(timestamp.getTime());
+                    yield calendar;
+                }
             }
-        case OFFSET_TIME_CLASS_NAME:
-            return (T) getOffsetTime();
-        case OFFSET_DATE_TIME_CLASS_NAME:
-            return (T) getOffsetDateTime();
-        case ZONED_DATE_TIME_CLASS_NAME:
-            return (T) getZonedDateTime();
-        case CLOB_CLASS_NAME:
-        case NCLOB_CLASS_NAME:
-            return (T) getClob();
-        case BLOB_CLASS_NAME:
-        case FIREBIRD_BLOB_CLASS_NAME:
-            return (T) getBlob();
-        case INPUT_STREAM_CLASS_NAME:
-            return (T) getBinaryStream();
-        case READER_CLASS_NAME:
-            return (T) getCharacterStream();
-        case ROW_ID_CLASS_NAME:
-        case FB_ROW_ID_CLASS_NAME:
-            return (T) getRowId();
-        case RAW_DATE_TIME_STRUCT_CLASS_NAME:
-            return (T) getRawDateTimeStruct();
-        case DECIMAL_CLASS_NAME:
-            return (T) getDecimal();
-        case DECIMAL32_CLASS_NAME:
-            return (T) getDecimal(Decimal32.class);
-        case DECIMAL64_CLASS_NAME:
-            return (T) getDecimal(Decimal64.class);
-        case DECIMAL128_CLASS_NAME:
-            return (T) getDecimal(Decimal128.class);
-        default:
-            throw invalidGetConversion(type);
-        }
+            case OFFSET_TIME_CLASS_NAME -> getOffsetTime();
+            case OFFSET_DATE_TIME_CLASS_NAME -> getOffsetDateTime();
+            case ZONED_DATE_TIME_CLASS_NAME -> getZonedDateTime();
+            case CLOB_CLASS_NAME, NCLOB_CLASS_NAME -> getClob();
+            case BLOB_CLASS_NAME, FIREBIRD_BLOB_CLASS_NAME -> getBlob();
+            case INPUT_STREAM_CLASS_NAME -> getBinaryStream();
+            case READER_CLASS_NAME -> getCharacterStream();
+            case ROW_ID_CLASS_NAME, FB_ROW_ID_CLASS_NAME -> getRowId();
+            case RAW_DATE_TIME_STRUCT_CLASS_NAME -> getRawDateTimeStruct();
+            case DECIMAL_CLASS_NAME -> getDecimal();
+            case DECIMAL32_CLASS_NAME -> getDecimal(Decimal32.class);
+            case DECIMAL64_CLASS_NAME -> getDecimal(Decimal64.class);
+            case DECIMAL128_CLASS_NAME -> getDecimal(Decimal128.class);
+            default -> throw invalidGetConversion(type);
+        };
+        return type.cast(result);
     }
 
     private String getJdbcTypeName() {
@@ -517,92 +459,36 @@ public abstract class FBField {
 
     public void setObject(Object value) throws SQLException {
         if (setWhenNull(value)) return;
-
-        String typeName = value.getClass().getName();
         // As a form of optimization, we switch on the class name.
         // For non-final classes we'll also try using instanceof in the switch default.
-        switch (typeName) {
-        case BIG_DECIMAL_CLASS_NAME:
-            setBigDecimal((BigDecimal) value);
-            return;
-        case FB_BLOB_CLASS_NAME:
-            setBlob((FBBlob) value);
-            return;
-        case FB_CLOB_CLASS_NAME:
-            setClob((FBClob) value);
-            return;
-        case BOOLEAN_CLASS_NAME:
-            setBoolean((boolean) value);
-            return;
-        case BYTE_CLASS_NAME:
-            setByte((byte) value);
-            return;
-        case BYTE_ARRAY_CLASS_NAME:
-            setBytes((byte[]) value);
-            return;
-        case SQL_DATE_CLASS_NAME:
-            setDate((Date) value);
-            return;
-        case LOCAL_DATE_CLASS_NAME:
-            setLocalDate((LocalDate) value);
-            return;
-        case DOUBLE_CLASS_NAME:
-            setDouble((double) value);
-            return;
-        case FLOAT_CLASS_NAME:
-            setFloat((float) value);
-            return;
-        case INTEGER_CLASS_NAME:
-            setInteger((int) value);
-            return;
-        case LONG_CLASS_NAME:
-            setLong((long) value);
-            return;
-        case SHORT_CLASS_NAME:
-            setShort((short) value);
-            return;
-        case STRING_CLASS_NAME:
-            setString((String) value);
-            return;
-        case TIME_CLASS_NAME:
-            setTime((Time) value);
-            return;
-        case LOCAL_TIME_CLASS_NAME:
-            setLocalTime((LocalTime) value);
-            return;
-        case TIMESTAMP_CLASS_NAME:
-            setTimestamp((Timestamp) value);
-            return;
-        case LOCAL_DATE_TIME_CLASS_NAME:
-            setLocalDateTime((LocalDateTime) value);
-            return;
-        case OFFSET_TIME_CLASS_NAME:
-            setOffsetTime((OffsetTime) value);
-            return;
-        case OFFSET_DATE_TIME_CLASS_NAME:
-            setOffsetDateTime((OffsetDateTime) value);
-            return;
-        case ZONED_DATE_TIME_CLASS_NAME:
-            setZonedDateTime((ZonedDateTime) value);
-            return;
-        case UTIL_DATE_CLASS_NAME:
-            setTimestamp(new Timestamp(((java.util.Date) value).getTime()));
-            return;
-        case RAW_DATE_TIME_STRUCT_CLASS_NAME:
-            setRawDateTimeStruct((DatatypeCoder.RawDateTimeStruct) value);
-            return;
-        case BIG_INTEGER_CLASS_NAME:
-            setBigInteger((BigInteger) value);
-            return;
-        case FB_ROW_ID_CLASS_NAME:
-            setRowId((RowId) value);
-            return;
-        case DECIMAL32_CLASS_NAME:
-        case DECIMAL64_CLASS_NAME:
-        case DECIMAL128_CLASS_NAME:
-            setDecimal((Decimal<?>) value);
-            return;
-        default:
+        switch (value.getClass().getName()) {
+        case BIG_DECIMAL_CLASS_NAME -> setBigDecimal((BigDecimal) value);
+        case FB_BLOB_CLASS_NAME -> setBlob((FBBlob) value);
+        case FB_CLOB_CLASS_NAME -> setClob((FBClob) value);
+        case BOOLEAN_CLASS_NAME -> setBoolean((boolean) value);
+        case BYTE_CLASS_NAME -> setByte((byte) value);
+        case BYTE_ARRAY_CLASS_NAME -> setBytes((byte[]) value);
+        case SQL_DATE_CLASS_NAME -> setDate((Date) value);
+        case LOCAL_DATE_CLASS_NAME -> setLocalDate((LocalDate) value);
+        case DOUBLE_CLASS_NAME -> setDouble((double) value);
+        case FLOAT_CLASS_NAME -> setFloat((float) value);
+        case INTEGER_CLASS_NAME -> setInteger((int) value);
+        case LONG_CLASS_NAME -> setLong((long) value);
+        case SHORT_CLASS_NAME -> setShort((short) value);
+        case STRING_CLASS_NAME -> setString((String) value);
+        case TIME_CLASS_NAME -> setTime((Time) value);
+        case LOCAL_TIME_CLASS_NAME -> setLocalTime((LocalTime) value);
+        case TIMESTAMP_CLASS_NAME -> setTimestamp((Timestamp) value);
+        case LOCAL_DATE_TIME_CLASS_NAME -> setLocalDateTime((LocalDateTime) value);
+        case OFFSET_TIME_CLASS_NAME -> setOffsetTime((OffsetTime) value);
+        case OFFSET_DATE_TIME_CLASS_NAME -> setOffsetDateTime((OffsetDateTime) value);
+        case ZONED_DATE_TIME_CLASS_NAME -> setZonedDateTime((ZonedDateTime) value);
+        case UTIL_DATE_CLASS_NAME -> setTimestamp(new Timestamp(((java.util.Date) value).getTime()));
+        case RAW_DATE_TIME_STRUCT_CLASS_NAME -> setRawDateTimeStruct((DatatypeCoder.RawDateTimeStruct) value);
+        case BIG_INTEGER_CLASS_NAME -> setBigInteger((BigInteger) value);
+        case FB_ROW_ID_CLASS_NAME -> setRowId((RowId) value);
+        case DECIMAL32_CLASS_NAME, DECIMAL64_CLASS_NAME, DECIMAL128_CLASS_NAME -> setDecimal((Decimal<?>) value);
+        default -> {
             if (value instanceof BigDecimal) {
                 setBigDecimal((BigDecimal) value);
             } else if (value instanceof BigInteger) {
@@ -638,6 +524,7 @@ public abstract class FBField {
             } else {
                 throw invalidSetConversion(value.getClass());
             }
+        }
         }
     }
 
