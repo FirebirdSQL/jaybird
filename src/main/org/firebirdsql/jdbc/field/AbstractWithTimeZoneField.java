@@ -159,9 +159,7 @@ abstract class AbstractWithTimeZoneField extends FBField {
         try {
             setStringParse(string);
         } catch (DateTimeParseException e) {
-            SQLException conversionException = invalidSetConversion(String.class, string);
-            conversionException.initCause(e);
-            throw conversionException;
+            throw invalidSetConversion(String.class, string, e);
         }
     }
     

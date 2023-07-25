@@ -118,9 +118,7 @@ class FBShortField extends FBField {
         try {
             setShort(Short.parseShort(string));
         } catch(NumberFormatException nfex) {
-            SQLException conversionException = invalidSetConversion(String.class, string);
-            conversionException.initCause(nfex);
-            throw conversionException;
+            throw invalidSetConversion(String.class, string, nfex);
         }
     }
 

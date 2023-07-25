@@ -67,29 +67,13 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
     @Override
     public BigDecimal getBigDecimal() throws SQLException {
-        T value = getDecimal();
-        if (value == null) return null;
-
-        try {
-            return value.toBigDecimal();
-        } catch (ArithmeticException e) {
-            SQLException conversionException = invalidGetConversion(BigDecimal.class,
-                    format("value %s out of range", value));
-            conversionException.initCause(e);
-            throw conversionException;
-        }
+        return convertForGet(getDecimal(), Decimal::toBigDecimal, BigDecimal.class, "value %s out of range"::formatted);
     }
 
     @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        try {
-            setDecimalInternal(value != null ? decimalHandling.valueOf(value) : null);
-        } catch (ArithmeticException e) {
-            SQLException conversionException = invalidSetConversion(BigDecimal.class,
-                    format("value %f out of range", value));
-            conversionException.initCause(e);
-            throw conversionException;
-        }
+        setDecimalInternal(convertForSet(value, decimalHandling::valueOf, BigDecimal.class,
+                "value %f out of range"::formatted));
     }
 
     @Override
@@ -102,22 +86,13 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
         try {
             setDecimalInternal(value != null ? value.toDecimal(decimalType, OverflowHandling.THROW_EXCEPTION) : null);
         } catch (ArithmeticException e) {
-            SQLException conversionException = invalidSetConversion(requireNonNull(value).getClass(),
-                    format("value %s out of range", value));
-            conversionException.initCause(e);
-            throw conversionException;
+            throw invalidSetConversion(requireNonNull(value).getClass(), format("value %s out of range", value), e);
         }
     }
 
     private void setDecimalInternal(T value) throws SQLException {
-        try {
-            setFieldData(decimalHandling.encode(fieldDescriptor, value));
-        } catch (ArithmeticException e) {
-            SQLException conversionException = invalidSetConversion(requireNonNull(value).getClass(),
-                    format("value %s out of range", value));
-            conversionException.initCause(e);
-            throw conversionException;
-        }
+        setFieldData(convertForSet(value, v -> decimalHandling.encode(fieldDescriptor, v), decimalType,
+                "value %s out of range"::formatted));
     }
 
     @Override
@@ -239,14 +214,9 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
         try {
             setDecimalInternal(decimalHandling.valueOf(string));
         } catch (NumberFormatException nex) {
-            SQLException conversionException = invalidSetConversion(String.class, string);
-            conversionException.initCause(nex);
-            throw conversionException;
+            throw invalidSetConversion(String.class, string, nex);
         } catch (ArithmeticException e) {
-            SQLException conversionException = invalidSetConversion(String.class,
-                    format("value %s out of range", string));
-            conversionException.initCause(e);
-            throw conversionException;
+            throw invalidSetConversion(String.class, format("value %s out of range", string), e);
         }
     }
 

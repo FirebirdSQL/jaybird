@@ -88,9 +88,7 @@ class FBStringField extends FBField implements TrimmableField {
         try {
             return Byte.parseByte(string);
         } catch (NumberFormatException nfex) {
-            SQLException conversionException = invalidGetConversion("byte", string);
-            conversionException.initCause(nfex);
-            throw conversionException;
+            throw invalidGetConversion("byte", string, nfex);
         }
     }
 
@@ -101,9 +99,7 @@ class FBStringField extends FBField implements TrimmableField {
         try {
             return Short.parseShort(string);
         } catch (NumberFormatException nfex) {
-            SQLException conversionException = invalidGetConversion("short", string);
-            conversionException.initCause(nfex);
-            throw conversionException;
+            throw invalidGetConversion("short", string, nfex);
         }
     }
 
@@ -114,9 +110,7 @@ class FBStringField extends FBField implements TrimmableField {
         try {
             return Integer.parseInt(string);
         } catch (NumberFormatException nfex) {
-            SQLException conversionException = invalidGetConversion("int", string);
-            conversionException.initCause(nfex);
-            throw conversionException;
+            throw invalidGetConversion("int", string, nfex);
         }
     }
 
@@ -127,9 +121,7 @@ class FBStringField extends FBField implements TrimmableField {
         try {
             return Long.parseLong(string);
         } catch (NumberFormatException nfex) {
-            SQLException conversionException = invalidGetConversion("long", string);
-            conversionException.initCause(nfex);
-            throw conversionException;
+            throw invalidGetConversion("long", string, nfex);
         }
     }
 
@@ -145,9 +137,7 @@ class FBStringField extends FBField implements TrimmableField {
         try {
             return Float.parseFloat(string);
         } catch (NumberFormatException nfex) {
-            SQLException conversionException = invalidGetConversion("float", string);
-            conversionException.initCause(nfex);
-            throw conversionException;
+            throw invalidGetConversion("float", string, nfex);
         }
     }
 
@@ -158,9 +148,7 @@ class FBStringField extends FBField implements TrimmableField {
         try {
             return Double.parseDouble(string);
         } catch (NumberFormatException nfex) {
-            SQLException conversionException = invalidGetConversion("double", string);
-            conversionException.initCause(nfex);
-            throw conversionException;
+            throw invalidGetConversion("double", string, nfex);
         }
     }
 
@@ -391,9 +379,7 @@ class FBStringField extends FBField implements TrimmableField {
         try {
             setBytes(IOUtils.toBytes(in, (int) length));
         } catch (IOException ioex) {
-            SQLException conversionException = invalidSetConversion(InputStream.class);
-            conversionException.initCause(ioex);
-            throw conversionException;
+            throw invalidSetConversion(InputStream.class, ioex);
         }
     }
 
@@ -408,9 +394,7 @@ class FBStringField extends FBField implements TrimmableField {
         try {
             setString(IOUtils.toString(in, (int) length));
         } catch (IOException ioex) {
-            SQLException conversionException = invalidSetConversion(Reader.class);
-            conversionException.initCause(ioex);
-            throw conversionException;
+            throw invalidSetConversion(Reader.class, ioex);
         }
     }
 
@@ -497,14 +481,7 @@ class FBStringField extends FBField implements TrimmableField {
     }
 
     private <T> T getValueAs(Class<T> type, Function<String, T> converter) throws SQLException {
-        if (isNull()) return null;
-        String string = getString().trim();
-        try {
-            return converter.apply(string);
-        } catch (RuntimeException e) {
-            SQLException conversionException = invalidGetConversion(type, string);
-            conversionException.initCause(e);
-            throw conversionException;
-        }
+        return convertForGet(getString(), converter.compose(String::trim), type);
     }
+    
 }

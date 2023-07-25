@@ -92,9 +92,7 @@ class FBBinaryField extends FBField {
         try {
             setBytes(IOUtils.toBytes(in, (int) length));
         } catch (IOException ioex) {
-            SQLException conversionException = invalidSetConversion(InputStream.class);
-            conversionException.initCause(ioex);
-            throw conversionException;
+            throw invalidSetConversion(InputStream.class, ioex);
         }
     }
 
@@ -109,9 +107,7 @@ class FBBinaryField extends FBField {
         try {
             setString(IOUtils.toString(in, (int) length));
         } catch (IOException ioex) {
-            SQLException conversionException = invalidSetConversion(Reader.class);
-            conversionException.initCause(ioex);
-            throw conversionException;
+            throw invalidSetConversion(Reader.class, ioex);
         }
     }
 

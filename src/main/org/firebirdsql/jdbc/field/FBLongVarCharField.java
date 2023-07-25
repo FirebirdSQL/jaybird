@@ -45,8 +45,6 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
 
     // TODO Reduce duplication with FBBlobField, maybe make it wrap an FBBlobField?
 
-    private static final int BUFF_SIZE = 4096;
-    
     private FBBlob blob;
     private boolean blobExplicitNull;
 
@@ -123,17 +121,10 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
         try (final InputStream in = blob.getBinaryStream()) {
             if (in == null) return null;
             final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-
-            final byte[] buff = new byte[BUFF_SIZE];
-            int counter;
-            while((counter = in.read(buff)) != -1) {
-                bout.write(buff, 0, counter);
-            }
+            in.transferTo(bout);
             return bout.toByteArray();
         } catch(IOException ioex) {
-            SQLException conversionException = invalidGetConversion("bytes[]", ioex.getMessage());
-            conversionException.initCause(ioex);
-            throw conversionException;
+            throw invalidGetConversion("bytes[]", ioex.getMessage(), ioex);
         }
     }
 

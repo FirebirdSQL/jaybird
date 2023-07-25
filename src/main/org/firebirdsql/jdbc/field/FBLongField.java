@@ -127,9 +127,7 @@ final class FBLongField extends FBField {
         try {
             setLong(Long.parseLong(string));
         } catch (NumberFormatException nfex) {
-            SQLException conversionException = invalidSetConversion(String.class, string);
-            conversionException.initCause(nfex);
-            throw conversionException;
+            throw invalidSetConversion(String.class, string, nfex);
         }
     }
 

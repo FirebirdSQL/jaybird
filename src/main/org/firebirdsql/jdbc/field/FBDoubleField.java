@@ -122,9 +122,7 @@ class FBDoubleField extends FBField {
         try {
             setDouble(Double.parseDouble(string));
         } catch(NumberFormatException nfex) {
-            SQLException conversionException = invalidSetConversion(String.class, string);
-            conversionException.initCause(nfex);
-            throw conversionException;
+            throw invalidSetConversion(String.class, string, nfex);
         }
     }
     

@@ -36,7 +36,6 @@ import java.util.GregorianCalendar;
 import java.util.Map;
 import java.util.function.Function;
 
-import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
 
 /**
@@ -794,31 +793,13 @@ public abstract class FBField {
      *         For database access errors, or values that cannot be converted.
      */
     public Decimal<?> getDecimal() throws SQLException {
-        BigDecimal bdValue = getBigDecimal();
-        try {
-            return bdValue != null
-                    ? Decimal128.valueOf(bdValue, OverflowHandling.THROW_EXCEPTION)
-                    : null;
-        } catch (ArithmeticException e) {
-            SQLException conversionException = invalidGetConversion(Decimal128.class,
-                    String.format("value %s out of range", bdValue));
-            conversionException.initCause(e);
-            throw conversionException;
-        }
+        return convertForGet(getBigDecimal(), v -> Decimal128.valueOf(v, OverflowHandling.THROW_EXCEPTION),
+                Decimal128.class, "value %s out of range"::formatted);
     }
 
     public final <D extends Decimal<D>> D getDecimal(Class<D> targetType) throws SQLException {
-        final Decimal<?> value = getDecimal();
-        try {
-            return value != null
-                    ? value.toDecimal(targetType, OverflowHandling.THROW_EXCEPTION)
-                    : null;
-        } catch (ArithmeticException e) {
-            SQLException conversionException = invalidGetConversion(targetType,
-                    String.format("value %s out of range", value));
-            conversionException.initCause(e);
-            throw conversionException;
-        }
+        return convertForGet(getDecimal(), v -> v.toDecimal(targetType, OverflowHandling.THROW_EXCEPTION), targetType,
+                "value %s out of range"::formatted);
     }
 
     /**
@@ -831,69 +812,103 @@ public abstract class FBField {
      *         Value to set
      */
     public void setDecimal(Decimal<?> decimal) throws SQLException {
-        try {
-            setBigDecimal(decimal != null ? decimal.toBigDecimal() : null);
-        } catch (ArithmeticException e) {
-            SQLException conversionException = invalidSetConversion(requireNonNull(decimal).getClass(),
-                    String.format("value %s out of range", decimal));
-            conversionException.initCause(e);
-            throw conversionException;
-        }
+        setBigDecimal(convertForSet(decimal, v -> decimal.toBigDecimal(), Decimal.class,
+                "value %s out of range"::formatted));
     }
 
     final SQLException invalidGetConversion(Class<?> requestedType) {
-        return invalidGetConversion(requestedType.getName(), null);
+        return invalidGetConversion(requestedType, null, null);
     }
 
     final SQLException invalidGetConversion(Class<?> requestedType, String reason) {
-        return invalidGetConversion(requestedType.getName(), reason);
+        return invalidGetConversion(requestedType, reason, null);
+    }
+
+    final SQLException invalidGetConversion(Class<?> requestedType, String reason, Throwable cause) {
+        return invalidGetConversion(requestedType.getName(), reason, cause);
     }
 
     final SQLException invalidGetConversion(String requestedTypeName) {
-        return invalidGetConversion(requestedTypeName, null);
+        return invalidGetConversion(requestedTypeName, null, null);
     }
 
     final SQLException invalidGetConversion(String requestedTypeName, String reason) {
+        return invalidGetConversion(requestedTypeName, reason, null);
+    }
+
+    final SQLException invalidGetConversion(String requestedTypeName, String reason, Throwable cause) {
         String message = String.format(
                 "Unsupported get conversion requested for field %s at index %d (JDBC type %s), target type: %s",
                 getAlias(), fieldDescriptor.getPosition() + 1, getJdbcTypeName(), requestedTypeName);
         if (reason != null) {
             message = message + ", reason: " + reason;
         }
-        return new TypeConversionException(message);
+        return cause != null ? new TypeConversionException(message, cause) : new TypeConversionException(message);
     }
 
     final SQLException invalidSetConversion(Class<?> sourceType) {
-        return invalidSetConversion(sourceType.getName(), null);
+        return invalidSetConversion(sourceType, null, null);
+    }
+
+    final SQLException invalidSetConversion(Class<?> sourceType, Throwable cause) {
+        return invalidSetConversion(sourceType, null, cause);
     }
 
     final SQLException invalidSetConversion(Class<?> sourceType, String reason) {
-        return invalidSetConversion(sourceType.getName(), reason);
+        return invalidSetConversion(sourceType, reason, null);
+    }
+
+    final SQLException invalidSetConversion(Class<?> sourceType, String reason, Throwable cause) {
+        return invalidSetConversion(sourceType.getName(), reason, cause);
     }
 
     final SQLException invalidSetConversion(String sourceTypeName) {
-        return invalidSetConversion(sourceTypeName, null);
+        return invalidSetConversion(sourceTypeName, null, null);
     }
 
     final SQLException invalidSetConversion(String sourceTypeName, String reason) {
-        String message = String.format(
-                "Unsupported set conversion requested for field %s at index %d (JDBC type %s), source type: %s",
-                getAlias(), fieldDescriptor.getPosition() + 1, getJdbcTypeName(), sourceTypeName);
+        return invalidSetConversion(sourceTypeName, reason, null);
+    }
+
+    final SQLException invalidSetConversion(String sourceTypeName, String reason, Throwable cause) {
+        String message = "Unsupported set conversion requested for field %s at index %d (JDBC type %s), source type: %s"
+                .formatted(getAlias(), fieldDescriptor.getPosition() + 1, getJdbcTypeName(), sourceTypeName);
         if (reason != null) {
             message = message + ", reason: " + reason;
         }
-        return new TypeConversionException(message);
+        return cause != null ? new TypeConversionException(message, cause) : new TypeConversionException(message);
     }
 
     final <T> T fromString(String value, Function<String, T> converter) throws SQLException {
+        return convertForSet(value, converter.compose(String::trim), String.class);
+    }
+
+    final <S, T> T convertForSet(S value, Function<S, T> converter, Class<? extends S> sourceType) throws SQLException {
+        return convertForSet(value, converter, sourceType, String::valueOf);
+    }
+
+    final <S, T> T convertForSet(S value, Function<S, T> converter, Class<? extends S> sourceType,
+            Function<S, String> reasonFactory) throws SQLException {
         if (value == null) return null;
-        String string = value.trim();
         try {
             return converter.apply(value);
         } catch (RuntimeException e) {
-            SQLException conversionException = invalidSetConversion(String.class, string);
-            conversionException.initCause(e);
-            throw conversionException;
+            throw invalidSetConversion(sourceType, reasonFactory.apply(value), e);
+        }
+    }
+
+    final <S, T> T convertForGet(S value, Function<S, T> converter, Class<? extends T> requestedType)
+            throws SQLException {
+        return convertForGet(value, converter, requestedType, String::valueOf);
+    }
+
+    final <S, T> T convertForGet(S value, Function<S, T> converter, Class<? extends T> requestedType,
+            Function<S, String> reasonFactory) throws SQLException {
+        if (value == null) return null;
+        try {
+            return converter.apply(value);
+        } catch (RuntimeException e) {
+            throw invalidGetConversion(requestedType, reasonFactory.apply(value), e);
         }
     }
 
