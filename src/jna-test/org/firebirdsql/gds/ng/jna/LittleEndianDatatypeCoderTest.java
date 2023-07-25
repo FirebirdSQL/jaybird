@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Test numeric conversion in little endian
@@ -56,6 +57,11 @@ class LittleEndianDatatypeCoderTest {
     }
 
     @Test
+    void decodeShort_null() {
+        assertEquals(0, datatypeCoder.decodeShort(null));
+    }
+
+    @Test
     void encodeInt() {
         int testValue = 0b1011_0110_1001_0000_1111_0101_0001_1010;
         byte[] result = datatypeCoder.encodeInt(testValue);
@@ -69,6 +75,11 @@ class LittleEndianDatatypeCoderTest {
         int result = datatypeCoder.decodeInt(testValue);
 
         assertEquals(0b1011_0110_1001_0000_1111_0101_0001_1010, result);
+    }
+
+    @Test
+    void decodeInt_null() {
+        assertEquals(0, datatypeCoder.decodeInt(null));
     }
 
     @Test
@@ -90,11 +101,21 @@ class LittleEndianDatatypeCoderTest {
     }
 
     @Test
+    void testDecodeLong_null() {
+        assertEquals(0L, datatypeCoder.decodeLong(null));
+    }
+
+    @Test
     void decodeDecimal64() {
         final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
         final byte[] bytes = reverseByteOrder(decimal64.toBytes());
 
         assertEquals(decimal64, datatypeCoder.decodeDecimal64(bytes));
+    }
+
+    @Test
+    void decodeDecimal64_null() {
+        assertNull(datatypeCoder.decodeDecimal64(null));
     }
 
     @Test
@@ -106,11 +127,21 @@ class LittleEndianDatatypeCoderTest {
     }
 
     @Test
+    void encodeDecimal64_null() {
+        assertNull(datatypeCoder.encodeDecimal64(null));
+    }
+
+    @Test
     void decodeDecimal128() {
         final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
         final byte[] bytes = reverseByteOrder(decimal128.toBytes());
 
         assertEquals(decimal128, datatypeCoder.decodeDecimal128(bytes));
+    }
+
+    @Test
+    void decodeDecimal128_null() {
+        assertNull(datatypeCoder.decodeDecimal128(null));
     }
 
     @Test
@@ -121,6 +152,11 @@ class LittleEndianDatatypeCoderTest {
         assertArrayEquals(bytes, datatypeCoder.encodeDecimal128(decimal128));
     }
 
+    @Test
+    void encodeDecimal128_null() {
+        assertNull(datatypeCoder.encodeDecimal128(null));
+    }
+
     private byte[] reverseByteOrder(byte[] array) {
         final byte[] newArray = new byte[array.length];
         final int maxIndex = newArray.length - 1;
@@ -129,4 +165,5 @@ class LittleEndianDatatypeCoderTest {
         }
         return newArray;
     }
+    
 }

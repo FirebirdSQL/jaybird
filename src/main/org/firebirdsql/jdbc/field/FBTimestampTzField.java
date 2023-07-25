@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
+import java.sql.Date;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Calendar;
@@ -43,42 +44,33 @@ class FBTimestampTzField extends AbstractWithTimeZoneField {
     }
 
     @Override
-    public java.sql.Date getDate() throws SQLException {
+    public Date getDate() throws SQLException {
         OffsetDateTime offsetDateTime = getOffsetDateTime();
-        if (offsetDateTime == null) {
-            return null;
-        }
-        return new java.sql.Date(offsetDateTime.toInstant().toEpochMilli());
+        return offsetDateTime != null ? new Date(offsetDateTime.toInstant().toEpochMilli()) : null;
     }
 
     @Override
-    public java.sql.Date getDate(Calendar cal) throws SQLException {
+    public Date getDate(Calendar cal) throws SQLException {
         // Intentionally ignoring calendar, see jdp-2019-03
         return getDate();
     }
 
     @Override
-    public void setDate(java.sql.Date value) throws SQLException {
+    public void setDate(Date value) throws SQLException {
         if (setWhenNull(value)) return;
-
-        OffsetDateTime offsetDateTime = value.toLocalDate()
-                .atStartOfDay()
-                .atZone(getDefaultZoneId())
-                .toOffsetDateTime();
-        setOffsetDateTime(offsetDateTime);
+        setOffsetDateTime(value.toLocalDate().atStartOfDay().atZone(getDefaultZoneId()).toOffsetDateTime());
     }
 
     @Override
-    public void setDate(java.sql.Date value, Calendar cal) throws SQLException {
+    public void setDate(Date value, Calendar cal) throws SQLException {
         // Intentionally ignoring calendar, see jdp-2019-03
         setDate(value);
     }
 
     @Override
     public String getString() throws SQLException {
-        if (isNull()) return null;
-
-        return String.valueOf(getOffsetDateTime());
+        OffsetDateTime offsetDateTime = getOffsetDateTime();
+        return offsetDateTime != null ? offsetDateTime.toString() : null;
     }
 
 }

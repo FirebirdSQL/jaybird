@@ -106,15 +106,13 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
     @Override
     public Clob getClob() throws SQLException {
     	FBBlob blob = (FBBlob) getBlob();
-    	if (blob == null) return null;
-    	return new FBClob(blob);
+        return blob != null ? new FBClob(blob) : null;
     }
 
     @Override
     public InputStream getBinaryStream() throws SQLException {
         Blob blob = getBlob();
-        if (blob == null) return null;
-        return blob.getBinaryStream();
+        return blob != null ? blob.getBinaryStream() : null;
     }
 
     @Override
@@ -168,10 +166,7 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
 
     @Override
     public String getString() throws SQLException {
-        byte[] data = getBytes();
-        if (data == null) return null;
-        
-        return applyTrimTrailing(getDatatypeCoder().decodeString(data));
+        return applyTrimTrailing(getDatatypeCoder().decodeString(getBytes()));
     }
 
     @Override
@@ -187,9 +182,7 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
 
     @Override
     public void setBlob(Blob blob) throws SQLException {
-        if (blob == null) {
-            setNull();
-        } else if (blob instanceof FBBlob) {
+        if (blob instanceof FBBlob || blob == null) {
             setBlob((FBBlob) blob);
         } else {
             FBBlob fbb = createBlob();
@@ -210,9 +203,7 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
 
     @Override
     public void setClob(Clob clob) throws SQLException {
-        if (clob == null) {
-            setNull();
-        } else if (clob instanceof FBClob) {
+        if (clob instanceof FBClob || clob == null) {
             setClob((FBClob) clob);
         } else {
             FBClob fbc = createClob();
@@ -234,11 +225,7 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
 
     @Override
     public void setString(String value) throws SQLException {
-        // setNull() to reset field to empty state
-        setNull();
-        if (value != null) {
-            setBytes(getDatatypeCoder().encodeString(value));
-        }
+        setBytes(getDatatypeCoder().encodeString(value));
     }
 
     @Override

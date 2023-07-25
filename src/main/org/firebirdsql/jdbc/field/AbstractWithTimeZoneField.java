@@ -22,6 +22,8 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.tz.TimeZoneDatatypeCoder;
 
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.*;
 import java.time.format.DateTimeParseException;
 import java.util.Calendar;
@@ -46,8 +48,6 @@ abstract class AbstractWithTimeZoneField extends FBField {
 
     @Override
     final OffsetDateTime getOffsetDateTime() throws SQLException {
-        if (isNull()) return null;
-
         return timeZoneCodec.decodeOffsetDateTime(getFieldData());
     }
 
@@ -58,8 +58,6 @@ abstract class AbstractWithTimeZoneField extends FBField {
 
     @Override
     final OffsetTime getOffsetTime() throws SQLException {
-        if (isNull()) return null;
-
         return timeZoneCodec.decodeOffsetTime(getFieldData());
     }
 
@@ -70,8 +68,6 @@ abstract class AbstractWithTimeZoneField extends FBField {
 
     @Override
     final ZonedDateTime getZonedDateTime() throws SQLException {
-        if (isNull()) return null;
-
         return timeZoneCodec.decodeZonedDateTime(getFieldData());
     }
 
@@ -81,68 +77,54 @@ abstract class AbstractWithTimeZoneField extends FBField {
     }
 
     @Override
-    public java.sql.Time getTime() throws SQLException {
+    public Time getTime() throws SQLException {
         OffsetDateTime offsetDateTime = getOffsetDateTime();
-        if (offsetDateTime == null) {
-            return null;
-        }
-        return new java.sql.Time(offsetDateTime.toInstant().toEpochMilli());
+        return offsetDateTime != null ? new Time(offsetDateTime.toInstant().toEpochMilli()) : null;
     }
 
     @Override
-    public java.sql.Time getTime(Calendar cal) throws SQLException {
+    public Time getTime(Calendar cal) throws SQLException {
         // Intentionally ignoring calendar, see jdp-2019-03
         return getTime();
     }
 
     @Override
-    public void setTime(java.sql.Time value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        OffsetDateTime offsetDateTime = ZonedDateTime.of(LocalDate.now(), value.toLocalTime(), getDefaultZoneId())
-                .toOffsetDateTime();
-        setOffsetDateTime(offsetDateTime);
+    public void setTime(Time value) throws SQLException {
+        setOffsetDateTime(value != null
+                ? ZonedDateTime.of(LocalDate.now(), value.toLocalTime(), getDefaultZoneId()).toOffsetDateTime()
+                : null);
     }
 
     @Override
-    public void setTime(java.sql.Time value, Calendar cal) throws SQLException {
+    public void setTime(Time value, Calendar cal) throws SQLException {
         // Intentionally ignoring calendar, see jdp-2019-03
         setTime(value);
     }
 
     @Override
-    public java.sql.Timestamp getTimestamp() throws SQLException {
+    public Timestamp getTimestamp() throws SQLException {
         OffsetDateTime offsetDateTime = getOffsetDateTime();
-        if (offsetDateTime == null) {
-            return null;
-        }
-        return new java.sql.Timestamp(offsetDateTime.toInstant().toEpochMilli());
+        if (offsetDateTime == null) return null;
+
+        Instant instant = offsetDateTime.toInstant();
+        Timestamp timestamp = new Timestamp(instant.toEpochMilli());
+        timestamp.setNanos(instant.getNano());
+        return timestamp;
     }
 
     @Override
-    public java.sql.Timestamp getTimestamp(Calendar cal) throws SQLException {
+    public Timestamp getTimestamp(Calendar cal) throws SQLException {
         // Intentionally ignoring calendar, see jdp-2019-03
         return getTimestamp();
     }
 
     @Override
-    public void setTimestamp(java.sql.Timestamp value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        OffsetDateTime offsetDateTime = value.toLocalDateTime()
-                .atZone(getDefaultZoneId())
-                .toOffsetDateTime();
-        setOffsetDateTime(offsetDateTime);
+    public void setTimestamp(Timestamp value) throws SQLException {
+        setOffsetDateTime(value != null ? value.toLocalDateTime().atZone(getDefaultZoneId()).toOffsetDateTime() : null);
     }
 
     @Override
-    public void setTimestamp(java.sql.Timestamp value, Calendar cal) throws SQLException {
+    public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
         // Intentionally ignoring calendar, see jdp-2019-03
         setTimestamp(value);
     }
@@ -173,7 +155,6 @@ abstract class AbstractWithTimeZoneField extends FBField {
     @Override
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
-
         String string = value.trim();
         try {
             setStringParse(string);
@@ -183,4 +164,5 @@ abstract class AbstractWithTimeZoneField extends FBField {
             throw conversionException;
         }
     }
+    
 }

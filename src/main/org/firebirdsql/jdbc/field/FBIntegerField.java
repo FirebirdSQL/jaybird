@@ -51,10 +51,7 @@ final class FBIntegerField extends FBField {
 
     @Override
     public byte getByte() throws SQLException {
-        if (isNull()) return BYTE_NULL_VALUE;
-
-        int value = getDatatypeCoder().decodeInt(getFieldData());
-
+        int value = getInt();
         // check if value is within bounds
         if (value > MAX_BYTE_VALUE || value < MIN_BYTE_VALUE) {
             throw invalidGetConversion("byte", String.format("value %d out of range", value));
@@ -65,10 +62,7 @@ final class FBIntegerField extends FBField {
 
     @Override
     public short getShort() throws SQLException {
-        if (isNull()) return SHORT_NULL_VALUE;
-
-        int value = getDatatypeCoder().decodeInt(getFieldData());
-
+        int value = getInt();
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
             throw invalidGetConversion("short", String.format("value %d out of range", value));
@@ -79,44 +73,39 @@ final class FBIntegerField extends FBField {
 
     @Override
     public int getInt() throws SQLException {
-        if (isNull()) return INT_NULL_VALUE;
         return getDatatypeCoder().decodeInt(getFieldData());
     }
 
     @Override
     public long getLong() throws SQLException {
-        if (isNull()) return LONG_NULL_VALUE;
-        return getDatatypeCoder().decodeInt(getFieldData());
+        return getInt();
     }
 
     @Override
     public float getFloat() throws SQLException {
-        if (isNull()) return FLOAT_NULL_VALUE;
-        return getDatatypeCoder().decodeInt(getFieldData());
+        return getInt();
     }
 
     @Override
     public double getDouble() throws SQLException {
-        if (isNull()) return DOUBLE_NULL_VALUE;
-        return getDatatypeCoder().decodeInt(getFieldData());
+        return getInt();
     }
 
     @Override
     public BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return null;
-        return BigDecimal.valueOf(getDatatypeCoder().decodeInt(getFieldData()));
+        return BigDecimal.valueOf(getInt());
     }
 
     @Override
     public boolean getBoolean() throws SQLException {
-        if (isNull()) return BOOLEAN_NULL_VALUE;
-        return getDatatypeCoder().decodeInt(getFieldData()) == 1;
+        return getInt() == 1;
     }
 
     @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
-        return String.valueOf(getDatatypeCoder().decodeInt(getFieldData()));
+        return String.valueOf(getInt());
     }
 
     @Override
@@ -130,7 +119,6 @@ final class FBIntegerField extends FBField {
     @Override
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
-
         String string = value.trim();
         try {
             setInteger(Integer.parseInt(string));
@@ -194,7 +182,6 @@ final class FBIntegerField extends FBField {
     @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
         if (setWhenNull(value)) return;
-
         // check if value is within bounds
         if (value.compareTo(BD_MAX_INT) > 0 || value.compareTo(BD_MIN_INT) < 0) {
             throw invalidSetConversion(BigDecimal.class, String.format("value %f out of range", value));
@@ -206,7 +193,6 @@ final class FBIntegerField extends FBField {
     @Override
     public void setBigInteger(BigInteger value) throws SQLException {
         if (setWhenNull(value)) return;
-
         // check if value is within bounds
         if (value.compareTo(BI_MAX_INT) > 0 || value.compareTo(BI_MIN_INT) < 0) {
             throw invalidSetConversion(BigInteger.class, String.format("value %d out of range", value));
@@ -214,4 +200,5 @@ final class FBIntegerField extends FBField {
 
         setLong(value.intValueExact());
     }
+
 }

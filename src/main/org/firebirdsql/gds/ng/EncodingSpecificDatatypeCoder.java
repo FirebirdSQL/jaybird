@@ -69,7 +69,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
 
     @Override
     public byte[] encodeString(String val) {
-        return encoding.encodeToCharset(val);
+        return val != null ? encoding.encodeToCharset(val) : null;
     }
 
     @Override
@@ -79,7 +79,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
 
     @Override
     public String decodeString(byte[] buf) {
-        return encoding.decodeFromCharset(buf);
+        return buf != null ? encoding.decodeFromCharset(buf) : null;
     }
 
     @Override

@@ -125,7 +125,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public short decodeShort(byte[] buf) {
-        return decodeShort(buf, 0);
+        return buf != null ? decodeShort(buf, 0) : 0;
     }
 
     @Override
@@ -150,7 +150,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public int decodeInt(byte[] buf) {
-        return decodeInt(buf, 0);
+        return buf != null ? decodeInt(buf, 0) : 0;
     }
 
     @Override
@@ -177,6 +177,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public long decodeLong(byte[] buf) {
+        if (buf == null) return 0;
         return ((long) (buf[0]) << 56) +
                ((buf[1] & 0xFFL) << 48) +
                ((buf[2] & 0xFFL) << 40) +
@@ -194,7 +195,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public float decodeFloat(byte[] buf) {
-        return Float.intBitsToFloat(decodeInt(buf));
+        return buf != null ? Float.intBitsToFloat(decodeInt(buf)) : 0;
     }
 
     @Override
@@ -204,12 +205,12 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public double decodeDouble(byte[] buf) {
-        return Double.longBitsToDouble(decodeLong(buf));
+        return buf != null ? Double.longBitsToDouble(decodeLong(buf)) : 0;
     }
 
     @Override
     public final byte[] encodeString(String val) {
-        return encoding.encodeToCharset(val);
+        return val != null ? encoding.encodeToCharset(val) : null;
     }
 
     @Override
@@ -219,7 +220,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public final String decodeString(byte[] buf) {
-        return encoding.decodeFromCharset(buf);
+        return buf != null ? encoding.decodeFromCharset(buf) : null;
     }
 
     @Override
@@ -231,24 +232,21 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public Timestamp encodeTimestamp(Timestamp val, Calendar c) {
-        if (c == null) {
-            return val;
-        }
+        if (c == null || val == null) return val;
         return new Timestamp(val.getTime() + calculateOffset(c));
     }
 
-    private int calculateOffset(Calendar cal) {
+    private static int calculateOffset(Calendar cal) {
         return cal.getTimeZone().getRawOffset() - Calendar.getInstance().getTimeZone().getRawOffset();
     }
 
     @Override
     public byte[] encodeTimestampRaw(RawDateTimeStruct val) {
-        return new datetime(val).toTimestampBytes();
+        return val != null ? new datetime(val).toTimestampBytes() : null;
     }
 
     @Override
     public byte[] encodeTimestampCalendar(Timestamp val, Calendar c) {
-
         /* note, we cannot simply pass millis to the database, because
          * Firebird stores timestamp in format (citing Ann W. Harrison):
          *
@@ -256,108 +254,95 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
          * the number of days since 17 Nov 1858 and one representing number
          * of 100 nano-seconds since midnight" (NOTE: It is actually 100 microseconds!)
          */
-        return new datetime(val, c).toTimestampBytes();
+        return val != null ? new datetime(val, c).toTimestampBytes() : null;
     }
 
     @Override
     public Timestamp decodeTimestamp(Timestamp val, Calendar c) {
-        if (c == null) {
-            return val;
-        }
+        if (c == null || val == null) return val;
         return new Timestamp(val.getTime() - calculateOffset(c));
     }
 
     @Override
     public RawDateTimeStruct decodeTimestampRaw(byte[] buf) {
-        datetime d = fromLongBytes(buf);
-        return d.getRaw();
+        return buf != null ? fromLongBytes(buf).getRaw() : null;
     }
 
     @Override
     public Timestamp decodeTimestampCalendar(byte[] buf, Calendar c) {
-        datetime d = fromLongBytes(buf);
-        return d.toTimestamp(c);
+        return buf != null ? fromLongBytes(buf).toTimestamp(c) : null;
     }
 
     @Override
     public Time encodeTime(Time val, Calendar c) {
-        if (c == null) {
-            return val;
-        }
+        if (c == null || val == null) return val;
         return new Time(val.getTime() + calculateOffset(c));
     }
 
     @Override
     public byte[] encodeTimeRaw(RawDateTimeStruct val) {
-        return new datetime(val).toTimeBytes();
+        return val != null ? new datetime(val).toTimeBytes() : null;
     }
 
     @Override
     public byte[] encodeTimeCalendar(Time val, Calendar c) {
-        return new datetime(val, c).toTimeBytes();
+        return val != null ? new datetime(val, c).toTimeBytes() : null;
     }
 
     @Override
     public Time decodeTime(Time val, Calendar c) {
-        if (c == null) {
-            return val;
-        }
+        if (c == null || val == null) return val;
         return new Time(val.getTime() - calculateOffset(c));
     }
 
     @Override
     public RawDateTimeStruct decodeTimeRaw(byte[] buf) {
-        return new datetime(buf, -1, 0).getRaw();
+        return buf != null ? new datetime(buf, -1, 0).getRaw() : null;
     }
 
     @Override
     public Time decodeTimeCalendar(byte[] buf, Calendar c) {
-        return new datetime(buf, -1, 0).toTime(c);
+        return buf != null ? new datetime(buf, -1, 0).toTime(c) : null;
     }
 
     @Override
     public Date encodeDate(Date val, Calendar c) {
-        if (c == null) {
-            return (val);
-        } else {
-            c.setTime(val);
-            return new Date(c.getTime().getTime());
-        }
+        if (c == null || val == null) return val;
+        // TODO This effectively does nothing... just replace with return val?
+        c.setTime(val);
+        return new Date(c.getTime().getTime());
     }
 
     @Override
     public byte[] encodeDateRaw(RawDateTimeStruct val) {
-        return new datetime(val).toDateBytes();
+        return val != null ? new datetime(val).toDateBytes() : null;
     }
 
     @Override
     public byte[] encodeDateCalendar(Date val, Calendar c) {
-        return new datetime(val, c).toDateBytes();
+        return val != null ? new datetime(val, c).toDateBytes() : null;
     }
 
     @Override
     public Date decodeDate(Date val, Calendar c) {
-        if (c == null || val == null) {
-            return val;
-        } else {
-            c.setTime(val);
-            return new Date(c.getTime().getTime());
-        }
+        if (c == null || val == null) return val;
+        c.setTime(val);
+        return new Date(c.getTime().getTime());
     }
 
     @Override
     public RawDateTimeStruct decodeDateRaw(byte[] buf) {
-        return new datetime(buf, 0, -1).getRaw();
+        return buf != null ? new datetime(buf, 0, -1).getRaw() : null;
     }
 
     @Override
     public Date decodeDateCalendar(byte[] buf, Calendar c) {
-        return new datetime(buf, 0, -1).toDate(c);
+        return buf != null ? new datetime(buf, 0, -1).toDate(c) : null;
     }
 
     @Override
     public boolean decodeBoolean(byte[] buf) {
-        return buf[0] != 0;
+        return buf != null && buf[0] != 0;
     }
 
     @Override
@@ -367,7 +352,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public LocalTime decodeLocalTime(byte[] buf) {
-        return decodeLocalTime(buf, 0);
+        return buf != null ? decodeLocalTime(buf, 0) : null;
     }
 
     @Override
@@ -377,7 +362,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public byte[] encodeLocalTime(LocalTime val) {
-        return encodeInt(FbDatetimeConversion.toFbTimeUnits(val));
+        return val != null ? encodeInt(FbDatetimeConversion.toFbTimeUnits(val)) : null;
     }
 
     @Override
@@ -387,7 +372,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public LocalDate decodeLocalDate(byte[] buf) {
-        return decodeLocalDate(buf, 0);
+        return buf != null ? decodeLocalDate(buf, 0) : null;
     }
 
     @Override
@@ -397,7 +382,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public byte[] encodeLocalDate(LocalDate val) {
-        return encodeInt(FbDatetimeConversion.toModifiedJulianDate(val));
+        return val != null ? encodeInt(FbDatetimeConversion.toModifiedJulianDate(val)) : null;
     }
 
     @Override
@@ -407,7 +392,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public LocalDateTime decodeLocalDateTime(byte[] buf) {
-        return decodeLocalDateTime(buf, 0);
+        return buf != null ? decodeLocalDateTime(buf, 0) : null;
     }
 
     @Override
@@ -417,6 +402,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public byte[] encodeLocalDateTime(LocalDateTime val) {
+        if (val == null) return null;
         byte[] buf = new byte[8];
         encodeLocalDateTime(val, buf, 0);
         return buf;
@@ -446,31 +432,32 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public Decimal64 decodeDecimal64(byte[] buf) {
-        return Decimal64.parseBytes(networkOrder(buf));
+        return buf != null ? Decimal64.parseBytes(networkOrder(buf)) : null;
     }
 
     @Override
     public byte[] encodeDecimal64(Decimal64 val) {
-        return networkOrder(val.toBytes());
+        return val != null ? networkOrder(val.toBytes()) : null;
     }
 
     @Override
     public Decimal128 decodeDecimal128(byte[] buf) {
-        return Decimal128.parseBytes(networkOrder(buf));
+        return buf != null ? Decimal128.parseBytes(networkOrder(buf)) : null;
     }
 
     @Override
     public byte[] encodeDecimal128(Decimal128 val) {
-        return networkOrder(val.toBytes());
+        return val != null ? networkOrder(val.toBytes()) : null;
     }
 
     @Override
     public BigInteger decodeInt128(byte[] buf) {
-        return new BigInteger(networkOrder(buf));
+        return buf != null ? new BigInteger(networkOrder(buf)) : null;
     }
 
     @Override
     public byte[] encodeInt128(BigInteger val) {
+        if (val == null) return null;
         if (val.bitLength() > 127) {
             throw new IllegalArgumentException("Received BigInteger value requires more than 16 bytes storage");
         }

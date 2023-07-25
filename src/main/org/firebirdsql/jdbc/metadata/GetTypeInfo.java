@@ -211,7 +211,7 @@ public final class GetTypeInfo {
     }
 
     private static byte[] getBytes(String value) {
-        return value != null ? ROW_DESCRIPTOR.getDatatypeCoder().encodeString(value) : null;
+        return ROW_DESCRIPTOR.getDatatypeCoder().encodeString(value);
     }
 
     private static byte[] getCharBoolean(boolean booleanValue) {

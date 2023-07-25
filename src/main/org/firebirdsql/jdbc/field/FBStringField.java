@@ -84,7 +84,6 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public byte getByte() throws SQLException {
         if (isNull()) return BYTE_NULL_VALUE;
-
         String string = getString().trim();
         try {
             return Byte.parseByte(string);
@@ -98,7 +97,6 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public short getShort() throws SQLException {
         if (isNull()) return SHORT_NULL_VALUE;
-
         String string = getString().trim();
         try {
             return Short.parseShort(string);
@@ -112,7 +110,6 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public int getInt() throws SQLException {
         if (isNull()) return INT_NULL_VALUE;
-
         String string = getString().trim();
         try {
             return Integer.parseInt(string);
@@ -126,7 +123,6 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public long getLong() throws SQLException {
         if (isNull()) return LONG_NULL_VALUE;
-
         String string = getString().trim();
         try {
             return Long.parseLong(string);
@@ -145,7 +141,6 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public float getFloat() throws SQLException {
         if (isNull()) return FLOAT_NULL_VALUE;
-
         String string = getString().trim();
         try {
             return Float.parseFloat(string);
@@ -159,7 +154,6 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public double getDouble() throws SQLException {
         if (isNull()) return DOUBLE_NULL_VALUE;
-
         String string = getString().trim();
         try {
             return Double.parseDouble(string);
@@ -175,7 +169,6 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public boolean getBoolean() throws SQLException {
         if (isNull()) return BOOLEAN_NULL_VALUE;
-
         final String trimmedValue = getString().trim();
         return trimmedValue.equalsIgnoreCase(LONG_TRUE) ||
                 trimmedValue.equalsIgnoreCase(SHORT_TRUE) ||
@@ -185,7 +178,6 @@ class FBStringField extends FBField implements TrimmableField {
 
     @Override
     public String getString() throws SQLException {
-        if (isNull()) return null;
         String result = applyTrimTrailing(getDatatypeCoder().decodeString(getFieldData()));
         if (requiredType == Types.VARCHAR || isTrimTrailing()) {
             return result;
@@ -199,7 +191,7 @@ class FBStringField extends FBField implements TrimmableField {
         // NOTE: For Firebird 3.0 and earlier, this prevents access to oversized CHAR(n) CHARACTER SET UNICODE_FSS.
         // We accept that limitation because the workaround is to cast to VARCHAR, and because Firebird 4.0 no longer
         // allows storing oversized UNICODE_FSS values
-        if (result.length() > possibleCharLength) {
+        if (result != null && result.length() > possibleCharLength) {
             return result.substring(0, possibleCharLength);
         }
         return result;
@@ -235,7 +227,6 @@ class FBStringField extends FBField implements TrimmableField {
 
     @Override
     public Date getDate(Calendar cal) throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeDate(getDate(), cal);
     }
 
@@ -251,7 +242,6 @@ class FBStringField extends FBField implements TrimmableField {
 
     @Override
     public Time getTime(Calendar cal) throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeTime(getTime(), cal);
     }
 
@@ -267,7 +257,6 @@ class FBStringField extends FBField implements TrimmableField {
 
     @Override
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeTimestamp(getTimestamp(), cal);
     }
 
@@ -360,7 +349,7 @@ class FBStringField extends FBField implements TrimmableField {
     public void setBoolean(boolean value) throws SQLException {
         if (possibleCharLength > 4) {
             setString(value ? LONG_TRUE : LONG_FALSE);
-        } else if (possibleCharLength >= 1) {
+        } else {
             setString(value ? SHORT_TRUE : SHORT_FALSE);
         }
     }
@@ -394,7 +383,6 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
         if (setWhenNull(in)) return;
-
         // TODO More specific value
         if (length > Integer.MAX_VALUE) {
             throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
@@ -412,7 +400,6 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
         if (setWhenNull(in)) return;
-
         // TODO More specific value
         if (length > Integer.MAX_VALUE) {
             throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
@@ -430,7 +417,6 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public void setBytes(byte[] value) throws SQLException {
         if (setWhenNull(value)) return;
-
         if (value.length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, value.length,
                     fieldDescriptor.getLength());
@@ -443,8 +429,6 @@ class FBStringField extends FBField implements TrimmableField {
 
     @Override
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (setWhenNull(value)) return;
-
         setDate(getDatatypeCoder().encodeDate(value, cal));
     }
 
@@ -460,8 +444,6 @@ class FBStringField extends FBField implements TrimmableField {
 
     @Override
     public void setTime(Time value, Calendar cal) throws SQLException {
-        if (setWhenNull(value)) return;
-
         setTime(getDatatypeCoder().encodeTime(value, cal));
     }
 
@@ -477,8 +459,6 @@ class FBStringField extends FBField implements TrimmableField {
 
     @Override
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (setWhenNull(value)) return;
-
         setTimestamp(getDatatypeCoder().encodeTimestamp(value, cal));
     }
 
@@ -513,8 +493,7 @@ class FBStringField extends FBField implements TrimmableField {
     }
 
     private void setAsString(Object value) throws SQLException {
-        if (setWhenNull(value)) return;
-        setString(value.toString());
+        setString(value != null ? value.toString() : null);
     }
 
     private <T> T getValueAs(Class<T> type, Function<String, T> converter) throws SQLException {

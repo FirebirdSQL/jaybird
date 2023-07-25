@@ -70,6 +70,11 @@ class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
+    void encodeString_null() {
+        assertNull(coder.encodeString(null));
+    }
+
+    @Test
     void createWriter_delegatesToEncoding(@Mock OutputStream outputStream) {
         final Writer writer = new StringWriter();
         when(encoding.createWriter(outputStream)).thenReturn(writer);
@@ -88,6 +93,11 @@ class EncodingSpecificDatatypeCoderTest {
         String result = coder.decodeString(inputValue);
 
         assertEquals(resultValue, result);
+    }
+
+    @Test
+    void decodeString_null() {
+        assertNull(coder.decodeString(null));
     }
 
     @Test

@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.sql.SQLException;
+import java.time.OffsetTime;
 
 /**
  * Field for {@code TIME WITH TIME ZONE}.
@@ -42,9 +43,8 @@ class FBTimeTzField extends AbstractWithTimeZoneField {
 
     @Override
     public String getString() throws SQLException {
-        if (isNull()) return null;
-
-        return String.valueOf(getOffsetTime());
+        OffsetTime offsetTime = getOffsetTime();
+        return offsetTime != null ? offsetTime.toString() : null;
     }
 
 }

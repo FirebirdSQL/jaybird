@@ -72,10 +72,7 @@ abstract class AbstractWithoutTimeZoneField extends FBField {
     }
 
     final Calendar getCalendar() {
-        if (calendar == null) {
-            return initCalendar();
-        }
-        return calendar;
+        return calendar != null ? calendar : initCalendar();
     }
 
     private Calendar initCalendar() {

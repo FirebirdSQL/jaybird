@@ -61,6 +61,11 @@ class DefaultDatatypeCoderTest {
     }
 
     @Test
+    void testDecodeShort_null() {
+        assertEquals(0, datatypeCoder.decodeShort(null));
+    }
+
+    @Test
     void testShortWithOffset() {
         final short testShort = 513;
         byte[] target = new byte[8];
@@ -82,6 +87,11 @@ class DefaultDatatypeCoderTest {
         final int result = datatypeCoder.decodeInt(intBytes);
 
         assertEquals(testInt, result, "Unexpected int");
+    }
+
+    @Test
+    void testDecodeInt_null() {
+        assertEquals(0, datatypeCoder.decodeInt(null));
     }
 
     @Test
@@ -108,11 +118,36 @@ class DefaultDatatypeCoderTest {
         assertEquals(testLong, result, "Unexpected long");
     }
 
+    @Test
+    void testDecodeLong_null() {
+        assertEquals(0L, datatypeCoder.decodeLong(null));
+    }
+
     // Skip testing encode/decodeFloat as it is same as testing encode/decodeInt + JDK implementation of Float.floatToIntBits/intBitsToFloat
+
+    @Test
+    void testDecodeFloat_null() {
+        assertEquals(0f, datatypeCoder.decodeFloat(null));
+    }
 
     // Skip testing encode/decodeDouble as it is same as testing encode/decodeLong + JDK implementation of Double.doubleToLongBits/longBitsToDouble
 
+    @Test
+    void testDecodeDouble_null() {
+        assertEquals(0d, datatypeCoder.decodeDouble(null));
+    }
+
     // Skipping string encoding
+
+    @Test
+    void testEncodeString_null() {
+        assertNull(datatypeCoder.encodeString(null));
+    }
+
+    @Test
+    void testDecodeString_null() {
+        assertNull(datatypeCoder.decodeString(null));
+    }
 
     @Test
     void testLocalDateTime() {
@@ -122,6 +157,106 @@ class DefaultDatatypeCoderTest {
         LocalDateTime result = datatypeCoder.decodeLocalDateTime(timestampBytes);
 
         assertEquals(testTimestamp, result, "Unexpected timestamp");
+    }
+
+    @Test
+    void testEncodeLocalDateTime_null() {
+        assertNull(datatypeCoder.encodeLocalDateTime(null));
+    }
+
+    @Test
+    void testDecodeLocalDateTime_null() {
+        assertNull(datatypeCoder.decodeLocalDateTime(null));
+    }
+
+    @Test
+    void testEncodeTimestamp_null() {
+        assertNull(datatypeCoder.encodeTimestamp(null, Calendar.getInstance()));
+    }
+
+    @Test
+    void testEncodeTimestampRaw_null() {
+        assertNull(datatypeCoder.encodeTimestampRaw(null));
+    }
+
+    @Test
+    void testEncodeTimestampCalendar_null() {
+        assertNull(datatypeCoder.encodeTimestampCalendar(null, Calendar.getInstance()));
+    }
+
+    @Test
+    void testDecodeTimestamp_null() {
+        assertNull(datatypeCoder.decodeTimestamp(null, Calendar.getInstance()));
+    }
+
+    @Test
+    void testDecodeTimestampRaw_null() {
+        assertNull(datatypeCoder.decodeTimestampRaw(null));
+    }
+
+    @Test
+    void testDecodeTimestampCalendar_null() {
+        assertNull(datatypeCoder.decodeTimestampCalendar(null, Calendar.getInstance()));
+    }
+
+    @Test
+    void testEncodeTime_null() {
+        assertNull(datatypeCoder.encodeTime(null, Calendar.getInstance()));
+    }
+
+    @Test
+    void testEncodeTimeRaw_null() {
+        assertNull(datatypeCoder.encodeTimeRaw(null));
+    }
+
+    @Test
+    void testEncodeTimeCalendar_null() {
+        assertNull(datatypeCoder.encodeTimeCalendar(null, Calendar.getInstance()));
+    }
+
+    @Test
+    void testDecodeTime_null() {
+        assertNull(datatypeCoder.decodeTime(null, Calendar.getInstance()));
+    }
+
+    @Test
+    void testDecodeTimeRaw_null() {
+        assertNull(datatypeCoder.decodeTimeRaw(null));
+    }
+
+    @Test
+    void testDecodeTimeCalendar_null() {
+        assertNull(datatypeCoder.decodeTimeCalendar(null, Calendar.getInstance()));
+    }
+
+    @Test
+    void testEncodeDate_null() {
+        assertNull(datatypeCoder.encodeDate(null, Calendar.getInstance()));
+    }
+
+    @Test
+    void testEncodeDateRaw_null() {
+        assertNull(datatypeCoder.encodeDateRaw(null));
+    }
+
+    @Test
+    void testEncodeDateCalendar_null() {
+        assertNull(datatypeCoder.encodeDateCalendar(null, Calendar.getInstance()));
+    }
+
+    @Test
+    void testDecodeDate_null() {
+        assertNull(datatypeCoder.decodeDate(null, Calendar.getInstance()));
+    }
+
+    @Test
+    void testDecodeDateRaw_null() {
+        assertNull(datatypeCoder.decodeDateRaw(null));
+    }
+
+    @Test
+    void testDecodeDateCalendar_null() {
+        assertNull(datatypeCoder.decodeDateCalendar(null, Calendar.getInstance()));
     }
 
     // TODO Tests for various Timestamp methods taking a Calendar
@@ -137,6 +272,16 @@ class DefaultDatatypeCoderTest {
     }
 
     @Test
+    void testEncodeLocalTime_null() {
+        assertNull(datatypeCoder.encodeLocalTime(null));
+    }
+
+    @Test
+    void testDecodeLocalTime_null() {
+        assertNull(datatypeCoder.decodeLocalTime(null));
+    }
+
+    @Test
     void testLocalDate() {
         LocalDate testDate = LocalDate.parse("2014-03-29");
         byte[] dateBytes = datatypeCoder.encodeLocalDate(testDate);
@@ -144,6 +289,16 @@ class DefaultDatatypeCoderTest {
         LocalDate result = datatypeCoder.decodeLocalDate(dateBytes);
 
         assertEquals(testDate, result, "Unexpected date");
+    }
+
+    @Test
+    void testEncodeLocalDate_null() {
+        assertNull(datatypeCoder.encodeLocalDate(null));
+    }
+
+    @Test
+    void testDecodeLocalDate_null() {
+        assertNull(datatypeCoder.decodeLocalDate(null));
     }
 
     @ParameterizedTest
@@ -154,6 +309,11 @@ class DefaultDatatypeCoderTest {
         final boolean result = datatypeCoder.decodeBoolean(booleanBytes);
 
         assertEquals(testBoolean, result, "Unexpected boolean");
+    }
+
+    @Test
+    void testDecodeBoolean_null() {
+        assertFalse(datatypeCoder.decodeBoolean(null));
     }
     
     // TODO java.time roundtrip tests
@@ -288,11 +448,21 @@ class DefaultDatatypeCoderTest {
     }
 
     @Test
+    void decodeDecimal64_null() {
+        assertNull(datatypeCoder.decodeDecimal64(null));
+    }
+
+    @Test
     void encodeDecimal64() {
         final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
         final byte[] bytes = decimal64.toBytes();
 
         assertArrayEquals(bytes, datatypeCoder.encodeDecimal64(decimal64));
+    }
+
+    @Test
+    void encodeDecimal64_null() {
+        assertNull(datatypeCoder.encodeDecimal64(null));
     }
 
     @Test
@@ -304,11 +474,31 @@ class DefaultDatatypeCoderTest {
     }
 
     @Test
+    void decodeDecimal128_null() {
+        assertNull(datatypeCoder.decodeDecimal128(null));
+    }
+
+    @Test
     void encodeDecimal128() {
         final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
         final byte[] bytes = decimal128.toBytes();
 
         assertArrayEquals(bytes, datatypeCoder.encodeDecimal128(decimal128));
+    }
+
+    @Test
+    void encodeDecimal128_null() {
+        assertNull(datatypeCoder.encodeDecimal128(null));
+    }
+
+    @Test
+    void decodeInt128_null() {
+        assertNull(datatypeCoder.decodeInt128(null));
+    }
+
+    @Test
+    void encodeInt128_null() {
+        assertNull(datatypeCoder.encodeInt128(null));
     }
 
 }

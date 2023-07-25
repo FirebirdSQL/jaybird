@@ -46,83 +46,89 @@ final class FBBooleanField extends FBField {
         return getBoolean();
     }
 
+    @Override
     public byte getByte() throws SQLException {
-        if (isNull()) {
-            return BYTE_NULL_VALUE;
-        }
         return (byte) (getBoolean() ? 1 : 0);
     }
 
+    @Override
     public short getShort() throws SQLException {
         return getByte();
     }
 
+    @Override
     public int getInt() throws SQLException {
-        if (isNull()) {
-            return INT_NULL_VALUE;
-        }
         return getBoolean() ? 1 : 0;
     }
 
+    @Override
     public long getLong() throws SQLException {
         return getInt();
     }
 
+    @Override
     public float getFloat() throws SQLException {
         return getInt();
     }
 
+    @Override
     public double getDouble() throws SQLException {
         return getInt();
     }
 
+    @Override
     public BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return null;
         return getBoolean() ? BigDecimal.ONE : BigDecimal.ZERO;
     }
 
+    @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
         return getBoolean() ? FBStringField.LONG_TRUE : FBStringField.LONG_FALSE;
     }
 
+    @Override
     public boolean getBoolean() throws SQLException {
-        if (isNull()) return BOOLEAN_NULL_VALUE;
         return getDatatypeCoder().decodeBoolean(getFieldData());
     }
 
+    @Override
     public void setByte(byte value) throws SQLException {
         setBoolean(value != 0);
     }
 
+    @Override
     public void setShort(short value) throws SQLException {
         setBoolean(value != 0);
     }
 
+    @Override
     public void setInteger(int value) throws SQLException {
         setBoolean(value != 0);
     }
 
+    @Override
     public void setLong(long value) throws SQLException {
         setBoolean(value != 0);
     }
 
+    @Override
     public void setFloat(float value) throws SQLException {
         //TODO What if NaN?
         setBoolean(value != 0);
     }
 
+    @Override
     public void setDouble(double value) throws SQLException {
         //TODO What if NaN?
         setBoolean(value != 0);
     }
 
+    @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == null) {
-            setNull();
-        } else {
-            setBoolean(value.compareTo(BigDecimal.ZERO) != 0);
-        }
+        if (setWhenNull(value)) return;
+        setBoolean(value.compareTo(BigDecimal.ZERO) != 0);
     }
 
     /**
@@ -138,19 +144,19 @@ final class FBBooleanField extends FBField {
      * Sets to false for all other values.
      * </p>
      */
+    @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-        } else {
-            final String trimmedValue = value.trim();
-            setBoolean(trimmedValue.equalsIgnoreCase(FBStringField.LONG_TRUE)
-                    || trimmedValue.equalsIgnoreCase(FBStringField.SHORT_TRUE)
-                    || trimmedValue.equalsIgnoreCase(FBStringField.SHORT_TRUE_2)
-                    || trimmedValue.equalsIgnoreCase(FBStringField.SHORT_TRUE_3));
-        }
+        if (setWhenNull(value)) return;
+        final String trimmedValue = value.trim();
+        setBoolean(trimmedValue.equalsIgnoreCase(FBStringField.LONG_TRUE)
+                || trimmedValue.equalsIgnoreCase(FBStringField.SHORT_TRUE)
+                || trimmedValue.equalsIgnoreCase(FBStringField.SHORT_TRUE_2)
+                || trimmedValue.equalsIgnoreCase(FBStringField.SHORT_TRUE_3));
     }
 
+    @Override
     public void setBoolean(boolean value) throws SQLException {
         setFieldData(getDatatypeCoder().encodeBoolean(value));
     }
+
 }

@@ -49,10 +49,7 @@ final class FBLongField extends FBField {
 
     @Override
     public byte getByte() throws SQLException {
-        if (isNull()) return BYTE_NULL_VALUE;
-
-        long value = getDatatypeCoder().decodeLong(getFieldData());
-
+        long value = getLong();
         // check if value is within bounds
         if (value > MAX_BYTE_VALUE || value < MIN_BYTE_VALUE) {
             throw invalidGetConversion("byte", String.format("value %d out of range", value));
@@ -63,10 +60,7 @@ final class FBLongField extends FBField {
 
     @Override
     public short getShort() throws SQLException {
-        if (isNull()) return SHORT_NULL_VALUE;
-
-        long value = getDatatypeCoder().decodeLong(getFieldData());
-
+        long value = getLong();
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
             throw invalidGetConversion("short", String.format("value %d out of range", value));
@@ -77,10 +71,7 @@ final class FBLongField extends FBField {
 
     @Override
     public int getInt() throws SQLException {
-        if (isNull()) return INT_NULL_VALUE;
-
-        long value = getDatatypeCoder().decodeLong(getFieldData());
-
+        long value = getLong();
         // check if value is within bounds
         if (value > MAX_INT_VALUE || value < MIN_INT_VALUE) {
             throw invalidGetConversion("int", String.format("value %d out of range", value));
@@ -91,38 +82,34 @@ final class FBLongField extends FBField {
 
     @Override
     public long getLong() throws SQLException {
-        if (isNull()) return LONG_NULL_VALUE;
         return getDatatypeCoder().decodeLong(getFieldData());
     }
 
     @Override
     public float getFloat() throws SQLException {
-        if (isNull()) return FLOAT_NULL_VALUE;
-        return getDatatypeCoder().decodeLong(getFieldData());
+        return getLong();
     }
 
     @Override
     public double getDouble() throws SQLException {
-        if (isNull()) return DOUBLE_NULL_VALUE;
-        return getDatatypeCoder().decodeLong(getFieldData());
+        return getLong();
     }
 
     @Override
     public BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return null;
-        return BigDecimal.valueOf(getDatatypeCoder().decodeLong(getFieldData()));
+        return BigDecimal.valueOf(getLong());
     }
 
     @Override
     public boolean getBoolean() throws SQLException {
-        if (isNull()) return BOOLEAN_NULL_VALUE;
-        return getDatatypeCoder().decodeLong(getFieldData()) == 1;
+        return getLong() == 1L;
     }
 
     @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
-        return String.valueOf(getDatatypeCoder().decodeLong(getFieldData()));
+        return String.valueOf(getLong());
     }
 
     @Override
@@ -136,7 +123,6 @@ final class FBLongField extends FBField {
     @Override
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
-
         String string = value.trim();
         try {
             setLong(Long.parseLong(string));
@@ -195,7 +181,6 @@ final class FBLongField extends FBField {
     @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
         if (setWhenNull(value)) return;
-
         // check if value is within bounds
         if (value.compareTo(BD_MAX_LONG) > 0 || value.compareTo(BD_MIN_LONG) < 0) {
             throw invalidSetConversion(BigDecimal.class, String.format("value %f out of range", value));
@@ -207,7 +192,6 @@ final class FBLongField extends FBField {
     @Override
     public void setBigInteger(BigInteger value) throws SQLException {
         if (setWhenNull(value)) return;
-
         // check if value is within bounds
         if (value.compareTo(BI_MAX_LONG) > 0 || value.compareTo(BI_MIN_LONG) < 0) {
             throw invalidSetConversion(BigInteger.class, String.format("value %d out of range", value));
@@ -215,4 +199,5 @@ final class FBLongField extends FBField {
 
         setLong(value.longValueExact());
     }
+
 }

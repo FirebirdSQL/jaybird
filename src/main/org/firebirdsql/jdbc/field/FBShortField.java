@@ -52,10 +52,7 @@ class FBShortField extends FBField {
 
     @Override
     public byte getByte() throws SQLException {
-        if (isNull()) return BYTE_NULL_VALUE;
-
-        short value = getDatatypeCoder().decodeShort(getFieldData());
-
+        short value = getShort();
         // check if value is within bounds
         if (value > MAX_BYTE_VALUE || value < MIN_BYTE_VALUE) {
             throw invalidGetConversion("byte", String.format("value %d out of range", value));
@@ -66,58 +63,44 @@ class FBShortField extends FBField {
 
     @Override
     public short getShort() throws SQLException {
-        if (isNull()) return SHORT_NULL_VALUE;
-
         return getDatatypeCoder().decodeShort(getFieldData());
     }
 
     @Override
     public int getInt() throws SQLException {
-        if (isNull()) return INT_NULL_VALUE;
-
-        return getDatatypeCoder().decodeShort(getFieldData());
+        return getShort();
     }
 
     @Override
     public long getLong() throws SQLException {
-        if (isNull()) return LONG_NULL_VALUE;
-
-        return getDatatypeCoder().decodeShort(getFieldData());
+        return getShort();
     }
 
     @Override
     public float getFloat() throws SQLException {
-        if (isNull()) return FLOAT_NULL_VALUE;
-
-        return getDatatypeCoder().decodeShort(getFieldData());
+        return getShort();
     }
 
     @Override
     public double getDouble() throws SQLException {
-        if (isNull()) return DOUBLE_NULL_VALUE;
-
-        return getDatatypeCoder().decodeShort(getFieldData());
+        return getShort();
     }
 
     @Override
     public BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return null;
-
-        return BigDecimal.valueOf(getDatatypeCoder().decodeShort(getFieldData()));
+        return BigDecimal.valueOf(getShort());
     }
 
     @Override
     public boolean getBoolean() throws SQLException {
-        if (isNull()) return BOOLEAN_NULL_VALUE;
-
-        return getDatatypeCoder().decodeShort(getFieldData()) == 1;
+        return getShort() == 1;
     }
 
     @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
-
-        return String.valueOf(getDatatypeCoder().decodeShort(getFieldData()));
+        return String.valueOf(getShort());
     }
 
     @Override
@@ -131,7 +114,6 @@ class FBShortField extends FBField {
     @Override
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
-
         String string = value.trim();
         try {
             setShort(Short.parseShort(string));
@@ -149,7 +131,7 @@ class FBShortField extends FBField {
 
     @Override
     public void setBoolean(boolean value) throws SQLException {
-        setShort((short)(value ? 1 : 0));
+        setShort((short) (value ? 1 : 0));
     }
 
     @Override
@@ -159,7 +141,7 @@ class FBShortField extends FBField {
             throw invalidSetConversion("float", String.format("value %f out of range", value));
         }
 
-        setShort((short)value);
+        setShort((short) value);
     }
 
     @Override
@@ -169,7 +151,7 @@ class FBShortField extends FBField {
             throw invalidSetConversion("double", String.format("value %f out of range", value));
         }
 
-        setShort((short)value);
+        setShort((short) value);
     }
 
     @Override
@@ -179,7 +161,7 @@ class FBShortField extends FBField {
             throw invalidSetConversion("long", String.format("value %d out of range", value));
         }
 
-        setShort((short)value);
+        setShort((short) value);
     }
 
     @Override
@@ -189,7 +171,7 @@ class FBShortField extends FBField {
             throw invalidSetConversion("int", String.format("value %d out of range", value));
         }
 
-        setShort((short)value);
+        setShort((short) value);
     }
 
     @Override
@@ -200,7 +182,6 @@ class FBShortField extends FBField {
     @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
         if (setWhenNull(value)) return;
-
         // check if value is within bounds
         if (value.compareTo(BD_MAX_SHORT) > 0 || value.compareTo(BD_MIN_SHORT) < 0) {
             throw invalidSetConversion(BigDecimal.class, String.format("value %f out of range", value));
@@ -212,7 +193,6 @@ class FBShortField extends FBField {
     @Override
     public void setBigInteger(BigInteger value) throws SQLException {
         if (setWhenNull(value)) return;
-
         // check if value is within bounds
         if (value.compareTo(BI_MAX_SHORT) > 0 || value.compareTo(BI_MIN_SHORT) < 0) {
             throw invalidSetConversion(BigInteger.class, String.format("value %d out of range", value));
@@ -220,4 +200,5 @@ class FBShortField extends FBField {
 
         setShort(value.shortValueExact());
     }
+
 }

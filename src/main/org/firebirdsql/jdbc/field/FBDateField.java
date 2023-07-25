@@ -48,19 +48,17 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
 
     @Override
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        if (isNull()) return null;
-        return new java.sql.Timestamp(getDatatypeCoder().decodeDateCalendar(getFieldData(), cal).getTime());
+        Date date = getDate(cal);
+        return date != null ? new Timestamp(date.getTime()) : null;
     }
 
     @Override
     public Date getDate(Calendar cal) throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeDateCalendar(getFieldData(), cal);
     }
 
     @Override
     LocalDate getLocalDate() throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeLocalDate(getFieldData());
     }
 
@@ -82,9 +80,7 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
 
     @Override
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (setWhenNull(value)) return;
-
-        setFieldData(getDatatypeCoder().encodeDateCalendar(new java.sql.Date(value.getTime()), cal));
+        setDate(value != null ? new Date(value.getTime()) : null, cal);
     }
 
     @Override
@@ -94,26 +90,22 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
 
     @Override
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (setWhenNull(value)) return;
-
         setFieldData(getDatatypeCoder().encodeDateCalendar(value, cal));
     }
 
     @Override
     void setLocalDate(LocalDate value) throws SQLException {
-        if (setWhenNull(value)) return;
         setFieldData(getDatatypeCoder().encodeLocalDate(value));
     }
 
     @Override
     public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeDateRaw(getFieldData());
     }
 
     @Override
     public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
-        if (setWhenNull(raw)) return;
         setFieldData(getDatatypeCoder().encodeDateRaw(raw));
     }
+    
 }

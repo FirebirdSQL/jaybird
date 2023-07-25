@@ -94,8 +94,6 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
     @Override
     public T getDecimal() throws SQLException {
-        if (isNull()) return null;
-
         return decimalHandling.decode(fieldDescriptor, getFieldData());
     }
 
@@ -112,8 +110,6 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
     }
 
     private void setDecimalInternal(T value) throws SQLException {
-        if (setWhenNull(value)) return;
-
         try {
             setFieldData(decimalHandling.encode(fieldDescriptor, value));
         } catch (ArithmeticException e) {
@@ -149,10 +145,11 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
     public long getLong() throws SQLException {
         BigDecimal value = getBigDecimal();
         if (value == null) return LONG_NULL_VALUE;
-
+        // check if value is within bounds
         if (BD_MIN_LONG.compareTo(value) > 0 || value.compareTo(BD_MAX_LONG) > 0) {
             throw invalidGetConversion("long", format("value %f out of range", value));
         }
+
         return value.longValue();
     }
 
@@ -163,13 +160,12 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
     @Override
     public int getInt() throws SQLException {
-        if (isNull()) return INT_NULL_VALUE;
         long longValue = getLong();
-
         // check if value is within bounds
         if (longValue > MAX_INT_VALUE || longValue < MIN_INT_VALUE) {
             throw invalidGetConversion("int", format("value %d out of range", longValue));
         }
+
         return (int) longValue;
     }
 
@@ -180,9 +176,7 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
     @Override
     public short getShort() throws SQLException {
-        if (isNull()) return SHORT_NULL_VALUE;
         long longValue = getLong();
-
         // check if value is within bounds
         if (longValue > MAX_SHORT_VALUE || longValue < MIN_SHORT_VALUE) {
             throw invalidGetConversion("short", format("value %d out of range", longValue));
@@ -198,9 +192,7 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
     
     @Override
     public byte getByte() throws SQLException {
-        if (isNull()) return BYTE_NULL_VALUE;
         long longValue = getLong();
-
         // check if value is within bounds
         if (longValue > MAX_BYTE_VALUE || longValue < MIN_BYTE_VALUE) {
             throw invalidGetConversion("byte", format("value %d out of range", longValue));
@@ -217,15 +209,12 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
     @Override
     public BigInteger getBigInteger() throws SQLException {
         BigDecimal value = getBigDecimal();
-        if (value == null) return null;
-        return value.toBigInteger();
+        return value != null ? value.toBigInteger() : null;
     }
 
     @Override
     public void setBigInteger(BigInteger value) throws SQLException {
-        if (setWhenNull(value)) return;
-
-        setBigDecimal(new BigDecimal(value));
+        setBigDecimal(value != null ? new BigDecimal(value) : null);
     }
 
     @Override
@@ -240,16 +229,12 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
     @Override
     public String getString() throws SQLException {
         T value = getDecimal();
-        if (value == null) {
-            return null;
-        }
-        return value.toString();
+        return value != null ? value.toString() : null;
     }
 
     @Override
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
-
         String string = value.trim();
         try {
             setDecimalInternal(decimalHandling.valueOf(string));

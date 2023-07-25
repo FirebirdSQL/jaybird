@@ -34,6 +34,7 @@ import java.time.*;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Common test behaviour for {@link TimeZoneCodec} implementation tests.
@@ -75,6 +76,11 @@ abstract class TimeZoneCodecAbstractTest {
     }
 
     @Test
+    final void decodeOffsetDateTime_null() throws Exception {
+        assertNull(getNetworkCodec(tzType, FIXED_AT_2019_03_09).decodeOffsetDateTime(null));
+    }
+
+    @Test
     final void decodeOffsetTime_offset_network_at2019_03_09() throws Exception {
         OffsetTime offsetTime = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
                 .decodeOffsetTime(getOffsetNetworkAt2019_03_09Input());
@@ -83,11 +89,21 @@ abstract class TimeZoneCodecAbstractTest {
     }
 
     @Test
+    final void decodeOffsetTime_null() throws Exception {
+        assertNull(getNetworkCodec(tzType, FIXED_AT_2019_03_09).decodeOffsetTime(null));
+    }
+
+    @Test
     final void decodeZonedDateTime_offset_network_at2019_03_09() throws Exception {
         ZonedDateTime zonedDateTime = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
                 .decodeZonedDateTime(getOffsetNetworkAt2019_03_09Input());
 
         assertEquals(OFFSET_1_ZONED_DATE_TIME_AT_2019_03_09, zonedDateTime);
+    }
+
+    @Test
+    final void decodeZonedDateTime_null() throws Exception {
+        assertNull(getNetworkCodec(tzType, FIXED_AT_2019_03_09).decodeZonedDateTime(null));
     }
 
     @Test
@@ -268,6 +284,11 @@ abstract class TimeZoneCodecAbstractTest {
     }
 
     @Test
+    final void encodeOffsetDateTime_null() throws Exception {
+        assertNull(getNetworkCodec(tzType, FIXED_AT_2019_03_09).encodeOffsetDateTime(null));
+    }
+
+    @Test
     final void encodeOffsetTime_network_at2019_03_09() throws Exception {
         byte[] encoded = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
                 .encodeOffsetTime(OFFSET_1_OFFSET_TIME);
@@ -276,11 +297,21 @@ abstract class TimeZoneCodecAbstractTest {
     }
 
     @Test
+    final void encodeOffsetTime_null() throws Exception {
+        assertNull(getNetworkCodec(tzType, FIXED_AT_2019_03_09).encodeOffsetTime(null));
+    }
+
+    @Test
     final void encodeZonedDateTime_offset_network_at2019_03_09() throws Exception {
         byte[] encoded = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
                 .encodeZonedDateTime(OFFSET_1_ZONED_DATE_TIME_AT_2019_03_09);
 
         assertArrayEquals(getOffsetNetworkAt2019_03_09Expected(), encoded);
+    }
+
+    @Test
+    final void encodeZonedDateTime_null() throws Exception {
+        assertNull(getNetworkCodec(tzType, FIXED_AT_2019_03_09).encodeZonedDateTime(null));
     }
 
     @Test

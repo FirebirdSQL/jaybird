@@ -176,6 +176,9 @@ public abstract class FBField {
                 return new FBDecfloatField<>(fieldDescriptor, dataProvider, jdbcType, Decimal64.class);
             case ISCConstants.SQL_DEC34:
                 return new FBDecfloatField<>(fieldDescriptor, dataProvider, jdbcType, Decimal128.class);
+            default:
+                throw new FBDriverNotCapableException(
+                        "Unexpected field type for DECFLOAT: " + fieldDescriptor.getType());
             }
         case Types.FLOAT:
             return new FBFloatField(fieldDescriptor, dataProvider, jdbcType);
@@ -279,9 +282,7 @@ public abstract class FBField {
     }
 
     public Object getObject() throws SQLException {
-        if (isNull()) {
-            return null;
-        }
+        if (isNull()) return null;
         throw invalidGetConversion(Object.class);
     }
 
@@ -394,11 +395,7 @@ public abstract class FBField {
 
     public Reader getCharacterStream() throws SQLException {
         final InputStream is = getBinaryStream();
-        if (is == null) {
-            return null;
-        } else {
-            return getDatatypeCoder().createReader(is);
-        }
+        return is != null ? getDatatypeCoder().createReader(is) : null;
     }
 
     public byte[] getBytes() throws SQLException {
@@ -520,10 +517,7 @@ public abstract class FBField {
     }
 
     public void setObject(Object value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         String typeName = value.getClass().getName();
         // As a form of optimization, we switch on the class name.
@@ -782,11 +776,9 @@ public abstract class FBField {
      * @return {@code true} when {@code value} was {@code null}, {@code false} otherwise
      */
     final boolean setWhenNull(Object value) {
-        if (value == null) {
-            setNull();
-            return true;
-        }
-        return false;
+        if (value != null) return false;
+        setNull();
+        return true;
     }
 
     /**

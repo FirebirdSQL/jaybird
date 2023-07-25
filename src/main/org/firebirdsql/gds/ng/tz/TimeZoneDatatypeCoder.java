@@ -140,6 +140,7 @@ public class TimeZoneDatatypeCoder {
 
     private <T extends Temporal> T decodeTimestampTz(byte[] timestampTzBytes,
             BiFunction<Instant, ZoneId, T> conversionFunction) {
+        if (timestampTzBytes == null) return null;
         Instant instant = decodeTimestampTzAsInstant(timestampTzBytes);
         ZoneId zoneId = decodeTimeZoneId(timestampTzBytes, 8);
         return conversionFunction.apply(instant, zoneId);
@@ -150,6 +151,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     private byte[] encodeOffsetDateTimeToTimestampTz(OffsetDateTime offsetDateTime, int bufferSize) {
+        if (offsetDateTime == null) return null;
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(offsetDateTime.getOffset());
 
         LocalDateTime utcDateTime = offsetDateTime.withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime();
@@ -157,6 +159,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     private byte[] encodeZonedDateTimeToTimestampTz(ZonedDateTime zonedDateTime, int bufferSize) {
+        if (zonedDateTime == null) return null;
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(zonedDateTime.getZone());
 
         LocalDateTime utcDateTime = zonedDateTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
@@ -178,6 +181,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     private OffsetTime decodeTimeTzToOffsetTime(byte[] timeTzBytes) {
+        if (timeTzBytes == null) return null;
         LocalTime utcTime = decodeTimeTzToUtcLocalTime(timeTzBytes);
         ZoneId zoneId = decodeTimeZoneId(timeTzBytes, 4);
 
@@ -197,6 +201,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     private OffsetDateTime decodeTimeTzToOffsetDateTime(byte[] timeTzBytes) {
+        if (timeTzBytes == null) return null;
         LocalTime utcTime = decodeTimeTzToUtcLocalTime(timeTzBytes);
         ZoneId zoneId = decodeTimeZoneId(timeTzBytes, 4);
 
@@ -212,6 +217,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     private ZonedDateTime decodeTimeTzToZonedDateTime(byte[] timeTzBytes) {
+        if (timeTzBytes == null) return null;
         LocalTime utcTime = decodeTimeTzToUtcLocalTime(timeTzBytes);
         ZoneId zoneId = decodeTimeZoneId(timeTzBytes, 4);
 
@@ -229,6 +235,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     private byte[] encodeOffsetTimeToTimeTz(OffsetTime offsetTime, int bufferSize) {
+        if (offsetTime == null) return null;
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(offsetTime.getOffset());
 
         LocalTime utcTime = offsetTime.withOffsetSameInstant(ZoneOffset.UTC).toLocalTime();
@@ -236,6 +243,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     private byte[] encodeZonedDateTimeToTimeTz(ZonedDateTime zonedDateTime, int bufferSize) {
+        if (zonedDateTime == null) return null;
         ZoneId zone = zonedDateTime.getZone();
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(zone);
         if (!timeZoneMapping.isOffsetTimeZone(firebirdZoneId)) {
@@ -298,8 +306,8 @@ public class TimeZoneDatatypeCoder {
          * Encode an offset date time to an encoded value.
          *
          * @param offsetDateTime
-         *         Offset date time instance
-         * @return Byte array with encoded value
+         *         offset date time instance
+         * @return byte array with encoded value, or {@code null} if {@code offsetDateTime} is {@code null}
          */
         byte[] encodeOffsetDateTime(OffsetDateTime offsetDateTime);
 
@@ -307,8 +315,8 @@ public class TimeZoneDatatypeCoder {
          * Decodes an encoded value to an offset date time.
          *
          * @param fieldData
-         *         Byte array with encoded value
-         * @return Offset date time instance
+         *         byte array with encoded value
+         * @return offset date time instance, or {@code null} if {@code fieldDate} is {@code null}
          */
         OffsetDateTime decodeOffsetDateTime(byte[] fieldData);
 
@@ -316,8 +324,8 @@ public class TimeZoneDatatypeCoder {
          * Encode an offset time to an encoded value.
          *
          * @param offsetTime
-         *         Offset time instance
-         * @return Byte array with encoded value
+         *         offset time instance
+         * @return byte array with encoded value, or {@code null} if {@code offsetTime} is {@code null}
          */
         byte[] encodeOffsetTime(OffsetTime offsetTime);
 
@@ -325,8 +333,8 @@ public class TimeZoneDatatypeCoder {
          * Decodes an encoded value to an offset time.
          *
          * @param fieldData
-         *         Byte array with encoded value
-         * @return Offset time instance
+         *         byte array with encoded value
+         * @return offset time instance, or {@code null} if {@code fieldDate} is {@code null}
          */
         OffsetTime decodeOffsetTime(byte[] fieldData);
 
@@ -334,8 +342,8 @@ public class TimeZoneDatatypeCoder {
          * Encode a zoned date time to an encoded value.
          *
          * @param zonedDateTime
-         *         Zoned date time instance
-         * @return Byte array with encoded value
+         *         zoned date time instance
+         * @return byte array with encoded value, or {@code null} if {@code zonedDateTime} is {@code null}
          */
         byte[] encodeZonedDateTime(ZonedDateTime zonedDateTime);
 
@@ -343,8 +351,8 @@ public class TimeZoneDatatypeCoder {
          * Decodes an encoded value to a zoned date time.
          *
          * @param fieldData
-         *         Byte array with encoded value
-         * @return Zoned date time value
+         *         byte array with encoded value
+         * @return zoned date time value, or {@code null} if {@code fieldDate} is {@code null}
          */
         ZonedDateTime decodeZonedDateTime(byte[] fieldData);
 
@@ -368,6 +376,7 @@ public class TimeZoneDatatypeCoder {
 
         @Override
         public byte[] encodeOffsetDateTime(OffsetDateTime offsetDateTime) {
+            if (offsetDateTime == null) return null;
             return encodeOffsetTime(offsetDateTime.toOffsetTime());
         }
 
@@ -383,7 +392,7 @@ public class TimeZoneDatatypeCoder {
 
         @Override
         public OffsetTime decodeOffsetTime(byte[] fieldData) {
-            assert fieldData.length == encodedSize : "timestampTzBytes not length " + encodedSize;
+            assert fieldData == null || fieldData.length == encodedSize : "timestampTzBytes not length " + encodedSize;
             return decodeTimeTzToOffsetTime(fieldData);
         }
 
@@ -418,12 +427,13 @@ public class TimeZoneDatatypeCoder {
 
         @Override
         public OffsetDateTime decodeOffsetDateTime(byte[] fieldData) {
-            assert fieldData.length == encodedSize : "timestampTzBytes not length " + encodedSize;
+            assert fieldData == null || fieldData.length == encodedSize : "timestampTzBytes not length " + encodedSize;
             return decodeTimestampTz(fieldData, OffsetDateTime::ofInstant);
         }
 
         @Override
         public byte[] encodeOffsetTime(OffsetTime offsetTime) {
+            if (offsetTime == null) return null;
             // We need to base on a date to determine value, we use the current date; this will be inconsistent depending
             // on the date, but this aligns closest with Firebird behaviour and SQL standard
             ZoneOffset offset = offsetTime.getOffset();
@@ -434,6 +444,7 @@ public class TimeZoneDatatypeCoder {
 
         @Override
         public OffsetTime decodeOffsetTime(byte[] fieldData) {
+            if (fieldData == null) return null;
             return decodeOffsetDateTime(fieldData).toOffsetTime();
         }
 
@@ -444,8 +455,10 @@ public class TimeZoneDatatypeCoder {
 
         @Override
         public ZonedDateTime decodeZonedDateTime(byte[] fieldData) {
-            assert fieldData.length == encodedSize : "timestampTzBytes not length " + encodedSize;
+            assert fieldData == null || fieldData.length == encodedSize : "timestampTzBytes not length " + encodedSize;
             return decodeTimestampTz(fieldData, ZonedDateTime::ofInstant);
         }
+
     }
+    
 }

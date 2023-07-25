@@ -50,25 +50,26 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
         return getTime();
     }
 
+    @Override
     public String getString() throws SQLException {
-        if (isNull()) return null;
-        return String.valueOf(getTime());
+        Time time = getTime();
+        return time != null ? time.toString() : null;
     }
 
+    @Override
     public Time getTime(Calendar cal) throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeTimeCalendar(getFieldData(), cal);
     }
 
     @Override
     LocalTime getLocalTime() throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeLocalTime(getFieldData());
     }
 
+    @Override
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        if (isNull()) return null;
-        return new java.sql.Timestamp(getDatatypeCoder().decodeTimeCalendar(getFieldData(), cal).getTime());
+        Time time = getTime(cal);
+        return time != null ? new Timestamp(time.getTime()) : null;
     }
 
     @Override
@@ -79,13 +80,14 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
 
     //--- setXXX methods
 
+    @Override
     public void setString(String value) throws SQLException {
         setTime(fromString(value, Time::valueOf));
     }
 
+    @Override
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (setWhenNull(value)) return;
-        setFieldData(getDatatypeCoder().encodeTimeCalendar(new java.sql.Time(value.getTime()), cal));
+        setTime(value != null ? new Time(value.getTime()) : null, cal);
     }
 
     @Override
@@ -93,27 +95,24 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
         setLocalTime(value != null ? value.toLocalTime() : null);
     }
 
+    @Override
     public void setTime(Time value, Calendar cal) throws SQLException {
-        if (setWhenNull(value)) return;
-
         setFieldData(getDatatypeCoder().encodeTimeCalendar(value, cal));
     }
 
     @Override
     void setLocalTime(LocalTime value) throws SQLException {
-        if (setWhenNull(value)) return;
         setFieldData(getDatatypeCoder().encodeLocalTime(value));
     }
 
     @Override
     public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeTimeRaw(getFieldData());
     }
 
     @Override
     public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
-        if (setWhenNull(raw)) return;
         setFieldData(getDatatypeCoder().encodeTimeRaw(raw));
     }
+
 }

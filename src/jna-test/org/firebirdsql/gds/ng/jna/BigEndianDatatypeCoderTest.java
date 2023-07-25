@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Test numeric conversion in big endian
@@ -56,11 +57,31 @@ class BigEndianDatatypeCoderTest {
     }
 
     @Test
+    void decodeShort_null() {
+        assertEquals(0, datatypeCoder.decodeShort(null));
+    }
+
+    @Test
+    void decodeInt_null() {
+        assertEquals(0, datatypeCoder.decodeInt(null));
+    }
+
+    @Test
+    void testDecodeLong_null() {
+        assertEquals(0L, datatypeCoder.decodeLong(null));
+    }
+
+    @Test
     void decodeDecimal64() {
         final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
         final byte[] bytes = decimal64.toBytes();
 
         assertEquals(decimal64, datatypeCoder.decodeDecimal64(bytes));
+    }
+
+    @Test
+    void decodeDecimal64_null() {
+        assertNull(datatypeCoder.decodeDecimal64(null));
     }
 
     @Test
@@ -72,11 +93,21 @@ class BigEndianDatatypeCoderTest {
     }
 
     @Test
+    void encodeDecimal64_null() {
+        assertNull(datatypeCoder.encodeDecimal64(null));
+    }
+
+    @Test
     void decodeDecimal128() {
         final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
         final byte[] bytes = decimal128.toBytes();
 
         assertEquals(decimal128, datatypeCoder.decodeDecimal128(bytes));
+    }
+
+    @Test
+    void decodeDecimal128_null() {
+        assertNull(datatypeCoder.decodeDecimal128(null));
     }
 
     @Test
@@ -86,4 +117,10 @@ class BigEndianDatatypeCoderTest {
 
         assertArrayEquals(bytes, datatypeCoder.encodeDecimal128(decimal128));
     }
+
+    @Test
+    void encodeDecimal128_null() {
+        assertNull(datatypeCoder.encodeDecimal128(null));
+    }
+    
 }

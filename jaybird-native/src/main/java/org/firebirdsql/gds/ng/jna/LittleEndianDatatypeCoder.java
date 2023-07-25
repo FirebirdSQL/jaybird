@@ -107,6 +107,7 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
 
     @Override
     public long decodeLong(byte[] buf) {
+        if (buf == null) return 0;
         return (buf[0] & 0xFFL) +
                ((buf[1] & 0xFFL) << 8) +
                ((buf[2] & 0xFFL) << 16) +
@@ -119,6 +120,7 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
 
     @Override
     protected byte[] networkOrder(final byte[] buf) {
+        if (buf == null) return null;
         final byte[] newArray = new byte[buf.length];
         final int maxIndex = newArray.length - 1;
         for (int idx = 0; idx <= maxIndex; idx++) {

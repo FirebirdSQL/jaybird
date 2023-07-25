@@ -49,16 +49,16 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
         return getTimestamp();
     }
 
+    @Override
     public String getString() throws SQLException {
-        if (isNull()) return null;
-
-        return String.valueOf(getTimestamp());
+        Timestamp timestamp = getTimestamp();
+        return timestamp != null ? timestamp.toString() : null;
     }
 
+    @Override
     public Date getDate(Calendar cal) throws SQLException {
-        if (isNull()) return null;
-
-        return new java.sql.Date(getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal).getTime());
+        Timestamp timestamp = getTimestamp(cal);
+        return timestamp != null ? new Date(timestamp.getTime()) : null;
     }
 
     @Override
@@ -67,10 +67,10 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
         return localDateTime != null ? localDateTime.toLocalDate() : null;
     }
 
+    @Override
     public Time getTime(Calendar cal) throws SQLException {
-        if (isNull()) return null;
-
-        return new java.sql.Time(getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal).getTime());
+        Timestamp timestamp = getTimestamp(cal);
+        return timestamp != null ? new Time(timestamp.getTime()) : null;
     }
 
     @Override
@@ -79,55 +79,49 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
         return localDateTime != null ? localDateTime.toLocalTime() : null;
     }
 
+    @Override
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        if (isNull()) return null;
-
         return getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal);
     }
 
     @Override
     LocalDateTime getLocalDateTime() throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeLocalDateTime(getFieldData());
     }
 
+    @Override
     public void setString(String value) throws SQLException {
         setTimestamp(fromString(value, Timestamp::valueOf));
     }
 
+    @Override
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (setWhenNull(value)) return;
-
-        setFieldData(getDatatypeCoder().encodeTimestampCalendar(new java.sql.Timestamp(value.getTime()), cal));
+        setTimestamp(value != null ? new Timestamp(value.getTime()) : null, cal);
     }
 
+    @Override
     public void setTime(Time value, Calendar cal) throws SQLException {
-        if (setWhenNull(value)) return;
-
-        setFieldData(getDatatypeCoder().encodeTimestampCalendar(new java.sql.Timestamp(value.getTime()), cal));
+        setTimestamp(value != null ? new Timestamp(value.getTime()) : null, cal);
     }
 
+    @Override
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (setWhenNull(value)) return;
-
         setFieldData(getDatatypeCoder().encodeTimestampCalendar(value, cal));
     }
 
     @Override
     void setLocalDateTime(LocalDateTime value) throws SQLException {
-        if (setWhenNull(value)) return;
         setFieldData(getDatatypeCoder().encodeLocalDateTime(value));
     }
 
     @Override
     public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeTimestampRaw(getFieldData());
     }
 
     @Override
     public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
-        if (setWhenNull(raw)) return;
         setFieldData(getDatatypeCoder().encodeTimestampRaw(raw));
     }
+    
 }

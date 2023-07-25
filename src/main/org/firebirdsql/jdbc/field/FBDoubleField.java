@@ -45,10 +45,7 @@ class FBDoubleField extends FBField {
     }
 
     public byte getByte() throws SQLException {
-        if (isNull()) return BYTE_NULL_VALUE;
-
-        double value = getDatatypeCoder().decodeDouble(getFieldData());
-
+        double value = getDouble();
         // check if value is within bounds
         if (value > MAX_BYTE_VALUE || value < MIN_BYTE_VALUE) {
             throw invalidGetConversion("byte", String.format("value %f out of range", value));
@@ -58,10 +55,7 @@ class FBDoubleField extends FBField {
     }
     
     public short getShort() throws SQLException {
-        if (isNull()) return SHORT_NULL_VALUE;
-
-        double value = getDatatypeCoder().decodeDouble(getFieldData());
-
+        double value = getDouble();
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
             throw invalidGetConversion("short", String.format("value %f out of range", value));
@@ -71,10 +65,7 @@ class FBDoubleField extends FBField {
     }
     
     public int getInt() throws SQLException {
-        if (isNull()) return INT_NULL_VALUE;
-
-        double value = getDatatypeCoder().decodeDouble(getFieldData());
-
+        double value = getDouble();
         // check if value is within bounds
         if (value > MAX_INT_VALUE || value < MIN_INT_VALUE) {
             throw invalidGetConversion("int", String.format("value %f out of range", value));
@@ -84,10 +75,7 @@ class FBDoubleField extends FBField {
     }
     
     public long getLong() throws SQLException {
-        if (isNull()) return LONG_NULL_VALUE;
-
-        double value = getDatatypeCoder().decodeDouble(getFieldData());
-
+        double value = getDouble();
         // check if value is within bounds
         if (value > MAX_LONG_VALUE || value < MIN_LONG_VALUE) {
             throw invalidGetConversion("long", String.format("value %f out of range", value));
@@ -97,10 +85,8 @@ class FBDoubleField extends FBField {
     }
     
     public float getFloat() throws SQLException {
-        if (isNull()) return FLOAT_NULL_VALUE;
-
         // TODO Does this match with the way getDouble() works?
-        double value = getDatatypeCoder().decodeDouble(getFieldData());
+        double value = getDouble();
         float cValue = (float) value;
         // check if value is within bounds
         if (cValue == Float.POSITIVE_INFINITY || cValue == Float.NEGATIVE_INFINITY) {
@@ -111,34 +97,27 @@ class FBDoubleField extends FBField {
     }
     
     public double getDouble() throws SQLException {
-        if (isNull()) return DOUBLE_NULL_VALUE;
-
         return getDatatypeCoder().decodeDouble(getFieldData());
     }
     
     public BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return null;
-
-        return BigDecimal.valueOf(getDatatypeCoder().decodeDouble(getFieldData()));
+        return BigDecimal.valueOf(getDouble());
     }
 
     public boolean getBoolean() throws SQLException {
-        if (isNull()) return BOOLEAN_NULL_VALUE;
-
-        return getDatatypeCoder().decodeDouble(getFieldData()) == 1;
+        return getDouble() == 1;
     }
     
     public String getString() throws SQLException {
         if (isNull()) return null;
-
-        return String.valueOf(getDatatypeCoder().decodeDouble(getFieldData()));
+        return String.valueOf(getDouble());
     }
 
     //--- setXXX methods
 
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
-
         String string = value.trim();
         try {
             setDouble(Double.parseDouble(string));
@@ -178,11 +157,7 @@ class FBDoubleField extends FBField {
     }
     
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
+        if (setWhenNull(value)) return;
         // check if value is within bounds
         if (value.compareTo(BD_MAX_DOUBLE) > 0 || value.compareTo(BD_MIN_DOUBLE) < 0) {
             throw invalidSetConversion(BigDecimal.class, String.format("value %f out of range", value));
@@ -190,4 +165,5 @@ class FBDoubleField extends FBField {
 
         setDouble(value.doubleValue());
     }
+
 }

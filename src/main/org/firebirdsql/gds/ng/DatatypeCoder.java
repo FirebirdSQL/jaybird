@@ -92,7 +92,8 @@ public interface DatatypeCoder {
      * @param val
      *         value to be encoded
      * @param buf
-     *         byte array of sufficient size (warning: this is datatype coder specific, see {@link #sizeOfShort()})
+     *         byte array of sufficient size (warning: this is datatype coder specific, see {@link #sizeOfShort()}),
+     *         never {@code null}
      * @param off
      *         offset to start encoding
      * @since 4
@@ -104,7 +105,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         byte array of sufficient size (warning: this is datatype coder specific, see {@link #sizeOfShort()})
-     * @return short value from {@code buf}
+     * @return short value from {@code buf}, or {@code 0} when {@code buf} is {@code null}
      */
     short decodeShort(byte[] buf);
 
@@ -112,7 +113,8 @@ public interface DatatypeCoder {
      * Decode a short value from {@code buf} starting at offset {@code off} for {@link #sizeOfShort()} bytes.
      *
      * @param buf
-     *         byte array of sufficient size (warning: this is datatype coder specific, see {@link #sizeOfShort()})
+     *         byte array of sufficient size (warning: this is datatype coder specific, see {@link #sizeOfShort()}),
+     *         never {@code null}
      * @param off
      *         offset to start decoding
      * @return short value from {@code buf}
@@ -125,7 +127,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to be encoded
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code 0} when {@code buf} is {@code null}
      */
     byte[] encodeInt(int val);
 
@@ -135,7 +137,7 @@ public interface DatatypeCoder {
      * @param val
      *         value to be encoded
      * @param buf
-     *         byte array of sufficient size
+     *         byte array of sufficient size, never {@code null}
      * @param off
      *         offset to start encoding
      * @since 4
@@ -147,7 +149,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         byte array of sufficient size
-     * @return int value decoded from {@code buf}
+     * @return int value decoded from {@code buf}, or {@code 0} when {@code buf} is {@code null}
      */
     int decodeInt(byte[] buf);
 
@@ -155,7 +157,7 @@ public interface DatatypeCoder {
      * Decode an int value from {@code buf} starting at offset {@code off} for 4 bytes.
      *
      * @param buf
-     *         byte array of sufficient size
+     *         byte array of sufficient size, never {@code null}
      * @param off
      *         offset to start decoding
      * @return int value decoded from {@code buf}
@@ -176,7 +178,7 @@ public interface DatatypeCoder {
      * Decode a long value from {@code buf} from the first 8 bytes.
      *
      * @param buf
-     *         byte array of sufficient size
+     *         byte array of sufficient size, or {@code 0} when {@code buf} is {@code null}
      * @return long value decoded from {@code buf}
      */
     long decodeLong(byte[] buf);
@@ -194,7 +196,7 @@ public interface DatatypeCoder {
      * Decode a float value from {@code buf} from the first 4 bytes.
      *
      * @param buf
-     *         byte array of sufficient size
+     *         byte array of sufficient size, or {@code 0} when {@code buf} is {@code null}
      * @return float value decoded from {@code buf}
      */
     float decodeFloat(byte[] buf);
@@ -212,7 +214,7 @@ public interface DatatypeCoder {
      * Decode a double value from {@code buf} from the first 8 bytes.
      *
      * @param buf
-     *         byte array of sufficient size
+     *         byte array of sufficient size, or {@code 0} when {@code buf} is {@code null}
      * @return double value decoded from {@code buf}
      */
     double decodeDouble(byte[] buf);
@@ -222,7 +224,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to be encoded
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      * @since 4
      */
     byte[] encodeString(String val);
@@ -242,7 +244,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         byte array to be decoded
-     * @return {@code String} decoded from {@code buf}
+     * @return {@code String} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      * @since 4
      */
     String decodeString(byte[] buf);
@@ -264,7 +266,7 @@ public interface DatatypeCoder {
      *         value to be encoded
      * @param c
      *         calendar to use for encoding, may be {@code null}
-     * @return encoded {@code Timestamp}
+     * @return encoded {@code Timestamp}, or {@code null} if {@code val} is {@code null}
      */
     Timestamp encodeTimestamp(Timestamp val, Calendar c);
 
@@ -273,7 +275,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to be encoded
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
     byte[] encodeTimestampRaw(RawDateTimeStruct val);
 
@@ -284,7 +286,7 @@ public interface DatatypeCoder {
      *         value to be encoded
      * @param c
      *         calendar to use for time zone calculation
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
     byte[] encodeTimestampCalendar(Timestamp val, Calendar c);
 
@@ -295,7 +297,7 @@ public interface DatatypeCoder {
      *         value to be decoded
      * @param c
      *         calendar to use in decoding, may be {@code null}
-     * @return encoded {@code Timestamp}
+     * @return encoded {@code Timestamp}, or {@code null} if {@code val} is {@code null}
      */
     Timestamp decodeTimestamp(Timestamp val, Calendar c);
 
@@ -304,7 +306,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         byte array of sufficient size
-     * @return {@code RawDateTimeStruct} decoded from {@code buf}
+     * @return {@code RawDateTimeStruct} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      */
     RawDateTimeStruct decodeTimestampRaw(byte[] buf);
 
@@ -315,7 +317,7 @@ public interface DatatypeCoder {
      *         byte array of sufficient size
      * @param c
      *         calendar to use for time zone calculation
-     * @return {@code Timestamp} decoded from {@code buf}
+     * @return {@code Timestamp} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      */
     Timestamp decodeTimestampCalendar(byte[] buf, Calendar c);
 
@@ -326,7 +328,7 @@ public interface DatatypeCoder {
      *         value to be encoded
      * @param c
      *         calendar to use in the encoding, may be {@code null}
-     * @return encoded {@code Time}
+     * @return encoded {@code Time}, or {@code null} if {@code val} is {@code null}
      */
     Time encodeTime(Time val, Calendar c);
 
@@ -335,7 +337,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to be encoded
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
     byte[] encodeTimeRaw(RawDateTimeStruct val);
 
@@ -346,7 +348,7 @@ public interface DatatypeCoder {
      *         value to be encoded
      * @param c
      *         calendar to use for time zone calculation
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
     byte[] encodeTimeCalendar(Time val, Calendar c);
 
@@ -357,7 +359,7 @@ public interface DatatypeCoder {
      *         value to be decoded
      * @param c
      *         calendar to used in the decoding, may be {@code null}
-     * @return decoded {@code Time}
+     * @return decoded {@code Time}, or {@code null} if {@code val} is {@code null}
      */
     Time decodeTime(Time val, Calendar c);
 
@@ -366,7 +368,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         byte array of sufficient size
-     * @return {@code RawDateTimeStruct} decoded from {@code buf}
+     * @return {@code RawDateTimeStruct} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      */
     RawDateTimeStruct decodeTimeRaw(byte[] buf);
 
@@ -377,7 +379,7 @@ public interface DatatypeCoder {
      *         byte array of sufficient size
      * @param c
      *         calendar to use for time zone calculation
-     * @return {@code Time} decoded from {@code buf}
+     * @return {@code Time} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      */
     Time decodeTimeCalendar(byte[] buf, Calendar c);
 
@@ -388,7 +390,7 @@ public interface DatatypeCoder {
      *         value to be encoded
      * @param c
      *         calendar to use in the encoding, may be {@code null}
-     * @return encoded {@code Date}
+     * @return encoded {@code Date}, or {@code null} if {@code val} is {@code null}
      */
     Date encodeDate(Date val, Calendar c);
 
@@ -397,7 +399,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to be encoded
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
     byte[] encodeDateRaw(RawDateTimeStruct val);
 
@@ -408,7 +410,7 @@ public interface DatatypeCoder {
      *         value to be encoded
      * @param c
      *         calendar to use for time zone calculation
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
     byte[] encodeDateCalendar(Date val, Calendar c);
 
@@ -419,7 +421,7 @@ public interface DatatypeCoder {
      *         value to be decoded
      * @param c
      *         calendar to use in the decoding, may be {@code null}
-     * @return decoded {@code Date}
+     * @return decoded {@code Date}, or {@code null} if {@code val} is {@code null}
      */
     Date decodeDate(Date val, Calendar c);
 
@@ -428,7 +430,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         byte array of sufficient size
-     * @return {@code RawDateTimeStruct} decoded from {@code buf}
+     * @return {@code RawDateTimeStruct} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      */
     RawDateTimeStruct decodeDateRaw(byte[] buf);
 
@@ -439,7 +441,7 @@ public interface DatatypeCoder {
      *         byte array of sufficient size
      * @param c
      *         calendar to use for time zone calculation
-     * @return {@code Date} decoded from {@code buf}
+     * @return {@code Date} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      */
     Date decodeDateCalendar(byte[] buf, Calendar c);
 
@@ -448,7 +450,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         (expected) 1 bytes
-     * @return {@code false} when 0, {@code true} for all other values
+     * @return {@code false} when 0, {@code true} for all other values, or {@code false} if {@code buf} is {@code null}
      */
     boolean decodeBoolean(byte[] buf);
 
@@ -466,7 +468,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         (expected) at least 4 bytes
-     * @return {@code LocalTime} decoded from {@code buf}
+     * @return {@code LocalTime} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      * @since 5
      */
     LocalTime decodeLocalTime(byte[] buf);
@@ -475,7 +477,7 @@ public interface DatatypeCoder {
      * Decode {@code java.time.LocalTime} from {@code buf} from the 4 bytes starting at {@code off}.
      *
      * @param buf
-     *         (expected) at least 4 bytes from {@code off}
+     *         (expected) at least 4 bytes from {@code off}, never {@code null}
      * @param off
      *         offset of the time value in {@code buf}
      * @return {@code LocalTime} decoded from {@code buf}
@@ -488,7 +490,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to encode
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      * @since 5
      */
     byte[] encodeLocalTime(LocalTime val);
@@ -499,7 +501,7 @@ public interface DatatypeCoder {
      * @param val
      *         value to encode
      * @param buf
-     *         byte array with at least 4 bytes starting at {@code off}
+     *         byte array with at least 4 bytes starting at {@code off}, never {@code null}
      * @param off
      *         offset of the time value in {@code buf}
      * @since 6
@@ -511,7 +513,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         (expected) at least 4 bytes
-     * @return {@code LocalDate} decoded from {@code buf}
+     * @return {@code LocalDate} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      * @since 5
      */
     LocalDate decodeLocalDate(byte[] buf);
@@ -520,7 +522,7 @@ public interface DatatypeCoder {
      * Decode {@code java.time.LocalDate} from {@code buf} from the 4 bytes starting at {@code off}.
      *
      * @param buf
-     *         (expected) at least 4 bytes from {@code off}
+     *         (expected) at least 4 bytes from {@code off}, never {@code null}
      * @param off
      *         offset of the time value in {@code buf}
      * @return {@code LocalDate} decoded from {@code buf}
@@ -533,7 +535,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to encode
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      * @since 5
      */
     byte[] encodeLocalDate(LocalDate val);
@@ -544,7 +546,7 @@ public interface DatatypeCoder {
      * @param val
      *         value to encode
      * @param buf
-     *         byte array with at least 4 bytes starting at {@code off}
+     *         byte array with at least 4 bytes starting at {@code off}, never {@code null}
      * @param off
      *         offset of the date value in {@code buf}
      * @since 6
@@ -556,7 +558,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         (expected) at least 8 bytes
-     * @return {@code LocalDateTime} decoded from {@code buf}
+     * @return {@code LocalDateTime} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      * @since 5
      */
     LocalDateTime decodeLocalDateTime(byte[] buf);
@@ -565,7 +567,7 @@ public interface DatatypeCoder {
      * Decode {@code java.time.LocalDateTime} from {@code buf} from the 8 bytes starting at {@code off}.
      *
      * @param buf
-     *         (expected) at least 8 bytes from {@code off}
+     *         (expected) at least 8 bytes from {@code off}, never {@code null}
      * @param off
      *         offset of the datetime value in {@code buf}
      * @return {@code LocalDateTime} decoded from {@code buf}
@@ -578,7 +580,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to encode
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      * @since 5
      */
     byte[] encodeLocalDateTime(LocalDateTime val);
@@ -589,7 +591,7 @@ public interface DatatypeCoder {
      * @param val
      *         value to encode
      * @param buf
-     *         byte array with at least 8 bytes starting at {@code off}
+     *         byte array with at least 8 bytes starting at {@code off}, never {@code null}
      * @param off
      *         offset of the datetime value in {@code buf}
      * @since 6
@@ -601,7 +603,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         data to decode (expects exactly 8 bytes)
-     * @return Decimal64 decoded from {@code buf}
+     * @return Decimal64 decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      */
     Decimal64 decodeDecimal64(byte[] buf);
 
@@ -610,7 +612,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to be encoded
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
     byte[] encodeDecimal64(Decimal64 val);
 
@@ -619,7 +621,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         data to decode (expects exactly 16 bytes)
-     * @return Decimal128 decoded from {@code buf}
+     * @return Decimal128 decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      */
     Decimal128 decodeDecimal128(byte[] buf);
 
@@ -628,7 +630,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to be encoded
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
     byte[] encodeDecimal128(Decimal128 val);
 
@@ -637,7 +639,7 @@ public interface DatatypeCoder {
      *
      * @param buf
      *         data to decode (expects exactly 16 bytes)
-     * @return BigInteger decoded from {@code buf}
+     * @return BigInteger decoded from {@code buf}, or {@code null} if {@code val} is {@code null}
      */
     BigInteger decodeInt128(byte[] buf);
 
@@ -650,7 +652,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to be encoded
-     * @return {@code val} encoded as a byte array
+     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
     byte[] encodeInt128(BigInteger val);
 

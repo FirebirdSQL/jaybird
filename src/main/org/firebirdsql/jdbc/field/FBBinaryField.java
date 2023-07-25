@@ -50,29 +50,24 @@ class FBBinaryField extends FBField {
 
     @Override
     public String getString() throws SQLException {
-        if (isNull()) return null;
         return getDatatypeCoder().decodeString(getFieldData());
     }
 
     @Override
     public void setString(String value) throws SQLException {
-        if (setWhenNull(value)) return;
-
         setBytes(getDatatypeCoder().encodeString(value));
     }
 
     @Override
     public byte[] getBytes() throws SQLException {
         if (isNull()) return null;
-        // protect against unintentional modification of cached or shared byte-arrays (eg in DatabaseMetaData)
+        // protect against unintentional modification of cached or shared byte-arrays (e.g. in DatabaseMetaData)
         return getFieldData().clone();
     }
 
     @Override
     public void setBytes(byte[] value) throws SQLException {
-        if (setWhenNull(value)) return;
-
-        if (value.length > fieldDescriptor.getLength()) {
+        if (value != null && value.length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, value.length,
                     fieldDescriptor.getLength());
         }
@@ -89,7 +84,6 @@ class FBBinaryField extends FBField {
     @Override
     protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
         if (setWhenNull(in)) return;
-
         if (length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, (int) length,
                     fieldDescriptor.getLength());
@@ -107,7 +101,6 @@ class FBBinaryField extends FBField {
     @Override
     protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
         if (setWhenNull(in)) return;
-
         if (length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, (int) length,
                     fieldDescriptor.getLength());
@@ -126,14 +119,13 @@ class FBBinaryField extends FBField {
 
     @Override
     public RowId getRowId() throws SQLException {
-        if (isNull()) return null;
-        return new FBRowId(getBytes());
+        byte[] bytes = getFieldData();
+        return bytes != null ? new FBRowId(bytes) : null;
     }
 
     @Override
     public void setRowId(RowId value) throws SQLException {
-        if (setWhenNull(value)) return;
-
-        setBytes(value.getBytes());
+        setBytes(value != null ? value.getBytes() : null);
     }
+    
 }

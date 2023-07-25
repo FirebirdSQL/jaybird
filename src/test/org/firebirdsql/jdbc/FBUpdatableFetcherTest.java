@@ -419,14 +419,14 @@ class FBUpdatableFetcherTest {
         byte[] fieldId = rowValue.getFieldData(0);
         Integer id = fieldId != null ? datatypeCoder.decodeInt(fieldId) : null;
         byte[] fieldColval = rowValue.getFieldData(1);
-        String colval = fieldColval != null ? datatypeCoder.decodeString(fieldColval) : null;
+        String colval = datatypeCoder.decodeString(fieldColval);
         return new TestValue(id, colval);
     }
 
     private RowValue toRowValue(TestValue testValue) {
         DatatypeCoder datatypeCoder = db.getDatatypeCoder();
         byte[] fieldId = testValue.id != null ? datatypeCoder.encodeInt(testValue.id) : null;
-        byte[] fieldColval = testValue.colval != null ? datatypeCoder.encodeString(testValue.colval) : null;
+        byte[] fieldColval = datatypeCoder.encodeString(testValue.colval);
         return RowValue.of(fieldId, fieldColval);
     }
 
