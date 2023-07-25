@@ -26,6 +26,8 @@ import org.firebirdsql.jaybird.util.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -34,9 +36,14 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.DataTruncation;
+import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
@@ -614,6 +621,13 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     }
 
     @Test
+    void getTimestamp_isoFormat() throws SQLException {
+        toReturnStringExpectations("2016-05-02T10:57:01", encoding);
+
+        assertEquals("2016-05-02 10:57:01.0", field.getTimestamp().toString(), "Unexpected value for getTimestamp");
+    }
+
+    @Test
     @Override
     void getObject_java_sql_Timestamp() throws SQLException {
         toReturnStringExpectations("2016-05-02 10:57:01", encoding);
@@ -788,6 +802,88 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
         toReturnStringExpectations(zonedDateTimeString, encoding);
 
         assertEquals(expectedZonedDateTime, field.getObject(ZonedDateTime.class));
+    }
+
+    @Test
+    void setObject_java_time_LocalDate() throws Exception {
+        String localDateString = "2023-07-24";
+        var localDate = LocalDate.parse(localDateString);
+
+        field.setObject(localDate);
+
+        verifySetString(localDateString, encoding);
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            fieldValue, expectedValue
+            2023-07-24, 2023-07-24
+            2023-7-24,  2023-07-24
+            2023-12-2,  2023-12-02
+            """)
+    void getObject_java_time_LocalDate(String fieldValue, LocalDate expectedValue) throws Exception {
+        toReturnStringExpectations(fieldValue, encoding);
+
+        assertEquals(expectedValue, field.getObject(LocalDate.class));
+        // Double-check if the behaviour is the same for Date
+        assertEquals(Date.valueOf(expectedValue), field.getObject(Date.class));
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            localTime,     expectedFieldValue
+            15:31:23,      15:31:23
+            15:31:23.1,    15:31:23.100
+            15:31:23.12,   15:31:23.120
+            15:31:23.123,  15:31:23.123
+            15:31:23.1234, 15:31:23.123400
+            """)
+    void setObject_java_time_LocalTime(LocalTime localTime, String expectedFieldValue) throws Exception {
+        field.setObject(localTime);
+
+        verifySetString(expectedFieldValue, encoding);
+    }
+
+    @Test
+    void getObject_java_time_LocalTime() throws Exception {
+        String localTimeString = "15:31:23.1";
+        toReturnStringExpectations(localTimeString, encoding);
+
+        assertEquals(LocalTime.parse(localTimeString), field.getObject(LocalTime.class));
+        // Double-check if the behaviour is the same for Time (NOTE: value is truncated to seconds)
+        assertEquals(Time.valueOf("15:31:23"), field.getObject(Time.class));
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            localDateTime,            expectedFieldValue
+            2023-07-24T15:31:23,      2023-07-24T15:31:23
+            2023-07-24T15:31:23.1,    2023-07-24T15:31:23.100
+            2023-07-24T15:31:23.12,   2023-07-24T15:31:23.120
+            2023-07-24T15:31:23.123,  2023-07-24T15:31:23.123
+            2023-07-24T15:31:23.1234, 2023-07-24T15:31:23.123400
+            """)
+    void setObject_java_time_LocalDateTime(LocalDateTime localDateTime, String expectedFieldValue) throws Exception {
+        field.setObject(localDateTime);
+
+        verifySetString(expectedFieldValue, encoding);
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            fieldValue,               expectedValue
+            2023-07-23 15:44,         2023-07-23T15:44
+            2023-7-23 15:44:12,       2023-07-23T15:44:12
+            2023-07-23T15:44:12,      2023-07-23T15:44:12
+            2023-12-2 01:23:12.12,    2023-12-02T01:23:12.12
+            2023-12-02T01:23:12.1234, 2023-12-02T01:23:12.1234
+            """)
+    void getObject(String fieldValue, LocalDateTime expectedValue) throws Exception {
+        toReturnStringExpectations(fieldValue, encoding);
+
+        assertEquals(expectedValue, field.getObject(LocalDateTime.class));
+        // Double-check if the behaviour is the same for Timestamp
+        assertEquals(Timestamp.valueOf(expectedValue), field.getObject(Timestamp.class));
     }
 
     @Override

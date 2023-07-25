@@ -18,8 +18,9 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.firebirdsql.gds.ng.DatatypeCoder.RawDateTimeStruct;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 
 import java.sql.Date;
 import java.sql.SQLException;
@@ -51,8 +52,7 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
 
     @Override
     public String getString() throws SQLException {
-        Timestamp timestamp = getTimestamp();
-        return timestamp != null ? timestamp.toString() : null;
+        return convertForGet(getLocalDateTime(), FbDatetimeConversion::formatSqlTimestamp, String.class);
     }
 
     @Override
@@ -91,7 +91,7 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
 
     @Override
     public void setString(String value) throws SQLException {
-        setTimestamp(fromString(value, Timestamp::valueOf));
+        setLocalDateTime(fromString(value, FbDatetimeConversion::parseIsoOrSqlTimestamp));
     }
 
     @Override
@@ -115,13 +115,19 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
     }
 
     @Override
-    public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
-        return getDatatypeCoder().decodeTimestampRaw(getFieldData());
+    public RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
+        return convertForGet(getLocalDateTime(),
+                v -> {
+                    var raw = new RawDateTimeStruct();
+                    raw.updateDateTime(v);
+                    return raw;
+                },
+                RawDateTimeStruct.class);
     }
 
     @Override
-    public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
-        setFieldData(getDatatypeCoder().encodeTimestampRaw(raw));
+    public void setRawDateTimeStruct(RawDateTimeStruct raw) throws SQLException {
+        setLocalDateTime(convertForSet(raw, RawDateTimeStruct::toLocalDateTime, RawDateTimeStruct.class));
     }
     
 }

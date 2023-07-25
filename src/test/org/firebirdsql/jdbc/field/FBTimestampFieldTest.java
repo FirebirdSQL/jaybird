@@ -136,7 +136,7 @@ class FBTimestampFieldTest extends BaseJUnit5TestFBField<FBTimestampField, Times
     void getStringNonNull() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
-        assertEquals(TEST_TIMESTAMP + ".0", field.getString(), "Unexpected value for getString");
+        assertEquals(TEST_TIMESTAMP, field.getString(), "Unexpected value for getString");
     }
 
     @Test
@@ -144,7 +144,7 @@ class FBTimestampFieldTest extends BaseJUnit5TestFBField<FBTimestampField, Times
     void getObject_String() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
-        assertEquals(TEST_TIMESTAMP + ".0", field.getObject(String.class), "Unexpected value for getObject(String.class)");
+        assertEquals(TEST_TIMESTAMP, field.getObject(String.class), "Unexpected value for getObject(String.class)");
     }
 
     @Test

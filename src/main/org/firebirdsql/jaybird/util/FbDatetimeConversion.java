@@ -21,7 +21,13 @@ package org.firebirdsql.jaybird.util;
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.chrono.IsoChronology;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.ResolverStyle;
+import java.time.format.SignStyle;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.JulianFields;
@@ -30,6 +36,12 @@ import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalField;
 import java.time.temporal.TemporalUnit;
 import java.time.temporal.ValueRange;
+
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
+import static java.time.temporal.ChronoField.DAY_OF_MONTH;
+import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.YEAR;
 
 /**
  * Helpers and classes for Firebird/Jaybird datetime handling.
@@ -56,6 +68,59 @@ public final class FbDatetimeConversion {
      * Number of nanoseconds per Firebird unit of time (i.e. 100 microseconds, or 100,000 nanoseconds).
      */
     public static final long NANOS_PER_UNIT = 100_000L;
+
+    /**
+     * A formatter that can parse {@code yyyy-[m]m-[d]d} as specified in {@link java.sql.Date#valueOf(String)}.
+     * <p>
+     * Use {@link DateTimeFormatter#ISO_LOCAL_DATE} for formatting.
+     * </p>
+     */
+    private static final DateTimeFormatter SQL_DATE_PARSE = new DateTimeFormatterBuilder()
+            .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
+            .appendLiteral('-')
+            .appendValue(MONTH_OF_YEAR, 1, 2, SignStyle.NEVER)
+            .appendLiteral('-')
+            .appendValue(DAY_OF_MONTH, 1, 2, SignStyle.NEVER)
+            .toFormatter()
+            .withResolverStyle(ResolverStyle.STRICT)
+            .withChronology(IsoChronology.INSTANCE);
+
+    /**
+     * A formatter that can parse {@code yyyy-[m]m-[d]d hh:mm[:ss[.f...]]} as specified in
+     * {@link java.sql.Timestamp#valueOf(String)}.
+     * <p>
+     * NOTE: Contrary to {@link java.sql.Timestamp#valueOf(String)}, this format allows
+     * {@code yyyy-[m]m-[d]d hh:mm[:ss[.f...]]} (i.e. seconds are also optional).
+     * </p>
+     * <p>
+     * Use {@link #SQL_TIMESTAMP_FORMAT} for formatting.
+     * </p>
+     */
+    private static final DateTimeFormatter SQL_TIMESTAMP_PARSE = new DateTimeFormatterBuilder()
+            .append(SQL_DATE_PARSE)
+            .appendLiteral(' ')
+            .append(ISO_LOCAL_TIME)
+            .toFormatter()
+            .withResolverStyle(ResolverStyle.STRICT)
+            .withChronology(IsoChronology.INSTANCE);
+
+    /**
+     * A formatter that will format {@code yyyy-mm-dd hh:mm:ss[.f...]} similar to {@link java.sql.Timestamp#toString()}.
+     * <p>
+     * NOTE: Contrary to {@link java.sql.Timestamp#toString()}, this will not print {@code .0} if there is no sub-second
+     * value.
+     * </p>
+     * <p>
+     * Use {@link #SQL_TIMESTAMP_PARSE} for parsing.
+     * </p>
+     */
+    private static final DateTimeFormatter SQL_TIMESTAMP_FORMAT = new DateTimeFormatterBuilder()
+            .append(ISO_LOCAL_DATE)
+            .appendLiteral(' ')
+            .append(ISO_LOCAL_TIME)
+            .toFormatter()
+            .withResolverStyle(ResolverStyle.STRICT)
+            .withChronology(IsoChronology.INSTANCE);
 
     private FbDatetimeConversion() {
         // no instances
@@ -160,6 +225,104 @@ public final class FbDatetimeConversion {
      */
     public static <R extends Temporal> R updateFbTimeUnits(R datetime, int timeUnits) {
         return FB_TIME_FIELD.adjustInto(datetime, timeUnits);
+    }
+
+    /**
+     * Parse a string as a ISO 8601 datetime (yyyy-mm-dd{T|t}hh:mm[:ss[.f...]] <em>or</em> as a SQL timestamp value (see
+     * {@link #parseSqlTimestamp(String)}).
+     *
+     * @param datetimeString
+     *         datetime value to parse
+     * @return local date time value, or {@code null} if {@code datetimeString} is {@code null}
+     * @throws java.time.format.DateTimeParseException
+     *         if {@code datetimeString} cannot be parsed
+     * @see #parseSqlTimestamp(String)
+     */
+    public static LocalDateTime parseIsoOrSqlTimestamp(String datetimeString) {
+        if (datetimeString == null) return null;
+        if (datetimeString.length() >= 16 && (datetimeString.charAt(10) == 'T' || datetimeString.charAt(10) == 't')) {
+            return LocalDateTime.parse(datetimeString);
+        }
+        return parseSqlTimestamp(datetimeString);
+    }
+
+    /**
+     * Parse a string as a SQL timestamp value ({@code yyyy-[m]m-[d]d hh:mm[:ss[.f...]]}).
+     *
+     * @param datetimeString
+     *         datetime value to parse
+     * @return local date time value, or {@code null} if {@code datetimeString} is {@code null}
+     * @throws java.time.format.DateTimeParseException
+     *         if {@code datetimeString} cannot be parsed
+     * @see #parseIsoOrSqlTimestamp(String)
+     * @see java.sql.Timestamp#valueOf(String)
+     */
+    public static LocalDateTime parseSqlTimestamp(String datetimeString) {
+        return datetimeString != null ? LocalDateTime.parse(datetimeString, SQL_TIMESTAMP_PARSE) : null;
+    }
+
+    /**
+     * Formats a local date time as a SQL timestamp value ({@code yyyy-mm-dd hh:mm:ss[.f...]}).
+     *
+     * @param localDateTime
+     *         local date time
+     * @return formatted string, or {@code null} if {@code localDateTime} is {@code null}
+     */
+    public static String formatSqlTimestamp(LocalDateTime localDateTime) {
+        return localDateTime != null ? localDateTime.format(SQL_TIMESTAMP_FORMAT) : null;
+    }
+
+    /**
+     * Parse a string as a SQL time value ({@code hh:mm[:ss[.f...]]}).
+     * <p>
+     * Contrary to {@link java.sql.Time}, fractional seconds are supported.
+     * </p>
+     *
+     * @param timeString
+     *         time value to parse
+     * @return local time value, or {@code null} if {@code timeString} is {@code null}
+     * @throws java.time.format.DateTimeParseException
+     *         if {@code timeString} cannot be parsed
+     * @see java.sql.Time#valueOf(String)
+     */
+    public static LocalTime parseSqlTime(String timeString) {
+        return timeString != null ? LocalTime.parse(timeString) : null;
+    }
+
+    /**
+     * Formats a local time as a SQL time value ({@code hh:mm:ss[.f...]}).
+     *
+     * @param localTime
+     *         local time
+     * @return formatted string, or {@code null} if {@code localTime} is {@code null}
+     */
+    public static String formatSqlTime(LocalTime localTime) {
+        return localTime != null ? localTime.format(ISO_LOCAL_TIME) : null;
+    }
+
+    /**
+     * Parse a string as a SQL date value ({@code yyyy-[m]m-[d]d}).
+     *
+     * @param dateString
+     *         date value to parse
+     * @return local date value, or {@code null} if {@code dateString} is {@code null}
+     * @throws java.time.format.DateTimeParseException
+     *         if {@code dateString} cannot be parsed
+     * @see java.sql.Date#valueOf(String)
+     */
+    public static LocalDate parseSqlDate(String dateString) {
+        return dateString != null ? LocalDate.parse(dateString, SQL_DATE_PARSE) : null;
+    }
+
+    /**
+     * Formats a local date as a SQL date value ({@code yyyy-mm-dd}).
+     *
+     * @param localDate
+     *         local date
+     * @return formatted string, or {@code null} if {@code localDate} is {@code null}
+     */
+    public static String formatSqlDate(LocalDate localDate) {
+        return localDate != null ? localDate.toString() : null;
     }
 
     /**

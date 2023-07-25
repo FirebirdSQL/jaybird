@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 import org.firebirdsql.jaybird.util.IOUtils;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 
@@ -220,12 +221,12 @@ class FBStringField extends FBField implements TrimmableField {
 
     @Override
     public Date getDate() throws SQLException {
-        return getValueAs(Date.class, Date::valueOf);
+        return convertForGet(getLocalDate(), Date::valueOf, Date.class);
     }
 
     @Override
     LocalDate getLocalDate() throws SQLException {
-        return getValueAs(LocalDate.class, LocalDate::parse);
+        return getValueAs(LocalDate.class, FbDatetimeConversion::parseSqlDate);
     }
 
     @Override
@@ -235,7 +236,7 @@ class FBStringField extends FBField implements TrimmableField {
 
     @Override
     public Time getTime() throws SQLException {
-        return getValueAs(Time.class, Time::valueOf);
+        return convertForGet(getLocalTime(), Time::valueOf, Time.class);
     }
 
     @Override
@@ -250,26 +251,12 @@ class FBStringField extends FBField implements TrimmableField {
 
     @Override
     public Timestamp getTimestamp() throws SQLException {
-        return getValueAs(Timestamp.class, string -> {
-            int tIdx = string.indexOf('T');
-            if (tIdx != -1) {
-                // possibly yyyy-MM-ddTHH:mm:ss[.f...]
-                string = string.substring(0, tIdx) + ' ' + string.substring(tIdx + 1);
-            }
-            return Timestamp.valueOf(string);
-        });
+        return convertForGet(getLocalDateTime(), Timestamp::valueOf, Timestamp.class);
     }
 
     @Override
     LocalDateTime getLocalDateTime() throws SQLException {
-        return getValueAs(LocalDateTime.class, string -> {
-            int spaceIdx = string.indexOf(' ');
-            if (spaceIdx != -1) {
-                // possibly yyyy-MM-dd HH:mm:ss[.f...]
-                string = string.substring(0, spaceIdx) + 'T' + string.substring(spaceIdx + 1);
-            }
-            return LocalDateTime.parse(string);
-        });
+        return getValueAs(LocalDateTime.class, FbDatetimeConversion::parseIsoOrSqlTimestamp);
     }
 
     @Override

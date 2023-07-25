@@ -18,14 +18,21 @@
  */
 package org.firebirdsql.jaybird.util;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class FbDatetimeConversionTest {
 
@@ -61,8 +68,135 @@ class FbDatetimeConversionTest {
         assertEquals(localTime, FbDatetimeConversion.fromFbTimeUnits(alternativeTimeUnitCalculation(localTime)));
     }
 
+    // updateFbTimeUnits is tested through fromFbTimeUnits
+
     static Stream<String> localTimeValues() {
         return Stream.of("00:00", "10:18:39.1234", "11:23:15.1234", "15:45:53.9", "19:30:02.0001", "23:59:59.9999");
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            datetime,                 iso8601DateTime
+            1979-1-1 12:00:00,        1979-01-01T12:00
+            1979-01-01T12:00:00,      1979-01-01T12:00
+            1979-01-01t12:00:00,      1979-01-01T12:00
+            2023-07-22 11:33:12.1234, 2023-07-22T11:33:12.1234
+            2023-07-22T11:33:12.1234, 2023-07-22T11:33:12.1234
+            2023-07-22 11:33:12.123,  2023-07-22T11:33:12.123
+            2023-07-22T11:33:12.123,  2023-07-22T11:33:12.123
+            2023-7-22 11:33:12.12,    2023-07-22T11:33:12.12
+            2023-07-22t11:33:12.12,   2023-07-22T11:33:12.12
+            2023-07-22 11:33:12.1,    2023-07-22T11:33:12.1
+            2023-07-22T11:33:12.1,    2023-07-22T11:33:12.1
+            2025-12-31 23:54:59.9999, 2025-12-31T23:54:59.9999
+            2025-12-31t23:54:59.9999, 2025-12-31T23:54:59.9999
+            ,
+            """)
+    void testParseIsoOrSqlTimestamp(String datetime, LocalDateTime iso8601DateTime) {
+        LocalDateTime fromSqlDateTime = FbDatetimeConversion.parseIsoOrSqlTimestamp(datetime);
+        assertEquals(iso8601DateTime, fromSqlDateTime);
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            sqlDateTime,              iso8601DateTime
+            1979-1-1 12:00:00,        1979-01-01T12:00
+            2023-07-22 11:33:12.1234, 2023-07-22T11:33:12.1234
+            2023-07-22 11:33:12.123,  2023-07-22T11:33:12.123
+            2023-7-22 11:33:12.12,    2023-07-22T11:33:12.12
+            2023-07-22 11:33:12.1,    2023-07-22T11:33:12.1
+            2025-12-31 23:54:59.9999, 2025-12-31T23:54:59.9999
+            """)
+    void testSqlTimestampParseAndFormat(String sqlDateTime, LocalDateTime iso8601DateTime) {
+        LocalDateTime fromSqlDateTime = FbDatetimeConversion.parseSqlTimestamp(sqlDateTime);
+
+        assertEquals(iso8601DateTime, fromSqlDateTime);
+
+        Timestamp timestampFromSqlDateTime = Timestamp.valueOf(sqlDateTime);
+        assertEquals(timestampFromSqlDateTime.toLocalDateTime(), fromSqlDateTime);
+        String timestampString = timestampFromSqlDateTime.toString();
+        if (timestampString.endsWith(".0")) {
+            timestampString = timestampString.substring(0, timestampString.length() - 2);
+        }
+        assertEquals(timestampString, FbDatetimeConversion.formatSqlTimestamp(fromSqlDateTime));
+    }
+
+    @Test
+    void testParseSqlTimestamp_null() {
+        assertNull(FbDatetimeConversion.parseSqlTimestamp(null));
+    }
+
+    @Test
+    void testFormatSqlTimestamp_null() {
+        assertNull(FbDatetimeConversion.formatSqlTimestamp(null));
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            sqlTime,       compareLegacy
+            00:00:00,      true
+            00:00:00.1234, false
+            01:02:03,      true
+            01:02:03.1234, false
+            23:59:59,      true
+            23:59:59.9999, false
+            23:59:59.999,  false
+            23:59:59.99,   false
+            23:59:59.9,    false
+            23:59,         false
+            """)
+    void testSqlTimeParseAndFormat(String sqlTime, boolean compareLegacy) {
+        LocalTime fromSqlTime = FbDatetimeConversion.parseSqlTime(sqlTime);
+        String formattedSqlTime = FbDatetimeConversion.formatSqlTime(fromSqlTime);
+
+        assertEquals(sqlTime.length() > 5 ? sqlTime : sqlTime + ":00", formattedSqlTime);
+
+        if (compareLegacy) {
+            Time timeFromSqlTime = Time.valueOf(sqlTime);
+            assertEquals(timeFromSqlTime.toLocalTime(), fromSqlTime);
+            assertEquals(timeFromSqlTime.toString(), formattedSqlTime);
+        }
+    }
+
+    @Test
+    void testParseSqlTime_null() {
+        assertNull(FbDatetimeConversion.parseSqlTime(null));
+    }
+
+    @Test
+    void testFormatSqlTime_null() {
+        assertNull(FbDatetimeConversion.formatSqlTime(null));
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            sqlDate,    expectedDate
+            0001-01-01, 0001-01-01
+            1980-2-3,   1980-02-03
+            1980-02-03, 1980-02-03
+            2032-7-11,  2032-07-11
+            2024-12-2,  2024-12-02
+            9999-12-31, 9999-12-31
+            """)
+    void testSqlDateParseAndFormat(String sqlDate, String expectedDate) {
+        LocalDate fromSqlDate = FbDatetimeConversion.parseSqlDate(sqlDate);
+
+        String formattedSqlDate = FbDatetimeConversion.formatSqlDate(fromSqlDate);
+        assertEquals(expectedDate, formattedSqlDate);
+
+        Date dateFromSqlDate = Date.valueOf(sqlDate);
+        assertEquals(dateFromSqlDate.toLocalDate(), fromSqlDate);
+        assertEquals(dateFromSqlDate.toString(), formattedSqlDate);
+    }
+
+    @Test
+    void testParseSqlDate_null() {
+        assertNull(FbDatetimeConversion.parseSqlDate(null));
+    }
+
+    @Test
+    void testFormatSqlDate_null() {
+        assertNull(FbDatetimeConversion.formatSqlDate(null));
     }
 
     /**

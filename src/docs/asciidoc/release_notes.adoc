@@ -881,6 +881,19 @@ Attempts to cancel this operation will throw an exception.
 
 If you're currently using the `OperationAware` interface to monitor and/or cancel fetches, make sure to also process `STATEMENT_ASYNC_FETCH_START` and/or `STATEMENT_ASYNC_FETCH_COMPLETE` as appropriate.
 
+[#datetime-conversion-changes]
+=== Changes in datetime conversions
+
+The conversions of datetime values were overhauled to use the `java.time` types wherever possible.
+
+This results in some minor differences:
+
+* `getString(...)` on a `TIME` field will now render fractional seconds if available
+* `setString(...)` on a `TIME` field now has seconds optional and accepts fractional seconds
+* `getString(...)` on a `TIMESTAMP` field will now render without `.0` at the end if the value does not have fractional seconds (e.g. `2023-07-22 12:43:45` instead of `2023-07-22 12:43:45.0`)
+* `setString(...)` on a `TIMESTAMP` field now has seconds optional
+* `setString(...)` on a `TIMESTAMP` field now also accepts ISO 8601 datetime strings (that is, with a `T` as a separator instead of a space, for example, `2023-07-22 12:43:45` and `2023-07-22T12:43:45` are now both accepted)
+
 // TODO Document compatibility issues
 
 [#removal-of-classes-packages-and-methods-without-deprecation]
