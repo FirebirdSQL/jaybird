@@ -47,6 +47,7 @@ import static java.util.Objects.requireNonNull;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.0
  */
+@SuppressWarnings("deprecation")
 public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
 
     private final DatatypeCoder parentCoder;

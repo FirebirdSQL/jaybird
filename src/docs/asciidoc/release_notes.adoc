@@ -1172,6 +1172,7 @@ The following classes have been deprecated and will be removed in Jaybird 6:
 * `org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener` -- implementing `DatabaseListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
 * `org.firebirdsql.gds.ng.listeners.DefaultStatementListener` -- implementing `StatementListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
 * `org.firebirdsql.jdbc.FBConnectionDefaults`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants`, is considered internal API
+* `org.firebirdsql.gds.ng.DatatypeCoder.RawDateTimeStruct` (semi-internal API) -- use one of the `java.time` classes instead
 
 [#removal-of-deprecated-constants-6]
 ==== Removal of deprecated constants

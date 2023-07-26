@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("deprecation")
 class FBTimestampFieldTest extends BaseJUnit5TestFBField<FBTimestampField, Timestamp> {
 
     private static final String TEST_DATE = "2016-01-01";

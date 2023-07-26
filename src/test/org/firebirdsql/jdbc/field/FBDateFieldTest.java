@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("deprecation")
 class FBDateFieldTest extends BaseJUnit5TestFBField<FBDateField, java.sql.Date> {
 
     // TODO Check if a calendar with a bigger offset might be better

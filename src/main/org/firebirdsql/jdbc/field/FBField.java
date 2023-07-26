@@ -767,10 +767,22 @@ public abstract class FBField {
         throw invalidSetConversion(RowId.class);
     }
 
+    /**
+     * @deprecated use {@link #getLocalDate()}, {@link #getLocalTime()}, {@link #getLocalDateTime()}; will be removed in
+     * Jaybird 6
+     */
+    @SuppressWarnings("DeprecatedIsStillUsed")
+    @Deprecated
     public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
         throw invalidGetConversion(DatatypeCoder.RawDateTimeStruct.class);
     }
 
+    /**
+     * @deprecated use {@link #setLocalDate(LocalDate)}, {@link #setLocalTime(LocalTime)},
+     * {@link #setLocalDateTime(LocalDateTime)}; will be removed in Jaybird 6
+     */
+    @SuppressWarnings("DeprecatedIsStillUsed")
+    @Deprecated
     public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
         throw invalidSetConversion(DatatypeCoder.RawDateTimeStruct.class);
     }

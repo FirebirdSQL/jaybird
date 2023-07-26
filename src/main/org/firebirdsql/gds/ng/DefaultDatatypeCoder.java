@@ -61,6 +61,7 @@ import static java.util.Objects.requireNonNull;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
+@SuppressWarnings("deprecation")
 public class DefaultDatatypeCoder implements DatatypeCoder {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultDatatypeCoder.class);
@@ -589,6 +590,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     /**
      * Helper Class to encode/decode times/dates
      */
+    @SuppressWarnings("deprecation")
     private class datetime {
 
         private final RawDateTimeStruct raw;

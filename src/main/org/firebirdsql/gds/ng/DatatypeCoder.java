@@ -43,6 +43,7 @@ import java.util.Calendar;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
+@SuppressWarnings("DeprecatedIsStillUsed")
 public interface DatatypeCoder {
 
     // A fraction is 100 microseconds
@@ -247,7 +248,9 @@ public interface DatatypeCoder {
      *        will be subtracted from the encoded value, otherwise it will
      *        be added
      * @return The encoded {@code Timestamp}
+     * @deprecated will be removed in Jaybird 6
      */
+    @Deprecated
     Timestamp encodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone);
 
     /**
@@ -255,7 +258,9 @@ public interface DatatypeCoder {
      *
      * @param raw The {@code RawDateTimeStruct} to be encoded
      * @return The array of {@code byte}s representing the date and time of the given {@code RawDateTimeStruct}
+     * @deprecated use {@link #encodeLocalDateTime(LocalDateTime)}; will be removed in Jaybird 6
      */
+    @Deprecated
     byte[] encodeTimestampRaw(RawDateTimeStruct raw);
 
     /**
@@ -264,7 +269,9 @@ public interface DatatypeCoder {
      * @param value The {@code Timestamp} to be encoded
      * @param c Calendar to use for time zone calculation
      * @return The array of {@code byte}s that represents the given {@code Timestamp} value
+     * @deprecated use {@link #encodeLocalDateTime(LocalDateTime)}; will be removed in Jaybird 6
      */
+    @Deprecated
     byte[] encodeTimestampCalendar(Timestamp value, Calendar c);
 
     /**
@@ -277,7 +284,9 @@ public interface DatatypeCoder {
      *        will be subtracted from the decoded value, otherwise it will
      *        be added
      * @return The encoded {@code Timestamp}
+     * @deprecated will be removed in Jaybird 6
      */
+    @Deprecated
     Timestamp decodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone);
 
     /**
@@ -285,7 +294,9 @@ public interface DatatypeCoder {
      *
      * @param byte_long The {@code byte} array to be decoded
      * @return A {@link RawDateTimeStruct}.
+     * @deprecated use {@link #decodeLocalDateTime(byte[])}; will be removed in Jaybird 6
      */
+    @Deprecated
     RawDateTimeStruct decodeTimestampRaw(byte[] byte_long);
 
     /**
@@ -294,7 +305,9 @@ public interface DatatypeCoder {
      * @param byte_long The {@code byte} array to be decoded
      * @param c Calendar to use for time zone calculation
      * @return A {@code Timestamp} value from the decoded bytes
+     * @deprecated use {@link #decodeLocalDateTime(byte[])}; will be removed in Jaybird 6
      */
+    @Deprecated
     Timestamp decodeTimestampCalendar(byte[] byte_long, Calendar c);
 
     /**
@@ -303,7 +316,9 @@ public interface DatatypeCoder {
      * @param d The {@code Time} to be encoded
      * @param cal The {@code Calendar} to be used in the encoding, may be {@code null}
      * @return The encoded {@code Time}
+     * @deprecated use {@link #encodeLocalTime(LocalTime)}; will be removed in Jaybird 6
      */
+    @Deprecated
     java.sql.Time encodeTime(Time d, Calendar cal, boolean invertTimeZone);
 
     /**
@@ -311,7 +326,9 @@ public interface DatatypeCoder {
      *
      * @param raw The {@code RawDateTimeStruct} to be encoded
      * @return The array of {@code byte}s representing the time of the given {@code RawDateTimeStruct}
+     * @deprecated use {@link #encodeLocalTime(LocalTime)}; will be removed in Jaybird 6
      */
+    @Deprecated
     byte[] encodeTimeRaw(RawDateTimeStruct raw);
 
     /**
@@ -320,7 +337,9 @@ public interface DatatypeCoder {
      * @param d The {@code Time} to be encoded
      * @param c Calendar to use for time zone calculation
      * @return The array of {@code byte}s representing the given {@code Time}
+     * @deprecated will be removed in Jaybird 6
      */
+    @Deprecated
     byte[] encodeTimeCalendar(Time d, Calendar c);
 
     /**
@@ -329,7 +348,9 @@ public interface DatatypeCoder {
      * @param d The {@code Time} to be decoded
      * @param cal The {@code Calendar} to be used in the decoding, may be {@code null}
      * @return The decoded {@code Time}
+     * @deprecated will be removed in Jaybird 6
      */
+    @Deprecated
     Time decodeTime(Time d, Calendar cal, boolean invertTimeZone);
 
     /**
@@ -337,7 +358,9 @@ public interface DatatypeCoder {
      *
      * @param int_byte The {@code byte} array to be decoded
      * @return The {@link RawDateTimeStruct}
+     * @deprecated use {@link #decodeLocalTime(byte[])}; will be removed in Jaybird 6
      */
+    @Deprecated
     RawDateTimeStruct decodeTimeRaw(byte[] int_byte);
 
     /**
@@ -346,7 +369,9 @@ public interface DatatypeCoder {
      * @param int_byte The {@code byte} array to be decoded
      * @param c Calendar to use for time zone calculation
      * @return The decoded {@code Time}
+     * @deprecated use {@link #decodeLocalTime(byte[])}; will be removed in Jaybird 6
      */
+    @Deprecated
     Time decodeTimeCalendar(byte[] int_byte, Calendar c);
 
     /**
@@ -355,7 +380,9 @@ public interface DatatypeCoder {
      * @param d The {@code Date} to be encoded
      * @param cal The {@code Calendar} to be used in the encoding, may be {@code null}
      * @return The encoded {@code Date}
+     * @deprecated will be removed in Jaybird 6
      */
+    @Deprecated
     Date encodeDate(Date d, Calendar cal);
 
     /**
@@ -363,7 +390,9 @@ public interface DatatypeCoder {
      *
      * @param raw The {@code RawDateTimeStruct} to be encoded
      * @return The array of {@code byte}s representing the date of the given {@code RawDateTimeStruct}
+     * @deprecated use {@link #encodeLocalDate(LocalDate)}; will be removed in Jaybird 6
      */
+    @Deprecated
     byte[] encodeDateRaw(RawDateTimeStruct raw);
 
     /**
@@ -372,7 +401,9 @@ public interface DatatypeCoder {
      * @param d The {@code Date} to be encoded
      * @param c Calendar to use for time zone calculation
      * @return The array of {@code byte}s representing the given {@code Date}
+     * @deprecated use {@link #encodeLocalDate(LocalDate)}; will be removed in Jaybird 6
      */
+    @Deprecated
     byte[] encodeDateCalendar(Date d, Calendar c);
 
     /**
@@ -381,7 +412,9 @@ public interface DatatypeCoder {
      * @param d The {@code Date} to be decoded
      * @param cal The {@code Calendar} to be used in the decoding, may be {@code null}
      * @return The decoded {@code Date}
+     * @deprecated will be removed in Jaybird 6
      */
+    @Deprecated
     Date decodeDate(Date d, Calendar cal);
 
     /**
@@ -389,7 +422,9 @@ public interface DatatypeCoder {
      *
      * @param byte_int The {@code byte} array to be decoded
      * @return The {@link RawDateTimeStruct}
+     * @deprecated use {@link #decodeLocalDate(byte[])}; will be removed in Jaybird 6
      */
+    @Deprecated
     RawDateTimeStruct decodeDateRaw(byte[] byte_int);
 
     /**
@@ -398,7 +433,9 @@ public interface DatatypeCoder {
      * @param byte_int The {@code byte} array to be decoded
      * @param c Calendar to use for time zone calculation
      * @return The decoded {@code Date}
+     * @deprecated use {@link #decodeLocalDate(byte[])}; will be removed in Jaybird 6
      */
+    @Deprecated
     Date decodeDateCalendar(byte[] byte_int, Calendar c);
 
     /**
@@ -587,7 +624,9 @@ public interface DatatypeCoder {
      * "[timestamp is] stored a two long words, one representing the number of days since 17 Nov 1858 and one
      * representing number of 100 nano-seconds since midnight" (NOTE: It is actually 100 microseconds!)
      * </p>
+     * @deprecated use a {@code java.time} type; will be removed in Jaybird 6
      */
+    @Deprecated
     final class RawDateTimeStruct {
         public int year;
         public int month;

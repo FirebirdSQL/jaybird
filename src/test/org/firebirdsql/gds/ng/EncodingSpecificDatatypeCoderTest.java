@@ -44,6 +44,7 @@ import static org.mockito.Mockito.when;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("deprecation")
 @ExtendWith(MockitoExtension.class)
 class EncodingSpecificDatatypeCoderTest {
 

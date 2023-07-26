@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("deprecation")
 class FBTimeFieldTest extends BaseJUnit5TestFBField<FBTimeField, Time> {
 
     private static final LocalTime TEST_LOCAL_TIME = LocalTime.parse("13:37:59");

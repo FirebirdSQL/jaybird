@@ -45,6 +45,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.0
  */
+@SuppressWarnings("deprecation")
 public class TimeZoneDatatypeCoder {
 
     private static final int SIZE_OF_TIMESTAMPTZ = 12;
