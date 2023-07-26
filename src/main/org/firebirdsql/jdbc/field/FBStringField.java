@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 import org.firebirdsql.jaybird.util.IOUtils;
+import org.firebirdsql.jaybird.util.LegacyDatetimeConversions;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 
 import java.io.ByteArrayInputStream;
@@ -212,41 +213,14 @@ class FBStringField extends FBField implements TrimmableField {
         return getFieldData().clone();
     }
 
-    //----- getDate, getTime and getTimestamp code
-
-    @Override
-    public Date getDate(Calendar cal) throws SQLException {
-        return getDatatypeCoder().decodeDate(getDate(), cal);
-    }
-
-    @Override
-    public Date getDate() throws SQLException {
-        return convertForGet(getLocalDate(), Date::valueOf, Date.class);
-    }
-
     @Override
     LocalDate getLocalDate() throws SQLException {
         return getValueAs(LocalDate.class, FbDatetimeConversion::parseSqlDate);
     }
 
     @Override
-    public Time getTime(Calendar cal) throws SQLException {
-        return getDatatypeCoder().decodeTime(getTime(), cal);
-    }
-
-    @Override
-    public Time getTime() throws SQLException {
-        return convertForGet(getLocalTime(), Time::valueOf, Time.class);
-    }
-
-    @Override
     LocalTime getLocalTime() throws SQLException {
         return getValueAs(LocalTime.class, LocalTime::parse);
-    }
-
-    @Override
-    public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        return getDatatypeCoder().decodeTimestamp(getTimestamp(), cal);
     }
 
     @Override
@@ -396,31 +370,9 @@ class FBStringField extends FBField implements TrimmableField {
         setFieldData(value);
     }
 
-    //----- setDate, setTime and setTimestamp code
-
-    @Override
-    public void setDate(Date value, Calendar cal) throws SQLException {
-        setDate(getDatatypeCoder().encodeDate(value, cal));
-    }
-
-    @Override
-    public void setDate(Date value) throws SQLException {
-        setAsString(value);
-    }
-
     @Override
     void setLocalDate(LocalDate localDate) throws SQLException {
         setAsString(localDate);
-    }
-
-    @Override
-    public void setTime(Time value, Calendar cal) throws SQLException {
-        setTime(getDatatypeCoder().encodeTime(value, cal));
-    }
-
-    @Override
-    public void setTime(Time value) throws SQLException {
-        setAsString(value);
     }
 
     @Override
@@ -430,12 +382,15 @@ class FBStringField extends FBField implements TrimmableField {
 
     @Override
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        setTimestamp(getDatatypeCoder().encodeTimestamp(value, cal));
+        setString(convertForSet(value,
+                v -> FbDatetimeConversion.formatSqlTimestamp(LegacyDatetimeConversions.toLocalDateTime(v, cal)),
+                Timestamp.class));
     }
 
     @Override
     public void setTimestamp(Timestamp value) throws SQLException {
-        setAsString(value);
+        setString(convertForSet(value,
+                v -> FbDatetimeConversion.formatSqlTimestamp(v.toLocalDateTime()), Timestamp.class));
     }
 
     @Override

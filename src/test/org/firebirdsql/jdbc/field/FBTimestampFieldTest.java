@@ -112,8 +112,7 @@ class FBTimestampFieldTest extends BaseJUnit5TestFBField<FBTimestampField, Times
 
         field.setDate(java.sql.Date.valueOf(TEST_DATE), calendar);
 
-        // TODO Conversion seems wrong
-        verifySetTimestamp(LocalDateTime.parse("2015-12-31T23:00:00"));
+        verifySetTimestamp(LocalDateTime.parse("2015-12-31T00:00:00"));
     }
 
     @Test

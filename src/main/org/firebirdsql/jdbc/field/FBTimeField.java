@@ -18,18 +18,14 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import java.sql.Timestamp;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Calendar;
-
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 
-import java.sql.Time;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * Field implementation for {@code TIME (WITHOUT TIME ZONE)}.
@@ -57,19 +53,8 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
     }
 
     @Override
-    public Time getTime(Calendar cal) throws SQLException {
-        return getDatatypeCoder().decodeTimeCalendar(getFieldData(), cal);
-    }
-
-    @Override
     LocalTime getLocalTime() throws SQLException {
         return getDatatypeCoder().decodeLocalTime(getFieldData());
-    }
-
-    @Override
-    public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        Time time = getTime(cal);
-        return time != null ? new Timestamp(time.getTime()) : null;
     }
 
     @Override
@@ -86,18 +71,8 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
     }
 
     @Override
-    public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        setTime(value != null ? new Time(value.getTime()) : null, cal);
-    }
-
-    @Override
     void setLocalDateTime(LocalDateTime value) throws SQLException {
         setLocalTime(value != null ? value.toLocalTime() : null);
-    }
-
-    @Override
-    public void setTime(Time value, Calendar cal) throws SQLException {
-        setFieldData(getDatatypeCoder().encodeTimeCalendar(value, cal));
     }
 
     @Override

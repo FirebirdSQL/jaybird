@@ -744,6 +744,17 @@ For compatibility with use on the classpath, it is recommended to also provide t
 
 For more information, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-13-modularization-of-jaybird.adoc[jdp-2023-13: Modularization of Jaybird^].
 
+[#timestamp-localdate-localtime]
+=== `TIMESTAMP` fields now accept `LocalDate` and `LocalTime`
+
+The JDBC specification does not specify support for `LocalDate` and `LocalTime` on `TIMESTAMP` (without time zone).
+However, when we introduced support for the `java.time` types, we implemented support for getting `LocalDate` and `LocalTime` (through `getObject`), but did not provide support for setting values of those types (through `setObject`) on `TIMESTAMP`.
+
+We have now addressed this inconsistency, by also introducing support for setting these types on `TIMESTAMP` with the following behaviour:
+
+* `setObject(..., localTime)` sets a `LocalDateTime` derived as `LocalDate.EPOCH.atTime(localTime)` (i.e. on 1970-01-01)
+* `setObject(..., localDate)` sets a `LocalDateTime` derived as `localDate.atStartOfDay()` (i.e. at 00:00:00)
+
 // TODO add major changes
 
 [#potentially-breaking-changes]
@@ -890,9 +901,19 @@ This results in some minor differences:
 
 * `getString(...)` on a `TIME` field will now render fractional seconds if available
 * `setString(...)` on a `TIME` field now has seconds optional and accepts fractional seconds
+* `setTime(...)` on a `TIME` field will not set sub-second values (previously this could vary with the millisecond value wrapped by `java.sql.Time`)
 * `getString(...)` on a `TIMESTAMP` field will now render without `.0` at the end if the value does not have fractional seconds (e.g. `2023-07-22 12:43:45` instead of `2023-07-22 12:43:45.0`)
 * `setString(...)` on a `TIMESTAMP` field now has seconds optional
 * `setString(...)` on a `TIMESTAMP` field now also accepts ISO 8601 datetime strings (that is, with a `T` as a separator instead of a space, for example, `2023-07-22 12:43:45` and `2023-07-22T12:43:45` are now both accepted)
+* `setDate(...)` on a `TIMESTAMP` field now sets time to 00:00:00 (previously this could vary with the millisecond value wrapped by `java.sql.Date`)
+* `setTime(...)` on a `TIMESTAMP` field will now always set at 1970-01-01, and will not set sub-second values (previously this could vary with the millisecond value wrapped by `java.sql.Time`)
+* `setTimestamp(...)` on a `CHAR`/`VARCHAR`/`BLOB SUB_TYPE TEXT` field will now set the value without `.0` at the end if the value does not have fractional seconds (e.g. `2023-07-22 12:43:45` instead of `2023-07-22 12:43:45.0`)
+* `getTimestamp(...)` on a `CHAR`/`VARCHAR`/`BLOB SUB_TYPE TEXT` field will now also parse ISO 8601 datetime strings (that is, with a `T` as a separator instead of a space, for example, `2023-07-22 12:43:45` and `2023-07-22T12:43:45` are now both accepted), and seconds are now optional
+* `getTime(...)` on a `CHAR`/`VARCHAR`/`BLOB SUB_TYPE TEXT` field will now parse values without seconds and values with fractional seconds.
+Though it can parse it, the resulting value will not include fractional seconds.
+* `setDate(..., Calendar)` on a `CHAR`/`VARCHAR`/`BLOB SUB_TYPE TEXT` field will now use the `Calendar` to rebase the date, this can result in an off-by-one difference in the date compared to previous versions (depending on the time zone set on the `Calendar`)
+* `getDate(..., Calendar)`  on a `CHAR`/`VARCHAR`/`BLOB SUB_TYPE TEXT` field will now use the `Calendar` to rebase the date, this can result in an off-by-one difference in the date compared to previous versions (depending on the time zone set on the `Calendar`)
+* The `TypeConversionException` thrown by `getDate(...)`, `getTime(...)` and `getTimestamp(...)` on unsupported types may now report `java.time.LocalDate`, `java.time.LocalTime` or `java.time.LocalDateTime` as the type in its error message instead of `java.sql.Date`, `java.sql.Time`, or `java.sql.Timestamp`
 
 // TODO Document compatibility issues
 
@@ -1208,21 +1229,37 @@ The new package is not exported from the module.
 * `DbMetadataMediator` was moved to package `org.firebirdsql.jdbc` for module accessibility reasons.
 * `DatatypeCoder`
 ** `encodeTimestamp(Timestamp, Calendar, boolean)` was removed;
-use `encodeTimestamp(Timestamp, Calendar)`
+there is no replacement
 ** `decodeTimestamp(Timestamp, Calendar, boolean)` was removed;
-use `decodeTimestamp(Timestamp, Calendar)`
-** `encodeTime(Time, Calendar, boolean)` was removed;
-use `encodeTime(Time, Calendar)`
-** `decodeTime(Time, Calendar, boolean)` was removed;
-use `decodeTime(Time, Calendar)`
+there is no replacement
+** `encodeTimestampCalendar(Timestamp, Calendar)` was removed;
+use `encodeLocalDateTime(LocalDateTime)`
+** `decodeTimestampCalendar(byte[], Calendar)` was removed;
+use `decodeLocalDateTime(byte[])`
 ** `encodeTimestampRaw(DatatypeCoder.RawDateTimeStruct)` was removed;
 use `encodeLocalDateTime(LocalDateTime)`
 ** `decodeTimestampRaw(byte[])` was removed;
 use `decodeLocalDateTime(byte[])`
+** `encodeTime(Time, Calendar, boolean)` was removed;
+there is no replacement
+** `decodeTime(Time, Calendar, boolean)` was removed;
+there is no replacement
+** `encodeTimeCalendar(Time, Calendar)` was removed;
+use `encodeLocalTime(LocalTime)`
+** `decodeTimeCalendar(byte[], Calendar)` was removed;
+use `decodeLocalTime(byte[])`
 ** `encodeTimeRaw(DatatypeCoder.RawDateTimeStruct)` was removed;
 use `encodeLocalTime(LocalTime)`
 ** `decodeTimeRaw(byte[])` was removed;
 use `decodeLocalTime(byte[])`
+** `encodeDate(Date, Calendar)` was removed;
+there is no replacement
+** `decodeDate(Date, Calendar)` was removed;
+there is no replacement
+** `encodeDateCalendar(Date, Calendar)` was removed;
+use `encodeLocalDate(LocalDate)`
+** `decodeDateCalendar(byte[], Calendar)` was removed;
+use `decodeLocalDate(byte[])`
 ** `encodeDateRaw(DatatypeCoder.RawDateTimeStruct)` was removed;
 use `encodeLocalDate(LocalDate)`
 ** `decodeDateRaw(byte[])` was removed;

@@ -22,12 +22,9 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 
-import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Calendar;
 
 /**
  * Describe class <code>FBDateField</code> here.
@@ -45,17 +42,6 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
     @Override
     public Object getObject() throws SQLException {
         return getDate();
-    }
-
-    @Override
-    public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        Date date = getDate(cal);
-        return date != null ? new Timestamp(date.getTime()) : null;
-    }
-
-    @Override
-    public Date getDate(Calendar cal) throws SQLException {
-        return getDatatypeCoder().decodeDateCalendar(getFieldData(), cal);
     }
 
     @Override
@@ -79,18 +65,8 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
     }
 
     @Override
-    public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        setDate(value != null ? new Date(value.getTime()) : null, cal);
-    }
-
-    @Override
     void setLocalDateTime(LocalDateTime value) throws SQLException {
         setLocalDate(value != null ? value.toLocalDate() : null);
-    }
-
-    @Override
-    public void setDate(Date value, Calendar cal) throws SQLException {
-        setFieldData(getDatatypeCoder().encodeDateCalendar(value, cal));
     }
 
     @Override

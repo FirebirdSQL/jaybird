@@ -19,9 +19,9 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DataGenerator;
-import org.firebirdsql.common.MaxFbTimePrecision;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -261,9 +261,9 @@ class BatchUpdatesTest {
                         assertEquals(expectedSmallString, rs.getString(11));
                         assertEquals(expectedLargeString, rs.getString(12));
                         assertEquals(localDateBase.plusDays(id), rs.getObject(13, LocalDate.class));
-                        assertEquals(localTimeBase.plusMinutes(id).truncatedTo(MaxFbTimePrecision.INSTANCE),
+                        assertEquals(localTimeBase.plusMinutes(id).truncatedTo(FbDatetimeConversion.FB_TIME_UNIT),
                                 rs.getObject(14, LocalTime.class));
-                        assertEquals(localDateTimeBase.plusHours(id).truncatedTo(MaxFbTimePrecision.INSTANCE),
+                        assertEquals(localDateTimeBase.plusHours(id).truncatedTo(FbDatetimeConversion.FB_TIME_UNIT),
                                 rs.getObject(15, LocalDateTime.class));
                         assertEquals(expectedLargeString, rs.getString(16));
                     } catch (SQLException e) {

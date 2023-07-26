@@ -31,14 +31,10 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.math.BigInteger;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
@@ -226,88 +222,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     @Override
     public final Reader createReader(InputStream in) {
         return encoding.createReader(in);
-    }
-
-    // times,dates...
-
-    @Override
-    public Timestamp encodeTimestamp(Timestamp val, Calendar c) {
-        if (c == null || val == null) return val;
-        return new Timestamp(val.getTime() + calculateOffset(c));
-    }
-
-    private static int calculateOffset(Calendar cal) {
-        return cal.getTimeZone().getRawOffset() - Calendar.getInstance().getTimeZone().getRawOffset();
-    }
-
-    @Override
-    public byte[] encodeTimestampCalendar(Timestamp val, Calendar c) {
-        /* note, we cannot simply pass millis to the database, because
-         * Firebird stores timestamp in format (citing Ann W. Harrison):
-         *
-         * "[timestamp is] stored a two long words, one representing
-         * the number of days since 17 Nov 1858 and one representing number
-         * of 100 nano-seconds since midnight" (NOTE: It is actually 100 microseconds!)
-         */
-        return val != null ? new datetime(val, c).toTimestampBytes() : null;
-    }
-
-    @Override
-    public Timestamp decodeTimestamp(Timestamp val, Calendar c) {
-        if (c == null || val == null) return val;
-        return new Timestamp(val.getTime() - calculateOffset(c));
-    }
-
-    @Override
-    public Timestamp decodeTimestampCalendar(byte[] buf, Calendar c) {
-        return buf != null ? fromLongBytes(buf).toTimestamp(c) : null;
-    }
-
-    @Override
-    public Time encodeTime(Time val, Calendar c) {
-        if (c == null || val == null) return val;
-        return new Time(val.getTime() + calculateOffset(c));
-    }
-
-    @Override
-    public byte[] encodeTimeCalendar(Time val, Calendar c) {
-        return val != null ? new datetime(val, c).toTimeBytes() : null;
-    }
-
-    @Override
-    public Time decodeTime(Time val, Calendar c) {
-        if (c == null || val == null) return val;
-        return new Time(val.getTime() - calculateOffset(c));
-    }
-
-    @Override
-    public Time decodeTimeCalendar(byte[] buf, Calendar c) {
-        return buf != null ? new datetime(buf, -1, 0).toTime(c) : null;
-    }
-
-    @Override
-    public Date encodeDate(Date val, Calendar c) {
-        if (c == null || val == null) return val;
-        // TODO This effectively does nothing... just replace with return val?
-        c.setTime(val);
-        return new Date(c.getTime().getTime());
-    }
-
-    @Override
-    public byte[] encodeDateCalendar(Date val, Calendar c) {
-        return val != null ? new datetime(val, c).toDateBytes() : null;
-    }
-
-    @Override
-    public Date decodeDate(Date val, Calendar c) {
-        if (c == null || val == null) return val;
-        c.setTime(val);
-        return new Date(c.getTime().getTime());
-    }
-
-    @Override
-    public Date decodeDateCalendar(byte[] buf, Calendar c) {
-        return buf != null ? new datetime(buf, 0, -1).toDate(c) : null;
     }
 
     @Override
@@ -531,108 +445,4 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         return hash(getClass(), getEncodingDefinition());
     }
 
-    private datetime fromLongBytes(byte[] buf) {
-        if (buf.length < 8) {
-            throw new IllegalArgumentException("Bad parameter to decode, require byte array of at least length 8");
-        }
-
-        // we have to extract time and date correctly see encodeTimestamp(...) for explanations
-        return new datetime(buf, 0 , 4);
-    }
-
-    /**
-     * Helper Class to encode/decode times/dates
-     */
-    @SuppressWarnings("removal")
-    private class datetime {
-
-        private final RawDateTimeStruct raw;
-
-        datetime(Timestamp value, Calendar cOrig) {
-            this(new RawDateTimeStruct());
-            Calendar c = (Calendar) cOrig.clone();
-            c.setTime(value);
-            raw.updateDate(c);
-            raw.updateTime(c, value.getNanos());
-        }
-
-        datetime(Date value, Calendar cOrig) {
-            this(new RawDateTimeStruct());
-            Calendar c = (Calendar) cOrig.clone();
-            c.setTime(value);
-            raw.updateDate(c);
-        }
-
-        datetime(Time value, Calendar cOrig) {
-            this(new RawDateTimeStruct());
-            Calendar c = (Calendar) cOrig.clone();
-            c.setTime(value);
-            raw.updateTime(c, -1);
-        }
-
-        datetime(byte[] buf, int offDate, int offTime) {
-            final boolean hasDate = offDate != -1;
-            final boolean hasTime = offTime != -1;
-            raw = new RawDateTimeStruct(
-                    hasDate ? decodeInt(buf, offDate) : 0, hasDate,
-                    hasTime ? decodeInt(buf, offTime) : 0, hasTime);
-        }
-
-        datetime(RawDateTimeStruct raw) {
-            this.raw = new RawDateTimeStruct(raw);
-        }
-
-        byte[] toTimeBytes() {
-            return encodeInt(raw.getEncodedTime());
-        }
-
-        byte[] toDateBytes() {
-            return encodeInt(raw.getEncodedDate());
-        }
-
-        byte[] toTimestampBytes() {
-            byte[] result = new byte[8];
-            encodeInt(raw.getEncodedDate(), result, 0);
-            encodeInt(raw.getEncodedTime(), result, 4);
-            return result;
-        }
-
-        Time toTime(Calendar cOrig) {
-            Calendar c = (Calendar) cOrig.clone();
-            c.set(Calendar.YEAR, 1970);
-            c.set(Calendar.MONTH, Calendar.JANUARY);
-            c.set(Calendar.DAY_OF_MONTH, 1);
-            c.set(Calendar.HOUR_OF_DAY, raw.hour);
-            c.set(Calendar.MINUTE, raw.minute);
-            c.set(Calendar.SECOND, raw.second);
-            c.set(Calendar.MILLISECOND, raw.fractions / FRACTIONS_PER_MILLISECOND);
-            return new Time(c.getTimeInMillis());
-        }
-
-        Timestamp toTimestamp(Calendar cOrig) {
-            Calendar c = (Calendar) cOrig.clone();
-            c.set(Calendar.YEAR, raw.year);
-            c.set(Calendar.MONTH, raw.month - 1);
-            c.set(Calendar.DAY_OF_MONTH, raw.day);
-            c.set(Calendar.HOUR_OF_DAY, raw.hour);
-            c.set(Calendar.MINUTE, raw.minute);
-            c.set(Calendar.SECOND, raw.second);
-            Timestamp timestamp = new Timestamp(c.getTimeInMillis());
-            timestamp.setNanos(raw.getFractionsAsNanos());
-            return timestamp;
-        }
-
-        Date toDate(Calendar cOrig) {
-            Calendar c = (Calendar) cOrig.clone();
-            c.set(Calendar.YEAR, raw.year);
-            c.set(Calendar.MONTH, raw.month - 1);
-            c.set(Calendar.DAY_OF_MONTH, raw.day);
-            c.set(Calendar.HOUR_OF_DAY, 0);
-            c.set(Calendar.MINUTE, 0);
-            c.set(Calendar.SECOND, 0);
-            c.set(Calendar.MILLISECOND, 0);
-            return new Date(c.getTimeInMillis());
-        }
-
-    }
 }

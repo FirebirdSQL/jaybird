@@ -855,11 +855,10 @@ abstract class BaseJUnit5TestFBField<T extends FBField, O> {
     }
 
     TimeZone getOneHourBehindTimeZone() {
-        TimeZone defaultZone = TimeZone.getDefault();
+        var defaultZone = TimeZone.getDefault();
         int defaultOffset = defaultZone.getRawOffset();
-        int oneHourbehind = defaultOffset - (int) TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
-
-        return new SimpleTimeZone(oneHourbehind, "JAYBIRD_TEST");
+        int oneHourBehind = defaultOffset - (int) TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
+        return new SimpleTimeZone(oneHourBehind, "JAYBIRD_TEST");
     }
 
     private static final byte[] BASIC_ALPHA_NUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"

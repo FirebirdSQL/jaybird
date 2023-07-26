@@ -28,13 +28,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.*;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Calendar;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -256,150 +252,6 @@ class EncodingSpecificDatatypeCoderTest {
         double result = coder.decodeDouble(value);
 
         assertEquals(response, result, 0.0);
-    }
-
-    @Test
-    void encodeTimestamp_calendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final Timestamp value = new Timestamp(System.currentTimeMillis());
-        final Timestamp response = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
-        when(parentCoder.encodeTimestamp(value, calendar)).thenReturn(response);
-
-        Timestamp result = coder.encodeTimestamp(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void encodeTimestampCalendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final Timestamp value = new Timestamp(System.currentTimeMillis());
-        final byte[] response = {1, 2, 3, 4};
-        when(parentCoder.encodeTimestampCalendar(value, calendar)).thenReturn(response);
-
-        byte[] result = coder.encodeTimestampCalendar(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void decodeTimestamp_calendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final Timestamp value = new Timestamp(System.currentTimeMillis());
-        final Timestamp response = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
-        when(parentCoder.decodeTimestamp(value, calendar)).thenReturn(response);
-
-        Timestamp result = coder.decodeTimestamp(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void decodeTimestampCalendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final byte[] value = {1, 2, 3, 4};
-        final Timestamp response = new Timestamp(System.currentTimeMillis());
-        when(parentCoder.decodeTimestampCalendar(value, calendar)).thenReturn(response);
-
-        Timestamp result = coder.decodeTimestampCalendar(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void encodeTime_calendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final Time value = new Time(System.currentTimeMillis());
-        final Time response = new Time(System.currentTimeMillis() - 60 * 60 * 1000);
-        when(parentCoder.encodeTime(value, calendar)).thenReturn(response);
-
-        Time result = coder.encodeTime(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void encodeTimeCalendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final Time value = new Time(System.currentTimeMillis());
-        final byte[] response = {1, 2, 3, 4};
-        when(parentCoder.encodeTimeCalendar(value, calendar)).thenReturn(response);
-
-        byte[] result = coder.encodeTimeCalendar(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void decodeTime_calendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final Time value = new Time(System.currentTimeMillis());
-        final Time response = new Time(System.currentTimeMillis() - 60 * 60 * 1000);
-        when(parentCoder.decodeTime(value, calendar)).thenReturn(response);
-
-        Time result = coder.decodeTime(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void decodeTimeCalendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final byte[] value = {1, 2, 3, 4};
-        final Time response = new Time(System.currentTimeMillis());
-        when(parentCoder.decodeTimeCalendar(value, calendar)).thenReturn(response);
-
-        Time result = coder.decodeTimeCalendar(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void encodeDate_calendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final Date value = new Date(System.currentTimeMillis());
-        final Date response = new Date(System.currentTimeMillis() - 60 * 60 * 1000);
-        when(parentCoder.encodeDate(value, calendar)).thenReturn(response);
-
-        Date result = coder.encodeDate(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void encodeDateCalendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final Date value = new Date(System.currentTimeMillis());
-        final byte[] response = {1, 2, 3, 4};
-        when(parentCoder.encodeDateCalendar(value, calendar)).thenReturn(response);
-
-        byte[] result = coder.encodeDateCalendar(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void decodeDate_calendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final Date value = new Date(System.currentTimeMillis());
-        final Date response = new Date(System.currentTimeMillis() - 60 * 60 * 1000);
-        when(parentCoder.decodeDate(value, calendar)).thenReturn(response);
-
-        Date result = coder.decodeDate(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void decodeDateCalendar() {
-        final Calendar calendar = Calendar.getInstance();
-        final byte[] value = {1, 2, 3, 4};
-        final Date response = new Date(System.currentTimeMillis());
-        when(parentCoder.decodeDateCalendar(value, calendar)).thenReturn(response);
-
-        Date result = coder.decodeDateCalendar(value, calendar);
-
-        assertSame(response, result);
     }
 
     @Test

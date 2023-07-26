@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jaybird.util.LegacyDatetimeConversions;
 import org.firebirdsql.jdbc.*;
 
 import java.io.InputStream;
@@ -244,6 +245,7 @@ public abstract class FBField {
         throw invalidGetConversion(BigDecimal.class);
     }
 
+    @SuppressWarnings("unused")
     public final BigDecimal getBigDecimal(int scale) throws SQLException {
         return getBigDecimal();
     }
@@ -261,6 +263,7 @@ public abstract class FBField {
         throw invalidGetConversion(Object.class);
     }
 
+    @SuppressWarnings("unused")
     public Object getObject(Map<String, Class<?>> map) throws SQLException {
         throw new FBDriverNotCapableException();
     }
@@ -348,11 +351,11 @@ public abstract class FBField {
     }
 
     public Date getDate() throws SQLException {
-        throw invalidGetConversion(Date.class);
+        return getDate(null);
     }
 
     public Date getDate(Calendar cal) throws SQLException {
-        throw invalidGetConversion(Date.class);
+        return convertForGet(getLocalDate(), v -> LegacyDatetimeConversions.toDate(v, cal), Date.class);
     }
 
     LocalDate getLocalDate() throws SQLException {
@@ -360,11 +363,11 @@ public abstract class FBField {
     }
 
     public Time getTime() throws SQLException {
-        throw invalidGetConversion(Time.class);
+        return getTime(null);
     }
 
     public Time getTime(Calendar cal) throws SQLException {
-        throw invalidGetConversion(Time.class);
+        return convertForGet(getLocalTime(), v -> LegacyDatetimeConversions.toTime(v, cal), Time.class);
     }
 
     LocalTime getLocalTime() throws SQLException {
@@ -372,11 +375,11 @@ public abstract class FBField {
     }
 
     public Timestamp getTimestamp() throws SQLException {
-        throw invalidGetConversion(Timestamp.class);
+        return getTimestamp(null);
     }
 
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        throw invalidGetConversion(Timestamp.class);
+        return convertForGet(getLocalDateTime(), v -> LegacyDatetimeConversions.toTimestamp(v, cal), Timestamp.class);
     }
 
     LocalDateTime getLocalDateTime() throws SQLException {
@@ -572,11 +575,11 @@ public abstract class FBField {
     }
 
     public void setDate(Date value, Calendar cal) throws SQLException {
-        throw invalidSetConversion(Date.class);
+        setLocalDate(convertForSet(value, v -> LegacyDatetimeConversions.toLocalDate(v, cal), Date.class));
     }
 
     public void setDate(Date value) throws SQLException {
-        throw invalidSetConversion(Date.class);
+        setDate(value, null);
     }
 
     void setLocalDate(LocalDate value) throws SQLException {
@@ -584,11 +587,11 @@ public abstract class FBField {
     }
 
     public void setTime(Time value, Calendar cal) throws SQLException {
-        throw invalidSetConversion(Time.class);
+        setLocalTime(convertForSet(value, v -> LegacyDatetimeConversions.toLocalTime(v, cal), Time.class));
     }
 
     public void setTime(Time value) throws SQLException {
-        throw invalidSetConversion(Time.class);
+        setTime(value, null);
     }
 
     void setLocalTime(LocalTime value) throws SQLException {
@@ -596,11 +599,11 @@ public abstract class FBField {
     }
 
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        throw invalidSetConversion(Timestamp.class);
+        setLocalDateTime(convertForSet(value, v -> LegacyDatetimeConversions.toLocalDateTime(v, cal), Timestamp.class));
     }
 
     public void setTimestamp(Timestamp value) throws SQLException {
-        throw invalidSetConversion(Timestamp.class);
+        setTimestamp(value, null);
     }
 
     void setLocalDateTime(LocalDateTime value) throws SQLException {

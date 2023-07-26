@@ -22,14 +22,10 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 
-import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Calendar;
 
 /**
  * Field implementation for {@code TIMESTAMP (WITHOUT TIME ZONE)}.
@@ -56,32 +52,15 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
     }
 
     @Override
-    public Date getDate(Calendar cal) throws SQLException {
-        Timestamp timestamp = getTimestamp(cal);
-        return timestamp != null ? new Date(timestamp.getTime()) : null;
-    }
-
-    @Override
     LocalDate getLocalDate() throws SQLException {
         LocalDateTime localDateTime = getLocalDateTime();
         return localDateTime != null ? localDateTime.toLocalDate() : null;
     }
 
     @Override
-    public Time getTime(Calendar cal) throws SQLException {
-        Timestamp timestamp = getTimestamp(cal);
-        return timestamp != null ? new Time(timestamp.getTime()) : null;
-    }
-
-    @Override
     LocalTime getLocalTime() throws SQLException {
         LocalDateTime localDateTime = getLocalDateTime();
         return localDateTime != null ? localDateTime.toLocalTime() : null;
-    }
-
-    @Override
-    public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        return getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal);
     }
 
     @Override
@@ -95,18 +74,13 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
     }
 
     @Override
-    public void setDate(Date value, Calendar cal) throws SQLException {
-        setTimestamp(value != null ? new Timestamp(value.getTime()) : null, cal);
+    void setLocalDate(LocalDate value) throws SQLException {
+        setLocalDateTime(convertForSet(value, LocalDate::atStartOfDay, LocalDate.class));
     }
 
     @Override
-    public void setTime(Time value, Calendar cal) throws SQLException {
-        setTimestamp(value != null ? new Timestamp(value.getTime()) : null, cal);
-    }
-
-    @Override
-    public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        setFieldData(getDatatypeCoder().encodeTimestampCalendar(value, cal));
+    void setLocalTime(LocalTime value) throws SQLException {
+        setLocalDateTime(convertForSet(value, LocalDate.EPOCH::atTime, LocalTime.class));
     }
 
     @Override

@@ -29,13 +29,9 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.math.BigInteger;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Calendar;
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
@@ -214,66 +210,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     @Override
     public double decodeDouble(byte[] buf) {
         return parentCoder.decodeDouble(buf);
-    }
-
-    @Override
-    public Timestamp encodeTimestamp(Timestamp val, Calendar c) {
-        return parentCoder.encodeTimestamp(val, c);
-    }
-
-    @Override
-    public byte[] encodeTimestampCalendar(Timestamp val, Calendar c) {
-        return parentCoder.encodeTimestampCalendar(val, c);
-    }
-
-    @Override
-    public Timestamp decodeTimestamp(Timestamp val, Calendar c) {
-        return parentCoder.decodeTimestamp(val, c);
-    }
-
-    @Override
-    public Timestamp decodeTimestampCalendar(byte[] buf, Calendar c) {
-        return parentCoder.decodeTimestampCalendar(buf, c);
-    }
-
-    @Override
-    public Time encodeTime(Time val, Calendar c) {
-        return parentCoder.encodeTime(val, c);
-    }
-
-    @Override
-    public byte[] encodeTimeCalendar(Time val, Calendar c) {
-        return parentCoder.encodeTimeCalendar(val, c);
-    }
-
-    @Override
-    public Time decodeTime(Time val, Calendar c) {
-        return parentCoder.decodeTime(val, c);
-    }
-
-    @Override
-    public Time decodeTimeCalendar(byte[] buf, Calendar c) {
-        return parentCoder.decodeTimeCalendar(buf, c);
-    }
-
-    @Override
-    public Date encodeDate(Date val, Calendar c) {
-        return parentCoder.encodeDate(val, c);
-    }
-
-    @Override
-    public byte[] encodeDateCalendar(Date val, Calendar c) {
-        return parentCoder.encodeDateCalendar(val, c);
-    }
-
-    @Override
-    public Date decodeDate(Date val, Calendar c) {
-        return parentCoder.decodeDate(val, c);
-    }
-
-    @Override
-    public Date decodeDateCalendar(byte[] buf, Calendar c) {
-        return parentCoder.decodeDateCalendar(buf, c);
     }
 
     @Override

@@ -18,8 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.MaxFbTimePrecision;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 import org.firebirdsql.jdbc.field.TypeConversionException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -134,11 +134,19 @@ class JDBC42JavaTimeConversionsTest {
 
     @Test
     void testLocalDate_ToTimestampColumn() throws Exception {
+        final LocalDate localDate = LocalDate.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
-            final LocalDate localDate = LocalDate.now();
-
-            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, localDate));
+            pstmt.setObject(1, localDate);
+            pstmt.execute();
+        }
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aTimestamp FROM javatimetest WHERE ID = 1")) {
+            assertTrue(rs.next(), "Expected a row");
+            assertEquals(localDate, rs.getObject(1, LocalDate.class),
+                    "Expected retrieved java.time.LocalDate as TIMESTAMP to be the same as inserted value");
+            assertEquals(localDate.atStartOfDay(), rs.getObject(1, LocalDateTime.class),
+                    "Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value at 00:00:00");
         }
     }
 
@@ -257,18 +265,28 @@ class JDBC42JavaTimeConversionsTest {
              ResultSet rs = stmt.executeQuery("SELECT aTime FROM javatimetest WHERE ID = 1")) {
             assertTrue(rs.next(), "Expected a row");
             LocalTime asLocalTime = rs.getObject(1, LocalTime.class);
-            assertEquals(localTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalTime,
+            assertEquals(localTime.truncatedTo(FbDatetimeConversion.FB_TIME_UNIT), asLocalTime,
                     "Expected retrieved java.time.LocalTime as TIME to be the same as inserted value");
         }
     }
 
     @Test
     void testLocalTime_ToTimestampColumn() throws Exception {
+        final LocalTime localTime = LocalTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
-            final LocalTime localTime = LocalTime.now();
+            pstmt.setObject(1, localTime);
+            pstmt.execute();
+        }
 
-            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, localTime));
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aTimestamp FROM javatimetest WHERE ID = 1")) {
+            assertTrue(rs.next(), "Expected a row");
+            assertEquals(localTime.truncatedTo(FbDatetimeConversion.FB_TIME_UNIT), rs.getObject(1, LocalTime.class),
+                    "Expected retrieved java.time.LocalTime as TIME to be the same as inserted value");
+            assertEquals(LocalDate.EPOCH.atTime(localTime).truncatedTo(FbDatetimeConversion.FB_TIME_UNIT),
+                    rs.getObject(1, LocalDateTime.class),
+                    "Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value at 1970-01-01");
         }
     }
 
@@ -414,7 +432,7 @@ class JDBC42JavaTimeConversionsTest {
             assertTrue(rs.next(), "Expected a row");
             LocalDateTime asLocalDateTime = rs.getObject(1, LocalDateTime.class);
             assertEquals(
-                    localDateTime.truncatedTo(MaxFbTimePrecision.INSTANCE).toLocalTime().atDate(LocalDate.of(1970, 1, 1)),
+                    localDateTime.truncatedTo(FbDatetimeConversion.FB_TIME_UNIT).toLocalTime().atDate(LocalDate.of(1970, 1, 1)),
                     asLocalDateTime,
                     "Expected retrieved java.time.LocalDateTime as TIME to be the same as LocalTime portion of inserted value");
         }
@@ -434,7 +452,7 @@ class JDBC42JavaTimeConversionsTest {
             assertTrue(rs.next(), "Expected a row");
             Timestamp aTimestamp = rs.getTimestamp(1);
             LocalDateTime asLocalDateTime = aTimestamp.toLocalDateTime();
-            assertEquals(localDateTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalDateTime,
+            assertEquals(localDateTime.truncatedTo(FbDatetimeConversion.FB_TIME_UNIT), asLocalDateTime,
                     "Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value");
         }
     }
@@ -452,7 +470,7 @@ class JDBC42JavaTimeConversionsTest {
              ResultSet rs = stmt.executeQuery("SELECT aTimestamp FROM javatimetest WHERE ID = 1")) {
             assertTrue(rs.next(), "Expected a row");
             LocalDateTime asLocalDateTime = rs.getObject(1, LocalDateTime.class);
-            assertEquals(localDateTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalDateTime,
+            assertEquals(localDateTime.truncatedTo(FbDatetimeConversion.FB_TIME_UNIT), asLocalDateTime,
                     "Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value");
         }
     }

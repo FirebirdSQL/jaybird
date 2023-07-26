@@ -48,6 +48,7 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -373,7 +374,7 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
 
         field.setDate(java.sql.Date.valueOf("2016-04-24"), calendar);
         
-        verifySetString("2016-04-24", encoding);
+        verifySetString("2016-04-23", encoding);
     }
 
     @Test
@@ -632,7 +633,7 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     void getObject_java_sql_Timestamp() throws SQLException {
         toReturnStringExpectations("2016-05-02 10:57:01", encoding);
 
-        assertEquals("2016-05-02 10:57:01.0", field.getObject(java.sql.Timestamp.class).toString(),
+        assertEquals("2016-05-02 10:57:01.0", field.getObject(Timestamp.class).toString(),
                 "Unexpected value for getObject(java.sql.Timestamp.class)");
     }
 
@@ -651,7 +652,7 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     void getObject_Calendar() throws SQLException {
         toReturnStringExpectations("2016-05-02 10:57:01", encoding);
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(java.sql.Timestamp.valueOf("2016-05-02 10:57:01"));
+        calendar.setTime(Timestamp.valueOf("2016-05-02 10:57:01"));
 
         assertEquals(calendar, field.getObject(Calendar.class), "Unexpected value for getObject(Calendar.class)");
     }
@@ -659,30 +660,42 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     @Test
     @Override
     void setTimestampNonNull() throws SQLException {
-        field.setTimestamp(java.sql.Timestamp.valueOf("2016-05-02 10:57:01"));
+        field.setTimestamp(Timestamp.valueOf("2016-05-02 10:57:01"));
 
-        verifySetString("2016-05-02 10:57:01.0", encoding);
+        verifySetString("2016-05-02 10:57:01", encoding);
     }
 
     @Test
     @Override
     void getTimestampCalendarNonNull() throws SQLException {
-        toReturnStringExpectations("2016-05-02 10:57:01", encoding);
-        Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
+        TimeZone originalTimeZone = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
+            toReturnStringExpectations("2016-05-02 10:57:01", encoding);
+            var calendar = Calendar.getInstance(TimeZone.getTimeZone("Europe/London"));
 
-        // java.sql.Timestamp.toString() will render in the current time zone
-        assertEquals("2016-05-02 11:57:01.0", field.getTimestamp(calendar).toString(),
-                "Unexpected value for getTimestamp(Calendar)");
+            // java.sql.Timestamp.toString() will render in the current time zone
+            assertEquals("2016-05-02 11:57:01.0", field.getTimestamp(calendar).toString(),
+                    "Unexpected value for getTimestamp(Calendar)");
+        } finally {
+            TimeZone.setDefault(originalTimeZone);
+        }
     }
 
     @Test
     @Override
     void setTimestampCalendarNonNull() throws SQLException {
-        Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
+        TimeZone originalTimeZone = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
+            var calendar = Calendar.getInstance(TimeZone.getTimeZone("Europe/London"));
 
-        field.setTimestamp(java.sql.Timestamp.valueOf("2016-05-02 10:57:01"), calendar);
-        
-        verifySetString("2016-05-02 09:57:01.0", encoding);
+            field.setTimestamp(Timestamp.valueOf("2016-05-02 10:57:01"), calendar);
+
+            verifySetString("2016-05-02 09:57:01", encoding);
+        } finally {
+            TimeZone.setDefault(originalTimeZone);
+        }
     }
 
     @Test
