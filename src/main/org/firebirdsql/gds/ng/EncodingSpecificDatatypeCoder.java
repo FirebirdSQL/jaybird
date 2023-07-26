@@ -222,11 +222,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeTimestampRaw(RawDateTimeStruct val) {
-        return parentCoder.encodeTimestampRaw(val);
-    }
-
-    @Override
     public byte[] encodeTimestampCalendar(Timestamp val, Calendar c) {
         return parentCoder.encodeTimestampCalendar(val, c);
     }
@@ -234,11 +229,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     @Override
     public Timestamp decodeTimestamp(Timestamp val, Calendar c) {
         return parentCoder.decodeTimestamp(val, c);
-    }
-
-    @Override
-    public RawDateTimeStruct decodeTimestampRaw(byte[] buf) {
-        return parentCoder.decodeTimestampRaw(buf);
     }
 
     @Override
@@ -252,11 +242,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeTimeRaw(RawDateTimeStruct val) {
-        return parentCoder.encodeTimeRaw(val);
-    }
-
-    @Override
     public byte[] encodeTimeCalendar(Time val, Calendar c) {
         return parentCoder.encodeTimeCalendar(val, c);
     }
@@ -264,11 +249,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     @Override
     public Time decodeTime(Time val, Calendar c) {
         return parentCoder.decodeTime(val, c);
-    }
-
-    @Override
-    public RawDateTimeStruct decodeTimeRaw(byte[] buf) {
-        return parentCoder.decodeTimeRaw(buf);
     }
 
     @Override
@@ -282,11 +262,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeDateRaw(RawDateTimeStruct val) {
-        return parentCoder.encodeDateRaw(val);
-    }
-
-    @Override
     public byte[] encodeDateCalendar(Date val, Calendar c) {
         return parentCoder.encodeDateCalendar(val, c);
     }
@@ -294,11 +269,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     @Override
     public Date decodeDate(Date val, Calendar c) {
         return parentCoder.decodeDate(val, c);
-    }
-
-    @Override
-    public RawDateTimeStruct decodeDateRaw(byte[] buf) {
-        return parentCoder.decodeDateRaw(buf);
     }
 
     @Override

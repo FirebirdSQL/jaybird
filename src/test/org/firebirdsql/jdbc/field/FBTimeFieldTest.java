@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  *
  * @author Mark Rotteveel
  */
+@SuppressWarnings("removal")
 class FBTimeFieldTest extends BaseJUnit5TestFBField<FBTimeField, Time> {
 
     private static final LocalTime TEST_LOCAL_TIME = LocalTime.parse("13:37:59");
@@ -242,7 +243,7 @@ class FBTimeFieldTest extends BaseJUnit5TestFBField<FBTimeField, Time> {
     void getObject_RawDateTimeStruct() throws SQLException {
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct = 
+        final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct =
                 field.getObject(DatatypeCoder.RawDateTimeStruct.class);
 
         assertEquals(0, rawDateTimeStruct.year, "year");

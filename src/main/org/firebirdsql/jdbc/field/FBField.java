@@ -457,6 +457,7 @@ public abstract class FBField {
         throw invalidSetConversion(BigInteger.class);
     }
 
+    @SuppressWarnings("removal")
     public void setObject(Object value) throws SQLException {
         if (setWhenNull(value)) return;
         // As a form of optimization, we switch on the class name.
@@ -646,10 +647,22 @@ public abstract class FBField {
         throw invalidSetConversion(RowId.class);
     }
 
+    /**
+     * @deprecated use {@link #getLocalDateTime()}, {@link #getLocalTime()} or {@link #getLocalDate()}; will be removed
+     * in Jaybird 7
+     */
+    @SuppressWarnings("removal")
+    @Deprecated(forRemoval = true, since = "6")
     public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
         throw invalidGetConversion(DatatypeCoder.RawDateTimeStruct.class);
     }
 
+    /**
+     * @deprecated use {@link #setLocalDateTime(LocalDateTime)}, {@link #setLocalTime(LocalTime)} or
+     * {@link #setLocalDate(LocalDate)}; will be removed in Jaybird 7
+     */
+    @SuppressWarnings("removal")
+    @Deprecated(forRemoval = true, since = "6")
     public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
         throw invalidSetConversion(DatatypeCoder.RawDateTimeStruct.class);
     }

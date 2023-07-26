@@ -175,11 +175,6 @@ class DefaultDatatypeCoderTest {
     }
 
     @Test
-    void testEncodeTimestampRaw_null() {
-        assertNull(datatypeCoder.encodeTimestampRaw(null));
-    }
-
-    @Test
     void testEncodeTimestampCalendar_null() {
         assertNull(datatypeCoder.encodeTimestampCalendar(null, Calendar.getInstance()));
     }
@@ -187,11 +182,6 @@ class DefaultDatatypeCoderTest {
     @Test
     void testDecodeTimestamp_null() {
         assertNull(datatypeCoder.decodeTimestamp(null, Calendar.getInstance()));
-    }
-
-    @Test
-    void testDecodeTimestampRaw_null() {
-        assertNull(datatypeCoder.decodeTimestampRaw(null));
     }
 
     @Test
@@ -205,11 +195,6 @@ class DefaultDatatypeCoderTest {
     }
 
     @Test
-    void testEncodeTimeRaw_null() {
-        assertNull(datatypeCoder.encodeTimeRaw(null));
-    }
-
-    @Test
     void testEncodeTimeCalendar_null() {
         assertNull(datatypeCoder.encodeTimeCalendar(null, Calendar.getInstance()));
     }
@@ -217,11 +202,6 @@ class DefaultDatatypeCoderTest {
     @Test
     void testDecodeTime_null() {
         assertNull(datatypeCoder.decodeTime(null, Calendar.getInstance()));
-    }
-
-    @Test
-    void testDecodeTimeRaw_null() {
-        assertNull(datatypeCoder.decodeTimeRaw(null));
     }
 
     @Test
@@ -235,11 +215,6 @@ class DefaultDatatypeCoderTest {
     }
 
     @Test
-    void testEncodeDateRaw_null() {
-        assertNull(datatypeCoder.encodeDateRaw(null));
-    }
-
-    @Test
     void testEncodeDateCalendar_null() {
         assertNull(datatypeCoder.encodeDateCalendar(null, Calendar.getInstance()));
     }
@@ -247,11 +222,6 @@ class DefaultDatatypeCoderTest {
     @Test
     void testDecodeDate_null() {
         assertNull(datatypeCoder.decodeDate(null, Calendar.getInstance()));
-    }
-
-    @Test
-    void testDecodeDateRaw_null() {
-        assertNull(datatypeCoder.decodeDateRaw(null));
     }
 
     @Test

@@ -79,6 +79,7 @@ import static org.mockito.Mockito.when;
  *         Object type of FBField implementation under test
  * @author Mark Rotteveel
  */
+@SuppressWarnings("removal")
 @ExtendWith(MockitoExtension.class)
 abstract class BaseJUnit5TestFBField<T extends FBField, O> {
 

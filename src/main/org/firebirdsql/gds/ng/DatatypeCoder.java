@@ -271,15 +271,6 @@ public interface DatatypeCoder {
     Timestamp encodeTimestamp(Timestamp val, Calendar c);
 
     /**
-     * Encode the date and time portions of a raw date time struct as a byte array of 8 bytes.
-     *
-     * @param val
-     *         value to be encoded
-     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
-     */
-    byte[] encodeTimestampRaw(RawDateTimeStruct val);
-
-    /**
      * Encode a {@code Timestamp} as a byte array of 8 bytes.
      *
      * @param val
@@ -300,15 +291,6 @@ public interface DatatypeCoder {
      * @return encoded {@code Timestamp}, or {@code null} if {@code val} is {@code null}
      */
     Timestamp decodeTimestamp(Timestamp val, Calendar c);
-
-    /**
-     * Decode the date and time portions of a raw date time struct from {@code buf} from the first 8 bytes.
-     *
-     * @param buf
-     *         byte array of sufficient size
-     * @return {@code RawDateTimeStruct} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
-     */
-    RawDateTimeStruct decodeTimestampRaw(byte[] buf);
 
     /**
      * Decode a {@code Timestamp} from {@code buf} from the first 8 bytes.
@@ -333,15 +315,6 @@ public interface DatatypeCoder {
     Time encodeTime(Time val, Calendar c);
 
     /**
-     * Encode the time portion of a raw date time struct as a byte array of 4 bytes.
-     *
-     * @param val
-     *         value to be encoded
-     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
-     */
-    byte[] encodeTimeRaw(RawDateTimeStruct val);
-
-    /**
      * Encode a {@code Time} value as a byte array of 4 bytes.
      *
      * @param val
@@ -362,15 +335,6 @@ public interface DatatypeCoder {
      * @return decoded {@code Time}, or {@code null} if {@code val} is {@code null}
      */
     Time decodeTime(Time val, Calendar c);
-
-    /**
-     * Decode the time portion of a raw date time struct from {@code buf} from the first 4 bytes.
-     *
-     * @param buf
-     *         byte array of sufficient size
-     * @return {@code RawDateTimeStruct} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
-     */
-    RawDateTimeStruct decodeTimeRaw(byte[] buf);
 
     /**
      * Decode a {@code Time} value from {@code buf} from the first 4 bytes.
@@ -395,15 +359,6 @@ public interface DatatypeCoder {
     Date encodeDate(Date val, Calendar c);
 
     /**
-     * Encode the date portion of a raw date time struct as a byte array of 4 bytes.
-     *
-     * @param val
-     *         value to be encoded
-     * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
-     */
-    byte[] encodeDateRaw(RawDateTimeStruct val);
-
-    /**
      * Encode a {@code Date} value as a {@code byte} array of 4 bytes.
      *
      * @param val
@@ -424,15 +379,6 @@ public interface DatatypeCoder {
      * @return decoded {@code Date}, or {@code null} if {@code val} is {@code null}
      */
     Date decodeDate(Date val, Calendar c);
-
-    /**
-     * Decode the date portion of a raw date time struct from {@code buf} from the first 4 bytes.
-     *
-     * @param buf
-     *         byte array of sufficient size
-     * @return {@code RawDateTimeStruct} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
-     */
-    RawDateTimeStruct decodeDateRaw(byte[] buf);
 
     /**
      * Decode a {@code Date} value from {@code buf} from the first 4 bytes.
@@ -722,7 +668,9 @@ public interface DatatypeCoder {
      * "[timestamp is] stored a two long words, one representing the number of days since 17 Nov 1858 and one
      * representing number of 100 nano-seconds since midnight" (NOTE: It is actually 100 microseconds!)
      * </p>
+     * @deprecated use a suitable {@code java.time} type; will be removed in Jaybird 7
      */
+    @Deprecated(forRemoval = true, since = "6")
     final class RawDateTimeStruct {
         public int year;
         public int month;

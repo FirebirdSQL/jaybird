@@ -241,11 +241,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeTimestampRaw(RawDateTimeStruct val) {
-        return val != null ? new datetime(val).toTimestampBytes() : null;
-    }
-
-    @Override
     public byte[] encodeTimestampCalendar(Timestamp val, Calendar c) {
         /* note, we cannot simply pass millis to the database, because
          * Firebird stores timestamp in format (citing Ann W. Harrison):
@@ -264,11 +259,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public RawDateTimeStruct decodeTimestampRaw(byte[] buf) {
-        return buf != null ? fromLongBytes(buf).getRaw() : null;
-    }
-
-    @Override
     public Timestamp decodeTimestampCalendar(byte[] buf, Calendar c) {
         return buf != null ? fromLongBytes(buf).toTimestamp(c) : null;
     }
@@ -280,11 +270,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeTimeRaw(RawDateTimeStruct val) {
-        return val != null ? new datetime(val).toTimeBytes() : null;
-    }
-
-    @Override
     public byte[] encodeTimeCalendar(Time val, Calendar c) {
         return val != null ? new datetime(val, c).toTimeBytes() : null;
     }
@@ -293,11 +278,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     public Time decodeTime(Time val, Calendar c) {
         if (c == null || val == null) return val;
         return new Time(val.getTime() - calculateOffset(c));
-    }
-
-    @Override
-    public RawDateTimeStruct decodeTimeRaw(byte[] buf) {
-        return buf != null ? new datetime(buf, -1, 0).getRaw() : null;
     }
 
     @Override
@@ -314,11 +294,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeDateRaw(RawDateTimeStruct val) {
-        return val != null ? new datetime(val).toDateBytes() : null;
-    }
-
-    @Override
     public byte[] encodeDateCalendar(Date val, Calendar c) {
         return val != null ? new datetime(val, c).toDateBytes() : null;
     }
@@ -328,11 +303,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         if (c == null || val == null) return val;
         c.setTime(val);
         return new Date(c.getTime().getTime());
-    }
-
-    @Override
-    public RawDateTimeStruct decodeDateRaw(byte[] buf) {
-        return buf != null ? new datetime(buf, 0, -1).getRaw() : null;
     }
 
     @Override
@@ -573,6 +543,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     /**
      * Helper Class to encode/decode times/dates
      */
+    @SuppressWarnings("removal")
     private class datetime {
 
         private final RawDateTimeStruct raw;
@@ -609,13 +580,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
         datetime(RawDateTimeStruct raw) {
             this.raw = new RawDateTimeStruct(raw);
-        }
-
-        /**
-         * @return copy of the raw data time struct contained in this datetime.
-         */
-        RawDateTimeStruct getRaw() {
-            return new RawDateTimeStruct(raw);
         }
 
         byte[] toTimeBytes() {

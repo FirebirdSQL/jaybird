@@ -271,17 +271,6 @@ class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    void encodeTimestampRaw() {
-        final DatatypeCoder.RawDateTimeStruct value = new DatatypeCoder.RawDateTimeStruct();
-        final byte[] response = {1, 2, 3, 4};
-        when(parentCoder.encodeTimestampRaw(value)).thenReturn(response);
-
-        byte[] result = coder.encodeTimestampRaw(value);
-
-        assertArrayEquals(response, result);
-    }
-
-    @Test
     void encodeTimestampCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final Timestamp value = new Timestamp(System.currentTimeMillis());
@@ -301,17 +290,6 @@ class EncodingSpecificDatatypeCoderTest {
         when(parentCoder.decodeTimestamp(value, calendar)).thenReturn(response);
 
         Timestamp result = coder.decodeTimestamp(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void decodeTimestampRaw() {
-        final byte[] value = {1, 2, 3, 4};
-        final DatatypeCoder.RawDateTimeStruct response = new DatatypeCoder.RawDateTimeStruct();
-        when(parentCoder.decodeTimestampRaw(value)).thenReturn(response);
-
-        DatatypeCoder.RawDateTimeStruct result = coder.decodeTimestampRaw(value);
 
         assertSame(response, result);
     }
@@ -341,17 +319,6 @@ class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    void encodeTimeRaw() {
-        final DatatypeCoder.RawDateTimeStruct value = new DatatypeCoder.RawDateTimeStruct();
-        final byte[] response = {1, 2, 3, 4};
-        when(parentCoder.encodeTimeRaw(value)).thenReturn(response);
-
-        byte[] result = coder.encodeTimeRaw(value);
-
-        assertArrayEquals(response, result);
-    }
-
-    @Test
     void encodeTimeCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final Time value = new Time(System.currentTimeMillis());
@@ -371,17 +338,6 @@ class EncodingSpecificDatatypeCoderTest {
         when(parentCoder.decodeTime(value, calendar)).thenReturn(response);
 
         Time result = coder.decodeTime(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void decodeTimeRaw() {
-        final byte[] value = {1, 2, 3, 4};
-        final DatatypeCoder.RawDateTimeStruct response = new DatatypeCoder.RawDateTimeStruct();
-        when(parentCoder.decodeTimeRaw(value)).thenReturn(response);
-
-        DatatypeCoder.RawDateTimeStruct result = coder.decodeTimeRaw(value);
 
         assertSame(response, result);
     }
@@ -411,17 +367,6 @@ class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    void encodeDateRaw() {
-        final DatatypeCoder.RawDateTimeStruct value = new DatatypeCoder.RawDateTimeStruct();
-        final byte[] response = {1, 2, 3, 4};
-        when(parentCoder.encodeDateRaw(value)).thenReturn(response);
-
-        byte[] result = coder.encodeDateRaw(value);
-
-        assertArrayEquals(response, result);
-    }
-
-    @Test
     void encodeDateCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final Date value = new Date(System.currentTimeMillis());
@@ -441,17 +386,6 @@ class EncodingSpecificDatatypeCoderTest {
         when(parentCoder.decodeDate(value, calendar)).thenReturn(response);
 
         Date result = coder.decodeDate(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    void decodeDateRaw() {
-        final byte[] value = {1, 2, 3, 4};
-        final DatatypeCoder.RawDateTimeStruct response = new DatatypeCoder.RawDateTimeStruct();
-        when(parentCoder.decodeDateRaw(value)).thenReturn(response);
-
-        DatatypeCoder.RawDateTimeStruct result = coder.decodeDateRaw(value);
 
         assertSame(response, result);
     }
