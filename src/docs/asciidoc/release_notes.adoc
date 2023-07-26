@@ -923,6 +923,8 @@ Though it can parse it, the resulting value will not include fractional seconds.
 Below list of removals may look daunting, but if you use Jaybird only as a JDBC driver, through the JDBC API, you're likely unaffected.
 Although we list them as removed without deprecation, some were marked as deprecated retroactively in Jaybird 5.0.3 or later.
 
+This section does not include all changes to packages or classes considered internal API.
+
 [#removal-of-packages-without-deprecation]
 ==== Removal of packages without deprecation
 
@@ -996,7 +998,9 @@ The following methods had their visibility reduced:
 
 The following classes have been removed in Jaybird 6 without deprecation:
 
-* `FbLocalDatabaseFactory` -- unused since removal of LOCAL protocol implementation in Jaybird 5.
+* `FbLocalDatabaseFactory` -- unused since removal of LOCAL protocol implementation in Jaybird 5
+* `DatatypeCoder.RawDateTimeStruct` (semi-internal API) -- use one of the `java.time` types (`LocalDateTime`, `LocalDate` or `LocalTime`).
+Though this class is publicly accessible through `ResultSet.getObject/updateObject` and `PreparedStatement.setObject`, it is internal API, and we expect it is unlikely to be actually used in user code.
 
 The following classes are no longer accessible in Jaybird 6:
 
@@ -1314,9 +1318,6 @@ The following methods will be removed in Jaybird 7:
 It may get removed in Jaybird 7 or later.
 ** `getSupportedProtocols` -- use `getSupportedProtocolList()`.
 It may get removed in Jaybird 7 or later.
-* `FBField` (internal API)
-** `getRawDateTimeStruct()` -- use `getLocalDateTime()`/`getLocalDate()`/`getLocalTime()`
-** `setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct)` ` -- use `setLocalDateTime(LocalDateTime)`/`setLocalDate(LocalDate)`/`setLocalTime(LocalTime)`
 
 [#removal-of-deprecated-classes-7]
 ===== Removal of deprecated classes
@@ -1327,8 +1328,6 @@ The following classes have been deprecated and will be removed in Jaybird 7:
 Previous versions of `GDSFactoryPlugin` declared `throws GDSException` for some methods, but now `throws SQLException`.
 To retain some semblance of backwards-compatibility, this class was retrofitted to extend `SQLException`.
 It may get removed in Jaybird 7 or later.
-* `DatatypeCoder.RawDateTimeStruct` -- use one of the `java.time` types (`LocalDateTime`, `LocalDate` or `LocalTime`).
-Though this class is publicly accessible through `ResultSet.getObject/updateObject` and `PreparedStatement.setObject`, it is internal API, and we expect it is unlikely to be actually used in user code.
 
 [#removal-of-deprecated-constants-7]
 ==== Removal of deprecated constants

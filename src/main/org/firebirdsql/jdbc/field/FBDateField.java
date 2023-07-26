@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 
@@ -74,23 +73,4 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
         setFieldData(getDatatypeCoder().encodeLocalDate(value));
     }
 
-    @SuppressWarnings("removal")
-    @Override
-    public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
-        return convertForGet(getLocalDate(),
-                v -> {
-                    var raw = new DatatypeCoder.RawDateTimeStruct();
-                    raw.updateDate(v);
-                    return raw;
-                },
-                DatatypeCoder.RawDateTimeStruct.class);
-    }
-
-    @SuppressWarnings("removal")
-    @Override
-    public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
-        setLocalDate(convertForSet(raw, DatatypeCoder.RawDateTimeStruct::toLocalDate,
-                DatatypeCoder.RawDateTimeStruct.class));
-    }
-    
 }

@@ -79,7 +79,6 @@ import static org.mockito.Mockito.when;
  *         Object type of FBField implementation under test
  * @author Mark Rotteveel
  */
-@SuppressWarnings("removal")
 @ExtendWith(MockitoExtension.class)
 abstract class BaseJUnit5TestFBField<T extends FBField, O> {
 
@@ -483,27 +482,6 @@ abstract class BaseJUnit5TestFBField<T extends FBField, O> {
     void setTimestampCalendarNonNull() throws SQLException {
         assertThrows(TypeConversionException.class,
                 () -> field.setTimestamp(new Timestamp(Calendar.getInstance().getTimeInMillis()), Calendar.getInstance()));
-    }
-
-    @Test
-    void getRawDateTimeStructNonNull() throws SQLException {
-        assertThrows(TypeConversionException.class, field::getRawDateTimeStruct);
-    }
-
-    @Test
-    void getObject_RawDateTimeStruct() throws SQLException {
-        assertThrows(TypeConversionException.class, () -> field.getObject(DatatypeCoder.RawDateTimeStruct.class));
-    }
-
-    @Test
-    void setRawDateTimeStructNonNull() throws SQLException {
-        assertThrows(TypeConversionException.class,
-                () -> field.setRawDateTimeStruct(new DatatypeCoder.RawDateTimeStruct()));
-    }
-
-    @Test
-    void setObject_RawDateTimeStruct() throws SQLException {
-        assertThrows(TypeConversionException.class, () -> field.setObject(new DatatypeCoder.RawDateTimeStruct()));
     }
 
     @Test

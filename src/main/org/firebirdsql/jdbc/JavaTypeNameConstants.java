@@ -63,8 +63,6 @@ public final class JavaTypeNameConstants {
     public static final String OFFSET_TIME_CLASS_NAME = "java.time.OffsetTime";
     public static final String SQL_DATE_CLASS_NAME = "java.sql.Date";
     public static final String LOCAL_DATE_CLASS_NAME = "java.time.LocalDate";
-    public static final String RAW_DATE_TIME_STRUCT_CLASS_NAME =
-            "org.firebirdsql.gds.ng.DatatypeCoder$RawDateTimeStruct";
     public static final String ARRAY_CLASS_NAME = "java.sql.Array";
     public static final String ROW_ID_CLASS_NAME = "java.sql.RowId";
     public static final String FB_ROW_ID_CLASS_NAME = "org.firebirdsql.jdbc.FBRowId";

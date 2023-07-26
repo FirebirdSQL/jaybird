@@ -308,7 +308,6 @@ public abstract class FBField {
             case INPUT_STREAM_CLASS_NAME -> getBinaryStream();
             case READER_CLASS_NAME -> getCharacterStream();
             case ROW_ID_CLASS_NAME, FB_ROW_ID_CLASS_NAME -> getRowId();
-            case RAW_DATE_TIME_STRUCT_CLASS_NAME -> getRawDateTimeStruct();
             case DECIMAL_CLASS_NAME -> getDecimal();
             case DECIMAL32_CLASS_NAME -> getDecimal(Decimal32.class);
             case DECIMAL64_CLASS_NAME -> getDecimal(Decimal64.class);
@@ -460,7 +459,6 @@ public abstract class FBField {
         throw invalidSetConversion(BigInteger.class);
     }
 
-    @SuppressWarnings("removal")
     public void setObject(Object value) throws SQLException {
         if (setWhenNull(value)) return;
         // As a form of optimization, we switch on the class name.
@@ -488,7 +486,6 @@ public abstract class FBField {
         case OFFSET_DATE_TIME_CLASS_NAME -> setOffsetDateTime((OffsetDateTime) value);
         case ZONED_DATE_TIME_CLASS_NAME -> setZonedDateTime((ZonedDateTime) value);
         case UTIL_DATE_CLASS_NAME -> setTimestamp(new Timestamp(((java.util.Date) value).getTime()));
-        case RAW_DATE_TIME_STRUCT_CLASS_NAME -> setRawDateTimeStruct((DatatypeCoder.RawDateTimeStruct) value);
         case BIG_INTEGER_CLASS_NAME -> setBigInteger((BigInteger) value);
         case FB_ROW_ID_CLASS_NAME -> setRowId((RowId) value);
         case DECIMAL32_CLASS_NAME, DECIMAL64_CLASS_NAME, DECIMAL128_CLASS_NAME -> setDecimal((Decimal<?>) value);
@@ -648,26 +645,6 @@ public abstract class FBField {
 
     public void setRowId(RowId rowId) throws SQLException {
         throw invalidSetConversion(RowId.class);
-    }
-
-    /**
-     * @deprecated use {@link #getLocalDateTime()}, {@link #getLocalTime()} or {@link #getLocalDate()}; will be removed
-     * in Jaybird 7
-     */
-    @SuppressWarnings("removal")
-    @Deprecated(forRemoval = true, since = "6")
-    public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
-        throw invalidGetConversion(DatatypeCoder.RawDateTimeStruct.class);
-    }
-
-    /**
-     * @deprecated use {@link #setLocalDateTime(LocalDateTime)}, {@link #setLocalTime(LocalTime)} or
-     * {@link #setLocalDate(LocalDate)}; will be removed in Jaybird 7
-     */
-    @SuppressWarnings("removal")
-    @Deprecated(forRemoval = true, since = "6")
-    public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
-        throw invalidSetConversion(DatatypeCoder.RawDateTimeStruct.class);
     }
 
     /**

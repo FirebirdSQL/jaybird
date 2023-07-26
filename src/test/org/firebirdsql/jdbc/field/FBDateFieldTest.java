@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * 
  * @author Mark Rotteveel
  */
-@SuppressWarnings("removal")
 class FBDateFieldTest extends BaseJUnit5TestFBField<FBDateField, java.sql.Date> {
 
     // TODO Check if a calendar with a bigger offset might be better
@@ -343,66 +341,6 @@ class FBDateFieldTest extends BaseJUnit5TestFBField<FBDateField, java.sql.Date> 
         assertEquals(calendar, field.getObject(Calendar.class), "Unexpected value for field.getObject(Calendar.class)");
     }
 
-    @Test
-    @Override
-    void getRawDateTimeStructNonNull() throws SQLException {
-        toReturnTestSqlDateExpectations();
-
-        final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct = field.getRawDateTimeStruct();
-
-        assertNotNull(rawDateTimeStruct);
-        assertEquals(2012, rawDateTimeStruct.year, "year");
-        assertEquals(3, rawDateTimeStruct.month, "month");
-        assertEquals(11, rawDateTimeStruct.day, "day");
-        assertEquals(0, rawDateTimeStruct.hour, "hour");
-        assertEquals(0, rawDateTimeStruct.minute, "minute");
-        assertEquals(0, rawDateTimeStruct.second, "second");
-        assertEquals(0, rawDateTimeStruct.fractions, "fractions");
-    }
-
-    @Test
-    @Override
-    void getObject_RawDateTimeStruct() throws SQLException {
-        toReturnTestSqlDateExpectations();
-
-        final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct =
-                field.getObject(DatatypeCoder.RawDateTimeStruct.class);
-
-        assertEquals(2012, rawDateTimeStruct.year, "year");
-        assertEquals(3, rawDateTimeStruct.month, "month");
-        assertEquals(11, rawDateTimeStruct.day, "day");
-        assertEquals(0, rawDateTimeStruct.hour, "hour");
-        assertEquals(0, rawDateTimeStruct.minute, "minute");
-        assertEquals(0, rawDateTimeStruct.second, "second");
-        assertEquals(0, rawDateTimeStruct.fractions, "fractions");
-    }
-
-    @Test
-    @Override
-    void setRawDateTimeStructNonNull() throws SQLException {
-        final DatatypeCoder.RawDateTimeStruct raw = new DatatypeCoder.RawDateTimeStruct();
-        raw.year = 2012;
-        raw.month = 3;
-        raw.day = 11;
-
-        field.setRawDateTimeStruct(raw);
-
-        verifySetTestSqlDate();
-    }
-
-    @Test
-    @Override
-    void setObject_RawDateTimeStruct() throws SQLException {
-        final DatatypeCoder.RawDateTimeStruct raw = new DatatypeCoder.RawDateTimeStruct();
-        raw.year = 2012;
-        raw.month = 3;
-        raw.day = 11;
-
-        field.setObject(raw);
-
-        verifySetTestSqlDate();
-    }
-    
     /**
      * Expectations to return {@link #TEST_LOCAL_DATE} from fieldData
      */
