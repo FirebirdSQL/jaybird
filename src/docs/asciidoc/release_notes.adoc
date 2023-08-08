@@ -9,7 +9,7 @@
 :icons: font
 :sectnums:
 :bc-version: 1.73
-:jna-version: 5.12.1
+:jna-version: 5.13.0
 
 ifeval::["{version_tag}" != ""]
 [WARNING]
@@ -241,6 +241,7 @@ If you use native or embedded, make sure to update your JNA dependency to versio
 ====
 Previous versions used `artifactId` `jna` instead of `jna-jpms`.
 Although both artifacts are nearly identical, the `jna-jpms` artifact provides a `module-info.class`, while the `jna` artifact does not.
+If you want to use Jaybird as a module, and use `jaybird-native`, make sure to use the `jna-jpms` artifact.
 ====
 
 [#manual-install]
