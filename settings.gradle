@@ -16,13 +16,13 @@ dependencyResolutionManagement {
         }
 
         testLibs {
-            version('junit', '5.9.3')
-            version('mockito', '5.3.1')
+            version('junit', '5.10.0')
+            version('mockito', '5.4.0')
 
             library('junit-bom', 'org.junit', 'junit-bom').versionRef('junit')
             library('junit-jupiter', 'org.junit.jupiter', 'junit-jupiter').withoutVersion()
             library('hamcrest', 'org.hamcrest', 'hamcrest').version('2.2')
-            library('assertj-core', 'org.assertj', 'assertj-core').version('3.23.1')
+            library('assertj-core', 'org.assertj', 'assertj-core').version('3.24.2')
             library('mockito-bom', 'org.mockito', 'mockito-bom').versionRef('mockito')
             library('mockito-core', 'org.mockito', 'mockito-core').withoutVersion()
             library('mockito-junit-jupiter', 'org.mockito', 'mockito-junit-jupiter').withoutVersion()
