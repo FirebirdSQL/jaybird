@@ -68,6 +68,8 @@ This driver does not work on Android, because it uses classes and features not a
 
 The major changes and new features in Jaybird 5 are:
 
+* ...
+
 // TODO List Jaybird 6 changes
 
 Upgrading from Jaybird 5 to 6 should be simple, but please make sure to read <<compatibility-changes>> before using Jaybird 6.
@@ -79,9 +81,10 @@ Feedback can be sent to the https://groups.google.com/g/firebird-java[Firebird-j
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 3.0.10, and 4.0.2 and a recent snapshot of Firebird 5.0, but should also support other Firebird versions from 3.0 and up.
+Jaybird {version_wo_target} was tested against Firebird 3.0.11, and 4.0.3 and a recent snapshot of Firebird 5.0, but should also support other Firebird versions from 3.0 and up.
 
 Jaybird 6 will -- by default -- not connect to Firebird 2.5 or older.
+See also <<unsupported-protocol>>.
 
 This driver does not support InterBase servers due to Firebird-specific changes in the protocol and database attachment parameters that are sent to the server.
 
@@ -101,7 +104,12 @@ Jaybird 5 will serve as a "`long-term support`" version for Java 8 and 11, with 
 
 Jaybird 6 provides libraries for Java Java 17.
 
-Jaybird 6 is not modularized, but all versions declare the automatic module name `org.firebirdsql.jaybird`.
+Jaybird 6 is modularized.
+The available modules are:
+
+* `org.firebirdsql.jaybird` -- main Jaybird driver
+* `org.firebirdsql.jaybird.chacha64` -- ChaCha64 wire encryption implementation
+* `org.firebirdsql.jna` -- native and embedded protocol implementation using JNA
 
 See also <<java-support>> in <<whats-new-in-jaybird-6>>.
 
@@ -115,7 +123,7 @@ Jaybird supports the following specifications:
 
 | JDBC 4.3
 | All JDBC 4.3 methods for features supported by Firebird;
-Java 9 and higher supported using the Java 17 driver.
+Java 17 and higher supported using the Java 17 driver.
 
 | JTA 1.0.1
 | Implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
@@ -185,9 +193,9 @@ You can download the latest versions from https://www.firebirdsql.org/en/jdbc-dr
 
 At minimum Jaybird 6 requires `jaybird-{version_wo_target}.jar`.
 
-For "`ChaCha64`" support, also add `chacha64-plugin.jar` and `bcprov-jdk18on-{bc-version}.jar`.
+For "`ChaCha64`" wire-encryption support, also add `chacha64-plugin-{version_wo_target}.jar` and `bcprov-jdk18on-{bc-version}.jar`.
 
-For native or embedded support, you will need to include `jna-jpms-{jna-version}.jar` on your classpath or modulepath.
+For native or embedded support, also add `jaybird-native-{version_wo_target}.jar` and `jna-jpms-{jna-version}.jar` on your classpath or modulepath.
 See also <<type-2-native-and-embedded-driver>>.
 
 [#upgrading-from-jaybird-5-to-jaybird-6]
@@ -226,7 +234,7 @@ If you use native or embedded, you now need to explicitly add `jaybird-native` a
 </dependency>
 ----
 
-If you use native or embedded, make sure to update your JNA dependency to version {jna-version}, or remove it altogether as the dependencies will be pulled in through the `jaybird-native` artifact.
+If you use native or embedded, make sure to update your JNA dependency to version {jna-version}, or remove it altogether as the dependencies will now be pulled in through the `jaybird-native` artifact.
 
 [source,xml,subs="verbatim,attributes"]
 ----
@@ -306,8 +314,16 @@ Most of the JDBC 4.3 features have been implemented (in as far as they are suppo
 
 Given the limited support period for Java 17 and higher versions, not all Java releases are supported, see <<supported-java-versions>> for details.
 
-For compatibility with Java 9 modules, Jaybird defines the automatic module name `org.firebirdsql.jaybird`, and the `chacha64-plugin` uses `org.firebirdsql.jaybird.chacha64`.
-This guarantees a stable module name for Jaybird, and allows for future modularization of Jaybird.
+Jaybird 6 is modularized, and provides the following modules:
+
+`org.firebirdsql.jaybird`::
+main Jaybird driver (`jaybird-{version_wo_target}.jar`)
+
+`org.firebirdsql.jaybird.chacha64`::
+ChaCha64 wire encryption implementation (`chacha64-plugin-{version_wo_target}.jar`)
+
+`org.firebirdsql.jna`::
+native and embedded protocol implementation using JNA (`jaybird-native-{version_wo_target}.jar`)
 
 [#firebird-support]
 === Firebird support
@@ -692,7 +708,7 @@ In normal usage of a result set, the first fetch will be a normal synchronous fe
 If certain conditions are met, subsequent fetches will be performed asynchronously.
 
 The conditions for using asynchronous fetch are considered an implementation detail and may change in point releases.
-In Jaybird 6.0.0, the condition to enable asynchronous fetching are:
+In Jaybird 6.0.0, the conditions to enable asynchronous fetching are:
 
 . The result set has type `FORWARD_ONLY`.
 . The result set does not have cursor name set.
@@ -700,7 +716,7 @@ In Jaybird 6.0.0, the condition to enable asynchronous fetching are:
 Be aware that the server may return fewer rows than the configured fetch size (default is 400), depending on Firebird version, row size and other factors.
 
 When the asynchronous fetch is triggered is also an implementation detail and may change in point releases.
-In Jaybird 6.0.0, the condition to perform an asynchronous fetch is:
+In Jaybird 6.0.0, the conditions to perform an asynchronous fetch are:
 
 * Size of the row buffer is equal to the "`low-water mark`".
 +
@@ -791,7 +807,7 @@ Previously almost all types returned `true` (including -- for example -- `BOOLEA
 * Consistent use of `BigDecimal.valueOf(double)` instead of a combination of `new BigDecimal(double)` and `BigDecimal.valueOf(double)` (https://github.com/FirebirdSQL/jaybird/issues/553[jaybird#553])
 * Switched blob identification in message BLR from `blr_quad` to `blr_blob2` (https://github.com/FirebirdSQL/jaybird/issues/726[jaybird#726])
 * Removed `finalize()` methods and -- where it made sense -- replaced them with use of `Cleaner` (https://github.com/FirebirdSQL/jaybird/issues/727[jaybird#727])
-* Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DEICMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (https://github.com/FirebirdSQL/jaybird/issues/731[jaybird#731])
+* Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DECIMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (https://github.com/FirebirdSQL/jaybird/issues/731[jaybird#731])
 * Optimized the query to retrieve extended field info for `ResultSetMetaData.getPrecision` to only retrieve columns of type `NUMERIC` or `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/732[jaybird#732])
 * Added methods `List<String> getTypeAliasList()` and `List<String> getSupportedProtocolList()` to `GDSFactoryPlugin`, and deprecated `String[] getTypeAliases()` and `String[] getSupportedProtocols()` for removal in Jaybird 7 or later
 * Fixed formatting of `isc_formatted_exception` to not repeat the original parameters of the exception (https://github.com/FirebirdSQL/jaybird/issues/749[jaybird#749])
@@ -814,7 +830,10 @@ It might have been a change we forgot to document, but it could just as well be 
 === Support for Firebird 2.5 dropped
 
 Jaybird 6 has dropped support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support^]).
-In general, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
+In general, we expect the driver to remain functional, if the protocol version is explicitly enabled, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
+
+By default, Jaybird will only connect to Firebird 3.0 and higher.
+See also <<unsupported-protocols-disabled>>.
 
 [[unsupported-protocols-disabled]]
 === Unsupported protocol version disabled by default
@@ -828,7 +847,7 @@ See also <<unsupported-protocol>>.
 [#support-for-java-before-17-dropped]
 === Support for Java versions before Java 17 dropped
 
-Jaybird 5 does not support Java versions before Java 17.
+Jaybird 6 does not support Java versions before Java 17.
 You will need to upgrade to Java 17 or higher, or remain on Jaybird 5.
 
 Jaybird 5 will serve as a form of "`long-term support`" for Java 8 and 11, with maintenance releases at least until the release of Jaybird 7.
@@ -1001,7 +1020,7 @@ The following classes have been removed in Jaybird 6 without deprecation:
 
 * `FbLocalDatabaseFactory` -- unused since removal of LOCAL protocol implementation in Jaybird 5
 * `DatatypeCoder.RawDateTimeStruct` (semi-internal API) -- use one of the `java.time` types (`LocalDateTime`, `LocalDate` or `LocalTime`).
-Though this class is publicly accessible through `ResultSet.getObject/updateObject` and `PreparedStatement.setObject`, it is internal API, and we expect it is unlikely to be actually used in user code.
+Though this class was publicly accessible through `ResultSet.getObject/updateObject` and `PreparedStatement.setObject`, it is internal API, and we expect it is unlikely to be actually used in user code.
 
 The following classes are no longer accessible in Jaybird 6:
 
