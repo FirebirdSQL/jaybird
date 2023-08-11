@@ -20,11 +20,8 @@ def buildTime = new Date()
 ext.'build.id' = buildTime.format('yyyyMMddHHmm')
 ext.YEAR = buildTime.format("yyyy")
 
-// Build profile (Java version specific)
-println 'Build profile: Java 17'
+// Build profile
 ext.'maven.jdkversion' = 'java17'
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
 ext.'specification.version' = '4.3'
 
 ext.'version.simple' = "${project.'version.major'}.${project.'version.minor'}.${project.'version.revision'}".toString()

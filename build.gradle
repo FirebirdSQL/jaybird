@@ -14,7 +14,7 @@ plugins {
     id 'nu.studer.credentials' version '3.0'
     id 'maven-publish'
     id 'signing'
-    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id 'org.asciidoctor.jvm.convert' version '4.0.0-alpha.1'
 }
 
 defaultTasks 'clean', 'build'
@@ -23,7 +23,6 @@ apply from: 'build-properties.gradle'
 
 group = 'org.firebirdsql.jdbc'
 version = project.'version.maven'
-archivesBaseName = project.mavenName
 
 allprojects {
     tasks.withType(JavaCompile).configureEach {
@@ -34,7 +33,13 @@ allprojects {
     }
 }
 
+base {
+    archivesName = project.mavenName
+}
+
 java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
     withJavadocJar()
     withSourcesJar()
 }
@@ -88,12 +93,12 @@ processResources {
     ]
 }
 
-//apply from: 'documentation.gradle'
-
 asciidoctorj {
-    version = '2.5.7'
-    attributes 'revnumber': null,
-            'version_simple': project.'version.simple',
+    version = '2.5.9'
+}
+
+tasks.named('asciidoctor', AsciidoctorTask).configure {
+    attributes 'version_simple': project.'version.simple',
             'version_wo_target': "${project.'version.simple'}${project.'version.tag'}",
             'version_tag': project.'version.tag',
             'version_example': "${project.'version.simple'}${project.'version.tag'}",
@@ -101,6 +106,9 @@ asciidoctorj {
             'stylesheet': 'firebird.css',
             'docinfo': 'shared',
             'docinfodir': file('src/docs/theme/jaybird-html/docinfo')
+    forkOptions {
+        jvmArgs "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens", "java.base/java.io=ALL-UNNAMED"
+    }
 }
 
 tasks.register('dist', Zip) {
