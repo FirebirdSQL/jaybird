@@ -2574,7 +2574,7 @@ and `local` protocol. Be aware that this dependency does not support `embedded`.
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>fbclient</artifactId>
-    <version>3.0.5.1</artifactId>
+    <version>4.0.3.0</artifactId>
 </dependency>
 ```
 
