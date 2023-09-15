@@ -156,18 +156,16 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
 
         int counter = 0;
         int pos = off;
-        byte[] buffer = new byte[Math.min(owner.getBufferLength(), len)];
-
         int toRead = len;
 
-        while (toRead > 0 && (counter = read(buffer, 0, Math.min(toRead, buffer.length))) != -1) {
-            System.arraycopy(buffer, 0, b, pos, counter);
+        while (toRead > 0 && (counter = read(b, pos, toRead)) != -1) {
             pos += counter;
             toRead -= counter;
         }
 
-        if (counter == -1)
+        if (counter == -1) {
             throw new EOFException();
+        }
     }
 
     @Override
