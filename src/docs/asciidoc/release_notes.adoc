@@ -31,6 +31,13 @@ For known issues, consult <<known-issues>>.
 
 The following has been changed or fixed since Jaybird 5.0.2:
 
+* Improvement: Do not reject attempts to read blob id 0 -- backported from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/765[jaybird#765])
++
+Previously, Jaybird rejected attempts to read blobs with blob id `0` (not on all code paths, for some only when assertions are enabled).
+Formally, blob id `0` is not a valid blob id, but in practice they can occur (e.g. due to bugs, or access components/drivers explicitly setting a blob column to id `0`).
+Other drivers and tools simply send the requests for blob id `0` to the server, which then treats it as an empty blob.
+For consistency, we decided to let Jaybird handle it the same.
+
 [#jaybird-5-0-2-changelog]
 === Jaybird 5.0.2
 

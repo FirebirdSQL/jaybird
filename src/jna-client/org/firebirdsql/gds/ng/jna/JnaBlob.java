@@ -53,15 +53,42 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     private final FbClientLibrary clientLibrary;
     private ByteBuffer byteBuffer;
 
+    /**
+     * Creates a blob for output (writing to the database).
+     *
+     * @param database
+     *         database
+     * @param transaction
+     *         transaction
+     * @param blobParameterBuffer
+     *         blob parameter buffer
+     */
     public JnaBlob(JnaDatabase database, JnaTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
-        this(database, transaction, blobParameterBuffer, NO_BLOB_ID);
+        this(database, transaction, blobParameterBuffer, NO_BLOB_ID, true);
     }
 
+    /**
+     * Creates a blob for input (reading from the database).
+     *
+     * @param database
+     *         database
+     * @param transaction
+     *         transaction
+     * @param blobParameterBuffer
+     *         blob parameter buffer
+     * @param blobId
+     *         blob id
+     */
     public JnaBlob(JnaDatabase database, JnaTransaction transaction, BlobParameterBuffer blobParameterBuffer,
             long blobId) {
+        this(database, transaction, blobParameterBuffer, blobId, false);
+    }
+
+    private JnaBlob(JnaDatabase database, JnaTransaction transaction, BlobParameterBuffer blobParameterBuffer,
+            long blobId, boolean outputBlob) {
         super(database, transaction, blobParameterBuffer);
         this.blobId = new LongByReference(blobId);
-        outputBlob = blobId == NO_BLOB_ID;
+        this.outputBlob = outputBlob;
         clientLibrary = database.getClientLibrary();
     }
 
