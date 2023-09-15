@@ -20,7 +20,6 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 
 import java.sql.SQLException;
@@ -34,9 +33,8 @@ public abstract class AbstractFbWireInputBlob extends AbstractFbWireBlob {
     private final long blobId;
 
     protected AbstractFbWireInputBlob(FbWireDatabase database, FbWireTransaction transaction,
-                                      BlobParameterBuffer blobParameterBuffer, long blobId) {
+            BlobParameterBuffer blobParameterBuffer, long blobId) {
         super(database, transaction, blobParameterBuffer);
-        assert blobId != FbBlob.NO_BLOB_ID : "blobId must be non-zero for an input blob";
         this.blobId = blobId;
     }
 

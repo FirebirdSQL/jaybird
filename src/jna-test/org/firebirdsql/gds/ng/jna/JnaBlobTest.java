@@ -420,6 +420,22 @@ class JnaBlobTest extends BaseTestBlob {
         }
     }
 
+    @Test
+    void readBlobIdZero() throws Exception {
+        try (JnaDatabase db = createDatabaseConnection()) {
+            try {
+                transaction = getTransaction(db);
+                FbBlob blob = db.createBlobForInput(transaction, 0);
+                blob.open();
+                assertEquals(0, blob.length());
+                byte[] segment = blob.getSegment(500);
+                assertEquals(0, segment.length, "expected empty segment");
+            } finally {
+                if (transaction != null) transaction.commit();
+            }
+        }
+    }
+
     @Override
     protected JnaDatabase createFbDatabase(FbConnectionProperties connectionInfo) throws SQLException {
         final JnaDatabase db = factory.connect(connectionInfo);

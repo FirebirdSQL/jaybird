@@ -812,6 +812,14 @@ Previously almost all types returned `true` (including -- for example -- `BOOLEA
 * Added methods `List<String> getTypeAliasList()` and `List<String> getSupportedProtocolList()` to `GDSFactoryPlugin`, and deprecated `String[] getTypeAliases()` and `String[] getSupportedProtocols()` for removal in Jaybird 7 or later
 * Fixed formatting of `isc_formatted_exception` to not repeat the original parameters of the exception (https://github.com/FirebirdSQL/jaybird/issues/749[jaybird#749])
 * Added aliases `ApplicationName` and `applicationName` for connection property `processName` (https://github.com/FirebirdSQL/jaybird/issues/751[jaybird#751])
+* Improvement: Do not reject attempts to read blob id 0 (https://github.com/FirebirdSQL/jaybird/issues/764[jaybird#764])
++
+Previously, Jaybird rejected attempts to read blobs with blob id `0` (not on all code paths, for some only when assertions are enabled).
+Formally, blob id `0` is not a valid blob id, but in practice they can occur (e.g. due to bugs, or access components/drivers explicitly setting a blob column to id `0`).
+Other drivers and tools simply send the requests for blob id `0` to the server, which then treats it as an empty blob.
+For consistency, we decided to let Jaybird handle it the same.
++
+This change was also backported to Jaybird 5.0.3.
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
