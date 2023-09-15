@@ -502,7 +502,7 @@ Unsupported protocol versions may be removed in future releases of Jaybird.
 |15footnote:[since Firebird 3.0.2, version 13 for 3.0.0 and 3.0.1]footnote:[Jaybird has no protocol 14 implementation]
 
 |4.0
-|16footnote:[Jaybird no protocol 17 implementation]
+|16footnote:[Jaybird has no protocol 17 implementation]
 
 |5.0
 |18
