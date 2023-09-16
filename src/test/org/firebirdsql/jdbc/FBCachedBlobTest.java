@@ -143,7 +143,7 @@ class FBCachedBlobTest {
      * </p>
      */
     @Test
-    void testGetBytes_null() throws Exception {
+    void testGetBytes_long_int_null() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(null);
 
         assertNull(blob.getBytes(1, 1));
@@ -153,13 +153,37 @@ class FBCachedBlobTest {
      * Test {@link FBCachedBlob#getBytes(long, int)}.
      */
     @Test
-    void testGetBytes() throws Exception {
+    void testGetBytes_long_int() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
         byte[] data = blob.getBytes(5, 5);
 
         assertNotNull(data, "Expected non-null array");
         assertArrayEquals(new byte[] { 5, 6, 7, 8, 9 }, data, "Unexpected data");
+    }
+
+    @Test
+    void testGetBytes() throws Exception {
+        byte[] input = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        var blob = new FBCachedBlob(input);
+
+        byte[] data = blob.getBytes();
+
+        assertArrayEquals(input, data, "Unexpected data");
+        assertNotSame(input, data, "Expected copy of input, not same object");
+    }
+
+    /**
+     * Test if {@link FBCachedBlob#getBytes()} returns {@code null} if data is null.
+     * <p>
+     * TODO: Not certain if this behavior is allowed!
+     * </p>
+     */
+    @Test
+    void testGetBytes_null() throws Exception {
+        var blob = new FBCachedBlob(null);
+
+        assertNull(blob.getBytes());
     }
 
     /**

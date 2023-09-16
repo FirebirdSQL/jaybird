@@ -24,9 +24,8 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBObjectListener;
+import org.firebirdsql.jdbc.FirebirdBlob;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.sql.Blob;
@@ -78,10 +77,6 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
         try {
             if (blob != null) blob.free();
         } finally {
-            // forget this blob instance, resource waste
-            // but simplifies our life. BLOB handle will be
-            // released by a server automatically later
-
             blob = null;
             blobExplicitNull = false;
             bytes = null;
@@ -95,10 +90,10 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
     @Override
     public Blob getBlob() throws SQLException {
         if (blob != null) return blob;
-        if (isNull()) return null;
+        byte[] bytes = getFieldData();
+        if (bytes == null) return null;
 
-        blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(getFieldData()), blobListener, blobConfig);
-        return blob;
+        return blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(bytes), blobListener, blobConfig);
     }
 
     @Override
@@ -115,17 +110,8 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
 
     @Override
     public byte[] getBytes() throws SQLException {
-        final Blob blob = getBlob();
-        if (blob == null) return null;
-
-        try (final InputStream in = blob.getBinaryStream()) {
-            if (in == null) return null;
-            final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            in.transferTo(bout);
-            return bout.toByteArray();
-        } catch(IOException ioex) {
-            throw invalidGetConversion("bytes[]", ioex.getMessage(), ioex);
-        }
+        final FirebirdBlob blob = (FirebirdBlob) getBlob();
+        return blob != null ? blob.getBytes() : null;
     }
 
     @Override

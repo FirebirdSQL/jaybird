@@ -43,7 +43,7 @@ public interface FirebirdBlob extends Blob {
      * {@link InputStream} only because it is abstract class and not interface
      * that we can extend.
      */
-    interface BlobInputStream {
+    interface BlobInputStream extends AutoCloseable {
         
         /** Seek based on the absolute beginning of the stream */
         int SEEK_MODE_ABSOLUTE = 0;
@@ -85,6 +85,7 @@ public interface FirebirdBlob extends Blob {
          * 
          * @throws IOException if I/O error occurs.
          */
+        @Override
         void close() throws IOException;
         
         /**
@@ -263,5 +264,16 @@ public interface FirebirdBlob extends Blob {
      * @return {@code true} if this blob is segmented, otherwise {@code false}
      */
     boolean isSegmented() throws SQLException;
+
+    /**
+     * Gets the byte content of this blob as a byte array.
+     *
+     * @return byte array with blob content (may return {@code null} for certain cached blobs)
+     * @throws SQLException
+     *         for database access errors, or if the blob size exceeds the maximum safe array size (i.e.
+     *         {@link Integer#MAX_VALUE} - 8)
+     * @since 6
+     */
+    byte[] getBytes() throws SQLException;
 
 }

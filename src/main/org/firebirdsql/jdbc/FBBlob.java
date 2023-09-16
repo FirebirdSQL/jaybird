@@ -40,6 +40,7 @@ import org.firebirdsql.util.InternalApi;
 import java.io.*;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -131,7 +132,8 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
         try (LockCloseable ignored = withLock()) {
             checkClosed();
             if (isNew) {
-                throw new FBSQLException("No Blob ID is available in new Blob object");
+                throw new SQLException("No Blob ID is available in new Blob object",
+                        SQLStateConstants.SQL_STATE_GENERAL_ERROR);
             }
             return gdsHelper.openBlob(blobId, config);
         }
@@ -171,8 +173,8 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
                 for (FBBlobInputStream blobIS : new ArrayList<>(inputStreams)) {
                     try {
                         blobIS.close();
-                    } catch (IOException ex) {
-                        chain.append(new FBSQLException(ex));
+                    } catch (IOException e) {
+                        chain.append(new SQLException(e.toString(), SQLStateConstants.SQL_STATE_GENERAL_ERROR, e));
                     }
                 }
                 inputStreams.clear();
@@ -180,8 +182,8 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
                 if (blobOut != null) {
                     try {
                         blobOut.close();
-                    } catch (IOException ex) {
-                        chain.append(new FBSQLException(ex));
+                    } catch (IOException e) {
+                        chain.append(new SQLException(e.toString(), SQLStateConstants.SQL_STATE_GENERAL_ERROR, e));
                     }
                 }
 
@@ -244,8 +246,9 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      * @throws SQLException if length cannot be interpreted.
      */
     long interpretLength(byte[] info, int position) throws SQLException {
-        if (info[position] != ISCConstants.isc_info_blob_total_length)
-            throw new FBSQLException("Length is not available");
+        if (info[position] != ISCConstants.isc_info_blob_total_length) {
+            throw new SQLException("Length is not available", SQLStateConstants.SQL_STATE_GENERAL_ERROR);
+        }
 
         int dataLength = VaxEncoding.iscVaxInteger(info, position + 1, 2);
         return VaxEncoding.iscVaxLong(info, position + 3, dataLength);
@@ -255,8 +258,9 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     public boolean isSegmented() throws SQLException {
         byte[] info = getInfo(new byte[] { ISCConstants.isc_info_blob_type }, 20);
 
-        if (info[0] != ISCConstants.isc_info_blob_type)
-            throw new FBSQLException("Cannot determine BLOB type");
+        if (info[0] != ISCConstants.isc_info_blob_type) {
+            throw new SQLException("Cannot determine BLOB type", SQLStateConstants.SQL_STATE_GENERAL_ERROR);
+        }
 
         int dataLength = VaxEncoding.iscVaxInteger(info, 1, 2);
         int type = VaxEncoding.iscVaxInteger(info, 3, dataLength);
@@ -273,29 +277,59 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
 
     @Override
     public byte[] getBytes(long pos, int length) throws SQLException {
-        if (pos < 1)
-            throw new FBSQLException("Blob position should be >= 1");
-
-        if (pos > Integer.MAX_VALUE)
-            throw new FBSQLException("Blob position is limited to 2^31 - 1 due to isc_seek_blob limitations",
+        if (pos < 1) {
+            throw new SQLException("Expected value of pos > 0, got " + pos,
                     SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
+        } else if (pos > Integer.MAX_VALUE) {
+            throw new SQLException("Blob position is limited to 2^31 - 1 due to isc_seek_blob limitations",
+                    SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
+        } else if (length < 0) {
+            throw new SQLException("Expected value of length >= 0, got " + length,
+                    SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
+        }
 
         try (LockCloseable ignored = withLock()) {
             blobListener.executionStarted(this);
-            try {
-                FirebirdBlob.BlobInputStream in = (FirebirdBlob.BlobInputStream) getBinaryStream();
-                try {
-                    if (pos != 1)
-                        in.seek((int) pos - 1);
-
-                    byte[] result = new byte[length];
-                    in.readFully(result);
-                    return result;
-                } finally {
-                    in.close();
+            try (FirebirdBlob.BlobInputStream in = (FirebirdBlob.BlobInputStream) getBinaryStream()) {
+                if (pos != 1) {
+                    in.seek((int) pos - 1);
                 }
-            } catch (IOException ex) {
-                throw new FBSQLException(ex);
+
+                byte[] result = new byte[length];
+                in.readFully(result);
+                return result;
+            } catch (IOException e) {
+                if (e.getCause() instanceof SQLException sqle) {
+                    throw sqle;
+                }
+                throw new SQLException(e.toString(), SQLStateConstants.SQL_STATE_GENERAL_ERROR, e);
+            } finally {
+                blobListener.executionCompleted(this);
+            }
+        }
+    }
+
+    @Override
+    public byte[] getBytes() throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            blobListener.executionStarted(this);
+            try (FirebirdBlob.BlobInputStream in = (FirebirdBlob.BlobInputStream) getBinaryStream()) {
+                long length = in.length();
+                if (length > Integer.MAX_VALUE - 8) {
+                    // TODO Externalize?
+                    throw new SQLNonTransientException(
+                            "Blob size of %d bytes exceeds maximum safe array size, use a stream to read this blob"
+                                    .formatted(length),
+                            SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
+                }
+                byte[] bytes = new byte[(int) length];
+                in.readFully(bytes);
+                return bytes;
+            } catch (IOException e) {
+                if (e.getCause() instanceof SQLException sqle) {
+                    throw sqle;
+                }
+                throw new SQLException(e.toString(), SQLStateConstants.SQL_STATE_GENERAL_ERROR, e);
             } finally {
                 blobListener.executionCompleted(this);
             }
@@ -349,16 +383,16 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
             checkClosed();
             blobListener.executionStarted(this);
 
-            if (blobOut != null)
-                throw new FBSQLException("OutputStream already open. Only one blob output stream can be open at a time");
-
-            if (pos < 1)
-                throw new FBSQLException("You can't start before the beginning of the blob",
+            if (blobOut != null) {
+                throw new SQLException("OutputStream already open. Only one blob output stream can be open at a time",
+                        SQLStateConstants.SQL_STATE_GENERAL_ERROR);
+            } else if (pos < 1) {
+                throw new SQLException("You can't start before the beginning of the blob",
                         SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
-
-            if (isNew && pos > 1)
-                throw new FBSQLException("Previous value was null, you must start at position 1",
+            } else if (isNew && pos > 1) {
+                throw new SQLException("Previous value was null, you must start at position 1",
                         SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
+            }
 
             blobOut = new FBBlobOutputStream(this);
             if (pos > 1) {
@@ -379,8 +413,10 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      */
     public long getBlobId() throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            if (isNew)
-                throw new FBSQLException("No Blob ID is available in new Blob object");
+            if (isNew) {
+                throw new SQLException("No Blob ID is available in new Blob object",
+                        SQLStateConstants.SQL_STATE_GENERAL_ERROR);
+            }
 
             return blobId;
         }
@@ -403,8 +439,8 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
         try (LockCloseable ignored = withLock();
              OutputStream out = setBinaryStream(1)) {
             out.write(bytes, pos, len);
-        } catch (IOException ex) {
-            throw new FBSQLException(ex);
+        } catch (IOException e) {
+            throw new SQLException(e.toString(), SQLStateConstants.SQL_STATE_GENERAL_ERROR, e);
         }
     }
 

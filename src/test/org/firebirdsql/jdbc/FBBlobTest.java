@@ -166,7 +166,8 @@ class FBBlobTest {
     }
 
     @Test
-    void testSetBytes_long_byteArr_throwsSQLFeatureNotSupported() throws Exception {
+    void testSetBytes_long_byteArr() throws Exception {
+        executeCreateTable(conn, RECREATE_BLOB_TABLE);
         try (PreparedStatement pstmt = conn.prepareStatement(INSERT_BLOB)) {
             pstmt.setInt(1, 1);
             Blob blob = conn.createBlob();
@@ -187,7 +188,7 @@ class FBBlobTest {
     }
 
     @Test
-    void testSetBytes_long_byteArr_int_int_throwsSQLFeatureNotSupported() throws Exception {
+    void testSetBytes_long_byteArr_int_int() throws Exception {
         executeCreateTable(conn, RECREATE_BLOB_TABLE);
         try (PreparedStatement pstmt = conn.prepareStatement(INSERT_BLOB)) {
             pstmt.setInt(1, 1);
@@ -279,7 +280,7 @@ class FBBlobTest {
                 select.setInt(1, 1);
                 try (ResultSet rs = select.executeQuery()) {
                     assertTrue(rs.next(), "Expected a row in result set");
-                    FBBlob blob = (FBBlob) rs.getBlob(1);
+                    FirebirdBlob blob = (FirebirdBlob) rs.getBlob(1);
 
                     byte[] bytes = blob.getBytes(2, 4);
 
@@ -298,7 +299,7 @@ class FBBlobTest {
                 select.setInt(1, 1);
                 try (ResultSet rs = select.executeQuery()) {
                     assertTrue(rs.next(), "Expected a row in result set");
-                    FBBlob blob = (FBBlob) rs.getBlob(1);
+                    FirebirdBlob blob = (FirebirdBlob) rs.getBlob(1);
 
                     SQLException exception = assertThrows(SQLException.class, () -> blob.getBytes(2, 4));
                     assertThat(exception, message(containsString(getFbMessage(ISCConstants.isc_bad_segstr_type))));
@@ -307,17 +308,35 @@ class FBBlobTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testGetBytes_withOffset_streamBlob(boolean useStreamBlobs) throws Exception {
+        try (Connection conn = getConnection(useStreamBlobs)) {
+            byte[] input = { 1, 2, 3, 4, 5 };
+            populateBlob(conn, input);
+            try (var select = conn.prepareStatement(SELECT_BLOB)) {
+                select.setInt(1, 1);
+                try (var rs = select.executeQuery()) {
+                    assertTrue(rs.next(), "Expected a row in result set");
+                    FirebirdBlob blob = (FirebirdBlob) rs.getBlob(1);
+
+                    assertArrayEquals(input, blob.getBytes(), "Expected array equal to original");
+                }
+            }
+        }
+    }
+
     @Test
     void testGetBytes_positionZero_throwsSQLException() throws Exception {
-        FBBlob blob = (FBBlob) conn.createBlob();
+        FirebirdBlob blob = (FirebirdBlob) conn.createBlob();
 
         SQLException exception = assertThrows(SQLException.class, () -> blob.getBytes(0, 4));
-        assertThat(exception, message(containsString("should be >= 1")));
+        assertThat(exception, message(containsString("Expected value of pos > 0, got 0")));
     }
 
     @Test
     void testGetBytes_positionLargerThanMaxIntValue_throwsSQLException() throws Exception {
-        FBBlob blob = (FBBlob) conn.createBlob();
+        FirebirdBlob blob = (FirebirdBlob) conn.createBlob();
 
         SQLException exception = assertThrows(SQLException.class, () -> blob.getBytes(Integer.MAX_VALUE + 1L, 4));
         assertThat(exception, allOf(
@@ -345,7 +364,6 @@ class FBBlobTest {
 
         conn.commit();
 
-        //noinspection ResultOfMethodCallIgnored
         IOException exception = assertThrows(IOException.class, binaryStream::read);
         assertThat(exception, message(equalTo("Input stream is already closed.")));
     }
@@ -370,7 +388,6 @@ class FBBlobTest {
 
         conn.rollback();
 
-        //noinspection ResultOfMethodCallIgnored
         IOException exception = assertThrows(IOException.class, binaryStream::read);
         assertThat(exception, message(equalTo("Input stream is already closed.")));
     }
@@ -385,7 +402,7 @@ class FBBlobTest {
     void testBlobCloseOnConnectionClose_inAutoCommit() throws Exception {
         OutputStream binaryStream;
         try {
-            FBBlob blob = (FBBlob) conn.createBlob();
+            FirebirdBlob blob = (FirebirdBlob) conn.createBlob();
             binaryStream = blob.setBinaryStream(1);
         } finally {
             // This should not trigger an exception
@@ -502,7 +519,6 @@ class FBBlobTest {
 
         rs.next();
 
-        //noinspection ResultOfMethodCallIgnored
         IOException exception = assertThrows(IOException.class, binaryStream::read);
         assertThat(exception, message(equalTo("Input stream is already closed.")));
     }

@@ -19,9 +19,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbTransaction;
-import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jaybird.props.PropertyConstants;
@@ -45,7 +43,7 @@ import java.sql.Types;
  */
 class FBBlobField extends FBField implements FBCloseableField, FBFlushableField, BlobListenableField {
 
-    protected FirebirdBlob blob;
+    FirebirdBlob blob;
     private boolean blobExplicitNull;
     private long length;
     private InputStream binaryStream;
@@ -76,8 +74,6 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
         try {
             if (blob != null) blob.free();
         } finally {
-            // forget this blob instance, resource waste but simplifies our life. BLOB handle will be
-            // released by a server automatically later
             blob = null;
             blobExplicitNull = false;
             bytes = null;
@@ -88,13 +84,12 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
         }
     }
 
-    protected FirebirdBlob getBlobInternal() {
+    FirebirdBlob getBlobInternal() {
         if (blob != null) return blob;
         final byte[] bytes = getFieldData();
         if (bytes == null) return null;
 
-        blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(bytes), blobListener, blobConfig);
-        return blob;
+        return blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(bytes), blobListener, blobConfig);
     }
 
     @Override
@@ -127,31 +122,8 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
     }
 
     public byte[] getBytesInternal() throws SQLException {
-        final byte[] blobIdBuffer = getFieldData();
-        if (blobIdBuffer == null) return null;
-
-        final long blobId = getDatatypeCoder().decodeLong(blobIdBuffer);
-        try (LockCloseable ignored = gdsHelper.withLock();
-             FbBlob blobHandle = gdsHelper.openBlob(blobId, blobConfig)) {
-            final int blobLength = (int) blobHandle.length();
-            final int bufferLength = blobConfig.blobBufferSize();
-            final byte[] resultBuffer = new byte[blobLength];
-
-            int offset = 0;
-
-            while (offset < blobLength) {
-                final byte[] segmentBuffer = blobHandle.getSegment(bufferLength);
-
-                if (segmentBuffer.length == 0) {
-                    throw invalidGetConversion("byte[]", "unexpected EOF");
-                }
-
-                System.arraycopy(segmentBuffer, 0, resultBuffer, offset, segmentBuffer.length);
-                offset += segmentBuffer.length;
-            }
-
-            return resultBuffer;
-        }
+        FirebirdBlob blob = getBlobInternal();
+        return blob != null ? blob.getBytes() : null;
     }
 
     @Override
@@ -172,7 +144,7 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
     }
 
     @Override
-    public void setCachedObject(FBFlushableField.CachedObject cachedObject) throws SQLException {
+    public void setCachedObject(FBFlushableField.CachedObject cachedObject) {
         // setNull() to reset field to empty state
         setNull();
         bytes = cachedObject.bytes;

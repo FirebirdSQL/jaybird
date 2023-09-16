@@ -93,6 +93,12 @@ public final class FBCachedBlob implements FirebirdBlob {
         return result;
     }
 
+    @Override
+    public byte[] getBytes() throws SQLException {
+        checkClosed();
+        return blobData != null ? blobData.clone() : null;
+    }
+
     /**
      * Find the first entry of the specified pattern.
      *
@@ -136,7 +142,7 @@ public final class FBCachedBlob implements FirebirdBlob {
      */
     @Override
     public int setBytes(long pos, byte[] bytes) throws SQLException {
-        throw new FBSQLException(BLOB_READ_ONLY);
+        throw new SQLException(BLOB_READ_ONLY, SQLStateConstants.SQL_STATE_GENERAL_ERROR);
     }
 
     /**
@@ -147,7 +153,7 @@ public final class FBCachedBlob implements FirebirdBlob {
      */
     @Override
     public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
-        throw new FBSQLException(BLOB_READ_ONLY);
+        throw new SQLException(BLOB_READ_ONLY, SQLStateConstants.SQL_STATE_GENERAL_ERROR);
     }
 
     /**
@@ -158,7 +164,7 @@ public final class FBCachedBlob implements FirebirdBlob {
      */
     @Override
     public OutputStream setBinaryStream(long pos) throws SQLException {
-        throw new FBSQLException(BLOB_READ_ONLY);
+        throw new SQLException(BLOB_READ_ONLY, SQLStateConstants.SQL_STATE_GENERAL_ERROR);
     }
 
     /**
