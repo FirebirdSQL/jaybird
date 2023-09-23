@@ -44,27 +44,13 @@ import java.util.Map.Entry;
  * @author Mark Rotteveel
  */
 public final class GDSFactory {
-
-    /**
-     * Class for string comparison in the descendant order. This effectively
-     * puts the shortest JDBC URLs at the end of the list, so the correct
-     * default protocol handling can be implemented.
-     */
-    private static final class ReversedStringComparator implements Comparator<String>, Serializable {
-
-        @Serial
-        private static final long serialVersionUID = 8861240319376746440L;
-
-        public int compare(String s1, String s2) {
-            // note, we compare here s2 to s1,
-            // this causes descending sorting
-            return s2.compareTo(s1);
-        }
-    }
-
     private static final Set<GDSFactoryPlugin> registeredPlugins = new HashSet<>();
     private static final Map<GDSType, GDSFactoryPlugin> typeToPluginMap = new HashMap<>();
-    private static final TreeMap<String, GDSFactoryPlugin> jdbcUrlToPluginMap = new TreeMap<>(new ReversedStringComparator());
+    /**
+     * This sorting effectively puts the shortest JDBC URLs at the end of the map,
+     * so the correct default protocol handling can be implemented.
+     */
+    private static final TreeMap<String, GDSFactoryPlugin> jdbcUrlToPluginMap = new TreeMap<>(Comparator.reverseOrder());
 
     private static GDSType defaultType;
 
