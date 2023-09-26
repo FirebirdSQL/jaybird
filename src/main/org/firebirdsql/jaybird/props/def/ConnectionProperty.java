@@ -32,7 +32,6 @@ import java.util.*;
 
 import static java.util.Collections.*;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 
 /**
@@ -241,12 +240,7 @@ public final class ConnectionProperty {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ConnectionProperty)) return false;
-
-        ConnectionProperty that = (ConnectionProperty) o;
-
-        return name.equals(that.name);
+        return this == o || o instanceof ConnectionProperty that && name.equals(that.name);
     }
 
     /**
@@ -296,8 +290,8 @@ public final class ConnectionProperty {
         List<String> normalizedValues = values.stream()
                 .map(StringUtils::trimToNull)
                 .filter(Objects::nonNull)
-                .collect(toList());
-        return normalizedValues.isEmpty() ? emptyList() : unmodifiableList(normalizedValues);
+                .toList();
+        return normalizedValues.isEmpty() ? emptyList() : normalizedValues;
     }
 
     public static final class Builder {
