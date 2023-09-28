@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.jna;
+package org.firebirdsql.gds.ng.nativeoo;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.GdsTypeExtension;
@@ -43,22 +43,23 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Test for blobs in the JNA implementation.
+ * Test for blobs in the OO API implementation {@link org.firebirdsql.gds.ng.nativeoo.IBlobImpl}.
  * <p>
  * This class has copied tests from {@link org.firebirdsql.gds.ng.wire.version10.V10OutputBlobTest} and
- * {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlobTest}. TODO: Consider refactoring test hierarchy
+ * {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlobTest}.
  * </p>
  *
- * @author Mark Rotteveel
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 6.0
  */
-class JnaBlobTest extends BaseTestBlob {
+class IBlobImplTest extends BaseTestBlob {
 
     @RegisterExtension
     @Order(1)
-    public static final GdsTypeExtension testType = GdsTypeExtension.supportsNativeOnly();
+    public static final GdsTypeExtension testType = GdsTypeExtension.supportsFBOONativeOnly();
 
-    private final AbstractNativeDatabaseFactory factory =
-            (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
+    private final AbstractNativeOODatabaseFactory factory =
+            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     /**
      * Tests retrieval of a blob (what goes in is what comes out).
@@ -103,7 +104,7 @@ class JnaBlobTest extends BaseTestBlob {
         final int requiredSize = 4 * Short.MAX_VALUE;
         populateBlob(testId, baseContent, requiredSize);
 
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -134,7 +135,7 @@ class JnaBlobTest extends BaseTestBlob {
         final int requiredSize = 200;
         populateStreamBlob(testId, baseContent, requiredSize);
 
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -167,7 +168,7 @@ class JnaBlobTest extends BaseTestBlob {
         final int requiredSize = 256;
         populateBlob(testId, baseContent, requiredSize);
 
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -206,7 +207,7 @@ class JnaBlobTest extends BaseTestBlob {
         final int requiredSize = 256;
         populateBlob(testId, baseContent, requiredSize);
 
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -234,7 +235,7 @@ class JnaBlobTest extends BaseTestBlob {
         final int requiredSize = 4 * Short.MAX_VALUE;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             writeBlob(testId, testBytes, db, null);
         }
 
@@ -252,7 +253,7 @@ class JnaBlobTest extends BaseTestBlob {
         final int requiredSize = 4 * Short.MAX_VALUE;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             final BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
             blobParameterBuffer.addArgument(BpbItems.isc_bpb_type, BpbItems.TypeValues.isc_bpb_type_stream);
             writeBlob(testId, testBytes, db, blobParameterBuffer);
@@ -266,7 +267,7 @@ class JnaBlobTest extends BaseTestBlob {
      */
     @Test
     void testOutputBlobIsEof_afterOpen() throws Exception {
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction);
@@ -285,7 +286,7 @@ class JnaBlobTest extends BaseTestBlob {
      */
     @Test
     void testOutputBlobIsEof_afterClose() throws Exception {
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction);
@@ -305,7 +306,7 @@ class JnaBlobTest extends BaseTestBlob {
      */
     @Test
     void testOutputBlobIsEof_afterCancel() throws Exception {
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction);
@@ -330,7 +331,7 @@ class JnaBlobTest extends BaseTestBlob {
         final int requiredSize = 256;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             final SimpleStatementListener listener = new SimpleStatementListener();
             final FbTransaction transaction = getTransaction(db);
             try {
@@ -374,7 +375,7 @@ class JnaBlobTest extends BaseTestBlob {
         final int requiredSize = 256;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 final FbBlob blob = db.createBlobForOutput(transaction);
@@ -405,7 +406,7 @@ class JnaBlobTest extends BaseTestBlob {
      */
     @Test
     void testOutputBlobDoubleOpen() throws Exception {
-        try (JnaDatabase db = createDatabaseConnection()) {
+        try (IDatabaseImpl db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 final FbBlob blob = db.createBlobForOutput(transaction);
@@ -420,31 +421,15 @@ class JnaBlobTest extends BaseTestBlob {
         }
     }
 
-    @Test
-    void readBlobIdZero() throws Exception {
-        try (JnaDatabase db = createDatabaseConnection()) {
-            try {
-                transaction = getTransaction(db);
-                FbBlob blob = db.createBlobForInput(transaction, 0);
-                blob.open();
-                assertEquals(0, blob.length());
-                byte[] segment = blob.getSegment(500);
-                assertEquals(0, segment.length, "expected empty segment");
-            } finally {
-                if (transaction != null) transaction.commit();
-            }
-        }
-    }
-
     @Override
-    protected JnaDatabase createFbDatabase(FbConnectionProperties connectionInfo) throws SQLException {
-        final JnaDatabase db = (JnaDatabase) factory.connect(connectionInfo);
+    protected IDatabaseImpl createFbDatabase(FbConnectionProperties connectionInfo) throws SQLException {
+        final IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo);
         db.attach();
         return db;
     }
 
     @Override
-    protected JnaDatabase createDatabaseConnection() throws SQLException {
-        return (JnaDatabase) super.createDatabaseConnection();
+    protected IDatabaseImpl createDatabaseConnection() throws SQLException {
+        return (IDatabaseImpl) super.createDatabaseConnection();
     }
 }

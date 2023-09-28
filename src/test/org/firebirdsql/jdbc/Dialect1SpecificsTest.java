@@ -68,7 +68,8 @@ class Dialect1SpecificsTest {
         fbManager = createFBManager();
 
         if (getGdsType() == GDSType.getType("PURE_JAVA")
-                || getGdsType() == GDSType.getType("NATIVE")) {
+                || getGdsType() == GDSType.getType("NATIVE")
+                || getGdsType() == GDSType.getType("FBOONATIVE")) {
             fbManager.setServer(DB_SERVER_URL);
             fbManager.setPort(DB_SERVER_PORT);
         }

@@ -114,7 +114,7 @@ public final class FBTestProperties {
      */
     public static String getdbpath(String name) {
         final String gdsType = getProperty("test.gds_type", null);
-        if ("EMBEDDED".equalsIgnoreCase(gdsType)) {
+        if ("EMBEDDED".equalsIgnoreCase(gdsType) || "FBOOEMBEDDED".equalsIgnoreCase(gdsType)) {
             return new File(DB_PATH, name).getAbsolutePath();
         } else {
             return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + getDatabasePath(name);
@@ -295,7 +295,8 @@ public final class FBTestProperties {
     public static <T extends FBManager> T configureFBManager(T fbManager) throws Exception {
         final GDSType gdsType = getGdsType();
         if (gdsType == GDSType.getType("PURE_JAVA")
-                || gdsType == GDSType.getType("NATIVE")) {
+                || gdsType == GDSType.getType("NATIVE")
+                || gdsType == GDSType.getType("FBOONATIVE")) {
             fbManager.setServer(DB_SERVER_URL);
             fbManager.setPort(DB_SERVER_PORT);
         }

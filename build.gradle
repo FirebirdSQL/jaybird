@@ -74,7 +74,7 @@ sourceSets {
     }
     test {
         java {
-            srcDirs = ['src/test', 'src/jna-test']
+            srcDirs = ['src/test', 'src/jna-test', 'src/nativeoo-test']
         }
         resources {
             srcDirs = ['src/test_resources']
@@ -200,10 +200,11 @@ test {
     )
     if (project.hasProperty('test.jna.library.path')) {
         systemProperty 'jna.library.path', project.'test.jna.library.path'
-    } else if (project.'test.gds_type' == 'NATIVE' || project.'test.gds_type' == 'EMBEDDED') {
+    } else if (project.'test.gds_type' == 'NATIVE' || project.'test.gds_type' == 'EMBEDDED' ||
+            project.'test.gds_type' == 'FBOONATIVE' || project.'test.gds_type' == 'FBOOEMBEDDED') {
         println "Running test type ${project.'test.gds_type'} without explicit native library path. " +
-                "Specify property 'test.jna.library.path' to point to a Firebird client location (NATIVE) or " +
-                "Firebird install (EMBEDDED)."
+                "Specify property 'test.jna.library.path' to point to a Firebird client location (NATIVE/FBOONATIVE) or " +
+                "Firebird install (EMBEDDED/FBOOEMBEDDED)."
     }
 
     doFirst {

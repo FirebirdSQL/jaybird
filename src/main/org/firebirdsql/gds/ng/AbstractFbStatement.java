@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -917,6 +918,10 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     private void fetchExecuted() {
         fetched = true;
+    }
+
+    public FbBatch createBatch(BatchParameterBuffer parameters) throws SQLException {
+        throw new FBDriverNotCapableException();
     }
 
     /**

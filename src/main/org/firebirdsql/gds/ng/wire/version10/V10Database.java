@@ -21,7 +21,10 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
+import org.firebirdsql.gds.ng.FbBatch;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.FbMessageMetadata;
+import org.firebirdsql.gds.ng.FbMetadataBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -29,6 +32,7 @@ import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.io.IOException;
@@ -60,6 +64,21 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      */
     protected V10Database(WireDatabaseConnection connection, ProtocolDescriptor descriptor) {
         super(connection, descriptor);
+    }
+
+    @Override
+    public FbBatch createBatch(FbTransaction transaction, String statement, FbMessageMetadata metadata, BatchParameterBuffer parameters) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    @Override
+    public FbBatch createBatch(FbTransaction transaction, String statement, BatchParameterBuffer parameters) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    @Override
+    public FbMetadataBuilder getMetadataBuilder(int fieldCount) throws SQLException {
+        throw new FBDriverNotCapableException();
     }
 
     @Override

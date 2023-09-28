@@ -475,6 +475,21 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
         }
     }
 
+    @Override
+    public FbBatch createBatch(FbTransaction transaction, String statement, FbMessageMetadata metadata, BatchParameterBuffer parameters) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    @Override
+    public FbBatch createBatch(FbTransaction transaction, String statement, BatchParameterBuffer parameters) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    @Override
+    public FbMetadataBuilder getMetadataBuilder(int fieldCount) throws SQLException  {
+        throw new FBDriverNotCapableException();
+    }
+
     private void processStatusVector() throws SQLException {
         processStatusVector(statusVector, getDatabaseWarningCallback());
     }

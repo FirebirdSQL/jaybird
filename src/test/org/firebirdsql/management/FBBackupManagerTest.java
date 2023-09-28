@@ -75,7 +75,8 @@ class FBBackupManagerTest {
     @BeforeEach
     void setUp() {
         backupManager = configureDefaultServiceProperties(new FBBackupManager(getGdsType()));
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")
+                || getGdsType() == GDSType.getType("FBOONATIVE")) {
             assumeTrue(isLocalHost(DB_SERVER_URL), "Test needs to run on localhost for proper clean up");
         }
         backupManager.setDatabase(getDatabasePath());
@@ -296,7 +297,8 @@ class FBBackupManagerTest {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         assumeTrue(supportInfo.supportsCustomSecurityDb(), "Requires custom security DB support");
         try (FBManager mgr = new FBManager(getGdsType())) {
-            if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+            if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE") ||
+                    getGdsType() == GDSType.getType("FBOONATIVE")) {
                 mgr.setServer(DB_SERVER_URL);
                 mgr.setPort(DB_SERVER_PORT);
             }

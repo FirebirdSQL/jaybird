@@ -24,10 +24,7 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.EventHandle;
-import org.firebirdsql.gds.EventHandler;
-import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
@@ -402,4 +399,39 @@ public interface FbDatabase extends FbAttachment {
      * @return A potentially cached empty row descriptor for this database.
      */
     RowDescriptor emptyRowDescriptor();
+
+    /**
+     * Creates a batch.
+     *
+     * @param transaction
+     *         Transaction associated with the batch.
+     * @param statement
+     *         Sql statement for creating batch
+     * @param metadata
+     *         Input metadata {@link  FbMessageMetadata}
+     * @param parameters
+     *         Batch parameters buffer {@link BatchParameterBuffer}
+     * @return Instance of {@link FbBatch}
+     * @throws SQLException
+     */
+    FbBatch createBatch(FbTransaction transaction, String statement, FbMessageMetadata metadata, BatchParameterBuffer parameters) throws SQLException;
+
+    /**
+     * Creates a batch that call prepared statement to get a metadata.
+     *
+     * @param transaction
+     *         Transaction associated with the batch.
+     * @param statement
+     *         Sql statement for creating batch
+     * @param parameters
+     *         Batch parameters buffer {@link BatchParameterBuffer}
+     * @return Instance of {@link FbBatch}
+     * @throws SQLException
+     */
+    FbBatch createBatch(FbTransaction transaction, String statement, BatchParameterBuffer parameters) throws SQLException;
+
+    /**
+     * @return A metadata builder for a batch execution.
+     */
+    FbMetadataBuilder getMetadataBuilder(int fieldCount)  throws SQLException;
 }
