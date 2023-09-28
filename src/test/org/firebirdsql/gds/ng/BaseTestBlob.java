@@ -35,10 +35,14 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 
-import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultTpb;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues.isc_bpb_type_segmented;
 import static org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues.isc_bpb_type_stream;
 import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_type;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -63,37 +67,6 @@ public abstract class BaseTestBlob {
             "  id INTEGER PRIMARY KEY," +
             "  blobvalue BLOB SUB_TYPE 0" +
             ")";
-
-    protected static final String CREATE_PROC_FILL_BINARY_BLOB =
-            "CREATE PROCEDURE FILL_BINARY_BLOB \n" +
-            " (\n" +
-            "    ID INTEGER,\n" +
-            "    BASE_CONTENT VARCHAR(" + BASE_CONTENT_SIZE + ") CHARACTER SET OCTETS,\n" +
-            "    REQUIRED_SIZE INTEGER\n" +
-            " ) \n" +
-            "AS \n" +
-            "  DECLARE VARIABLE REMAINING INTEGER;\n" +
-            "  DECLARE VARIABLE BASE_CONTENT_SIZE INTEGER;\n" +
-            "  DECLARE VARIABLE TEMP_BLOB BLOB SUB_TYPE 0;\n" +
-            "BEGIN\n" +
-            "  REMAINING = REQUIRED_SIZE;\n" +
-            "  TEMP_BLOB = '';\n" +
-            "  BASE_CONTENT_SIZE = OCTET_LENGTH(BASE_CONTENT);\n" +
-            "  WHILE (REMAINING > 0) DO\n" +
-            "  BEGIN\n" +
-            "    TEMP_BLOB = TEMP_BLOB || \n" +
-            "        CASE \n" +
-            "            WHEN REMAINING > BASE_CONTENT_SIZE \n" +
-            "            THEN BASE_CONTENT \n" +
-            "            ELSE LEFT(BASE_CONTENT, REMAINING) \n" +
-            "        END;\n" +
-            "    REMAINING = REMAINING - BASE_CONTENT_SIZE;\n" +
-            "  END\n" +
-            "  INSERT INTO blob_table (id, blobvalue) VALUES (:ID, :TEMP_BLOB);\n" +
-            "END";
-
-    protected static final String EXECUTE_FILL_BINARY_BLOB =
-            "{call FILL_BINARY_BLOB(?, ?, ?)}";
 
     protected static final String CREATE_PROC_CHECK_BINARY_BLOB =
             "CREATE PROCEDURE CHECK_BINARY_BLOB \n" +
@@ -146,7 +119,6 @@ public abstract class BaseTestBlob {
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
             CREATE_BLOB_TABLE,
-            CREATE_PROC_FILL_BINARY_BLOB,
             CREATE_PROC_CHECK_BINARY_BLOB);
 
     protected SimpleStatementListener listener;
@@ -163,10 +135,14 @@ public abstract class BaseTestBlob {
 
     /**
      * Queries the blob table for the blob id of the record with the specified (row) id.
-     * @param testId Id of the row
-     * @param db database to use
+     *
+     * @param testId
+     *         id of the row
+     * @param db
+     *         database to use
      * @return Blob id
-     * @throws SQLException For errors executing the query
+     * @throws SQLException
+     *         For errors executing the query
      */
     @SuppressWarnings("SameParameterValue")
     protected long getBlobId(int testId, FbDatabase db) throws SQLException {
@@ -214,45 +190,71 @@ public abstract class BaseTestBlob {
     /**
      * Checks if the blob content is of the required size and matches the expected content based on baseContent.
      *
-     * @param blobContent Blob content
-     * @param baseContent Base content
-     * @param requiredSize Required size
-     * @return {@code true} content matches, {@code false} otherwise
+     * @param blobContent
+     *         Blob content
+     * @param baseContent
+     *         Base content
+     * @param requiredSize
+     *         Required size
      */
-    protected boolean validateBlobContent(byte[] blobContent, byte[] baseContent, int requiredSize) {
-        if (blobContent.length != requiredSize) return false;
-        for (int index = 0; index < blobContent.length; index++) {
-            if (blobContent[index] != baseContent[index % baseContent.length]) return false;
+    protected void assertBlobContent(byte[] blobContent, byte[] baseContent, int requiredSize) {
+        assertEquals(requiredSize, blobContent.length, "Unexpected length of blobContent");
+        int pos = 0;
+        while (pos + baseContent.length <= blobContent.length) {
+            assertArrayEquals(baseContent, Arrays.copyOfRange(blobContent, pos, pos + baseContent.length),
+                    "from pos = " + pos);
+            pos += baseContent.length;
         }
-        return true;
-    }
-
-    /**
-     * Populates a (segmented) blob using the FILL_BINARY_BLOB stored procedure
-     *
-     * @param id ID of the record to be created in blob_table
-     * @param baseContent Base content
-     * @param requiredSize Required size
-     */
-    @SuppressWarnings("SameParameterValue")
-    protected void populateBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
-        try (Connection con = getConnectionViaDriverManager();
-             CallableStatement cstmt = con.prepareCall(EXECUTE_FILL_BINARY_BLOB)) {
-            cstmt.setInt(1, id);
-            cstmt.setBytes(2, baseContent);
-            cstmt.setInt(3, requiredSize);
-
-            cstmt.execute();
+        if (pos < blobContent.length) {
+            assertArrayEquals(Arrays.copyOfRange(baseContent, 0, blobContent.length - pos),
+                    Arrays.copyOfRange(blobContent, pos, blobContent.length), "from pos = " + pos);
         }
     }
 
     /**
-     * Populates a stream blob for testing.
+     * Populates a segmented blob.
      *
-     * @param testId Id of the record to be inserted.
+     * @param id
+     *         ID of the record to be created in blob_table
+     * @param baseContent
+     *         Base content
+     * @param requiredSize
+     *         Required size
      */
     @SuppressWarnings("SameParameterValue")
-    protected void populateStreamBlob(int testId, byte[] baseContent, int requiredSize) throws SQLException {
+    protected void populateSegmentedBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
+        populateBlob(id, baseContent, requiredSize, false);;
+    }
+
+    /**
+     * Populates a stream blob.
+     *
+     * @param id
+     *         id of the record to be created in blob_table
+     * @param baseContent
+     *         Base content
+     * @param requiredSize
+     *         Required size
+     */
+    @SuppressWarnings("SameParameterValue")
+    protected void populateStreamBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
+        populateBlob(id, baseContent, requiredSize, true);
+    }
+
+    /**
+     * Populates a blob.
+     *
+     * @param id
+     *         id of the record to be created in blob_table
+     * @param baseContent
+     *         Base content
+     * @param requiredSize
+     *         Required size
+     * @param streamBlob
+     *         {@code true} create as stream blob, {@code false} create as segmented blob
+     */
+    protected void populateBlob(int id, byte[] baseContent, int requiredSize, boolean streamBlob)
+            throws SQLException {
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
         try (FbDatabase db = createDatabaseConnection()) {
@@ -262,9 +264,9 @@ public abstract class BaseTestBlob {
                 statement = db.createStatement(transaction);
                 statement.addStatementListener(listener);
 
-                final BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
-                blobParameterBuffer.addArgument(isc_bpb_type, isc_bpb_type_stream);
-                final FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
+                BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
+                blobParameterBuffer.addArgument(isc_bpb_type, streamBlob ? isc_bpb_type_stream : isc_bpb_type_segmented);
+                FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
                 blob.open();
                 int bytesWritten = 0;
                 while (bytesWritten < testBytes.length) {
@@ -276,9 +278,9 @@ public abstract class BaseTestBlob {
                 blob.close();
 
                 statement.prepare(INSERT_BLOB_TABLE);
-                final DatatypeCoder datatypeCoder = db.getDatatypeCoder();
+                DatatypeCoder datatypeCoder = db.getDatatypeCoder();
                 RowValue rowValue = RowValue.of(
-                        datatypeCoder.encodeInt(testId),
+                        datatypeCoder.encodeInt(id),
                         datatypeCoder.encodeLong(blob.getBlobId()));
                 statement.execute(rowValue);
                 statement.close();

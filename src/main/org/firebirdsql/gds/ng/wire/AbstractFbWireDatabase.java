@@ -114,6 +114,11 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     @Override
+    public final FbWireOperations getWireOperations() {
+        return wireOperations;
+    }
+
+    @Override
     public final boolean isAttached() {
         return super.isAttached() && connection.isConnected();
     }

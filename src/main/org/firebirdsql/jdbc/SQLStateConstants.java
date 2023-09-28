@@ -138,6 +138,11 @@ public final class SQLStateConstants {
     // TODO Name suggests: invalid escape sequence => 22025
     public static final String SQL_STATE_INVALID_ESCAPE_SEQ = SQL_STATE_SYNTAX_ERROR;
 
+    /**
+     * ISO-9075-2: locator exception
+     */
+    public static final String SQL_STATE_LOCATOR_EXCEPTION = "0F000";
+
     private SQLStateConstants() {
         // no instances
     }

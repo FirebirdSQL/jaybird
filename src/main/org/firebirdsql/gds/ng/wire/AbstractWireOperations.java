@@ -156,12 +156,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         return response;
     }
 
-    /**
-     * Reads the next operation. Forwards call to {@link WireConnection#readNextOperation()}.
-     *
-     * @return next operation
-     * @throws java.io.IOException For errors reading the operation from the connection
-     */
+    @Override
     public final int readNextOperation() throws IOException {
         try (LockCloseable ignored = withLock()) {
             processDeferredActions();

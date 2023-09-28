@@ -40,7 +40,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlob, DatabaseListener {
 
-    // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open() and getMaximumSegmentSize()), find a way to unify this
+    // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open()), find a way to unify this
 
     public V10OutputBlob(FbWireDatabase database, FbWireTransaction transaction,
             BlobParameterBuffer blobParameterBuffer) {
@@ -62,7 +62,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
 
             final FbWireDatabase database = getDatabase();
             try {
-                final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
+                final XdrOutputStream xdrOut = getXdrOut();
                 final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
                 if (blobParameterBuffer == null) {
                     xdrOut.writeInt(op_create_blob);
@@ -108,7 +108,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
 
                 final FbWireDatabase database = getDatabase();
                 try {
-                    final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
+                    final XdrOutputStream xdrOut = getXdrOut();
                     xdrOut.writeInt(op_put_segment);
                     xdrOut.writeInt(getHandle());
                     xdrOut.writeInt(segment.length);

@@ -66,6 +66,22 @@ public interface FbWireOperations {
     Response readResponse(WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
+     * Reads the next operation code, after processing deferred packets.
+     * <p>
+     * In general, calling {@link #readResponse(WarningMessageCallback)} or one of the specific {@code readXXXResponse}
+     * methods should be preferred to read the response code and the response body. Use this method only for reading
+     * custom responses, or if you need to process the response in a way that is not possible with
+     * {@link #readResponse(WarningMessageCallback)}.
+     * </p>
+     *
+     * @return next operation
+     * @throws java.io.IOException
+     *         for errors reading the operation from the connection
+     * @since 6
+     */
+    int readNextOperation() throws IOException;
+
+    /**
      * Reads the response from the server when the operation code has already been read.
      *
      * @param operationCode

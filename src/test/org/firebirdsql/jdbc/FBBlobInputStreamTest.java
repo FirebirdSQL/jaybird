@@ -20,19 +20,27 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.firebirdsql.jaybird.props.PropertyNames;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.EOFException;
 import java.sql.*;
+import java.util.Arrays;
+import java.util.Properties;
 
-import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
+import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -57,27 +65,20 @@ class FBBlobInputStreamTest {
 
     private static final String SELECT_BLOB = "SELECT bin_data FROM test_blob WHERE id = ?";
 
-    private static Connection connection;
-
-    @BeforeAll
-    static void setupAll() throws Exception{
-        connection = getConnectionViaDriverManager();
-    }
+    private Connection connection;
 
     @BeforeEach
     void setUp() throws Exception {
-        connection.setAutoCommit(true);
+        connection = getConnection(true);
         try (Statement stmt = connection.createStatement()) {
             stmt.execute("delete from test_blob");
         }
     }
 
-    @AfterAll
-    static void tearDownAll() throws Exception {
-        try {
+    @AfterEach
+    void tearDown() throws Exception {
+        if (connection != null) {
             connection.close();
-        } finally {
-            connection = null;
         }
     }
 
@@ -183,9 +184,14 @@ class FBBlobInputStreamTest {
         }
     }
 
-    @Test
-    void testRead_byteArr_moreThanAvailable_returnsAvailable() throws Exception {
-        final byte[] bytes = DataGenerator.createRandomBytes(128 * 1024);
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testRead_byteArr_moreThanAvailable_returnsAvailable(boolean useStreamBlobs) throws Exception {
+        if (!useStreamBlobs) {
+            connection.close();
+            connection = getConnection(false);
+        }
+        byte[] bytes = DataGenerator.createRandomBytes(128 * 1024);
         populateBlob(1, bytes);
 
         try (PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB)) {
@@ -196,15 +202,70 @@ class FBBlobInputStreamTest {
                 FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
 
                 assertEquals(bytes[0] & 0xFF, is.read(), "Unexpected first byte");
+                int available = is.available();
+                int blobBufferSize = getConnectionBlobBufferSize();
+                assertThat("Value of available() should be greater than 0 but less than blobBufferSize",
+                        available, allOf(greaterThan(0), lessThan(blobBufferSize)));
+
+                // For small buffer size, we only read from the internal buffer, and don't request more from the server
+                int smallBufferSize = blobBufferSize / 2;
+                byte[] buffer = new byte[smallBufferSize];
+                int bytesRead = is.read(buffer);
+
+                int expectedSize = Math.min(smallBufferSize, available);
+                assertEquals(expectedSize, bytesRead,
+                        "Expected to read number of bytes previously returned by available or smallBufferSize");
+                assertArrayEquals(Arrays.copyOfRange(bytes, 1, expectedSize + 1),
+                        expectedSize == buffer.length ? buffer : Arrays.copyOf(bytes, expectedSize),
+                        "Unexpected read bytes");
+
+                int readOffset = expectedSize + 1;
+                if (is.available() == 0) {
+                    assertEquals(bytes[++readOffset], is.read(), "Unexpected byte at offset " + (readOffset - 1));
+                }
+
+                buffer = new byte[is.available() + smallBufferSize];
+                // If after reading available, we still have smallBufferSize remaining, we read the remaining bytes
+                // from server
+                bytesRead = is.read(buffer);
+
+                assertEquals(buffer.length, bytesRead, "Expected to read number of bytes equal to the buffer size");
+                assertArrayEquals(Arrays.copyOfRange(bytes, readOffset, readOffset + buffer.length), buffer,
+                        "Unexpected read bytes");
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testRead_byteArr_moreThanAvailable_returnsAll(boolean useStreamBlobs) throws Exception {
+        if (!useStreamBlobs) {
+            connection.close();
+            connection = getConnection(false);
+        }
+        final int testBlobSize = 128 * 1024;
+        final byte[] bytes = DataGenerator.createRandomBytes(testBlobSize);
+        populateBlob(1, bytes);
+
+        try (PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB)) {
+            pstmt.setInt(1, 1);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row");
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                int blobBufferSize = getConnectionBlobBufferSize();
+
+                assertEquals(bytes[0] & 0xFF, is.read(), "Unexpected first byte");
                 final int available = is.available();
-                assertTrue(available > 0, "Value of available() should be larger than 0");
-                assertTrue(available < 128 * 1024 - 1, "Value of available() should be smaller than 128 * 1024 - 1");
+                assertThat("Value of available() should be greater than 0 but less than blobBufferSize",
+                        available, allOf(greaterThan(0), lessThan(blobBufferSize)));
 
-                byte[] buffer = new byte[128 * 1024];
-                int bytesRead = is.read(buffer, 1, 128 * 1024 - 1);
+                byte[] buffer = new byte[testBlobSize];
+                buffer[0] = bytes[0];
 
-                assertEquals(available, bytesRead,
-                        "Expected to read the number of bytes previously returned by available");
+                assertEquals(testBlobSize - 1, is.read(buffer, 1, testBlobSize - 1),
+                        "Expected remaining bytes to be read");
+                assertArrayEquals(bytes, buffer, "Expected identical bytes to be returned");
             }
         }
     }
@@ -242,7 +303,7 @@ class FBBlobInputStreamTest {
                 Blob blob = rs.getBlob(1);
                 FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
 
-                //noinspection ResultOfMethodCallIgnored
+                //noinspection DataFlowIssue
                 assertThrows(NullPointerException.class, () -> is.read(null, 0, 1));
             }
         }
@@ -261,7 +322,6 @@ class FBBlobInputStreamTest {
                 FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
 
                 byte[] buffer = new byte[5];
-                //noinspection ResultOfMethodCallIgnored
                 assertThrows(IndexOutOfBoundsException.class, () -> is.read(buffer, -1, 1));
             }
         }
@@ -280,7 +340,6 @@ class FBBlobInputStreamTest {
                 FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
 
                 byte[] buffer = new byte[5];
-                //noinspection ResultOfMethodCallIgnored
                 assertThrows(IndexOutOfBoundsException.class, () -> is.read(buffer, 0, -1));
             }
         }
@@ -299,7 +358,6 @@ class FBBlobInputStreamTest {
                 FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
 
                 byte[] buffer = new byte[5];
-                //noinspection ResultOfMethodCallIgnored
                 assertThrows(IndexOutOfBoundsException.class, () -> is.read(buffer, 5, 1));
             }
         }
@@ -318,7 +376,6 @@ class FBBlobInputStreamTest {
                 FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
 
                 byte[] buffer = new byte[5];
-                //noinspection ResultOfMethodCallIgnored
                 assertThrows(IndexOutOfBoundsException.class, () -> is.read(buffer, 0, 6));
             }
         }
@@ -326,7 +383,8 @@ class FBBlobInputStreamTest {
 
     @Test
     void testReadFully_byteArr_moreThanAvailable_returnsAllRead() throws Exception {
-        final byte[] bytes = DataGenerator.createRandomBytes(128 * 1024);
+        final int testBlobSize = 128 * 1024;
+        final byte[] bytes = DataGenerator.createRandomBytes(testBlobSize);
         populateBlob(1, bytes);
 
         try (PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB)) {
@@ -336,15 +394,16 @@ class FBBlobInputStreamTest {
                 Blob blob = rs.getBlob(1);
                 FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
 
-                byte[] buffer = new byte[128 * 1024];
+                byte[] buffer = new byte[testBlobSize];
                 int firstValue = is.read();
                 assertEquals(bytes[0] & 0xFF, firstValue, "Unexpected first byte");
                 buffer[0] = (byte) firstValue;
 
                 final int available = is.available();
-                assertTrue(available < 128 * 1024 - 1, "Value of available() should be smaller than 128 * 1024 - 1");
+                assertThat("Value of available() should be smaller than 128 * 1024 - 1",
+                        available, lessThan(testBlobSize - 1));
 
-                is.readFully(buffer, 1, 128 * 1024 - 1);
+                is.readFully(buffer, 1, testBlobSize - 1);
 
                 assertArrayEquals(bytes, buffer, "Full blob should have been read");
             }
@@ -484,5 +543,18 @@ class FBBlobInputStreamTest {
             insert.setBytes(2, bytes);
             insert.execute();
         }
+    }
+
+    private static Connection getConnection(boolean useStreamBlobs) throws SQLException {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useStreamBlobs, String.valueOf(useStreamBlobs));
+        return DriverManager.getConnection(getUrl(), getDefaultPropertiesForConnection());
+    }
+
+    private int getConnectionBlobBufferSize() throws SQLException {
+        return connection.unwrap(FirebirdConnection.class)
+                .getFbDatabase()
+                .getConnectionProperties()
+                .getBlobBufferSize();
     }
 }

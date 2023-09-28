@@ -22,10 +22,13 @@ import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbBlob;
+import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
@@ -67,13 +70,14 @@ public class V10InputBlobTest extends BaseTestV10Blob {
     /**
      * Tests retrieval of a blob (what goes in is what comes out).
      */
-    @Test
-    public void testBlobRetrieval() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testBlobRetrieval(boolean useStreamBlobs) throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         // Use sufficiently large value so that multiple segments are used
         final int requiredSize = 4 * Short.MAX_VALUE;
-        populateBlob(testId, baseContent, requiredSize);
+        populateBlob(testId, baseContent, requiredSize, useStreamBlobs);
 
         try (FbWireDatabase db = createDatabaseConnection()) {
             try {
@@ -88,8 +92,36 @@ public class V10InputBlobTest extends BaseTestV10Blob {
                 blob.close();
                 statement.close();
                 byte[] result = bos.toByteArray();
-                assertEquals(requiredSize, result.length, "Unexpected length read from blob");
-                assertTrue(validateBlobContent(result, baseContent, requiredSize), "Unexpected blob content");
+                assertBlobContent(result, baseContent, requiredSize);
+            } finally {
+                if (transaction != null) transaction.commit();
+            }
+        }
+    }
+
+    /**
+     * Tests retrieval of a blob (what goes in is what comes out).
+     */
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testBlobGet(boolean useStreamBlobs) throws Exception {
+        final int testId = 1;
+        final byte[] baseContent = generateBaseContent();
+        // Use sufficiently large value so that multiple roundtrips are used
+        final int requiredSize = 4 * Short.MAX_VALUE;
+        populateBlob(testId, baseContent, requiredSize, useStreamBlobs);
+
+        try (FbDatabase db = createDatabaseConnection()) {
+            try {
+                long blobId = getBlobId(testId, db);
+
+                FbBlob blob = db.createBlobForInput(transaction, blobId);
+                blob.open();
+                byte[] result = new byte[requiredSize];
+                blob.get(result, 0, requiredSize);
+                blob.close();
+                statement.close();
+                assertBlobContent(result, baseContent, requiredSize);
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -105,7 +137,7 @@ public class V10InputBlobTest extends BaseTestV10Blob {
         final byte[] baseContent = generateBaseContent();
         // Use sufficiently large value so that multiple segments are used
         final int requiredSize = 4 * Short.MAX_VALUE;
-        populateBlob(testId, baseContent, requiredSize);
+        populateSegmentedBlob(testId, baseContent, requiredSize);
 
         try (FbWireDatabase db = createDatabaseConnection()) {
             try {
@@ -169,7 +201,7 @@ public class V10InputBlobTest extends BaseTestV10Blob {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
-        populateBlob(testId, baseContent, requiredSize);
+        populateSegmentedBlob(testId, baseContent, requiredSize);
 
         try (FbWireDatabase db = createDatabaseConnection()) {
             try {
@@ -192,8 +224,7 @@ public class V10InputBlobTest extends BaseTestV10Blob {
 
                 statement.close();
                 byte[] result = bos.toByteArray();
-                assertEquals(requiredSize, result.length, "Unexpected length read from blob");
-                assertTrue(validateBlobContent(result, baseContent, requiredSize), "Unexpected blob content");
+                assertBlobContent(result, baseContent, requiredSize);
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -208,7 +239,7 @@ public class V10InputBlobTest extends BaseTestV10Blob {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
-        populateBlob(testId, baseContent, requiredSize);
+        populateSegmentedBlob(testId, baseContent, requiredSize);
 
         try (FbWireDatabase db = createDatabaseConnection()) {
             try {

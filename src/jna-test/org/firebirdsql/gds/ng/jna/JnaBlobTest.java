@@ -29,6 +29,8 @@ import org.firebirdsql.jaybird.fb.constants.BpbItems;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
@@ -63,13 +65,14 @@ class JnaBlobTest extends BaseTestBlob {
     /**
      * Tests retrieval of a blob (what goes in is what comes out).
      */
-    @Test
-    void testInputBlobRetrieval() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testInputBlobRetrieval(boolean useStreamBlobs) throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         // Use sufficiently large value so that multiple segments are used
         final int requiredSize = 4 * Short.MAX_VALUE;
-        populateBlob(testId, baseContent, requiredSize);
+        populateBlob(testId, baseContent, requiredSize, useStreamBlobs);
 
         try (FbDatabase db = createDatabaseConnection()) {
             try {
@@ -84,8 +87,36 @@ class JnaBlobTest extends BaseTestBlob {
                 blob.close();
                 statement.close();
                 byte[] result = bos.toByteArray();
-                assertEquals(requiredSize, result.length, "Unexpected length read from blob");
-                assertTrue(validateBlobContent(result, baseContent, requiredSize), "Unexpected blob content");
+                assertBlobContent(result, baseContent, requiredSize);
+            } finally {
+                if (transaction != null) transaction.commit();
+            }
+        }
+    }
+
+    /**
+     * Tests retrieval of a blob (what goes in is what comes out).
+     */
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testBlobGet(boolean useStreamBlobs) throws Exception {
+        final int testId = 1;
+        final byte[] baseContent = generateBaseContent();
+        // Use sufficiently large value so that multiple roundtrips are used
+        final int requiredSize = 4 * Short.MAX_VALUE;
+        populateBlob(testId, baseContent, requiredSize, useStreamBlobs);
+
+        try (FbDatabase db = createDatabaseConnection()) {
+            try {
+                long blobId = getBlobId(testId, db);
+
+                FbBlob blob = db.createBlobForInput(transaction, blobId);
+                blob.open();
+                byte[] result = new byte[requiredSize];
+                blob.get(result, 0, requiredSize);
+                blob.close();
+                statement.close();
+                assertBlobContent(result, baseContent, requiredSize);
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -101,7 +132,7 @@ class JnaBlobTest extends BaseTestBlob {
         final byte[] baseContent = generateBaseContent();
         // Use sufficiently large value so that multiple segments are used
         final int requiredSize = 4 * Short.MAX_VALUE;
-        populateBlob(testId, baseContent, requiredSize);
+        populateSegmentedBlob(testId, baseContent, requiredSize);
 
         try (JnaDatabase db = createDatabaseConnection()) {
             try {
@@ -165,7 +196,7 @@ class JnaBlobTest extends BaseTestBlob {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
-        populateBlob(testId, baseContent, requiredSize);
+        populateSegmentedBlob(testId, baseContent, requiredSize);
 
         try (JnaDatabase db = createDatabaseConnection()) {
             try {
@@ -188,8 +219,7 @@ class JnaBlobTest extends BaseTestBlob {
 
                 statement.close();
                 byte[] result = bos.toByteArray();
-                assertEquals(requiredSize, result.length, "Unexpected length read from blob");
-                assertTrue(validateBlobContent(result, baseContent, requiredSize), "Unexpected blob content");
+                assertBlobContent(result, baseContent, requiredSize);
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -204,7 +234,7 @@ class JnaBlobTest extends BaseTestBlob {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
-        populateBlob(testId, baseContent, requiredSize);
+        populateSegmentedBlob(testId, baseContent, requiredSize);
 
         try (JnaDatabase db = createDatabaseConnection()) {
             try {

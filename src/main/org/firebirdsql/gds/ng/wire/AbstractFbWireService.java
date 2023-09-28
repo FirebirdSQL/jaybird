@@ -170,6 +170,11 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
         return connection.getXdrStreamAccess();
     }
 
+    @Override
+    public final FbWireOperations getWireOperations() {
+        return wireOperations;
+    }
+
     /**
      * Closes the WireConnection associated with this connection.
      *

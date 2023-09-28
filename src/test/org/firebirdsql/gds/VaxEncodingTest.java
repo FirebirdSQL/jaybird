@@ -20,6 +20,7 @@ package org.firebirdsql.gds;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -180,4 +181,12 @@ class VaxEncodingTest {
 
         assertEquals(21251, VaxEncoding.iscVaxInteger2(encoding, 1));
     }
+
+    @Test
+    void decodeVaxInteger2WithoutLength() throws Exception {
+        var in = new ByteArrayInputStream(new byte[] { 5, 3 });
+
+        assertEquals(773, VaxEncoding.decodeVaxInteger2WithoutLength(in));
+    }
+
 }

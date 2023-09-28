@@ -24,6 +24,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.ISCConstants;
+
 import java.sql.Blob;
 import java.sql.SQLException;
 
@@ -46,13 +48,13 @@ public interface FirebirdBlob extends Blob {
     interface BlobInputStream extends AutoCloseable {
         
         /** Seek based on the absolute beginning of the stream */
-        int SEEK_MODE_ABSOLUTE = 0;
+        int SEEK_MODE_ABSOLUTE = ISCConstants.blb_seek_from_head;
 
         /** Seek relative to the current position in the stream */
-        int SEEK_MODE_RELATIVE = 1;
+        int SEEK_MODE_RELATIVE = ISCConstants.blb_seek_relative;
 
         /** Seek relative to the tail end of the stream */
-        int SEEK_MODE_FROM_TAIL = 2;
+        int SEEK_MODE_FROM_TAIL = ISCConstants.blb_seek_from_tail;
         
         /**
          * Get instance of {@link FirebirdBlob} to which this stream belongs to.
@@ -87,93 +89,106 @@ public interface FirebirdBlob extends Blob {
          */
         @Override
         void close() throws IOException;
-        
+
         /**
-         * Get Blob length. This is shortcut method for the {@code inputStream.getBlob().length()} call, however is more
-         * resource friendly, because no new Blob handle is created.
-         * 
-         * @return length of the blob.
-         * 
-         * @throws IOException if I/O error occurs.
+         * Get Blob length. This is a shortcut for {@code inputStream.getBlob().length()} call, and is more resource
+         * friendly, because no new Blob handle is created.
+         *
+         * @return length of the blob
+         * @throws IOException
+         *         if I/O error occurs
          */
         long length() throws IOException;
-        
+
         /**
-         * Read single byte from the stream.
-         * 
-         * @return next byte read from the stream or -1 if end of stream was
-         * reached.
-         * 
-         * @throws IOException if I/O error occurs.
+         * Read a single byte from the stream.
+         *
+         * @return next byte read from the stream or {@code -1} if end of stream was reached
+         * @throws IOException
+         *         if I/O error occurs
+         * @see InputStream#read()
          */
         int read() throws IOException;
-        
+
         /**
-         * Read some bytes from the stream without blocking.
-         * 
-         * @param buffer buffer into which data should be read.
-         * @param offset offset in the buffer where to start.
-         * @param length number of bytes to read.
-         * 
-         * @return number of bytes that were read.
-         * 
-         * @throws IOException if I/O error occurs.
+         * Read some bytes from the stream into {@code buffer}.
+         * <p>
+         * The implementation may read less bytes than requested. Implementations may perform multiple roundtrips to
+         * the server to fill {@code buffer} up to the requested length.
+         * </p>
+         *
+         * @param buffer
+         *         buffer into which data should be read
+         * @param offset
+         *         offset in the buffer where to start
+         * @param length
+         *         number of bytes to read
+         * @return number of bytes that were actually read, returns {@code 0} if {@code len == 0}, {@code -1} if
+         * end-of-blob was reached without reading any bytes
+         * @throws IOException
+         *         if I/O error occurs
+         * @see InputStream#read(byte[], int, int)
          */
         int read(byte[] buffer, int offset, int length) throws IOException;
-        
+
         /**
          * Read {@code length} from the stream into the specified buffer.
-         * This method can block until desired number of bytes is read, it can
-         * throw an exception if end of stream was reached during read.
-         * 
-         * @param buffer buffer where data should be read.
-         * @param offset offset in the buffer where to start.
-         * @param length number of bytes to read.
-         * 
-         * @throws EOFException if stream end was reached when reading data.
-         * @throws IOException if I/O error occurs.
+         * <p>
+         * This method will throw an {@code EOFException} if end-of-blob was reached before reading {@code length}
+         * bytes.
+         * </p>
+         *
+         * @param buffer
+         *         buffer where data should be read
+         * @param offset
+         *         offset in the buffer where to start
+         * @param length
+         *         number of bytes to read
+         * @throws EOFException
+         *         if stream end was reached when reading data.
+         * @throws IOException
+         *         if I/O error occurs.
          */
         void readFully(byte[] buffer, int offset, int length) throws IOException;
-        
+
         /**
          * Read {@code buffer.length} bytes from the buffer. This is a shortcut method for
          * {@code readFully(buffer, 0, buffer.length)} call.
-         * 
-         * @param buffer buffer where data should be read.
-         * 
-         * @throws IOException if I/O error occurs.
+         *
+         * @param buffer
+         *         buffer where data should be read
+         * @throws IOException
+         *         if I/O error occurs
          */
         void readFully(byte[] buffer) throws IOException;
-        
+
         /**
-         * Move current position in the Blob stream. This is a shortcut method
-         * to {@link #seek(int, int)} passing {@link #SEEK_MODE_ABSOLUTE} as 
-         * seek mode.
-         * 
-         * @param position absolute position to seek, starting position is
-         * 0 (note, in {@link Blob#getBytes(long, int)} starting position is 1).
-         * 
-         * @throws IOException if I/O error occurs.
+         * Move current position in the Blob stream. This is a shortcut method to {@link #seek(int, int)} passing
+         * {@link #SEEK_MODE_ABSOLUTE} as seek mode.
+         *
+         * @param position
+         *         absolute position to seek, starting position is 0 (note, in {@link Blob#getBytes(long, int)} starting
+         *         position is 1).
+         * @throws IOException
+         *         if I/O error occurs.
          */
         void seek(int position) throws IOException;
-        
+
         /**
-         * Move current position in the Blob stream. Depending on the specified
-         * seek mode, position can be either positive or negative.
-         * <p>
-         * Note, this method allows to move position in the Blob stream only
-         * forward. If you need to read data before the current position, new
-         * stream must be opened.
-         * 
-         * @param position position in the stream, starting position is
-         * 0 (note, in {@link Blob#getBytes(long, int)} starting position is 1).
-         * 
-         * @param seekMode mode of seek operation, one of {@link #SEEK_MODE_ABSOLUTE},
-         * {@link #SEEK_MODE_RELATIVE} or {@link #SEEK_MODE_FROM_TAIL}.
-         * 
-         * @throws IOException if I/O error occurs.
+         * Move current position in the Blob stream. Depending on the specified seek mode, position can be either
+         * positive or negative.
+         *
+         * @param position
+         *         position in the stream, starting position is 0 (note, in {@link Blob#getBytes(long, int)} starting
+         *         position is 1)
+         * @param seekMode
+         *         mode of seek operation, one of {@link #SEEK_MODE_ABSOLUTE}, {@link #SEEK_MODE_RELATIVE} or
+         *         {@link #SEEK_MODE_FROM_TAIL}
+         * @throws IOException
+         *         if I/O error occurs
          */
         void seek(int position, int seekMode) throws IOException;
+
     }
     
     /**

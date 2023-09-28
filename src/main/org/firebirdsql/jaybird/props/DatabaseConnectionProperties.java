@@ -198,15 +198,17 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     }
 
     /**
-     * @return BLOB buffer size in bytes.
+     * @return BLOB buffer size in bytes; if the configured value is less than an implementation-specific minimum, that
+     * minimum is returned
      */
     default int getBlobBufferSize() {
-        return getIntProperty(PropertyNames.blobBufferSize, PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE);
+        return Math.max(PropertyConstants.MIN_BLOB_BUFFER_SIZE,
+                getIntProperty(PropertyNames.blobBufferSize, PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE));
     }
 
     /**
      * @param blobBufferSize
-     *         size of the BLOB buffer in bytes.
+     *         size of the BLOB buffer in bytes
      */
     default void setBlobBufferSize(int blobBufferSize) {
         setIntProperty(PropertyNames.blobBufferSize, blobBufferSize);

@@ -18,7 +18,9 @@
  */
 package org.firebirdsql.gds;
 
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -243,4 +245,23 @@ public final class VaxEncoding {
         out.write(val);
         out.write(val >> 8);
     }
+
+    /**
+     * Decodes an integer using two byte Vax encoding from an input stream, without length prefix.
+     *
+     * @param in
+     *         input stream to read
+     * @return decoded value
+     * @throws IOException
+     *         for errors reading from the stream, or if end-of-stream was reached before the full integer
+     * @since 6
+     */
+    public static int decodeVaxInteger2WithoutLength(InputStream in) throws IOException {
+        int ch1 = in.read();
+        int ch2 = in.read();
+        if ((ch1 | ch2) < 0)
+            throw new EOFException();
+        return ch1 | (ch2 << 8);
+    }
+
 }

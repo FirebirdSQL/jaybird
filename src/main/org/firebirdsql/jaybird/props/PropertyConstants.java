@@ -52,6 +52,7 @@ public final class PropertyConstants {
     static final boolean DEFAULT_IGNORE_PROCEDURE_TYPE = false;
     static final boolean DEFAULT_WIRE_COMPRESSION = false;
     public static final int DEFAULT_BLOB_BUFFER_SIZE = 16384;
+    static final int MIN_BLOB_BUFFER_SIZE = 512;
     public static final int DEFAULT_PAGE_CACHE_SIZE = 0;
     static final boolean DEFAULT_USE_SERVER_BATCH = true;
     public static final int DEFAULT_SERVER_BATCH_BUFFER_SIZE = 0;

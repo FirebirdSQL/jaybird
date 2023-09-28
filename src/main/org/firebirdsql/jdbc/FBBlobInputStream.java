@@ -25,6 +25,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.Objects;
 
 /**
  * An input stream for reading directly from a FBBlob instance.
@@ -43,7 +44,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
 
     FBBlobInputStream(FBBlob owner) throws SQLException {
         if (owner.isNew()) {
-            throw new FBSQLException("You can't read a new blob");
+            throw new SQLException("You can't read a new blob", SQLStateConstants.SQL_STATE_LOCATOR_EXCEPTION);
         }
 
         this.owner = owner;
@@ -97,7 +98,8 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
      * Checks the available buffer size, retrieving a segment from the server if necessary.
      *
      * @return The number of bytes available in the buffer, or {@code -1} if the end of the stream is reached.
-     * @throws IOException if an I/O error occurs, or if the stream has been closed.
+     * @throws IOException
+     *         if an I/O error occurs, or if the stream has been closed.
      */
     private int checkBuffer() throws IOException {
         try (LockCloseable ignored = owner.withLock()) {
@@ -126,45 +128,48 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     }
 
     @Override
-    public int read(byte[] b, int off, int len) throws IOException {
-        if (b == null) {
-            throw new NullPointerException();
-        } else if (off < 0 || len < 0 || len > b.length - off) {
-            throw new IndexOutOfBoundsException();
-        } else if (len == 0) {
-            return 0;
-        }
+    public int read(final byte[] b, int off, final int len) throws IOException {
+        Objects.checkFromIndexSize(off, len, b.length);
+        if (len == 0) return 0;
 
-        final int toCopy = Math.min(checkBuffer(), len);
-        if (toCopy == -1) {
-            return -1;
+        try (LockCloseable ignored = owner.withLock()) {
+            checkClosed();
+            // Optimization: for small lengths use buffer, otherwise only check if we currently have data in buffer
+            final int smallBufferLimit = Math.min(owner.getBufferLength(), blobHandle.getMaximumSegmentSize()) / 2;
+            final int avail = len <= smallBufferLimit ? checkBuffer() : available();
+            if (avail == -1) {
+                return -1;
+            }
+            int count = 0;
+            if (avail > 0) {
+                count = Math.min(avail, len);
+                System.arraycopy(buffer, this.pos, b, off, count);
+                this.pos += count;
+                if (len - count < smallBufferLimit) {
+                    // Remaining bytes are small, better if this method is called again (which will use a buffer)
+                    return count;
+                }
+            }
+
+            if (count < len) {
+                count += blobHandle.get(b, off + count, len - count);
+            }
+            // When we haven't read anything, report end-of-blob
+            return count == 0 ? -1 : count;
+        } catch (SQLException ge) {
+            if (ge.getCause() instanceof IOException ioe) {
+                throw ioe;
+            }
+            throw new IOException("Blob read problem: " + ge, ge);
         }
-        System.arraycopy(buffer, pos, b, off, toCopy);
-        pos += toCopy;
-        return toCopy;
     }
 
     @Override
     public void readFully(byte[] b, int off, int len) throws IOException {
-        if (b == null) {
-            throw new NullPointerException();
-        } else if (off < 0 || len < 0 || len > b.length - off) {
-            throw new IndexOutOfBoundsException();
-        } else if (len == 0) {
-            return;
-        }
-
-        int counter = 0;
-        int pos = off;
-        int toRead = len;
-
-        while (toRead > 0 && (counter = read(b, pos, toRead)) != -1) {
-            pos += counter;
-            toRead -= counter;
-        }
-
-        if (counter == -1) {
-            throw new EOFException();
+        int read = readNBytes(b, off, len);
+        if (read != len) {
+            throw new EOFException(
+                    "End-of-blob reached after reading %d bytes, required %d bytes".formatted(read, len));
         }
     }
 

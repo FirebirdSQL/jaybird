@@ -70,16 +70,25 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
 
     @Override
     public final byte[] getSegment(int sizeRequested) throws SQLException {
+        readNotSupported();
+        return null;
+    }
+
+    private void readNotSupported() throws SQLException {
         SQLException e = FbExceptionBuilder.forNonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
         exceptionListenerDispatcher.errorOccurred(e);
         throw e;
     }
 
     @Override
+    public int get(byte[] buf, int pos, int len) throws SQLException {
+        readNotSupported();
+        return -1;
+    }
+
+    @Override
     public final void seek(int offset, SeekMode seekMode) throws SQLException {
         // This assumes seeks are not (nor in the future) supported on output blobs
-        SQLException e = FbExceptionBuilder.forNonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
-        exceptionListenerDispatcher.errorOccurred(e);
-        throw e;
+        readNotSupported();
     }
 }

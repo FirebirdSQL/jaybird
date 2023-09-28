@@ -772,6 +772,29 @@ We have now addressed this inconsistency, by also introducing support for settin
 * `setObject(..., localTime)` sets a `LocalDateTime` derived as `LocalDate.EPOCH.atTime(localTime)` (i.e. on 1970-01-01)
 * `setObject(..., localDate)` sets a `LocalDateTime` derived as `localDate.atStartOfDay()` (i.e. at 00:00:00)
 
+[#blob-performance]
+=== Performance improvements blobs
+
+[#blob-performance-read]
+==== Reading blobs
+
+Performance of reading blobs was improved, especially when using `ResultSet.getBytes`, `Blob.getBytes`, `ResultSet.getString` or reading from a blob input stream with `read(byte[], int, int)` and similar methods with a byte array and requested length greater than 50% of the configured `blobBufferSize`.
+
+Testing on a local network (Wi-Fi) shows an increase in throughput of roughly 50-100% for reading large blobs with the default `blobBufferSize` of 16384.
+
+These throughput improvements were only realised in the pure Java protocol, because there we had the opportunity to avoid all additional allocations by writing directly from the network stream into the destination byte array, and this allows us to ignore the configured `blobBufferSize` and use up to the maximum request size of 64KiB - 1 instead.
+
+This is not possible for the JNA-based protocols (native/embedded), as the implementation requires a direct byte buffer to bridge to the native API, and thus we can't ignore the `blobBufferSize`.
+We were able to realise some other optimizations (in both pure Java and JNA), by avoiding allocation of a number of intermediate objects, but this has only marginal effects on the throughput.
+
+Similar improvements may follow for writes.
+
+[#blob-performance-min-buf]
+==== Minimum `blobBufferSize` 512 bytes
+
+As part of the performance improvements, a minimum `blobBufferSize` of 512 bytes was introduced.
+Configuring values less than 512 will be ignored and use 512 instead.
+
 // TODO add major changes
 
 [#potentially-breaking-changes]

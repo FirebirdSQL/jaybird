@@ -20,6 +20,8 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
+import org.firebirdsql.gds.impl.wire.XdrInputStream;
+import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
 import org.firebirdsql.gds.ng.LockCloseable;
 
@@ -113,5 +115,33 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
+    }
+
+    /**
+     * Gets the XdrInputStream.
+     *
+     * @return instance of XdrInputStream
+     * @throws SQLException
+     *         if no connection is opened or when exceptions occur retrieving the InputStream
+     * @since 6
+     */
+    protected final XdrInputStream getXdrIn() throws SQLException {
+        return getXdrStreamAccess().getXdrIn();
+    }
+
+    /**
+     * Gets the XdrOutputStream.
+     *
+     * @return instance of XdrOutputStream
+     * @throws SQLException
+     *         if no connection is opened or when exceptions occur retrieving the OutputStream
+     * @since 6
+     */
+    protected final XdrOutputStream getXdrOut() throws SQLException {
+        return getXdrStreamAccess().getXdrOut();
+    }
+
+    private XdrStreamAccess getXdrStreamAccess() {
+        return getDatabase().getXdrStreamAccess();
     }
 }

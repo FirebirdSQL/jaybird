@@ -42,6 +42,11 @@ public interface FbWireAttachment extends FbAttachment {
     XdrStreamAccess getXdrStreamAccess();
 
     /**
+     * @return Instance of {@link FbWireOperations} for this attachment.
+     */
+    FbWireOperations getWireOperations();
+
+    /**
      * Convenience method to read a Response to a GenericResponse
      *
      * @param callback
