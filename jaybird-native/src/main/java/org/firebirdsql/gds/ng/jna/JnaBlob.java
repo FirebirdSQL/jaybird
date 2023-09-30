@@ -170,6 +170,8 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
                         .toSQLException();
             }
             checkDatabaseAttached();
+            checkTransactionActive();
+            checkBlobOpen();
             ShortByReference actualLength = new ShortByReference();
             ByteBuffer responseBuffer = getSegment0(sizeRequested, actualLength);
             byte[] segment = new byte[actualLength.getValue() & 0xFFFF];
@@ -182,8 +184,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     }
 
     private ByteBuffer getSegment0(int sizeRequested, ShortByReference actualLength) throws SQLException {
-        checkTransactionActive();
-        checkBlobOpen();
         sizeRequested = Math.min(sizeRequested, getMaximumSegmentSize());
         ByteBuffer responseBuffer = getByteBuffer(sizeRequested);
         clientLibrary.isc_get_segment(statusVector, getJnaHandle(), actualLength, (short) sizeRequested,
@@ -208,6 +208,8 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             }
             if (len == 0) return 0;
             checkDatabaseAttached();
+            checkTransactionActive();
+            checkBlobOpen();
             ShortByReference actualLength = new ShortByReference();
             int count = 0;
             while (count < len && !isEof()) {
