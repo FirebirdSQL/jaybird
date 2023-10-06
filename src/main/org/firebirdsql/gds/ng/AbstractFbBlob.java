@@ -24,9 +24,12 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
+import java.util.Objects;
 
 import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.TRACE;
@@ -174,6 +177,11 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      * to check for attached database and active transaction, nor does it need to mark this blob as closed.
      */
     protected abstract void cancelImpl() throws SQLException;
+
+    @Override
+    public void putSegment(byte[] segment) throws SQLException {
+        put(segment, 0, segment.length);
+    }
 
     /**
      * Release Java resources held. This should not communicate with the Firebird server.
@@ -419,4 +427,26 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         // and older (which aren't supported any way), so we leave this as is
         return Short.MAX_VALUE - 2;
     }
+
+    /**
+     * Validates requested offset ({@code off}) and length ({@code len}) against the array ({@code b}).
+     *
+     * @param b
+     *         array
+     * @param off
+     *         position in array
+     * @param len
+     *         length from {@code off}
+     * @throws SQLException
+     *         if {@code off < 0}, {@code len < 0}, or if {@code off + len > b.length}
+     * @since 6
+     */
+    protected final void validateBufferLength(byte[] b, int off, int len) throws SQLException {
+        try {
+            Objects.checkFromIndexSize(off, len, b.length);
+        } catch (IndexOutOfBoundsException e) {
+            throw new SQLNonTransientException(e.toString(), SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
+        }
+    }
+
 }

@@ -38,6 +38,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * An {@code XdrOutputStream} writes data in XDR format to an underlying {@code java.io.OutputStream}.
@@ -178,13 +179,33 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      *         if an error occurs while writing to the underlying output stream
      */
     public void writeBuffer(byte[] buf) throws IOException {
-        if (buf == null)
+        if (buf == null) {
             writeInt(0);
-        else {
-            int len = buf.length;
-            writeInt(len);
-            write(buf, 0, len, (4 - len) & 3);
+        } else {
+            writeBuffer(buf, 0, buf.length);
         }
+    }
+
+    /**
+     * Write byte buffer {@code buf} from offset {@code off} for {@code len} bytes to the underlying output stream
+     * in XDR format.
+     *
+     * @param buf
+     *         byte buffer to be written
+     * @param off
+     *         offset to start
+     * @param len
+     *         length to write
+     * @throws IOException
+     *         if an error occurs while writing to the underlying output stream
+     * @throws IndexOutOfBoundsException
+     *         If {@code off} is negative, {@code len} is negative, or {@code len} is greater than
+     *         {@code buff.length - off}
+     */
+    public void writeBuffer(byte[] buf, int off, int len) throws IOException {
+        Objects.checkFromIndexSize(off, len, buf.length);
+        writeInt(len);
+        write(buf, off, len, (4 - len) & 3);
     }
 
     /**

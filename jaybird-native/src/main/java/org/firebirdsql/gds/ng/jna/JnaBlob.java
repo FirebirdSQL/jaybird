@@ -28,18 +28,14 @@ import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
-import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
-import java.util.Objects;
 
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
-import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentTooLong;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbBlob} for native client access.
@@ -199,13 +195,9 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     }
 
     @Override
-    public int get(final byte[] buf, final int pos, final int len) throws SQLException {
+    public int get(final byte[] b, final int off, final int len) throws SQLException {
         try (LockCloseable ignored = withLock())  {
-            try {
-                Objects.checkFromIndexSize(pos, len, Objects.requireNonNull(buf, "buf").length);
-            } catch (IndexOutOfBoundsException e) {
-                throw new SQLNonTransientException(e.toString(), SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
-            }
+            validateBufferLength(b, off, len);
             if (len == 0) return 0;
             checkDatabaseAttached();
             checkTransactionActive();
@@ -218,7 +210,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
                         Math.min(len - count, Math.max(getBlobBufferSize(), currentBufferCapacity())),
                         actualLength);
                 int dataLength = actualLength.getValue() & 0xFFFF;
-                segmentBuffer.get(buf, pos + count, dataLength);
+                segmentBuffer.get(b, off + count, dataLength);
                 count += dataLength;
             }
             return count;
@@ -233,22 +225,36 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     }
 
     @Override
-    public void putSegment(byte[] segment) throws SQLException {
-        try {
-            if (segment.length == 0) {
+    public void put(final byte[] b, final int off, final int len) throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            validateBufferLength(b, off, len);
+            if (len == 0) {
                 throw FbExceptionBuilder.forException(jb_blobPutSegmentEmpty).toSQLException();
             }
-            // TODO Handle by performing multiple puts? (Wrap in byte buffer, use position to move pointer?)
-            if (segment.length > getMaximumSegmentSize()) {
-                throw FbExceptionBuilder.forException(jb_blobPutSegmentTooLong).toSQLException();
-            }
-            try (LockCloseable ignored = withLock()) {
-                checkDatabaseAttached();
-                checkTransactionActive();
-                checkBlobOpen();
+            checkDatabaseAttached();
+            checkTransactionActive();
+            checkBlobOpen();
 
-                clientLibrary.isc_put_segment(statusVector, getJnaHandle(), (short) segment.length, segment);
+            int count = 0;
+            if (off == 0) {
+                // no additional buffer allocation needed, so we can send with max segment size
+                count = Math.min(len, getMaximumSegmentSize());
+                clientLibrary.isc_put_segment(statusVector, getJnaHandle(), (short) count, b);
                 processStatusVector();
+                if (count == len) {
+                    // put complete
+                    return;
+                }
+            }
+
+            byte[] segmentBuffer =
+                    new byte[Math.min(len - count, Math.min(getBlobBufferSize(), getMaximumSegmentSize()))];
+            while (count < len) {
+                int segmentLength = Math.min(len - count, segmentBuffer.length);
+                System.arraycopy(b, off + count, segmentBuffer, 0, segmentLength);
+                clientLibrary.isc_put_segment(statusVector, getJnaHandle(), (short) segmentLength, segmentBuffer);
+                processStatusVector();
+                count += segmentLength;
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);

@@ -172,6 +172,7 @@ class FBBlobOutputStreamTest {
 
     @Test
     void testWrite_byteArrNull_throwsNPE() {
+        //noinspection DataFlowIssue
         assertThrows(NullPointerException.class, () -> stream.write(null, 0, 1));
     }
 

@@ -45,6 +45,10 @@ public interface JaybirdErrorCodes {
     int jb_range_start              = 337248256;
     int jb_blobGetSegmentNegative   = 337248257;
     int jb_blobPutSegmentEmpty      = 337248258;
+    /**
+     * @deprecated Jaybird no longer uses this error code
+     */
+    @Deprecated
     int jb_blobPutSegmentTooLong    = 337248259;
     int jb_blobIdAlreadySet         = 337248260;
     int jb_invalidClumpletStructure = 337248261;

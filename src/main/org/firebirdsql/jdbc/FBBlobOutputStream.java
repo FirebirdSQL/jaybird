@@ -24,6 +24,7 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.SQLException;
+import java.util.Objects;
 
 /**
  * {@link java.io.OutputStream} for writing Firebird blobs.
@@ -82,20 +83,6 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
     }
 
     /**
-     * Writes a byte array directly to the blob.
-     *
-     * @param buf
-     *         Byte array to write
-     * @throws SQLException
-     *         For errors writing to the blob
-     */
-    private void writeSegment(byte[] buf) throws SQLException {
-        try (LockCloseable ignored = owner.withLock()) {
-            blobHandle.putSegment(buf);
-        }
-    }
-
-    /**
      * {@inheritDoc}
      * <p>
      * Writes are buffered up to the buffer length of the blob (optionally specified by the connection
@@ -105,25 +92,30 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
         checkClosed();
-        if (b == null) {
-            throw new NullPointerException();
-        } else if (off < 0 || len < 0 || len > b.length - off) {
-            throw new IndexOutOfBoundsException();
-        } else if (len == 0) {
-            return;
-        }
+        Objects.checkFromIndexSize(off, len, b.length);
+        if (len == 0) return;
 
-        // array doesn't fit in remainder of buffer,
-        // or full array written is equal to buffer size: flush and write immediately (saves copying)
-        if (off == 0 && len == buf.length || len > buf.length - count) {
+        int avail = buf.length - count;
+        if (avail >= len && len != buf.length) {
+            // Value fits into buffer, but avoid copy overhead if buf is empty and len is equal to buffer size
+            copyToBuf(b, off, len);
+        } else if (len <= buf.length / 2) {
+            // small size, use buffer
+            // fill and flush current buffer
+            copyToBuf(b, off, avail);
+            // buffer remaining bytes
+            copyToBuf(b, off + avail, len - avail);
+        } else {
+            // large size, write directly
             flush();
             writeInternal(b, off, len);
-        } else {
-            System.arraycopy(b, off, buf, count, len);
-            count += len;
-
-            if (count == buf.length) flush();
         }
+    }
+
+    private void copyToBuf(byte[] b, int off, int len) throws IOException {
+        System.arraycopy(b, off, buf, count, len);
+        count += len;
+        if (count == buf.length) flush();
     }
 
     /**
@@ -136,32 +128,11 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
      * @param len
      *         length to write
      * @throws IOException
-     *         If an I/O error occurs.
+     *         if an I/O error occurs
      */
     private void writeInternal(byte[] b, int off, int len) throws IOException {
-        // TODO Rewrite to use maximum segment size instead of blob buffer length
         try {
-            if (off == 0 && len == b.length && len <= owner.getBufferLength()) {
-                // If we are just writing the entire byte array, we need to do nothing but just write it over
-                writeSegment(b);
-            } else {
-                // In this case, we need to chunk it over since putBlobSegment cannot currently support length and offset.
-                int chunk = Math.min(owner.getBufferLength(), len);
-                byte[] buffer = new byte[chunk];
-                while (len > 0) {
-                    chunk = Math.min(len, chunk);
-
-                    // this allows us to reuse the buffer if its size has not changed
-                    if (chunk != buffer.length) {
-                        buffer = new byte[chunk];
-                    }
-                    System.arraycopy(b, off, buffer, 0, chunk);
-                    writeSegment(buffer);
-
-                    len -= chunk;
-                    off += chunk;
-                }
-            }
+            blobHandle.put(b, off, len);
         } catch (SQLException ge) {
             throw new IOException("Problem writing to FBBlobOutputStream: " + ge.getMessage(), ge);
         }
@@ -178,9 +149,8 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
     @Override
     public void close() throws IOException {
         if (blobHandle == null) return;
-        flush();
-
         try (LockCloseable ignored = owner.withLock()) {
+            flush();
             blobHandle.close();
             owner.setBlobId(blobHandle.getBlobId());
         } catch (SQLException ge) {
@@ -194,7 +164,7 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
 
     /**
      * @throws IOException
-     *         When this output stream has been closed.
+     *         when this output stream has been closed
      */
     private void checkClosed() throws IOException {
         if (blobHandle == null || !blobHandle.isOpen()) {

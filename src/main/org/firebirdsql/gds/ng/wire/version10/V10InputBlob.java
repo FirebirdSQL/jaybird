@@ -26,13 +26,10 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
-import java.util.Objects;
 
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
@@ -180,79 +177,72 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
     }
 
     @Override
-    public int get(final byte[] buf, final int pos, final int len) throws SQLException {
-        try {
-            try {
-                Objects.checkFromIndexSize(pos, len, Objects.requireNonNull(buf, "buf").length);
-            } catch (IndexOutOfBoundsException e) {
-                throw new SQLNonTransientException(e.toString(), SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
-            }
+    public int get(final byte[] b, final int off, final int len) throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            validateBufferLength(b, off, len);
+            checkDatabaseAttached();
+            checkTransactionActive();
+            checkBlobOpen();
 
-            try (LockCloseable ignored = withLock()) {
-                checkDatabaseAttached();
-                checkTransactionActive();
-                checkBlobOpen();
-
-                int count = 0;
-                while (count < len && !isEof()) {
-                    try {
-                        sendGetSegment(segmentRequestSize(len - count));
-                        getXdrOut().flush();
-                    } catch (IOException e) {
-                        throw FbExceptionBuilder.ioWriteError(e);
-                    }
-                    try {
-                        FbWireOperations wireOps = getDatabase().getWireOperations();
-                        final int opCode = wireOps.readNextOperation();
-                        if (opCode != op_response) {
-                            wireOps.readOperationResponse(opCode, null);
-                            throw new SQLException("Unexpected response to op_get_segment: " + opCode);
-                        }
-                        XdrInputStream xdrIn = getXdrIn();
-                        final int objHandle = xdrIn.readInt();
-                        xdrIn.skipNBytes(8); // blob-id (unused)
-
-                        final int bufferLength = xdrIn.readInt();
-                        if (bufferLength > 0) {
-                            int bufferRemaining = bufferLength;
-                            while (bufferRemaining > 2) {
-                                int segmentLength = VaxEncoding.decodeVaxInteger2WithoutLength(xdrIn);
-                                bufferRemaining -= 2;
-                                if (segmentLength > bufferRemaining) {
-                                    throw new IOException(
-                                            "Inconsistent segment buffer: segment length %d, remaining buffer was %d"
-                                                    .formatted(segmentLength, bufferRemaining));
-                                } else if (segmentLength > len - count) {
-                                    throw new IOException("Returned segment length %d exceeded remaining size %d"
-                                            .formatted(segmentLength, len - count));
-                                }
-                                xdrIn.readFully(buf, pos + count, segmentLength);
-                                bufferRemaining -= segmentLength;
-                                count += segmentLength;
-                            }
-
-                            // Safety measure: read remaining (shouldn't happen in practice)
-                            xdrIn.skipNBytes(bufferRemaining);
-                            // Skip buffer padding
-                            xdrIn.skipPadding(bufferLength);
-                        }
-
-                        SQLException exception = wireOps.readStatusVector();
-                        if (exception != null && !(exception instanceof SQLWarning)) {
-                            // NOTE: SQLWarning is unlikely for this operation, so we don't do anything to report it
-                            throw exception;
-                        }
-
-                        if (objHandle == STATE_END_OF_BLOB) {
-                            setEof();
-                        }
-                    } catch (IOException e) {
-                        throw FbExceptionBuilder.ioReadError(e);
-                    }
+            int count = 0;
+            while (count < len && !isEof()) {
+                try {
+                    sendGetSegment(segmentRequestSize(len - count));
+                    getXdrOut().flush();
+                } catch (IOException e) {
+                    throw FbExceptionBuilder.ioWriteError(e);
                 }
+                try {
+                    FbWireOperations wireOps = getDatabase().getWireOperations();
+                    final int opCode = wireOps.readNextOperation();
+                    if (opCode != op_response) {
+                        wireOps.readOperationResponse(opCode, null);
+                        throw new SQLException("Unexpected response to op_get_segment: " + opCode);
+                    }
+                    XdrInputStream xdrIn = getXdrIn();
+                    final int objHandle = xdrIn.readInt();
+                    xdrIn.skipNBytes(8); // blob-id (unused)
 
-                return count;
+                    final int bufferLength = xdrIn.readInt();
+                    if (bufferLength > 0) {
+                        int bufferRemaining = bufferLength;
+                        while (bufferRemaining > 2) {
+                            int segmentLength = VaxEncoding.decodeVaxInteger2WithoutLength(xdrIn);
+                            bufferRemaining -= 2;
+                            if (segmentLength > bufferRemaining) {
+                                throw new IOException(
+                                        "Inconsistent segment buffer: segment length %d, remaining buffer was %d"
+                                                .formatted(segmentLength, bufferRemaining));
+                            } else if (segmentLength > len - count) {
+                                throw new IOException("Returned segment length %d exceeded remaining size %d"
+                                        .formatted(segmentLength, len - count));
+                            }
+                            xdrIn.readFully(b, off + count, segmentLength);
+                            bufferRemaining -= segmentLength;
+                            count += segmentLength;
+                        }
+
+                        // Safety measure: read remaining (shouldn't happen in practice)
+                        xdrIn.skipNBytes(bufferRemaining);
+                        // Skip buffer padding
+                        xdrIn.skipPadding(bufferLength);
+                    }
+
+                    SQLException exception = wireOps.readStatusVector();
+                    if (exception != null && !(exception instanceof SQLWarning)) {
+                        // NOTE: SQLWarning is unlikely for this operation, so we don't do anything to report it
+                        throw exception;
+                    }
+
+                    if (objHandle == STATE_END_OF_BLOB) {
+                        setEof();
+                    }
+                } catch (IOException e) {
+                    throw FbExceptionBuilder.ioReadError(e);
+                }
             }
+
+            return count;
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;

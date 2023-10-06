@@ -81,14 +81,13 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
     }
 
     @Override
-    public int get(byte[] buf, int pos, int len) throws SQLException {
+    public int get(byte[] b, int off, int len) throws SQLException {
         readNotSupported();
         return -1;
     }
 
     @Override
     public final void seek(int offset, SeekMode seekMode) throws SQLException {
-        // This assumes seeks are not (nor in the future) supported on output blobs
         readNotSupported();
     }
 }

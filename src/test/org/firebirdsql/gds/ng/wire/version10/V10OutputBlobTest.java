@@ -20,44 +20,28 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.common.extension.RequireProtocolExtension;
-import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ng.DatatypeCoder;
-import org.firebirdsql.gds.ng.FbBlob;
-import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.FbTransaction;
-import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.ng.BaseTestOutputBlob;
+import org.firebirdsql.gds.ng.FbConnectionProperties;
+import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
-import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
-import org.firebirdsql.jaybird.fb.constants.BpbItems;
+import org.firebirdsql.gds.ng.wire.ProtocolCollection;
+import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 
 import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.startsWith;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10OutputBlob}. This test class can
  * be sub-classed for tests running on newer protocol versions.
- * <p>
- * Tests from this class are also copied to {@code org.firebirdsql.gds.ng.jna.JnaBlobTest} TODO: Consider refactoring test hierarchy
- * </p>
  *
  * @author Mark Rotteveel
  * @since 3.0
  */
-public class V10OutputBlobTest extends BaseTestV10Blob {
+public class V10OutputBlobTest extends BaseTestOutputBlob {
 
     @RegisterExtension
     @Order(1)
@@ -67,206 +51,30 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
     @Order(1)
     public static final GdsTypeExtension testType = GdsTypeExtension.excludesNativeOnly();
 
-    @Override
+    private final V10CommonConnectionInfo commonConnectionInfo = commonConnectionInfo();
+
     protected V10CommonConnectionInfo commonConnectionInfo() {
         return new V10CommonConnectionInfo();
     }
 
-    /**
-     * Tests storage of a blob (what goes in is what comes out).
-     */
-    @Test
-    public void testBlobStorage() throws Exception {
-        final int testId = 1;
-        final byte[] baseContent = generateBaseContent();
-        // Use sufficiently large value so that multiple segments are used
-        final int requiredSize = 4 * Short.MAX_VALUE;
-        final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
-
-        try (FbWireDatabase db = createDatabaseConnection()) {
-            writeBlob(testId, testBytes, db, null);
-        }
-
-        assertTrue(validateBlob(testId, baseContent, requiredSize), "Unexpected blob content");
+    protected final ProtocolCollection getProtocolCollection() {
+        return commonConnectionInfo.getProtocolCollection();
     }
 
-    /**
-     * Tests storage of a stream blob (what goes in is what comes out).
-     */
-    @Test
-    public void testBlobStorage_Stream() throws Exception {
-        final int testId = 1;
-        final byte[] baseContent = generateBaseContent();
-        // Use sufficiently large value so that multiple segments are used
-        final int requiredSize = 4 * Short.MAX_VALUE;
-        final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
-
-        try (FbWireDatabase db = createDatabaseConnection()) {
-            final BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
-            blobParameterBuffer.addArgument(BpbItems.isc_bpb_type, BpbItems.TypeValues.isc_bpb_type_stream);
-            writeBlob(testId, testBytes, db, blobParameterBuffer);
-        }
-
-        assertTrue(validateBlob(testId, baseContent, requiredSize), "Unexpected blob content");
+    @SuppressWarnings("resource")
+    @Override
+    protected final FbDatabase createFbDatabase(FbConnectionProperties connectionInfo) throws SQLException {
+        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
+                EncodingFactory.getPlatformDefault(), getProtocolCollection());
+        gdsConnection.socketConnect();
+        FbWireDatabase db = gdsConnection.identify();
+        db.attach();
+        return db;
     }
 
-    /**
-     * Test if blob is not eof after open.
-     */
-    @Test
-    public void testIsEof_afterOpen() throws Exception {
-        try (FbWireDatabase db = createDatabaseConnection()) {
-            final FbTransaction transaction = getTransaction(db);
-            try {
-                FbBlob blob = db.createBlobForOutput(transaction);
-                assumeTrue(blob.isEof(), "Output blob before open should be eof");
-
-                blob.open();
-                assertFalse(blob.isEof(), "Output blob after open should not be eof");
-            } finally {
-                transaction.commit();
-            }
-        }
+    @Override
+    protected final FbWireDatabase createDatabaseConnection() throws SQLException {
+        return (FbWireDatabase) super.createDatabaseConnection();
     }
 
-    /**
-     * Test if blob is eof after close.
-     */
-    @Test
-    public void testIsEof_afterClose() throws Exception {
-        try (FbWireDatabase db = createDatabaseConnection()) {
-            final FbTransaction transaction = getTransaction(db);
-            try {
-                FbBlob blob = db.createBlobForOutput(transaction);
-                assumeTrue(blob.isEof(), "Output blob before open should be eof");
-                blob.open();
-
-                blob.close();
-                assertTrue(blob.isEof(), "Output blob after close should be eof");
-            } finally {
-                transaction.commit();
-            }
-        }
-    }
-
-    /**
-     * Test if blob is eof after cancel.
-     */
-    @Test
-    public void testIsEof_afterCancel() throws Exception {
-        try (FbWireDatabase db = createDatabaseConnection()) {
-            final FbTransaction transaction = getTransaction(db);
-            try {
-                FbBlob blob = db.createBlobForOutput(transaction);
-                assumeTrue(blob.isEof(), "Output blob before open should be eof");
-                blob.open();
-
-                blob.cancel();
-                assertTrue(blob.isEof(), "Output blob after cancel should be eof");
-            } finally {
-                transaction.commit();
-            }
-        }
-    }
-
-    /**
-     * Test whether a cancelled blob cannot be used (indicating it was indeed cancelled).
-     */
-    @Test
-    public void testUsingCancelledBlob() throws Exception {
-        final int testId = 1;
-        final byte[] baseContent = generateBaseContent();
-        final int requiredSize = 256;
-        final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
-
-        try (FbWireDatabase db = createDatabaseConnection()) {
-            final SimpleStatementListener listener = new SimpleStatementListener();
-            final FbTransaction transaction = getTransaction(db);
-            try {
-                final FbStatement statement = db.createStatement(transaction);
-                statement.addStatementListener(listener);
-                final FbBlob blob = db.createBlobForOutput(transaction);
-                blob.open();
-                int bytesWritten = 0;
-                while (bytesWritten < testBytes.length) {
-                    // TODO the interface for writing blobs should be simpler
-                    byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
-                    System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
-                    blob.putSegment(buffer);
-                    bytesWritten += buffer.length;
-                }
-
-                blob.cancel();
-
-                statement.prepare(INSERT_BLOB_TABLE);
-                final DatatypeCoder datatypeCoder = db.getDatatypeCoder();
-                RowValue rowValue = RowValue.of(
-                        datatypeCoder.encodeInt(testId),
-                        datatypeCoder.encodeLong(blob.getBlobId()));
-
-                SQLException exception = assertThrows(SQLException.class, () -> statement.execute(rowValue));
-                assertThat(exception, allOf(
-                        errorCodeEquals(ISCConstants.isc_bad_segstr_id),
-                        message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_id)))));
-                statement.close();
-            } finally {
-                transaction.commit();
-            }
-        }
-    }
-
-    /**
-     * Test reopen is not allowed.
-     */
-    @Test
-    public void testReopen() throws Exception {
-        final byte[] baseContent = generateBaseContent();
-        final int requiredSize = 256;
-        final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
-
-        try (FbWireDatabase db = createDatabaseConnection()) {
-            final FbTransaction transaction = getTransaction(db);
-            try {
-                final FbBlob blob = db.createBlobForOutput(transaction);
-                blob.open();
-                int bytesWritten = 0;
-                while (bytesWritten < testBytes.length) {
-                    // TODO the interface for writing blobs should be simpler
-                    byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
-                    System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
-                    blob.putSegment(buffer);
-                    bytesWritten += buffer.length;
-                }
-                blob.close();
-
-                // Reopen
-                SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
-                assertThat(exception, allOf(
-                        errorCodeEquals(ISCConstants.isc_segstr_no_op),
-                        fbMessageStartsWith(ISCConstants.isc_segstr_no_op)));
-            } finally {
-                transaction.commit();
-            }
-        }
-    }
-
-    /**
-     * Test double open is not allowed.
-     */
-    @Test
-    public void testDoubleOpen() throws Exception {
-        try (FbWireDatabase db = createDatabaseConnection()) {
-            final FbTransaction transaction = getTransaction(db);
-            try {
-                final FbBlob blob = db.createBlobForOutput(transaction);
-                blob.open();
-                SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
-                assertThat(exception, allOf(
-                        errorCodeEquals(ISCConstants.isc_no_segstr_close),
-                        fbMessageStartsWith(ISCConstants.isc_no_segstr_close)));
-            } finally {
-                transaction.commit();
-            }
-        }
-    }
 }

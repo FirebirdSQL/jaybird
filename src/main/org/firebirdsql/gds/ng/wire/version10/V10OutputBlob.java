@@ -26,12 +26,12 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 
 import java.io.IOException;
 import java.sql.SQLException;
 
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
-import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentTooLong;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
@@ -42,12 +42,15 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
 
     // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open()), find a way to unify this
 
+    /**
+     * Number of op_put_segment calls batched by {@link #put(byte[], int, int)} without retrieving response.
+     */
+    private static final int OUTSTANDING_PUT_SEGMENT_PACKETS = 8;
+
     public V10OutputBlob(FbWireDatabase database, FbWireTransaction transaction,
             BlobParameterBuffer blobParameterBuffer) {
         super(database, transaction, blobParameterBuffer);
     }
-
-    // TODO Need blob specific warning callback?
 
     @Override
     public void open() throws SQLException {
@@ -92,40 +95,73 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
     }
 
     @Override
-    public void putSegment(byte[] segment) throws SQLException {
-        try {
-            if (segment.length == 0) {
+    public void put(final byte[] b, final int off, final int len) throws SQLException {
+        try (LockCloseable ignored = withLock())  {
+            validateBufferLength(b, off, len);
+            if (len == 0) {
                 throw FbExceptionBuilder.forException(jb_blobPutSegmentEmpty).toSQLException();
             }
-            // TODO Handle by performing multiple puts?
-            if (segment.length > getMaximumSegmentSize()) {
-                throw FbExceptionBuilder.forException(jb_blobPutSegmentTooLong).toSQLException();
-            }
-            try (LockCloseable ignored = withLock()) {
-                checkDatabaseAttached();
-                checkTransactionActive();
-                checkBlobOpen();
+            checkDatabaseAttached();
+            checkTransactionActive();
+            checkBlobOpen();
 
-                final FbWireDatabase database = getDatabase();
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
+            FbWireDatabase db = getDatabase();
+            int requestCount = 0;
+            try {
+                XdrOutputStream xdrOut = getXdrOut();
+                int count = 0;
+                while (count < len) {
+                    int segmentLength = Math.min(len - count, getMaximumSegmentSize());
                     xdrOut.writeInt(op_put_segment);
                     xdrOut.writeInt(getHandle());
-                    xdrOut.writeInt(segment.length);
-                    xdrOut.writeBuffer(segment);
-                    xdrOut.flush();
-                } catch (IOException e) {
-                    throw FbExceptionBuilder.ioWriteError(e);
+                    xdrOut.writeInt(segmentLength);
+                    xdrOut.writeBuffer(b, off + count, segmentLength);
+                    count += segmentLength;
+                    if (++requestCount >= OUTSTANDING_PUT_SEGMENT_PACKETS) {
+                        xdrOut.flush();
+                        try {
+                            consumePutSegmentResponses(db, requestCount);
+                        } finally {
+                            requestCount = 0;
+                        }
+                    }
                 }
-                try {
-                    database.readResponse(null);
-                } catch (IOException e) {
-                    throw FbExceptionBuilder.ioReadError(e);
-                }
+                xdrOut.flush();
+            } catch (IOException e) {
+                db.consumePackets(requestCount, w -> {});
+                throw FbExceptionBuilder.ioWriteError(e);
             }
+
+            consumePutSegmentResponses(db, requestCount);
+
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
     }
+
+    protected void consumePutSegmentResponses(FbWireDatabase db, int requestCount) throws SQLException {
+        if (requestCount == 0) return;
+        var chain = new SQLExceptionChainBuilder<>();
+        try {
+            while (requestCount-- > 0) {
+                try {
+                    db.readResponse(null);
+                } catch (SQLException e) {
+                    chain.append(e);
+                }
+            }
+            if (chain.hasException()) {
+                throw chain.getException();
+            }
+        } catch (IOException e) {
+            db.consumePackets(requestCount, w -> {});
+            SQLException exception = FbExceptionBuilder.ioReadError(e);
+            if (chain.hasException()) {
+                exception.addSuppressed(chain.getException());
+            }
+            throw exception;
+        }
+    }
+
 }

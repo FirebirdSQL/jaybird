@@ -25,23 +25,24 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.io.ByteArrayOutputStream;
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultTpb;
-import static org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues.isc_bpb_type_segmented;
-import static org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues.isc_bpb_type_stream;
-import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_type;
+import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -180,11 +181,14 @@ public abstract class BaseTestBlob {
      * @return Blob content array
      */
     protected byte[] generateBlobContent(byte[] baseContent, int requiredSize) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
-        while (bos.size() < requiredSize) {
-            bos.write(baseContent, 0, Math.min(baseContent.length, requiredSize - bos.size()));
+        byte[] result = new byte[requiredSize];
+        int count = 0;
+        while (count < requiredSize) {
+            int toCopy = Math.min(baseContent.length, requiredSize - count);
+            System.arraycopy(baseContent, 0, result, count, toCopy);
+            count += toCopy;
         }
-        return bos.toByteArray();
+        return result;
     }
 
     /**
@@ -247,46 +251,21 @@ public abstract class BaseTestBlob {
      * @param id
      *         id of the record to be created in blob_table
      * @param baseContent
-     *         Base content
+     *         base content
      * @param requiredSize
-     *         Required size
+     *         required size
      * @param streamBlob
      *         {@code true} create as stream blob, {@code false} create as segmented blob
      */
     protected void populateBlob(int id, byte[] baseContent, int requiredSize, boolean streamBlob)
             throws SQLException {
-        final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
-
-        try (FbDatabase db = createDatabaseConnection()) {
-            listener = new SimpleStatementListener();
-            transaction = getTransaction(db);
-            try {
-                statement = db.createStatement(transaction);
-                statement.addStatementListener(listener);
-
-                BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
-                blobParameterBuffer.addArgument(isc_bpb_type, streamBlob ? isc_bpb_type_stream : isc_bpb_type_segmented);
-                FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
-                blob.open();
-                int bytesWritten = 0;
-                while (bytesWritten < testBytes.length) {
-                    byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
-                    System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
-                    blob.putSegment(buffer);
-                    bytesWritten += buffer.length;
-                }
-                blob.close();
-
-                statement.prepare(INSERT_BLOB_TABLE);
-                DatatypeCoder datatypeCoder = db.getDatatypeCoder();
-                RowValue rowValue = RowValue.of(
-                        datatypeCoder.encodeInt(id),
-                        datatypeCoder.encodeLong(blob.getBlobId()));
-                statement.execute(rowValue);
-                statement.close();
-            } finally {
-                transaction.commit();
-            }
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useStreamBlobs, String.valueOf(streamBlob));
+        try (var connection = DriverManager.getConnection(getUrl(), props);
+             var pstmt = connection.prepareStatement(INSERT_BLOB_TABLE)) {
+            pstmt.setInt(1, id);
+            pstmt.setBytes(2, generateBlobContent(baseContent, requiredSize));
+            pstmt.execute();
         }
     }
 
@@ -307,14 +286,7 @@ public abstract class BaseTestBlob {
             statement.addStatementListener(listener);
             final FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
             blob.open();
-            int bytesWritten = 0;
-            while (bytesWritten < testBytes.length) {
-                // TODO the interface for writing blobs should be simpler
-                byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
-                System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
-                blob.putSegment(buffer);
-                bytesWritten += buffer.length;
-            }
+            blob.putSegment(testBytes);
             blob.close();
 
             statement.prepare(INSERT_BLOB_TABLE);

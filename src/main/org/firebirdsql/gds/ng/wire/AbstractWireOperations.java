@@ -262,8 +262,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
 
     @Override
     public final void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback) {
-        while (numberOfResponses > 0) {
-            numberOfResponses--;
+        while (numberOfResponses-- > 0) {
             try {
                 readResponse(warningCallback);
             } catch (Exception e) {

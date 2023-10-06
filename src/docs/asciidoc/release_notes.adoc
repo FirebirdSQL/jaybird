@@ -782,18 +782,53 @@ Performance of reading blobs was improved, especially when using `ResultSet.getB
 
 Testing on a local network (Wi-Fi) shows an increase in throughput of roughly 50-100% for reading large blobs with the default `blobBufferSize` of 16384.
 
-These throughput improvements were only realised in the pure Java protocol, because there we had the opportunity to avoid all additional allocations by writing directly from the network stream into the destination byte array, and this allows us to ignore the configured `blobBufferSize` and use up to the maximum request size of 64KiB - 1 instead.
+These throughput improvements were only realised in the pure Java protocol, because there we had the opportunity to avoid all additional allocations by writing directly from the network stream into the destination byte array, and this allows us to ignore the configured `blobBufferSize` and use up to the maximum request size of 65535 bytes instead.
 
 This is not possible for the JNA-based protocols (native/embedded), as the implementation requires a direct byte buffer to bridge to the native API, and thus we can't ignore the `blobBufferSize`.
 We were able to realise some other optimizations (in both pure Java and JNA), by avoiding allocation of a number of intermediate objects, but this has only marginal effects on the throughput.
 
-Similar improvements may follow for writes.
+[#blob-performance-write]
+==== Writing blobs
+
+Performance of writing blobs was improved, especially when using `ResultSet.setBytes`, `Blob.setBytes`, `ResultSet.setString` or writing to a blob output stream with `write(byte[], int, int)` and similar methods with a byte array larger than the configured `blobBufferSize`.
+A smaller improvement was made when using arrays larger than 50% of the `blobBufferSize`.
+
+Testing on a local network (Wi-Fi) shows an increase in throughput of roughly 300-400% for writing large blobs with the default `blobBufferSize` of 16384.
+The improvement is not available for all methods of writing blobs, for example using `ResultSet.setBinaryStream` does not see this improvement, as it relies on the `blobBufferSize` for transferring the blob content.
+
+Most of these throughput improvements were only realised in the pure Java protocol, because there we had the opportunity to avoid all additional allocations by writing directly from the source byte array to the network stream, and this allows us to ignore the configured `blobBufferSize` and use up to the maximum segment size of 65535 bytes instead.
+
+For the JNA-based protocols (native/embedded) a smaller throughput improvement was realised, by using the maximum segment size for the first roundtrip if the array write used offset `0`.
+If the length is larger than the maximum segment size, or if the offset is non-zero, we need to allocate a buffer (for subsequent segments in case offset is `0`), and thus cannot ignore the `blobBufferSize`.
+
+Similar to the improvements for reading, we were also able to realise some other optimizations (in both pure Java and JNA), by avoiding allocation of a number of intermediate objects, but this has only marginal effects on the throughput.
 
 [#blob-performance-min-buf]
 ==== Minimum `blobBufferSize` 512 bytes
 
 As part of the performance improvements, a minimum `blobBufferSize` of 512 bytes was introduced.
 Configuring values less than 512 will be ignored and use 512 instead.
+
+[#blob-performance-max-segment]
+==== Maximum segment size raised
+
+For connections to Firebird 2.1 and higherfootnote:[Formally, only Firebird 3.0 and higher are supported], the maximum segment size was raised from 32765 to 65535 bytes to match the maximum segment size supported by Firebird.
+
+The maximum segment size is the maximum size for sending segments (_put_) to the server.
+Due to protocol limitations, retrieving segments from the server (_get_) is two bytes (or multiples of two bytes) shorterfootnote:[For _get_ the maximum segment size is actually the maximum buffer size to receive one or more segments which are prefixed with two bytes for the length].
+
+[#blob-put-segment-limit]
+==== Internal API changes for `FbBlob`
+
+Two new methods were added to `FbBlob`:
+
+`int get(byte[] b, int off, int len)`:: populates the array `b`, starting at `off`, for the requested `len` bytes from the blob, and returning the actual read bytes.
+This method will read until `len` bytes have been read, and only return less than `len` when end-of-blob was reached.
+
+`void put(byte[] b, int off, int len)`:: sends data from array `b` to the blob, starting at `off`, for the requested `len` bytes.
+
+The documentation of method `FbBlob.putSegment(byte[])` contradicted itself, by requiring implementations to batch larger arrays, but also requiring them to throw an exception for larger arrays, and the actual implementations provided by Jaybird threw an exception.
+This contradiction has been removed, and the implementations will now send arrays longer than the maximum segment size to the server in multiple _put_ requests.
 
 // TODO add major changes
 
@@ -1150,6 +1185,7 @@ there is no replacement
 use `FBSQLException(String)` or `FBSQLException(String, String)` followed by `setNextException(SQLException)`
 ** `getInternalException()`;
 use `getCause()`
+* `FBServiceManager`
 ** `executeServicesOperation(ServiceRequestBuffer)`;
 use `executeServicesOperation(FbService, ServiceRequestBuffer)`
 * `FirebirdDriver` (and `FBDriver`)
