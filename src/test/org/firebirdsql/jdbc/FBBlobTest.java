@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
@@ -35,7 +36,6 @@ import java.sql.*;
 import java.util.Properties;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
-import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
@@ -70,7 +70,7 @@ class FBBlobTest {
 
     @BeforeEach
     void setup() throws SQLException {
-        conn = getConnectionViaDriverManager();
+        conn = getConnection(true);
     }
 
     @AfterEach
@@ -86,18 +86,20 @@ class FBBlobTest {
     @ParameterizedTest
     @ValueSource(booleans = { false, true })
     void testIsSegmented(boolean useStreamBlobs) throws SQLException {
-        try (Connection conn = getConnection(useStreamBlobs)) {
-            populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
+        if (!useStreamBlobs) {
+            conn.close();
+            conn = getConnection(false);
+        }
+        populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
 
-            try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
-                select.setInt(1, 1);
-                try (ResultSet rs = select.executeQuery()) {
-                    assertTrue(rs.next(), "Expected a row in result set");
-                    FBBlob blob = (FBBlob) rs.getBlob(1);
-                    assertEquals(!useStreamBlobs, blob.isSegmented(),
-                            "Expected a " + (useStreamBlobs ? "stream" : "segmented") + " blob");
-                    blob.free();
-                }
+        try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
+            select.setInt(1, 1);
+            try (ResultSet rs = select.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row in result set");
+                FBBlob blob = (FBBlob) rs.getBlob(1);
+                assertEquals(!useStreamBlobs, blob.isSegmented(),
+                        "Expected a " + (useStreamBlobs ? "stream" : "segmented") + " blob");
+                blob.free();
             }
         }
     }
@@ -211,9 +213,9 @@ class FBBlobTest {
 
     @Test
     void testGetBinaryStream_long_long_throwsSQLFeatureNotSupported() throws Exception {
-            Blob blob = conn.createBlob();
+        Blob blob = conn.createBlob();
 
-            assertThrows(SQLFeatureNotSupportedException.class, () -> blob.getBinaryStream(1, 1));
+        assertThrows(SQLFeatureNotSupportedException.class, () -> blob.getBinaryStream(1, 1));
     }
 
     @SuppressWarnings("resource")
@@ -274,19 +276,17 @@ class FBBlobTest {
 
     @Test
     void testGetBytes_withOffset_streamBlob() throws Exception {
-        try (Connection conn = getConnection(true)) {
-            populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
-            try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
-                select.setInt(1, 1);
-                try (ResultSet rs = select.executeQuery()) {
-                    assertTrue(rs.next(), "Expected a row in result set");
-                    FirebirdBlob blob = (FirebirdBlob) rs.getBlob(1);
+        populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
+        try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
+            select.setInt(1, 1);
+            try (ResultSet rs = select.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row in result set");
+                FirebirdBlob blob = (FirebirdBlob) rs.getBlob(1);
 
-                    byte[] bytes = blob.getBytes(2, 4);
+                byte[] bytes = blob.getBytes(2, 4);
 
-                    assertArrayEquals(new byte[] { 2, 3, 4, 5 }, bytes,
-                            "Expected array equal to original from index 1");
-                }
+                assertArrayEquals(new byte[] { 2, 3, 4, 5 }, bytes,
+                        "Expected array equal to original from index 1");
             }
         }
     }
@@ -310,18 +310,20 @@ class FBBlobTest {
 
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
-    void testGetBytes_withOffset_streamBlob(boolean useStreamBlobs) throws Exception {
-        try (Connection conn = getConnection(useStreamBlobs)) {
-            byte[] input = { 1, 2, 3, 4, 5 };
-            populateBlob(conn, input);
-            try (var select = conn.prepareStatement(SELECT_BLOB)) {
-                select.setInt(1, 1);
-                try (var rs = select.executeQuery()) {
-                    assertTrue(rs.next(), "Expected a row in result set");
-                    FirebirdBlob blob = (FirebirdBlob) rs.getBlob(1);
+    void testGetBytes(boolean useStreamBlobs) throws Exception {
+        if (!useStreamBlobs) {
+            conn.close();
+            conn = getConnection(false);
+        }
+        byte[] input = { 1, 2, 3, 4, 5 };
+        populateBlob(conn, input);
+        try (var select = conn.prepareStatement(SELECT_BLOB)) {
+            select.setInt(1, 1);
+            try (var rs = select.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row in result set");
+                FirebirdBlob blob = (FirebirdBlob) rs.getBlob(1);
 
-                    assertArrayEquals(input, blob.getBytes(), "Expected array equal to original");
-                }
+                assertArrayEquals(input, blob.getBytes(), "Expected array equal to original");
             }
         }
     }
@@ -343,6 +345,43 @@ class FBBlobTest {
                 message(equalTo("Blob position is limited to 2^31 - 1 due to isc_seek_blob limitations")),
                 sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH))));
     }
+
+    @Test
+    void testGetBytes_lengthLongerThanBlobSize() throws Exception {
+        byte[] data = DataGenerator.createRandomBytes(50);
+        populateBlob(conn, data);
+
+        try (var select = conn.prepareStatement(SELECT_BLOB)) {
+            select.setInt(1, 1);
+            try (var rs = select.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row in result set");
+                Blob blob = rs.getBlob(1);
+
+                assertArrayEquals(data, blob.getBytes(1, data.length + 10),
+                        "Expected array equal to original even when requesting larger length");
+            }
+        }
+    }
+
+    @Test
+    void testGetBytes_offsetBeyondEndOfBlob() throws Exception {
+        byte[] data = DataGenerator.createRandomBytes(50);
+        populateBlob(conn, data);
+
+        try (var select = conn.prepareStatement(SELECT_BLOB)) {
+            select.setInt(1, 1);
+            try (var rs = select.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row in result set");
+                Blob blob = rs.getBlob(1);
+
+                // The JDBC API does not state if a position beyond the end-of-blob should be an error condition or not.
+                // Interestingly, it does consider it an error condition for getBinaryStream(long, long), so consider
+                // this "undefined" behaviour.
+                assertArrayEquals(new byte[0], blob.getBytes(data.length + 5, 10), "Expected empty array");
+            }
+        }
+    }
+
 
     /**
      * Checks if the blob close on commit is done successfully.

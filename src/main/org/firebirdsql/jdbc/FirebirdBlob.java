@@ -163,6 +163,16 @@ public interface FirebirdBlob extends Blob {
         void readFully(byte[] buffer) throws IOException;
 
         /**
+         * @see InputStream#readNBytes(byte[], int, int)
+         */
+        int readNBytes(byte[] b, int off, int len) throws IOException;
+
+        /**
+         * @see InputStream#readNBytes(int)
+         */
+        byte[] readNBytes(int len) throws IOException;
+
+        /**
          * Move current position in the Blob stream. This is a shortcut method to {@link #seek(int, int)} passing
          * {@link #SEEK_MODE_ABSOLUTE} as seek mode.
          *

@@ -878,6 +878,12 @@ Other drivers and tools simply send the requests for blob id `0` to the server, 
 For consistency, we decided to let Jaybird handle it the same.
 +
 This change was also backported to Jaybird 5.0.3.
+* Fixed: The implementation of `Blob.getBytes(long, int)` threw a `SQLException` if the remaining bytes of the blob where less than the requested number of bytes (https://github.com/FirebirdSQL/jaybird/issues/767[#767])
++
+The JDBC API specifies _" This `byte` array contains up to `length` consecutive bytes starting at position pos."_, so the implementation was changed to return up to `length` bytes, or the remaining actual blob length, whichever is shorter.
++
+The JDBC API does not specify what should happen if the requested position is beyond the end-of-blob.
+The modified implementation returns an empty array, but given this is unspecified behaviour, we reserve the option to change this in the future to throw an exception instead.
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages

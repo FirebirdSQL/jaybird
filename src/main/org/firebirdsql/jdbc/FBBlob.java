@@ -42,6 +42,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -295,9 +296,10 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
                     in.seek((int) pos - 1);
                 }
 
+                // We optimize for the case where we can read all data
                 byte[] result = new byte[length];
-                in.readFully(result);
-                return result;
+                int read = in.readNBytes(result, 0, length);
+                return read == length ? result : Arrays.copyOf(result, read);
             } catch (IOException e) {
                 if (e.getCause() instanceof SQLException sqle) {
                     throw sqle;
