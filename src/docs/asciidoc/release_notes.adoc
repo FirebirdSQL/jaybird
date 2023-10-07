@@ -66,7 +66,7 @@ This driver does not work on Android, because it uses classes and features not a
 
 // TODO Describe Jaybird 6
 
-The major changes and new features in Jaybird 5 are:
+The major changes and new features in Jaybird 6 are:
 
 * ...
 
@@ -95,7 +95,7 @@ Jaybird 6 supports Java 17 and higher (JDBC 4.3).
 Support for earlier Java versions has been dropped.
 
 Given the limited support period for Java 9 and higher versions, we limit support to Java 17 and the most recent LTS version after Java 17 and the latest Java release.
-Currently, that means we support Java 17 and 20.
+Currently, that means we support Java 17 and 21.
 
 [NOTE]
 ====
@@ -333,6 +333,9 @@ See also <<support-for-firebird-25-dropped>>.
 
 Jaybird 6 supports Firebird version 3.0, 4.0, and provides tentative support for Firebird 5.0.
 
+Jaybird 6 will -- by default -- not connect to unsupported versions (Firebird 2.5 or older).
+See also <<unsupported-protocol>>.
+
 [#native-plugin]
 === NATIVE and EMBEDDED support moved to separate artifact
 
@@ -515,7 +518,7 @@ Unsupported protocol versions may be removed in future releases of Jaybird.
 The package `org.firebirdsql.logging` has been removed.
 The logging facade from this package has been replaced with the Java Platform Logging API (https://openjdk.org/jeps/264[JEP 264^]).
 
-The Java Platform Logging API by default logs to `java.util.logging`, but it is possible to plugin different logging platforms.
+The Java Platform Logging API by default logs to `java.util.logging`, but it is possible to plug in different logging platforms.
 For example, Log4j provides the `log4j-jpl` dependency which will replace the default binding to `java.util.logging` with one to Log4j.
 
 With this change, Jaybird no longer provides an option to specify a custom logger implementation, so the system property `org.firebirdsql.jdbc.loggerImplementation` is no longer supported.
@@ -574,7 +577,7 @@ For embedded connections, if there is a valid `FirebirdEmbeddedProvider` on the 
 === Opt-in feature for package information in DatabaseMetaData
 
 Firebird 3.0 added packages, which can contain stored procedures and functions.
-The JDBC API does not provide a "`standard`" way of accessing information about packages, or the routines defined in packages.
+The JDBC API does not provide a standard way of accessing information about packages, or the routines defined in packages.
 Instead of adding additional Jaybird-specific metadata methods, we've added an "`opt-in`" feature that provides access through normal metadata methods, using the "`catalog`" to report packages.
 
 This feature can be enabled by setting the connection property `useCatalogAsPackage` to `true`.
@@ -711,7 +714,7 @@ The conditions for using asynchronous fetch are considered an implementation det
 In Jaybird 6.0.0, the conditions to enable asynchronous fetching are:
 
 . The result set has type `FORWARD_ONLY`.
-. The result set does not have cursor name set.
+. The result set does not have a cursor name set.
 . Any synchronous fetch on the statement cursor retrieved at least 15 rows.
 Be aware that the server may return fewer rows than the configured fetch size (default is 400), depending on Firebird version, row size and other factors.
 
@@ -880,7 +883,7 @@ For consistency, we decided to let Jaybird handle it the same.
 This change was also backported to Jaybird 5.0.3.
 * Fixed: The implementation of `Blob.getBytes(long, int)` threw a `SQLException` if the remaining bytes of the blob where less than the requested number of bytes (https://github.com/FirebirdSQL/jaybird/issues/767[#767])
 +
-The JDBC API specifies _" This `byte` array contains up to `length` consecutive bytes starting at position pos."_, so the implementation was changed to return up to `length` bytes, or the remaining actual blob length, whichever is shorter.
+The JDBC API specifies _"This `byte` array contains up to `length` consecutive bytes starting at position pos."_, so the implementation was changed to return up to `length` bytes, or the remaining actual blob length, whichever is shorter.
 +
 The JDBC API does not specify what should happen if the requested position is beyond the end-of-blob.
 The modified implementation returns an empty array, but given this is unspecified behaviour, we reserve the option to change this in the future to throw an exception instead.
@@ -904,10 +907,10 @@ It might have been a change we forgot to document, but it could just as well be 
 Jaybird 6 has dropped support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support^]).
 In general, we expect the driver to remain functional, if the protocol version is explicitly enabled, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
 
-By default, Jaybird will only connect to Firebird 3.0 and higher.
+By default, Jaybird 6 will only connect to Firebird 3.0 and higher.
 See also <<unsupported-protocols-disabled>>.
 
-[[unsupported-protocols-disabled]]
+[#unsupported-protocols-disabled]
 === Unsupported protocol version disabled by default
 
 The wire protocol versions for Firebird 2.5 and earlier are disabled by default to disallow connection for the pure Java protocol.
