@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Vector;
 
+import static org.firebirdsql.jdbc.SQLStateConstants.*;
+
 /**
  * Represents procedure call.
  */
@@ -185,8 +187,7 @@ public class FBProcedureCall implements Cloneable {
         if (compatibilityMode) {
             return index;
         } else {
-            throw new FBSQLException("Specified parameter does not exist",
-                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
+            throw new SQLException("Specified parameter does not exist", SQL_STATE_INVALID_DESC_FIELD_ID);
         }
     }
 
@@ -301,7 +302,7 @@ public class FBProcedureCall implements Cloneable {
 
         if (param == null || param == NullParam.NULL_PARAM) {
             throw new SQLException("Cannot find parameter with the specified position",
-                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
+                    SQL_STATE_INVALID_DESC_FIELD_ID);
         }
 
         param.setType(type);
@@ -359,11 +360,11 @@ public class FBProcedureCall implements Cloneable {
             // to the next one.
             if (!param.isValueSet()) {
                 if (param.isParam()
-                        && outputParams.size() > 0
-                        && outputParams.get(param.getPosition()) == null)
-                    throw new FBSQLException("Value of parameter " + param.getIndex() + " not set and "
-                            + "it was not registered as output parameter",
-                            SQLStateConstants.SQL_STATE_WRONG_PARAM_NUM);
+                    && !outputParams.isEmpty()
+                    && outputParams.get(param.getPosition()) == null) {
+                    throw new SQLException("Value of parameter %d not set and it was not registered as output parameter"
+                                    .formatted(param.getIndex()), SQL_STATE_WRONG_PARAM_NUM);
+                }
             }
         }
     }
@@ -391,10 +392,8 @@ public class FBProcedureCall implements Cloneable {
     }
 
     /**
-     * This class defines a procedure parameter that does not have any value
-     * and value of which cannot be set. It is created in order to avoid NPE
-     * when {@link FBProcedureCall#getInputParam(int)} does not find correct
-     * parameter.
+     * This class defines a procedure parameter that does not have any value and value of which cannot be set. It was
+     * created to avoid NPE when {@link FBProcedureCall#getInputParam(int)} does not find the correct parameter.
      */
     private static final class NullParam extends FBProcedureParam {
 
@@ -406,8 +405,7 @@ public class FBProcedureCall implements Cloneable {
 
         @Override
         public void setValue(Object value) throws SQLException {
-            throw new FBSQLException("You cannot set value of a non-existing parameter",
-                    SQLStateConstants.SQL_STATE_ATT_CANNOT_SET_NOW);
+            throw new SQLException("You cannot set value of a non-existing parameter", SQL_STATE_ATT_CANNOT_SET_NOW);
         }
 
         @Override

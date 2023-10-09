@@ -30,6 +30,7 @@ import java.sql.Wrapper;
 import java.util.Map;
 
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_PARAM_TYPE;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
@@ -143,9 +144,8 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             case Types.BOOLEAN -> BOOLEAN_CLASS_NAME;
             case Types.NULL, Types.OTHER -> OBJECT_CLASS_NAME;
             case Types.ROWID -> ROW_ID_CLASS_NAME;
-            default -> throw new FBSQLException(
-                    "Field %d has unknown JDBC SQL type: %s".formatted(field, getFieldType(field)),
-                    SQLStateConstants.SQL_STATE_INVALID_PARAM_TYPE);
+            default -> throw new SQLException("Field %d has unknown JDBC SQL type: %s"
+                    .formatted(field, getFieldType(field)), SQL_STATE_INVALID_PARAM_TYPE);
         };
     }
 

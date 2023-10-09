@@ -24,7 +24,6 @@ import java.sql.SQLException;
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
 
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_CONNECTION_FAILURE;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -160,11 +160,11 @@ class FBPooledConnectionMockTest {
     void testFatalExceptionFiresConnectionErrorOccurred(@Mock ConnectionEventListener cel) throws SQLException {
         pooled.addConnectionEventListener(cel);
 
-        doThrow(new FBSQLException("Mock Exception", SQLStateConstants.SQL_STATE_CONNECTION_FAILURE))
+        doThrow(new SQLException("Mock Exception", SQL_STATE_CONNECTION_FAILURE))
                 .when(physical).setAutoCommit(true);
 
         SQLException exception = assertThrows(SQLException.class, () -> pooled.getConnection());
-        assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_FAILURE));
+        assertThat(exception, sqlStateEquals(SQL_STATE_CONNECTION_FAILURE));
 
         verify(cel).connectionErrorOccurred(argThat(new ConnectionEventMatcher(pooled, instanceOf(SQLException.class))));
     }

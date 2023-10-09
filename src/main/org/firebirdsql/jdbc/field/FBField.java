@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_USE_NULL;
 
 /**
  * Base class for fields (for use by prepared statement and result set to represent columns and parameters).
@@ -82,8 +83,8 @@ public abstract class FBField {
 
     FBField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         if (fieldDescriptor == null) {
-            throw new FBSQLException("Cannot create FBField instance with fieldDescriptor null",
-                    SQLStateConstants.SQL_STATE_INVALID_USE_NULL);
+            throw new SQLNonTransientException("Cannot create FBField instance with fieldDescriptor null",
+                    SQL_STATE_INVALID_USE_NULL);
         }
 
         this.fieldDescriptor = fieldDescriptor;

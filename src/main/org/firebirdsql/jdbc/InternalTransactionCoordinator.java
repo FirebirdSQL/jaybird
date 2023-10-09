@@ -30,6 +30,7 @@ import java.util.*;
 
 import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.isc_tpb_autocommit;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
 
 /**
  * Transaction coordinator for the {@link org.firebirdsql.jdbc.FBConnection} class.
@@ -390,12 +391,12 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         public void commit() throws SQLException {
-            throw new FBSQLException("Calling commit() in auto-commit mode is not allowed.");
+            throw new SQLException("Calling commit() in auto-commit mode is not allowed.", SQL_STATE_GENERAL_ERROR);
         }
 
         @Override
         public void rollback() throws SQLException {
-            throw new FBSQLException("Calling rollback() in auto-commit mode is not allowed.");
+            throw new SQLException("Calling rollback() in auto-commit mode is not allowed.", SQL_STATE_GENERAL_ERROR);
         }
 
         @Override
@@ -552,12 +553,12 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         public void commit() throws SQLException {
-            throw new FBSQLException("Calling commit() in auto-commit mode is not allowed.");
+            throw new SQLException("Calling commit() in auto-commit mode is not allowed.", SQL_STATE_GENERAL_ERROR);
         }
 
         @Override
         public void rollback() throws SQLException {
-            throw new FBSQLException("Calling rollback() in auto-commit mode is not allowed.");
+            throw new SQLException("Calling rollback() in auto-commit mode is not allowed.", SQL_STATE_GENERAL_ERROR);
         }
 
         @Override

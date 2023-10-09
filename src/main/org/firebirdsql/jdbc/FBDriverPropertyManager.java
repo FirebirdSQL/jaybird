@@ -25,6 +25,8 @@ import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.*;
 
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
+
 /**
  * Manager of the DPB properties.
  */
@@ -54,8 +56,9 @@ final class FBDriverPropertyManager {
             String primaryName = property != null ? property.name() : propName;
             boolean hasDuplicate = property != null && result.containsKey(primaryName);
             if (hasDuplicate) {
-                throw new FBSQLException("Specified properties contain multiple references to a property: "
-                        + "primary name " + primaryName + ", current name: " + propName);
+                throw new SQLException(
+                        "Specified properties contain multiple references to a property: primary name %s, current name: %s"
+                                .formatted(primaryName, propName), SQL_STATE_GENERAL_ERROR);
             }
             String propValue = entry.getValue();
             result.put(primaryName, propValue);

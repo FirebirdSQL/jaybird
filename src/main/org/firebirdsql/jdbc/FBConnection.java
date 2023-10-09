@@ -49,6 +49,10 @@ import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
 import static java.util.stream.Collectors.toMap;
 import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_CONNECTION_CLOSED;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_TX_STATE;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_TX_ACTIVE;
 
 /**
  * The class {@code FBConnection} is a handle to a {@link FBManagedConnection} and implements {@link Connection}.
@@ -126,7 +130,7 @@ public class FBConnection implements FirebirdConnection {
     protected void checkValidity() throws SQLException {
         if (isClosed()) {
             throw new SQLNonTransientConnectionException("This connection is closed and cannot be used now",
-                    SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
+                    SQL_STATE_CONNECTION_CLOSED);
         }
     }
 
@@ -251,7 +255,8 @@ public class FBConnection implements FirebirdConnection {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (mc.isManagedEnvironment()) {
-                throw new FBSQLException("Cannot set transaction parameters in managed environment.");
+                throw new SQLException("Cannot set transaction parameters in managed environment.",
+                        SQL_STATE_GENERAL_ERROR);
             }
 
             mc.setTransactionParameters(isolationLevel, tpb);
@@ -264,7 +269,8 @@ public class FBConnection implements FirebirdConnection {
             checkValidity();
             if (getLocalTransaction().inTransaction()) {
                 // TODO More specific exception, jaybird error code
-                throw new FBSQLException("Cannot set transaction parameters when transaction is already started.");
+                throw new SQLException("Cannot set transaction parameters when transaction is already started.",
+                        SQL_STATE_TX_ACTIVE);
             }
 
             mc.setTransactionParameters(tpb);
@@ -359,7 +365,8 @@ public class FBConnection implements FirebirdConnection {
     public boolean getAutoCommit() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (isClosed()) {
-                throw new FBSQLException("You cannot getAutoCommit on an unassociated closed connection.");
+                throw new SQLNonTransientConnectionException(
+                        "You cannot getAutoCommit on an unassociated closed connection.", SQL_STATE_CONNECTION_CLOSED);
             }
             return txCoordinator.getAutoCommit();
         }
@@ -369,13 +376,12 @@ public class FBConnection implements FirebirdConnection {
     public void commit() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (isClosed()) {
-                throw new FBSQLException(
-                        "You cannot commit a closed connection.",
-                        SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
+                throw new SQLNonTransientConnectionException("You cannot commit a closed connection.",
+                        SQL_STATE_CONNECTION_CLOSED);
             }
 
             if (mc.inDistributedTransaction()) {
-                throw new FBSQLException("Connection enlisted in distributed transaction", SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
+                throw new SQLException("Connection enlisted in distributed transaction", SQL_STATE_INVALID_TX_STATE);
             }
 
             txCoordinator.commit();
@@ -387,13 +393,12 @@ public class FBConnection implements FirebirdConnection {
     public void rollback() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (isClosed()) {
-                throw new FBSQLException(
-                        "You cannot rollback closed connection.",
-                        SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
+                throw new SQLNonTransientConnectionException("You cannot rollback closed connection.",
+                        SQL_STATE_CONNECTION_CLOSED);
             }
 
             if (mc.inDistributedTransaction()) {
-                throw new FBSQLException("Connection enlisted in distributed transaction", SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
+                throw new SQLException("Connection enlisted in distributed transaction", SQL_STATE_INVALID_TX_STATE);
             }
 
             txCoordinator.rollback();
@@ -443,7 +448,7 @@ public class FBConnection implements FirebirdConnection {
                             try {
                                 setAutoCommit(true);
                             } catch (SQLException e) {
-                                if (!SQLStateConstants.SQL_STATE_CONNECTION_CLOSED.equals(e.getSQLState())) {
+                                if (!SQL_STATE_CONNECTION_CLOSED.equals(e.getSQLState())) {
                                     chainBuilder.append(e);
                                 }
                             }
@@ -550,8 +555,9 @@ public class FBConnection implements FirebirdConnection {
             checkValidity();
             if (getLocalTransaction().inTransaction() && !mc.isManagedEnvironment()) {
                 // TODO More specific exception, jaybird error code
-                throw new FBSQLException("Calling setReadOnly(boolean) method " +
-                        "is not allowed when transaction is already started.");
+                throw new SQLException(
+                        "Calling setReadOnly(boolean) method is not allowed when transaction is already started.",
+                        SQL_STATE_TX_ACTIVE);
             }
             mc.setReadOnly(readOnly);
         }
@@ -859,12 +865,11 @@ public class FBConnection implements FirebirdConnection {
     private void setSavepoint(FBSavepoint savepoint) throws SQLException {
         if (getAutoCommit()) {
             throw new SQLException("Connection.setSavepoint() method cannot be used in auto-commit mode.",
-                    SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
+                    SQL_STATE_INVALID_TX_STATE);
         }
 
         if (mc.inDistributedTransaction()) {
-            throw new SQLException("Connection enlisted in distributed transaction",
-                    SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
+            throw new SQLException("Connection enlisted in distributed transaction", SQL_STATE_INVALID_TX_STATE);
         }
 
         txCoordinator.ensureTransaction();
@@ -917,7 +922,7 @@ public class FBConnection implements FirebirdConnection {
             checkValidity();
             if (getAutoCommit()) {
                 throw new SQLException("Connection.rollback(Savepoint) method cannot be used in auto-commit mode.",
-                        SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
+                        SQL_STATE_INVALID_TX_STATE);
             }
 
             // TODO The error message and actual condition do not match
@@ -926,8 +931,7 @@ public class FBConnection implements FirebirdConnection {
             }
 
             if (mc.inDistributedTransaction()) {
-                throw new SQLException("Connection enlisted in distributed transaction",
-                        SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
+                throw new SQLException("Connection enlisted in distributed transaction", SQL_STATE_INVALID_TX_STATE);
             }
 
             if (!fbSavepoint.isValid()) {
@@ -946,7 +950,7 @@ public class FBConnection implements FirebirdConnection {
             checkValidity();
             if (getAutoCommit()) {
                 throw new SQLException("Connection.releaseSavepoint() method cannot be used in auto-commit mode.",
-                        SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
+                        SQL_STATE_INVALID_TX_STATE);
             }
 
             // TODO The error message and actual condition do not match

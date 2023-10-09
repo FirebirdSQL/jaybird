@@ -33,6 +33,8 @@ import java.sql.Date;
 import java.sql.*;
 import java.util.*;
 
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_NO_RESULT_SET;
+
 /**
  * Implementation of {@link java.sql.CallableStatement}.
  * 
@@ -249,8 +251,9 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             notifyStatementStarted();
             prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
 
-            if (!internalExecute(!isSelectableProcedure()))
-                throw new FBSQLException("No resultset for sql", SQLStateConstants.SQL_STATE_NO_RESULT_SET);
+            if (!internalExecute(!isSelectableProcedure())) {
+                throw new SQLNonTransientException("No resultset for sql", SQL_STATE_NO_RESULT_SET);
+            }
 
             getResultSet();
             setRequiredTypes();
@@ -1091,8 +1094,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      */
     protected void assertHasData(ResultSet rs) throws SQLException {
         if (rs == null) {
-            throw new SQLException("Current statement has no data to return",
-                    SQLStateConstants.SQL_STATE_NO_RESULT_SET);
+            throw new SQLException("Current statement has no data to return", SQL_STATE_NO_RESULT_SET);
         }
         // check if we have a row, and try to move to the first position.
         if (rs.getRow() == 0) {
@@ -1103,8 +1105,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
         // check if we still have no row and throw an exception in this case.
         if (rs.getRow() == 0) {
-            throw new SQLException("Current statement has no data to return",
-                    SQLStateConstants.SQL_STATE_NO_RESULT_SET);
+            throw new SQLException("Current statement has no data to return", SQL_STATE_NO_RESULT_SET);
         }
     }
 

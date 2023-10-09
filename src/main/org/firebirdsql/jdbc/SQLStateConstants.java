@@ -103,9 +103,18 @@ public final class SQLStateConstants {
     public static final String SQL_STATE_INVALID_CONVERSION = "07006";
 
     /**
+     * ISO-9075-2: invalid cursor state => 24000.
+     */
+    public static final String SQL_STATE_INVALID_CURSOR_STATE = "24000";
+
+    /**
      * ISO-9075-2: invalid transaction state => 25000.
      */
     public static final String SQL_STATE_INVALID_TX_STATE = "25000";
+    /**
+     * ISO-9075-2: active SQL-transaction => 25001
+     */
+    public static final String SQL_STATE_TX_ACTIVE = "25001";
 
     /**
      * ISO-9075-2: invalid SQL statement name => 26000.

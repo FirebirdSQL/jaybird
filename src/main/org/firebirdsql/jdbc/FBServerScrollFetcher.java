@@ -38,6 +38,7 @@ import static org.firebirdsql.gds.ISCConstants.INF_RECORD_COUNT;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE;
 
 /**
  * Fetcher implementation for server-side scrollable cursors.
@@ -373,7 +374,9 @@ final class FBServerScrollFetcher implements FBFetcher {
     }
 
     private void checkOpen() throws SQLException {
-        if (closed) throw new FBSQLException("Result set is already closed.");
+        if (closed) {
+            throw new SQLException("Result set is already closed.", SQL_STATE_INVALID_CURSOR_STATE);
+        }
     }
 
     @Override

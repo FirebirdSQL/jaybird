@@ -22,7 +22,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -166,7 +165,7 @@ class PooledConnectionHandlerMockTest {
      */
     @Test
     void testException_Notify() throws SQLException {
-        SQLException sqle = new FBSQLException("Mock Exception");
+        SQLException sqle = new SQLException("Mock Exception");
 
         Connection proxy = handler.getProxy();
         doThrow(sqle).when(physicalConnection).clearWarnings();

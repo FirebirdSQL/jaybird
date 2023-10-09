@@ -36,6 +36,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE;
+
 /**
  * Class responsible for modifying updatable result sets.
  * <p>
@@ -141,18 +143,18 @@ final class FBRowUpdater implements FirebirdRowUpdater {
                 tableName = fieldDescriptor.getOriginalTableName();
             } else if (!tableName.equals(fieldDescriptor.getOriginalTableName())) {
                 throw new FBResultSetNotUpdatableException(
-                        "Underlying result set references at least two relations: " +
-                                tableName + " and " + fieldDescriptor.getOriginalTableName() + ".");
+                        "Underlying result set references at least two relations: %s and %s."
+                                .formatted(tableName, fieldDescriptor.getOriginalTableName()));
             }
         }
     }
 
     private void notifyExecutionStarted() throws SQLException {
-        if (closed)
-            throw new FBSQLException("Corresponding result set is closed.");
+        if (closed) {
+            throw new SQLException("Corresponding result set is closed.", SQL_STATE_INVALID_CURSOR_STATE);
+        }
 
-        if (processing)
-            return;
+        if (processing) return;
 
         rsListener.executionStarted(this);
         this.processing = true;
@@ -252,15 +254,16 @@ final class FBRowUpdater implements FirebirdRowUpdater {
                 // if we did not find a column from the best row identifier
                 // in our result set, throw an exception, since we cannot
                 // reliably identify the row.
-                if (!hasParams)
+                if (!hasParams) {
                     throw new FBResultSetNotUpdatableException(
-                            "Underlying result set does not contain all columns " +
-                                    "that form 'best row identifier'.");
+                            "Underlying result set does not contain all columns that form 'best row identifier'.");
+                }
             }
 
-            if (!hasParams)
+            if (!hasParams) {
                 throw new FBResultSetNotUpdatableException(
                         "No columns that can be used in WHERE clause could be found.");
+            }
 
             return result;
         }
@@ -451,11 +454,13 @@ final class FBRowUpdater implements FirebirdRowUpdater {
                     selectStatement.fetchRows(10);
 
                     List<RowValue> rows = rowListener.getRows();
-                    if (rows.size() == 0)
+                    if (rows.isEmpty()) {
                         throw new SQLException("No rows could be fetched.");
+                    }
 
-                    if (rows.size() > 1)
+                    if (rows.size() > 1) {
                         throw new SQLException("More then one row fetched.");
+                    }
 
                     setRow(rows.get(0));
                 } finally {
@@ -489,27 +494,13 @@ final class FBRowUpdater implements FirebirdRowUpdater {
 
         int[] parameterMask = getParameterMask();
 
-        String sql;
-        switch (statementType) {
-        case UPDATE_STATEMENT_TYPE:
-            sql = buildUpdateStatement(parameterMask);
-            break;
-
-        case DELETE_STATEMENT_TYPE:
-            sql = buildDeleteStatement(parameterMask);
-            break;
-
-        case INSERT_STATEMENT_TYPE:
-            sql = buildInsertStatement();
-            break;
-
-        case SELECT_STATEMENT_TYPE:
-            sql = buildSelectStatement(parameterMask);
-            break;
-
-        default:
-            throw new IllegalArgumentException("Incorrect statement type specified.");
-        }
+        String sql = switch (statementType) {
+            case UPDATE_STATEMENT_TYPE -> buildUpdateStatement(parameterMask);
+            case DELETE_STATEMENT_TYPE -> buildDeleteStatement(parameterMask);
+            case INSERT_STATEMENT_TYPE -> buildInsertStatement();
+            case SELECT_STATEMENT_TYPE -> buildSelectStatement(parameterMask);
+            default -> throw new IllegalArgumentException("Incorrect statement type specified.");
+        };
 
         stmt.prepare(sql);
 

@@ -19,11 +19,14 @@
 package org.firebirdsql.jdbc;
 
 import java.io.Serial;
+import java.sql.SQLNonTransientException;
+
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE;
 
 /**
  * Exception is thrown when trying to modify the non-updatable result set.
  */
-public class FBResultSetNotUpdatableException extends FBSQLException {
+public class FBResultSetNotUpdatableException extends SQLNonTransientException {
 
     @Serial
     private static final long serialVersionUID = 675357382993364256L;
@@ -42,7 +45,7 @@ public class FBResultSetNotUpdatableException extends FBSQLException {
      *         message to display.
      */
     public FBResultSetNotUpdatableException(String message) {
-        super(message, SQLStateConstants.SQL_STATE_GENERAL_ERROR);
+        super(message, SQL_STATE_INVALID_CURSOR_STATE);
     }
 
 }

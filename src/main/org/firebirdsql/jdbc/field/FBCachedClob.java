@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBCachedBlob;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
-import org.firebirdsql.jdbc.FBSQLException;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,6 +29,9 @@ import java.io.Writer;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
+
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_LOCATOR_EXCEPTION;
 
 /**
  * Clob implementation that is cached client-side.
@@ -86,20 +88,19 @@ public final class FBCachedClob implements Clob, NClob {
 	}
 
 	public OutputStream setAsciiStream(long pos) throws SQLException {
-		throw new FBSQLException("Clob in auto-commit mode is read-only.");
+		throw new SQLNonTransientException("Clob in auto-commit mode is read-only.", SQL_STATE_LOCATOR_EXCEPTION);
 	}
 
 	public Writer setCharacterStream(long pos) throws SQLException {
-		throw new FBSQLException("Clob in auto-commit mode is read-only.");
+		throw new SQLNonTransientException("Clob in auto-commit mode is read-only.", SQL_STATE_LOCATOR_EXCEPTION);
 	}
 
 	public int setString(long pos, String str) throws SQLException {
-		throw new FBSQLException("Clob in auto-commit mode is read-only.");
+		throw new SQLNonTransientException("Clob in auto-commit mode is read-only.", SQL_STATE_LOCATOR_EXCEPTION);
 	}
 
-	public int setString(long pos, String str, int offset, int len)
-			throws SQLException {
-		throw new FBSQLException("Clob in auto-commit mode is read-only.");
+	public int setString(long pos, String str, int offset, int len) throws SQLException {
+		throw new SQLNonTransientException("Clob in auto-commit mode is read-only.", SQL_STATE_LOCATOR_EXCEPTION);
 	}
 
 	public void truncate(long len) throws SQLException {

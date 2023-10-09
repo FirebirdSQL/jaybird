@@ -32,6 +32,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 import static org.firebirdsql.jaybird.util.ConditionalHelpers.firstNonZero;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE;
 
 /**
  * Statement fetcher for read-only case. It differs from updatable cursor case
@@ -229,7 +230,9 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
     }
 
     private void checkClosed() throws SQLException {
-        if (closed) throw new FBSQLException("Result set is already closed.");
+        if (closed) {
+            throw new SQLException("Result set is already closed.", SQL_STATE_INVALID_CURSOR_STATE);
+        }
     }
 
     @Override

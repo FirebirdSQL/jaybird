@@ -520,7 +520,7 @@ class FBStatementTest {
     void testGetLastExplainedExecutionPlan_noStatement() throws SQLException {
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class, stmt::getLastExplainedExecutionPlan);
-            assertThat(exception, message(equalTo("No statement was executed, detailed plan cannot be obtained")));
+            assertThat(exception, message(equalTo("No statement was executed, plan cannot be obtained")));
         }
     }
 

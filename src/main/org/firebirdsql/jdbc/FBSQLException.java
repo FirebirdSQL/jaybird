@@ -21,6 +21,11 @@ package org.firebirdsql.jdbc;
 import java.io.Serial;
 import java.sql.SQLException;
 
+/**
+ * @deprecated Unused, will be removed in Jaybird 7
+ */
+@SuppressWarnings("unused")
+@Deprecated
 public class FBSQLException extends SQLException {
 
     @Serial

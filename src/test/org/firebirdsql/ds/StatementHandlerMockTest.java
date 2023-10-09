@@ -22,7 +22,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -87,7 +86,7 @@ class StatementHandlerMockTest {
     @Test
     void testException_notify() throws SQLException {
         Statement proxy = handler.getProxy();
-        SQLException testException = new FBSQLException("Mock Exception");
+        SQLException testException = new SQLException("Mock Exception");
         when(statement.getFetchSize()).thenThrow(testException);
 
         SQLException exception = assertThrows(SQLException.class, proxy::getFetchSize);

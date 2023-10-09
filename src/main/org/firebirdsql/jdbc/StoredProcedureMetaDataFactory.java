@@ -27,10 +27,13 @@ package org.firebirdsql.jdbc;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
 
 /**
  * Factory to retrieve meta-data on stored procedures in a Firebird database.
@@ -104,8 +107,7 @@ final class DefaultCallableStatementMetaData implements StoredProcedureMetaData 
 }
 
 /**
- * A non-functional implementation of {@link StoredProcedureMetaData} for
- * databases that don't have this capability.
+ * A non-functional implementation of {@link StoredProcedureMetaData} for databases that don't have this capability.
  */
 final class DummyCallableStatementMetaData implements StoredProcedureMetaData {
 
@@ -114,7 +116,8 @@ final class DummyCallableStatementMetaData implements StoredProcedureMetaData {
     }
 
     public boolean isSelectable(String procedureName) throws SQLException {
-        throw new FBSQLException("A DummyCallableStatementMetaData can't retrieve selectable settings");
+        throw new SQLNonTransientException("A DummyCallableStatementMetaData can't retrieve selectable settings",
+                SQL_STATE_GENERAL_ERROR);
     }
 
 }

@@ -20,6 +20,8 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_PARAM_TYPE;
+
 /**
  * Represents procedure call parameter.
  */
@@ -99,9 +101,9 @@ public class FBProcedureParam implements Cloneable {
      *         if this parameter contains a constant value
      */
     public void setValue(Object value) throws SQLException {
-        if (!isParam)
-            throw new FBSQLException("Cannot set parameter, since it is constant.",
-                    SQLStateConstants.SQL_STATE_INVALID_PARAM_TYPE);
+        if (!isParam) {
+            throw new SQLException("Cannot set parameter, since it is constant.", SQL_STATE_INVALID_PARAM_TYPE);
+        }
 
         this.value = value;
         this.valueSet = true;
