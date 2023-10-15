@@ -20,7 +20,7 @@ plugins {
     id 'nu.studer.credentials' version '3.0'
     id 'maven-publish'
     id 'signing'
-    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id 'org.asciidoctor.jvm.convert' version '4.0.0-alpha.1'
 }
 
 defaultTasks 'clean', 'build'
@@ -29,13 +29,12 @@ apply from: 'build-properties.gradle'
 
 group = 'org.firebirdsql.jdbc'
 version = project.'version.maven'
-archivesBaseName = project.mavenName
 
 allprojects {
-    tasks.withType(JavaCompile) {
+    tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
     }
-    tasks.withType(Test) {
+    tasks.withType(Test).configureEach {
         systemProperty 'file.encoding', 'UTF-8'
     }
 }
@@ -44,7 +43,19 @@ repositories {
     mavenCentral()
 }
 
+base {
+    archivesName = project.mavenName
+}
+
 java {
+    def javaVersion = JavaVersion.VERSION_11
+    if (project.'maven.jdkversion' == 'java17') {
+        javaVersion = JavaVersion.VERSION_17
+    } else if (project.'maven.jdkversion' == 'java8') {
+        javaVersion = JavaVersion.VERSION_1_8
+    }
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
     withJavadocJar()
     withSourcesJar()
     registerFeature('native') {
@@ -122,9 +133,11 @@ processResources {
 //apply from: 'documentation.gradle'
 
 asciidoctorj {
-    version = '2.5.7'
-    attributes 'revnumber': null,
-            'version_simple': project.'version.simple',
+    version = '2.5.10'
+}
+
+tasks.named('asciidoctor', AsciidoctorTask).configure {
+    attributes 'version_simple': project.'version.simple',
             'version_wo_target': "${project.'version.simple'}${project.'version.tag'}",
             'version_tag': project.'version.tag',
             'version_example': "${project.'version.simple'}.java11${project.'version.tag'}",
@@ -132,6 +145,12 @@ asciidoctorj {
             'stylesheet': 'firebird.css',
             'docinfo': 'shared',
             'docinfodir': file('src/docs/theme/jaybird-html/docinfo')
+
+    if (JavaVersion.current().isJava9Compatible()) {
+        forkOptions {
+            jvmArgs "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens", "java.base/java.io=ALL-UNNAMED"
+        }
+    }
 }
 
 task dist(type: Zip) {
