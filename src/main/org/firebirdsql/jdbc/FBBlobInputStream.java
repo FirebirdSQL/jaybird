@@ -24,6 +24,7 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.Objects;
 
@@ -36,23 +37,18 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
 
     private byte[] buffer = EMPTY_BUFFER;
     private FbBlob blobHandle;
-    private int pos = 0;
-
+    private int pos;
+    private int lim;
     private boolean closed;
 
     private final FBBlob owner;
 
     FBBlobInputStream(FBBlob owner) throws SQLException {
         if (owner.isNew()) {
-            throw new SQLException("You can't read a new blob", SQLStateConstants.SQL_STATE_LOCATOR_EXCEPTION);
+            throw new SQLException("Cannot read a new blob", SQLStateConstants.SQL_STATE_LOCATOR_EXCEPTION);
         }
-
         this.owner = owner;
-        closed = false;
-
-        try (LockCloseable ignored = owner.withLock()) {
-            blobHandle = owner.openBlob();
-        }
+        blobHandle = owner.openBlob();
     }
 
     @Override
@@ -91,32 +87,45 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
 
     @Override
     public int available() throws IOException {
-        return buffer.length - pos;
+        return lim - pos;
     }
 
     /**
      * Checks the available buffer size, retrieving a segment from the server if necessary.
      *
-     * @return The number of bytes available in the buffer, or {@code -1} if the end of the stream is reached.
+     * @return the number of bytes available in the buffer, or {@code -1} if the end of the stream is reached.
      * @throws IOException
      *         if an I/O error occurs, or if the stream has been closed.
      */
     private int checkBuffer() throws IOException {
         try (LockCloseable ignored = owner.withLock()) {
             checkClosed();
-            if (pos < buffer.length) {
-                return buffer.length - pos;
+            if (pos < lim) {
+                return lim - pos;
             }
-            if (blobHandle.isEof()) {
-                return -1;
-            }
+            if (blobHandle.isEof()) return -1;
 
-            buffer = blobHandle.getSegment(owner.getBufferLength());
+            byte[] buffer = requireBuffer();
+            lim = blobHandle.get(buffer, 0, buffer.length, 0.9f);
             pos = 0;
-            return buffer.length != 0 ? buffer.length : -1;
-        } catch (SQLException ge) {
-            throw new IOException("Blob read problem: " + ge, ge);
+            return lim > 0 ? lim : -1;
+        } catch (SQLException e) {
+            if (e.getCause() instanceof IOException ioe) {
+                throw ioe;
+            }
+            throw new IOException("Blob read problem: " + e, e);
         }
+    }
+
+    /**
+     * @return buffer with length equal to {@code owner.getBufferLength()}.
+     */
+    private byte[] requireBuffer() {
+        byte[] buffer = this.buffer;
+        if (buffer.length > 0) {
+            return buffer;
+        }
+        return this.buffer = new byte[owner.getBufferLength()];
     }
 
     @Override
@@ -140,9 +149,8 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
             if (avail == -1) {
                 return -1;
             }
-            int count = 0;
-            if (avail > 0) {
-                count = Math.min(avail, len);
+            int count = Math.min(avail, len);
+            if (count > 0) {
                 System.arraycopy(buffer, this.pos, b, off, count);
                 this.pos += count;
                 if (len - count < smallBufferLimit) {
@@ -152,15 +160,37 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
             }
 
             if (count < len) {
-                count += blobHandle.get(b, off + count, len - count);
+                count += blobHandle.get(b, off + count, len - count, 0.9f);
             }
             // When we haven't read anything, report end-of-blob
             return count == 0 ? -1 : count;
-        } catch (SQLException ge) {
-            if (ge.getCause() instanceof IOException ioe) {
+        } catch (SQLException e) {
+            if (e.getCause() instanceof IOException ioe) {
                 throw ioe;
             }
-            throw new IOException("Blob read problem: " + ge, ge);
+            throw new IOException("Blob read problem: " + e, e);
+        }
+    }
+
+    @Override
+    public int readNBytes(final byte[] b, final int off, final int len) throws IOException {
+        Objects.checkFromIndexSize(off, len, b.length);
+        if (len == 0) return 0;
+
+        try (LockCloseable ignored = owner.withLock()) {
+            checkClosed();
+            final int count = Math.min(available(), len);
+            if (count > 0) {
+                System.arraycopy(buffer, pos, b, off, count);
+                pos += count;
+                if (count == len) return len;
+            }
+            return count + blobHandle.get(b, off + count, len - count);
+        } catch (SQLException e) {
+            if (e.getCause() instanceof IOException ioe) {
+                throw ioe;
+            }
+            throw new IOException("Blob read problem: " + e, e);
         }
     }
 
@@ -179,6 +209,36 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     }
 
     @Override
+    public long transferTo(final OutputStream out) throws IOException {
+        Objects.requireNonNull(out, "out");
+
+        try (LockCloseable ignored = owner.withLock()) {
+            checkClosed();
+            int read = checkBuffer();
+            if (read == -1) return 0;
+            final byte[] buffer = requireBuffer();
+            if (read != 0) {
+                out.write(buffer, pos, read);
+                pos = lim = 0;
+            }
+            try {
+                long transferred = read;
+                while (!blobHandle.isEof()) {
+                    read = blobHandle.get(buffer, 0, buffer.length, 0.9f);
+                    out.write(buffer, 0, read);
+                    transferred += read;
+                }
+                return transferred;
+            } catch (SQLException e) {
+                if (e.getCause() instanceof IOException ioe) {
+                    throw ioe;
+                }
+                throw new IOException("Blob read problem: " + e, e);
+            }
+        }
+    }
+
+    @Override
     public void close() throws IOException {
         try (LockCloseable ignored = owner.withLock()) {
             if (blobHandle == null) {
@@ -187,13 +247,14 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
             try {
                 blobHandle.close();
                 owner.notifyClosed(this);
-            } catch (SQLException ge) {
-                throw new IOException("couldn't close blob: " + ge);
+            } catch (SQLException e) {
+                throw new IOException("Couldn't close blob: " + e, e);
             } finally {
                 blobHandle = null;
                 closed = true;
                 buffer = EMPTY_BUFFER;
                 pos = 0;
+                lim = 0;
             }
         }
     }

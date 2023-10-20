@@ -142,6 +142,13 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
      * Contrary to similar methods like {@link java.io.InputStream#read(byte[], int, int)}, this method returns
      * {@code 0} when no bytes were read if end-of-blob is reached without reading any bytes, not {@code -1}.
      * </p>
+     * <p>
+     * Given this method attempts to fulfill the entire request for {@code len} bytes, it may not always be efficient.
+     * For example, requests near multiples of the maximum segment size (or blob buffer size) may result in a final
+     * request for just a few bytes. This is not a problem if the entire blob is requested at once, but for intermediate
+     * buffering it might be better not to do that final request, and instead work with a smaller number of bytes than
+     * requested. For those cases, use {@link #get(byte[], int, int, float)}.
+     * </p>
      *
      * @param b
      *         target byte array
@@ -155,6 +162,42 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
      * @since 6
      */
     int get(byte[] b, int off, int len) throws SQLException;
+
+    /**
+     * Variant of {@link #get(byte[], int, int)} to exert some control over the number of requests performed.
+     * <p>
+     * This method will request segments until at least {@code (int) (minFillFactor * len)} bytes have been retrieved,
+     * or end-of-blob is reached. This method is intended as an alternative to {@link #get(byte[], int, int)} where
+     * avoiding the potential inefficiencies of that method are preferred over getting all the requested {@code len}
+     * bytes.
+     * </p>
+     * <p>
+     * If the implementation cannot perform reads without additional allocation, it should use at most
+     * {@link DatabaseConnectionProperties#getBlobBufferSize()} as an internal buffer. If the implementation can
+     * perform reads without additional allocation, it is recommended it performs reads using (at most)
+     * {@link #getMaximumSegmentSize()}.
+     * </p>
+     * <p>
+     * Contrary to similar methods like {@link java.io.InputStream#read(byte[], int, int)}, this method returns
+     * {@code 0} when no bytes were read if end-of-blob is reached without reading any bytes, not {@code -1}.
+     * </p>
+     *
+     * @param b
+     *         target byte array
+     * @param off
+     *         offset to start
+     * @param len
+     *         number of bytes
+     * @param minFillFactor
+     *         minimum fill factor ({@code 0 < minFillFactor <= 1})
+     * @return actual number of bytes read, this method returns at least {@code (int) (minFillFactor * len)} bytes,
+     * unless end-of-blob is reached
+     * @throws SQLException
+     *         for database access errors, if {@code off < 0}, {@code len < 0}, or if {@code off + len > b.length},
+     *         {@code minFillFactor <= 0}, or {@code minFillFactor > 1} or {@code minFillFactor is NaN}
+     * @since 6
+     */
+    int get(byte[] b, int off, int len, float minFillFactor) throws SQLException;
 
     /**
      * Writes a segment of blob data.

@@ -28,11 +28,13 @@ import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
@@ -195,16 +197,22 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     }
 
     @Override
-    public int get(final byte[] b, final int off, final int len) throws SQLException {
+    protected int get(final byte[] b, final int off, final int len, final int minLen) throws SQLException {
         try (LockCloseable ignored = withLock())  {
             validateBufferLength(b, off, len);
             if (len == 0) return 0;
+            if (minLen <= 0 || minLen > len ) {
+                throw new SQLNonTransientException(
+                        "Value out of range 0 < minLen <= %d, minLen was: %d".formatted(len, minLen),
+                        SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
+            }
             checkDatabaseAttached();
             checkTransactionActive();
             checkBlobOpen();
-            ShortByReference actualLength = new ShortByReference();
+
+            var actualLength = new ShortByReference();
             int count = 0;
-            while (count < len && !isEof()) {
+            while (count < minLen && !isEof()) {
                 // We honor the configured buffer size unless we somehow already allocated a bigger buffer earlier
                 ByteBuffer segmentBuffer = getSegment0(
                         Math.min(len - count, Math.max(getBlobBufferSize(), currentBufferCapacity())),

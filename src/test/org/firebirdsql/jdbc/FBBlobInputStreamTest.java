@@ -26,9 +26,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
+import java.io.InputStream;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
@@ -51,11 +54,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class FBBlobInputStreamTest {
 
-    private static final String CREATE_TABLE =
-            "CREATE TABLE test_blob(" +
-            "  id INTEGER, " +
-            "  bin_data BLOB " +
-            ")";
+    private static final int MULTI_SEGMENT_LENGTH = 128 * 1024;
+
+    private static final String CREATE_TABLE = """
+            CREATE TABLE test_blob(
+              id INTEGER,
+              bin_data BLOB
+            )""";
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll useDatabase = UsesDatabaseExtension.usesDatabaseForAll(
@@ -103,7 +108,7 @@ class FBBlobInputStreamTest {
         Blob blob = connection.createBlob();
 
         SQLException exception = assertThrows(SQLException.class, blob::getBinaryStream);
-        assertThat(exception, message(equalTo("You can't read a new blob")));
+        assertThat(exception, message(equalTo("Cannot read a new blob")));
     }
 
     @Test
@@ -115,7 +120,7 @@ class FBBlobInputStreamTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue(rs.next(), "Expected a row");
                 Blob blob = rs.getBlob(1);
-                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                InputStream is = blob.getBinaryStream();
 
                 assertEquals(0, is.available(), "Available() without initial read should return 0");
             }
@@ -132,7 +137,7 @@ class FBBlobInputStreamTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue(rs.next(), "Expected a row");
                 Blob blob = rs.getBlob(1);
-                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                InputStream is = blob.getBinaryStream();
 
                 assertEquals(1, is.read(), "Expected first blob value of 1");
 
@@ -174,7 +179,7 @@ class FBBlobInputStreamTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue(rs.next(), "Expected a row");
                 Blob blob = rs.getBlob(1);
-                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                InputStream is = blob.getBinaryStream();
 
                 assertEquals(1, is.read(), "Expected first blob value of 1");
                 is.close();
@@ -191,7 +196,7 @@ class FBBlobInputStreamTest {
             connection.close();
             connection = getConnection(false);
         }
-        byte[] bytes = DataGenerator.createRandomBytes(128 * 1024);
+        byte[] bytes = DataGenerator.createRandomBytes(MULTI_SEGMENT_LENGTH);
         populateBlob(1, bytes);
 
         try (PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB)) {
@@ -199,7 +204,7 @@ class FBBlobInputStreamTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue(rs.next(), "Expected a row");
                 Blob blob = rs.getBlob(1);
-                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                InputStream is = blob.getBinaryStream();
 
                 assertEquals(bytes[0] & 0xFF, is.read(), "Unexpected first byte");
                 int available = is.available();
@@ -243,8 +248,7 @@ class FBBlobInputStreamTest {
             connection.close();
             connection = getConnection(false);
         }
-        final int testBlobSize = 128 * 1024;
-        final byte[] bytes = DataGenerator.createRandomBytes(testBlobSize);
+        final byte[] bytes = DataGenerator.createRandomBytes(MULTI_SEGMENT_LENGTH);
         populateBlob(1, bytes);
 
         try (PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB)) {
@@ -252,7 +256,7 @@ class FBBlobInputStreamTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue(rs.next(), "Expected a row");
                 Blob blob = rs.getBlob(1);
-                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                InputStream is = blob.getBinaryStream();
                 int blobBufferSize = getConnectionBlobBufferSize();
 
                 assertEquals(bytes[0] & 0xFF, is.read(), "Unexpected first byte");
@@ -260,10 +264,10 @@ class FBBlobInputStreamTest {
                 assertThat("Value of available() should be greater than 0 but less than blobBufferSize",
                         available, allOf(greaterThan(0), lessThan(blobBufferSize)));
 
-                byte[] buffer = new byte[testBlobSize];
+                byte[] buffer = new byte[MULTI_SEGMENT_LENGTH];
                 buffer[0] = bytes[0];
 
-                assertEquals(testBlobSize - 1, is.read(buffer, 1, testBlobSize - 1),
+                assertEquals(MULTI_SEGMENT_LENGTH - 1, is.read(buffer, 1, MULTI_SEGMENT_LENGTH - 1),
                         "Expected remaining bytes to be read");
                 assertArrayEquals(bytes, buffer, "Expected identical bytes to be returned");
             }
@@ -280,7 +284,7 @@ class FBBlobInputStreamTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue(rs.next(), "Expected a row");
                 Blob blob = rs.getBlob(1);
-                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                InputStream is = blob.getBinaryStream();
 
                 byte[] buffer = new byte[5];
                 int bytesRead = is.read(buffer, 0, 0);
@@ -301,7 +305,7 @@ class FBBlobInputStreamTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue(rs.next(), "Expected a row");
                 Blob blob = rs.getBlob(1);
-                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                InputStream is = blob.getBinaryStream();
 
                 //noinspection DataFlowIssue
                 assertThrows(NullPointerException.class, () -> is.read(null, 0, 1));
@@ -319,7 +323,7 @@ class FBBlobInputStreamTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue(rs.next(), "Expected a row");
                 Blob blob = rs.getBlob(1);
-                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                InputStream is = blob.getBinaryStream();
 
                 byte[] buffer = new byte[5];
                 assertThrows(IndexOutOfBoundsException.class, () -> is.read(buffer, -1, 1));
@@ -337,7 +341,7 @@ class FBBlobInputStreamTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue(rs.next(), "Expected a row");
                 Blob blob = rs.getBlob(1);
-                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                InputStream is = blob.getBinaryStream();
 
                 byte[] buffer = new byte[5];
                 assertThrows(IndexOutOfBoundsException.class, () -> is.read(buffer, 0, -1));
@@ -355,7 +359,7 @@ class FBBlobInputStreamTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue(rs.next(), "Expected a row");
                 Blob blob = rs.getBlob(1);
-                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                InputStream is = blob.getBinaryStream();
 
                 byte[] buffer = new byte[5];
                 assertThrows(IndexOutOfBoundsException.class, () -> is.read(buffer, 5, 1));
@@ -373,7 +377,7 @@ class FBBlobInputStreamTest {
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue(rs.next(), "Expected a row");
                 Blob blob = rs.getBlob(1);
-                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+                InputStream is = blob.getBinaryStream();
 
                 byte[] buffer = new byte[5];
                 assertThrows(IndexOutOfBoundsException.class, () -> is.read(buffer, 0, 6));
@@ -383,8 +387,7 @@ class FBBlobInputStreamTest {
 
     @Test
     void testReadFully_byteArr_moreThanAvailable_returnsAllRead() throws Exception {
-        final int testBlobSize = 128 * 1024;
-        final byte[] bytes = DataGenerator.createRandomBytes(testBlobSize);
+        final byte[] bytes = DataGenerator.createRandomBytes(MULTI_SEGMENT_LENGTH);
         populateBlob(1, bytes);
 
         try (PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB)) {
@@ -394,16 +397,16 @@ class FBBlobInputStreamTest {
                 Blob blob = rs.getBlob(1);
                 FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
 
-                byte[] buffer = new byte[testBlobSize];
+                byte[] buffer = new byte[MULTI_SEGMENT_LENGTH];
                 int firstValue = is.read();
                 assertEquals(bytes[0] & 0xFF, firstValue, "Unexpected first byte");
                 buffer[0] = (byte) firstValue;
 
                 final int available = is.available();
                 assertThat("Value of available() should be smaller than 128 * 1024 - 1",
-                        available, lessThan(testBlobSize - 1));
+                        available, lessThan(MULTI_SEGMENT_LENGTH - 1));
 
-                is.readFully(buffer, 1, testBlobSize - 1);
+                is.readFully(buffer, 1, MULTI_SEGMENT_LENGTH - 1);
 
                 assertArrayEquals(bytes, buffer, "Full blob should have been read");
             }
@@ -532,6 +535,44 @@ class FBBlobInputStreamTest {
 
                 byte[] buffer = new byte[6];
                 assertThrows(EOFException.class, () -> is.readFully(buffer));
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            useStreamBlobs, startWithSingleRead
+            true,           false
+            true,           true
+            false,          false
+            false,          true
+            """)
+    void testTransferTo(boolean useStreamBlobs, boolean startWithSingleRead) throws Exception {
+        if (!useStreamBlobs) {
+            connection.close();
+            connection = getConnection(false);
+        }
+        final byte[] bytes = DataGenerator.createRandomBytes(MULTI_SEGMENT_LENGTH);
+        populateBlob(1, bytes);
+
+        try (var pstmt = connection.prepareStatement(SELECT_BLOB)) {
+            pstmt.setInt(1, 1);
+            try (var rs = pstmt.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row");
+                Blob blob = rs.getBlob(1);
+                InputStream is = blob.getBinaryStream();
+                var baos = new ByteArrayOutputStream(bytes.length);
+                if (startWithSingleRead) {
+                    // Using a single read will populate the buffer of the FBBlobInputStream. This verifies that we
+                    // take the current buffer content into consideration when transferring
+                    int read = is.read();
+                    assertEquals(bytes[0] & 0xFF, read, "Unexpected first byte");
+                    baos.write(read);
+                }
+                assertEquals(startWithSingleRead ? MULTI_SEGMENT_LENGTH - 1 : MULTI_SEGMENT_LENGTH, is.transferTo(baos),
+                        "Unexpected number of bytes transferred");
+
+                assertArrayEquals(bytes, baos.toByteArray(), "Expected identical bytes to be returned");
             }
         }
     }

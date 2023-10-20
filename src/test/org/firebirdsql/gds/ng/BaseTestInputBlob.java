@@ -35,6 +35,9 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -48,6 +51,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public abstract class BaseTestInputBlob extends BaseTestBlob {
 
     /**
+     * Blob size sufficiently large that multiple segments are used.
+     */
+    protected static final int MULTI_SEGMENT_SIZE = 4 * Short.MAX_VALUE;
+
+    /**
      * Tests retrieval of a blob (what goes in is what comes out).
      */
     @ParameterizedTest
@@ -55,24 +63,23 @@ public abstract class BaseTestInputBlob extends BaseTestBlob {
     public void testBlobRetrieval(boolean useStreamBlobs) throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
-        // Use sufficiently large value so that multiple segments are used
-        final int requiredSize = 4 * Short.MAX_VALUE;
-        populateBlob(testId, baseContent, requiredSize, useStreamBlobs);
+        populateBlob(testId, baseContent, MULTI_SEGMENT_SIZE, useStreamBlobs);
 
         try (FbDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, blobId);
-                blob.open();
-                var bos = new ByteArrayOutputStream(requiredSize);
-                while (!blob.isEof()) {
-                    bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
+                try (FbBlob blob = db.createBlobForInput(transaction, blobId)) {
+                    blob.open();
+                    var bos = new ByteArrayOutputStream(MULTI_SEGMENT_SIZE);
+                    while (!blob.isEof()) {
+                        bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
+                    }
+                    byte[] result = bos.toByteArray();
+                    assertBlobContent(result, baseContent, MULTI_SEGMENT_SIZE);
+                } finally {
+                    statement.close();
                 }
-                blob.close();
-                statement.close();
-                byte[] result = bos.toByteArray();
-                assertBlobContent(result, baseContent, requiredSize);
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -87,21 +94,102 @@ public abstract class BaseTestInputBlob extends BaseTestBlob {
     public void testBlobGet(boolean useStreamBlobs) throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
-        // Use sufficiently large value so that multiple roundtrips are used
-        final int requiredSize = 4 * Short.MAX_VALUE;
-        populateBlob(testId, baseContent, requiredSize, useStreamBlobs);
+        populateBlob(testId, baseContent, MULTI_SEGMENT_SIZE, useStreamBlobs);
 
         try (FbDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
-                FbBlob blob = db.createBlobForInput(transaction, blobId);
+                try (FbBlob blob = db.createBlobForInput(transaction, blobId)) {
+                    blob.open();
+                    byte[] result = new byte[MULTI_SEGMENT_SIZE];
+                    assertEquals(MULTI_SEGMENT_SIZE, blob.get(result, 0, MULTI_SEGMENT_SIZE));
+                    assertBlobContent(result, baseContent, MULTI_SEGMENT_SIZE);
+                } finally {
+                    statement.close();
+                }
+            } finally {
+                if (transaction != null) transaction.commit();
+            }
+        }
+    }
+
+    @Test
+    public void testBlobGet_minFillFactor_outOfRange() throws Exception {
+        try (FbDatabase db = createDatabaseConnection()) {
+            FbTransaction transaction = getTransaction(db);
+            try (FbBlob blob = db.createBlobForInput(transaction, 0)) {
                 blob.open();
-                byte[] result = new byte[requiredSize];
-                blob.get(result, 0, requiredSize);
-                blob.close();
-                statement.close();
-                assertBlobContent(result, baseContent, requiredSize);
+
+                byte[] segment = new byte[1];
+                assertAll(
+                        () -> assertThrows(SQLNonTransientException.class, () -> blob.get(segment, 0, 1, 0f)),
+                        () -> assertThrows(SQLNonTransientException.class,
+                                () -> blob.get(segment, 0, 1, 0f - Math.ulp(0f))),
+                        () -> assertThrows(SQLNonTransientException.class,
+                                () -> blob.get(segment, 0, 1, 1f + Math.ulp(1f))));
+            } finally {
+                transaction.commit();
+            }
+        }
+    }
+
+    @Test
+    public void testBlobGet_minFillFactor_inRange() throws Exception {
+        final int testId = 1;
+        populateStreamBlob(testId, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, 10);
+        try (FbDatabase db = createDatabaseConnection()) {
+            long blobId = getBlobId(testId, db);
+            try (FbBlob blob = db.createBlobForInput(transaction, blobId)) {
+                blob.open();
+                byte[] segment = new byte[1];
+                assertEquals(0, blob.get(segment, 0, 0, 0f + Math.ulp(0f)),
+                        "fetch with length 0 should allow minFillFactor just greater than 0f");
+                assertEquals(0, blob.get(segment, 0, 0, 1f), "fetch with length 0 should allow minFillFactor = 1f");
+                assertEquals(1, blob.get(segment, 0, 1, 0f + Math.ulp(0f)),
+                        "fetch with length 1 should allow minFillFactor just greater than 0f");
+                assertEquals(1, segment[0]);
+                assertEquals(1, blob.get(segment, 0, 1, 1f), "fetch with length 1 should allow minFillFactor = 1f");
+                assertEquals(2, segment[0]);
+                segment = new byte[8];
+                assertEquals(8, blob.get(segment, 0, 8, 0.1f),
+                        "fetch with length 8 and minFillFactor = 0.1f should fetch remainder");
+                assertArrayEquals(new byte[] { 3, 4, 5, 6, 7, 8, 9, 10 }, segment);
+            } finally {
+                transaction.commit();
+            }
+        }
+    }
+
+    /**
+     * Tests retrieval of a blob (what goes in is what comes out).
+     */
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void testBlobGet_withMinFillFactor(boolean useStreamBlobs) throws Exception {
+        final int testId = 1;
+        final byte[] baseContent = generateBaseContent();
+        populateBlob(testId, baseContent, MULTI_SEGMENT_SIZE, useStreamBlobs);
+
+        try (FbDatabase db = createDatabaseConnection()) {
+            try {
+                long blobId = getBlobId(testId, db);
+
+                try (FbBlob blob = db.createBlobForInput(transaction, blobId)) {
+                    blob.open();
+                    final int maximumSegmentSize = blob.getMaximumSegmentSize();
+                    byte[] result = new byte[(int) (maximumSegmentSize * 1.05f)];
+                    int readBytes = blob.get(result, 0, result.length, 0.9f);
+                    assertThat(readBytes, allOf(
+                            greaterThanOrEqualTo((int) (0.9f * result.length)),
+                            /* NOTE: for pure Java, the max segment size is the determining factor, but for native it is
+                             (multiples of) blobBufferSize. Fudging it a bit, so the result works both for pure Java and
+                             native (with blobBufferSize=16384) */
+                            lessThanOrEqualTo(maximumSegmentSize + 1)));
+                    assertBlobContent(Arrays.copyOf(result, readBytes), baseContent, readBytes);
+                } finally {
+                    statement.close();
+                }
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -115,24 +203,23 @@ public abstract class BaseTestInputBlob extends BaseTestBlob {
     public void testBlobSeek_segmented() throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
-        // Use sufficiently large value so that multiple segments are used
-        final int requiredSize = 4 * Short.MAX_VALUE;
-        populateSegmentedBlob(testId, baseContent, requiredSize);
+        populateSegmentedBlob(testId, baseContent, MULTI_SEGMENT_SIZE);
 
         try (FbDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
                 // NOTE: What matters is if the blob on the server is stream or segment
-                final FbBlob blob = db.createBlobForInput(transaction, blobId);
-                blob.open();
-                int offset = baseContent.length / 2;
+                try (FbBlob blob = db.createBlobForInput(transaction, blobId)) {
+                    blob.open();
+                    int offset = baseContent.length / 2;
 
-                SQLException exception = assertThrows(SQLException.class,
-                        () -> blob.seek(offset, FbBlob.SeekMode.ABSOLUTE));
-                assertThat(exception, allOf(
-                        errorCodeEquals(ISCConstants.isc_bad_segstr_type),
-                        message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_type)))));
+                    SQLException exception = assertThrows(SQLException.class,
+                            () -> blob.seek(offset, FbBlob.SeekMode.ABSOLUTE));
+                    assertThat(exception, allOf(
+                            errorCodeEquals(ISCConstants.isc_bad_segstr_type),
+                            message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_type)))));
+                }
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -146,7 +233,6 @@ public abstract class BaseTestInputBlob extends BaseTestBlob {
     public void testBlobSeek_streamed() throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
-        // Use sufficiently large value so that multiple segments are used
         final int requiredSize = 200;
         populateStreamBlob(testId, baseContent, requiredSize);
 
@@ -155,18 +241,18 @@ public abstract class BaseTestInputBlob extends BaseTestBlob {
                 long blobId = getBlobId(testId, db);
 
                 // NOTE: What matters is if the blob on the server is stream or segment
-                final FbBlob blob = db.createBlobForInput(transaction, blobId);
-                blob.open();
-                final int offset = requiredSize / 2;
+                try (FbBlob blob = db.createBlobForInput(transaction, blobId)) {
+                    blob.open();
+                    final int offset = requiredSize / 2;
+                    blob.seek(offset, FbBlob.SeekMode.ABSOLUTE);
+                    byte[] segment = blob.getSegment(100);
+                    assertEquals(100, segment.length, "Unexpected length read from blob");
+                    assertArrayEquals(Arrays.copyOfRange(baseContent, offset, offset + 100), segment,
+                            "Unexpected segment content");
+                } finally {
+                    statement.close();
+                }
 
-                blob.seek(offset, FbBlob.SeekMode.ABSOLUTE);
-                byte[] segment = blob.getSegment(100);
-                byte[] expected = Arrays.copyOfRange(baseContent, offset, offset + 100);
-
-                blob.close();
-                statement.close();
-                assertEquals(100, segment.length, "Unexpected length read from blob");
-                assertArrayEquals(expected, segment, "Unexpected segment content");
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -188,24 +274,24 @@ public abstract class BaseTestInputBlob extends BaseTestBlob {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, blobId);
-                blob.open();
-                ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
-                while (!blob.isEof()) {
-                    bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
+                try (FbBlob blob = db.createBlobForInput(transaction, blobId)) {
+                    blob.open();
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
+                    while (!blob.isEof()) {
+                        bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
+                    }
+                    blob.close();
+                    // Reopen
+                    blob.open();
+                    bos = new ByteArrayOutputStream(requiredSize);
+                    while (!blob.isEof()) {
+                        bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
+                    }
+                    byte[] result = bos.toByteArray();
+                    assertBlobContent(result, baseContent, requiredSize);
+                } finally {
+                    statement.close();
                 }
-                blob.close();
-                // Reopen
-                blob.open();
-                bos = new ByteArrayOutputStream(requiredSize);
-                while (!blob.isEof()) {
-                    bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
-                }
-                blob.close();
-
-                statement.close();
-                byte[] result = bos.toByteArray();
-                assertBlobContent(result, baseContent, requiredSize);
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -226,13 +312,14 @@ public abstract class BaseTestInputBlob extends BaseTestBlob {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, blobId);
-                blob.open();
-                // Double open
-                SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
-                assertThat(exception, allOf(
-                        errorCodeEquals(ISCConstants.isc_no_segstr_close),
-                        fbMessageStartsWith(ISCConstants.isc_no_segstr_close)));
+                try (FbBlob blob = db.createBlobForInput(transaction, blobId)) {
+                    blob.open();
+                    // Double open
+                    SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
+                    assertThat(exception, allOf(
+                            errorCodeEquals(ISCConstants.isc_no_segstr_close),
+                            fbMessageStartsWith(ISCConstants.isc_no_segstr_close)));
+                }
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -243,8 +330,7 @@ public abstract class BaseTestInputBlob extends BaseTestBlob {
     public void readBlobIdZero() throws Exception {
         try (FbDatabase db = createDatabaseConnection()) {
             FbTransaction transaction = getTransaction(db);
-            try {
-                FbBlob blob = db.createBlobForInput(transaction, 0);
+            try (FbBlob blob = db.createBlobForInput(transaction, 0)) {
                 blob.open();
                 assertEquals(0, blob.length());
                 byte[] segment = blob.getSegment(500);

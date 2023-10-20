@@ -183,6 +183,42 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         put(segment, 0, segment.length);
     }
 
+    @Override
+    public final int get(byte[] b, int off, int len) throws SQLException {
+        // requested length is minimum length
+        return get(b, off, len, len);
+    }
+
+    @Override
+    public final int get(byte[] b, int off, int len, float minFillFactor) throws SQLException {
+        if (minFillFactor <= 0f || minFillFactor > 1f || Float.isNaN(minFillFactor)) {
+            var invalidFloatFactor = new SQLNonTransientException(
+                    "minFillFactor out of range, must be 0 < minFillFactor <= 1, was: " + minFillFactor);
+            exceptionListenerDispatcher.errorOccurred(invalidFloatFactor);
+            throw invalidFloatFactor;
+        }
+        return get(b, off, len, len != 0 ? Math.max(1, (int) (minFillFactor * len)) : 0);
+    }
+
+    /**
+     * Default implementation for {@link #get(byte[], int, int)} and {@link #get(byte[], int, int, float)}.
+     *
+     * @param b
+     *         target byte array
+     * @param off
+     *         offset to start
+     * @param len
+     *         number of bytes
+     * @param minLen
+     *         minimum number of bytes to fill (must be {@code 0 < minLen <= len} if {@code len != 0}
+     * @return actual number of bytes read; is {@code 0} if {@code len == 0}, will only be less than {@code minLen} if
+     * end-of-blob is reached
+     * @throws SQLException
+     *         for database access errors, if {@code off < 0}, {@code len < 0}, or if {@code off + len > b.length},
+     *         or {@code len != 0 && (minLen <= 0 || minLen > len)}
+     */
+    protected abstract int get(byte[] b, int off, int len, int minLen) throws SQLException;
+
     /**
      * Release Java resources held. This should not communicate with the Firebird server.
      */
@@ -416,9 +452,8 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     private static int maximumSegmentSize(FbDatabase db) {
         // Max size in FB 2.1 and higher is 2^16 - 1, not 2^15 - 3 (IB 6 docs mention max is 32KiB)
-        if (db != null && (db.getOdsMajor() > 11 || db.getOdsMajor() == 11 && db.getOdsMinor() >= 1)) {
-            /* ODS 11.1 is Firebird 2.1
-               NOTE: getSegment can retrieve at most 65533 bytes of blob data as the buffer to receive segments is
+        if (db != null && db.getServerVersion().isEqualOrAbove(2, 1)) {
+            /* NOTE: getSegment can retrieve at most 65533 bytes of blob data as the buffer to receive segments is
                max 65535 bytes, but the contents of the buffer are one or more segments prefixed with 2-byte lengths;
                putSegment can write max 65535 bytes, because the buffer *is* the segment */
             return 65535;

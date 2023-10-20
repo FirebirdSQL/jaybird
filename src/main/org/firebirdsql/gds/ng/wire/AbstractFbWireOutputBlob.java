@@ -81,7 +81,7 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
     }
 
     @Override
-    public int get(byte[] b, int off, int len) throws SQLException {
+    protected final int get(byte[] b, int off, int len, int minLen) throws SQLException {
         readNotSupported();
         return -1;
     }

@@ -820,13 +820,28 @@ For connections to Firebird 2.1 and higherfootnote:[Formally, only Firebird 3.0 
 The maximum segment size is the maximum size for sending segments (_put_) to the server.
 Due to protocol limitations, retrieving segments from the server (_get_) is two bytes (or multiples of two bytes) shorterfootnote:[For _get_ the maximum segment size is actually the maximum buffer size to receive one or more segments which are prefixed with two bytes for the length].
 
+[#blob-buffer-size]
+==== Effectiveness of `blobBufferSize` larger than maximum segment size
+
+Previously, when reading blobs, a `blobBufferSize` larger than the maximum segment size was effectively ignored.
+Now, when reading through an input stream, a `blobBufferSize` larger than the maximum segment size can be used.
+
+Jaybird will use one or more roundtrips to fill the buffer.
+To avoid inefficient fetches, a minimum of 90% of the buffer size will be filled up to the `blobBufferSize`.
+This change is not likely to improve performance, but it may allow for optimizations when reading or transferring data in large chunks.
+
+In general, setting the `blobBufferSize` larger than 65535 bytes will likely not improve performance.
+
 [#blob-put-segment-limit]
 ==== Internal API changes for `FbBlob`
 
 Two new methods were added to `FbBlob`:
 
-`int get(byte[] b, int off, int len)`:: populates the array `b`, starting at `off`, for the requested `len` bytes from the blob, and returning the actual read bytes.
+`int get(byte[] b, int off, int len)`:: populates the array `b`, starting at `off`, for the requested `len` bytes from the blob, and returns the actual number of bytes read.
 This method will read until `len` bytes have been read, and only return less than `len` when end-of-blob was reached.
+
+`int get(byte[] b, int off, int len, float minFillFactor)`:: populates the array `b`, starting at `off`, for
+ at least `minFillFactor` * `len` bytes (up to `len` bytes) from the blob, and returns the actual number of bytes read.
 
 `void put(byte[] b, int off, int len)`:: sends data from array `b` to the blob, starting at `off`, for the requested `len` bytes.
 

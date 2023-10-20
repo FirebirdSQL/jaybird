@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
@@ -58,6 +59,7 @@ class V10InputBlobMockTest {
     @BeforeEach
     void setUp() {
         lenient().when(db.withLock()).thenReturn(LockCloseable.NO_OP);
+        lenient().when(db.getServerVersion()).thenReturn(GDSServerVersion.INVALID_VERSION);
     }
 
     /**

@@ -26,9 +26,11 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
 
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
@@ -177,29 +179,35 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
     }
 
     @Override
-    public int get(final byte[] b, final int off, final int len) throws SQLException {
+    protected int get(final byte[] b, final int off, final int len, final int minLen) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             validateBufferLength(b, off, len);
+            if (len == 0) return 0;
+            if (minLen <= 0 || minLen > len ) {
+                throw new SQLNonTransientException("Value out of range 0 < minLen <= len, minLen was: " + minLen,
+                        SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
+            }
             checkDatabaseAttached();
             checkTransactionActive();
             checkBlobOpen();
 
+            final FbWireOperations wireOps = getDatabase().getWireOperations();
+            final XdrOutputStream xdrOut = getXdrOut();
+            final XdrInputStream xdrIn = getXdrIn();
             int count = 0;
-            while (count < len && !isEof()) {
+            while (count < minLen && !isEof()) {
                 try {
                     sendGetSegment(segmentRequestSize(len - count));
-                    getXdrOut().flush();
+                    xdrOut.flush();
                 } catch (IOException e) {
                     throw FbExceptionBuilder.ioWriteError(e);
                 }
                 try {
-                    FbWireOperations wireOps = getDatabase().getWireOperations();
                     final int opCode = wireOps.readNextOperation();
                     if (opCode != op_response) {
                         wireOps.readOperationResponse(opCode, null);
                         throw new SQLException("Unexpected response to op_get_segment: " + opCode);
                     }
-                    XdrInputStream xdrIn = getXdrIn();
                     final int objHandle = xdrIn.readInt();
                     xdrIn.skipNBytes(8); // blob-id (unused)
 

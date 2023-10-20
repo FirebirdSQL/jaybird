@@ -20,7 +20,7 @@ package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.GdsTypeExtension;
-import org.firebirdsql.gds.ng.BaseTestBlob;
+import org.firebirdsql.gds.ng.BaseTestInputBlob;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,7 +32,7 @@ import java.sql.SQLException;
  *
  * @author Mark Rotteveel
  */
-class JnaBlobInputTest extends BaseTestBlob {
+class JnaBlobInputTest extends BaseTestInputBlob {
 
     @RegisterExtension
     @Order(1)
