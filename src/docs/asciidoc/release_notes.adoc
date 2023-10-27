@@ -37,6 +37,9 @@ Previously, Jaybird rejected attempts to read blobs with blob id `0` (not on all
 Formally, blob id `0` is not a valid blob id, but in practice they can occur (e.g. due to bugs, or access components/drivers explicitly setting a blob column to id `0`).
 Other drivers and tools simply send the requests for blob id `0` to the server, which then treats it as an empty blob.
 For consistency, we decided to let Jaybird handle it the same.
+* Fixed: on `CHAR` fields, a too short value could be returned if the string contained one or more codepoints represented by surrogate pairs and the string length in `char` exceeded the maximum string length -- backported from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/770[#770])
++
+We now truncate the returned string if the codepoint count exceeds the maximum string length.
 
 [#jaybird-5-0-2-changelog]
 === Jaybird 5.0.2
