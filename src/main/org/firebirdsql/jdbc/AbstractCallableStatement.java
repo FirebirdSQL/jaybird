@@ -426,7 +426,6 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         return getAndAssertSingletonResultSet().getDouble(parameterIndex);
     }
 
-    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
@@ -478,7 +477,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      */
     @Override
     public Object getObject(String colName) throws SQLException {
-        return getObject(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getObject(colName);
     }
 
     /**
@@ -501,7 +500,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      */
     @Override
     public Object getObject(String colName, Map<String, Class<?>> map) throws SQLException {
-        return getObject(findOutParameter(colName), map);
+        return getAndAssertSingletonResultSet().getObject(colName, map);
     }
 
     @Override
@@ -512,7 +511,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
     @Override
     public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
-        return getObject(findOutParameter(parameterName), type);
+        return getAndAssertSingletonResultSet().getObject(parameterName, type);
     }
 
     @Override
@@ -571,107 +570,107 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
     @Override
     public String getString(String colName) throws SQLException {
-        return getString(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getString(colName);
     }
 
     @Override
     public boolean getBoolean(String colName) throws SQLException {
-        return getBoolean(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getBoolean(colName);
     }
 
     @Override
     public byte getByte(String colName) throws SQLException {
-        return getByte(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getByte(colName);
     }
 
     @Override
     public short getShort(String colName) throws SQLException {
-        return getShort(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getShort(colName);
     }
 
     @Override
     public int getInt(String colName) throws SQLException {
-        return getInt(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getInt(colName);
     }
 
     @Override
     public long getLong(String colName) throws SQLException {
-        return getLong(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getLong(colName);
     }
 
     @Override
     public float getFloat(String colName) throws SQLException {
-        return getFloat(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getFloat(colName);
     }
 
     @Override
     public double getDouble(String colName) throws SQLException {
-        return getDouble(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getDouble(colName);
     }
 
     @Override
     public byte[] getBytes(String colName) throws SQLException {
-        return getBytes(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getBytes(colName);
     }
 
     @Override
     public Date getDate(String colName) throws SQLException {
-        return getDate(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getDate(colName);
     }
 
     @Override
     public Time getTime(String colName) throws SQLException {
-        return getTime(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getTime(colName);
     }
 
     @Override
     public Timestamp getTimestamp(String colName) throws SQLException {
-        return getTimestamp(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getTimestamp(colName);
     }
 
     @Override
     public BigDecimal getBigDecimal(String colName) throws SQLException {
-        return getBigDecimal(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getBigDecimal(colName);
     }
 
     @Override
     public Ref getRef(String colName) throws SQLException {
-        return getRef(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getRef(colName);
     }
 
     @Override
     public Blob getBlob(String colName) throws SQLException {
-        return getBlob(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getBlob(colName);
     }
 
     @Override
     public Clob getClob(String colName) throws SQLException {
-        return getClob(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getClob(colName);
     }
 
     @Override
     public Array getArray(String colName) throws SQLException {
-        return getArray(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getArray(colName);
     }
 
     @Override
     public Date getDate(String colName, Calendar cal) throws SQLException {
-        return getDate(findOutParameter(colName), cal);
+        return getAndAssertSingletonResultSet().getDate(colName, cal);
     }
 
     @Override
     public Time getTime(String colName, Calendar cal) throws SQLException {
-        return getTime(findOutParameter(colName), cal);
+        return getAndAssertSingletonResultSet().getTime(colName, cal);
     }
 
     @Override
     public Timestamp getTimestamp(String colName, Calendar cal) throws SQLException {
-        return getTimestamp(findOutParameter(colName), cal);
+        return getAndAssertSingletonResultSet().getTimestamp(colName, cal);
     }
 
     @Override
     public URL getURL(String colName) throws SQLException {
-        return getURL(findOutParameter(colName));
+        return getAndAssertSingletonResultSet().getURL(colName);
     }
 
     @Override
@@ -682,7 +681,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
     @Override
     public Reader getCharacterStream(String parameterName) throws SQLException {
-        return getCharacterStream(findOutParameter(parameterName));
+        return getAndAssertSingletonResultSet().getCharacterStream(parameterName);
     }
 
     /**
@@ -705,7 +704,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      */
     @Override
     public Reader getNCharacterStream(String parameterName) throws SQLException {
-        return getNCharacterStream(findOutParameter(parameterName));
+        return getAndAssertSingletonResultSet().getNCharacterStream(parameterName);
     }
 
     /**
@@ -728,7 +727,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      */
     @Override
     public String getNString(String parameterName) throws SQLException {
-        return getNString(findOutParameter(parameterName));
+        return getAndAssertSingletonResultSet().getNString(parameterName);
     }
 
     @Override
@@ -1238,13 +1237,16 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     private void setSelectabilityAutomatically(StoredProcedureMetaData storedProcMetaData) throws SQLException {
         selectableProcedure = storedProcMetaData.isSelectable(procedureCall.getName());
     }
-    
+
     /**
-     * Helper method to identify the right result set column for the give OUT parameter name.
-     * 
+     * Helper method to identify the right result set column for an OUT parameter name.
+     *
      * @param paramName
-     *            Name of the OUT parameter
+     *         name of the OUT parameter
+     * @deprecated use {@code getAndAssertSingletonResultSet().findColumn(paramName)} (but verify if that is the right
+     * thing to do); method will be removed in Jaybird 6
      */
+    @Deprecated
     protected int findOutParameter(String paramName) throws SQLException {
         return getAndAssertSingletonResultSet().findColumn(paramName);
     }
@@ -1269,7 +1271,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      */
     @Override
     public NClob getNClob(String parameterName) throws SQLException {
-        return getNClob(findOutParameter(parameterName));
+        return getAndAssertSingletonResultSet().getNClob(parameterName);
     }
 
     @Override
@@ -1280,7 +1282,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
     @Override
     public RowId getRowId(String parameterName) throws SQLException {
-        return getRowId(findOutParameter(parameterName));
+        return getAndAssertSingletonResultSet().getRowId(parameterName);
     }
 
     @Override
@@ -1291,7 +1293,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
     @Override
     public SQLXML getSQLXML(String parameterName) throws SQLException {
-        return getSQLXML(findOutParameter(parameterName));
+        return getAndAssertSingletonResultSet().getSQLXML(parameterName);
     }
 
     /**

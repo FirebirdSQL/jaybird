@@ -1068,4 +1068,31 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             assertEquals("Unexpected trim by cstmt.getString", "A    ", cstmt.getString(1));
         }
     }
+
+    /**
+     * Rationale: an implementation bug looked up the result set index by name, then requested the value by index on
+     * the callable statement. If that index corresponded to the index of a registered OUT parameter, it would remap
+     * that to a different result set column and return the value of the wrong column.
+     */
+    @Test
+    public void namedRetrievalMapping() throws Exception {
+        executeDDL(con,
+                "create procedure one_in_two_out(in1 varchar(5)) returns (out1 varchar(8), out2 varchar(8))\n" +
+                "as\n" +
+                "begin\n" +
+                "  out1 = 'out1' || in1;\n" +
+                "  out2 = 'out2' || in1;\n" +
+                "end");
+
+        try (CallableStatement cstmt = con.prepareCall("{call one_in_two_out(?, ?, ?)}")) {
+            cstmt.setString(1, "test");
+            cstmt.registerOutParameter(2, Types.VARCHAR);
+            cstmt.registerOutParameter(3, Types.VARCHAR);
+
+            cstmt.execute();
+
+            assertEquals("Unexpected value for column OUT1", "out1test", cstmt.getString("OUT1"));
+            assertEquals("Unexpected value for column OUT2", "out2test", cstmt.getString("OUT2"));
+        }
+    }
 }

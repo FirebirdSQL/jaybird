@@ -11,6 +11,8 @@ The following has been changed or fixed since Jaybird 4.0.9
 
 - Fixed: Reconnect transaction with a transaction id exceeding 0x7FFF_FFFF did
   not work ([jaybird#734](https://github.com/FirebirdSQL/jaybird/issues/734))
+- Fixed: `CallableStatement.getXXX(String)` could return value from wrong column
+  &mdash; backported from Jaybird 6 ([jaybird#773](https://github.com/FirebirdSQL/jaybird/issues/773))
 
 Jaybird 4.0.9
 -------------
