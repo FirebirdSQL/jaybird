@@ -537,26 +537,21 @@ public class FBStatement implements FirebirdStatement {
     public ResultSet getResultSet(boolean metaDataQuery) throws  SQLException {
         if (fbStatement == null) {
             throw new SQLException("No statement was executed", SQL_STATE_INVALID_STATEMENT_ID);
-        }
-
-        if (cursorName != null) {
-            fbStatement.setCursorName(cursorName);
-        }
-
-        if (currentRs != null) {
-            throw new SQLException("Only one result set at a time/statement", SQL_STATE_GENERAL_ERROR);
+        } else if (currentRs != null) {
+            return currentRs;
         }
 
         // A generated keys query does not produce a normal result set (but EXECUTE PROCEDURE or INSERT ... RETURNING without Statement.RETURN_GENERATED_KEYS do)
-        // TODO Behavior might not be correct for callable statement implementation
         if (!isGeneratedKeyQuery() && currentStatementResult.isResultSet()) {
             if (!isSingletonResult) {
-                currentRs = new FBResultSet(connection, this, fbStatement, resultSetListener, metaDataQuery, rsType,
-                        rsConcurrency, rsHoldability, false);
+                if (cursorName != null) {
+                    fbStatement.setCursorName(cursorName);
+                }
+                return currentRs = new FBResultSet(connection, this, fbStatement, resultSetListener, metaDataQuery,
+                        rsType, rsConcurrency, rsHoldability, false);
             } else if (!specialResult.isEmpty()) {
-                currentRs = createSpecialResultSet(resultSetListener);
+                return currentRs = createSpecialResultSet(resultSetListener);
             }
-            return currentRs;
         }
         return null;
     }
@@ -832,9 +827,16 @@ public class FBStatement implements FirebirdStatement {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @deprecated Use {@link #getResultSet()} instead, will be removed in Jaybird 7
+     */
+    @SuppressWarnings("removal")
+    @Deprecated(since = "6", forRemoval = true)
     @Override
     public ResultSet getCurrentResultSet() throws SQLException {
-        return currentRs;
+        return getResultSet();
     }
 
     @Override
