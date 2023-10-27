@@ -803,7 +803,7 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
         assertEquals("UTF-8", encoding.getCharsetName(), "Unexpected charset for field");
 
         // character Smiling Face with Open Mouth; uses surrogate pairs
-        String surrogatePairsValue = Character.toString(0x1f603);
+        String surrogatePairsValue = new String(Character.toChars(0x1f603));
         assertEquals(2, surrogatePairsValue.length(), "Expected string with 2 characters (surrogate pairs)");
         field.setString(surrogatePairsValue);
 
@@ -823,7 +823,7 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
         assertEquals("UTF-8", encoding.getCharsetName(), "Unexpected charset for field");
 
         // character Smiling Face with Open Mouth; uses surrogate pairs
-        String surrogatePairsValue = Character.toString(0x1f603);
+        String surrogatePairsValue = new String(Character.toChars(0x1f603));
         assertEquals(2, surrogatePairsValue.length(), "Expected string with 2 characters (surrogate pairs)");
         toReturnStringExpectations(surrogatePairsValue, encoding);
 
