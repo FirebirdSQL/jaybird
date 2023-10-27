@@ -47,7 +47,7 @@ import java.util.function.Function;
 class FBStringField extends FBField implements TrimmableField {
 
     // TODO think about the right setBoolean and getBoolean (currently it is "Y" and "N", or "TRUE" and "FALSE")
-    
+
     static final String SHORT_TRUE = "Y";
     static final String SHORT_FALSE = "N";
     static final String LONG_TRUE = "true";
@@ -181,8 +181,9 @@ class FBStringField extends FBField implements TrimmableField {
         // NOTE: For Firebird 3.0 and earlier, this prevents access to oversized CHAR(n) CHARACTER SET UNICODE_FSS.
         // We accept that limitation because the workaround is to cast to VARCHAR, and because Firebird 4.0 no longer
         // allows storing oversized UNICODE_FSS values
-        if (result != null && result.length() > possibleCharLength) {
-            return result.substring(0, possibleCharLength);
+        if (result != null && result.length() > possibleCharLength
+            && result.codePointCount(0, result.length()) > possibleCharLength) {
+            return result.substring(0, result.offsetByCodePoints(0, possibleCharLength));
         }
         return result;
     }
@@ -425,5 +426,5 @@ class FBStringField extends FBField implements TrimmableField {
     private <T> T getValueAs(Class<T> type, Function<String, T> converter) throws SQLException {
         return convertForGet(getString(), converter.compose(String::trim), type);
     }
-    
+
 }

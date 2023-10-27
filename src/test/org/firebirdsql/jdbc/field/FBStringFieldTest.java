@@ -899,6 +899,46 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
         assertEquals(Timestamp.valueOf(expectedValue), field.getObject(Timestamp.class));
     }
 
+    @Test
+    void setString_surrogatePairs_maxLength() throws Exception {
+        fieldDescriptor = rowDescriptorBuilder
+                .setType(ISCConstants.SQL_TEXT)
+                .setLength(4 /* bytes */)
+                .setSubType(4 /* UTF8 */)
+                .toFieldDescriptor();
+        field = new FBStringField(fieldDescriptor, fieldData, Types.CHAR);
+        datatypeCoder = fieldDescriptor.getDatatypeCoder();
+        Encoding encoding = datatypeCoder.getEncoding();
+        assertEquals("UTF-8", encoding.getCharsetName(), "Unexpected charset for field");
+
+        // character Smiling Face with Open Mouth; uses surrogate pairs
+        String surrogatePairsValue = Character.toString(0x1f603);
+        assertEquals(2, surrogatePairsValue.length(), "Expected string with 2 characters (surrogate pairs)");
+        field.setString(surrogatePairsValue);
+
+        verifySetString(surrogatePairsValue, encoding);
+    }
+
+    @Test
+    void getString_surrogatePairs_maxLength() throws Exception {
+        fieldDescriptor = rowDescriptorBuilder
+                .setType(ISCConstants.SQL_TEXT)
+                .setLength(4 /* bytes */)
+                .setSubType(4 /* UTF8 */)
+                .toFieldDescriptor();
+        field = new FBStringField(fieldDescriptor, fieldData, Types.CHAR);
+        datatypeCoder = fieldDescriptor.getDatatypeCoder();
+        Encoding encoding = datatypeCoder.getEncoding();
+        assertEquals("UTF-8", encoding.getCharsetName(), "Unexpected charset for field");
+
+        // character Smiling Face with Open Mouth; uses surrogate pairs
+        String surrogatePairsValue = Character.toString(0x1f603);
+        assertEquals(2, surrogatePairsValue.length(), "Expected string with 2 characters (surrogate pairs)");
+        toReturnStringExpectations(surrogatePairsValue, encoding);
+
+        assertEquals(surrogatePairsValue, field.getString(), "Unexpected value for string with surrogate pairs");
+    }
+
     @Override
     String getNonNullObject() {
         return TEST_STRING_SHORT;

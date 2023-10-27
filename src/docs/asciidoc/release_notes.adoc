@@ -888,6 +888,11 @@ Previously almost all types returned `true` (including -- for example -- `BOOLEA
 * Added methods `List<String> getTypeAliasList()` and `List<String> getSupportedProtocolList()` to `GDSFactoryPlugin`, and deprecated `String[] getTypeAliases()` and `String[] getSupportedProtocols()` for removal in Jaybird 7 or later
 * Fixed formatting of `isc_formatted_exception` to not repeat the original parameters of the exception (https://github.com/FirebirdSQL/jaybird/issues/749[jaybird#749])
 * Added aliases `ApplicationName` and `applicationName` for connection property `processName` (https://github.com/FirebirdSQL/jaybird/issues/751[jaybird#751])
+* Fixed: on `CHAR` fields, a too short value could be returned if the string contained one or more codepoints represented by surrogate pairs and the string length in `char` exceeded the maximum string length (https://github.com/FirebirdSQL/jaybird/issues/760[#760])
++
+We now truncate the returned string if the codepoint count exceeds the maximum string length.
++
+This change was also backported to Jaybird 5.0.3.
 * Improvement: Do not reject attempts to read blob id 0 (https://github.com/FirebirdSQL/jaybird/issues/764[jaybird#764])
 +
 Previously, Jaybird rejected attempts to read blobs with blob id `0` (not on all code paths, for some only when assertions are enabled).
