@@ -57,82 +57,82 @@ class FBCallableStatementTest {
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
-    //@formatter:off
-    private static final String CREATE_PROCEDURE =
-            "CREATE PROCEDURE factorial( "
-            + "  max_rows INTEGER, "
-            + "  mode INTEGER "
-            + ") RETURNS ( "
-            + "  row_num INTEGER, "
-            + "  factorial INTEGER "
-            + ") AS "
-            + "  DECLARE VARIABLE temp INTEGER; "
-            + "  DECLARE VARIABLE counter INTEGER; "
-            + "BEGIN "
-            + "  counter = 0; "
-            + "  temp = 1; "
-            + "  WHILE (counter <= max_rows) DO BEGIN "
-            + "    row_num = counter; "
-            + "    IF (row_num = 0) THEN "
-            + "      temp = 1; "
-            + "    ELSE "
-            + "      temp = temp * row_num; "
-            + "    factorial = temp; "
-            + "    counter = counter + 1; "
-            + "    IF (mode = 1) THEN "
-            + "      SUSPEND; "
-            + "  END "
-            + "  IF (mode = 2) THEN "
-            + "    SUSPEND; "
-            + "END ";
+    private static final String CREATE_PROCEDURE = """
+            CREATE PROCEDURE factorial(
+              max_rows INTEGER,
+              mode INTEGER
+            ) RETURNS (
+              row_num INTEGER,
+              factorial INTEGER
+            ) AS
+              DECLARE VARIABLE temp INTEGER;
+              DECLARE VARIABLE counter INTEGER;
+            BEGIN
+              counter = 0;
+              temp = 1;
+              WHILE (counter <= max_rows) DO BEGIN
+                row_num = counter;
+                IF (row_num = 0) THEN
+                  temp = 1;
+                ELSE
+                  temp = temp * row_num;
+                factorial = temp;
+                counter = counter + 1;
+                IF (mode = 1) THEN
+                  SUSPEND;
+              END
+              IF (mode = 2) THEN
+                SUSPEND;
+            END""";
 
     private static final String SELECT_PROCEDURE = "SELECT * FROM factorial(?, 2)";
     private static final String CALL_SELECT_PROCEDURE = "{call factorial(?, 1, ?, ?)}";
     private static final String EXECUTE_PROCEDURE = "{call factorial(?, ?, ?, ?)}";
     private static final String EXECUTE_PROCEDURE_AS_STMT = "{call factorial(?, 0)}";
 
-    private static final String CREATE_PROCEDURE_EMP_SELECT =
-            "CREATE PROCEDURE get_emp_proj(emp_no SMALLINT) "
-            + " RETURNS (proj_id VARCHAR(25)) AS "
-            + " BEGIN "
-            + "    FOR SELECT PROJ_ID "
-            + "        FROM employee_project "
-            + "        WHERE emp_no = :emp_no ORDER BY proj_id "
-            + "        INTO :proj_id "
-            + "    DO "
-            + "        SUSPEND; "
-            + "END";
+    private static final String CREATE_PROCEDURE_EMP_SELECT = """
+            CREATE PROCEDURE get_emp_proj(emp_no SMALLINT)
+             RETURNS (proj_id VARCHAR(25)) AS
+             BEGIN
+                FOR SELECT PROJ_ID
+                    FROM employee_project
+                    WHERE emp_no = :emp_no ORDER BY proj_id
+                    INTO :proj_id
+                DO
+                    SUSPEND;
+            END""";
 
     private static final String SELECT_PROCEDURE_EMP_SELECT = "SELECT * FROM get_emp_proj(?)";
     private static final String EXECUTE_PROCEDURE_EMP_SELECT = "{call get_emp_proj(?)}";
 
-    private static final String CREATE_PROCEDURE_EMP_INSERT =
-            "CREATE PROCEDURE set_emp_proj(emp_no SMALLINT, proj_id VARCHAR(10)"
-            + " , last_name VARCHAR(10), proj_name VARCHAR(25)) "
-            + " AS "
-            + " BEGIN "
-            + "    INSERT INTO employee_project (emp_no, proj_id, last_name, proj_name) "
-            + "    VALUES (:emp_no, :proj_id, :last_name, :proj_name); "
-            + "END";
+    private static final String CREATE_PROCEDURE_EMP_INSERT = """
+            CREATE PROCEDURE set_emp_proj(emp_no SMALLINT, proj_id VARCHAR(10)
+             , last_name VARCHAR(10), proj_name VARCHAR(25))
+             AS
+             BEGIN
+                INSERT INTO employee_project (emp_no, proj_id, last_name, proj_name)
+                VALUES (:emp_no, :proj_id, :last_name, :proj_name);
+            END""";
 
     private static final String EXECUTE_PROCEDURE_EMP_INSERT = "{call set_emp_proj (?,?,?,?)}";
     private static final String EXECUTE_PROCEDURE_EMP_INSERT_1 = "EXECUTE PROCEDURE set_emp_proj (?,?,?,?)";
     private static final String EXECUTE_PROCEDURE_EMP_INSERT_SPACES = "EXECUTE PROCEDURE \nset_emp_proj\t   ( ?,?\t,?\n  ,?)";
 
-    private static final String CREATE_EMPLOYEE_PROJECT =
-            "CREATE TABLE employee_project( "
-            + " emp_no INTEGER NOT NULL, "
-            + " proj_id VARCHAR(10) NOT NULL, "
-            + " last_name VARCHAR(10) NOT NULL, "
-            + " proj_name VARCHAR(25) NOT NULL, "
-            + " proj_desc BLOB SUB_TYPE 1, "
-            + " product VARCHAR(25) )";
+    private static final String CREATE_EMPLOYEE_PROJECT = """
+            CREATE TABLE employee_project(
+              emp_no INTEGER NOT NULL,
+              proj_id VARCHAR(10) NOT NULL,
+              last_name VARCHAR(10) NOT NULL,
+              proj_name VARCHAR(25) NOT NULL,
+              proj_desc BLOB SUB_TYPE 1,
+              product VARCHAR(25)
+            )""";
 
-    private static final String CREATE_SIMPLE_OUT_PROC =
-            "CREATE PROCEDURE test_out (inParam VARCHAR(10)) RETURNS (outParam VARCHAR(10)) "
-            + "AS BEGIN "
-            + "    outParam = inParam; "
-            + "END";
+    private static final String CREATE_SIMPLE_OUT_PROC = """
+            CREATE PROCEDURE test_out (inParam VARCHAR(10)) RETURNS (outParam VARCHAR(10))
+            AS BEGIN
+                outParam = inParam;
+            END""";
 
     private static final String EXECUTE_SIMPLE_OUT_PROCEDURE = "{call test_out ?, ? }";
     private static final String EXECUTE_SIMPLE_OUT_PROCEDURE_1 = "{?=CALL test_out(?)}";
@@ -141,59 +141,58 @@ class FBCallableStatementTest {
     private static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION = "EXECUTE PROCEDURE test_out 'test?'";
     private static final String EXECUTE_SIMPLE_OUT_WITH_OUT_PARAM = "EXECUTE PROCEDURE test_out(?, ?)";
 
-    private static final String CREATE_PROCEDURE_WITHOUT_PARAMS =
-            "CREATE PROCEDURE test_no_params "
-            + "AS BEGIN "
-            + "    exit;"
-            + "END";
+    private static final String CREATE_PROCEDURE_WITHOUT_PARAMS = """
+            CREATE PROCEDURE test_no_params
+            AS BEGIN
+                exit;
+            END""";
 
     private static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS = "{call test_no_params}";
     private static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_1 = "{call test_no_params()}";
     private static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_2 = "{call test_no_params () }";
     private static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_3 = "EXECUTE PROCEDURE test_no_params ()";
 
-    private static final String CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS =
-            "CREATE PROCEDURE select_no_params "
-            + " RETURNS (proj_id VARCHAR(25)) "
-            + "AS BEGIN "
-            + "    proj_id = 'abc'; "
-            + "    SUSPEND;"
-            + "END";
+    private static final String CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS = """
+            CREATE PROCEDURE select_no_params
+             RETURNS (proj_id VARCHAR(25))
+            AS BEGIN
+                proj_id = 'abc';
+                SUSPEND;
+            END""";
 
     private static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS = "{call select_no_params}";
     private static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_1 = "{call select_no_params()}";
     private static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_2 = "{call select_no_params () }";
 
-    private static final String CREATE_PROCEDURE_BLOB_RESULT =
-            "CREATE PROCEDURE blob_result\n" +
-            "RETURNS (\n" +
-            "    SQL_SELECT BLOB SUB_TYPE 1 )\n" +
-            "AS\n" +
-            "BEGIN\n" +
-            "    sql_select = '\n" +
-            "        EXECUTE BLOCK\n" +
-            "        RETURNS(\n" +
-            "            column_info_column_name VARCHAR(30),\n" +
-            "            column_value VARCHAR(100),\n" +
-            "            column_alias VARCHAR(20))\n" +
-            "        AS\n" +
-            "        DECLARE VARIABLE i INTEGER;\n" +
-            "        BEGIN\n" +
-            "          i = 0;\n" +
-            "          WHILE (i < 10)\n" +
-            "          DO BEGIN\n" +
-            "            column_info_column_name = ''FK_TETEL__DYN'';\n" +
-            "            column_value = ascii_char(ascii_val(''a'') + i);\n" +
-            "            column_alias = UPPER(column_value);\n" +
-            "            SUSPEND;\n" +
-            "\n" +
-            "            i = i + 1;\n" +
-            "          END\n" +
-            "        END';\n" +
-            "END";
+    private static final String CREATE_PROCEDURE_BLOB_RESULT = """
+            CREATE PROCEDURE blob_result
+            RETURNS (
+                SQL_SELECT BLOB SUB_TYPE 1 )
+            AS
+            BEGIN
+                sql_select = '
+                    EXECUTE BLOCK
+                    RETURNS(
+                        column_info_column_name VARCHAR(30),
+                        column_value VARCHAR(100),
+                        column_alias VARCHAR(20))
+                    AS
+                    DECLARE VARIABLE i INTEGER;
+                    BEGIN
+                      i = 0;
+                      WHILE (i < 10)
+                      DO BEGIN
+                        column_info_column_name = ''FK_TETEL__DYN'';
+                        column_value = ascii_char(ascii_val(''a'') + i);
+                        column_alias = UPPER(column_value);
+                        SUSPEND;
+
+                        i = i + 1;
+                      END
+                    END';
+            END""";
 
     private static final String EXECUTE_PROCEDURE_BLOB_RESULT = "EXECUTE PROCEDURE blob_result";
-    //@formatter:on
 
     private Connection con;
 
@@ -1119,6 +1118,33 @@ class FBCallableStatementTest {
                 cstmt.execute();
                 assertEquals("sentinel", cstmt.getString("MSG"));
             }
+        }
+    }
+
+    /**
+     * Rationale: an implementation bug looked up the result set index by name, then requested the value by index on
+     * the callable statement. If that index corresponded to the index of a registered OUT parameter, it would remap
+     * that to a different result set column and return the value of the wrong column.
+     */
+    @Test
+    void namedRetrievalMapping() throws Exception {
+        executeDDL(con, """
+                create procedure one_in_two_out(in1 varchar(5)) returns (out1 varchar(8), out2 varchar(8))
+                as
+                begin
+                  out1 = 'out1' || in1;
+                  out2 = 'out2' || in1;
+                end""");
+
+        try (var cstmt = con.prepareCall("{call one_in_two_out(?, ?, ?)}")) {
+            cstmt.setString(1, "test");
+            cstmt.registerOutParameter(2, Types.VARCHAR);
+            cstmt.registerOutParameter(3, Types.VARCHAR);
+
+            cstmt.execute();
+
+            assertEquals("out1test", cstmt.getString("OUT1"), "Unexpected value for column OUT1");
+            assertEquals("out2test", cstmt.getString("OUT2"), "Unexpected value for column OUT2");
         }
     }
 

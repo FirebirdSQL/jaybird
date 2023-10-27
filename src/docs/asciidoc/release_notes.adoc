@@ -911,6 +911,9 @@ The JDBC API specifies _"This `byte` array contains up to `length` consecutive b
 +
 The JDBC API does not specify what should happen if the requested position is beyond the end-of-blob.
 The modified implementation returns an empty array, but given this is unspecified behaviour, we reserve the option to change this in the future to throw an exception instead.
+* Fixed: `CallableStatement.getXXX(String)` could return value from wrong column (https://github.com/FirebirdSQL/jaybird/issues/771[#771])
++
+This change was also backported to Jaybird 4.0.10 and Jaybird 5.0.3.
 * `FBResultSetNotUpdatableException` now extends `SQLNonTransientException` instead of `FBSQLException`.
 * Jaybird no longer throws any instances of `FBSQLException`.
 
@@ -1098,6 +1101,10 @@ there is no replacement
 there is no replacement
 ** `getLoggerImplementation()`;
 there is no replacement
+* `FBCallableStatement`
+** `findOutParameter(String)` (protected);
+use `getAndAssertSingletonResultSet().findColumn(paramName)`;
+carefully check if that is the correct usage (the method was removed because the old usage within Jaybird resulted in mapping the wrong column)
 
 The following methods had their visibility reduced:
 
