@@ -54,12 +54,6 @@ public class FBProcedureCall implements Cloneable {
         return clonedParameters;
     }
 
-    /**
-     * <code>true</code> if the old callable statement compatibility mode should
-     * be used, otherwise - <code>false</code>. Current value - <code>true</code>.
-     */
-    public static final boolean OLD_CALLABLE_STATEMENT_COMPATIBILITY = true;
-
     private String name;
     // TODO Replace Vector with a List
     private Vector<FBProcedureParam> inputParams = new Vector<>();
@@ -137,58 +131,29 @@ public class FBProcedureCall implements Cloneable {
     }
 
     /**
-     * Map output parameter index to a column number of corresponding result
-     * set.
+     * Map output parameter index to a column number of the corresponding result set.
      *
-     * @param index index to map.
-     *
-     * @return mapped column number or <code>index</code> if no output parameter
-     * with the specified index found (assuming that {@link #OLD_CALLABLE_STATEMENT_COMPATIBILITY}
-     * constant is set to <code>true</code>, otherwise throws exception).
-     *
-     * @throws SQLException if compatibility mode is switched off and no
-     * parameter was found (see {@link #OLD_CALLABLE_STATEMENT_COMPATIBILITY}
-     * constant).
+     * @param index
+     *         index to map
+     * @return mapped column number or {@code index} if no output parameter with the specified index is found
+     * @throws SQLException
+     *         in current implementation: never, throws clause retained for compatibility and possibly future uses
      */
+    @SuppressWarnings("RedundantThrows")
     public int mapOutParamIndexToPosition(int index) throws SQLException {
-        return mapOutParamIndexToPosition(index, OLD_CALLABLE_STATEMENT_COMPATIBILITY);
-    }
-
-    /**
-     * Map output parameter index to a column number of corresponding result
-     * set.
-     *
-     * @param index index to map.
-     * @param compatibilityMode <code>true</code> if we should run in old compatibility mode.
-     *
-     * @return mapped column number or <code>index</code> if no output parameter
-     * with the specified index found and <code>compatibilityMode</code> is set.
-     *
-     * @throws SQLException if compatibility mode is switched off and no
-     * parameter was found.
-     */
-    public int mapOutParamIndexToPosition(int index, boolean compatibilityMode) throws SQLException {
-        int position = -1;
+        int position = 0;
 
         for (FBProcedureParam param : outputParams) {
             if (param != null && param.isParam()) {
                 position++;
 
                 if (param.getIndex() == index) {
-                    return position + 1;
+                    return position;
                 }
             }
         }
-
-        // hack: if we did not find the right parameter we return
-        // an index that was asked if we run in compatibility mode
-        // 
-        // we should switch it off as soon as people convert applications
-        if (compatibilityMode) {
-            return index;
-        } else {
-            throw new SQLException("Specified parameter does not exist", SQL_STATE_INVALID_DESC_FIELD_ID);
-        }
+        // For historic compatibility reasons we return the original requested index if there is no mapping
+        return index;
     }
 
     /**

@@ -52,6 +52,7 @@ class FBEscapedCallParserTest {
     private static final String CALL_TEST_8 = "EXECUTE PROCEDURE my_proc (UPPER(?), '11-dec-2001')";
     private static final String CALL_TEST_9 = "   \t  EXECUTE\nPROCEDURE  my_proc   (    UPPER(?), '11-dec-2001')  \t";
 
+    private final FBEscapedCallParser parser = new FBEscapedCallParser();
     private FBProcedureCall testProcedureCall;
     private final FBProcedureParam param1 = new FBProcedureParam(0, "?");
     private final FBProcedureParam param2 = new FBProcedureParam(1, "UPPER(?)");
@@ -78,17 +79,15 @@ class FBEscapedCallParserTest {
 
     @Test
     void testProcessEscapedCall() throws Exception {
-        FBEscapedCallParser parser = new FBEscapedCallParser();
-
         FBProcedureCall procedureCall1 = parser.parseCall(CALL_TEST_5);
         procedureCall1.registerOutParam(1, Types.INTEGER);
         procedureCall1.getInputParam(2).setValue("test value");
         assertThrows(SQLException.class, () -> procedureCall1.registerOutParam(3, Types.CHAR),
                 "Should not allow registering param 3 as output, since it does not exist");
-
-        assertEquals(1, procedureCall1.mapOutParamIndexToPosition(1, false));
-        assertThrows(SQLException.class, () -> procedureCall1.mapOutParamIndexToPosition(2, false),
-                "Should not allow to obtain position when no compatibility mode is specified");
+        // Index 1 corresponds to the first mapped OUT parameter, so it returns 1
+        assertEquals(1, procedureCall1.mapOutParamIndexToPosition(1), "Should return mapped parameter");
+        // Index 2 does not correspond to a mapped OUT parameter, this returns the original value (2)
+        assertEquals(2, procedureCall1.mapOutParamIndexToPosition(2), "Should return unmapped parameter");
 
         FBProcedureCall procedureCall2 = parser.parseCall(CALL_TEST_5_1);
         procedureCall2.registerOutParam(1, Types.INTEGER);
@@ -110,6 +109,20 @@ class FBEscapedCallParserTest {
 
         FBProcedureCall procedureCall6 = parser.parseCall(CALL_TEST_9);
         verifyParseSql(procedureCall6);
+    }
+
+    @Test
+    void testOutParameterMapping() throws Exception {
+        FBProcedureCall procedureCall = parser.parseCall(CALL_TEST_5);
+        procedureCall.getInputParam(1).setValue("test value");
+        procedureCall.registerOutParam(2, Types.INTEGER);
+        // Index 1 does not correspond to a mapped OUT parameter, this returns the original value (1)
+        assertEquals(1, procedureCall.mapOutParamIndexToPosition(1), "Should return unmapped parameter");
+        // Index 2 corresponds to the first mapped OUT parameter, so it returns 1 as well
+        assertEquals(1, procedureCall.mapOutParamIndexToPosition(2), "Should return mapped parameter");
+        // Index 3 does not correspond to a mapped OUT parameter (though it does correspond to a literal marked as OUT),
+        // this returns the original value (3)
+        assertEquals(3, procedureCall.mapOutParamIndexToPosition(3), "Should return unmapped parameter");
     }
 
     private void verifyParseSql(FBProcedureCall procedureCall) throws SQLException {
