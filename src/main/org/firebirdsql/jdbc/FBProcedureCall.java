@@ -18,11 +18,13 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.jaybird.util.CollectionUtils;
+
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Vector;
 
 import static org.firebirdsql.jdbc.SQLStateConstants.*;
 
@@ -46,8 +48,8 @@ public class FBProcedureCall implements Cloneable {
         }
     }
 
-    private static Vector<FBProcedureParam> cloneParameters(final Vector<FBProcedureParam> parameters) {
-        final Vector<FBProcedureParam> clonedParameters = new Vector<>(parameters.size());
+    private static List<FBProcedureParam> cloneParameters(final List<FBProcedureParam> parameters) {
+        final List<FBProcedureParam> clonedParameters = new ArrayList<>(parameters.size());
         for (FBProcedureParam param : parameters) {
             clonedParameters.add(param != null ? (FBProcedureParam) param.clone() : null);
         }
@@ -55,9 +57,8 @@ public class FBProcedureCall implements Cloneable {
     }
 
     private String name;
-    // TODO Replace Vector with a List
-    private Vector<FBProcedureParam> inputParams = new Vector<>();
-    private Vector<FBProcedureParam> outputParams = new Vector<>();
+    private List<FBProcedureParam> inputParams = new ArrayList<>();
+    private List<FBProcedureParam> outputParams = new ArrayList<>();
 
     /**
      * Get the name of the procedure to be called.
@@ -92,10 +93,7 @@ public class FBProcedureCall implements Cloneable {
 
             // ensure that vector has right size
             // note, index starts with 1
-            if (inputParams.size() < index) {
-                inputParams.setSize(index);
-            }
-
+            CollectionUtils.growToSize(inputParams, index);
             inputParams.set(index - 1, result);
         }
 
@@ -120,7 +118,7 @@ public class FBProcedureCall implements Cloneable {
      *
      * @return instance of {@link FBProcedureParam}.
      */
-    private FBProcedureParam getParam(Collection<FBProcedureParam> params, int index) {
+    private static FBProcedureParam getParam(Collection<FBProcedureParam> params, int index) {
         for (FBProcedureParam param : params) {
             if (param != null && param.getIndex() == index) {
                 return param;
@@ -180,11 +178,7 @@ public class FBProcedureCall implements Cloneable {
      * @param param The parameter to be added
      */
     public void addInputParam(FBProcedureParam param) {
-        if (inputParams.size() < param.getPosition() + 1) {
-            inputParams.setSize(param.getPosition() + 1);
-        }
-
-        inputParams.set(param.getPosition(), param);
+        addParam(inputParams, param);
     }
 
     /**
@@ -194,11 +188,12 @@ public class FBProcedureCall implements Cloneable {
      *         The parameter to be added
      */
     public void addOutputParam(FBProcedureParam param) {
-        if (outputParams.size() < param.getPosition() + 1) {
-            outputParams.setSize(param.getPosition() + 1);
-        }
+        addParam(outputParams, param);
+    }
 
-        outputParams.set(param.getPosition(), param);
+    private static void addParam(List<FBProcedureParam> params, FBProcedureParam param) {
+        CollectionUtils.growToSize(params, param.getPosition() + 1);
+        params.set(param.getPosition(), param);
     }
 
     /**
