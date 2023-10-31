@@ -159,7 +159,7 @@ public final class GDSServerVersion implements Serializable {
      */
     public int getProtocolVersion() {
         // We assume the protocol information is in the second version string;
-        // TODO this assumption may be wrong for multi-hop connections
+        // this assumption may be wrong for multi-hop connections
         if (rawVersions.length == 1 || rawVersions[1] == null) return -1;
         Matcher connectionMetadataMatcher = CONNECTION_METADATA_PATTERN.matcher(rawVersions[1]);
         if (!connectionMetadataMatcher.find()) return -1;
@@ -182,7 +182,7 @@ public final class GDSServerVersion implements Serializable {
 
     private String getConnectionOptions() {
         // We assume the protocol information is in the second version string;
-        // TODO this assumption may be wrong for multi-hop connections
+        // this assumption may be wrong for multi-hop connections
         if (rawVersions.length == 1 || rawVersions[1] == null) return "";
         Matcher connectionMetadataMatcher = CONNECTION_METADATA_PATTERN.matcher(rawVersions[1]);
         if (!connectionMetadataMatcher.find()) return "";

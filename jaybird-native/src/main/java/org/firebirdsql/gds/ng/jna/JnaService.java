@@ -47,8 +47,6 @@ import java.sql.SQLException;
  */
 public final class JnaService extends AbstractFbService<JnaServiceConnection> implements JnaAttachment {
 
-    // TODO Find out if there are any exception from JNA that we need to be prepared to handle.
-
     private static final ParameterConverter<?, JnaServiceConnection> PARAMETER_CONVERTER = new JnaParameterConverter();
     public static final int STATUS_VECTOR_SIZE = 20;
 

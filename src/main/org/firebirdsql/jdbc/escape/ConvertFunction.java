@@ -41,8 +41,8 @@ import java.util.regex.Pattern;
  *  <li>{@code LONGVARBINARY}, {@code BLOB} will be cast to {@code BLOB SUB_TYPE BINARY}</li>
  *  <li>{@code TINYINT} is mapped to {@code SMALLINT}</li>
  *  <li>{@code ROWID} is not supported as length of {@code DB_KEY} values depend on the context
- *  TODO: consider cast to CHAR(8) character set binary or maybe multiples of 8?</li>
- *  <li>{@code `(SQL_)DECIMAL`} and {@code `(SQL_)NUMERIC`} without precision and scale are passed as is, in current
+ *  <!-- TODO: consider cast to CHAR(8) character set binary or maybe multiples of 8? --></li>
+ *  <li>{@code (SQL_)DECIMAL} and {@code (SQL_)NUMERIC} without precision and scale are passed as is, in current
  *  Firebird versions, this means the value will be equivalent to {@code DECIMAL(9,0)} (which is equivalent to
  *  {@code INTEGER})</li>
  *  <li>Extension not defined in JDBC: {@code TIME_WITH_TIMEZONE/TIME_WITH_TIME_ZONE} and

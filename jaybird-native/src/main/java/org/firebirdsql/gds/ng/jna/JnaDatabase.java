@@ -51,8 +51,6 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
         implements JnaAttachment, TransactionListener, FbClientFeatureAccess {
 
-    // TODO Find out if there are any exception from JNA that we need to be prepared to handle.
-
     private static final ParameterConverter<JnaDatabaseConnection, ?> PARAMETER_CONVERTER = new JnaParameterConverter();
     public static final int STATUS_VECTOR_SIZE = 20;
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
@@ -211,8 +209,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             if (kind != fb_cancel_abort) {
                 checkConnected();
             }
-            // TODO Test what happens with 2.1 and earlier client library
-            // No synchronization, otherwise cancel will never work; might conflict with sync policy of JNA (TODO: find out)
+            // No synchronization, otherwise cancel will never work; might conflict with sync policy of JNA
             try {
                 clientLibrary.fb_cancel_operation(statusVector, handle, (short) kind);
             } finally {
@@ -395,14 +392,11 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     @Override
     public JnaEventHandle createEventHandle(String eventName, EventHandler eventHandler) throws SQLException {
-        // TODO Any JNA errors we need to track and convert to SQLException here?
         final JnaEventHandle eventHandle = new JnaEventHandle(eventName, eventHandler, getEncoding());
         try (LockCloseable ignored = withLock()) {
-            synchronized (eventHandle) {
-                int size = clientLibrary.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(),
-                        (short) 1, eventHandle.getEventNameMemory());
-                eventHandle.setSize(size);
-            }
+            int size = clientLibrary.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(),
+                    (short) 1, eventHandle.getEventNameMemory());
+            eventHandle.setSize(size);
         }
         return eventHandle;
     }

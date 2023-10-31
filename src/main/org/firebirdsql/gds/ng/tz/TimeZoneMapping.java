@@ -341,7 +341,6 @@ public final class TimeZoneMapping {
     }
 
     private static List<String> loadTimeZoneNameById() {
-        // TODO Potential loading issues?
         // TODO Just hard code it instead?
         try {
             final Properties timeZoneMapping = loadTimeZoneMapping();

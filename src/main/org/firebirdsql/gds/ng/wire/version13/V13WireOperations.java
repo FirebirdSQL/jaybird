@@ -84,7 +84,6 @@ public class V13WireOperations extends V11WireOperations {
                 data = acceptPacket.p_acpt_data;
                 pluginName = acceptPacket.p_acpt_plugin;
                 addServerKeys(acceptPacket.p_acpt_keys);
-                // TODO handle compression
                 acceptPacket = null;
             } else {
                 int operation = readNextOperation();
@@ -115,7 +114,6 @@ public class V13WireOperations extends V11WireOperations {
                     xdrIn.skipNBytes(4); // skip int: p_acpt_authenticated
                     addServerKeys(xdrIn.readBuffer()); //p_acpt_keys
                 }
-                // TODO handle compression
                 case op_response -> {
                     GenericResponse response = (GenericResponse) readOperationResponse(operation, null);
                     boolean wasAuthComplete = clientAuthBlock.isAuthComplete();

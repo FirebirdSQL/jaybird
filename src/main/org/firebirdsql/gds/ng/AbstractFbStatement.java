@@ -164,7 +164,6 @@ public abstract class AbstractFbStatement implements FbStatement {
     public void close() throws SQLException {
         if (getState() == StatementState.CLOSED) return;
         try (LockCloseable ignored = withLock()) {
-            // TODO do additional checks (see also old implementation and .NET)
             try {
                 final StatementState currentState = getState();
                 forceState(StatementState.CLOSING);

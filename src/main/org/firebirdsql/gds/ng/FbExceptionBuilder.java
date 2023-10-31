@@ -744,7 +744,6 @@ public final class FbExceptionBuilder {
         EXCEPTION(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
-                // TODO Replace with a list or chain of processors?
                 if (sqlState != null) {
                     if (sqlState.startsWith(SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX)) {
                         // Feature not supported by Firebird
