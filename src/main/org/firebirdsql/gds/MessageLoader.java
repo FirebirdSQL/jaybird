@@ -18,12 +18,13 @@
  */
 package org.firebirdsql.gds;
 
+import org.firebirdsql.jaybird.util.CollectionUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.Vector;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.ERROR;
@@ -43,21 +44,21 @@ final class MessageLoader {
 
     private final System.Logger log = System.getLogger(MessageLoader.class.getName());
     // Implementation note, using Vector here as they can be sized and then populated by index
-    private final List<Vector<String>> facilityMessages;
-    private final List<Vector<String>> facilityStates;
+    private final List<List<String>> facilityMessages;
+    private final List<List<String>> facilityStates;
 
     private MessageLoader() {
-        facilityMessages = createFacilityVectorList();
-        facilityStates = createFacilityVectorList();
+        facilityMessages = createFacilityLists();
+        facilityStates = createFacilityLists();
     }
 
-    private static List<Vector<String>> createFacilityVectorList() {
+    private static List<List<String>> createFacilityLists() {
         int size = MessageLookup.FACILITY_SIZE;
-        final List<Vector<String>> vectors = new ArrayList<>(size);
+        final List<List<String>> facilities = new ArrayList<>(size);
         while (size-- > 0) {
-            vectors.add(new Vector<>());
+            facilities.add(new ArrayList<>());
         }
-        return vectors;
+        return facilities;
     }
 
     /**
@@ -129,26 +130,24 @@ final class MessageLoader {
     }
 
     private void storeMessage(int errorCode, String value) {
-        Vector<String> facilityMessage = facilityMessages.get(MessageLookup.getFacility(errorCode));
-        storeValue(errorCode, value, facilityMessage);
+        storeValue(errorCode, value, facilityMessages.get(MessageLookup.getFacility(errorCode)));
     }
 
     private void storeSqlState(int errorCode, String value) {
-        Vector<String> facilityState = facilityStates.get(MessageLookup.getFacility(errorCode));
         // Given the large number of duplicate sql states, interning makes sense here
-        storeValue(errorCode, value.intern(), facilityState);
+        storeValue(errorCode, value.intern(), facilityStates.get(MessageLookup.getFacility(errorCode)));
     }
 
-    private void storeValue(int errorCode, String value, Vector<String> facilityVector) {
-        if (facilityVector == null) {
+    private void storeValue(int errorCode, String value, List<String> facilityList) {
+        if (facilityList == null) {
             log.log(WARNING, "Invalid error code {0}, no valid facility; skipping", errorCode);
             return;
         }
         final int code = MessageLookup.getCode(errorCode);
-        if (facilityVector.size() <= code) {
-            facilityVector.setSize(code + 1);
+        if (facilityList.size() <= code) {
+            CollectionUtils.growToSize(facilityList, code + 1);
         }
-        facilityVector.set(code, value);
+        facilityList.set(code, value);
     }
 
     private static InputStream getResourceAsStream(String res) {

@@ -19,7 +19,6 @@
 package org.firebirdsql.gds;
 
 import java.util.List;
-import java.util.Vector;
 
 /**
  * Lookup table for error messages and sql states by error code.
@@ -44,7 +43,7 @@ final class MessageLookup {
     // Lookup from facility + code to SQL state
     private final String[][] sqlStates;
 
-    MessageLookup(List<Vector<String>> facilityMessages, List<Vector<String>> facilityStates) {
+    MessageLookup(List<List<String>> facilityMessages, List<List<String>> facilityStates) {
         messages = toLookupArray(facilityMessages);
         sqlStates = toLookupArray(facilityStates);
     }
@@ -89,7 +88,7 @@ final class MessageLookup {
         return (errorCode & ISC_MASK) != ISC_MASK;
     }
 
-    private static String[][] toLookupArray(List<Vector<String>> sourceData) {
+    private static String[][] toLookupArray(List<List<String>> sourceData) {
         final int facilitySize = sourceData.size();
         final String[][] data = new String[facilitySize][];
         for (int idx = 0; idx < facilitySize; idx++) {
