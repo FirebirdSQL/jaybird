@@ -51,11 +51,9 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
 
         public void run() {
             try {
-                System.out.println("Start trace");
                 try (FbService service = this.service) {
                     executeServicesOperation(service, srb);
                 }
-                System.out.println("Trace stopped");
             } catch (SQLException e) {
                 // ignore
             }
