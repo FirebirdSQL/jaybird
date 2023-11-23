@@ -41,6 +41,7 @@ For consistency, we decided to let Jaybird handle it the same.
 +
 We now truncate the returned string if the codepoint count exceeds the maximum string length.
 * Fixed: `CallableStatement.getXXX(String)` could return value from wrong column -- backported from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/772[#772])
+* Updated: error messages updated from Firebird 5.0.0.1272
 
 [#jaybird-5-0-2-changelog]
 === Jaybird 5.0.2
