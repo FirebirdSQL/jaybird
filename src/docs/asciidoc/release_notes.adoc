@@ -148,7 +148,7 @@ Feedback can be sent to the https://groups.google.com/g/firebird-java[Firebird-j
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.10, and 4.0.2 and a recent snapshot of Firebird 5.0, but should also support other Firebird versions from 2.5 and up.
+Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.11, and 4.0.4, and a recent snapshot of Firebird 5.0, but should also support other Firebird versions from 2.5 and up.
 
 This driver does not support InterBase servers due to Firebird-specific changes in the protocol and database attachment parameters that are sent to the server.
 
@@ -158,8 +158,8 @@ This driver does not support InterBase servers due to Firebird-specific changes 
 Jaybird 5 supports Java 8 (JDBC 4.2), and Java 9 and higher (JDBC 4.3).
 Support for earlier Java versions has been dropped.
 
-Given the limited support period for Java 9 and higher versions, we limit support to Java 8, 11, 17 and the most recent LTS version after Java 17 and the latest Java release.
-Currently, that means we support Java 8, 11, 17 and 20.
+Given the limited support period for Java 9 and higher versions, we limit support to Java 8, 11, 17, 21 and the latest Java release.
+Currently, that means we support Java 8, 11, 17 and 21.
 
 [NOTE]
 ====
