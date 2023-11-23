@@ -13,6 +13,7 @@ The following has been changed or fixed since Jaybird 4.0.9
   not work ([jaybird#734](https://github.com/FirebirdSQL/jaybird/issues/734))
 - Fixed: `CallableStatement.getXXX(String)` could return value from wrong column
   &mdash; backported from Jaybird 6 ([jaybird#773](https://github.com/FirebirdSQL/jaybird/issues/773))
+- Updated: error messages updated from Firebird 5.0.0.1272
 
 Jaybird 4.0.9
 -------------
