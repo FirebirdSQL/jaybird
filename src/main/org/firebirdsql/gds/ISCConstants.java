@@ -1583,7 +1583,7 @@ public interface ISCConstants {
     int isc_overriding_without_identity = 335545134;
     int isc_overriding_system_invalid = 335545135;
     int isc_overriding_user_invalid = 335545136;
-    int isc_overriding_system_missing = 335545137;
+    int isc_overriding_missing = 335545137;
     int isc_decprecision_err = 335545138;
     int isc_decfloat_divide_by_zero = 335545139;
     int isc_decfloat_inexact_result = 335545140;
