@@ -8,11 +8,11 @@ Where do I get Jaybird?
 
 #### Jaybird 5 ####
 
-Jaybird 5 is in development and not yet available from Maven central:
+Jaybird 5 is available on Maven Central:
 
 groupId: `org.firebirdsql.jdbc`, \
 artifactId: `jaybird`, \
-version: `5.0.1.javaXX` (where `XX` is `11` or `8`)
+version: `5.0.3.javaXX` (where `XX` is `11` or `8`)
 
 For example, for Java 11:
 
@@ -20,7 +20,7 @@ For example, for Java 11:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>5.0.1.java11</version>
+    <version>5.0.3.java11</version>
 </dependency>
 ~~~
 
@@ -37,14 +37,14 @@ explicitly include JNA 5.12.1 as a dependency:
 
 #### Jaybird 4 ####
 
-Jaybird 4 is maintained at least until the end of 2023. However, we recommend
+Jaybird 4 is end-of-life and will receive no further updates. We recommend
 upgrading to Jaybird 5.
 
-Jaybird 4 is available from Maven central:
+Jaybird 4 is available from Maven Central:
 
 groupId: `org.firebirdsql.jdbc`, \
 artifactId: `jaybird`, \
-version: `4.0.9.javaXX` (where `XX` is `11`, `8` or `7`)
+version: `4.0.10.javaXX` (where `XX` is `11`, `8` or `7`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
 artifact id `jaybird-XX` (with `XX` `jdk17` or `jdk18`). However, we
@@ -56,7 +56,7 @@ For example, for Java 11:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.9.java11</version>
+    <version>4.0.10.java11</version>
 </dependency>
 ~~~
 
@@ -68,7 +68,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.9.java11</version>
+    <version>4.0.10.java11</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -231,20 +231,19 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
-Jaybird 5 supports Java 8, 11, 17 and 20. Support for Java 9 and higher is
-limited to Java 8, 11, 17 and the most recent LTS version after Java 17 and
+Jaybird 5 supports Java 8, 11, 17 and 21. Support for Java 9 and higher is
+limited to Java 8, 11, 17, 21 and the most recent LTS version after Java 21 and
 the latest Java release.
 
 Jaybird 5 is the last version to support Java 8 and 11, support will be dropped 
 with Jaybird 6, raising the minimum supported version to Java 17.
 
-Jaybird 4 supports Java 7, 8, 11, 17 and 20. Support for Java 9 and higher is 
-limited to Java 11, 17 and the most recent LTS version after Java 17 and
-the latest Java release.
+Jaybird 4 supports Java 7, 8, 11, 17 and 21. Support for Java 9 and higher is 
+limited to Java 11, 17 and 21.
 
 Jaybird 4 is the last version to support Java 7, support will be dropped with
-Jaybird 5. Jaybird 4 is still maintained (at least until the end of 2023), but
-we recommend upgrading to Jaybird 5.
+Jaybird 5. Jaybird 4.0.10 is the last release of Jaybird 4, and is end-of-life. 
+We recommend upgrading to Jaybird 5.
 
 Jaybird 3 supports Java 7 and 8 and has basic support for Java 9 and higher
 using the Java 8 version of the driver. Support for Java 9 and higher is 
@@ -271,8 +270,17 @@ Jaybird itself is not (yet) modularized. To ensure a stable module name,
 Jaybird, since 2.2.14 and 3.0.3, declares the automatic module name 
 `org.firebirdsql.jaybird`.
 
+Jaybird 6 will be modular.
+
 Which Firebird versions are supported?
 --------------------------------------
+
+Jaybird 5 supports Firebird version 2.5, 3.0 and 4.0, and provides tentative 
+support for Firebird 5.0. Firebird 5.0 will become fully supported in the first 
+release after Firebird 5.0.0.
+
+Jaybird 5 is the last version to support Firebird 2.5. Future versions of 
+Jaybird are not guaranteed to work with version 2.5 and earlier.
 
 Jaybird 4 supports Firebird version 2.5, 3.0 and 4.0, and introduces support for
 Firebird 4.0 types `DECLOAT`, extended precision of `NUMERIC` and `DECIMAL`, and 
@@ -280,7 +288,7 @@ time zone types (`TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME ZONE`).
 
 Jaybird 4 only provides partial support for Firebird 5.0, and the generated-keys 
 support does not work in all cases due to Firebird 5.0 now supporting multi-row 
-`RETURNING`. Full Firebird 5.0 support will become available in Jaybird 5.
+`RETURNING`. Full Firebird 5.0 support is available in Jaybird 5.
 
 Jaybird 3 supports Firebird versions 2.0 - 4.0. Support for Firebird 4.0 is 
 limited to the Firebird 3.0 feature set. Formally, Firebird 5.0 is not supported,
@@ -318,6 +326,7 @@ Apart from this FAQ, you can get additional information from:
 
 For version specific details, consult the release notes
 
+* [Jaybird 5.0.x release notes](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/5.0.x/release_notes.html)
 * [Jaybird 4.0.x release notes](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/4.0.x/release_notes.html)
 * [Jaybird 3.0.x release notes](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/3.0.x/release_notes.html)
 * [Jaybird 2.2.x release notes](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/2.2.x/release_notes.html)
@@ -599,11 +608,13 @@ How can I enable the Windows "TCP Loopback Fast Path" introduced in Firebird 3.0
 
 NOTE: Microsoft has deprecated the `SIO_LOOPBACK_FAST_PATH` option and 
 recommends not to use it.
+Support was removed in Firebird 5.0
 
 Firebird 3.0.2 adds support for "TCP Loopback Fast Path" (`SIO_LOOPBACK_FAST_PATH` 
-socket option). This is available in Windows 8 / Windows Server 2012 and higher.
-This feature enables performance optimizations when connecting through 
-localhost (127.0.0.1 / ::1). It requires support on both client and server side.
+socket option); support was removed in Firebird 5.0. This is available in 
+Windows 8 / Windows Server 2012 and higher. This feature enables performance 
+optimizations when connecting through localhost (127.0.0.1 / ::1). It requires 
+support on both client and server side.
 
 Java support for "TCP Loopback Fast Path" was introduced in Java 8 update 60, 
 it can be enabled by specifying the system property `jdk.net.useFastTcpLoopback` 
@@ -613,8 +624,8 @@ commandline).
 Unfortunately, Java only has an 'all-or-nothing' support for the "TCP Loopback 
 Fast Path", so Jaybird cannot enable this for you: you must specify this 
 property on JVM startup. On the other hand, this has the benefit that this works 
-for all Jaybird versions, as long as you use Java 8 update 60 or higher (and 
-Firebird 3.0.2 or higher).
+for all Jaybird versions, as long as you use Java 8 update 60 or higher (and
+Firebird 3.0.2 or higher, but before 5.0.0).
 
 Common connection errors
 ------------------------

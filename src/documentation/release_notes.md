@@ -7,6 +7,9 @@ For known issues, consult [Known Issues](#known-issues).
 Jaybird 4.0.10
 --------------
 
+Jaybird 4.0.10 is the last release of Jaybird 4, and Jaybird 4 is now 
+end-of-life. We recommend upgrading to Jaybird 5.
+
 The following has been changed or fixed since Jaybird 4.0.9
 
 - Fixed: Reconnect transaction with a transaction id exceeding 0x7FFF_FFFF did
@@ -394,8 +397,9 @@ or reported on the issue tracker <https://github.com/FirebirdSQL/jaybird/issues/
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION_WO_TARGET@ was tested against Firebird 2.5.9, 3.0.10, and
-4.0.2, but should also support other Firebird versions from 2.5 and up.
+Jaybird @VERSION_WO_TARGET@ was tested against Firebird 2.5.9, 3.0.11, and 
+4.0.4, and a recent snapshot of Firebird 5.0, but should also support other 
+Firebird versions from 2.5 and up.
 
 Formal support for Firebird 2.0 and 2.1 has been dropped (although in general we 
 expect the driver to work). The Type 2 and embedded server JDBC drivers use JNA to
@@ -443,8 +447,7 @@ Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 and higher
 (JDBC 4.3). Support for earlier Java versions has been dropped.
 
 Given the limited support period for Java 9 and higher versions, we limit 
-support to Java 8, 11, 17 and the most recent LTS version after Java 17 and 
-the latest Java release. Currently, that means we support Java 8, 11, 17 and 20.
+support to Java 7, 8, 11, 17, 21.
 
 Jaybird 4 provides libraries for Java 7, Java 8 and Java 11. The Java 8 builds 
 have the same source and all JDBC 4.3 related functionality and can be used on
@@ -665,7 +668,7 @@ The driver supports Java 7 with caveats.
 -   Some libraries used for testing Jaybird have upped their minimum 
     version to Java 8, while we need those library versions to test - for 
     example - Java 11. When we can no longer work around these issues, we will 
-    sacrifice Java 7 test coverage in order to maintain Java 7 support. 
+    sacrifice Java 7 test coverage to maintain Java 7 support. 
 
 ### Java 8 ###
 
@@ -688,8 +691,7 @@ Jaybird needs the `java.xml.bind` module, where the Java 8 and higher versions
 do not need that module.
 
 Given the limited support period for Java 9 and higher versions, we limit 
-support to Java 8, 11, 17 and the most recent LTS version after Java 17 and 
-the latest Java release. Currently, that means we support Java 8, 11, 17 and 19.
+support to Java 7, 8, 11, 17, 21.
 
 For compatibility with Java 9 modules, Jaybird defines the automatic module name 
 `org.firebirdsql.jaybird`. This guarantees a stable module name for Jaybird, and 
