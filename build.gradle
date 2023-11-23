@@ -64,10 +64,11 @@ java {
 }
 
 ext {
-    junit_jupiter = '5.9.2'
+    junit_jupiter = '5.10.1'
     hamcrest = '2.2'
-    assertj = '3.23.1'
-    mockito = '4.10.0'
+    assertj = '3.24.2'
+    // Mockito 5 requires Java 11 or higher
+    mockito = findProperty('buildProfile') == 'java8' ? '4.11.0' : '5.7.0'
 }
 
 dependencies {
@@ -87,7 +88,9 @@ dependencies {
     testImplementation "org.assertj:assertj-core:$assertj"
 
     testImplementation "org.mockito:mockito-core:$mockito"
-    testImplementation "org.mockito:mockito-inline:$mockito"
+    if (findProperty('buildProfile') == 'java8') {
+        testImplementation "org.mockito:mockito-inline:$mockito"
+    }
     testImplementation "org.mockito:mockito-junit-jupiter:$mockito"
 }
 
