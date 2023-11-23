@@ -84,18 +84,19 @@ public abstract class UsesDatabaseExtension {
                 try {
                     fbManager.dropDatabase(databasePath, FBTestProperties.DB_USER, FBTestProperties.DB_PASSWORD);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "Exception dropping DB", e);
                 }
             }
-        } catch (Exception ex){
-            ex.printStackTrace();
+        } catch (Exception e){
+            System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "Exception dropping DBs", e);
         } finally {
             try {
                 if (!(fbManager == null || fbManager.getState().equals("Stopped"))) {
                     fbManager.stop();
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            } catch (Exception e) {
+                System.getLogger(getClass().getName())
+                        .log(System.Logger.Level.ERROR, "Exception stopping FBManager", e);
             }
             fbManager = null;
         }
