@@ -860,7 +860,7 @@ See also <<compatibility-changes>> for details.
 [#other-fixes-and-changes]
 === Other fixes and changes
 
-* Improvement: Setting oversized strings on `CHAR` or `VARCHAR` parameters with character set UTF8 will now throw a `DataTruncation` exception on `setString` (and not set a value) instead of a `SQLException` with a "`string right truncation`" error on execute (https://github.com/FirebirdSQL/jaybird/issues/396[jaybird#396])
+* Improvement: Setting oversized strings on `CHAR` or `VARCHAR` parameters with character set UTF8 will now throw a `DataTruncation` exception on `setString` (and not set a value) instead of a `SQLException` with a "`string right truncation`" error on execute (https://github.com/FirebirdSQL/jaybird/issues/396[#396])
 +
 With this change, the behaviour for UTF8 is now consistent with that of single-byte character sets.
 For UTF8, the `DataTruncation` reports the transfer size and data size in Unicode codepoints.
@@ -868,7 +868,7 @@ For other multibyte character sets, the `DataTruncation` reports those sizes in 
 This change is not applied to UNICODE_FSS, as Firebird 3.0 and earlier do not enforce character length limits for this character set, only byte length limits.
 +
 The `setBytes` method on `CHAR` and `VARCHAR` parameters only check the byte length limit.
-* Improvement: Implemented `java.sql.Connection.abort(Executor)` to forcibly abort a connection (https://github.com/FirebirdSQL/jaybird/issues/496[jaybird#496])
+* Improvement: Implemented `java.sql.Connection.abort(Executor)` to forcibly abort a connection (https://github.com/FirebirdSQL/jaybird/issues/496[#496])
 +
 The `java.sql.Connection` is marked closed immediately, after which the executor is used to mark client-side statements and result sets as closed, and then closes the actual physical connection.
 The close of the physical connection is not a clean close and may result in "`connection reset by peer`" errors (e.g. error 10054 on Windows, error 104 on Linux) logged in `fiebird.log`.
@@ -876,24 +876,24 @@ Active transactions may not be rolled back immediately;
 this will be delayed until the server detects that the connection was closed.
 It is possible that some listeners are not informed of the connection, statement or result set close.
 When a security manager is active, calling `abort` requires the `SQLPermission` "`callAbort`".
-* Changed: `DatabaseMetaData.getTypeInfo()` column `FIXED_PREC_SCALE` (column 11) now returns `false` for all data types except `NUMERIC` and `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/551[jaybird#551])
+* Changed: `DatabaseMetaData.getTypeInfo()` column `FIXED_PREC_SCALE` (column 11) now returns `false` for all data types except `NUMERIC` and `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/551[#551])
 +
 This was done because of the stated requirement "`__can it be a money value__`".
 Previously almost all types returned `true` (including -- for example -- `BOOLEAN` and `TIMESTAMP`, which are definitely not money types).
-* Consistent use of `BigDecimal.valueOf(double)` instead of a combination of `new BigDecimal(double)` and `BigDecimal.valueOf(double)` (https://github.com/FirebirdSQL/jaybird/issues/553[jaybird#553])
-* Switched blob identification in message BLR from `blr_quad` to `blr_blob2` (https://github.com/FirebirdSQL/jaybird/issues/726[jaybird#726])
-* Removed `finalize()` methods and -- where it made sense -- replaced them with use of `Cleaner` (https://github.com/FirebirdSQL/jaybird/issues/727[jaybird#727])
-* Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DECIMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (https://github.com/FirebirdSQL/jaybird/issues/731[jaybird#731])
-* Optimized the query to retrieve extended field info for `ResultSetMetaData.getPrecision` to only retrieve columns of type `NUMERIC` or `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/732[jaybird#732])
+* Consistent use of `BigDecimal.valueOf(double)` instead of a combination of `new BigDecimal(double)` and `BigDecimal.valueOf(double)` (https://github.com/FirebirdSQL/jaybird/issues/553[#553])
+* Switched blob identification in message BLR from `blr_quad` to `blr_blob2` (https://github.com/FirebirdSQL/jaybird/issues/726[#726])
+* Removed `finalize()` methods and -- where it made sense -- replaced them with use of `Cleaner` (https://github.com/FirebirdSQL/jaybird/issues/727[#727])
+* Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DECIMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (https://github.com/FirebirdSQL/jaybird/issues/731[#731])
+* Optimized the query to retrieve extended field info for `ResultSetMetaData.getPrecision` to only retrieve columns of type `NUMERIC` or `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/732[#732])
 * Added methods `List<String> getTypeAliasList()` and `List<String> getSupportedProtocolList()` to `GDSFactoryPlugin`, and deprecated `String[] getTypeAliases()` and `String[] getSupportedProtocols()` for removal in Jaybird 7 or later
-* Fixed formatting of `isc_formatted_exception` to not repeat the original parameters of the exception (https://github.com/FirebirdSQL/jaybird/issues/749[jaybird#749])
-* Added aliases `ApplicationName` and `applicationName` for connection property `processName` (https://github.com/FirebirdSQL/jaybird/issues/751[jaybird#751])
+* Fixed formatting of `isc_formatted_exception` to not repeat the original parameters of the exception (https://github.com/FirebirdSQL/jaybird/issues/749[#749])
+* Added aliases `ApplicationName` and `applicationName` for connection property `processName` (https://github.com/FirebirdSQL/jaybird/issues/751[#751])
 * Fixed: on `CHAR` fields, a too short value could be returned if the string contained one or more codepoints represented by surrogate pairs and the string length in `char` exceeded the maximum string length (https://github.com/FirebirdSQL/jaybird/issues/760[#760])
 +
 We now truncate the returned string if the codepoint count exceeds the maximum string length.
 +
 This change was also backported to Jaybird 5.0.3.
-* Improvement: Do not reject attempts to read blob id 0 (https://github.com/FirebirdSQL/jaybird/issues/764[jaybird#764])
+* Improvement: Do not reject attempts to read blob id 0 (https://github.com/FirebirdSQL/jaybird/issues/764[#764])
 +
 Previously, Jaybird rejected attempts to read blobs with blob id `0` (not on all code paths, for some only when assertions are enabled).
 Formally, blob id `0` is not a valid blob id, but in practice they can occur (e.g. due to bugs, or access components/drivers explicitly setting a blob column to id `0`).
