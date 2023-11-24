@@ -7,10 +7,10 @@
 :source-highlighter: prettify
 :toc: left
 :icons: font
-:jaybird5-full-version: 5.0.2
+:jaybird5-full-version: 5.0.3
 :jaybird5-template-version: {jaybird5-full-version}.<java>
 :jaybird5-example-version: {jaybird5-full-version}.java11
-:jaybird4-full-version: 4.0.9
+:jaybird4-full-version: 4.0.10
 :jaybird4-template-version: {jaybird4-full-version}.<java>
 :jaybird4-example-version: {jaybird4-full-version}.java11
 :jaybird3-full-version: 3.0.12
@@ -63,8 +63,8 @@ If you want to use Type 2 support (native or embedded), you need to explicitly i
 [#jaybird-4]
 ==== Jaybird 4
 
-Jaybird 4 is maintained at least until the end of 2023.
-However, we recommend upgrading to <<jaybird-5>>.
+Jaybird 4 is end-of-life and will receive no further updates.
+We recommend upgrading to <<jaybird-5>>.
 
 Jaybird 4 is available from Maven Central:
 
@@ -262,9 +262,8 @@ Future versions of Jaybird may specify an explicit version, or be released under
 [discrete]
 === Jaybird 5
 
-Jaybird 5 supports Java 8, 11, 17 and 20.
-Support for Java 9 and higher is limited to Java 11, 17 and the most recent LTS version after Java 17 and
-the latest Java release.
+Jaybird 5 supports Java 8, 11, 17 and 21.
+Support for Java 9 and higher is limited to Java 8, 11, 17, 21 and the most recent LTS version after Java 21 and the latest Java release.
 
 Jaybird 5 is the last version to support Java 8 and 11, support will be dropped with Jaybird 6, raising the minimum supported version to Java 17.
 
@@ -279,12 +278,12 @@ See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-
 [discrete]
 === Jaybird 4
 
-Jaybird 4 supports Java 7, 8, 11, 17 and 20.
-Support for Java 9 and higher is limited to Java 11, 17 and the most recent LTS version after Java 17 and
-the latest Java release.
+Jaybird 4 supports Java 7, 8, 11, 17 and 21.
+Support for Java 9 and higher is limited to Java 11, 17 and 21.
 
 Jaybird 4 is the last version to support Java 7, support will be dropped with Jaybird 5.
-Jaybird 4 is still maintained (at least until the end of 2023), but we recommend upgrading to Jaybird 5.
+Jaybird 4.0.10 is the last release of Jaybird 4, and is end-of-life.
+We recommend upgrading to Jaybird 5.
 
 [#java-jaybird-3-0]
 [discrete]
@@ -315,6 +314,8 @@ Jaybird 2.2 is the last version to support Java 6, support has been dropped with
 Jaybird itself is not (yet) modularized.
 To ensure a stable module name, Jaybird, since 2.2.14 and 3.0.3, declares the automatic module name `org.firebirdsql.jaybird`.
 
+Jaybird 6 will be modular.
+
 [#which-firebird-versions-are-supported]
 == Which Firebird versions are supported?
 
@@ -335,7 +336,7 @@ Future versions of Jaybird are not guaranteed to work with version 2.5 and earli
 Jaybird 4 supports Firebird version 2.5, 3.0 and 4.0, and introduces support for Firebird 4.0 types `DECLOAT`, extended precision of `NUMERIC` and `DECIMAL`, and time zone types (`TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME ZONE`).
 
 Jaybird 4 only provides partial support for Firebird 5.0, and the generated-keys support does not work in all cases due to Firebird 5.0 now supporting multi-row `RETURNING`.
-Full Firebird 5.0 support will become available in Jaybird 5.
+Full Firebird 5.0 support is available in Jaybird 5.
 
 [#firebird-jaybird-3-0]
 [discrete]
@@ -385,6 +386,7 @@ Apart from this FAQ, you can get additional information from:
 
 For version specific details, consult the release notes
 
+* https://www.firebirdsql.org/file/documentation/drivers_documentation/java/5.0.x/release_notes.html[Jaybird 5.0.x release notes]
 * https://www.firebirdsql.org/file/documentation/drivers_documentation/java/4.0.x/release_notes.html[Jaybird 4.0.x release notes]
 * https://www.firebirdsql.org/file/documentation/drivers_documentation/java/3.0.x/release_notes.html[Jaybird 3.0.x release notes]
 * https://www.firebirdsql.org/file/documentation/drivers_documentation/java/2.2.x/release_notes.html[Jaybird 2.2.x release notes]
@@ -637,7 +639,7 @@ It requires support on both client and server side.
 Java support for "TCP Loopback Fast Path" was introduced in Java 8 update 60, it can be enabled by specifying the system property `jdk.net.useFastTcpLoopback` with value `true` (e.g. specify `-Djdk.net.useFastTcpLoopback=true` in your Java commandline).
 
 Unfortunately, Java only has an 'all-or-nothing' support for the "`TCP Loopback Fast Path`", so Jaybird cannot enable this for you: you must specify this  property on JVM startup.
-On the other hand, this has the benefit that this works for all Jaybird versions, as long as you use Java 8 update 60 or higher (and Firebird 3.0.2 or higher).
+On the other hand, this has the benefit that this works for all Jaybird versions, as long as you use Java 8 update 60 or higher (and Firebird 3.0.2 or higher, but before 5.0.0).
 
 [#common-connection-errors]
 == Common connection errors
