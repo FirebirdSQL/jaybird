@@ -10,6 +10,7 @@
 :sectnums:
 :bc-version: 1.76
 :jna-version: 5.13.0
+:jaybird-fbclient-version: 4.0.4.0
 
 ifeval::["{version_tag}" != ""]
 [WARNING]
@@ -1509,12 +1510,12 @@ The `fbclient.dll`, `fbembed.dll`, `libfbclient.so`, or `libfbembed.so` need to 
 For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient` dependency on your classpath to provide the native libraries for the `native` and `local` protocol.
 Be aware that this dependency does not support `embedded`.
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>fbclient</artifactId>
-    <version>4.0.4.0</artifactId>
+    <version>{jaybird-fbclient-version}</artifactId>
 </dependency>
 ----
 
