@@ -447,15 +447,15 @@ Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 and higher
 (JDBC 4.3). Support for earlier Java versions has been dropped.
 
 Given the limited support period for Java 9 and higher versions, we limit 
-support to Java 7, 8, 11, 17, 21[^java21]. 
+support to Java 7, 8, 11, 17, and 21[^java21]. 
 
 [^java21]: The support for Java 21 comes with one caveat: some tests weren't run
 due to lack of support for Java 21 in test libraries used for testing Jaybird, 
 and we did not want to invest time to upgrade or replace those libraries.
 
 Jaybird 4 provides libraries for Java 7, Java 8 and Java 11. The Java 8 builds 
-have the same source and all JDBC 4.3 related functionality and can be used on
-Java 9 and higher as well.
+have the same source and all JDBC 4.3 related functionality as the Java 11 build
+and can be used on Java 9 and higher as well.
 
 Jaybird 4 is not modularized, but all versions declare the automatic module name 
 `org.firebirdsql.jaybird`.
@@ -695,7 +695,7 @@ Jaybird needs the `java.xml.bind` module, where the Java 8 and higher versions
 do not need that module.
 
 Given the limited support period for Java 9 and higher versions, we limit 
-support to Java 7, 8, 11, 17, 21.
+support to Java 7, 8, 11, 17, and 21[^java21].
 
 For compatibility with Java 9 modules, Jaybird defines the automatic module name 
 `org.firebirdsql.jaybird`. This guarantees a stable module name for Jaybird, and 
@@ -778,8 +778,8 @@ value from a connection property. Be aware that a static value response for
 database encryption is not very secure as it can easily lead to replay attacks 
 or unintended key exposure. 
 
-Future versions of Jaybird (likely 5) will introduce plugin support for database
-encryption plugins that require a more complex callback.
+Future versions of Jaybird may introduce plugin support for database encryption
+plugins that require a more complex callback.
 
 The static response value of the encryption callback can be set through the 
 `dbCryptConfig` connection property. `DataSource` and `ServiceManager` 
@@ -2488,7 +2488,7 @@ Jaybird 5 will drop support for Java 7.
 
 Jaybird 5 will continue to support Java 8.
 
-(this section exists because in previous versions it announced tentative removal
+(This section exists because in previous versions it announced tentative removal
 of Java 8 support in Jaybird 5.)
 
 ### Dropping JCA support ###
