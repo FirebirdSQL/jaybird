@@ -451,15 +451,19 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     private static int maximumSegmentSize(FbDatabase db) {
-        // Max size in FB 2.1 and higher is 2^16 - 1, not 2^15 - 3 (IB 6 docs mention max is 32KiB)
-        if (db != null && db.getServerVersion().isEqualOrAbove(2, 1)) {
+        /* Max size in FB 2.1 and higher is 2^16 - 1, not 2^15 - 3 (IB 6 docs mention max is 32KiB). However,
+           Firebird 2.1 and 2.5 have issues with conversion from SSHORT to 32-bit (applying sign extension), leading to
+           incorrect buffer sizes, instead of addressing that, we only apply the higher limit for Firebird 3.0 and
+           higher. */
+        if (db != null && db.getServerVersion().isEqualOrAbove(3)) {
             /* NOTE: getSegment can retrieve at most 65533 bytes of blob data as the buffer to receive segments is
                max 65535 bytes, but the contents of the buffer are one or more segments prefixed with 2-byte lengths;
                putSegment can write max 65535 bytes, because the buffer *is* the segment */
             return 65535;
         }
-        // NOTE: This should probably be Short.MAX_VALUE, but we can no longer run the relevant tests on Firebird 2.0
-        // and older (which aren't supported any way), so we leave this as is
+        /* NOTE: This should probably be Short.MAX_VALUE, but we can no longer run the relevant tests on Firebird 2.0
+           and older (which aren't supported any way), and for Firebird 2.1 and 2.5, this may cause the same issue with
+           sign extension and buffer sizes mentioned above, so we leave this as is. */
         return Short.MAX_VALUE - 2;
     }
 

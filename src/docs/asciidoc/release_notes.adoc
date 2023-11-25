@@ -816,7 +816,7 @@ Configuring values less than 512 will be ignored and use 512 instead.
 [#blob-performance-max-segment]
 ==== Maximum segment size raised
 
-For connections to Firebird 2.1 and higherfootnote:[Formally, only Firebird 3.0 and higher are supported], the maximum segment size was raised from 32765 to 65535 bytes to match the maximum segment size supported by Firebird.
+For connections to Firebird 3.0 and higher, the maximum segment size was raised from 32765 to 65535 bytes to match the maximum segment size supported by Firebird.
 
 The maximum segment size is the maximum size for sending segments (_put_) to the server.
 Due to protocol limitations, retrieving segments from the server (_get_) is two bytes (or multiples of two bytes) shorterfootnote:[For _get_ the maximum segment size is actually the maximum buffer size to receive one or more segments which are prefixed with two bytes for the length].
