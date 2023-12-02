@@ -38,7 +38,7 @@ For use on data sources, it will need to be set using `setProperty(String, Strin
 
 === Rejected alternatives
 
-The following solutions were considered by rejected
+The following solutions were considered but rejected
 
 * Giving the connection property an obscure name like `iknowwhatimdoing01`
 +

@@ -88,7 +88,7 @@ The `var` type keyword is allowed, but only for the following cases:
 1. The assignment expression starts with `new` (e.g. `var someVariable = new SomeType(...)`)
 2. The assignment expression is a simple factory method that clearly reveals 
    the type (e.g. `var someVariable = SomeType.of(...)`)
-3. The assignment expression is a well-known JDBC methods (e.g. 
+3. The assignment expression is a well-known JDBC method (e.g. 
    `var connection = DriverManager.getConnection(..)` and 
    `var pstmt = connection.prepareStatement(..)`) (this can be considered 
    a specialization of rule 2)

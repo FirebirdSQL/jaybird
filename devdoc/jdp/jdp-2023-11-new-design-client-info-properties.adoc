@@ -43,7 +43,7 @@ Only `SYSTEM` (and `DDL_TRIGGER`) have known properties names, but are not modif
 
 Attempts to retrieve a non-existent variable from `SYSTEM` results in `isc_ctx_var_not_found` (`335544843`), for the user-contexts it returns `NULL`.
 
-Blank context names are allowed and are considered distinct (that is empty string is different from a single space, is different from two spaces, etc.).
+Blank property names are allowed and are considered distinct (that is empty string is different from a single space, is different from two spaces, etc.).
 
 Executing `ALTER SESSION RESET` will clear the user-contexts.
 

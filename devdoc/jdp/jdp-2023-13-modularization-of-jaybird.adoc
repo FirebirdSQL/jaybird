@@ -100,7 +100,7 @@ The `chacha64-plugin` library introduced for Jaybird 6 declares the automatic mo
 The service SPI must be exported API, but service implementations do not need to be explicitly exported.
 
 Depending on how Jaybird is used, exported access to packages can range from none when used purely as a JDBC driver without needing the extension interfaces in `org.firebirdsql.jdbc`, while using data sources, events and/or management classes requires more access.
-When using the internals of Jaybird (which are considered "`internal`" API, but may be beneficial to power users, even more access is needed.
+When using the internals of Jaybird, which are considered "`internal`" API, but may be beneficial to power users, even more access is needed.
 
 Jaybird has a long history, and some of its API has rough edges and weirdness.
 For example, some parts of `org.firebirdsql.gds.impl` are most definitely public API while others are not, while the `impl` in its name suggest that it is not supposed to be a public API.
@@ -191,7 +191,7 @@ some types are accepted and returned by public methods in other exported package
 some types are returned by public methods in `org.firebirdsql.jdbc`
 `org.firebirdsql.jdbc.metadata`:: not exported -- for internal use only
 `org.firebirdsql.management`:: exported -- public API
-`org.firebirdsql.util`:: exported -- public API (at least, some classes, others may be should be moved to `org.firebirdsql.jaybird.util`)
+`org.firebirdsql.util`:: exported -- public API (at least, some classes, others maybe should be moved to `org.firebirdsql.jaybird.util`)
 
 === `jaybird-native` (module `org.firebirdsql.jna`)
 
