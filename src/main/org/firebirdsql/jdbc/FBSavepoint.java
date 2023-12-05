@@ -23,123 +23,89 @@ import java.sql.SQLException;
 /**
  * Savepoint implementation.
  *
+ * @param savepointId
+ *         numeric savepoint id (must be non-{@code null} if {@code name} is {@code null}).
+ * @param name
+ *         savepoint name (must be non-{@code null} if {@code savepointId} is {@code null})
  * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
-public final class FBSavepoint implements FirebirdSavepoint {
+public record FBSavepoint(Integer savepointId, String name) implements FirebirdSavepoint {
 
     private static final String SAVEPOINT_ID_PREFIX = "SVPT";
 
-    private final boolean named;
-    private final int savepointId;
-    private final String name;
-    private boolean valid = true;
+    public FBSavepoint {
+        if (savepointId == null && name == null) {
+            throw new NullPointerException("savepointId and name cannot both be null");
+        } else if (name == null) {
+            name = generateSavepointName(savepointId);
+        } else if (savepointId != null) {
+            throw new IllegalArgumentException("savepointId cannot be non-null if name is not null");
+        } else if (name.isBlank()) {
+            throw new IllegalArgumentException("name must be non-blank");
+        }
+    }
 
     /**
-     * Create instance of this class.
+     * Create an unnamed savepoint.
      *
      * @param savepointId
-     *         ID of the savepoint.
+     *         ID of the savepoint
      */
     public FBSavepoint(int savepointId) {
-        this(false, savepointId, getSavepointServerId(savepointId));
+        this(savepointId, null);
     }
 
     /**
-     * Create instance of this class for the specified name.
+     * Create a named savepoint.
      *
      * @param name
-     *         name of the savepoint.
+     *         name of the savepoint
      */
     public FBSavepoint(String name) {
-        this(true, -1, name);
-    }
-
-    private FBSavepoint(boolean named, int savepointId, String name) {
-        this.named = named;
-        this.savepointId = savepointId;
-        this.name = name;
+        this(null, name);
     }
 
     /**
      * Generate a savepoint name for the specified savepoint id.
      *
      * @param savePointId
-     *         savepoint id.
-     * @return valid savepoint name.
+     *         savepoint id
+     * @return valid savepoint name
      */
-    private static String getSavepointServerId(int savePointId) {
+    private static String generateSavepointName(int savePointId) {
         if (savePointId >= 0) {
             return SAVEPOINT_ID_PREFIX + savePointId;
         }
         return SAVEPOINT_ID_PREFIX + '_' + Math.abs(savePointId);
     }
 
-    /**
-     * Get server savepoint name.
-     * <p>
-     * This method generates correct name for the savepoint that can be used in the SQL statement after
-     * dialect-appropriate quoting.
-     * </p>
-     *
-     * @return valid server-side name for the savepoint.
-     */
-    String getServerSavepointId() {
-        return name;
-    }
-
     @Override
     public int getSavepointId() throws SQLException {
-        if (named) {
-            throw new SQLException("Savepoint is named.");
+        if (savepointId == null) {
+            throw new SQLException("Savepoint is named");
         }
         return savepointId;
     }
 
     @Override
     public String getSavepointName() throws SQLException {
-        if (!named) {
-            throw new SQLException("Savepoint is unnamed.");
+        if (savepointId != null) {
+            throw new SQLException("Savepoint is unnamed");
         }
         return name;
     }
 
-    /**
-     * Check if the savepoint is valid.
-     *
-     * @return {@code true} if savepoint is valid.
-     */
-    boolean isValid() {
-        return valid;
+    String toSavepointStatement(QuoteStrategy quoteStrategy) {
+        return "SAVEPOINT " + quoteStrategy.quoteObjectName(name);
     }
 
-    /**
-     * Make this savepoint invalid.
-     */
-    void invalidate() {
-        this.valid = false;
+    String toRollbackStatement(QuoteStrategy quoteStrategy) {
+        return "ROLLBACK TO " + quoteStrategy.quoteObjectName(name);
     }
 
-    /**
-     * Check if objects are equal. For unnamed savepoints their IDs are checked, otherwise their names.
-     *
-     * @param obj
-     *         object to test.
-     * @return {@code true} if {@code obj} is equal to this object.
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (!(obj instanceof FBSavepoint)) return false;
-
-        FBSavepoint that = (FBSavepoint) obj;
-
-        return this.named == that.named &&
-                this.name.equals(that.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return name.hashCode();
+    String toReleaseStatement(QuoteStrategy quoteStrategy) {
+        return "RELEASE SAVEPOINT " + quoteStrategy.quoteObjectName(name) + " ONLY";
     }
 
 }

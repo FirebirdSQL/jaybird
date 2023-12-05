@@ -858,13 +858,13 @@ public class FBConnection implements FirebirdConnection {
      * Set the savepoint on the server.
      *
      * @param savepoint
-     *         savepoint to set.
+     *         savepoint to set
      * @throws SQLException
-     *         if something went wrong.
+     *         if something went wrong
      */
     private void setSavepoint(FBSavepoint savepoint) throws SQLException {
         if (getAutoCommit()) {
-            throw new SQLException("Connection.setSavepoint() method cannot be used in auto-commit mode.",
+            throw new SQLException("Connection.setSavepoint() method cannot be used in auto-commit mode",
                     SQL_STATE_INVALID_TX_STATE);
         }
 
@@ -874,10 +874,7 @@ public class FBConnection implements FirebirdConnection {
 
         txCoordinator.ensureTransaction();
 
-        StringBuilder setSavepoint = new StringBuilder("SAVEPOINT ");
-        getQuoteStrategy().appendQuoted(savepoint.getServerSavepointId(), setSavepoint);
-
-        getGDSHelper().executeImmediate(setSavepoint.toString());
+        getGDSHelper().executeImmediate(savepoint.toSavepointStatement(getQuoteStrategy()));
         savepoints.add(savepoint);
     }
 
@@ -921,26 +918,14 @@ public class FBConnection implements FirebirdConnection {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (getAutoCommit()) {
-                throw new SQLException("Connection.rollback(Savepoint) method cannot be used in auto-commit mode.",
+                throw new SQLException("Connection.rollback(Savepoint) method cannot be used in auto-commit mode",
                         SQL_STATE_INVALID_TX_STATE);
-            }
-
-            // TODO The error message and actual condition do not match
-            if (!(savepoint instanceof FBSavepoint fbSavepoint)) {
-                throw new SQLException("Specified savepoint was not obtained from this connection.");
-            }
-
-            if (mc.inDistributedTransaction()) {
+            } else if (mc.inDistributedTransaction()) {
                 throw new SQLException("Connection enlisted in distributed transaction", SQL_STATE_INVALID_TX_STATE);
             }
 
-            if (!fbSavepoint.isValid()) {
-                throw new SQLException("Savepoint is no longer valid.");
-            }
-
-            StringBuilder rollbackSavepoint = new StringBuilder("ROLLBACK TO ");
-            getQuoteStrategy().appendQuoted(fbSavepoint.getServerSavepointId(), rollbackSavepoint);
-            getGDSHelper().executeImmediate(rollbackSavepoint.toString());
+            FBSavepoint fbSavepoint = validateSavepoint(savepoint);
+            getGDSHelper().executeImmediate(fbSavepoint.toRollbackStatement(getQuoteStrategy()));
         }
     }
 
@@ -949,24 +934,12 @@ public class FBConnection implements FirebirdConnection {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (getAutoCommit()) {
-                throw new SQLException("Connection.releaseSavepoint() method cannot be used in auto-commit mode.",
+                throw new SQLException("Connection.releaseSavepoint() method cannot be used in auto-commit mode",
                         SQL_STATE_INVALID_TX_STATE);
             }
 
-            // TODO The error message and actual condition do not match
-            if (!(savepoint instanceof FBSavepoint fbSavepoint)) {
-                throw new SQLException("Specified savepoint was not obtained from this connection.");
-            }
-
-            if (!fbSavepoint.isValid()) {
-                throw new SQLException("Savepoint is no longer valid.");
-            }
-
-            StringBuilder rollbackSavepoint = new StringBuilder("RELEASE SAVEPOINT ");
-            getQuoteStrategy().appendQuoted(fbSavepoint.getServerSavepointId(), rollbackSavepoint).append(" ONLY");
-            getGDSHelper().executeImmediate(rollbackSavepoint.toString());
-
-            fbSavepoint.invalidate();
+            FBSavepoint fbSavepoint = validateSavepoint(savepoint);
+            getGDSHelper().executeImmediate(fbSavepoint.toReleaseStatement(getQuoteStrategy()));
 
             savepoints.remove(fbSavepoint);
         }
@@ -977,12 +950,21 @@ public class FBConnection implements FirebirdConnection {
      */
     protected void invalidateSavepoints() {
         try (LockCloseable ignored = withLock()) {
-            for (FBSavepoint savepoint : savepoints) {
-                savepoint.invalidate();
-            }
-
             savepoints.clear();
         }
+    }
+
+    FBSavepoint validateSavepoint(Savepoint savepoint) throws SQLException {
+        // TODO The error message and actual condition do not match
+        if (!(savepoint instanceof FBSavepoint fbSavepoint)) {
+            throw new SQLException("Specified savepoint was not obtained from this connection");
+        }
+
+        if (!savepoints.contains(fbSavepoint)) {
+            throw new SQLException("Savepoint is no longer valid");
+        }
+
+        return fbSavepoint;
     }
 
     /**

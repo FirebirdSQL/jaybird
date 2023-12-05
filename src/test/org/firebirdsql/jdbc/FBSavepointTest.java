@@ -77,7 +77,7 @@ class FBSavepointTest {
         connection.setAutoCommit(true);
 
         SQLException exception = assertThrows(SQLException.class, connection::setSavepoint);
-        assertThat(exception, message(equalTo("Connection.setSavepoint() method cannot be used in auto-commit mode.")));
+        assertThat(exception, message(equalTo("Connection.setSavepoint() method cannot be used in auto-commit mode")));
     }
 
     @Test
@@ -94,7 +94,7 @@ class FBSavepointTest {
         Savepoint savepoint = connection.setSavepoint();
 
         SQLException exception = assertThrows(SQLException.class, savepoint::getSavepointName);
-        assertThat(exception, message(equalTo("Savepoint is unnamed.")));
+        assertThat(exception, message(equalTo("Savepoint is unnamed")));
     }
 
     /**
@@ -136,7 +136,7 @@ class FBSavepointTest {
         Savepoint savepoint = connection.setSavepoint("named");
 
         SQLException exception = assertThrows(SQLException.class, savepoint::getSavepointId);
-        assertThat(exception, message(equalTo("Savepoint is named.")));
+        assertThat(exception, message(equalTo("Savepoint is named")));
     }
 
     /**
