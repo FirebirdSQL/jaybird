@@ -418,7 +418,7 @@ div#preheader table { border: none; }
 #tocbot > .toc-list li { list-style: none; }
 #tocbot .toc-list { margin: 0; padding-left: 10px; }
 @media screen { #tocbot a.toc-link { height: 100%; }
-  #tocbot .is-collapsible { max-height: 1000px; overflow: hidden; }
+  #tocbot .is-collapsible { overflow: hidden; }
   #tocbot .is-collapsed { max-height: 0; }
   #tocbot .is-position-fixed { position: fixed !important; top: 0; }
   #tocbot .is-active-link { font-weight: 700; }
