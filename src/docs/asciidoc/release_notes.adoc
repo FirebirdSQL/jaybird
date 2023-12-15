@@ -9,7 +9,7 @@
 :icons: font
 :sectnums:
 :bc-version: 1.76
-:jna-version: 5.13.0
+:jna-version: 5.14.0
 :jaybird-fbclient-version: 4.0.4.0
 
 ifeval::["{version_tag}" != ""]
