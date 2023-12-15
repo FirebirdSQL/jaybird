@@ -38,4 +38,5 @@ jobs:
         with:
           name: report-artifacts
           path: build/reports
+          compression-level: 9
           retention-days: 7
