@@ -8,7 +8,7 @@
 :toc: left
 :icons: font
 :sectnums:
-:bc-version: 1.76
+:bc-version: 1.77
 :jna-version: 5.14.0
 :jaybird-fbclient-version: 4.0.4.0
 
