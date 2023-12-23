@@ -131,6 +131,8 @@ If you want to use Type 2 support (native, local or embedded), you need to expli
 Jaybird 3 is end-of-life and will receive no further updates.
 We recommend upgrading to <<jaybird-5>>.
 
+////
+// Stop showing Jaybird 3 Maven info, but keep available for now
 Jaybird 3 is available from Maven Central:
 
 [horizontal]
@@ -185,6 +187,8 @@ If you want to use Type 2 support (native, local or embedded), you need to  expl
     <version>4.4.0</version>
 </dependency>
 ----
+
+////
 
 [#jaybird-2-2]
 ==== Jaybird 2.2
