@@ -33,6 +33,7 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
@@ -75,6 +76,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     // TODO Check if methods currently throwing IOException should throw SQLException instead
 
     private static final Logger log = LoggerFactory.getLogger(WireConnection.class);
+    private static final WarningMessageCallback NOOP_WARNING_MESSAGE_CALLBACK = warning -> {};
 
     // Micro-optimization: we usually expect at most 3 (Firebird 5)
     private final List<KnownServerKey> knownServerKeys = new ArrayList<>(3);
@@ -487,7 +489,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     private AbstractWireOperations getDefaultWireOperations() {
         ProtocolDescriptor protocolDescriptor = protocols
                 .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10);
-        return (AbstractWireOperations) protocolDescriptor.createWireOperations(this, null);
+        return (AbstractWireOperations) protocolDescriptor.createWireOperations(this, NOOP_WARNING_MESSAGE_CALLBACK);
     }
 
     /**
@@ -496,7 +498,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     private FbWireOperations getCryptKeyCallbackWireOperations() {
         ProtocolDescriptor protocolDescriptor = protocols
                 .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION15);
-        return protocolDescriptor.createWireOperations(this, null);
+        return protocolDescriptor.createWireOperations(this, NOOP_WARNING_MESSAGE_CALLBACK);
     }
 
     /**

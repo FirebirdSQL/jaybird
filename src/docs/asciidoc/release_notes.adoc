@@ -32,6 +32,10 @@ For known issues, consult <<known-issues>>.
 
 The following has been changed or fixed since Jaybird 5.0.3:
 
+* Fixed: Potential NPE when `warningMessageCallback` is `null` while reading operations or consuming packets (https://github.com/FirebirdSQL/jaybird/issues/778[#778])
++
+As part of this change, the constructor `AbstractWireOperations` now explicitly requires the `connection` and `defaultWarningMessageCallback` to be non-``null`` and throws a `NullPointerException` otherwise.
+This may affect custom protocol implementations extending `AbstractWireOperations` and/or calling `ProtocolDescriptor#createWireOperations(WireConnection, WarningMessageCallback)`: make sure you don't pass `null`.
 * ...
 
 [#jaybird-5-0-3-changelog]
