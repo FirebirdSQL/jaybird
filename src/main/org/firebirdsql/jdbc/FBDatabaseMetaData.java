@@ -29,8 +29,6 @@ import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.io.Serial;
 import java.nio.charset.StandardCharsets;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.sql.*;
 import java.util.*;
 
@@ -1911,36 +1909,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return catalogMetadataInfo;
     }
 
-    static final int JDBC_MAJOR_VERSION = 4;
-    static final int JDBC_MINOR_VERSION;
-    static {
-        int tempVersion;
-        try {
-            String javaImplementation = getSystemPropertyPrivileged("java.specification.version");
-            if (javaImplementation == null) {
-                // Assume common case: JDBC 4.3
-                tempVersion = 3;
-            } else {
-                int javaVersionMajor;
-                try {
-                    javaVersionMajor = (int) Double.parseDouble(javaImplementation);
-                } catch (NumberFormatException e) {
-                    javaVersionMajor = 1;
-                }
-                if (javaVersionMajor >= 9) {
-                    // JDK 9 or higher: JDBC 4.3
-                    tempVersion = 3;
-                } else {
-                    // JDK 1.8 or lower: JDBC 4.2
-                    tempVersion = 2;
-                }
-            }
-        } catch (RuntimeException ex) {
-            // default to 3 (JDBC 4.3) when privileged call fails
-            tempVersion = 3;
-        }
-        JDBC_MINOR_VERSION = tempVersion;
-    }
+    private static final int JDBC_MAJOR_VERSION = 4;
+    private static final int JDBC_MINOR_VERSION = 3;
 
     @Override
     public int getJDBCMajorVersion() {
@@ -1950,11 +1920,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public int getJDBCMinorVersion() {
         return JDBC_MINOR_VERSION;
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static String getSystemPropertyPrivileged(final String propertyName) {
-        return AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty(propertyName));
     }
 
     private static class LruPreparedStatementCache extends LinkedHashMap<String, FBPreparedStatement> {
