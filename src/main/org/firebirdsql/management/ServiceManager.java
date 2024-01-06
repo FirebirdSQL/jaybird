@@ -66,7 +66,7 @@ public interface ServiceManager extends ServiceConnectionProperties {
      * @return the host for the connection to the service manager.
      * @deprecated Use {@link #getServerName()}; will be removed in Jaybird 6 or later
      */
-    @Deprecated
+    @Deprecated(since = "5", forRemoval = true)
     String getHost();
 
     /**
@@ -79,7 +79,7 @@ public interface ServiceManager extends ServiceConnectionProperties {
      *         for the connection to the service manager.
      * @deprecated Use {@link #setServerName(String)}; will be removed in Jaybird 6 or later
      */
-    @Deprecated
+    @Deprecated(since = "5", forRemoval = true)
     void setHost(String host);
 
     /**
@@ -88,7 +88,7 @@ public interface ServiceManager extends ServiceConnectionProperties {
      * @return the port for the connection to the service manager.
      * @deprecated Use {@link #getPortNumber()}; will be removed in Jaybird 6 or later
      */
-    @Deprecated
+    @Deprecated(since = "5", forRemoval = true)
     int getPort();
 
     /**
@@ -98,7 +98,7 @@ public interface ServiceManager extends ServiceConnectionProperties {
      *         for the connection to the service manager.
      * @deprecated Use {@link #setPortNumber(int)}; will be removed in Jaybird 6 or later
      */
-    @Deprecated
+    @Deprecated(since = "5", forRemoval = true)
     void setPort(int port);
 
     /**

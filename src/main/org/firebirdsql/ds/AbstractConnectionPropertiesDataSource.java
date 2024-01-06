@@ -457,14 +457,14 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @SuppressWarnings("deprecation")
-    @Deprecated
+    @Deprecated(since = "5")
     @Override
     public String getUserName() {
         return FirebirdConnectionProperties.super.getUserName();
     }
 
     @SuppressWarnings("deprecation")
-    @Deprecated
+    @Deprecated(since = "5")
     @Override
     public void setUserName(String userName) {
         FirebirdConnectionProperties.super.setUserName(userName);

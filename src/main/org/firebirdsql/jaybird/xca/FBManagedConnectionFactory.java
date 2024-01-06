@@ -494,7 +494,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
     }
 
     public void recover(FBManagedConnection mc, Xid xid) {
-
+        // nothing to do
     }
 
     /**
@@ -561,13 +561,12 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
                         String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
 
                         FbTransaction trHandle2 = dbHandle.startTransaction(getDefaultTpb().getTransactionParameterBuffer());
-                        FbStatement stmtHandle2 = dbHandle.createStatement(trHandle2);
-
-                        stmtHandle2.prepare(query);
-                        stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
-
-                        stmtHandle2.close();
-                        trHandle2.commit();
+                        try (FbStatement stmtHandle2 = dbHandle.createStatement(trHandle2)) {
+                            stmtHandle2.prepare(query);
+                            stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
+                        } finally {
+                            trHandle2.commit();
+                        }
                     } catch (SQLException sqle) {
                         throw new FBXAException("unable to remove in limbo transaction from rdb$transactions where rdb$transaction_id = " + fbTransactionId, XAException.XAER_RMERR);
                     }
@@ -625,16 +624,12 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
                                    + " class as single parameter was found.");
         } catch (InvocationTargetException ex) {
             final Throwable cause = ex.getCause();
-            if (cause instanceof RuntimeException) {
-                throw (RuntimeException) cause;
-            }
-
-            if (cause instanceof Error) {
-                throw (Error) cause;
-            }
-
-            if (cause instanceof SQLException) {
-                throw (SQLException) cause;
+            if (cause instanceof RuntimeException re) {
+                throw re;
+            } else if (cause instanceof Error error) {
+                throw error;
+            } else if (cause instanceof SQLException sqle) {
+                throw sqle;
             }
 
             // TODO More specific exception, Jaybird error code

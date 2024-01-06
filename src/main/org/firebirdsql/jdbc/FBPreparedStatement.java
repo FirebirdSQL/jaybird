@@ -408,7 +408,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * @throws SQLFeatureNotSupportedException Always
      * @deprecated
      */
-    @Deprecated
+    @Deprecated(since = "1")
     public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
         throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
@@ -590,10 +590,8 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     private void flushFields() throws SQLException {
         // flush any cached data that can be hanging
         for (int i = 0; i < fields.length; i++) {
-            FBField field = fields[i];
-
-            if (field instanceof FBFlushableField) {
-                ((FBFlushableField) field).flushCachedData();
+            if (fields[i] instanceof FBFlushableField flushableField) {
+                flushableField.flushCachedData();
             }
         }
     }
@@ -628,9 +626,8 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         try (LockCloseable ignored = withLock()) {
             final BatchedRowValue batchedValues = new BatchedRowValue(fieldValues.deepCopy());
             for (int i = 0; i < batchedValues.getCount(); i++) {
-                FBField field = getField(i + 1);
-                if (field instanceof FBFlushableField) {
-                    batchedValues.setCachedObject(i, ((FBFlushableField) field).getCachedObject());
+                if (getField(i + 1) instanceof FBFlushableField flushableField) {
+                    batchedValues.setCachedObject(i, flushableField.getCachedObject());
                 }
             }
 
@@ -790,8 +787,8 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
             // FIXME check if we can safely pass cached here
             FBField field = FBField.createField(getParameterDescriptor(i + 1), dataProvider, gdsHelper, false);
-            if (field instanceof BlobListenableField) {
-                ((BlobListenableField) field).setBlobListener(blobListener);
+            if (field instanceof BlobListenableField blobListenableField) {
+                blobListenableField.setBlobListener(blobListener);
             }
             fields[i] = field;
         }
@@ -898,6 +895,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         throw new SQLNonTransientException(METHOD_NOT_SUPPORTED, SQL_STATE_GENERAL_ERROR);
     }
 
+    @Override
     public long executeLargeUpdate() throws SQLException {
         executeUpdate();
         return getLargeUpdateCountMinZero();
@@ -975,9 +973,8 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             try {
                 fieldValues = rowValue;
                 for (int i = 0; i < fieldValues.getCount(); i++) {
-                    FBField field = getField(i + 1);
-                    if (field instanceof FBFlushableField) {
-                        ((FBFlushableField) field).setCachedObject((CachedObject) getCachedObject(i));
+                    if (getField(i + 1) instanceof FBFlushableField flushableField) {
+                        flushableField.setCachedObject((CachedObject) getCachedObject(i));
                     }
                 }
                 flushFields();

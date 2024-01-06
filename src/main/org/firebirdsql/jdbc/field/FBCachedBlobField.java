@@ -47,12 +47,14 @@ final class FBCachedBlobField extends FBBlobField {
         blob = new FBCachedBlob(bytes);
         return blob;
     }
-    
+
+    @Override
     public Clob getClob() throws SQLException {
     	if (isNull()) return null;
     	return new FBCachedClob((FBCachedBlob) getBlob(), blobConfig);
     }
 
+    @Override
     public byte[] getBytes() throws SQLException {
         // TODO Looks suspicious compared to the implementation in FBBlobField
         return getFieldData();

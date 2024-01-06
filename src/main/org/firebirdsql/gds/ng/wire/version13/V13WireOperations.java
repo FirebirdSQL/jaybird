@@ -132,15 +132,13 @@ public class V13WireOperations extends V11WireOperations {
                 }
             }
 
-            if (pluginName != null && pluginName.length() > 0
-                    && Objects.equals(pluginName, clientAuthBlock.getCurrentPluginName())) {
+            if (pluginName != null && !pluginName.isEmpty()
+                && Objects.equals(pluginName, clientAuthBlock.getCurrentPluginName())) {
                 pluginName = null;
             }
 
-            if (pluginName != null && pluginName.length() > 0) {
-                if (!clientAuthBlock.switchPlugin(pluginName)) {
-                    break;
-                }
+            if (pluginName != null && !pluginName.isEmpty() && !clientAuthBlock.switchPlugin(pluginName)) {
+                break;
             }
 
             if (!clientAuthBlock.hasPlugin()) {

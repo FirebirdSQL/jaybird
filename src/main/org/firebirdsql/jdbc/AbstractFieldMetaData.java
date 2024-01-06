@@ -194,11 +194,11 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             default -> 0;
         };
         case Types.CHAR, Types.VARCHAR -> {
-            final FieldDescriptor var = getFieldDescriptor(field);
+            final FieldDescriptor fieldDesc = getFieldDescriptor(field);
             final EncodingDefinition encodingDefinition =
-                    var.getEncodingFactory().getEncodingDefinitionByCharacterSetId(var.getSubType());
+                    fieldDesc.getEncodingFactory().getEncodingDefinitionByCharacterSetId(fieldDesc.getSubType());
             final int charSetSize = encodingDefinition != null ? encodingDefinition.getMaxBytesPerChar() : 1;
-            yield var.getLength() / charSetSize;
+            yield fieldDesc.getLength() / charSetSize;
         }
         case Types.BINARY, Types.VARBINARY -> getFieldDescriptor(field).getLength();
         case Types.FLOAT -> {

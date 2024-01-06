@@ -598,13 +598,12 @@ public final class FBManagedConnection implements ExceptionListener {
         try {
             // delete XID
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
-            FbStatement stmtHandle2 = database.createStatement(trHandle2);
-
-            stmtHandle2.prepare(getXidQueries().forgetDelete() + inLimboId);
-            stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
-
-            stmtHandle2.close();
-            trHandle2.commit();
+            try (FbStatement stmtHandle2 = database.createStatement(trHandle2)) {
+                stmtHandle2.prepare(getXidQueries().forgetDelete() + inLimboId);
+                stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
+            } finally {
+                trHandle2.commit();
+            }
         } catch (SQLException ex) {
             throw new FBXAException("can't perform query to delete xids", XAException.XAER_RMFAIL, ex);
         }
@@ -689,33 +688,32 @@ public final class FBManagedConnection implements ExceptionListener {
             var xids = new ArrayList<FBXid>();
 
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
-            FbStatement stmtHandle2 = database.createStatement(trHandle2);
+            try (FbStatement stmtHandle2 = database.createStatement(trHandle2)) {
+                var gdsHelper2 = new GDSHelper(database);
+                gdsHelper2.setCurrentTransaction(trHandle2);
 
-            var gdsHelper2 = new GDSHelper(database);
-            gdsHelper2.setCurrentTransaction(trHandle2);
+                stmtHandle2.prepare(getXidQueries().recoveryQuery());
 
-            stmtHandle2.prepare(getXidQueries().recoveryQuery());
+                var dataProvider = new DataProvider(stmtHandle2);
+                stmtHandle2.addStatementListener(dataProvider);
 
-            var dataProvider = new DataProvider(stmtHandle2);
-            stmtHandle2.addStatementListener(dataProvider);
+                stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
 
-            stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
+                var field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider.asFieldDataProvider(0), gdsHelper2, false);
+                var field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider.asFieldDataProvider(1), gdsHelper2, false);
 
-            var field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider.asFieldDataProvider(0), gdsHelper2, false);
-            var field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider.asFieldDataProvider(1), gdsHelper2, false);
+                while (dataProvider.next()) {
+                    long inLimboTxId = field0.getLong();
+                    byte[] inLimboMessage = field1.getBytes();
 
-            while (dataProvider.next()) {
-                long inLimboTxId = field0.getLong();
-                byte[] inLimboMessage = field1.getBytes();
-
-                FBXid xid = extractXid(inLimboMessage, inLimboTxId);
-                if (xid != null) {
-                    xids.add(xid);
+                    FBXid xid = extractXid(inLimboMessage, inLimboTxId);
+                    if (xid != null) {
+                        xids.add(xid);
+                    }
                 }
+            } finally {
+                trHandle2.commit();
             }
-
-            stmtHandle2.close();
-            trHandle2.commit();
 
             return xids.toArray(new Xid[0]);
         } catch (SQLException | IOException e) {
@@ -749,35 +747,33 @@ public final class FBManagedConnection implements ExceptionListener {
     Xid findSingleXid(Xid externalXid) throws javax.transaction.xa.XAException {
         try {
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
-            FbStatement stmtHandle2 = database.createStatement(trHandle2);
+            try (FbStatement stmtHandle2 = database.createStatement(trHandle2)) {
 
-            var gdsHelper2 = new GDSHelper(database);
-            gdsHelper2.setCurrentTransaction(trHandle2);
+                var gdsHelper2 = new GDSHelper(database);
+                gdsHelper2.setCurrentTransaction(trHandle2);
 
-            stmtHandle2.prepare(getXidQueries().recoveryQueryParameterized());
+                stmtHandle2.prepare(getXidQueries().recoveryQueryParameterized());
 
-            var dataProvider = new DataProvider(stmtHandle2);
-            stmtHandle2.addStatementListener(dataProvider);
+                var dataProvider = new DataProvider(stmtHandle2);
+                stmtHandle2.addStatementListener(dataProvider);
 
-            var tempXid = new FBXid(externalXid);
-            stmtHandle2.execute(RowValue.of(stmtHandle2.getParameterDescriptor(), tempXid.toBytes()));
+                var tempXid = new FBXid(externalXid);
+                stmtHandle2.execute(RowValue.of(stmtHandle2.getParameterDescriptor(), tempXid.toBytes()));
 
-            var field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider.asFieldDataProvider(0), gdsHelper2, false);
-            var field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider.asFieldDataProvider(1), gdsHelper2, false);
+                var field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider.asFieldDataProvider(0), gdsHelper2, false);
+                var field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider.asFieldDataProvider(1), gdsHelper2, false);
 
-            stmtHandle2.fetchRows(1);
-            FBXid xid = null;
-            if (dataProvider.next()) {
-                long inLimboTxId = field0.getLong();
-                byte[] inLimboMessage = field1.getBytes();
-
-                xid = extractXid(inLimboMessage, inLimboTxId);
+                stmtHandle2.fetchRows(1);
+                if (dataProvider.next()) {
+                    long inLimboTxId = field0.getLong();
+                    byte[] inLimboMessage = field1.getBytes();
+                    return extractXid(inLimboMessage, inLimboTxId);
+                } else {
+                    return null;
+                }
+            } finally {
+                trHandle2.commit();
             }
-
-            stmtHandle2.close();
-            trHandle2.commit();
-
-            return xid;
         } catch (SQLException | IOException e) {
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, e);
         }

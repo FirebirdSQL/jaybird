@@ -54,6 +54,7 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
         return localDate != null ? localDate.atStartOfDay() : null;
     }
 
+    @Override
     public String getString() throws SQLException {
         return FbDatetimeConversion.formatSqlDate(getLocalDate());
     }

@@ -283,7 +283,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                This is acceptable as commit/rollback failure should be limited to situations were the database
                is either inaccessible and the transaction is likely already rolled back or pending rollback by
                the server, or the transaction was already committed or rolled back.
-            */
+             */
             // TODO "register" transaction as pendingEnd for debugging?
         case PREPARED:
             try (LockCloseable ignored = withLock()) {

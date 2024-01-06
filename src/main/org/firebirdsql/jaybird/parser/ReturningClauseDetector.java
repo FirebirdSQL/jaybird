@@ -140,8 +140,8 @@ class ReturningClauseDetector extends AbstractTokenVisitor {
      * RETURNING} clause
      */
     private boolean cannotOccurAsFirstReturningToken(Token token) {
-        return token instanceof OperatorToken
-                && !(isPossibleUnaryOperator((OperatorToken) token) || token.equalsIgnoreCase("*"))
+        return token instanceof OperatorToken operatorToken
+                && !(isPossibleUnaryOperator(operatorToken) || operatorToken.equalsIgnoreCase("*"))
                 || NOT_IMMEDIATELY_AFTER_RETURNING_TOKEN_TEXT.contains(token.textAsCharSequence());
     }
 

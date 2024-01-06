@@ -39,7 +39,7 @@ public final class TimeZoneMapping {
 
     private static final TimeZoneMapping INSTANCE = new TimeZoneMapping();
     private static final int MAX_ZONE_ID = 65535;
-    private static final int MAX_OFFSET = 1439; // 23h:59m;
+    private static final int MAX_OFFSET = 1439; // 23h:59m
     private static final int MIN_OFFSET = -MAX_OFFSET;
     private static final int MAX_OFFSET_SUPPORTED = 1080; // 18h:00m; derived from ZoneOffset limitations
     private static final int MIN_OFFSET_SUPPORTED = -MAX_OFFSET_SUPPORTED;
@@ -183,8 +183,8 @@ public final class TimeZoneMapping {
      * @since 4.0.1
      */
     public int toTimeZoneId(ZoneId zoneId) {
-        if (zoneId instanceof ZoneOffset) {
-            return toTimeZoneId((ZoneOffset) zoneId);
+        if (zoneId instanceof ZoneOffset zoneOffset) {
+            return toTimeZoneId(zoneOffset);
         }
         Integer firebirdId = namedZoneIdCache.get(zoneId);
         if (firebirdId != null) {

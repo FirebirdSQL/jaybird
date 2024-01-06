@@ -138,8 +138,8 @@ enum ServerVersionInformation {
         return getForVersion(serverVersion.getMajorVersion(), serverVersion.getMinorVersion());
     }
 
-    private static class Constants {
-        public static final byte[] V1_0_STATEMENT_INFO = new byte[] {
+    private static final class Constants {
+        static final byte[] V1_0_STATEMENT_INFO = new byte[] {
                 isc_info_sql_stmt_type,
                 isc_info_sql_select,
                 isc_info_sql_describe_vars,
@@ -165,7 +165,7 @@ enum ServerVersionInformation {
                 //isc_info_sql_owner,
                 isc_info_sql_describe_end
         };
-        public static final byte[] V_1_0_PARAMETER_INFO = new byte[] {
+        static final byte[] V_1_0_PARAMETER_INFO = new byte[] {
                 isc_info_sql_describe_vars,
                 isc_info_sql_sqlda_seq,
                 isc_info_sql_type, isc_info_sql_sub_type,
@@ -176,7 +176,7 @@ enum ServerVersionInformation {
                 isc_info_sql_owner,
                 isc_info_sql_describe_end
         };
-        public static final byte[] V_2_0_STATEMENT_INFO = new byte[] {
+        static final byte[] V_2_0_STATEMENT_INFO = new byte[] {
                 isc_info_sql_stmt_type,
                 isc_info_sql_select,
                 isc_info_sql_describe_vars,
@@ -203,7 +203,7 @@ enum ServerVersionInformation {
                 //isc_info_sql_owner,
                 isc_info_sql_describe_end
         };
-        public static final byte[] V_2_0_PARAMETER_INFO = new byte[] {
+        static final byte[] V_2_0_PARAMETER_INFO = new byte[] {
                 isc_info_sql_describe_vars,
                 isc_info_sql_sqlda_seq,
                 isc_info_sql_type, isc_info_sql_sub_type,
@@ -215,5 +215,9 @@ enum ServerVersionInformation {
                 isc_info_sql_owner,
                 isc_info_sql_describe_end
         };
+
+        private Constants() {
+            // no instances
+        }
     }
 }

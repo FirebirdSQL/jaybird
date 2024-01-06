@@ -356,7 +356,7 @@ class FBConnectionTest {
      * {@code org.firebirdsql.jdbc.requireConnectionEncoding} have not been set.
      */
     @Test
-    public void testNoCharacterSetWithoutDefaultConnectionEncodingDefaultsToNONEIfEncodingNotRequired() throws Exception {
+    void testNoCharacterSetWithoutDefaultConnectionEncodingDefaultsToNONEIfEncodingNotRequired() throws Exception {
         String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
         assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
                 defaultConnectionEncoding, nullValue());

@@ -35,6 +35,10 @@ import java.util.Map;
 @InternalApi
 public final class EncryptionPluginRegistry {
 
+    private EncryptionPluginRegistry() {
+        // no instances
+    }
+
     /**
      * Gets the encryption plugin SPI identified by {@code encryptionIdentifier}.
      *

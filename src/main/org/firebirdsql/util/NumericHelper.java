@@ -39,7 +39,7 @@ public final class NumericHelper {
      * @return {@code intValue} as an unsigned long.
      */
     public static long toUnsignedLong(int intValue) {
-        return ((long) intValue) & 0xffffffffL;
+        return intValue & 0xffffffffL;
     }
 
     /**

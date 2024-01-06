@@ -228,7 +228,7 @@ class FBXAResourceTest {
      * </p>
      */
     @Test
-    public void testXAMultipleStatements() throws Throwable {
+    void testXAMultipleStatements() throws Throwable {
         FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
         try {
@@ -268,7 +268,7 @@ class FBXAResourceTest {
      * </p>
      */
     @Test
-    public void testCloseConnectionDuringXA() throws Throwable {
+    void testCloseConnectionDuringXA() throws Throwable {
         FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
         try {

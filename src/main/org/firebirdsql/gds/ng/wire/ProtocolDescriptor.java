@@ -214,9 +214,9 @@ public interface ProtocolDescriptor {
      * Create an {@link FbWireOperations} implementation for this protocol version.
      *
      * @param connection
-     *         WireConnection instance
+     *         WireConnection instance (non-{@code null})
      * @param defaultWarningMessageCallback
-     *         Default warning message callback
+     *         default warning message callback (non-{@code null})
      * @return Wire operations implementation
      */
     FbWireOperations createWireOperations(WireConnection<?, ?> connection,

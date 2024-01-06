@@ -58,15 +58,17 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.getDataTypeName;
  */
 public final class GetBestRowIdentifier extends AbstractMetadataMethod {
 
+    private static final String ROWIDENTIFIER = "ROWIDENTIFIER";
+    
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(8)
-            .at(0).simple(SQL_SHORT, 0, "SCOPE", "ROWIDENTIFIER").addField()
-            .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "ROWIDENTIFIER").addField()
-            .at(2).simple(SQL_LONG, 0, "DATA_TYPE", "ROWIDENTIFIER").addField()
-            .at(3).simple(SQL_VARYING, 31, "TYPE_NAME", "ROWIDENTIFIER").addField()
-            .at(4).simple(SQL_LONG, 0, "COLUMN_SIZE", "ROWIDENTIFIER").addField()
-            .at(5).simple(SQL_LONG, 0, "BUFFER_LENGTH", "ROWIDENTIFIER").addField()
-            .at(6).simple(SQL_SHORT, 0, "DECIMAL_DIGITS", "ROWIDENTIFIER").addField()
-            .at(7).simple(SQL_SHORT, 0, "PSEUDO_COLUMN", "ROWIDENTIFIER").addField()
+            .at(0).simple(SQL_SHORT, 0, "SCOPE", ROWIDENTIFIER).addField()
+            .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", ROWIDENTIFIER).addField()
+            .at(2).simple(SQL_LONG, 0, "DATA_TYPE", ROWIDENTIFIER).addField()
+            .at(3).simple(SQL_VARYING, 31, "TYPE_NAME", ROWIDENTIFIER).addField()
+            .at(4).simple(SQL_LONG, 0, "COLUMN_SIZE", ROWIDENTIFIER).addField()
+            .at(5).simple(SQL_LONG, 0, "BUFFER_LENGTH", ROWIDENTIFIER).addField()
+            .at(6).simple(SQL_SHORT, 0, "DECIMAL_DIGITS", ROWIDENTIFIER).addField()
+            .at(7).simple(SQL_SHORT, 0, "PSEUDO_COLUMN", ROWIDENTIFIER).addField()
             .toRowDescriptor();
 
     //@formatter:off
@@ -100,7 +102,7 @@ public final class GetBestRowIdentifier extends AbstractMetadataMethod {
 
     public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
             throws SQLException {
-        if (table == null || "".equals(table)) {
+        if (table == null || table.isEmpty()) {
             return createEmpty();
         }
 
@@ -108,7 +110,7 @@ public final class GetBestRowIdentifier extends AbstractMetadataMethod {
         List<RowValue> rows = getPrimaryKeyIdentifier(table, valueBuilder);
 
         // if no primary key exists, add RDB$DB_KEY as pseudo-column
-        if (rows.size() == 0) {
+        if (rows.isEmpty()) {
             FBDatabaseMetaData dbmd = mediator.getMetaData();
             // NOTE: Currently is always ROWID_VALID_TRANSACTION
             RowIdLifetime rowIdLifetime = dbmd.getRowIdLifetime();

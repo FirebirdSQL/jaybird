@@ -128,7 +128,7 @@ public abstract class AbstractParameterConverter<D extends AbstractConnection<IC
         if (props.getRoleName() != null) {
             spb.addArgument(isc_spb_sql_role_name, props.getRoleName());
         }
-        if (props.getConnectTimeout() != IConnectionProperties.DEFAULT_CONNECT_TIMEOUT) {
+        if (props.getConnectTimeout() != IAttachProperties.DEFAULT_CONNECT_TIMEOUT) {
             spb.addArgument(isc_spb_connect_timeout, props.getConnectTimeout());
         }
     }

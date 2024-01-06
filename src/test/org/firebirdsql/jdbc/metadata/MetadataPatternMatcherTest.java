@@ -65,7 +65,7 @@ class MetadataPatternMatcherTest {
 
     @ParameterizedTest(name = "{index}: {0} => {1}")
     @MethodSource("parameters")
-    public void testPatternToRegex(String metadataPattern, String expectedRegexPattern) {
+    void testPatternToRegex(String metadataPattern, String expectedRegexPattern) {
         assumeThat("patternToRegex not supported for this pattern", metadataPattern, is(notNullValue()));
         assertEquals(expectedRegexPattern, MetadataPatternMatcher.patternToRegex(metadataPattern),
                 "Unexpected regex pattern for '" + metadataPattern + "'");
@@ -73,7 +73,7 @@ class MetadataPatternMatcherTest {
 
     @ParameterizedTest(name = "{index}: {0} => {2}")
     @MethodSource("parameters")
-    public void testMetadataPatternMatcher(String metadataPattern, String ignored, List<String> expectedMatches) {
+    void testMetadataPatternMatcher(String metadataPattern, String ignored, List<String> expectedMatches) {
         final MetadataPatternMatcher metadataPatternMatcher =
                 MetadataPattern.compile(metadataPattern).toMetadataPatternMatcher();
         Matcher<String> matchesMetadataPattern = new TypeSafeMatcher<String>() {

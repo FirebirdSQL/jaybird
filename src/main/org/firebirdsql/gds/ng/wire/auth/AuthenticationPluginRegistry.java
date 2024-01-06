@@ -38,6 +38,10 @@ public final class AuthenticationPluginRegistry {
     private static final Map<String, AuthenticationPluginSpi> PLUGIN_SPI_MAP =
             Map.copyOf(findAuthenticationPluginSpi());
 
+    private AuthenticationPluginRegistry() {
+        // no instances
+    }
+
     public static AuthenticationPluginSpi getAuthenticationPluginSpi(String authenticationPluginName) {
         return PLUGIN_SPI_MAP.get(authenticationPluginName);
     }

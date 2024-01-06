@@ -40,11 +40,13 @@ import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
  */
 public final class GetClientInfoProperties {
 
+    private static final String CLIENTINFO = "CLIENTINFO";
+    
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(4)
-            .at(0).simple(SQL_VARYING, 80, "NAME", "CLIENTINFO").addField()
-            .at(1).simple(SQL_LONG, 0, "MAX_LEN", "CLIENTINFO").addField()
-            .at(2).simple(SQL_VARYING | 1, 31, "DEFAULT_VALUE", "CLIENTINFO").addField()
-            .at(3).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "DESCRIPTION", "CLIENTINFO").addField()
+            .at(0).simple(SQL_VARYING, 80, "NAME", CLIENTINFO).addField()
+            .at(1).simple(SQL_LONG, 0, "MAX_LEN", CLIENTINFO).addField()
+            .at(2).simple(SQL_VARYING | 1, 31, "DEFAULT_VALUE", CLIENTINFO).addField()
+            .at(3).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "DESCRIPTION", CLIENTINFO).addField()
             .toRowDescriptor();
 
     private final DbMetadataMediator mediator;

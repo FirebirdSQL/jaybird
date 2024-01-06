@@ -63,7 +63,7 @@ public final class EncodingFactory implements IEncodingFactory {
         }
     }
 
-    // Linked HashMap because we need to preserve insertion order for the lazy initialization;
+    // Linked HashMap because we need to preserve insertion order for the lazy initialization.
     // Initial capacity of 128 should prevent resizing during loading (if only DefaultEncodingSet is present)
     private final Map<String, EncodingDefinition> firebirdEncodingToDefinition = new LinkedHashMap<>(128);
     private final EncodingDefinition[] firebirdCharacterSetIdToDefinition =

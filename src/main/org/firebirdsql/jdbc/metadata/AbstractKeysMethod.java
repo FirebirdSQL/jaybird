@@ -38,21 +38,23 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  */
 abstract class AbstractKeysMethod extends AbstractMetadataMethod {
 
+    private static final String COLUMNINFO = "COLUMNINFO";
+
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(14)
-            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PKTABLE_CAT", "COLUMNINFO").addField()
-            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PKTABLE_SCHEM", "COLUMNINFO").addField()
-            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_NAME", "COLUMNINFO").addField()
-            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKCOLUMN_NAME", "COLUMNINFO").addField()
-            .at(4).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FKTABLE_CAT", "COLUMNINFO").addField()
-            .at(5).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FKTABLE_SCHEM", "COLUMNINFO").addField()
-            .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_NAME", "COLUMNINFO").addField()
-            .at(7).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKCOLUMN_NAME", "COLUMNINFO").addField()
-            .at(8).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
-            .at(9).simple(SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO").addField()
-            .at(10).simple(SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO").addField()
-            .at(11).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FK_NAME", "COLUMNINFO").addField()
-            .at(12).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", "COLUMNINFO").addField()
-            .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PKTABLE_CAT", COLUMNINFO).addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PKTABLE_SCHEM", COLUMNINFO).addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_NAME", COLUMNINFO).addField()
+            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKCOLUMN_NAME", COLUMNINFO).addField()
+            .at(4).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FKTABLE_CAT", COLUMNINFO).addField()
+            .at(5).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FKTABLE_SCHEM", COLUMNINFO).addField()
+            .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_NAME", COLUMNINFO).addField()
+            .at(7).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKCOLUMN_NAME", COLUMNINFO).addField()
+            .at(8).simple(SQL_SHORT, 0, "KEY_SEQ", COLUMNINFO).addField()
+            .at(9).simple(SQL_SHORT, 0, "UPDATE_RULE", COLUMNINFO).addField()
+            .at(10).simple(SQL_SHORT, 0, "DELETE_RULE", COLUMNINFO).addField()
+            .at(11).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FK_NAME", COLUMNINFO).addField()
+            .at(12).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", COLUMNINFO).addField()
+            .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", COLUMNINFO).addField()
             .toRowDescriptor();
 
     AbstractKeysMethod(DbMetadataMediator mediator) {

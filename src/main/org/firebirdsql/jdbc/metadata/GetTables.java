@@ -59,21 +59,23 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
 @InternalApi
 public abstract class GetTables extends AbstractMetadataMethod {
 
+    private static final String TABLES = "TABLES";
+    
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(12)
-            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLES").addField()
-            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "TABLES").addField()
-            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "TABLES").addField()
-            .at(3).simple(SQL_VARYING, 20, "TABLE_TYPE", "TABLES").addField()
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", TABLES).addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", TABLES).addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", TABLES).addField()
+            .at(3).simple(SQL_VARYING, 20, "TABLE_TYPE", TABLES).addField()
             // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-            .at(4).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "TABLES").addField()
-            .at(5).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TYPE_CAT", "TABLES").addField()
-            .at(6).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TYPE_SCHEM", "TABLES").addField()
-            .at(7).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TYPE_NAME", "TABLES").addField()
-            .at(8).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "SELF_REFERENCING_COL_NAME", "TABLES").addField()
-            .at(9).simple(SQL_VARYING | 1, 10, "REF_GENERATION", "TABLES").addField()
+            .at(4).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", TABLES).addField()
+            .at(5).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TYPE_CAT", TABLES).addField()
+            .at(6).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TYPE_SCHEM", TABLES).addField()
+            .at(7).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TYPE_NAME", TABLES).addField()
+            .at(8).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "SELF_REFERENCING_COL_NAME", TABLES).addField()
+            .at(9).simple(SQL_VARYING | 1, 10, "REF_GENERATION", TABLES).addField()
             // Jaybird extensions
-            .at(10).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "OWNER_NAME", "TABLES").addField()
-            .at(11).simple(SQL_SHORT, 0, "JB_RELATION_ID", "TABLES").addField()
+            .at(10).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "OWNER_NAME", TABLES).addField()
+            .at(11).simple(SQL_SHORT, 0, "JB_RELATION_ID", TABLES).addField()
             .toRowDescriptor();
 
     private static final RowDescriptor ROW_DESCRIPTOR_TABLE_TYPES = DbMetadataMediator.newRowDescriptorBuilder(1)

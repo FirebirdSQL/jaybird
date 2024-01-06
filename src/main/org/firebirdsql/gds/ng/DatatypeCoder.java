@@ -33,7 +33,6 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Calendar;
 
 /**
  * Interface defining the encoding and decoding for Firebird (numerical) data types.

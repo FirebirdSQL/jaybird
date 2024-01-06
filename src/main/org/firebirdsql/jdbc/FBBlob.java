@@ -204,24 +204,24 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     }
 
     /**
-     * Get information about this Blob. This method should be considered as
-     * temporary because it provides access to low-level API. More information
-     * on how to use the API can be found in "API Guide".
+     * Get information about this Blob. This method should be considered as temporary because it provides access to
+     * low-level API. More information on how to use the API can be found in "API Guide".
      *
-     * @param items items in which we are interested.
-     * @param buffer_length buffer where information will be stored.
-     *
-     * @return array of bytes containing information about this Blob.
-     *
-     * @throws SQLException if something went wrong.
+     * @param items
+     *         items in which we are interested
+     * @param bufferLength
+     *         buffer where information will be stored
+     * @return array of bytes containing information about this Blob
+     * @throws SQLException
+     *         if something went wrong
      */
-    public byte[] getInfo(byte[] items, int buffer_length) throws SQLException {
+    public byte[] getInfo(byte[] items, int bufferLength) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkClosed();
             blobListener.executionStarted(this);
             // TODO Does it make sense to close blob here?
             try (FbBlob blob = gdsHelper.openBlob(blobId, config)) {
-                return blob.getBlobInfo(items, buffer_length);
+                return blob.getBlobInfo(items, bufferLength);
             } finally {
                 blobListener.executionCompleted(this);
             }
@@ -642,18 +642,12 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
-        switch (newState) {
-        case COMMITTED:
-        case ROLLED_BACK:
+        if (newState == TransactionState.COMMITTED || newState == TransactionState.ROLLED_BACK) {
             try (LockCloseable ignored = withLock()) {
                 free();
             } catch (SQLException e) {
                 logger.log(System.Logger.Level.ERROR, "Error calling free on blob during transaction end", e);
             }
-            break;
-        default:
-            // Do nothing
-            break;
         }
     }
 

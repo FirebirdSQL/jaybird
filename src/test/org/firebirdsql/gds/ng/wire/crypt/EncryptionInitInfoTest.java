@@ -79,7 +79,7 @@ class EncryptionInitInfoTest {
     }
 
     @Test
-    public void failureValues() {
+    void failureValues() {
         final SQLException exception = new SQLException();
         EncryptionInitInfo initInfo = EncryptionInitInfo.failure(DUMMY_IDENTIFIER, exception);
 
@@ -100,7 +100,6 @@ class EncryptionInitInfoTest {
     void failureGetEncryptionCipherNotAllowed() {
         EncryptionInitInfo initInfo = EncryptionInitInfo.failure(DUMMY_IDENTIFIER, new SQLException());
 
-        //noinspection ResultOfMethodCallIgnored
         assertThrows(IllegalStateException.class, initInfo::getEncryptionCipher);
     }
 
@@ -108,7 +107,6 @@ class EncryptionInitInfoTest {
     void failureGetDecryptionCipherNotAllowed() {
         EncryptionInitInfo initInfo = EncryptionInitInfo.failure(DUMMY_IDENTIFIER, new SQLException());
 
-        //noinspection ResultOfMethodCallIgnored
         assertThrows(IllegalStateException.class, initInfo::getDecryptionCipher);
     }
 }

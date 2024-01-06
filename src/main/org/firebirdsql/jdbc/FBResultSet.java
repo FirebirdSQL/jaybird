@@ -67,7 +67,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     private boolean wasNull = false;
     private boolean wasNullValid = false;
-    // closed is false until the close method is invoked;
+    // closed is false until the close method is invoked
     private volatile boolean closed = false;
 
     private SQLWarning firstWarning;
@@ -295,12 +295,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
             final FBField field = FBField.createField(rowDescriptor.getFieldDescriptor(i), dataProvider, gdsHelper, cached);
 
-            if (field instanceof FBCloseableField) {
-                closeableFields.add((FBCloseableField) field);
+            if (field instanceof FBCloseableField closeableField) {
+                closeableFields.add(closeableField);
             }
 
-            if (trimStrings && field instanceof TrimmableField) {
-                ((TrimmableField) field).setTrimTrailing(true);
+            if (trimStrings && field instanceof TrimmableField trimmableField) {
+                trimmableField.setTrimTrailing(true);
             }
 
             fields[i] = field;
@@ -572,7 +572,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         Always
      * @deprecated
      */
-    @Deprecated
+    @Deprecated(since = "1")
     public InputStream getUnicodeStream(int columnIndex) throws SQLException {
         throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
@@ -666,7 +666,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * Implementation note: ignores {@code scale} and behaves identical to {@link #getBigDecimal(int)}.
      * </p>
      */
-    @Deprecated
+    @Deprecated(since = "1")
     @Override
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
         return getField(columnIndex).getBigDecimal(scale);
@@ -729,7 +729,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * Implementation note: ignores {@code scale} and behaves identical to {@link #getBigDecimal(String)}.
      * </p>
      */
-    @Deprecated
+    @Deprecated(since = "1")
     @Override
     public BigDecimal getBigDecimal(String columnName, int scale) throws SQLException {
         return getField(columnName).getBigDecimal(scale);
@@ -777,7 +777,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         Always
      * @deprecated
      */
-    @Deprecated
+    @Deprecated(since = "1")
     @Override
     public InputStream getUnicodeStream(String columnName) throws SQLException {
         throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
@@ -989,8 +989,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             break;
         default:
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidFetchDirection)
-                    .messageParameter(direction)
-                    .toSQLException();
+                .messageParameter(direction)
+                .toSQLException();
         }
     }
 

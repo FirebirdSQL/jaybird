@@ -41,11 +41,13 @@ final class FBCachedLongVarCharField extends FBLongVarCharField {
         super(fieldDescriptor, dataProvider, requiredType, gdsHelper);
     }
 
+    @Override
     public Blob getBlob() throws SQLException {
         if (isNull()) return null;
         return new FBCachedBlob(getFieldData());
     }
-    
+
+    @Override
     public Clob getClob() throws SQLException {
     	if (isNull()) return null;
     	return new FBCachedClob((FBCachedBlob)getBlob(), blobConfig);

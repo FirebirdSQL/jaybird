@@ -157,8 +157,8 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
 
         synchronized (this) {
             OutputStream currentLogger = getLogger();
-            if (currentLogger instanceof TraceStream) {
-                currentLogger = ((TraceStream) currentLogger).unwrap();
+            if (currentLogger instanceof TraceStream traceStream) {
+                currentLogger = traceStream.unwrap();
             }
             setLogger(new TraceStream(currentLogger, traceSessionName));
 
@@ -256,6 +256,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
             this.sessionName = sessionName;
         }
 
+        @Override
         public void write(byte[] b, int off, int len) throws IOException {
             if (lookForSessionId) {
                 findSessionId(b, off, len);

@@ -46,20 +46,22 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  */
 public abstract class GetPseudoColumns {
 
+    private static final String PSEUDOCOLUMNS = "PSEUDOCOLUMNS";
+
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(12)
-            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "PSEUDOCOLUMNS").addField()
-            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "PSEUDOCOLUMNS").addField()
-            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "PSEUDOCOLUMNS").addField()
-            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "PSEUDOCOLUMNS").addField()
-            .at(4).simple(SQL_LONG, 0, "DATA_TYPE", "PSEUDOCOLUMNS").addField()
-            .at(5).simple(SQL_LONG, 0, "COLUMN_SIZE", "PSEUDOCOLUMNS").addField()
-            .at(6).simple(SQL_LONG | 1, 0, "DECIMAL_DIGITS", "PSEUDOCOLUMNS").addField()
-            .at(7).simple(SQL_LONG, 0, "NUM_PREC_RADIX", "PSEUDOCOLUMNS").addField()
-            .at(8).simple(SQL_VARYING, 50, "COLUMN_USAGE", "PSEUDOCOLUMNS").addField()
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", PSEUDOCOLUMNS).addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", PSEUDOCOLUMNS).addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", PSEUDOCOLUMNS).addField()
+            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", PSEUDOCOLUMNS).addField()
+            .at(4).simple(SQL_LONG, 0, "DATA_TYPE", PSEUDOCOLUMNS).addField()
+            .at(5).simple(SQL_LONG, 0, "COLUMN_SIZE", PSEUDOCOLUMNS).addField()
+            .at(6).simple(SQL_LONG | 1, 0, "DECIMAL_DIGITS", PSEUDOCOLUMNS).addField()
+            .at(7).simple(SQL_LONG, 0, "NUM_PREC_RADIX", PSEUDOCOLUMNS).addField()
+            .at(8).simple(SQL_VARYING, 50, "COLUMN_USAGE", PSEUDOCOLUMNS).addField()
             // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-            .at(9).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "PSEUDOCOLUMNS").addField()
-            .at(10).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "PSEUDOCOLUMNS").addField()
-            .at(11).simple(SQL_VARYING, 3, "IS_NULLABLE", "PSEUDOCOLUMNS").addField()
+            .at(9).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", PSEUDOCOLUMNS).addField()
+            .at(10).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", PSEUDOCOLUMNS).addField()
+            .at(11).simple(SQL_VARYING, 3, "IS_NULLABLE", PSEUDOCOLUMNS).addField()
             .toRowDescriptor();
 
     private static final String DB_KEY_REMARK = "The RDB$DB_KEY column in a select list will be renamed by Firebird to "

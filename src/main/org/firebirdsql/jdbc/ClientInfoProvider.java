@@ -69,8 +69,8 @@ final class ClientInfoProvider {
     private final FBConnection connection;
     // if null, use DEFAULT_CLIENT_INFO_PROPERTIES
     private Set<ClientInfoProperty> knownProperties;
-    // Statement used for setting or retrieving client info properties;
-    // we don't try to close this statement, and rely on it getting closed by connection close
+    // Statement used for setting or retrieving client info properties.
+    // We don't try to close this statement, and rely on it getting closed by connection close
     private Statement statement;
 
     ClientInfoProvider(FBConnection connection) throws SQLException {

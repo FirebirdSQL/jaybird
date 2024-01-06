@@ -37,11 +37,13 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  */
 public final class GetSuperTables {
 
+    private static final String SUPERTABLES = "SUPERTABLES";
+    
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(4)
-            .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "SUPERTABLES").addField()
-            .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "SUPERTABLES").addField()
-            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "SUPERTABLES").addField()
-            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTABLE_NAME", "SUPERTABLES").addField()
+            .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", SUPERTABLES).addField()
+            .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", SUPERTABLES).addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", SUPERTABLES).addField()
+            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTABLE_NAME", SUPERTABLES).addField()
             .toRowDescriptor();
 
     private GetSuperTables() {

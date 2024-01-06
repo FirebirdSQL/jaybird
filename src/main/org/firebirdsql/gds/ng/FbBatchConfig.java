@@ -167,8 +167,8 @@ public interface FbBatchConfig {
         if (batchBufferSize() >= 0) {
             batchPb.addArgument(TAG_BUFFER_BYTES_SIZE, batchBufferSize());
         }
-        // Doesn't seem to make a difference in current implementation;
-        // in practice we register existing blobs under their own id (see registerBlobs in V16Statement)
+        // Doesn't seem to make a difference in current implementation, in practice we register existing blobs under
+        // their own id (see registerBlobs in V16Statement)
         // TODO Might need to change when implementing batching of blobs
         batchPb.addArgument(TAG_BLOB_POLICY, BLOB_ID_USER);
     }

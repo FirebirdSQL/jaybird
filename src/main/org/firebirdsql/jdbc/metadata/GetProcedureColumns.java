@@ -55,28 +55,30 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
  */
 public abstract class GetProcedureColumns extends AbstractMetadataMethod {
 
+    private static final String COLUMNINFO = "COLUMNINFO";
+    
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(20)
-            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", "COLUMNINFO").addField()
-            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", "COLUMNINFO").addField()
-            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_NAME", "COLUMNINFO").addField()
-            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "COLUMNINFO").addField()
-            .at(4).simple(SQL_SHORT, 0, "COLUMN_TYPE", "COLUMNINFO").addField()
-            .at(5).simple(SQL_LONG, 0, "DATA_TYPE", "COLUMNINFO").addField()
-            .at(6).simple(SQL_VARYING, 31, "TYPE_NAME", "COLUMNINFO").addField()
-            .at(7).simple(SQL_LONG, 0, "PRECISION", "COLUMNINFO").addField()
-            .at(8).simple(SQL_LONG, 0, "LENGTH", "COLUMNINFO").addField()
-            .at(9).simple(SQL_SHORT, 0, "SCALE", "COLUMNINFO").addField()
-            .at(10).simple(SQL_SHORT, 0, "RADIX", "COLUMNINFO").addField()
-            .at(11).simple(SQL_SHORT, 0, "NULLABLE", "COLUMNINFO").addField()
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", COLUMNINFO).addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", COLUMNINFO).addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_NAME", COLUMNINFO).addField()
+            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", COLUMNINFO).addField()
+            .at(4).simple(SQL_SHORT, 0, "COLUMN_TYPE", COLUMNINFO).addField()
+            .at(5).simple(SQL_LONG, 0, "DATA_TYPE", COLUMNINFO).addField()
+            .at(6).simple(SQL_VARYING, 31, "TYPE_NAME", COLUMNINFO).addField()
+            .at(7).simple(SQL_LONG, 0, "PRECISION", COLUMNINFO).addField()
+            .at(8).simple(SQL_LONG, 0, "LENGTH", COLUMNINFO).addField()
+            .at(9).simple(SQL_SHORT, 0, "SCALE", COLUMNINFO).addField()
+            .at(10).simple(SQL_SHORT, 0, "RADIX", COLUMNINFO).addField()
+            .at(11).simple(SQL_SHORT, 0, "NULLABLE", COLUMNINFO).addField()
             // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-            .at(12).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "COLUMNINFO").addField()
-            .at(13).simple(SQL_VARYING, 31, "COLUMN_DEF", "COLUMNINFO").addField()
-            .at(14).simple(SQL_LONG, 0, "SQL_DATA_TYPE", "COLUMNINFO").addField()
-            .at(15).simple(SQL_LONG, 0, "SQL_DATETIME_SUB", "COLUMNINFO").addField()
-            .at(16).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "COLUMNINFO").addField()
-            .at(17).simple(SQL_LONG, 0, "ORDINAL_POSITION", "COLUMNINFO").addField()
-            .at(18).simple(SQL_VARYING, 3, "IS_NULLABLE", "COLUMNINFO").addField()
-            .at(19).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "COLUMNINFO").addField()
+            .at(12).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", COLUMNINFO).addField()
+            .at(13).simple(SQL_VARYING, 31, "COLUMN_DEF", COLUMNINFO).addField()
+            .at(14).simple(SQL_LONG, 0, "SQL_DATA_TYPE", COLUMNINFO).addField()
+            .at(15).simple(SQL_LONG, 0, "SQL_DATETIME_SUB", COLUMNINFO).addField()
+            .at(16).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", COLUMNINFO).addField()
+            .at(17).simple(SQL_LONG, 0, "ORDINAL_POSITION", COLUMNINFO).addField()
+            .at(18).simple(SQL_VARYING, 3, "IS_NULLABLE", COLUMNINFO).addField()
+            .at(19).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", COLUMNINFO).addField()
             .toRowDescriptor();
 
     private GetProcedureColumns(DbMetadataMediator mediator) {

@@ -235,8 +235,8 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
             throw new IOException("Input stream already encrypted");
         }
         InputStream currentStream = in;
-        if (currentStream instanceof EncryptedStreamSupport) {
-            ((EncryptedStreamSupport) currentStream).setCipher(cipher);
+        if (currentStream instanceof EncryptedStreamSupport encryptedStreamSupport) {
+            encryptedStreamSupport.setCipher(cipher);
         } else {
             in = new FbCipherInputStream(currentStream, cipher);
         }

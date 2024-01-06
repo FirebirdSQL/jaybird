@@ -270,7 +270,7 @@ class DefaultDatatypeCoderTest {
      * Checks cache maintenance implementation (warning: reflection ties this to the implementation)
      */
     @Test
-    public void testCacheOfEncodingSpecificDatatypeCoders() throws Exception {
+    void testCacheOfEncodingSpecificDatatypeCoders() throws Exception {
         Field cacheField = DefaultDatatypeCoder.class.getDeclaredField("encodingSpecificDatatypeCoders");
         cacheField.setAccessible(true);
 

@@ -44,25 +44,27 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
  */
 public final class GetTypeInfo {
 
+    private static final String TYPEINFO = "TYPEINFO";
+    
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(18)
-            .at(0).simple(SQL_VARYING, 31, "TYPE_NAME", "TYPEINFO").addField()
-            .at(1).simple(SQL_LONG, 0, "DATA_TYPE", "TYPEINFO").addField()
-            .at(2).simple(SQL_LONG, 0, "PRECISION", "TYPEINFO").addField()
-            .at(3).simple(SQL_VARYING | 1, 1, "LITERAL_PREFIX", "TYPEINFO").addField()
-            .at(4).simple(SQL_VARYING | 1, 1, "LITERAL_SUFFIX", "TYPEINFO").addField()
-            .at(5).simple(SQL_VARYING | 1, 31, "CREATE_PARAMS", "TYPEINFO").addField()
-            .at(6).simple(SQL_SHORT, 0, "NULLABLE", "TYPEINFO").addField()
-            .at(7).simple(SQL_TEXT, 1, "CASE_SENSITIVE", "TYPEINFO").addField()
-            .at(8).simple(SQL_SHORT, 0, "SEARCHABLE", "TYPEINFO").addField()
-            .at(9).simple(SQL_TEXT, 1, "UNSIGNED_ATTRIBUTE", "TYPEINFO").addField()
-            .at(10).simple(SQL_TEXT, 1, "FIXED_PREC_SCALE", "TYPEINFO").addField()
-            .at(11).simple(SQL_TEXT, 1, "AUTO_INCREMENT", "TYPEINFO").addField()
-            .at(12).simple(SQL_VARYING | 1, 31, "LOCAL_TYPE_NAME", "TYPEINFO").addField()
-            .at(13).simple(SQL_SHORT, 0, "MINIMUM_SCALE", "TYPEINFO").addField()
-            .at(14).simple(SQL_SHORT, 0, "MAXIMUM_SCALE", "TYPEINFO").addField()
-            .at(15).simple(SQL_LONG, 0, "SQL_DATA_TYPE", "TYPEINFO").addField()
-            .at(16).simple(SQL_LONG | 1, 0, "SQL_DATETIME_SUB", "TYPEINFO").addField()
-            .at(17).simple(SQL_LONG, 0, "NUM_PREC_RADIX", "TYPEINFO").addField()
+            .at(0).simple(SQL_VARYING, 31, "TYPE_NAME", TYPEINFO).addField()
+            .at(1).simple(SQL_LONG, 0, "DATA_TYPE", TYPEINFO).addField()
+            .at(2).simple(SQL_LONG, 0, "PRECISION", TYPEINFO).addField()
+            .at(3).simple(SQL_VARYING | 1, 1, "LITERAL_PREFIX", TYPEINFO).addField()
+            .at(4).simple(SQL_VARYING | 1, 1, "LITERAL_SUFFIX", TYPEINFO).addField()
+            .at(5).simple(SQL_VARYING | 1, 31, "CREATE_PARAMS", TYPEINFO).addField()
+            .at(6).simple(SQL_SHORT, 0, "NULLABLE", TYPEINFO).addField()
+            .at(7).simple(SQL_TEXT, 1, "CASE_SENSITIVE", TYPEINFO).addField()
+            .at(8).simple(SQL_SHORT, 0, "SEARCHABLE", TYPEINFO).addField()
+            .at(9).simple(SQL_TEXT, 1, "UNSIGNED_ATTRIBUTE", TYPEINFO).addField()
+            .at(10).simple(SQL_TEXT, 1, "FIXED_PREC_SCALE", TYPEINFO).addField()
+            .at(11).simple(SQL_TEXT, 1, "AUTO_INCREMENT", TYPEINFO).addField()
+            .at(12).simple(SQL_VARYING | 1, 31, "LOCAL_TYPE_NAME", TYPEINFO).addField()
+            .at(13).simple(SQL_SHORT, 0, "MINIMUM_SCALE", TYPEINFO).addField()
+            .at(14).simple(SQL_SHORT, 0, "MAXIMUM_SCALE", TYPEINFO).addField()
+            .at(15).simple(SQL_LONG, 0, "SQL_DATA_TYPE", TYPEINFO).addField()
+            .at(16).simple(SQL_LONG | 1, 0, "SQL_DATETIME_SUB", TYPEINFO).addField()
+            .at(17).simple(SQL_LONG, 0, "NUM_PREC_RADIX", TYPEINFO).addField()
             .toRowDescriptor();
 
     private final DbMetadataMediator mediator;

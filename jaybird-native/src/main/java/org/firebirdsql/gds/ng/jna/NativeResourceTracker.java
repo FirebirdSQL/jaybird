@@ -128,10 +128,9 @@ public final class NativeResourceTracker {
     }
 
     static void disableShutdownHook() {
-        Object currentShutdownThread = shutdownThread.getAndSet(new Object());
-        if (currentShutdownThread instanceof Thread) {
+        if (shutdownThread.getAndSet(new Object()) instanceof Thread thread) {
             try {
-                Runtime.getRuntime().removeShutdownHook((Thread) currentShutdownThread);
+                Runtime.getRuntime().removeShutdownHook(thread);
             } catch (IllegalStateException e) {
                 // ignore
             } catch (SecurityException e) {
@@ -182,7 +181,7 @@ public final class NativeResourceTracker {
     /**
      * A native resource that can be registered with {@link NativeResourceTracker}.
      */
-    static abstract class NativeResource {
+    abstract static class NativeResource {
         /**
          * Dispose method to clean up the native resource.
          * <p>

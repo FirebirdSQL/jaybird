@@ -35,7 +35,8 @@ final class XAConnectionHandler extends PooledConnectionHandler {
         super(connection, owner);
         xaOwner = owner;
     }
-    
+
+    @Override
     boolean isRollbackAllowed() throws SQLException {
         return !(xaOwner.inDistributedTransaction() || connection.getAutoCommit());
     }

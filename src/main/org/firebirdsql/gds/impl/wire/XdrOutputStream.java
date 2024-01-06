@@ -368,8 +368,8 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
         }
         flush();
         OutputStream currentStream = out;
-        if (currentStream instanceof EncryptedStreamSupport) {
-            ((EncryptedStreamSupport) currentStream).setCipher(cipher);
+        if (currentStream instanceof EncryptedStreamSupport encryptedStreamSupport) {
+            encryptedStreamSupport.setCipher(cipher);
         } else {
             out = new CipherOutputStream(currentStream, cipher);
         }

@@ -106,9 +106,9 @@ public final class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFacto
         if (optionalFbEmbeddedInstance.isPresent()) {
             FirebirdEmbeddedLibrary firebirdEmbeddedLibrary = optionalFbEmbeddedInstance.get();
             log.log(INFO, "Found Firebird Embedded {0} on classpath", firebirdEmbeddedLibrary.getVersion());
-            if (firebirdEmbeddedLibrary instanceof DisposableFirebirdEmbeddedLibrary) {
-                NativeResourceTracker.strongRegisterNativeResource(new FirebirdEmbeddedLibraryNativeResource(
-                        (DisposableFirebirdEmbeddedLibrary) firebirdEmbeddedLibrary));
+            if (firebirdEmbeddedLibrary instanceof DisposableFirebirdEmbeddedLibrary disposableLibrary) {
+                NativeResourceTracker.strongRegisterNativeResource(
+                        new FirebirdEmbeddedLibraryNativeResource(disposableLibrary));
             }
 
             Path entryPointPath = firebirdEmbeddedLibrary.getEntryPointPath().toAbsolutePath();

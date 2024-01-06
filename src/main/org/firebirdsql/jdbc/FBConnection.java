@@ -143,7 +143,7 @@ public class FBConnection implements FirebirdConnection {
      */
     void notifyStatementClosed(FBStatement stmt) {
         if (!activeStatements.remove(stmt)) {
-            if (stmt instanceof FBPreparedStatement && !((FBPreparedStatement) stmt).isInitialized()) {
+            if (stmt instanceof FBPreparedStatement pstmt && !pstmt.isInitialized()) {
                 // Close was likely triggered by finalizer of a prepared statement that failed on prepare in
                 // the constructor: Do not log warning
                 return;
@@ -219,7 +219,7 @@ public class FBConnection implements FirebirdConnection {
         return mc != null ? mc.getConnectionRequestInfo().asIConnectionProperties().asImmutable() : null;
     }
 
-    @Deprecated
+    @Deprecated(since = "2")
     @Override
     public void setTransactionParameters(int isolationLevel, int[] parameters) throws SQLException {
         try (LockCloseable ignored = withLock()) {

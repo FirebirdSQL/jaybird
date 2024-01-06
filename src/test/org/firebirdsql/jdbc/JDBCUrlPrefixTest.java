@@ -80,7 +80,7 @@ class JDBCUrlPrefixTest {
 
     @ParameterizedTest(name = "{0} => {1}")
     @MethodSource("parameters")
-    public void verifyUrl(String urlPrefix, String expectedType) throws SQLException {
+    void verifyUrl(String urlPrefix, String expectedType) throws SQLException {
         checkGDSType(expectedType);
         String url = getUrl(urlPrefix);
         try (Connection connection = DriverManager.getConnection(url, getDefaultPropertiesForConnection())) {

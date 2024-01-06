@@ -40,6 +40,7 @@ import org.firebirdsql.gds.ng.wire.version11.V11ParameterConverter;
  */
 public class V12ParameterConverter extends V11ParameterConverter {
 
+    @Override
     protected DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection) {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
         DatabaseParameterBuffer dpb =
@@ -48,6 +49,7 @@ public class V12ParameterConverter extends V11ParameterConverter {
         return dpb;
     }
 
+    @Override
     protected ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection) {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
         ServiceParameterBuffer spb = new ServiceParameterBufferImp(

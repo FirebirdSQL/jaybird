@@ -191,7 +191,7 @@ public class TimeZoneDatatypeCoder {
                     .withOffsetSameInstant((ZoneOffset) zoneId);
         }
 
-        // We need to base on a date to determine value, we use the 2020-01-01 date;
+        // We need to base on a date to determine value, we use the 2020-01-01 date,
         // this aligns closest with Firebird behaviour
 
         return ZonedDateTime.of(TIME_TZ_BASE_DATE, utcTime, ZoneOffset.UTC)
@@ -225,7 +225,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     private ZonedDateTime decodeTimeTzToZonedDateTime(LocalTime utcTime, ZoneId zoneId) {
-        // We need to base on a date to determine value, we use the 2020-01-01 date;
+        // We need to base on a date to determine value, we use the 2020-01-01 date,
         // this aligns closest with Firebird behaviour
 
         ZonedDateTime timeAtBaseDate = ZonedDateTime.of(TIME_TZ_BASE_DATE, utcTime, ZoneOffset.UTC)

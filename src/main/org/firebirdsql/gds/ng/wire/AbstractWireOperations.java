@@ -36,6 +36,8 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElse;
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
@@ -52,8 +54,9 @@ public abstract class AbstractWireOperations implements FbWireOperations {
 
     protected AbstractWireOperations(WireConnection<?, ?> connection,
             WarningMessageCallback defaultWarningMessageCallback) {
-        this.connection = connection;
-        this.defaultWarningMessageCallback = defaultWarningMessageCallback;
+        this.connection = requireNonNull(connection, "connection");
+        this.defaultWarningMessageCallback =
+                requireNonNull(defaultWarningMessageCallback, "defaultWarningMessageCallback");
     }
 
     @Override
@@ -233,14 +236,9 @@ public abstract class AbstractWireOperations implements FbWireOperations {
      *         Response to process
      */
     public final void processResponseWarnings(final Response response, WarningMessageCallback warningCallback) {
-        if (warningCallback == null) {
-            warningCallback = defaultWarningMessageCallback;
-        }
-        if (response instanceof GenericResponse genericResponse) {
-            SQLException exception = genericResponse.getException();
-            if (exception instanceof SQLWarning) {
-                warningCallback.processWarning((SQLWarning) exception);
-            }
+        if (response instanceof GenericResponse genericResponse
+            && genericResponse.getException() instanceof SQLWarning warning) {
+            requireNonNullElse(warningCallback, defaultWarningMessageCallback).processWarning(warning);
         }
     }
 
@@ -266,7 +264,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
             try {
                 readResponse(warningCallback);
             } catch (Exception e) {
-                warningCallback.processWarning(new SQLWarning(e));
+                requireNonNullElse(warningCallback, defaultWarningMessageCallback).processWarning(new SQLWarning(e));
                 // ignoring exceptions
                 log.log(System.Logger.Level.WARNING, "Exception in consumePackets; see debug level for stacktrace");
                 log.log(System.Logger.Level.DEBUG, "Exception in consumePackets", e);

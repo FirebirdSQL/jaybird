@@ -21,6 +21,8 @@ package org.firebirdsql.jaybird.props;
 import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.jaybird.props.def.ConnectionPropertyType;
 
+import java.util.Objects;
+
 /**
  * Identifies the database (or service attach) <em>parameter buffer type</em> of a connection property.
  * <p>
@@ -67,7 +69,7 @@ public enum DpbType {
     SINGLE {
         @Override
         public void addValue(ParameterBuffer pb, int pbItem, Object value, ConnectionPropertyType type) {
-            if (type.asBoolean(value)) {
+            if (Objects.equals(Boolean.TRUE, type.asBoolean(value))) {
                 pb.addArgument(pbItem);
             }
         }

@@ -175,7 +175,7 @@ public final class ClientAuthBlock {
     }
 
     private static String getPluginNames(List<AuthenticationPluginSpi> pluginProviders) {
-        if (pluginProviders.size() == 0) {
+        if (pluginProviders.isEmpty()) {
             return null;
         }
         StringBuilder names = new StringBuilder();

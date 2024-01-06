@@ -108,8 +108,8 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
     }
 
     public void setRestoreInputStream(InputStream restoreStream) {
-        restoreInputStream = (restoreStream instanceof BufferedInputStream)
-                ? (BufferedInputStream) restoreStream
+        restoreInputStream = (restoreStream instanceof BufferedInputStream bufferedInputStream)
+                ? bufferedInputStream
                 : new BufferedInputStream(restoreStream, 128 * MAX_RESTORE_CHUNK);
     }
 

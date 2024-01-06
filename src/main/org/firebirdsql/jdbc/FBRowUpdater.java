@@ -488,8 +488,9 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         // since flushable field can update the value, which
         // in turn can change the parameter distribution
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
-            if (fields[i] instanceof FBFlushableField)
-                ((FBFlushableField) fields[i]).flushCachedData();
+            if (fields[i] instanceof FBFlushableField flushableField) {
+                flushableField.flushCachedData();
+            }
         }
 
         int[] parameterMask = getParameterMask();

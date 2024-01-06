@@ -38,7 +38,7 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
      * @return name of the user that will be used when connecting to the database.
      * @deprecated Use {@link #getUser()} instead; will be retained indefinitely for compatibility
      */
-    @Deprecated
+    @Deprecated(since = "5")
     default String getUserName() {
         return getUser();
     }
@@ -48,7 +48,7 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
      *         name of the user that will be used when connecting to the database.
      * @deprecated Use {@link #setUser(String)}; will be retained indefinitely for compatibility
      */
-    @Deprecated
+    @Deprecated(since = "5")
     default void setUserName(String userName) {
         setUser(userName);
     }

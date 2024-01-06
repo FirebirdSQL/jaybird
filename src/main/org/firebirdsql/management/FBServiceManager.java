@@ -53,7 +53,7 @@ public class FBServiceManager implements ServiceManager {
     private String database;
     private OutputStream logger;
 
-    public final static int BUFFER_SIZE = 1024; //1K
+    public static final int BUFFER_SIZE = 1024; //1K
 
     /**
      * Create a new instance of <code>FBServiceManager</code> based on
@@ -182,26 +182,30 @@ public class FBServiceManager implements ServiceManager {
         return database;
     }
 
+    @SuppressWarnings("removal")
     @Override
-    @Deprecated
+    @Deprecated(since = "5", forRemoval = true)
     public String getHost() {
         return getServerName();
     }
 
+    @SuppressWarnings("removal")
     @Override
-    @Deprecated
+    @Deprecated(since = "5", forRemoval = true)
     public void setHost(String host) {
         setServerName(host);
     }
 
+    @SuppressWarnings("removal")
     @Override
-    @Deprecated
+    @Deprecated(since = "5", forRemoval = true)
     public int getPort() {
         return getPortNumber();
     }
 
+    @SuppressWarnings("removal")
     @Override
-    @Deprecated
+    @Deprecated(since = "5", forRemoval = true)
     public void setPort(int port) {
         setPortNumber(port);
     }

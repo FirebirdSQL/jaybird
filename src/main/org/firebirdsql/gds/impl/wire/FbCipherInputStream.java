@@ -90,7 +90,7 @@ final class FbCipherInputStream extends FilterInputStream {
             } while (i == 0);
             if (i == -1) return -1;
         }
-        return (int) outBuf[outPos++] & 0xFF;
+        return outBuf[outPos++] & 0xFF;
     }
 
     @Override

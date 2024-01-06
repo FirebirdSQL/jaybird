@@ -94,6 +94,7 @@ public class V16WireOperations extends V15WireOperations {
         super.afterProcessDeferredActions(processedDeferredActions < BATCH_LIMIT ? processedDeferredActions : -1);
     }
 
+    @Override
     protected BatchCompletionResponse readBatchCompletionResponse(XdrInputStream xdrIn) throws SQLException, IOException {
         xdrIn.skipNBytes(4); // skip int: p_batch_statement
         int elementCount = xdrIn.readInt(); // p_batch_reccount
@@ -102,8 +103,8 @@ public class V16WireOperations extends V15WireOperations {
         int simplifiedErrorsCount = xdrIn.readInt(); // p_batch_errors
 
         int[] updateCounts = new int[updateCountsCount];
-        for (int record = 0; record < updateCountsCount; record++) {
-            updateCounts[record] = xdrIn.readInt();
+        for (int row = 0; row < updateCountsCount; row++) {
+            updateCounts[row] = xdrIn.readInt();
         }
 
         List<BatchCompletion.DetailedError> detailedErrors = new ArrayList<>(detailedErrorsCount);

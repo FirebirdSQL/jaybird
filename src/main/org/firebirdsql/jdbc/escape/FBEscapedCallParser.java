@@ -172,27 +172,23 @@ public final class FBEscapedCallParser {
 
             switch (state) {
             case NORMAL_STATE:
-                // if we have an equal sign, most likely {? = call ...}
-                // syntax is used (there's hardly any place for this sign
-                // in procedure parameters). but to be sure, we check if
-                // no brace is open and if buffer contains only '?'
-                if (currentChar == '=') {
-                    if (openBraceCount <= 0) {
-                        if (buffer.length() >= 1 && buffer.charAt(0) == '?' && !isFirstOutParam && !isNameProcessed) {
-                            FBProcedureParam param = procedureCall.addParam(paramPosition, "?");
-                            paramCount++;
-                            param.setIndex(paramCount);
-                            isFirstOutParam = true;
-                            paramPosition++;
-                            buffer.setLength(0);
-                            continue;
-                        }
-                    }
+                // if we have an equal sign, most likely {? = call ...} syntax is used (there's hardly any place for
+                // this symbol in procedure parameters).
+                // To be sure, we check if no brace is open and if buffer contains only '?'.
+                if (currentChar == '=' && openBraceCount <= 0 && !buffer.isEmpty() && buffer.charAt(0) == '?'
+                    && !isFirstOutParam && !isNameProcessed) {
+                    FBProcedureParam param = procedureCall.addParam(paramPosition, "?");
+                    paramCount++;
+                    param.setIndex(paramCount);
+                    isFirstOutParam = true;
+                    paramPosition++;
+                    buffer.setLength(0);
+                    continue;
                 }
                 buffer.append(currentChar);
                 break;
             case SPACE_STATE:
-                if (buffer.length() == 0) {
+                if (buffer.isEmpty()) {
                     state = NORMAL_STATE;
                     continue;
                 }

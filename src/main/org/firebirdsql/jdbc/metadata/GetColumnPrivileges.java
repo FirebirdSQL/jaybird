@@ -44,16 +44,17 @@ import static org.firebirdsql.jdbc.metadata.PrivilegeMapping.mapPrivilege;
  */
 public final class GetColumnPrivileges extends AbstractMetadataMethod {
 
+    private static final String COLUMNPRIV = "COLUMNPRIV";
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(9)
-            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNPRIV").addField()
-            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "COLUMNPRIV").addField()
-            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "COLUMNPRIV").addField()
-            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "COLUMNPRIV").addField()
-            .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTOR", "COLUMNPRIV").addField()
-            .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTEE", "COLUMNPRIV").addField()
-            .at(6).simple(SQL_VARYING, 31, "PRIVILEGE", "COLUMNPRIV").addField()
-            .at(7).simple(SQL_VARYING, 3, "IS_GRANTABLE", "COLUMNPRIV").addField()
-            .at(8).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_GRANTEE_TYPE", "COLUMNPRIV").addField()
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", COLUMNPRIV).addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", COLUMNPRIV).addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", COLUMNPRIV).addField()
+            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", COLUMNPRIV).addField()
+            .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTOR", COLUMNPRIV).addField()
+            .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTEE", COLUMNPRIV).addField()
+            .at(6).simple(SQL_VARYING, 31, "PRIVILEGE", COLUMNPRIV).addField()
+            .at(7).simple(SQL_VARYING, 3, "IS_GRANTABLE", COLUMNPRIV).addField()
+            .at(8).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_GRANTEE_TYPE", COLUMNPRIV).addField()
             .toRowDescriptor();
 
     //@formatter:off

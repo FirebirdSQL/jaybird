@@ -205,6 +205,7 @@ public class FBEventManager implements EventManager {
             try {
                 dispatchThread.join();
             } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
                throw new SQLException(ex);
             } finally {
                 this.eventDispatcher = null;

@@ -47,11 +47,11 @@ final class FBCachedFetcher implements FBFetcher {
     private int fetchSize;
     private FBObjectListener.FetcherListener fetcherListener;
 
-    FBCachedFetcher(GDSHelper gdsHelper, int fetchSize, int maxRows, FbStatement stmt_handle,
+    FBCachedFetcher(GDSHelper gdsHelper, int fetchSize, int maxRows, FbStatement stmtHandle,
             FBObjectListener.FetcherListener fetcherListener, boolean forwardOnly) throws SQLException {
         this.fetcherListener = fetcherListener;
         this.forwardOnly = forwardOnly;
-        final RowDescriptor rowDescriptor = stmt_handle.getRowDescriptor();
+        final RowDescriptor rowDescriptor = stmtHandle.getRowDescriptor();
 
         // Check if there is blobs to catch
         final boolean[] isBlob = new boolean[rowDescriptor.getCount()];
@@ -62,7 +62,7 @@ final class FBCachedFetcher implements FBFetcher {
 
         try {
             RowListener rowListener = new RowListener();
-            stmt_handle.addStatementListener(rowListener);
+            stmtHandle.addStatementListener(rowListener);
             try {
                 int actualFetchSize = getFetchSize();
                 while (!rowListener.isAllRowsFetched() && (maxRows == 0 || rowListener.size() < maxRows)) {
@@ -70,11 +70,11 @@ final class FBCachedFetcher implements FBFetcher {
                         actualFetchSize = Math.min(actualFetchSize, maxRows - rowListener.size());
                     }
                     assert actualFetchSize > 0 : "actualFetchSize should be > 0";
-                    stmt_handle.fetchRows(actualFetchSize);
+                    stmtHandle.fetchRows(actualFetchSize);
                 }
                 rows = rowListener.getRows();
             } finally {
-                stmt_handle.removeStatementListener(rowListener);
+                stmtHandle.removeStatementListener(rowListener);
             }
 
             if (hasBlobs) {
@@ -83,7 +83,7 @@ final class FBCachedFetcher implements FBFetcher {
                 }
             }
         } finally {
-            stmt_handle.closeCursor();
+            stmtHandle.closeCursor();
         }
     }
 
@@ -296,7 +296,7 @@ final class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean isEmpty() {
-        return rows == null || rows.size() == 0;
+        return rows == null || rows.isEmpty();
     }
 
     @Override

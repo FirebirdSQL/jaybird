@@ -102,6 +102,7 @@ public class FBXAException extends XAException {
      *
      * @return combined message of this exception and original exception.
      */
+    @Override
     public String getMessage() {
         String s = super.getMessage();
         if (reason == null) return s;

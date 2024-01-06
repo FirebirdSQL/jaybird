@@ -20,10 +20,10 @@ package org.firebirdsql.internal.tools;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Function;
+import java.util.function.IntFunction;
 
 import static java.lang.String.format;
 import static org.firebirdsql.internal.tools.MessageConverter.toJaybirdMessageFormat;
@@ -36,13 +36,11 @@ import static org.firebirdsql.internal.tools.MessageConverter.toJaybirdMessageFo
  */
 class PerFacilityStore extends MessageStore {
 
+    @SuppressWarnings("unused")
     private static final int MAX_FACILITY = 25; // NOTE: This is Firebird max, Jaybird has facility 26
-    static final int FACILITY_SIZE = MAX_FACILITY + 1;
 
-    private final Map<Facility, Map<Integer, String>> messagesPerFacility =
-            new HashMap<>((int) (FACILITY_SIZE / 0.75f));
-    private final Map<Facility, Map<Integer, String>> sqlStatesPerFacility =
-            new HashMap<>((int) (FACILITY_SIZE / 0.75f));
+    private final Map<Facility, Map<Integer, String>> messagesPerFacility = new EnumMap<>(Facility.class);
+    private final Map<Facility, Map<Integer, String>> sqlStatesPerFacility = new EnumMap<>(Facility.class);
     private final SymbolStore symbolStore = new SymbolStore();
 
     @Override
@@ -79,8 +77,8 @@ class PerFacilityStore extends MessageStore {
         symbolStore.save();
     }
 
-    private void save(Map<Facility, Map<Integer, String>> facilityMap,
-            Function<Integer, String> filenameGenerator) throws IOException {
+    private void save(Map<Facility, Map<Integer, String>> facilityMap, IntFunction<String> filenameGenerator)
+            throws IOException {
         for (Map.Entry<Facility, Map<Integer, String>> facilityEntry : facilityMap.entrySet()) {
             Map<Integer, String> facilityData = facilityEntry.getValue();
             if (facilityData.isEmpty()) {

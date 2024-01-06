@@ -112,7 +112,7 @@ public final class FBConnectionProperties implements FirebirdConnectionPropertie
 
             return clone;
         } catch (CloneNotSupportedException ex) {
-            throw new Error("Assertion failure: clone not supported"); // Can't happen
+            throw new AssertionError("Assertion failure: clone not supported"); // Can't happen
         }
     }
 
@@ -128,7 +128,7 @@ public final class FBConnectionProperties implements FirebirdConnectionPropertie
             key = propertyMapping.substring(0, equalsIndex).trim();
             value = propertyMapping.substring(equalsIndex + 1).trim();
         }
-        if (key.length() > 0) {
+        if (!key.isEmpty()) {
             setProperty(key, value);
         } else {
             throw new IllegalArgumentException("Invalid non-standard property. "

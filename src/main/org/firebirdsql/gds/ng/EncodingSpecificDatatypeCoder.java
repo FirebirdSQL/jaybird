@@ -114,8 +114,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
         if (o == this) {
             return true;
         }
-        if (o instanceof EncodingSpecificDatatypeCoder) {
-            EncodingSpecificDatatypeCoder other = (EncodingSpecificDatatypeCoder) o;
+        if (o instanceof EncodingSpecificDatatypeCoder other) {
             return encodingDefinition.equals(other.encodingDefinition)
                    && parentCoder.getClass() == other.parentCoder.getClass();
         } else {

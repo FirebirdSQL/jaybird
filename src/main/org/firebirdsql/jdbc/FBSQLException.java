@@ -25,7 +25,7 @@ import java.sql.SQLException;
  * @deprecated Unused, will be removed in Jaybird 7
  */
 @SuppressWarnings("unused")
-@Deprecated
+@Deprecated(since = "6", forRemoval = true)
 public class FBSQLException extends SQLException {
 
     @Serial

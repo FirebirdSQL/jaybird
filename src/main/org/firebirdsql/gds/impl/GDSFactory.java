@@ -30,8 +30,6 @@ import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.jaybird.util.PluginLoader;
 import org.firebirdsql.util.InternalApi;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.Map.Entry;

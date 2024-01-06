@@ -197,6 +197,7 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
         return BigDecimal.ONE.equals(getBigDecimal());
     }
 
+    @Override
     public void setBoolean(boolean value) throws SQLException {
         setBigDecimal(value ? BigDecimal.ONE : BigDecimal.ZERO);
     }

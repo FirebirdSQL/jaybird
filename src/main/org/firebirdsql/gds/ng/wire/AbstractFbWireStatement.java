@@ -226,8 +226,8 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
      * @param exception exception received in a deferred response, or thrown while receiving the deferred response
      */
     private void deferredExceptionHandler(Exception exception) {
-        if (exception instanceof SQLException) {
-            exceptionListenerDispatcher.errorOccurred((SQLException) exception);
+        if (exception instanceof SQLException sqle) {
+            exceptionListenerDispatcher.errorOccurred(sqle);
         }
         if (exception instanceof IOException || exception.getCause() instanceof IOException) {
             forceState(StatementState.ERROR);

@@ -31,8 +31,8 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
-import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
@@ -78,6 +78,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             "The server and client could not agree on connection options. A possible reasons is attempting to connect "
             + "to an unsupported Firebird version. See the documentation of connection property 'enableProtocol' for "
             + "a possible workaround.";
+    private static final WarningMessageCallback NOOP_WARNING_MESSAGE_CALLBACK = warning -> {};
 
     // Micro-optimization: we usually expect at most 3 (Firebird 5)
     private final List<KnownServerKey> knownServerKeys = new ArrayList<>(3);
@@ -256,7 +257,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             }
 
             final int socketBufferSize = attachProperties.getSocketBufferSize();
-            if (socketBufferSize != IConnectionProperties.DEFAULT_SOCKET_BUFFER_SIZE) {
+            if (socketBufferSize != IAttachProperties.DEFAULT_SOCKET_BUFFER_SIZE) {
                 socket.setReceiveBufferSize(socketBufferSize);
                 socket.setSendBufferSize(socketBufferSize);
             }
@@ -495,7 +496,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     private AbstractWireOperations getDefaultWireOperations() {
         ProtocolDescriptor protocolDescriptor = protocols
                 .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10);
-        return (AbstractWireOperations) protocolDescriptor.createWireOperations(this, null);
+        return (AbstractWireOperations) protocolDescriptor.createWireOperations(this, NOOP_WARNING_MESSAGE_CALLBACK);
     }
 
     /**
@@ -504,7 +505,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     private FbWireOperations getCryptKeyCallbackWireOperations() {
         ProtocolDescriptor protocolDescriptor = protocols
                 .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION15);
-        return protocolDescriptor.createWireOperations(this, null);
+        return protocolDescriptor.createWireOperations(this, NOOP_WARNING_MESSAGE_CALLBACK);
     }
 
     /**

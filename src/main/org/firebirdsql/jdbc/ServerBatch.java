@@ -381,11 +381,9 @@ final class ServerBatch implements Batch, StatementListener {
 
         @Override
         public void onException(Exception exception) {
-            if (exception instanceof SQLException) {
-                chain.append((SQLException) exception);
-            } else {
-                chain.append(new SQLNonTransientException(genericExceptionMessage, exception));
-            }
+            chain.append(exception instanceof SQLException sqle
+                    ? sqle
+                    : new SQLNonTransientException(genericExceptionMessage, exception));
         }
 
     }

@@ -28,7 +28,6 @@ import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
-import java.sql.SQLWarning;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
@@ -56,13 +55,9 @@ public abstract class AbstractFbStatement implements FbStatement {
     private static final int IN_CURSOR = 0;
     private static final int AFTER_LAST = 1;
 
-    private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
-        @Override
-        public void processWarning(SQLWarning warning) {
-            statementListenerDispatcher.warningReceived(AbstractFbStatement.this, warning);
-        }
-    };
     protected final StatementListenerDispatcher statementListenerDispatcher = new StatementListenerDispatcher();
+    private final WarningMessageCallback warningCallback = warning ->
+            statementListenerDispatcher.warningReceived(AbstractFbStatement.this, warning);
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private volatile int cursorPosition = BEFORE_FIRST;
     // Indicates whether at least one fetch was done for the current cursor

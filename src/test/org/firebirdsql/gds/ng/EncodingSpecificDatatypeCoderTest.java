@@ -211,7 +211,7 @@ class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeFloat() {
+    void encodeFloat() {
         final float value = 23.1f;
         final byte[] response = {1, 2, 3, 4};
         when(parentCoder.encodeFloat(value)).thenReturn(response);
@@ -255,7 +255,7 @@ class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeBoolean() {
+    void decodeBoolean() {
         final byte[] valueTrue = {1, 0};
         final byte[] valueFalse = {0, 0};
         when(parentCoder.decodeBoolean(valueTrue)).thenReturn(true);

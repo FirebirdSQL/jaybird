@@ -64,11 +64,9 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public JnaDatabase(JnaDatabaseConnection connection) {
         super(connection, connection.createDatatypeCoder());
         clientLibrary = connection.getClientLibrary();
-        if (clientLibrary instanceof FbClientFeatureAccess) {
-            clientFeatures = ((FbClientFeatureAccess) clientLibrary).getFeatures();
-        } else {
-            clientFeatures = emptySet();
-        }
+        clientFeatures = clientLibrary instanceof FbClientFeatureAccess featureAccess
+                ? featureAccess.getFeatures()
+                : emptySet();
     }
 
     /**

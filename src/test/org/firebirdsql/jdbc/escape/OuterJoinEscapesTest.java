@@ -142,14 +142,12 @@ class OuterJoinEscapesTest {
     }
 
     @Test
-    public void testRightOuterJoinEscape() throws Exception {
+    void testRightOuterJoinEscape() throws Exception {
         try (Statement stmt = con.createStatement();
-//@formatter:off
-             ResultSet rs = stmt.executeQuery(
-                    "SELECT TAB1.ID, TAB2.ID " +
-                    "FROM {oj TAB1 RIGHT OUTER JOIN TAB2 ON TAB2.TAB1_ID = TAB1.ID} " +
-                    "ORDER BY TAB1.ID NULLS LAST")) {
-//@formatter:on
+             ResultSet rs = stmt.executeQuery("""
+                     SELECT TAB1.ID, TAB2.ID
+                     FROM {oj TAB1 RIGHT OUTER JOIN TAB2 ON TAB2.TAB1_ID = TAB1.ID}
+                     ORDER BY TAB1.ID NULLS LAST""")) {
 
             assertTrue(rs.next(), "Expected first row");
             assertEquals(1, rs.getInt(1));

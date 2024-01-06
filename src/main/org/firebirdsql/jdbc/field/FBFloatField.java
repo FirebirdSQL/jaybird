@@ -46,6 +46,7 @@ final class FBFloatField extends FBField {
         return getDouble();
     }
 
+    @Override
     public byte getByte() throws SQLException {
         float value = getFloat();
         // check if value is within bounds
@@ -56,6 +57,7 @@ final class FBFloatField extends FBField {
         return (byte) value;
     }
 
+    @Override
     public short getShort() throws SQLException {
         float value = getFloat();
         // check if value is within bounds
@@ -66,6 +68,7 @@ final class FBFloatField extends FBField {
         return (short) value;
     }
 
+    @Override
     public int getInt() throws SQLException {
         float value = getFloat();
         // check if value is within bounds
@@ -76,6 +79,7 @@ final class FBFloatField extends FBField {
         return (int) value;
     }
 
+    @Override
     public long getLong() throws SQLException {
         float value = getFloat();
         // check if value is within bounds
@@ -86,23 +90,28 @@ final class FBFloatField extends FBField {
         return (long) value;
     }
 
+    @Override
     public float getFloat() throws SQLException {
         return getDatatypeCoder().decodeFloat(getFieldData());
     }
 
+    @Override
     public double getDouble() throws SQLException {
         return getFloat();
     }
 
+    @Override
     public BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return null;
         return BigDecimal.valueOf(getFloat());
     }
 
+    @Override
     public boolean getBoolean() throws SQLException {
         return getFloat() == 1;
     }
 
+    @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
         return String.valueOf(getFloat());
@@ -110,6 +119,7 @@ final class FBFloatField extends FBField {
 
     //--- setXXX methods
 
+    @Override
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
         String string = value.trim();
@@ -120,18 +130,22 @@ final class FBFloatField extends FBField {
         }
     }
 
+    @Override
     public void setShort(short value) throws SQLException {
         setFloat(value);
     }
 
+    @Override
     public void setBoolean(boolean value) throws SQLException {
         setFloat(value ? 1.0f : 0.0f);
     }
 
+    @Override
     public void setFloat(float value) throws SQLException {
         setFieldData(getDatatypeCoder().encodeFloat(value));
     }
 
+    @Override
     public void setDouble(double value) throws SQLException {
         // check if value is within bounds
         if (value == Double.NEGATIVE_INFINITY) {
@@ -146,18 +160,22 @@ final class FBFloatField extends FBField {
         }
     }
 
+    @Override
     public void setLong(long value) throws SQLException {
         setFloat(value);
     }
 
+    @Override
     public void setInteger(int value) throws SQLException {
         setFloat(value);
     }
 
+    @Override
     public void setByte(byte value) throws SQLException {
         setFloat(value);
     }
 
+    @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
         if (setWhenNull(value)) return;
         // check if value is within bounds

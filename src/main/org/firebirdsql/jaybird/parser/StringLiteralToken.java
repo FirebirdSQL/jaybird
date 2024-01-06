@@ -78,7 +78,7 @@ final class StringLiteralToken extends AbstractToken implements LiteralToken {
             return value.indexOf('\'') == -1
                     ? value
                     // unescape single quotes
-                    : value.replaceAll("''", "'");
+                    : value.replace("''", "'");
         }
         case 'q':
         case 'Q':

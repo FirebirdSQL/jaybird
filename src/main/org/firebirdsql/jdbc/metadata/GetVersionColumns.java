@@ -42,15 +42,17 @@ import static org.firebirdsql.jdbc.metadata.MetadataPattern.escapeWildcards;
  */
 public class GetVersionColumns {
 
+    private static final String VERSIONCOL = "VERSIONCOL";
+    
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(8)
-            .at(0).simple(SQL_SHORT, 0, "SCOPE", "VERSIONCOL").addField()
-            .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "VERSIONCOL").addField()
-            .at(2).simple(SQL_LONG, 0, "DATA_TYPE", "VERSIONCOL").addField()
-            .at(3).simple(SQL_VARYING, 31, "TYPE_NAME", "VERSIONCOL").addField()
-            .at(4).simple(SQL_LONG, 0, "COLUMN_SIZE", "VERSIONCOL").addField()
-            .at(5).simple(SQL_LONG, 0, "BUFFER_LENGTH", "VERSIONCOL").addField()
-            .at(6).simple(SQL_SHORT, 0, "DECIMAL_DIGITS", "VERSIONCOL").addField()
-            .at(7).simple(SQL_SHORT, 0, "PSEUDO_COLUMN", "VERSIONCOL").addField()
+            .at(0).simple(SQL_SHORT, 0, "SCOPE", VERSIONCOL).addField()
+            .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", VERSIONCOL).addField()
+            .at(2).simple(SQL_LONG, 0, "DATA_TYPE", VERSIONCOL).addField()
+            .at(3).simple(SQL_VARYING, 31, "TYPE_NAME", VERSIONCOL).addField()
+            .at(4).simple(SQL_LONG, 0, "COLUMN_SIZE", VERSIONCOL).addField()
+            .at(5).simple(SQL_LONG, 0, "BUFFER_LENGTH", VERSIONCOL).addField()
+            .at(6).simple(SQL_SHORT, 0, "DECIMAL_DIGITS", VERSIONCOL).addField()
+            .at(7).simple(SQL_SHORT, 0, "PSEUDO_COLUMN", VERSIONCOL).addField()
             .toRowDescriptor();
 
     private final DbMetadataMediator mediator;
@@ -60,7 +62,7 @@ public class GetVersionColumns {
     }
 
     public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException {
-        if (table == null || "".equals(table)) {
+        if (table == null || table.isEmpty()) {
             return new FBResultSet(ROW_DESCRIPTOR, emptyList());
         }
 

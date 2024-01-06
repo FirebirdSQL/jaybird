@@ -119,7 +119,7 @@ class FBDatabaseMetaDataIndexInfoTest {
      * getIndexInfo().
      */
     @Test
-    public void testIndexInfoMetaDataColumns() throws Exception {
+    void testIndexInfoMetaDataColumns() throws Exception {
         try (ResultSet indexInfo = dbmd.getIndexInfo(null, null, "doesnotexist", false, true)) {
             getIndexInfoDefinition.validateResultSetColumns(indexInfo);
         }

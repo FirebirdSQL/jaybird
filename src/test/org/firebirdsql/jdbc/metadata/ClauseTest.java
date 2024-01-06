@@ -135,12 +135,12 @@ class ClauseTest {
     }
 
     @Test
-    public void clauseNullValue_noCondition() {
+    void clauseNullValue_noCondition() {
         validateNoCondition(null);
     }
 
     @Test
-    public void clauseAllPattern_noCondition() {
+    void clauseAllPattern_noCondition() {
         validateNoCondition("%");
     }
 

@@ -43,7 +43,7 @@ class LocateFunctionTest {
     }
 
     @Test
-    public void testFourArgument_throwsException() {
+    void testFourArgument_throwsException() {
         assertParseException(() -> function.apply("a", "b", "c", "d"),
                 "Expected 2 or 3 parameters for LOCATE, received 4");
     }

@@ -56,26 +56,28 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
 @InternalApi
 public abstract class GetFunctionColumns extends AbstractMetadataMethod {
 
+    private static final String FUNCTION_COLUMNS = "FUNCTION_COLUMNS";
+    
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(17)
-            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTION_COLUMNS").addField()
-            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTION_COLUMNS").addField()
-            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_NAME", "FUNCTION_COLUMNS").addField()
-            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "FUNCTION_COLUMNS").addField()
-            .at(4).simple(SQL_SHORT, 0, "COLUMN_TYPE", "FUNCTION_COLUMNS").addField()
-            .at(5).simple(SQL_LONG, 0, "DATA_TYPE", "FUNCTION_COLUMNS").addField()
-            .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_NAME", "FUNCTION_COLUMNS").addField()
-            .at(7).simple(SQL_LONG | 1, 0, "PRECISION", "FUNCTION_COLUMNS").addField()
-            .at(8).simple(SQL_LONG, 0, "LENGTH", "FUNCTION_COLUMNS").addField()
-            .at(9).simple(SQL_SHORT | 1, 0, "SCALE", "FUNCTION_COLUMNS").addField()
-            .at(10).simple(SQL_SHORT, 0, "RADIX", "FUNCTION_COLUMNS").addField()
-            .at(11).simple(SQL_SHORT, 0, "NULLABLE", "FUNCTION_COLUMNS").addField()
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_CAT", FUNCTION_COLUMNS).addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", FUNCTION_COLUMNS).addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_NAME", FUNCTION_COLUMNS).addField()
+            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", FUNCTION_COLUMNS).addField()
+            .at(4).simple(SQL_SHORT, 0, "COLUMN_TYPE", FUNCTION_COLUMNS).addField()
+            .at(5).simple(SQL_LONG, 0, "DATA_TYPE", FUNCTION_COLUMNS).addField()
+            .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_NAME", FUNCTION_COLUMNS).addField()
+            .at(7).simple(SQL_LONG | 1, 0, "PRECISION", FUNCTION_COLUMNS).addField()
+            .at(8).simple(SQL_LONG, 0, "LENGTH", FUNCTION_COLUMNS).addField()
+            .at(9).simple(SQL_SHORT | 1, 0, "SCALE", FUNCTION_COLUMNS).addField()
+            .at(10).simple(SQL_SHORT, 0, "RADIX", FUNCTION_COLUMNS).addField()
+            .at(11).simple(SQL_SHORT, 0, "NULLABLE", FUNCTION_COLUMNS).addField()
             // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-            .at(12).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "FUNCTION_COLUMNS").addField()
-            .at(13).simple(SQL_LONG | 1, 0, "CHAR_OCTET_LENGTH", "FUNCTION_COLUMNS").addField()
-            .at(14).simple(SQL_LONG, 0, "ORDINAL_POSITION", "FUNCTION_COLUMNS").addField()
-            .at(15).simple(SQL_VARYING, 3, "IS_NULLABLE", "FUNCTION_COLUMNS").addField()
+            .at(12).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", FUNCTION_COLUMNS).addField()
+            .at(13).simple(SQL_LONG | 1, 0, "CHAR_OCTET_LENGTH", FUNCTION_COLUMNS).addField()
+            .at(14).simple(SQL_LONG, 0, "ORDINAL_POSITION", FUNCTION_COLUMNS).addField()
+            .at(15).simple(SQL_VARYING, 3, "IS_NULLABLE", FUNCTION_COLUMNS).addField()
             // space for quoted package name, ".", quoted function name (assuming no double quotes in name)
-            .at(16).simple(SQL_VARYING, 2 * OBJECT_NAME_LENGTH + 5, "SPECIFIC_NAME", "FUNCTION_COLUMNS").addField()
+            .at(16).simple(SQL_VARYING, 2 * OBJECT_NAME_LENGTH + 5, "SPECIFIC_NAME", FUNCTION_COLUMNS).addField()
             .toRowDescriptor();
 
     private GetFunctionColumns(DbMetadataMediator mediator) {

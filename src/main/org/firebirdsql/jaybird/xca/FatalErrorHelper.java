@@ -79,7 +79,7 @@ public final class FatalErrorHelper {
      * @return {@code true} if the SQLSTATE is (considered) fatal
      */
     private static boolean isFatal(String sqlState) {
-        // Don't consider absence of SQLSTATE as a sign of fatal error (we did in the past for FBPooledConnection);
+        // Don't consider absence of SQLSTATE as a sign of fatal error (we did in the past for FBPooledConnection),
         // there are exceptions in Jaybird without SQLSTATE, and most of them are not fatal.
         if (sqlState == null) return false;
         // Invalid SQLSTATE specified, assume it's fatal

@@ -163,14 +163,14 @@ class StatementHandler implements InvocationHandler {
     }
 
     // Statement methods
-    private final static Method STATEMENT_IS_CLOSED = findMethod(Statement.class, "isClosed", new Class[0]);
-    private final static Method FIREBIRD_STATEMENT_IS_CLOSED = findMethod(FirebirdStatement.class, "isClosed",
+    private static final Method STATEMENT_IS_CLOSED = findMethod(Statement.class, "isClosed", new Class[0]);
+    private static final Method FIREBIRD_STATEMENT_IS_CLOSED = findMethod(FirebirdStatement.class, "isClosed",
             new Class[0]);
-    private final static Method STATEMENT_CLOSE = findMethod(Statement.class, "close", new Class[0]);
-    private final static Method GET_CONNECTION = findMethod(Statement.class, "getConnection", new Class[0]);
+    private static final Method STATEMENT_CLOSE = findMethod(Statement.class, "close", new Class[0]);
+    private static final Method GET_CONNECTION = findMethod(Statement.class, "getConnection", new Class[0]);
 
     // Object Methods
-    private final static Method TO_STRING = findMethod(Object.class, "toString", new Class[0]);
-    private final static Method EQUALS = findMethod(Object.class, "equals", new Class[] { Object.class });
-    private final static Method HASH_CODE = findMethod(Object.class, "hashCode", new Class[0]);
+    private static final Method TO_STRING = findMethod(Object.class, "toString", new Class[0]);
+    private static final Method EQUALS = findMethod(Object.class, "equals", new Class[] { Object.class });
+    private static final Method HASH_CODE = findMethod(Object.class, "hashCode", new Class[0]);
 }

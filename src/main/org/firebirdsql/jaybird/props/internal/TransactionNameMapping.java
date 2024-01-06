@@ -57,25 +57,20 @@ public final class TransactionNameMapping {
      *         For an unknown transaction isolation level name
      */
     public static int toIsolationLevel(String isolationLevelName) {
-        switch (isolationLevelName) {
-        case TRANSACTION_NONE:
-        case "" + Connection.TRANSACTION_NONE:
-            return Connection.TRANSACTION_NONE;
-        case TRANSACTION_READ_UNCOMMITTED:
-        case "" + Connection.TRANSACTION_READ_UNCOMMITTED:
-            return Connection.TRANSACTION_READ_UNCOMMITTED;
-        case TRANSACTION_READ_COMMITTED:
-        case "" + Connection.TRANSACTION_READ_COMMITTED:
-            return Connection.TRANSACTION_READ_COMMITTED;
-        case TRANSACTION_REPEATABLE_READ:
-        case "" + Connection.TRANSACTION_REPEATABLE_READ:
-            return Connection.TRANSACTION_REPEATABLE_READ;
-        case TRANSACTION_SERIALIZABLE:
-        case "" + Connection.TRANSACTION_SERIALIZABLE:
-            return Connection.TRANSACTION_SERIALIZABLE;
-        default:
-            throw new IllegalArgumentException("Unknown transaction isolation level name: " + isolationLevelName);
-        }
+        return switch (isolationLevelName) {
+            case TRANSACTION_NONE, "" + Connection.TRANSACTION_NONE ->
+                    Connection.TRANSACTION_NONE;
+            case TRANSACTION_READ_UNCOMMITTED, "" + Connection.TRANSACTION_READ_UNCOMMITTED ->
+                    Connection.TRANSACTION_READ_UNCOMMITTED;
+            case TRANSACTION_READ_COMMITTED, "" + Connection.TRANSACTION_READ_COMMITTED ->
+                    Connection.TRANSACTION_READ_COMMITTED;
+            case TRANSACTION_REPEATABLE_READ, "" + Connection.TRANSACTION_REPEATABLE_READ ->
+                    Connection.TRANSACTION_REPEATABLE_READ;
+            case TRANSACTION_SERIALIZABLE, "" + Connection.TRANSACTION_SERIALIZABLE ->
+                    Connection.TRANSACTION_SERIALIZABLE;
+            default -> throw new IllegalArgumentException(
+                    "Unknown transaction isolation level name: " + isolationLevelName);
+        };
     }
 
     /**

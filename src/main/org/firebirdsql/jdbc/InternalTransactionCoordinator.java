@@ -680,6 +680,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         }
 
+        @Override
         boolean isAutoCommit() throws SQLException {
             return tc.getAutoCommit();
         }

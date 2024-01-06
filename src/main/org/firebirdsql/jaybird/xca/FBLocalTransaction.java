@@ -74,8 +74,8 @@ public final class FBLocalTransaction {
             mc.internalStart(xid, XAResource.TMNOFLAGS);
         } catch (XAException ex) {
             xid = null;
-            if (ex.getCause() instanceof SQLException) {
-                throw (SQLException) ex.getCause();
+            if (ex.getCause() instanceof SQLException sqle) {
+                throw sqle;
             }
             // TODO More specific exception, Jaybird error code (or is this flow unlikely to hit?)
             throw new SQLException(ex.getMessage(), ex);
@@ -98,8 +98,8 @@ public final class FBLocalTransaction {
                 mc.internalEnd(xid, XAResource.TMSUCCESS);
                 mc.internalCommit(xid, true);
             } catch (XAException ex) {
-                if (ex.getCause() instanceof SQLException) {
-                    throw (SQLException) ex.getCause();
+                if (ex.getCause() instanceof SQLException sqle) {
+                    throw sqle;
                 }
                 // TODO More specific exception, Jaybird error code (or is this flow unlikely to hit?)
                 throw new SQLException(ex.getMessage(), ex);
@@ -126,8 +126,8 @@ public final class FBLocalTransaction {
                 // --FBManagedConnection is its own XAResource
                 mc.internalRollback(xid);
             } catch (XAException ex) {
-                if (ex.getCause() instanceof SQLException) {
-                    throw (SQLException) ex.getCause();
+                if (ex.getCause() instanceof SQLException sqle) {
+                    throw sqle;
                 }
                 // TODO More specific exception, Jaybird error code (or is this flow unlikely to hit?)
                 throw new SQLException(ex.getMessage(), ex);
@@ -137,12 +137,11 @@ public final class FBLocalTransaction {
         }
     }
 
-    // This is an intentionally non-implemented xid, so if prepare is called
-    // with it, it won't work.
+    // This is an intentionally non-implemented xid, so if prepare is called with it, it won't work.
     // Only object identity works for equals!
     private static final class FBLocalXid implements Xid {
 
-        private static final int formatId = 0x0102;// ????????????
+        private static final int FORMAT_ID = 0x0102;// ????????????
 
         private final String strValue;
 
@@ -172,7 +171,7 @@ public final class FBLocalTransaction {
          * </p>
          */
         public int getFormatId() {
-            return formatId;
+            return FORMAT_ID;
         }
 
         public String toString() {

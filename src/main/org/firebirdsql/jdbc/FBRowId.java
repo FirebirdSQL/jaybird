@@ -61,7 +61,7 @@ public final class FBRowId implements RowId {
     @Override
     public boolean equals(Object obj) {
         // TODO Implementation breaks equality/hashcode contract
-        return obj instanceof RowId && Arrays.equals(rowIdBytes, ((RowId) obj).getBytes());
+        return obj instanceof RowId rowId && Arrays.equals(rowIdBytes, rowId.getBytes());
     }
 
     @Override

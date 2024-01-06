@@ -44,15 +44,17 @@ import static org.firebirdsql.jdbc.metadata.PrivilegeMapping.mapPrivilege;
  */
 public final class GetTablePrivileges extends AbstractMetadataMethod {
 
+    private static final String TABLEPRIV = "TABLEPRIV";
+    
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(8)
-            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLEPRIV").addField()
-            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "TABLEPRIV").addField()
-            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "TABLEPRIV").addField()
-            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTOR", "TABLEPRIV").addField()
-            .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTEE", "TABLEPRIV").addField()
-            .at(5).simple(SQL_VARYING, 31, "PRIVILEGE", "TABLEPRIV").addField()
-            .at(6).simple(SQL_VARYING, 3, "IS_GRANTABLE", "TABLEPRIV").addField()
-            .at(7).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_GRANTEE_TYPE", "TABLEPRIV").addField()
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", TABLEPRIV).addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", TABLEPRIV).addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", TABLEPRIV).addField()
+            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTOR", TABLEPRIV).addField()
+            .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTEE", TABLEPRIV).addField()
+            .at(5).simple(SQL_VARYING, 31, "PRIVILEGE", TABLEPRIV).addField()
+            .at(6).simple(SQL_VARYING, 3, "IS_GRANTABLE", TABLEPRIV).addField()
+            .at(7).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_GRANTEE_TYPE", TABLEPRIV).addField()
             .toRowDescriptor();
 
     //@formatter:off

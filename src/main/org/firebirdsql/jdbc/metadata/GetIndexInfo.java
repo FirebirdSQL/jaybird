@@ -38,21 +38,23 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  */
 public final class GetIndexInfo extends AbstractMetadataMethod {
 
+    private static final String INDEXINFO = "INDEXINFO";
+    
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(13)
-            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "INDEXINFO").addField()
-            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "INDEXINFO").addField()
-            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "INDEXINFO").addField()
-            .at(3).simple(SQL_TEXT, 1, "NON_UNIQUE", "INDEXINFO").addField()
-            .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_QUALIFIER", "INDEXINFO").addField()
-            .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_NAME", "INDEXINFO").addField()
-            .at(6).simple(SQL_SHORT, 0, "TYPE", "INDEXINFO").addField()
-            .at(7).simple(SQL_SHORT, 0, "ORDINAL_POSITION", "INDEXINFO").addField()
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", INDEXINFO).addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", INDEXINFO).addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", INDEXINFO).addField()
+            .at(3).simple(SQL_TEXT, 1, "NON_UNIQUE", INDEXINFO).addField()
+            .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_QUALIFIER", INDEXINFO).addField()
+            .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_NAME", INDEXINFO).addField()
+            .at(6).simple(SQL_SHORT, 0, "TYPE", INDEXINFO).addField()
+            .at(7).simple(SQL_SHORT, 0, "ORDINAL_POSITION", INDEXINFO).addField()
             // Field with EXPRESSION_SOURCE (used for expression indexes) in Firebird is actually a blob, using Integer.MAX_VALUE for length
-            .at(8).simple(SQL_VARYING, Integer.MAX_VALUE, "COLUMN_NAME", "INDEXINFO").addField()
-            .at(9).simple(SQL_TEXT | 1, 1, "ASC_OR_DESC", "INDEXINFO").addField()
-            .at(10).simple(SQL_LONG, 0, "CARDINALITY", "INDEXINFO").addField()
-            .at(11).simple(SQL_LONG, 0, "PAGES", "INDEXINFO").addField()
-            .at(12).simple(SQL_VARYING | 1, 31, "FILTER_CONDITION", "INDEXINFO").addField()
+            .at(8).simple(SQL_VARYING, Integer.MAX_VALUE, "COLUMN_NAME", INDEXINFO).addField()
+            .at(9).simple(SQL_TEXT | 1, 1, "ASC_OR_DESC", INDEXINFO).addField()
+            .at(10).simple(SQL_LONG, 0, "CARDINALITY", INDEXINFO).addField()
+            .at(11).simple(SQL_LONG, 0, "PAGES", INDEXINFO).addField()
+            .at(12).simple(SQL_VARYING | 1, 31, "FILTER_CONDITION", INDEXINFO).addField()
             .toRowDescriptor();
 
     private static final String GET_INDEX_INFO_START = """

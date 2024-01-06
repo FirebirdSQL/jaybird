@@ -315,26 +315,17 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when the database supports the specified protocol
      */
     public boolean supportsProtocol(int protocolVersion) {
-        switch (protocolVersion) {
-        case 10:
-            return true;
-        case 11:
-            return isVersionEqualOrAbove(2, 1);
-        case 12:
-            return isVersionEqualOrAbove(2, 5);
-        case 13:
-            return isVersionEqualOrAbove(3);
-        case 14:
-            // fall-through: Jaybird has only implemented protocol version 14 as part of version 15
-        case 15:
-            return isVersionEqualOrAbove(3, 0, 2);
-        case 16:
-            return isVersionEqualOrAbove(4, 0, 0);
-        case 18:
-            return isVersionEqualOrAbove(5, 0 ,0);
-        default:
-            return false;
-        }
+        return switch (protocolVersion) {
+            case 10 -> true;
+            case 11 -> isVersionEqualOrAbove(2, 1);
+            case 12 -> isVersionEqualOrAbove(2, 5);
+            case 13 -> isVersionEqualOrAbove(3);
+            // Jaybird has only implemented protocol version 14 as part of version 15
+            case 14, 15 -> isVersionEqualOrAbove(3, 0, 2);
+            case 16 -> isVersionEqualOrAbove(4, 0, 0);
+            case 18 -> isVersionEqualOrAbove(5, 0, 0);
+            default -> false;
+        };
     }
 
     /**
@@ -433,18 +424,12 @@ public final class FirebirdSupportInfo {
     }
 
     public boolean supportsPageSize(int pageSize) {
-        switch (pageSize) {
-        case PageSizeConstants.SIZE_1K:
-        case PageSizeConstants.SIZE_2K:
-            return !isVersionEqualOrAbove(2, 1);
-        case PageSizeConstants.SIZE_4K:
-        case PageSizeConstants.SIZE_8K:
-        case PageSizeConstants.SIZE_16K:
-            return true;
-        case PageSizeConstants.SIZE_32K:
-            return isVersionEqualOrAbove(4);
-        }
-        return false;
+        return switch (pageSize) {
+            case PageSizeConstants.SIZE_1K, PageSizeConstants.SIZE_2K -> !isVersionEqualOrAbove(2, 1);
+            case PageSizeConstants.SIZE_4K, PageSizeConstants.SIZE_8K, PageSizeConstants.SIZE_16K -> true;
+            case PageSizeConstants.SIZE_32K -> isVersionEqualOrAbove(4);
+            default -> false;
+        };
     }
 
     public boolean supportsWireEncryption() {

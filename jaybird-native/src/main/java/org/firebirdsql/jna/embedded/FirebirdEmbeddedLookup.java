@@ -35,9 +35,13 @@ import static java.lang.System.Logger.Level.ERROR;
  * @author Mark Rotteveel
  * @since 5
  */
-public class FirebirdEmbeddedLookup {
+public final class FirebirdEmbeddedLookup {
 
     private static final System.Logger log = System.getLogger(FirebirdEmbeddedLookup.class.getName());
+
+    private FirebirdEmbeddedLookup() {
+        // no instances
+    }
 
     /**
      * Tries to find a Firebird Embedded library service provider for the current platform and install it.

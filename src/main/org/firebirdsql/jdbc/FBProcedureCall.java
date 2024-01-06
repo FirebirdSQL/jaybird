@@ -88,7 +88,7 @@ public class FBProcedureCall implements Cloneable {
     public FBProcedureParam getInputParam(int index) {
         FBProcedureParam result = getParam(inputParams, index);
 
-        if (result == null || result == NullParam.NULL_PARAM) {
+        if (result == NullParam.NULL_PARAM) {
             result = getParam(outputParams, index);
 
             // ensure that vector has right size

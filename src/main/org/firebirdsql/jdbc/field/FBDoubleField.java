@@ -44,6 +44,7 @@ class FBDoubleField extends FBField {
         return getDouble();
     }
 
+    @Override
     public byte getByte() throws SQLException {
         double value = getDouble();
         // check if value is within bounds
@@ -53,7 +54,8 @@ class FBDoubleField extends FBField {
 
         return (byte) value;
     }
-    
+
+    @Override
     public short getShort() throws SQLException {
         double value = getDouble();
         // check if value is within bounds
@@ -63,7 +65,8 @@ class FBDoubleField extends FBField {
 
         return (short) value;
     }
-    
+
+    @Override
     public int getInt() throws SQLException {
         double value = getDouble();
         // check if value is within bounds
@@ -73,7 +76,8 @@ class FBDoubleField extends FBField {
 
         return (int) value;
     }
-    
+
+    @Override
     public long getLong() throws SQLException {
         double value = getDouble();
         // check if value is within bounds
@@ -83,7 +87,8 @@ class FBDoubleField extends FBField {
 
         return (long) value;
     }
-    
+
+    @Override
     public float getFloat() throws SQLException {
         // TODO Does this match with the way getDouble() works?
         double value = getDouble();
@@ -95,20 +100,24 @@ class FBDoubleField extends FBField {
 
         return cValue;
     }
-    
+
+    @Override
     public double getDouble() throws SQLException {
         return getDatatypeCoder().decodeDouble(getFieldData());
     }
-    
+
+    @Override
     public BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return null;
         return BigDecimal.valueOf(getDouble());
     }
 
+    @Override
     public boolean getBoolean() throws SQLException {
         return getDouble() == 1;
     }
-    
+
+    @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
         return String.valueOf(getDouble());
@@ -116,6 +125,7 @@ class FBDoubleField extends FBField {
 
     //--- setXXX methods
 
+    @Override
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
         String string = value.trim();
@@ -125,35 +135,43 @@ class FBDoubleField extends FBField {
             throw invalidSetConversion(String.class, string, nfex);
         }
     }
-    
+
+    @Override
     public void setShort(short value) throws SQLException {
         setDouble(value);
     }
-    
+
+    @Override
     public void setBoolean(boolean value) throws SQLException {
         setDouble(value ? 1 : 0);
     }
-    
+
+    @Override
     public void setFloat(float value) throws SQLException {
         setDouble(value);
     }
-    
+
+    @Override
     public void setDouble(double value) throws SQLException {
         setFieldData(getDatatypeCoder().encodeDouble(value));
     }
-    
+
+    @Override
     public void setLong(long value) throws SQLException {
         setDouble(value);
     }
-    
+
+    @Override
     public void setInteger(int value) throws SQLException {
         setDouble(value);
     }
-    
+
+    @Override
     public void setByte(byte value) throws SQLException {
         setDouble(value);
     }
-    
+
+    @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
         if (setWhenNull(value)) return;
         // check if value is within bounds

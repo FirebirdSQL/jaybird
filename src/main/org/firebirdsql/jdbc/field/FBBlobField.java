@@ -304,10 +304,10 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
     }
 
     private <T extends FirebirdBlob> T registerWithTransaction(T blob) {
-        if (blob instanceof TransactionListener) {
+        if (blob instanceof TransactionListener transactionListener) {
             FbTransaction currentTransaction = gdsHelper.getCurrentTransaction();
             if (currentTransaction != null) {
-                currentTransaction.addWeakTransactionListener((TransactionListener) blob);
+                currentTransaction.addWeakTransactionListener(transactionListener);
             }
         }
         return blob;

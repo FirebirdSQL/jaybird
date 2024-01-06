@@ -48,7 +48,7 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 @SuppressWarnings("RedundantThrows")
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
-    private final static System.Logger log = System.getLogger(FBDatabaseMetaData.class.getName());
+    private static final System.Logger log = System.getLogger(FBDatabaseMetaData.class.getName());
 
     private final GDSHelper gdsHelper;
     private final FBConnection connection;
@@ -1498,21 +1498,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public boolean updatesAreDetected(int type) throws SQLException {
-        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor);
+        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor),
         //  change to return true when behaviour of EMULATED is the same
         return false;
     }
 
     @Override
     public boolean deletesAreDetected(int type) throws SQLException {
-        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor);
+        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor),
         //  change to return true when behaviour of EMULATED is the same
         return false;
     }
 
     @Override
     public boolean insertsAreDetected(int type) throws SQLException {
-        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor);
+        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor),
         //  change to return true when behaviour of EMULATED is the same
         return false;
     }

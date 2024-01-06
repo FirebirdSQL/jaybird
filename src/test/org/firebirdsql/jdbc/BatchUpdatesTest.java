@@ -162,13 +162,13 @@ class BatchUpdatesTest {
 
             var rs = stmt.executeQuery("SELECT * FROM batch_updates order by id");
             assertTrue(rs.next(), "expected row 1");
-            assertEquals(rs.getInt(1), 1, "id=1");
+            assertEquals(1, rs.getInt(1), "id=1");
             assertEquals("test", rs.getString(2), "id=1 str_value");
             assertTrue(rs.next(), "expected row 2");
-            assertEquals(rs.getInt(1), 2, "id=2");
+            assertEquals(2, rs.getInt(1), "id=2");
             assertEquals("another", rs.getString(2), "id=2 str_value");
             assertTrue(rs.next(), "expected row 3");
-            assertEquals(rs.getInt(1), 3, "id=3");
+            assertEquals(3, rs.getInt(1), "id=3");
             assertEquals("stream", rs.getString(2), "id=3 str_value");
             assertEquals("string", rs.getString(3), "id=3 clob_value");
             assertFalse(rs.next(), "no more rows");

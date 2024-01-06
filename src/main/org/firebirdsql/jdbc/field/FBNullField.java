@@ -77,35 +77,42 @@ final class FBNullField extends FBField {
 
     // ----- Math code
 
+    @Override
     public byte getByte() throws SQLException {
         checkNull();
         return BYTE_NULL_VALUE;
     }
 
+    @Override
     public short getShort() throws SQLException {
         checkNull();
         return SHORT_NULL_VALUE;
     }
 
+    @Override
     public int getInt() throws SQLException {
         checkNull();
         return INT_NULL_VALUE;
     }
 
+    @Override
     public long getLong() throws SQLException {
         checkNull();
         return LONG_NULL_VALUE;
     }
 
+    @Override
     public BigDecimal getBigDecimal() throws SQLException {
         return getAsNull();
     }
 
+    @Override
     public float getFloat() throws SQLException {
         checkNull();
         return FLOAT_NULL_VALUE;
     }
 
+    @Override
     public double getDouble() throws SQLException {
         checkNull();
         return DOUBLE_NULL_VALUE;
@@ -113,83 +120,101 @@ final class FBNullField extends FBField {
 
     // ----- getBoolean, getString and getObject code
 
+    @Override
     public boolean getBoolean() throws SQLException {
         checkNull();
         return BOOLEAN_NULL_VALUE;
     }
 
+    @Override
     public String getString() throws SQLException {
         return getAsNull();
     }
 
     // ----- getXXXStream code
 
+    @Override
     public InputStream getBinaryStream() throws SQLException {
         return getAsNull();
     }
 
+    @Override
     public byte[] getBytes() throws SQLException {
         return getAsNull();
     }
 
     // ----- getDate, getTime and getTimestamp code
 
+    @Override
     public Date getDate(Calendar cal) throws SQLException {
         return getAsNull();
     }
 
+    @Override
     public Date getDate() throws SQLException {
         return getAsNull();
     }
 
+    @Override
     public Time getTime(Calendar cal) throws SQLException {
         return getAsNull();
     }
 
+    @Override
     public Time getTime() throws SQLException {
         return getAsNull();
     }
 
+    @Override
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         return getAsNull();
     }
 
+    @Override
     public Timestamp getTimestamp() throws SQLException {
         return getAsNull();
     }
 
     // --- setXXX methods
 
+    @Override
     public void setByte(byte value) throws SQLException {
         setDummyObject();
     }
 
+    @Override
     public void setShort(short value) throws SQLException {
         setDummyObject();
     }
 
+    @Override
     public void setInteger(int value) throws SQLException {
         setDummyObject();
     }
 
+    @Override
     public void setLong(long value) throws SQLException {
         setDummyObject();
     }
 
+    @Override
     public void setFloat(float value) throws SQLException {
         setDummyObject();
     }
 
+    @Override
     public void setDouble(double value) throws SQLException {
         setDummyObject();
     }
 
+    @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
         setObject(value);
     }
 
     // ----- setBoolean, setObject and setObject code
 
+    @Override
     public void setBoolean(boolean value) throws SQLException {
         setDummyObject();
     }
@@ -210,32 +235,39 @@ final class FBNullField extends FBField {
         setDummyObject();
     }
 
+    @Override
     public void setBytes(byte[] value) throws SQLException {
         setObject(value);
     }
 
     // ----- setDate, setTime and setTimestamp code
 
+    @Override
     public void setDate(Date value, Calendar cal) throws SQLException {
         setObject(value);
     }
 
+    @Override
     public void setDate(Date value) throws SQLException {
         setObject(value);
     }
 
+    @Override
     public void setTime(Time value, Calendar cal) throws SQLException {
         setObject(value);
     }
 
+    @Override
     public void setTime(Time value) throws SQLException {
         setObject(value);
     }
 
+    @Override
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
         setObject(value);
     }
 
+    @Override
     public void setTimestamp(Timestamp value) throws SQLException {
         setObject(value);
     }

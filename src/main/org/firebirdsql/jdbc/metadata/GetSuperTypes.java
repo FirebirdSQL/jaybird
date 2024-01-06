@@ -37,13 +37,15 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  */
 public final class GetSuperTypes {
 
+    private static final String SUPERTYPES = "SUPERTYPES";
+    
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(6)
-            .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_CAT", "SUPERTYPES").addField()
-            .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_SCHEM", "SUPERTYPES").addField()
-            .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "SUPERTYPES").addField()
-            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTYPE_CAT", "SUPERTYPES").addField()
-            .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTYPE_SCHEM", "SUPERTYPES").addField()
-            .at(5).simple(SQL_VARYING, 31, "SUPERTYPE_NAME", "SUPERTYPES").addField()
+            .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_CAT", SUPERTYPES).addField()
+            .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_SCHEM", SUPERTYPES).addField()
+            .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", SUPERTYPES).addField()
+            .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTYPE_CAT", SUPERTYPES).addField()
+            .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTYPE_SCHEM", SUPERTYPES).addField()
+            .at(5).simple(SQL_VARYING, 31, "SUPERTYPE_NAME", SUPERTYPES).addField()
             .toRowDescriptor();
 
     private GetSuperTypes() {

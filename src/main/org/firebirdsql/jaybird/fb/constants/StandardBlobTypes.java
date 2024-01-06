@@ -50,4 +50,8 @@ public final class StandardBlobTypes {
     public static final int isc_blob_extfile = 8;
     public static final int isc_blob_debug_info = 9;
 
+    private StandardBlobTypes() {
+        // no instances
+    }
+
 }

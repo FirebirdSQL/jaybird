@@ -65,11 +65,13 @@ final class FBBigDecimalField extends FBField {
         return getBigDecimal();
     }
 
+    @Override
     public boolean getBoolean() throws SQLException {
         // TODO might be better to use BigDecimal.ONE.equals(getBigDecimal()) (or compareTo == 0), but is not backwards compatible.
         return getByte() == 1;
     }
 
+    @Override
     public byte getByte() throws SQLException {
         long longValue = getLong();
         // check if value is within bounds
@@ -80,16 +82,19 @@ final class FBBigDecimalField extends FBField {
         return (byte) longValue;
     }
 
+    @Override
     public double getDouble() throws SQLException {
         BigDecimal value = getBigDecimal();
         return value != null ? value.doubleValue() : DOUBLE_NULL_VALUE;
     }
 
+    @Override
     public float getFloat() throws SQLException {
         BigDecimal value = getBigDecimal();
         return value != null ? value.floatValue() : FLOAT_NULL_VALUE;
     }
 
+    @Override
     public int getInt() throws SQLException {
         long longValue = getLong();
         // check if value is within bounds
@@ -100,6 +105,7 @@ final class FBBigDecimalField extends FBField {
         return (int) longValue;
     }
 
+    @Override
     public long getLong() throws SQLException {
         BigDecimal value = getBigDecimal();
         if (value == null) return LONG_NULL_VALUE;
@@ -111,6 +117,7 @@ final class FBBigDecimalField extends FBField {
         return value.longValue();
     }
 
+    @Override
     public short getShort() throws SQLException {
         long longValue = getLong();
         // check if value is within bounds
@@ -121,11 +128,13 @@ final class FBBigDecimalField extends FBField {
         return (short) longValue;
     }
 
+    @Override
     public String getString() throws SQLException {
         BigDecimal value = getBigDecimal();
         return value != null ? value.toString() : null;
     }
 
+    @Override
     public BigDecimal getBigDecimal() throws SQLException {
         return fieldDataSize.decode(fieldDescriptor, getFieldData());
     }
@@ -138,38 +147,47 @@ final class FBBigDecimalField extends FBField {
 
     //--- setXXX methods
 
+    @Override
     public void setBoolean(boolean value) throws SQLException {
         setLong(value ? 1 : 0);
     }
 
+    @Override
     public void setByte(byte value) throws SQLException {
         setLong(value);
     }
 
+    @Override
     public void setDouble(double value) throws SQLException {
         setBigDecimal(BigDecimal.valueOf(value));
     }
 
+    @Override
     public void setFloat(float value) throws SQLException {
         setDouble(value);
     }
 
+    @Override
     public void setInteger(int value) throws SQLException {
         setLong(value);
     }
 
+    @Override
     public void setLong(long value) throws SQLException {
         setBigDecimal(BigDecimal.valueOf(value));
     }
 
+    @Override
     public void setShort(short value) throws SQLException {
         setLong(value);
     }
 
+    @Override
     public void setString(String value) throws SQLException {
         setBigDecimal(fromString(value, BigDecimal::new));
     }
 
+    @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
         setFieldData(fieldDataSize.encode(fieldDescriptor, value));
     }

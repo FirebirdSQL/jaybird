@@ -266,8 +266,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                              * have a result set that will be fetched, instead we have a singleton result if we have fields
                              */
                             statementListenerDispatcher.statementExecuted(this, false, true);
-                            if (response instanceof SqlResponse) {
-                                processExecuteSingletonResponse((SqlResponse) response);
+                            if (response instanceof SqlResponse sqlResponse) {
+                                processExecuteSingletonResponse(sqlResponse);
                                 expectedResponseCount--;
                                 response = db.readResponse(statementWarningCallback);
                             } else {

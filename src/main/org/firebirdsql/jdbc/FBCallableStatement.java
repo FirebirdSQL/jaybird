@@ -304,10 +304,10 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
                 if (value == null) {
                     field.setNull();
-                } else if (value instanceof WrapperWithCalendar) {
-                    setField(field, (WrapperWithCalendar)value);
-                } else if (value instanceof WrapperWithLong) {
-                    setField(field, (WrapperWithLong)value);
+                } else if (value instanceof WrapperWithCalendar wrapperWithCalendar) {
+                    setField(field, wrapperWithCalendar);
+                } else if (value instanceof WrapperWithLong wrapperWithLong) {
+                    setField(field, wrapperWithLong);
                 } else {
                     field.setObject(value);
                 }
@@ -339,10 +339,10 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         } else {
             long longValue = value.longValue();
 
-            if (obj instanceof InputStream) {
-                field.setBinaryStream((InputStream) obj, longValue);
-            } else if (obj instanceof Reader) {
-                field.setCharacterStream((Reader) obj, longValue);
+            if (obj instanceof InputStream inputStream) {
+                field.setBinaryStream(inputStream, longValue);
+            } else if (obj instanceof Reader reader) {
+                field.setCharacterStream(reader, longValue);
             } else {
                 throw new TypeConversionException("Cannot convert type " + obj.getClass().getName());
             }
@@ -357,14 +357,15 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         } else {
             Calendar cal = value.calendar();
 
-            if (obj instanceof Timestamp)
-                field.setTimestamp((Timestamp) obj, cal);
-            else if (obj instanceof java.sql.Date)
-                field.setDate((java.sql.Date) obj, cal);
-            else if (obj instanceof Time)
-                field.setTime((Time) obj, cal);
-            else
+            if (obj instanceof Timestamp timestamp) {
+                field.setTimestamp(timestamp, cal);
+            } else if (obj instanceof java.sql.Date date) {
+                field.setDate(date, cal);
+            } else if (obj instanceof Time time) {
+                field.setTime(time, cal);
+            } else {
                 throw new TypeConversionException("Cannot convert type " + obj.getClass().getName());
+            }
         }
     }
 
@@ -469,7 +470,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         return getAndAssertSingletonResultSet().getDouble(mapOutParamIndexToPosition(parameterIndex));
     }
 
-    @Deprecated
+    @Deprecated(since = "1")
     @Override
     public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
         return getAndAssertSingletonResultSet().getBigDecimal(mapOutParamIndexToPosition(parameterIndex), scale);

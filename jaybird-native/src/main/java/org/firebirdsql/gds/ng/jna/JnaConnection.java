@@ -46,7 +46,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
 public abstract class JnaConnection<T extends IAttachProperties<T>, C extends JnaAttachment>
         extends AbstractConnection<T, C> {
 
-    private static final boolean bigEndian = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
+    private static final boolean BIG_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
 
     private final FbClientLibrary clientLibrary;
     private final String attachUrl;
@@ -152,8 +152,8 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
 
         if (!builder.isEmpty()) {
             SQLException exception = builder.toFlatSQLException();
-            if (exception instanceof SQLWarning) {
-                warningMessageCallback.processWarning((SQLWarning) exception);
+            if (exception instanceof SQLWarning warning) {
+                warningMessageCallback.processWarning(warning);
             } else {
                 throw exception;
             }
@@ -161,7 +161,7 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
     }
 
     final DatatypeCoder createDatatypeCoder() {
-        if (bigEndian) {
+        if (BIG_ENDIAN) {
             return BigEndianDatatypeCoder.forEncodingFactory(getEncodingFactory());
         }
         return LittleEndianDatatypeCoder.forEncodingFactory(getEncodingFactory());
