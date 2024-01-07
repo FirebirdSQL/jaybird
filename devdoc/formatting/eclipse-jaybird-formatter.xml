@@ -302,26 +302,26 @@
 		<setting id="org.eclipse.jdt.core.formatter.alignment_for_enum_constants" value="49"/>
 		<setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_enum_constant" value="0"/>
 		<setting id="org.eclipse.jdt.core.formatter.alignment_for_superinterfaces_in_enum_declaration" value="0"/>
-		<setting id="org.eclipse.jdt.core.formatter.alignment_for_record_components" value="18"/>
+		<setting id="org.eclipse.jdt.core.formatter.alignment_for_record_components" value="16"/>
 		<setting id="org.eclipse.jdt.core.formatter.alignment_for_superinterfaces_in_record_declaration" value="0"/>
 		<setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_method_invocation" value="0"/>
 		<setting id="org.eclipse.jdt.core.formatter.alignment_for_selector_in_method_invocation" value="0"/>
 		<setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_explicit_constructor_call" value="0"/>
 		<setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_allocation_expression" value="0"/>
 		<setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_qualified_allocation_expression" value="0"/>
-		<setting id="org.eclipse.jdt.core.formatter.alignment_for_multiplicative_operator" value="18"/>
+		<setting id="org.eclipse.jdt.core.formatter.alignment_for_multiplicative_operator" value="16"/>
 		<setting id="org.eclipse.jdt.core.formatter.wrap_before_multiplicative_operator" value="true"/>
-		<setting id="org.eclipse.jdt.core.formatter.alignment_for_additive_operator" value="18"/>
+		<setting id="org.eclipse.jdt.core.formatter.alignment_for_additive_operator" value="16"/>
 		<setting id="org.eclipse.jdt.core.formatter.wrap_before_additive_operator" value="true"/>
-		<setting id="org.eclipse.jdt.core.formatter.alignment_for_string_concatenation" value="18"/>
+		<setting id="org.eclipse.jdt.core.formatter.alignment_for_string_concatenation" value="16"/>
 		<setting id="org.eclipse.jdt.core.formatter.wrap_before_string_concatenation" value="true"/>
-		<setting id="org.eclipse.jdt.core.formatter.alignment_for_shift_operator" value="18"/>
+		<setting id="org.eclipse.jdt.core.formatter.alignment_for_shift_operator" value="16"/>
 		<setting id="org.eclipse.jdt.core.formatter.wrap_before_shift_operator" value="true"/>
-		<setting id="org.eclipse.jdt.core.formatter.alignment_for_relational_operator" value="18"/>
+		<setting id="org.eclipse.jdt.core.formatter.alignment_for_relational_operator" value="16"/>
 		<setting id="org.eclipse.jdt.core.formatter.wrap_before_relational_operator" value="true"/>
-		<setting id="org.eclipse.jdt.core.formatter.alignment_for_bitwise_operator" value="18"/>
+		<setting id="org.eclipse.jdt.core.formatter.alignment_for_bitwise_operator" value="16"/>
 		<setting id="org.eclipse.jdt.core.formatter.wrap_before_bitwise_operator" value="true"/>
-		<setting id="org.eclipse.jdt.core.formatter.alignment_for_logical_operator" value="18"/>
+		<setting id="org.eclipse.jdt.core.formatter.alignment_for_logical_operator" value="16"/>
 		<setting id="org.eclipse.jdt.core.formatter.wrap_before_logical_operator" value="true"/>
 		<setting id="org.eclipse.jdt.core.formatter.alignment_for_conditional_expression" value="16"/>
 		<setting id="org.eclipse.jdt.core.formatter.alignment_for_conditional_expression_chain" value="0"/>
@@ -358,7 +358,7 @@
 		<setting id="org.eclipse.jdt.core.formatter.format_line_comment_starting_on_first_column" value="false"/>
 		<setting id="org.eclipse.jdt.core.formatter.comment.format_header" value="true"/>
 		<setting id="org.eclipse.jdt.core.formatter.comment.preserve_white_space_between_code_and_line_comments" value="true"/>
-		<setting id="org.eclipse.jdt.core.formatter.never_indent_line_comments_on_first_column" value="true"/>
+		<setting id="org.eclipse.jdt.core.formatter.never_indent_line_comments_on_first_column" value="false"/>
 		<setting id="org.eclipse.jdt.core.formatter.never_indent_block_comments_on_first_column" value="false"/>
 		<setting id="org.eclipse.jdt.core.formatter.join_lines_in_comments" value="false"/>
 		<setting id="org.eclipse.jdt.core.formatter.comment.format_html" value="false"/>
