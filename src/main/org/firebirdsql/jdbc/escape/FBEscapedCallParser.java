@@ -24,22 +24,17 @@ import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 
+import static org.firebirdsql.jdbc.escape.FBEscapedCallParser.ParserState.*;
+
 /**
  * Parser for escaped procedure call.
  */
 @InternalApi
 public final class FBEscapedCallParser {
 
-    private static final int NORMAL_STATE = 1;
-    private static final int LITERAL_STATE = 2;
-    private static final int BRACE_STATE = 4;
-    private static final int CURLY_BRACE_STATE = 8;
-    private static final int SPACE_STATE = 16;
-    private static final int COMMA_STATE = 32;
-
     private static final int INITIAL_CAPACITY = 32;
 
-    private int state = NORMAL_STATE;
+    private ParserState state = NORMAL_STATE;
 
     private boolean isNameProcessed;
     private boolean isExecuteWordProcessed;
@@ -63,34 +58,33 @@ public final class FBEscapedCallParser {
         }
 
         switch (testChar) {
-        case '\'':
+        case '\'' -> {
             if (state == NORMAL_STATE) {
                 state = LITERAL_STATE;
             } else if (state == LITERAL_STATE) {
                 state = NORMAL_STATE;
             }
-            break;
-        case ',':
+        }
+        case ',' -> {
             if (state != LITERAL_STATE && state != BRACE_STATE) {
                 state = COMMA_STATE;
             }
-            break;
-        case '(':
-        case ')':
+        }
+        case '(', ')' -> {
             if (state != LITERAL_STATE) {
                 state = BRACE_STATE;
             }
-            break;
-        case '{':
-        case '}':
+        }
+        case '{', '}' -> {
             if (state != LITERAL_STATE) {
                 state = CURLY_BRACE_STATE;
             }
-            break;
-        default:
+        }
+        default -> {
             if (state != LITERAL_STATE && state != BRACE_STATE) {
                 state = NORMAL_STATE;
             }
+        }
         }
     }
 
@@ -148,6 +142,7 @@ public final class FBEscapedCallParser {
      *         to parse
      * @return native form of the {@code sql}
      */
+    @SuppressWarnings("java:S127")
     public FBProcedureCall parseCall(String sql) throws SQLException {
         sql = cleanUpCall(sql);
 
@@ -183,25 +178,19 @@ public final class FBEscapedCallParser {
                     isFirstOutParam = true;
                     paramPosition++;
                     buffer.setLength(0);
-                    continue;
+                } else {
+                    buffer.append(currentChar);
                 }
-                buffer.append(currentChar);
                 break;
             case SPACE_STATE:
                 if (buffer.isEmpty()) {
                     state = NORMAL_STATE;
-                    continue;
-                }
-                if (openBraceCount > 0) {
+                } else if (openBraceCount > 0 || isNameProcessed) {
                     buffer.append(currentChar);
                     state = NORMAL_STATE;
-                    continue;
-                }
-
-                // if procedure name was not yet processed, process
-                // the token; we look for the sequence EXECUTE PROCEDURE <name>
-                // otherwise go into normal state to enable next transitions.
-                if (!isNameProcessed) {
+                } else {
+                    // If procedure name was not yet processed, process the token. We look for the sequence
+                    // EXECUTE PROCEDURE <name>.
                     boolean tokenProcessed = processToken(buffer.toString().trim());
                     if (tokenProcessed) {
                         buffer.setLength(0);
@@ -216,9 +205,6 @@ public final class FBEscapedCallParser {
                                 i = j;
                         }
                     }
-                } else {
-                    buffer.append(currentChar);
-                    state = NORMAL_STATE;
                 }
                 break;
             case BRACE_STATE:
@@ -232,8 +218,9 @@ public final class FBEscapedCallParser {
                                 !isNameProcessed;
 
                 if (isProcedureName) {
-                    if (buffer.length() == 0)
+                    if (buffer.isEmpty()) {
                         throw new FBSQLParseException("Procedure name is empty.");
+                    }
 
                     procedureCall.setName(buffer.toString().trim());
                     isNameProcessed = true;
@@ -275,7 +262,7 @@ public final class FBEscapedCallParser {
             }
         }
 
-        if (buffer.length() == 0) {
+        if (buffer.isEmpty()) {
             return procedureCall;
         }
 
@@ -305,7 +292,7 @@ public final class FBEscapedCallParser {
 
         final String value = startIndex < endIndex ? buffer.substring(startIndex, endIndex).trim() : "";
 
-        if (value.length() == 0) {
+        if (value.isEmpty()) {
             return procedureCall;
         }
 
@@ -371,4 +358,14 @@ public final class FBEscapedCallParser {
     String processParam(String param) throws SQLException {
         return FBEscapedParser.toNativeSql(param);
     }
+
+    enum ParserState {
+        NORMAL_STATE,
+        LITERAL_STATE,
+        BRACE_STATE,
+        CURLY_BRACE_STATE,
+        SPACE_STATE,
+        COMMA_STATE,
+    }
+
 }
