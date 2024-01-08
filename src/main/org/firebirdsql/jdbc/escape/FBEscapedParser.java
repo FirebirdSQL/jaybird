@@ -69,12 +69,10 @@ public final class FBEscapedParser {
     }
 
     /**
-     * Check if the target SQL contains at least one of the escaped syntax
-     * commands. This method performs a simple regex match, so it may
-     * report that SQL contains escaped syntax when the {@code "{"} is
-     * followed by the escaped syntax command in regular string constants that
-     * are passed as parameters. In this case {@link #parse(String)} will
-     * perform complete SQL parsing.
+     * Check if the target SQL contains at least one of the escaped syntax commands. This method performs a simple regex
+     * match, so it may report that SQL contains escaped syntax when the <code>"&#123;"</code> is followed by
+     * the escaped syntax command in regular string constants that are passed as parameters. In this case
+     * {@link #parse(String)} will perform complete SQL parsing.
      *
      * @param sql
      *         to test
@@ -102,6 +100,7 @@ public final class FBEscapedParser {
      *         to parse
      * @return native form of the {@code sql}.
      */
+    @SuppressWarnings("java:S127")
     public static String parse(final String sql) throws SQLException {
         if (!checkForEscapes(sql)) return sql;
 
@@ -115,32 +114,25 @@ public final class FBEscapedParser {
             char currentChar = sql.charAt(i);
             state = state.nextState(currentChar);
             switch (state) {
-            case INITIAL_STATE:
+            case INITIAL_STATE -> {
                 // Ignore leading whitespace
-                continue;
-            case NORMAL_STATE:
-            case LITERAL_STATE:
-            case START_LINE_COMMENT:
-            case LINE_COMMENT:
-            case START_BLOCK_COMMENT:
-            case BLOCK_COMMENT:
-            case END_BLOCK_COMMENT:
-            case POSSIBLE_Q_LITERAL_ENTER:
-                buffer.append(currentChar);
-                break;
-            case ESCAPE_ENTER_STATE:
+            }
+            case NORMAL_STATE, LITERAL_STATE,
+                    START_LINE_COMMENT, LINE_COMMENT, START_BLOCK_COMMENT, BLOCK_COMMENT, END_BLOCK_COMMENT,
+                    POSSIBLE_Q_LITERAL_ENTER -> buffer.append(currentChar);
+            case ESCAPE_ENTER_STATE -> {
                 bufferStack.push(buffer);
                 buffer = new StringBuilder();
-                break;
-            case ESCAPE_EXIT_STATE:
+            }
+            case ESCAPE_EXIT_STATE -> {
                 if (bufferStack.isEmpty()) {
                     throw new FBSQLParseException("Unbalanced JDBC escape, too many '}'");
                 }
                 String escapeText = buffer.toString();
                 buffer = bufferStack.pop();
                 escapeToNative(buffer, escapeText);
-                break;
-            case Q_LITERAL_START:
+            }
+            case Q_LITERAL_START -> {
                 buffer.append(currentChar);
                 if (++i >= sqlLength) {
                     throw new FBSQLParseException("Unexpected end of string at parser state " + state);
@@ -148,11 +140,10 @@ public final class FBEscapedParser {
                 final char alternateStartChar = sql.charAt(i);
                 buffer.append(alternateStartChar);
                 final char alternateEndChar = qLiteralEndChar(alternateStartChar);
-                for (i++; i <sqlLength; i++) {
+                for (i++; i < sqlLength; i++) {
                     currentChar = sql.charAt(i);
                     buffer.append(currentChar);
-                    if (currentChar == alternateEndChar
-                            && i + 1 < sqlLength && sql.charAt(i + 1) == '\'') {
+                    if (currentChar == alternateEndChar && i + 1 < sqlLength && sql.charAt(i + 1) == '\'') {
                         state = ParserState.Q_LITERAL_END;
                         break;
                     }
@@ -160,9 +151,8 @@ public final class FBEscapedParser {
                 if (i == sqlLength) {
                     throw new FBSQLParseException("Unexpected end of string at parser state " + state);
                 }
-                break;
-            default:
-                throw new FBSQLParseException("Unexpected parser state " + state);
+            }
+            default -> throw new FBSQLParseException("Unexpected parser state " + state);
             }
         }
         if (bufferStack.isEmpty()) {
@@ -173,22 +163,17 @@ public final class FBEscapedParser {
     }
 
     private static char qLiteralEndChar(char startChar) {
-        switch (startChar) {
-        case '(':
-            return ')';
-        case '{':
-            return '}';
-        case '[':
-            return ']';
-        case '<':
-            return '>';
-        default:
-            return startChar;
-        }
+        return switch (startChar) {
+            case '(' -> ')';
+            case '{' -> '}';
+            case '[' -> ']';
+            case '<' -> '>';
+            default -> startChar;
+        };
     }
 
     private static void processEscaped(final String escaped, final StringBuilder keyword, final StringBuilder payload) {
-        assert (keyword.length() == 0 && payload.length() == 0) : "StringBuilders keyword and payload should be empty";
+        assert keyword.isEmpty() && payload.isEmpty() : "StringBuilders keyword and payload should be empty";
 
         // Extract the keyword from the escaped syntax.
         final BreakIterator iterator = BreakIterator.getWordInstance();
@@ -230,37 +215,18 @@ public final class FBEscapedParser {
         final String keywordStr = keyword.toString().toLowerCase(Locale.ROOT);
         // NOTE: We assume here that all KEYWORD constants are lowercase!
         switch (keywordStr) {
-        case ESCAPE_CALL_KEYWORD:
-            // TODO Should we call convertProcedureCall? It leads to inefficient double parsing
-            convertProcedureCall(target, "{" + keyword + ' ' + payload + '}');
-            break;
-        case ESCAPE_CALL_KEYWORD3:
-            // TODO Should we call convertProcedureCall? It leads to inefficient double parsing
-            convertProcedureCall(target, "{" + ESCAPE_CALL_KEYWORD3 + payload + '}');
-            break;
-        case ESCAPE_DATE_KEYWORD:
-            toDateString(target, payload);
-            break;
-        case ESCAPE_ESCAPE_KEYWORD:
-            convertEscapeString(target, payload);
-            break;
-        case ESCAPE_FUNCTION_KEYWORD:
-            convertEscapedFunction(target, payload);
-            break;
-        case ESCAPE_OUTERJOIN_KEYWORD:
-            convertOuterJoin(target, payload);
-            break;
-        case ESCAPE_TIME_KEYWORD:
-            toTimeString(target, payload);
-            break;
-        case ESCAPE_TIMESTAMP_KEYWORD:
-            toTimestampString(target, payload);
-            break;
-        case ESCAPE_LIMIT_KEYWORD:
-            convertLimitString(target, payload);
-            break;
-        default:
-            throw new FBSQLParseException("Unknown keyword " + keywordStr + " for escaped syntax.");
+        // TODO Should we call convertProcedureCall? It leads to inefficient double parsing
+        case ESCAPE_CALL_KEYWORD -> convertProcedureCall(target, "{" + keyword + ' ' + payload + '}');
+        // TODO Should we call convertProcedureCall? It leads to inefficient double parsing
+        case ESCAPE_CALL_KEYWORD3 -> convertProcedureCall(target, "{" + ESCAPE_CALL_KEYWORD3 + payload + '}');
+        case ESCAPE_DATE_KEYWORD -> toDateString(target, payload);
+        case ESCAPE_ESCAPE_KEYWORD -> convertEscapeString(target, payload);
+        case ESCAPE_FUNCTION_KEYWORD -> convertEscapedFunction(target, payload);
+        case ESCAPE_OUTERJOIN_KEYWORD -> convertOuterJoin(target, payload);
+        case ESCAPE_TIME_KEYWORD -> toTimeString(target, payload);
+        case ESCAPE_TIMESTAMP_KEYWORD -> toTimestampString(target, payload);
+        case ESCAPE_LIMIT_KEYWORD -> convertLimitString(target, payload);
+        default -> throw new FBSQLParseException("Unknown keyword " + keywordStr + " for escaped syntax.");
         }
     }
 
@@ -409,23 +375,15 @@ public final class FBEscapedParser {
         NORMAL_STATE {
             @Override
             protected ParserState nextState(char inputChar) {
-                switch (inputChar) {
-                case '\'':
-                    return LITERAL_STATE;
-                case '{':
-                    return ESCAPE_ENTER_STATE;
-                case '}':
-                    return ESCAPE_EXIT_STATE;
-                case '-':
-                    return START_LINE_COMMENT;
-                case '/':
-                    return START_BLOCK_COMMENT;
-                case 'q':
-                case 'Q':
-                    return POSSIBLE_Q_LITERAL_ENTER;
-                default:
-                    return NORMAL_STATE;
-                }
+                return switch (inputChar) {
+                    case '\'' -> LITERAL_STATE;
+                    case '{' -> ESCAPE_ENTER_STATE;
+                    case '}' -> ESCAPE_EXIT_STATE;
+                    case '-' -> START_LINE_COMMENT;
+                    case '/' -> START_BLOCK_COMMENT;
+                    case 'q', 'Q' -> POSSIBLE_Q_LITERAL_ENTER;
+                    default -> NORMAL_STATE;
+                };
             }
         },
         /**
@@ -443,26 +401,28 @@ public final class FBEscapedParser {
         ESCAPE_ENTER_STATE {
             @Override
             protected ParserState nextState(char inputChar) throws FBSQLParseException {
-                switch (inputChar) {
-                case '?': // start of {?= call ...}
-                case 'c': // start of {call ...}
-                case 'C':
-                case 'd': // start of {d ...}
-                case 'D':
-                case 't': // start of {t ...} or {ts ...}
-                case 'T':
-                case 'e': // start of {escape ...}
-                case 'E':
-                case 'f': // start of {fn ...}
-                case 'F':
-                case 'o': // start of {oj ...}
-                case 'O':
-                case 'l': // start of {limit ...}
-                case 'L':
-                    return NORMAL_STATE;
-                default:
-                    throw new FBSQLParseException("Unexpected first character inside JDBC escape: " + inputChar);
-                }
+                return switch (inputChar) {
+                    //@formatter:off
+                    case    // start of {?= call ...}
+                            '?',
+                            // start of {call ...}
+                            'c', 'C',
+                            // start of {d ...}
+                            'd', 'D',
+                            // start of {t ...} or {ts ...}
+                            't', 'T',
+                            // start of {escape ...}
+                            'e', 'E',
+                            // start of {fn ...}
+                            'f', 'F',
+                            // start of {oj ...}
+                            'o', 'O',
+                            // start of {limit ...}
+                            'l', 'L' -> NORMAL_STATE;
+                    //@formatter:on
+                    default -> throw new FBSQLParseException(
+                            "Unexpected first character inside JDBC escape: " + inputChar);
+                };
             }
         },
         /**
