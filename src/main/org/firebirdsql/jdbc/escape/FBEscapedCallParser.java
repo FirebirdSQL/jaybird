@@ -359,6 +359,11 @@ public final class FBEscapedCallParser {
         return FBEscapedParser.toNativeSql(param);
     }
 
+    /**
+     * State for the escaped call parser.
+     *
+     * @since 6
+     */
     enum ParserState {
         NORMAL_STATE,
         LITERAL_STATE,
