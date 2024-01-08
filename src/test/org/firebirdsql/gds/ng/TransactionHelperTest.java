@@ -21,11 +21,9 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -33,7 +31,9 @@ import java.sql.SQLNonTransientException;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -43,14 +43,13 @@ import static org.mockito.Mockito.when;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@ExtendWith(MockitoExtension.class)
 class TransactionHelperTest {
 
     private static final int TEST_ERROR_CODE = ISCConstants.isc_dsql_error;
 
     @Test
     void testTransactionActiveDefault_Active_noException() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.ACTIVE);
+        FbTransaction transaction = setupTransaction(TransactionState.ACTIVE);
 
         TransactionHelper.checkTransactionActive(transaction);
     }
@@ -64,14 +63,14 @@ class TransactionHelperTest {
     @ParameterizedTest
     @EnumSource(names = { "ACTIVE" }, mode = EnumSource.Mode.EXCLUDE)
     void testTransactionActiveDefault_exception(TransactionState transactionState) {
-        final FbTransaction transaction = setupTransaction(transactionState);
+        FbTransaction transaction = setupTransaction(transactionState);
         
         assertDefaultNoTransactionException(()-> TransactionHelper.checkTransactionActive(transaction));
     }
 
     @Test
     void testTransactionActiveErrorCode_Active_noException() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.ACTIVE);
+        FbTransaction transaction = setupTransaction(TransactionState.ACTIVE);
 
         TransactionHelper.checkTransactionActive(transaction, TEST_ERROR_CODE);
     }
@@ -85,14 +84,35 @@ class TransactionHelperTest {
     @ParameterizedTest
     @EnumSource(names = { "ACTIVE" }, mode = EnumSource.Mode.EXCLUDE)
     void testTransactionActiveErrorCode_exception(TransactionState transactionState) {
-        final FbTransaction transaction = setupTransaction(transactionState);
+        FbTransaction transaction = setupTransaction(transactionState);
 
         assertErrorCodeNoTransactionException(
                 () -> TransactionHelper.checkTransactionActive(transaction, TEST_ERROR_CODE));
     }
 
+    @ParameterizedTest
+    @EnumSource(names = { "COMMITTING", "ROLLING_BACK", "PREPARING"})
+    void testIsTransactionEnding_true(TransactionState transactionState) {
+        FbTransaction transaction = setupTransaction(transactionState);
+
+        assertTrue(TransactionHelper.isTransactionEnding(transaction));
+    }
+
+    @ParameterizedTest
+    @EnumSource(names = { "COMMITTING", "ROLLING_BACK", "PREPARING"}, mode = EnumSource.Mode.EXCLUDE)
+    void testIsTransactionEnding_false(TransactionState transactionState) {
+        FbTransaction transaction = setupTransaction(transactionState);
+
+        assertFalse(TransactionHelper.isTransactionEnding(transaction));
+    }
+
+    @Test
+    void testIsTransactionEnding_nullTransaction_false() {
+        assertFalse(TransactionHelper.isTransactionEnding(null));
+    }
+
     private FbTransaction setupTransaction(TransactionState transactionState) {
-        final FbTransaction transaction = mock(FbTransaction.class);
+        FbTransaction transaction = mock(FbTransaction.class);
         when(transaction.getState()).thenReturn(transactionState);
         return transaction;
     }

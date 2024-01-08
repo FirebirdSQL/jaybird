@@ -29,41 +29,60 @@ import java.sql.SQLNonTransientException;
  * @author Mark Rotteveel
  * @since 3.0
  */
-public class TransactionHelper {
+public final class TransactionHelper {
 
     public static final String NO_TRANSACTION_ACTIVE = "No transaction or transaction not ACTIVE";
 
     private TransactionHelper() {
+        // no instances
     }
 
     /**
-     * Checks if this statement has a transaction and that the transaction is {@link TransactionState#ACTIVE}.
+     * Checks if the transaction is {@link TransactionState#ACTIVE}.
      *
      * @param transaction
-     *         The transaction to check
+     *         transaction to check
      * @throws SQLException
-     *         When this statement does not have a transaction, or if that transaction is not active.
+     *         when {@code transaction} is {@code null}, or its state is not active
      */
-    public static void checkTransactionActive(final FbTransaction transaction) throws SQLException {
+    public static void checkTransactionActive(FbTransaction transaction) throws SQLException {
         if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
             throw new SQLNonTransientException(NO_TRANSACTION_ACTIVE, SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
         }
     }
 
     /**
-     * Checks if this statement has a transaction and that the transaction is {@link TransactionState#ACTIVE}.
+     * Checks if the transaction is {@link TransactionState#ACTIVE}.
      *
      * @param transaction
-     *         The transaction to check
+     *         transaction to check
      * @param fbErrorCode
      *         Firebird error code to use for generating the exception message
      * @throws SQLException
-     *         When this statement does not have a transaction, or if that transaction is not active.
+     *         when {@code transaction} is {@code null}, or its state is not active
      */
-    public static void checkTransactionActive(final FbTransaction transaction, final int fbErrorCode)
-            throws SQLException {
+    public static void checkTransactionActive(FbTransaction transaction, final int fbErrorCode) throws SQLException {
         if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
             throw FbExceptionBuilder.forNonTransientException(fbErrorCode).toSQLException();
         }
     }
+
+    /**
+     * Checks if the transaction is ending (meaning its state is {@link TransactionState#COMMITTING},
+     * {@link TransactionState#ROLLING_BACK} or {@link TransactionState#PREPARING}).
+     *
+     * @param transaction
+     *         transaction to check
+     * @return {@code true} if the state is {@code COMMITTING}, {@code ROLLING_BACK} or {@code PREPARING}, otherwise
+     * {@code false} (including when {@code transaction} is {@code null})
+     * @since 6
+     */
+    public static boolean isTransactionEnding(FbTransaction transaction) {
+        if (transaction == null) return false;
+        return switch(transaction.getState()) {
+            case COMMITTING, ROLLING_BACK, PREPARING -> true;
+            default -> false;
+        };
+    }
+
 }

@@ -35,6 +35,8 @@ import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.TRACE;
 
 /**
+ * Base class for low-level blob operations.
+ *
  * @author Mark Rotteveel
  * @since 3.0
  */
@@ -74,7 +76,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     /**
-     * Marks this blob as EOF (End of file).
+     * Marks this blob as EOF (end of file).
      * <p>
      * For an output blob this is a no-op (as those are never end of file, unless explicitly closed)
      * </p>
@@ -105,15 +107,21 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      * This method should only be called by sub-classes of this class.
      * </p>
      *
-     * @param open New value of open.
+     * @param open
+     *         new value of open
      */
     protected final void setOpen(boolean open) {
+        // TODO Verify reopen behaviour, especially given close() shuts down exceptionListenerDispatcher
         try (LockCloseable ignored = withLock()) {
             final FbDatabase database = this.database;
-            if (open) {
-                database.addWeakDatabaseListener(this);
-            } else {
-                database.removeDatabaseListener(this);
+            if (database != null) {
+                if (open) {
+                    database.addWeakDatabaseListener(this);
+                } else {
+                    database.removeDatabaseListener(this);
+                }
+            }
+            if (!open) {
                 final FbTransaction transaction = this.transaction;
                 if (transaction != null) {
                     transaction.removeTransactionListener(this);
@@ -244,26 +252,23 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             return;
         }
         switch (newState) {
-        case COMMITTING:
-        case ROLLING_BACK:
-        case PREPARING:
+        case COMMITTING, ROLLING_BACK, PREPARING -> {
             try {
                 close();
             } catch (SQLException e) {
                 log.log(ERROR, "Exception while closing blob during transaction end", e);
             }
-            break;
-        case COMMITTED:
-        case ROLLED_BACK:
+        }
+        case COMMITTED, ROLLED_BACK -> {
             try (LockCloseable ignored = withLock()) {
                 clearTransaction();
                 setOpen(false);
                 releaseResources();
             }
-            break;
-        default:
+        }
+        default -> {
             // Do nothing
-            break;
+        }
         }
         // TODO Need additional handling for other transitions?
     }
@@ -309,14 +314,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      * @return {@code true} if the transaction is committing, rolling back or preparing
      */
     protected final boolean isEndingTransaction() {
-        FbTransaction transaction = getTransaction();
-        if (transaction != null) {
-            TransactionState transactionState = transaction.getState();
-            return transactionState == TransactionState.COMMITTING
-                    || transactionState == TransactionState.ROLLING_BACK
-                    || transactionState == TransactionState.PREPARING;
-        }
-        return false;
+        return TransactionHelper.isTransactionEnding(getTransaction());
     }
 
     /**
