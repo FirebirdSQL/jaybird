@@ -27,13 +27,16 @@ package org.firebirdsql.gds.ng.fields;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * The class {@code RowDescriptor} is a java mapping of the XSQLDA server data structure used to describe the row
  * metadata of one row for input or output.
  * <p>
- * RowDescriptor is an immutable, values of a row are maintained separately in a {@link RowValue}.
+ * RowDescriptor is immutable, values of a row are maintained separately in a {@link RowValue}.
  * </p>
  *
  * @author Mark Rotteveel
@@ -42,7 +45,7 @@ import java.util.*;
 public final class RowDescriptor implements Iterable<FieldDescriptor> {
 
     private static final FieldDescriptor[] NO_DESCRIPTORS = new FieldDescriptor[0];
-    private final FieldDescriptor[] fieldDescriptors;
+    private final List<FieldDescriptor> fieldDescriptors;
     private final DatatypeCoder datatypeCoder;
     private int hash;
 
@@ -51,14 +54,13 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
      * {@link FieldDescriptor} instances.
      *
      * @param fieldDescriptors
-     *         The field descriptors (array is cloned before use)
+     *         field descriptors (array is copied before use)
      * @param datatypeCoder
-     *         The datatype code for the connection that uses this RowDescriptor.
+     *         datatype coder for the connection that uses this RowDescriptor.
      */
-    private RowDescriptor(final FieldDescriptor[] fieldDescriptors, final DatatypeCoder datatypeCoder) {
-        assert datatypeCoder != null : "dataTypeCoder should not be null";
-        this.fieldDescriptors = fieldDescriptors.clone();
-        this.datatypeCoder = datatypeCoder;
+    private RowDescriptor(FieldDescriptor[] fieldDescriptors, DatatypeCoder datatypeCoder) {
+        this.fieldDescriptors = List.of(fieldDescriptors);
+        this.datatypeCoder = requireNonNull(datatypeCoder, "dataTypeCoder should not be null");
     }
 
     /**
@@ -79,7 +81,7 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
      * @return The number of fields.
      */
     public int getCount() {
-        return fieldDescriptors.length;
+        return fieldDescriptors.size();
     }
 
     /**
@@ -92,14 +94,14 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
      *         if index is not {@code 0 <= index < getCount}
      */
     public FieldDescriptor getFieldDescriptor(int index) {
-        return fieldDescriptors[index];
+        return fieldDescriptors.get(index);
     }
 
     /**
-     * @return An unmodifiable List of the {@link FieldDescriptor} instances of this row.
+     * @return An immutable List of the {@link FieldDescriptor} instances of this row.
      */
     public List<FieldDescriptor> getFieldDescriptors() {
-        return Collections.unmodifiableList(Arrays.asList(fieldDescriptors));
+        return fieldDescriptors;
     }
 
     /**
@@ -134,15 +136,15 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
 
     @Override
     public Iterator<FieldDescriptor> iterator() {
-        return new RowDescriptorIterator();
+        return fieldDescriptors.iterator();
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("RowDescriptor: [");
-        for (int idx = 0; idx < fieldDescriptors.length; idx++) {
+        for (int idx = 0; idx < fieldDescriptors.size(); idx++) {
             sb.append(idx).append('=');
-            FieldDescriptor descriptor = fieldDescriptors[idx];
+            FieldDescriptor descriptor = fieldDescriptors.get(idx);
             if (descriptor != null) {
                 descriptor.appendFieldDescriptor(sb);
             } else {
@@ -150,7 +152,7 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
             }
             sb.append(',');
         }
-        if (fieldDescriptors.length > 0) {
+        if (!fieldDescriptors.isEmpty()) {
             // Remove last ','
             sb.setLength(sb.length() - 1);
         }
@@ -162,29 +164,26 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof RowDescriptor other)) return false;
-        return Arrays.equals(this.fieldDescriptors, other.fieldDescriptors);
+        return this.fieldDescriptors.equals(other.fieldDescriptors);
     }
 
     @Override
     public int hashCode() {
-        if (hash == 0) {
-            hash = Arrays.hashCode(this.fieldDescriptors);
-        }
-        return hash;
+        if (hash != 0) return hash;
+        int newHash = fieldDescriptors.hashCode();
+        return hash = newHash != 0 ? newHash : 1;
     }
 
     /**
      * Creates an instance of {@code RowDescriptor} with the supplied {@link FieldDescriptor} instances.
      *
      * @param fieldDescriptors
-     *         the field descriptors (array is cloned before use)
+     *         field descriptors (array is cloned before use)
      * @param datatypeCoder
-     *         the datatype code for the connection that uses this RowDescriptor.
+     *         datatype coder for the connection that uses this RowDescriptor.
      * @return {@code RowDescriptor} instance
      */
-    public static RowDescriptor createRowDescriptor(final FieldDescriptor[] fieldDescriptors,
-            DatatypeCoder datatypeCoder) {
-        if (fieldDescriptors.length == 0) return empty(datatypeCoder);
+    public static RowDescriptor createRowDescriptor(FieldDescriptor[] fieldDescriptors, DatatypeCoder datatypeCoder) {
         return new RowDescriptor(fieldDescriptors, datatypeCoder);
     }
 
@@ -192,36 +191,11 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
      * Returns an empty row descriptor with the specified datatype coder.
      *
      * @param datatypeCoder
-     *         the datatype code for the connection that uses this RowDescriptor.
+     *         datatype coder for the connection that uses this RowDescriptor.
      * @return Empty row descriptor
      */
-    public static RowDescriptor empty(final DatatypeCoder datatypeCoder) {
+    public static RowDescriptor empty(DatatypeCoder datatypeCoder) {
         return new RowDescriptor(NO_DESCRIPTORS, datatypeCoder);
     }
 
-    /**
-     * Iterator implementation to iterate over the internal array
-     */
-    private class RowDescriptorIterator implements Iterator<FieldDescriptor> {
-
-        private int index = 0;
-
-        @Override
-        public boolean hasNext() {
-            return index < fieldDescriptors.length;
-        }
-
-        @Override
-        public FieldDescriptor next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return fieldDescriptors[index++];
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("remove() method is not supported");
-        }
-    }
 }
