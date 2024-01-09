@@ -22,9 +22,11 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.util.UncheckedSQLException;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.field.FBCloseableField;
 import org.firebirdsql.jdbc.field.FBField;
@@ -41,6 +43,9 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Implementation of {@link ResultSet}.
@@ -102,6 +107,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     /**
      * Creates a new {@code FBResultSet} instance.
      */
+    @SuppressWarnings("java:S1141")
     public FBResultSet(FBConnection connection,
             FBStatement fbStatement,
             FbStatement stmt,
@@ -640,24 +646,35 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         if (row == null && rowUpdater == null) {
             throw new SQLException("The result set is not in a row, use next", SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
         }
+        requireNonEmpty(columnName);
 
-        if (columnName == null) {
-            throw new SQLException("Column identifier must be not null",
-                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
+        try {
+            int fieldNum = colNames.computeIfAbsent(columnName, this::findColumnUnchecked);
+            final FBField field = rowUpdater != null ? rowUpdater.getField(fieldNum - 1) : fields[fieldNum - 1];
+            wasNullValid = true;
+            wasNull = row == null || row.getFieldData(fieldNum - 1) == null;
+            return field;
+        } catch (UncheckedSQLException e) {
+            throw e.getCause();
         }
+    }
 
-        Integer fieldNum = colNames.get(columnName);
-        // If it is the first time the columnName is used
-        if (fieldNum == null) {
-            fieldNum = findColumn(columnName);
-            colNames.put(columnName, fieldNum);
+    /**
+     * Variant of {@link #findColumn(String)} throwing a {@link UncheckedSQLException} instead of {@link SQLException}.
+     *
+     * @param columnName
+     *         column label or column name
+     * @return column index of the given column name
+     * @throws UncheckedSQLException
+     *         with the {@link SQLException} thrown by {@link #findColumn(String)}
+     * @see #findColumn(String)
+     */
+    private int findColumnUnchecked(String columnName) {
+        try {
+            return findColumn(columnName);
+        } catch (SQLException e) {
+            throw new UncheckedSQLException(e);
         }
-        final FBField field = rowUpdater != null
-                ? rowUpdater.getField(fieldNum - 1)
-                : fields[fieldNum - 1];
-        wasNullValid = true;
-        wasNull = row == null || row.getFieldData(fieldNum - 1) == null;
-        return field;
     }
 
     /**
@@ -826,49 +843,59 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     // See section 14.2.3 of jdbc-3.0 specification
-    // "Column names supplied to getter methods are case insensitive
+    // "Column names supplied to getter methods are case-insensitive
     // If a select list contains the same column more than once, 
     // the first instance of the column will be returned
     @Override
     public int findColumn(String columnName) throws SQLException {
-        if (columnName == null || columnName.equals("")) {
-            throw new SQLException("Empty string does not identify a column",
-                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
-        }
+        requireNonEmpty(columnName);
+        Predicate<String> columnNamePredicate;
         if (columnName.startsWith("\"") && columnName.endsWith("\"")) {
-            columnName = columnName.substring(1, columnName.length() - 1);
-            // case-sensitively check column aliases 
-            for (int i = 0; i < rowDescriptor.getCount(); i++) {
-                if (columnName.equals(rowDescriptor.getFieldDescriptor(i).getFieldName())) {
-                    return ++i;
-                }
-            }
-            // case-sensitively check column names
-            for (int i = 0; i < rowDescriptor.getCount(); i++) {
-                if (columnName.equals(rowDescriptor.getFieldDescriptor(i).getOriginalName())) {
-                    return ++i;
-                }
-            }
+            String caseSensitiveColumnName = columnName.substring(1, columnName.length() - 1);
+            requireNonEmpty(caseSensitiveColumnName);
+            // case-sensitively check columns
+            columnNamePredicate = caseSensitiveColumnName::equals;
         } else {
-            for (int i = 0; i < rowDescriptor.getCount(); i++) {
-                if (columnName.equalsIgnoreCase(rowDescriptor.getFieldDescriptor(i).getFieldName())) {
-                    return ++i;
-                }
-            }
-            for (int i = 0; i < rowDescriptor.getCount(); i++) {
-                if (columnName.equalsIgnoreCase(rowDescriptor.getFieldDescriptor(i).getOriginalName())) {
-                    return ++i;
-                }
-            }
+            // case-insensitively check columns
+            columnNamePredicate = columnName::equalsIgnoreCase;
         }
 
-        if ("RDB$DB_KEY".equalsIgnoreCase(columnName)) {
+        OptionalInt position = findColumn(columnNamePredicate);
+        if (position.isPresent()) return position.getAsInt();
+
+        if (columnNamePredicate.test("RDB$DB_KEY")) {
             // Fix up: RDB$DB_KEY is identified as DB_KEY in the result set
-            return findColumn("DB_KEY");
+            OptionalInt dbKeyPosition = findColumn("DB_KEY"::equals);
+            if (dbKeyPosition.isPresent()) return dbKeyPosition.getAsInt();
         }
 
         throw new SQLException("Column name " + columnName + " not found in result set",
                 SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
+    }
+
+    private static void requireNonEmpty(String columnName) throws SQLException {
+        if (columnName == null || columnName.isEmpty()) {
+            throw new SQLException("Empty string or null does not identify a column",
+                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
+        }
+    }
+
+    private OptionalInt findColumn(Predicate<String> columnNamePredicate) {
+        // Check labels (aliases) first
+        OptionalInt position = findColumn(columnNamePredicate, FieldDescriptor::getFieldName);
+        if (position.isPresent()) return position;
+        // then check underlying column names
+        return findColumn(columnNamePredicate, FieldDescriptor::getOriginalName);
+    }
+
+    private OptionalInt findColumn(Predicate<String> columnNamePredicate,
+            Function<FieldDescriptor, String> columnNameAccessor) {
+        for (int i = 0; i < rowDescriptor.getCount(); i++) {
+            if (columnNamePredicate.test(columnNameAccessor.apply(rowDescriptor.getFieldDescriptor(i)))) {
+                return OptionalInt.of(i + 1);
+            }
+        }
+        return OptionalInt.empty();
     }
 
     @Override
@@ -979,16 +1006,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     public void setFetchDirection(int direction) throws SQLException {
         checkOpen();
         switch (direction) {
-        case ResultSet.FETCH_FORWARD:
-            fetchDirection = direction;
-            break;
-        case ResultSet.FETCH_REVERSE:
-        case ResultSet.FETCH_UNKNOWN:
+        case ResultSet.FETCH_FORWARD -> fetchDirection = direction;
+        case ResultSet.FETCH_REVERSE, ResultSet.FETCH_UNKNOWN -> {
             checkScrollable();
             fetchDirection = direction;
-            break;
-        default:
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidFetchDirection)
+        }
+        default -> throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidFetchDirection)
                 .messageParameter(direction)
                 .toSQLException();
         }
@@ -1643,12 +1666,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public URL getURL(int param1) throws SQLException {
-        throw new FBDriverNotCapableException("Type URL not supported");
+        throw typeNotSupported("URL");
     }
 
     @Override
     public URL getURL(String param1) throws SQLException {
-        throw new FBDriverNotCapableException("Type URL not supported");
+        throw typeNotSupported("URL");
     }
 
     @Override
@@ -1663,12 +1686,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public void updateRef(int param1, Ref param2) throws SQLException {
-        throw new FBDriverNotCapableException("Type REF not supported");
+        throw typeNotSupported("REF");
     }
 
     @Override
     public void updateRef(String param1, Ref param2) throws SQLException {
-        throw new FBDriverNotCapableException("Type REF not supported");
+        throw typeNotSupported("REF");
     }
 
     @Override
@@ -1685,30 +1708,26 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
-        checkUpdatable();
-        getField(columnIndex).setBinaryStream(inputStream, length);
+        updateBinaryStream(columnIndex, inputStream, length);
     }
 
     @Override
     public void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
-        checkUpdatable();
-        getField(columnIndex).setBinaryStream(inputStream);
+        updateBinaryStream(columnIndex, inputStream);
     }
 
     @Override
     public void updateBlob(String columnLabel, InputStream inputStream, long length) throws SQLException {
-        checkUpdatable();
-        getField(columnLabel).setBinaryStream(inputStream, length);
+        updateBinaryStream(columnLabel, inputStream, length);
     }
 
     @Override
     public void updateBlob(String columnLabel, InputStream inputStream) throws SQLException {
-        checkUpdatable();
-        getField(columnLabel).setBinaryStream(inputStream);
+        updateBinaryStream(columnLabel, inputStream);
     }
 
     @Override
-    public void updateClob(int columnIndex, java.sql.Clob clob) throws SQLException {
+    public void updateClob(int columnIndex, Clob clob) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setClob(clob);
     }
@@ -1721,26 +1740,22 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
-        checkUpdatable();
-        getField(columnIndex).setCharacterStream(reader, length);
+        updateCharacterStream(columnIndex, reader, length);
     }
 
     @Override
     public void updateClob(int columnIndex, Reader reader) throws SQLException {
-        checkUpdatable();
-        getField(columnIndex).setCharacterStream(reader);
+        updateCharacterStream(columnIndex, reader);
     }
 
     @Override
     public void updateClob(String columnLabel, Reader reader, long length) throws SQLException {
-        checkUpdatable();
-        getField(columnLabel).setCharacterStream(reader, length);
+        updateCharacterStream(columnLabel, reader, length);
     }
 
     @Override
     public void updateClob(String columnLabel, Reader reader) throws SQLException {
-        checkUpdatable();
-        getField(columnLabel).setCharacterStream(reader);
+        updateCharacterStream(columnLabel, reader);
     }
 
     @Override
@@ -1787,12 +1802,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public SQLXML getSQLXML(int columnIndex) throws SQLException {
-        throw new FBDriverNotCapableException("Type SQLXML not supported");
+        throw typeNotSupported("SQLXML");
     }
 
     @Override
     public SQLXML getSQLXML(String columnLabel) throws SQLException {
-        throw new FBDriverNotCapableException("Type SQLXML not supported");
+        throw typeNotSupported("SQLXML");
     }
 
     /**
@@ -1814,7 +1829,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     @Override
     public void updateNClob(int columnIndex, Reader reader, long length) throws SQLException {
-        updateClob(columnIndex, reader, length);
+        updateCharacterStream(columnIndex, reader, length);
     }
 
     /**
@@ -1825,7 +1840,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     @Override
     public void updateNClob(int columnIndex, Reader reader) throws SQLException {
-        updateClob(columnIndex, reader);
+        updateCharacterStream(columnIndex, reader);
     }
 
     /**
@@ -1847,7 +1862,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     @Override
     public void updateNClob(String columnLabel, Reader reader, long length) throws SQLException {
-        updateClob(columnLabel, reader, length);
+        updateCharacterStream(columnLabel, reader, length);
     }
 
     /**
@@ -1858,48 +1873,45 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     @Override
     public void updateNClob(String columnLabel, Reader reader) throws SQLException {
-        updateClob(columnLabel, reader);
+        updateCharacterStream(columnLabel, reader);
     }
 
     @Override
     public void updateRowId(int columnIndex, RowId x) throws SQLException {
-        checkUpdatable();
-        throw new FBDriverNotCapableException("Firebird rowId (RDB$DB_KEY) is not updatable");
+        rowIdNotUpdatable();
     }
 
     @Override
     public void updateRowId(String columnLabel, RowId x) throws SQLException {
+        rowIdNotUpdatable();
+    }
+
+    private void rowIdNotUpdatable() throws SQLException {
         checkUpdatable();
         throw new FBDriverNotCapableException("Firebird rowId (RDB$DB_KEY) is not updatable");
     }
 
     @Override
     public void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {
-        throw new FBDriverNotCapableException("Type SQLXML not supported");
+        throw typeNotSupported("SQLXML");
     }
 
     @Override
     public void updateSQLXML(String columnLabel, SQLXML xmlObject) throws SQLException {
-        throw new FBDriverNotCapableException("Type SQLXML not supported");
+        throw typeNotSupported("SQLXML");
     }
 
     @Override
     public String getExecutionPlan() throws SQLException {
         checkCursorMove();
-
-        if (fbStatement == null)
-            return "";
-
+        if (fbStatement == null) return "";
         return fbStatement.getExecutionPlan();
     }
 
     @Override
     public String getExplainedExecutionPlan() throws SQLException {
         checkCursorMove();
-
-        if (fbStatement == null)
-            return "";
-
+        if (fbStatement == null) return "";
         return fbStatement.getExplainedExecutionPlan();
     }
 
@@ -1910,8 +1922,9 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (!isWrapperFor(iface))
-            throw new SQLException("Unable to unwrap to class " + iface.getName());
+        if (!isWrapperFor(iface)) {
+            throw new SQLException("Unable to unwrap to class " + (iface != null ? iface.getName() : "(null)"));
+        }
 
         return iface.cast(this);
     }
@@ -1923,4 +1936,9 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             firstWarning.setNextWarning(warning);
         }
     }
+
+    private static SQLException typeNotSupported(String typeName) {
+        return new FBDriverNotCapableException("Type " + typeName + " not supported");
+    }
+
 }
