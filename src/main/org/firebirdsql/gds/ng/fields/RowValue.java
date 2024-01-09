@@ -26,7 +26,7 @@ import java.util.Arrays;
  * @author Mark Rotteveel
  * @since 3.0
  */
-public class RowValue {
+public sealed class RowValue {
 
     /**
      * Marker array object for uninitialized fields
