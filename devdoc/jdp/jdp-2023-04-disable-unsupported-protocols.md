@@ -3,6 +3,7 @@
 ## Status
 
 - Published: 2023-02-25
+- Updated: 2024-01-10
 - Implemented in: Jaybird 6
 
 ## Type
@@ -38,7 +39,7 @@ Protocol version to (minimum) Firebird versions:
 ## Decision
 
 Given Jaybird 6 does not support Firebird 2.5 and earlier, we will disable
-the older protocol versions (12 and lower) _by default_. Additionally, _"future" 
+the older protocol versions (12 and lower) _by default_. Additionally, _"future"_ 
 protocol versions (greater than 18) will also be disabled. This only applies to
 the pure Java implementation, as the native client handles protocol support 
 internally.
@@ -60,5 +61,5 @@ a native connection (e.g `jdbc:firebirdsql:native:...`).
 
 To simplify running tests against unsupported versions, the Jaybird tests will 
 enable all available protocols (`enableProtocol=*`) by default. The system 
-property `test.enableProtocol`, or from Gradle `-P'test.enableProtocol=<value>` 
-can be used to configure alternative behaviour.
+property `test.enableProtocol`, or from Gradle `-P'test.enableProtocol=<value>'` 
+can be used to configure alternative behaviour of the Jaybird tests.
