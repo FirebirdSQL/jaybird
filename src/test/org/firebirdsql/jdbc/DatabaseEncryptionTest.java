@@ -30,7 +30,6 @@ import org.firebirdsql.management.FBMaintenanceManager;
 import org.firebirdsql.management.FBStatisticsManager;
 import org.firebirdsql.management.MaintenanceManager;
 import org.firebirdsql.management.StatisticsManager;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -52,15 +51,11 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * Tests related to database encryption.
  * <p>
  * Tests in this class require the existence of an encrypted database with alias crypttest, and encryption key passed
- * through callback (eg IBPhoenix AES128/256 with Callback configuration), and an encryption key value of
+ * through callback (e.g. IBPhoenix AES128/256 with Callback configuration), and an encryption key value of
  * {@code TestKey}.
  * </p>
  * <p>
- * The ignored service tests require a global {@code KeyHolderPlugin} configuration instead of a database-specific
- * configuration in {@code databases.conf}.
- * </p>
- * <p>
- * The ignored encrypted security db tests require an encrypted database with alias cryptsec that also serves as its own
+ * The encrypted security db tests require an encrypted database with alias cryptsec that also serves as its own
  * security database, with a sysdba password of {@code alt-masterkey}. Like crypttest, its encryption key passed through
  * callback (eg IBPhoenix AES128/256 with Callback configuration), and an encryption key value of {@code TestKey}.
  * </p>
@@ -199,7 +194,6 @@ class DatabaseEncryptionTest {
     }
 
     @Test
-    @Disabled("Requires global KeyHolderPlugin configuration")
     void testServiceManagerConnection_gstatException() {
         FBStatisticsManager statManager = configureServiceManager(new FBStatisticsManager(getGdsType()));
         statManager.setDatabase(CRYPTTEST_DB);
@@ -215,7 +209,6 @@ class DatabaseEncryptionTest {
     }
 
     @Test
-    @Disabled("Requires global KeyHolderPlugin configuration")
     void testDatabaseValidation() throws Exception {
         FBMaintenanceManager maintenanceManager = configureServiceManager(new FBMaintenanceManager(getGdsType()));
         maintenanceManager.setDatabase(CRYPTTEST_DB);
