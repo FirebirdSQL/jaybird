@@ -606,9 +606,8 @@ public abstract class AbstractStatementTest {
 
         statement.prepare(SELECT_FROM_RDB$DATABASE);
 
-        statement.setCursorName("abc1");
+        assertDoesNotThrow(() -> statement.setCursorName("abc1"));
 
-        // Just checking if this doesn't throw errors
         // TODO: Add/check existing tests using cursorName.
     }
 

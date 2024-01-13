@@ -26,16 +26,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
- * Dispatcher to maintain a list of listeners of type <code>TListener</code>
+ * Dispatcher to maintain a list of listeners of type {@code L}.
  *
- * @param <TListener> Listener type
+ * @param <L> Listener type
  * @author Mark Rotteveel
  * @since 3.0
  */
-public abstract class AbstractListenerDispatcher<TListener> implements Iterable<TListener> {
+public abstract class AbstractListenerDispatcher<L> implements Iterable<L> {
 
-    private final CopyOnWriteArrayList<TListener> listeners = new CopyOnWriteArrayList<>();
-    private final CopyOnWriteArrayList<WeakReference<TListener>> weakListeners = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<L> listeners = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<WeakReference<L>> weakListeners = new CopyOnWriteArrayList<>();
     private volatile boolean shutdown = false;
 
     /**
@@ -46,7 +46,7 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
      *
      * @param listener Listener object
      */
-    public final void addListener(TListener listener) {
+    public final void addListener(L listener) {
         if (listener == this) {
             throw new IllegalArgumentException("Adding this instance to itself is not allowed");
         }
@@ -65,13 +65,13 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
      *
      * @param listener Listener object
      */
-    public final void addWeakListener(TListener listener) {
+    public final void addWeakListener(L listener) {
         if (listener == this) {
             throw new IllegalArgumentException("Adding this instance to itself is not allowed");
         }
         if (isShutdown() || listeners.contains(listener)) return;
         removeListener(listener);
-        WeakReference<TListener> weakReference = new WeakReference<>(listener);
+        WeakReference<L> weakReference = new WeakReference<>(listener);
         weakListeners.add(weakReference);
         cleanWeakListeners();
     }
@@ -81,19 +81,19 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
      *
      * @param listener Listener object
      */
-    public final void removeListener(TListener listener) {
+    public final void removeListener(L listener) {
         if (listeners.remove(listener)) {
             return;
         }
         // Try to remove weak listener
         weakListeners.removeIf(ref -> {
-            TListener refValue = ref.get();
+            L refValue = ref.get();
             return refValue == null || refValue == listener;
         });
     }
 
-    protected final void notify(Consumer<TListener> notificationHandler, String notificationLogName) {
-        for (TListener listener : this) {
+    protected final void notify(Consumer<L> notificationHandler, String notificationLogName) {
+        for (L listener : this) {
             try {
                 notificationHandler.accept(listener);
             } catch (Exception e) {
@@ -124,14 +124,14 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
     }
 
     /**
-     * @return <code>true</code> when this dispatcher has been shut down.
+     * @return {@code true} when this dispatcher has been shut down.
      */
     public final boolean isShutdown() {
         return shutdown;
     }
 
     @Override
-    public final Iterator<TListener> iterator() {
+    public final Iterator<L> iterator() {
         cleanWeakListeners();
         return new ListenerIterator<>(listeners, weakListeners);
     }
@@ -144,18 +144,18 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
      * Iterator implementation that access the weak listeners in reverse order, and then the strong listeners in
      * reverse order.
      *
-     * @param <TListener> Listener type
+     * @param <L> Listener type
      */
-    private static final class ListenerIterator<TListener> implements Iterator<TListener> {
+    private static final class ListenerIterator<L> implements Iterator<L> {
 
-        private final ListIterator<TListener> strongIterator;
-        private final ListIterator<WeakReference<TListener>> weakIterator;
+        private final ListIterator<L> strongIterator;
+        private final ListIterator<WeakReference<L>> weakIterator;
         private boolean useStrongIterator;
-        private TListener nextWeakListener;
+        private L nextWeakListener;
 
         private ListenerIterator(
-                final CopyOnWriteArrayList<TListener> strongListeners,
-                final CopyOnWriteArrayList<WeakReference<TListener>> weakListeners) {
+                final CopyOnWriteArrayList<L> strongListeners,
+                final CopyOnWriteArrayList<WeakReference<L>> weakListeners) {
             this.strongIterator = listIteratorAtEnd(strongListeners);
             this.weakIterator = listIteratorAtEnd(weakListeners);
         }
@@ -174,7 +174,7 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
         }
 
         @Override
-        public TListener next() {
+        public L next() {
             // Be aware we are reverse iterating the listeners, but present it as forward iteration!
             if (!hasNext()) {
                 throw new NoSuchElementException();
@@ -182,17 +182,17 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
             if (useStrongIterator) {
                 return strongIterator.previous();
             }
-            TListener next = nextWeakListener;
+            L next = nextWeakListener;
             nextWeakListener = null;
             return next;
         }
 
-        private TListener getNextWeakListener() {
+        private L getNextWeakListener() {
             // Be aware we are reverse iterating the listeners, but present it as forward iteration!
-            final ListIterator<WeakReference<TListener>> weakIterator = this.weakIterator;
-            TListener nextWeakListener = this.nextWeakListener;
+            final ListIterator<WeakReference<L>> weakIterator = this.weakIterator;
+            L nextWeakListener = this.nextWeakListener;
             while (nextWeakListener == null && weakIterator.hasPrevious()) {
-                WeakReference<TListener> currentRef = weakIterator.previous();
+                WeakReference<L> currentRef = weakIterator.previous();
                 nextWeakListener = currentRef.get();
             }
             return this.nextWeakListener = nextWeakListener;

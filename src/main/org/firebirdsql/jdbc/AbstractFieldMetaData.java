@@ -61,9 +61,9 @@ public abstract class AbstractFieldMetaData implements Wrapper {
 
     @Override
     public final <T> T unwrap(Class<T> iface) throws SQLException {
-        if (!isWrapperFor(iface))
-            throw new SQLException("Unable to unwrap to class " + iface.getName());
-
+        if (!isWrapperFor(iface)) {
+            throw new SQLException("Unable to unwrap to class " + (iface != null ? iface.getName() : "(null)"));
+        }
         return iface.cast(this);
     }
 

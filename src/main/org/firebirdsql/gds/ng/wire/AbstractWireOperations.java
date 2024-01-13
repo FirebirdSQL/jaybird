@@ -113,24 +113,20 @@ public abstract class AbstractWireOperations implements FbWireOperations {
             while (true) {
                 int arg = xdrIn.readInt();
                 switch (arg) {
-                case isc_arg_gds, isc_arg_warning -> {
+                case isc_arg_gds -> {
                     int errorCode = xdrIn.readInt();
                     if (errorCode != 0) {
-                        if (arg == isc_arg_gds) {
-                            builder.exception(errorCode);
-                        } else {
-                            builder.warning(errorCode);
-                        }
+                        builder.exception(errorCode);
                     }
                 }
-                case isc_arg_interpreted, isc_arg_string, isc_arg_sql_state -> {
-                    String stringValue = xdrIn.readString(getEncoding());
-                    if (arg == isc_arg_sql_state) {
-                        builder.sqlState(stringValue);
-                    } else {
-                        builder.messageParameter(stringValue);
+                case isc_arg_warning -> {
+                    int errorCode = xdrIn.readInt();
+                    if (errorCode != 0) {
+                        builder.warning(errorCode);
                     }
                 }
+                case isc_arg_interpreted, isc_arg_string -> builder.messageParameter(xdrIn.readString(getEncoding()));
+                case isc_arg_sql_state -> builder.sqlState(xdrIn.readString(getEncoding()));
                 case isc_arg_end -> {
                     if (builder.isEmpty()) {
                         return null;
@@ -304,6 +300,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     /**
      * @return Immutable attach properties
      */
+    @SuppressWarnings("java:S1452")
     protected final IAttachProperties<?> getAttachProperties() {
         return connection.getAttachProperties().asImmutable();
     }
@@ -312,6 +309,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         return connection.getPluginSpecificData();
     }
 
+    @SuppressWarnings("java:S1452")
     protected final WireConnection<?, ?> getConnection() {
         return connection;
     }

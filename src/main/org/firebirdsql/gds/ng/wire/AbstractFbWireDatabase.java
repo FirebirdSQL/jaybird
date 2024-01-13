@@ -301,6 +301,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     @Override
+    @SuppressWarnings("java:S4274")
     public byte[] getInfo(int operation, int handle, byte[] requestItems, int maxBufferLength,
             WarningMessageCallback warningMessageCallback) throws SQLException {
         assert operation == op_info_sql || operation == op_info_blob || operation == op_info_database

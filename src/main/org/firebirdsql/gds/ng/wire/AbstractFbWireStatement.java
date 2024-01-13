@@ -56,7 +56,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     private final FbWireDatabase database;
     private Cleaner.Cleanable cleanable = Cleaners.getNoOp();
 
-    public AbstractFbWireStatement(FbWireDatabase database) {
+    protected AbstractFbWireStatement(FbWireDatabase database) {
         this.database = requireNonNull(database, "database");
     }
 
@@ -113,14 +113,15 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     /**
-     * Returns the (possibly cached) blr byte array for a {@link RowDescriptor}, or <code>null</code> if the parameter is null.
+     * Returns the (possibly cached) blr byte array for a {@link RowDescriptor}, or {@code null} if the parameter is null.
      *
      * @param rowDescriptor
      *         The row descriptor.
-     * @return blr byte array or <code>null</code> when <code>rowDescriptor</code> is <code>null</code>
+     * @return blr byte array or {@code null} when {@code rowDescriptor} is {@code null}
      * @throws SQLException
      *         When the {@link RowDescriptor} contains an unsupported field type.
      */
+    @SuppressWarnings("java:S1168")
     protected final byte[] calculateBlr(RowDescriptor rowDescriptor) throws SQLException {
         if (rowDescriptor == null) return null;
         byte[] blr = blrCache.get(rowDescriptor);
@@ -132,7 +133,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     /**
-     * Returns the blr byte array for a {@link RowValue}, or <code>null</code> if the parameter is null.
+     * Returns the blr byte array for a {@link RowValue}, or {@code null} if the parameter is null.
      * <p>
      * Contrary to {@link #calculateBlr(org.firebirdsql.gds.ng.fields.RowDescriptor)}, it is not allowed
      * to cache this value as it depends on the actual row value.
@@ -140,10 +141,11 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
      *
      * @param rowValue
      *         The row value.
-     * @return blr byte array or <code>null</code> when <code>rowValue</code> is <code>null</code>
+     * @return blr byte array or {@code null} when {@code rowValue} is {@code null}
      * @throws SQLException
      *         When the {@link RowValue} contains an unsupported field type.
      */
+    @SuppressWarnings("java:S1168")
     protected final byte[] calculateBlr(RowDescriptor rowDescriptor, RowValue rowValue) throws SQLException {
         if (rowDescriptor == null || rowValue == null) return null;
         return getBlrCalculator().calculateBlr(rowDescriptor, rowValue);

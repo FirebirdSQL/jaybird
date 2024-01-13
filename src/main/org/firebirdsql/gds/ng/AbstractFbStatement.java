@@ -72,15 +72,14 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     private final TransactionListener transactionListener = new TransactionListener() {
         @Override
+        @SuppressWarnings({ "ThrowFromFinallyBlock", "java:S1143", "java:S1163" })
         public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
                 TransactionState previousState) {
             if (getTransaction() != transaction) {
                 transaction.removeTransactionListener(this);
                 return;
             }
-            switch (newState) {
-            case COMMITTED:
-            case ROLLED_BACK:
+            if (newState == TransactionState.COMMITTED || newState == TransactionState.ROLLED_BACK) {
                 try (LockCloseable ignored = withLock()) {
                     try {
                         if (RESET_TO_PREPARED.contains(getState())) {
@@ -97,7 +96,6 @@ public abstract class AbstractFbStatement implements FbStatement {
                         try {
                             setTransaction(null);
                         } catch (SQLException e) {
-                            //noinspection ThrowFromFinallyBlock
                             throw new IllegalStateException("Received an SQLException when none was expected", e);
                         }
                     }
@@ -185,6 +183,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
+    @SuppressWarnings("java:S1141")
     public final void closeCursor(boolean transactionEnd) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (!getState().isCursorOpen()) return;

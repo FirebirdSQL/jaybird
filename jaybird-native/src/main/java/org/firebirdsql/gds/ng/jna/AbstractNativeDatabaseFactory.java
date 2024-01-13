@@ -83,6 +83,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
      *
      * @return Client library instance.
      */
+    @SuppressWarnings("java:S2589")
     protected FbClientLibrary getClientLibrary() {
         Lock readLock = rwLock.readLock();
         readLock.lock();
