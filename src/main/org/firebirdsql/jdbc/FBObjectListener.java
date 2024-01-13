@@ -113,6 +113,7 @@ public final class FBObjectListener {
      * Implementation of {@link org.firebirdsql.jdbc.FBObjectListener.ResultSetListener} that implements all methods as
      * empty methods.
      */
+    @SuppressWarnings("java:S1186")
     public static final class NoActionResultSetListener implements ResultSetListener {
 
         private static final ResultSetListener INSTANCE = new NoActionResultSetListener();
@@ -223,6 +224,7 @@ public final class FBObjectListener {
      * Implementation of {@link org.firebirdsql.jdbc.FBObjectListener.BlobListener} that implements all methods as
      * empty methods.
      */
+    @SuppressWarnings("java:S1186")
     public static final class NoActionBlobListener implements BlobListener {
 
         private static final BlobListener INSTANCE = new NoActionBlobListener();

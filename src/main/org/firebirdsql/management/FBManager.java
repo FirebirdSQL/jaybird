@@ -166,8 +166,9 @@ public class FBManager implements FBManagerMBean {
     public void setType(String type) {
         GDSType gdsType = GDSType.getType(type);
 
-        if (gdsType == null)
-            throw new RuntimeException("Unrecognized type '" + type + "'");
+        if (gdsType == null) {
+            throw new IllegalArgumentException("Unrecognized type '" + type + "'");
+        }
 
         this.type = gdsType;
     }

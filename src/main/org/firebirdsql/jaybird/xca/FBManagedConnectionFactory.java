@@ -510,6 +510,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
      * @throws XAException
      *         if "in limbo" transaction cannot be completed.
      */
+    @SuppressWarnings("java:S1141")
     private void tryCompleteInLimboTransaction(Xid xid, boolean commit) throws XAException {
         try {
             FBManagedConnection tempMc = null;
@@ -571,29 +572,14 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
                         throw new FBXAException("unable to remove in limbo transaction from rdb$transactions where rdb$transaction_id = " + fbTransactionId, XAException.XAER_RMERR);
                     }
                 }
-            } catch (SQLException ex) {
-                /*
-                 * if ex.getIntParam() is 335544353 (transaction is not in limbo) and next ex.getIntParam() is 335544468 (transaction {0} is {1})
-                 *  => detected heuristic
-                 */
-                // TODO: We may need to parse the exception to get the details (or we need to handle this specific one differently)
-                int errorCode = XAException.XAER_RMERR;
-                int sqlError = ex.getErrorCode();
-                //int nextIntParam = ex.getNext().getIntParam();
-
-                if (sqlError == ISCConstants.isc_no_recon /*&& nextIntParam == ISCConstants.isc_tra_state*/) {
-                    if (ex.getMessage().contains("committed")) {
-                        errorCode = XAException.XA_HEURCOM;
-                    } else if (ex.getMessage().contains("rolled back")) {
-                        errorCode = XAException.XA_HEURCOM;
-                    }
-                }
-
-                throw new FBXAException("unable to complete in limbo transaction", errorCode, ex);
+            } catch (SQLException e) {
+                throw new FBXAException("unable to complete in limbo transaction",
+                        determineLimboCompletionErrorCode(e), e);
             } finally {
                 try {
-                    if (tempLocalTx != null && tempLocalTx.inTransaction())
+                    if (tempLocalTx != null && tempLocalTx.inTransaction()) {
                         tempLocalTx.commit();
+                    }
                 } finally {
                     if (tempMc != null) tempMc.destroy();
                 }
@@ -601,6 +587,19 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
         } catch (SQLException ex) {
             throw new FBXAException(XAException.XAER_RMERR, ex);
         }
+    }
+
+    private static int determineLimboCompletionErrorCode(SQLException ex) {
+        /* if ex.getIntParam() is 335544353 (transaction is not in limbo) and next ex.getIntParam() is 335544468
+        (transaction {0} is {1})  => detected heuristic */
+        // TODO: We may need to parse the exception to get the details (or we need to handle this specific one differently)
+        if (ex.getErrorCode() == ISCConstants.isc_no_recon) {
+            String message = ex.getMessage();
+            if (message.contains("committed") || message.contains("rolled back")) {
+                return XAException.XA_HEURCOM;
+            }
+        }
+        return XAException.XAER_RMERR;
     }
 
     FBConnection newConnection(FBManagedConnection mc) throws SQLException {

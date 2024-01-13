@@ -141,6 +141,7 @@ public class FBProcedureParam implements Cloneable {
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (!(obj instanceof FBProcedureParam other)) return false;
+        // TODO this condition is flawed, but somehow current code relies on it
         return this.position == other.position &&
                 this.value != null ? this.value.equals(other.value) :
                 other.value == null;
@@ -159,7 +160,7 @@ public class FBProcedureParam implements Cloneable {
         try {
             return super.clone();
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError("clone() unexpectedly not supported", e);
         }
     }
 }

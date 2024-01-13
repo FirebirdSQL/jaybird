@@ -42,12 +42,7 @@ import java.util.regex.Pattern;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class FBNBackupManagerTest {
@@ -252,7 +247,7 @@ class FBNBackupManagerTest {
         String backup1 = tempDir.resolve("backup1.nbk").toString();
         manager.setBackupFile(backup1);
         manager.setDatabase(getDatabasePath());
-        manager.backupDatabase();
+        assertDoesNotThrow(manager::backupDatabase);
 
         // NOTE: We are not checking if the server actually cleaned history
     }
@@ -266,7 +261,7 @@ class FBNBackupManagerTest {
         String backup1 = tempDir.resolve("backup1.nbk").toString();
         manager.setBackupFile(backup1);
         manager.setDatabase(getDatabasePath());
-        manager.backupDatabase();
+        assertDoesNotThrow(manager::backupDatabase);
 
         // NOTE: We are not checking if the server actually cleaned history
     }

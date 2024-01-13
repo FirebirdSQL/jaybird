@@ -1002,7 +1002,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             batchRowValues.addLast(rowValue);
         }
 
-        private boolean isEmpty() throws SQLException {
+        private boolean isEmpty() {
             return batchRowValues.isEmpty();
         }
 

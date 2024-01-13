@@ -51,7 +51,7 @@ class FBManagerTest {
         try (FBManager m = createFBManager()) {
             m.setServer(DB_SERVER_URL);
             m.setPort(DB_SERVER_PORT);
-            m.start();
+            assertDoesNotThrow(m::start);
         }
     }
 
@@ -135,7 +135,7 @@ class FBManagerTest {
     void testSetPageSize_ValidValues(int pageSize) {
         FBManager m = createFBManager();
 
-        m.setPageSize(pageSize);
+        assertDoesNotThrow(() -> m.setPageSize(pageSize));
     }
 
     @Test

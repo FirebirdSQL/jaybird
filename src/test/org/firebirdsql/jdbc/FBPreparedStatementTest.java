@@ -413,6 +413,10 @@ class FBPreparedStatementTest {
                         "Timestamps 2 and 3 should differ for 3600 seconds");
                 String ts2ToStr = ts2.toString();
                 ts2ToStr = ts2ToStr.substring(0, Math.min(ts2ToStr.length(), maxLength));
+                if (ts2ToStr.length() == ts2AsStr.length() - 1) {
+                    // Account for presentation difference with trailing 0
+                    ts2ToStr += '0';
+                }
                 assertEquals(ts2AsStr, ts2ToStr, "Server should see the same timestamp");
                 String ts3ToStr = ts3.toString();
                 ts3ToStr = ts3ToStr.substring(0, Math.min(ts3ToStr.length(), maxLength));
@@ -617,7 +621,7 @@ class FBPreparedStatementTest {
     }
 
     @Test
-    @Disabled
+    @Disabled("With existing Firebird versions, this will throw a DataTruncation")
     void testLikeFullLength() throws Exception {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
 
@@ -820,7 +824,7 @@ class FBPreparedStatementTest {
     void testDoubleClose() throws SQLException {
         PreparedStatement stmt = con.prepareStatement("SELECT 1, 2 FROM RDB$DATABASE");
         stmt.close();
-        stmt.close();
+        assertDoesNotThrow(stmt::close);
     }
 
     /**
@@ -1007,7 +1011,7 @@ class FBPreparedStatementTest {
      */
     @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
     @ValueSource(booleans = { true, false })
-    @Disabled
+    @Disabled("Due to instability")
     @Unstable("Susceptible to character set transliteration issues")
     void testRepeatedBatchExecutionWithClobFromString(boolean useServerBatch) throws Exception {
         if (useServerBatch) {
@@ -1122,110 +1126,113 @@ class FBPreparedStatementTest {
     // See JDBC-472; TODO this test doesn't reproduce the issue
     @Test
     void testExecuteProcedureWithoutReturnValues() throws Exception {
-        executeDDL(con, "recreate table example_table (\n"
-                + "  id integer primary key,\n"
-                + "  example_date date\n"
-                + ")");
-        executeDDL(con, "recreate table another_example_table (\n"
-                + "  ex_id integer,\n"
-                + "  example_date varchar(100)\n"
-                + ")");
-        executeDDL(con, "recreate table example_table_2 (\n"
-                + "  id integer,\n"
-                + "  example_date date\n"
-                + ")");
-        executeDDL(con, "CREATE OR ALTER PROCEDURE EXAMPLE_PROCEDURE(\n"
-                + "    EX_ID integer)\n"
-                + "AS\n"
-                + "DECLARE VARIABLE EX_BL integer;\n"
-                + "declare variable EXAMPLE_DATE date;\n"
-                + "declare variable EXAMPLE_DATE_2 date;\n"
-                + "  /* ... (declaring other variables) */\n"
-                + "BEGIN\n"
-                + "\n"
-                + "  ex_bl = 0;"
-                + "  /*\n"
-                + "  RECOVERING INFORMATION\n"
-                + "  */\n"
-                + "  SELECT\n"
-                + "    /* SELECTING SOME FIELDS */\n"
-                + "    COALESCE(EXAMPLE_DATE - 1, CURRENT_DATE)\n"
-                + "  FROM\n"
-                + "    EXAMPLE_TABLE\n"
-                + "  WHERE\n"
-                + "    ID = :EX_ID\n"
-                + "  INTO\n"
-                + "    /* SAME AS TABLE FIELD NAMES */\n"
-                + "    EXAMPLE_DATE_2;\n"
-                + "\n"
-                + "  IF (EX_BL = 1) THEN\n"
-                + "    DELETE FROM ANOTHER_EXAMPLE_TABLE WHERE EX_ID = :EX_ID;\n"
-                + "  ELSE\n"
-                + "  BEGIN\n"
-                + "    /*\n"
-                + "    ANOTHER SELECT\n"
-                + "    */\n"
-                + "    SELECT FIRST 1\n"
-                + "      example_date\n"
-                + "    FROM\n"
-                + "      ANOTHER_EXAMPLE_TABLE\n"
-                + "    WHERE\n"
-                + "      EX_ID = :EX_ID\n"
-                + "    ORDER BY\n"
-                + "      EXAMPLE_DATE\n"
-                + "    INTO\n"
-                + "      example_date_2;\n"
-                + "     /* ALIASES */\n"
-                + "\n"
-                + "    IF (example_date_2 is null or example_date_2 < current_date) THEN\n"
-                + "    BEGIN\n"
-                + "      EXAMPLE_DATE = EXAMPLE_DATE_2;\n"
-                + "      WHILE (example_date < current_date) DO\n"
-                + "      BEGIN\n"
-                + "        INSERT INTO EXAMPLE_TABLE_2 (\n"
-                + "          id,\n"
-                + "          example_date)\n"
-                + "        VALUES (\n"
-                + "          :EX_ID,\n"
-                + "          :example_date);\n"
-                + "        EXAMPLE_DATE = EXAMPLE_DATE + 1;\n"
-                + "      END\n"
-                + "    END\n"
-                + "\n"
-                + "    SELECT FIRST 1\n"
-                + "      example_date\n"
-                + "    FROM\n"
-                + "      EXAMPLE_TABLE_2\n"
-                + "    WHERE\n"
-                + "      ID = :EX_ID\n"
-                + "    ORDER BY\n"
-                + "      EXAMPLE_DATE DESC\n"
-                + "    INTO\n"
-                + "      example_date_2;\n"
-                + "\n"
-                + "    IF (example_date_2 is null or example_date_2 < current_date) THEN\n"
-                + "    BEGIN\n"
-                + "      EXAMPLE_DATE = EXAMPLE_DATE_2;\n"
-                + "      WHILE (example_date < current_date) DO\n"
-                + "      BEGIN\n"
-                + "        INSERT INTO EXAMPLE_TABLE_2 (\n"
-                + "          id,\n"
-                + "         example_date)\n"
-                + "        VALUES (\n"
-                + "          :EX_ID,\n"
-                + "          :example_date);\n"
-                + "        EXAMPLE_DATE = EXAMPLE_DATE + 1;\n"
-                + "      END\n"
-                + "    END\n"
-                + "\n"
-                + "    DELETE FROM\n"
-                + "      EXAMPLE_TABLE_2\n"
-                + "    WHERE\n"
-                + "      (ID = :EX_ID) AND\n"
-                + "      ((EXAMPLE_DATE < current_date - 5) OR (EXAMPLE_DATE > current_date));\n"
-                + "  END\n"
-                + "\n"
-                + "END");
+        executeDDL(con, """
+                recreate table example_table (
+                  id integer primary key,
+                  example_date date
+                )""");
+        executeDDL(con, """
+                recreate table another_example_table (
+                  ex_id integer,
+                  example_date varchar(100)
+                )""");
+        executeDDL(con, """
+                recreate table example_table_2 (
+                  id integer,
+                  example_date date
+                )""");
+        executeDDL(con, """
+                CREATE OR ALTER PROCEDURE EXAMPLE_PROCEDURE(
+                    EX_ID integer)
+                AS
+                DECLARE VARIABLE EX_BL integer;
+                declare variable EXAMPLE_DATE date;
+                declare variable EXAMPLE_DATE_2 date;
+                  /* ... (declaring other variables) */
+                BEGIN
+
+                  ex_bl = 0;  /*
+                  RECOVERING INFORMATION
+                  */
+                  SELECT
+                    /* SELECTING SOME FIELDS */
+                    COALESCE(EXAMPLE_DATE - 1, CURRENT_DATE)
+                  FROM
+                    EXAMPLE_TABLE
+                  WHERE
+                    ID = :EX_ID
+                  INTO
+                    /* SAME AS TABLE FIELD NAMES */
+                    EXAMPLE_DATE_2;
+
+                  IF (EX_BL = 1) THEN
+                    DELETE FROM ANOTHER_EXAMPLE_TABLE WHERE EX_ID = :EX_ID;
+                  ELSE
+                  BEGIN
+                    /*
+                    ANOTHER SELECT
+                    */
+                    SELECT FIRST 1
+                      example_date
+                    FROM
+                      ANOTHER_EXAMPLE_TABLE
+                    WHERE
+                      EX_ID = :EX_ID
+                    ORDER BY
+                      EXAMPLE_DATE
+                    INTO
+                      example_date_2;
+                     /* ALIASES */
+
+                    IF (example_date_2 is null or example_date_2 < current_date) THEN
+                    BEGIN
+                      EXAMPLE_DATE = EXAMPLE_DATE_2;
+                      WHILE (example_date < current_date) DO
+                      BEGIN
+                        INSERT INTO EXAMPLE_TABLE_2 (
+                          id,
+                          example_date)
+                        VALUES (
+                          :EX_ID,
+                          :example_date);
+                        EXAMPLE_DATE = EXAMPLE_DATE + 1;
+                      END
+                    END
+
+                    SELECT FIRST 1
+                      example_date
+                    FROM
+                      EXAMPLE_TABLE_2
+                    WHERE
+                      ID = :EX_ID
+                    ORDER BY
+                      EXAMPLE_DATE DESC
+                    INTO
+                      example_date_2;
+
+                    IF (example_date_2 is null or example_date_2 < current_date) THEN
+                    BEGIN
+                      EXAMPLE_DATE = EXAMPLE_DATE_2;
+                      WHILE (example_date < current_date) DO
+                      BEGIN
+                        INSERT INTO EXAMPLE_TABLE_2 (
+                          id,
+                         example_date)
+                        VALUES (
+                          :EX_ID,
+                          :example_date);
+                        EXAMPLE_DATE = EXAMPLE_DATE + 1;
+                      END
+                    END
+
+                    DELETE FROM
+                      EXAMPLE_TABLE_2
+                    WHERE
+                      (ID = :EX_ID) AND
+                      ((EXAMPLE_DATE < current_date - 5) OR (EXAMPLE_DATE > current_date));
+                  END
+
+                END""");
 
         try (Statement stmt = con.createStatement()) {
             stmt.executeUpdate("insert into example_table(id, example_date) values (1, current_date - 5)");
@@ -1279,6 +1286,7 @@ class FBPreparedStatementTest {
      * </p>
      */
     @Test
+    @SuppressWarnings("java:S5783")
     void testReexecuteStatementAfterFailure() throws Exception {
         executeDDL(con, "recreate table encoding_error ("
                 + " id integer primary key, "

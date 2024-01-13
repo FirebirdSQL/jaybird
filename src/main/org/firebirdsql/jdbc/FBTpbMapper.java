@@ -452,8 +452,8 @@ public final class FBTpbMapper implements Serializable, Cloneable {
             clone.mapping = newMapping;
 
             return clone;
-        } catch (CloneNotSupportedException ex) {
-            throw new Error("Assertion failure: clone not supported"); // Can't happen
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("clone() unexpectedly not supported", e);
         }
     }
 

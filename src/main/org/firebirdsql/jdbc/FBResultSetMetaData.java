@@ -30,6 +30,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
+
 /**
  * Information about the types and properties of the columns in a {@code ResultSet} object.
  *
@@ -124,31 +126,23 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
 
     @Override
     public int getColumnDisplaySize(int column) throws SQLException {
-        final int colType = getColumnType(column);
         final int precision = getPrecision(column);
-
-        switch (colType) {
-        case Types.DECIMAL:
-        case Types.NUMERIC:
-            return precision + 2; // sign + decimal separator
-        case Types.FLOAT:
-            return 7 + 6; // 7: number of decimal digits, 6: sign + decimal separator + E + sign exp + exp (2 pos)
-        case Types.DOUBLE:
-            return 15 + 7; // 15: number of decimal digits, 7: sign + decimal separator + E + sign exp + exp (3 pos)
-        case Types.INTEGER:
-        case Types.BIGINT:
-        case Types.SMALLINT:
-            return precision + 1; // sign
-        case JaybirdTypeCodes.DECFLOAT:
-            if (precision == 16) {
-                return 16 + 7;  // 7: sign + decimal separator + E + sign exp + exp (3 pos)
+        return switch (getColumnType(column)) {
+            case Types.DECIMAL, Types.NUMERIC -> precision + 2; // sign + decimal separator
+            case Types.FLOAT ->
+                    7 + 6; // 7: number of decimal digits, 6: sign + decimal separator + E + sign exp + exp (2 pos)
+            case Types.DOUBLE ->
+                    15 + 7; // 15: number of decimal digits, 7: sign + decimal separator + E + sign exp + exp (3 pos)
+            case Types.INTEGER, Types.BIGINT, Types.SMALLINT -> precision + 1; // sign
+            case JaybirdTypeCodes.DECFLOAT -> {
+                if (precision == 16) {
+                    yield 16 + 7; // 7: sign + decimal separator + E + sign exp + exp (3 pos)
+                }
+                yield 34 + 8; // 8: sign + decimal separator + E + sign exp + exp (4 pos)
             }
-            return 34 + 8; // 8: sign + decimal separator + E + sign exp + exp (4 pos)
-        case Types.BOOLEAN:
-            return 5; // assuming displaying true/false
-        default:
-            return precision;
-        }
+            case Types.BOOLEAN -> 5; // assuming displaying true/false
+            default -> precision;
+        };
     }
 
     @Override
@@ -257,6 +251,10 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         return getFieldClassName(column);
     }
 
+    private static final int FIELD_INFO_RELATION_NAME = 1;
+    private static final int FIELD_INFO_FIELD_NAME = 2;
+    private static final int FIELD_INFO_FIELD_PRECISION = 3;
+
     private static final String GET_FIELD_INFO = """
             select
               RF.RDB$RELATION_NAME as RELATION_NAME,
@@ -267,10 +265,11 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
             where RF.RDB$FIELD_NAME = ? and RF.RDB$RELATION_NAME = ?""";
 
     // Apparently there is a limit in the UNION. It is necessary to split in several queries. Although the problem
-    // reported with 93 UNION use only 70.
+    // reported with 93 UNION, use only 70.
     private static final int MAX_FIELD_INFO_UNIONS = 70;
 
     @Override
+    @SuppressWarnings({ "java:S1994", "java:S135" })
     protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException {
         if (connection == null) return Collections.emptyMap();
 
@@ -280,24 +279,21 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
         var params = new ArrayList<String>();
         var sb = new StringBuilder();
-        int unionCount;
         while (currentColumn <= fieldCount) {
-            unionCount = 0;
             params.clear();
             sb.setLength(0);
 
-            for (; currentColumn <= fieldCount && unionCount < MAX_FIELD_INFO_UNIONS; currentColumn++) {
+            for (int unionCount = 0; currentColumn <= fieldCount && unionCount < MAX_FIELD_INFO_UNIONS; currentColumn++) {
                 FieldDescriptor fieldDescriptor = getFieldDescriptor(currentColumn);
                 if (!needsExtendedFieldInfo(fieldDescriptor)) continue;
 
                 String relationName = fieldDescriptor.getOriginalTableName();
                 String fieldName = fieldDescriptor.getOriginalName();
 
-                if (relationName == null || relationName.isEmpty()
-                    || fieldName == null || fieldName.isEmpty()) continue;
+                if (isNullOrEmpty(relationName) || isNullOrEmpty(fieldName)) continue;
 
-                if (unionCount > 0) {
-                    sb.append('\n').append("union all").append('\n');
+                if (unionCount != 0) {
+                    sb.append("\nunion all\n");
                 }
                 sb.append(GET_FIELD_INFO);
 
@@ -307,20 +303,21 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
                 unionCount++;
             }
 
-            if (unionCount == 0) continue;
+            if (sb.isEmpty()) continue;
 
             try (ResultSet rs = metaData.doQuery(sb.toString(), params, true)) {
                 while (rs.next()) {
-                    var relationName = rs.getString("RELATION_NAME");
-                    var fieldName = rs.getString("FIELD_NAME");
-                    int precision = rs.getInt("FIELD_PRECISION");
-                    var fieldInfo = new ExtendedFieldInfo(relationName, fieldName, precision);
-
+                    var fieldInfo = extractExtendedFieldInfo(rs);
                     result.put(fieldInfo.fieldKey(), fieldInfo);
                 }
             }
         }
         return result;
+    }
+
+    private static ExtendedFieldInfo extractExtendedFieldInfo(ResultSet rs) throws SQLException {
+        return new ExtendedFieldInfo(rs.getString(FIELD_INFO_RELATION_NAME), rs.getString(FIELD_INFO_FIELD_NAME),
+                rs.getInt(FIELD_INFO_FIELD_PRECISION));
     }
 
     /**

@@ -24,6 +24,7 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
@@ -37,7 +38,6 @@ import org.firebirdsql.jdbc.field.FieldDataProvider;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
@@ -294,6 +294,7 @@ public final class FBManagedConnection implements ExceptionListener {
      * @throws SQLException
      *         generic exception if operation fails
      */
+    @SuppressWarnings("java:S2095")
     public FBConnection getConnection() throws SQLException {
         disassociateConnections();
 
@@ -513,9 +514,8 @@ public final class FBManagedConnection implements ExceptionListener {
             if (isCurrentTransaction(endingTr)) {
                 clearCurrentTransaction();
             } else {
-                throw new FBXAException(
-                        "You are trying to %s a transaction that is not the current transaction"
-                                .formatted(flags == XAResource.TMSUSPEND ? "suspend" : "end"),
+                throw new FBXAException("You are trying to %s a transaction that is not the current transaction"
+                        .formatted(flags == XAResource.TMSUSPEND ? "suspend" : "end"),
                         XAException.XAER_INVAL);
             }
         }
@@ -547,45 +547,31 @@ public final class FBManagedConnection implements ExceptionListener {
             // find XID
             // TODO: Is there a reason why this piece of code can't use the JDBC Statement class?
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
-            FbStatement stmtHandle2 = database.createStatement(trHandle2);
+            try (FbStatement stmtHandle2 = database.createStatement(trHandle2)) {
+                var gdsHelper2 = new GDSHelper(database);
+                gdsHelper2.setCurrentTransaction(trHandle2);
 
-            var gdsHelper2 = new GDSHelper(database);
-            gdsHelper2.setCurrentTransaction(trHandle2);
+                stmtHandle2.prepare(getXidQueries().forgetFindQuery());
 
-            stmtHandle2.prepare(getXidQueries().forgetFindQuery());
+                var dataProvider = new DataProvider(stmtHandle2);
+                stmtHandle2.addStatementListener(dataProvider);
 
-            var dataProvider = new DataProvider(stmtHandle2);
-            stmtHandle2.addStatementListener(dataProvider);
+                RowDescriptor rowDescriptor = stmtHandle2.getRowDescriptor();
+                var field0 = FBField.createField(rowDescriptor.getFieldDescriptor(0),
+                        dataProvider.asFieldDataProvider(0), gdsHelper2, false);
+                var field1 = FBField.createField(rowDescriptor.getFieldDescriptor(1),
+                        dataProvider.asFieldDataProvider(1), gdsHelper2, false);
 
-            var field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider.asFieldDataProvider(0), gdsHelper2, false);
-            var field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider.asFieldDataProvider(1), gdsHelper2, false);
-
-            while (dataProvider.next()) {
-                long inLimboTxId = field0.getLong();
-                byte[] inLimboMessage = field1.getBytes();
-
-                try {
-                    var xid = new FBXid(inLimboMessage, inLimboTxId);
-
-                    boolean gtridEquals = Arrays.equals(xid.getGlobalTransactionId(), id.getGlobalTransactionId());
-                    boolean bqualEquals = Arrays.equals(xid.getBranchQualifier(), id.getBranchQualifier());
-
-                    if (gtridEquals && bqualEquals) {
+                while (dataProvider.next()) {
+                    long inLimboTxId = field0.getLong();
+                    if (matchesXid(id, inLimboTxId, field1.getBytes())) {
                         inLimboId = inLimboTxId;
                         break;
                     }
-                } catch (FBIncorrectXidException ex) {
-                    if (log.isLoggable(WARNING)) {
-                        String message =
-                                "incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId;
-                        log.log(WARNING, message + "; see debug level for stacktrace", ex);
-                        log.log(DEBUG, message, ex);
-                    }
                 }
+            } finally {
+                trHandle2.commit();
             }
-
-            stmtHandle2.close();
-            trHandle2.commit();
         } catch (SQLException ex) {
             log.log(DEBUG, "can't perform query to fetch xids", ex);
             throw new FBXAException(XAException.XAER_RMFAIL, ex);
@@ -606,6 +592,22 @@ public final class FBManagedConnection implements ExceptionListener {
             }
         } catch (SQLException ex) {
             throw new FBXAException("can't perform query to delete xids", XAException.XAER_RMFAIL, ex);
+        }
+    }
+
+    private static boolean matchesXid(Xid id, long fbTxId, byte[] fbTxMessage) {
+        try {
+            var xid = new FBXid(fbTxMessage, fbTxId);
+            return Arrays.equals(xid.getGlobalTransactionId(), id.getGlobalTransactionId())
+                    && Arrays.equals(xid.getBranchQualifier(), id.getBranchQualifier());
+        } catch (FBIncorrectXidException ex) {
+            if (log.isLoggable(WARNING)) {
+                String message = "incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=%d: %s"
+                        .formatted(fbTxId, ByteArrayHelper.toHexString(fbTxMessage));
+                log.log(WARNING, message + "; see debug level for stacktrace", ex);
+                log.log(DEBUG, message, ex);
+            }
+            return false;
         }
     }
 
@@ -716,12 +718,12 @@ public final class FBManagedConnection implements ExceptionListener {
             }
 
             return xids.toArray(new Xid[0]);
-        } catch (SQLException | IOException e) {
+        } catch (SQLException e) {
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, e);
         }
     }
 
-    private static FBXid extractXid(byte[] xidData, long txId) throws IOException {
+    private static FBXid extractXid(byte[] xidData, long txId) {
         try {
             return new FBXid(xidData, txId);
         } catch (FBIncorrectXidException e) {
@@ -774,7 +776,7 @@ public final class FBManagedConnection implements ExceptionListener {
             } finally {
                 trHandle2.commit();
             }
-        } catch (SQLException | IOException e) {
+        } catch (SQLException e) {
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, e);
         }
     }
@@ -1167,6 +1169,7 @@ public final class FBManagedConnection implements ExceptionListener {
         return tpb.isReadOnly();
     }
 
+    @SuppressWarnings("java:S135")
     private void notifyWarning(SQLWarning warning) {
         final FBConnection connection = connectionHandle;
         if (connection == null) {

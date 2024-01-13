@@ -44,7 +44,7 @@ public class FBProcedureCall implements Cloneable {
 
             return newProcedureCall;
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError("clone() unexpectedly not supported", e);
         }
     }
 
@@ -311,20 +311,12 @@ public class FBProcedureCall implements Cloneable {
      */
     public void checkParameters() throws SQLException {
         for (FBProcedureParam param : inputParams) {
-            if (param == null) {
-                continue;
-            }
-
-            // if parameter does not have set value, and is not registered
-            // as output parameter, throw an exception, otherwise, continue
-            // to the next one.
-            if (!param.isValueSet()) {
-                if (param.isParam()
-                    && !outputParams.isEmpty()
+            // if parameter does not have set value, and is not registered as output parameter, throw an exception,
+            // otherwise, continue to the next one.
+            if (param != null && !param.isValueSet() && param.isParam() && !outputParams.isEmpty()
                     && outputParams.get(param.getPosition()) == null) {
-                    throw new SQLException("Value of parameter %d not set and it was not registered as output parameter"
-                                    .formatted(param.getIndex()), SQL_STATE_WRONG_PARAM_NUM);
-                }
+                throw new SQLException("Value of parameter %d not set and it was not registered as output parameter"
+                        .formatted(param.getIndex()), SQL_STATE_WRONG_PARAM_NUM);
             }
         }
     }
@@ -337,18 +329,14 @@ public class FBProcedureCall implements Cloneable {
      */
     public boolean equals(Object obj) {
         if (obj == this) return true;
-        if (!(obj instanceof FBProcedureCall other)) return false;
-        return Objects.equals(name, other.name)
+        return obj instanceof FBProcedureCall other
+                && Objects.equals(name, other.name)
                 && inputParams.equals(other.inputParams)
                 && outputParams.equals(other.outputParams);
     }
 
     public int hashCode() {
-        int hashCode = 547;
-        hashCode = 37 * hashCode + (name != null ? name.hashCode() : 0);
-        hashCode = 37 * hashCode + inputParams.hashCode();
-        hashCode = 37 * hashCode + outputParams.hashCode();
-        return hashCode;
+        return Objects.hash(name, inputParams, outputParams);
     }
 
     /**

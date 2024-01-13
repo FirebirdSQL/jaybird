@@ -53,6 +53,7 @@ import org.firebirdsql.jaybird.props.AttachmentProperties;
  * @author David Jencks
  * @version 1.0
  */
+@SuppressWarnings("java:S112")
 public interface FBManagerMBean extends AutoCloseable {
 
     /**
