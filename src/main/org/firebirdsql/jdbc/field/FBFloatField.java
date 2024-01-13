@@ -31,7 +31,9 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  */
 final class FBFloatField extends FBField {
+    @SuppressWarnings("java:S2111")
     private static final BigDecimal BD_MAX_FLOAT = new BigDecimal(MAX_FLOAT_VALUE);
+    @SuppressWarnings("java:S2111")
     private static final BigDecimal BD_MIN_FLOAT = new BigDecimal(MIN_FLOAT_VALUE);
 
     FBFloatField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
@@ -51,10 +53,14 @@ final class FBFloatField extends FBField {
         float value = getFloat();
         // check if value is within bounds
         if (value > MAX_BYTE_VALUE || value < MIN_BYTE_VALUE) {
-            throw invalidGetConversion("byte", String.format("value %f out of range", value));
+            throw outOfRangeGetConversion("byte", value);
         }
 
         return (byte) value;
+    }
+
+    private SQLException outOfRangeGetConversion(String type, float value) {
+        return invalidGetConversion(type, "value %f out of range".formatted(value));
     }
 
     @Override
@@ -62,7 +68,7 @@ final class FBFloatField extends FBField {
         float value = getFloat();
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
-            throw invalidGetConversion("short", String.format("value %f out of range", value));
+            throw outOfRangeGetConversion("short", value);
         }
 
         return (short) value;
@@ -73,7 +79,7 @@ final class FBFloatField extends FBField {
         float value = getFloat();
         // check if value is within bounds
         if (value > MAX_INT_VALUE || value < MIN_INT_VALUE) {
-            throw invalidGetConversion("int", String.format("value %f out of range", value));
+            throw outOfRangeGetConversion("int", value);
         }
 
         return (int) value;
@@ -84,7 +90,7 @@ final class FBFloatField extends FBField {
         float value = getFloat();
         // check if value is within bounds
         if (value > MAX_LONG_VALUE || value < MIN_LONG_VALUE) {
-            throw invalidGetConversion("long", String.format("value %f out of range", value));
+            throw outOfRangeGetConversion("long", value);
         }
 
         return (long) value;

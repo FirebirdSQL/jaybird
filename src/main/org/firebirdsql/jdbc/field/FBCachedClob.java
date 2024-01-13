@@ -88,19 +88,23 @@ public final class FBCachedClob implements Clob, NClob {
 	}
 
 	public OutputStream setAsciiStream(long pos) throws SQLException {
-		throw new SQLNonTransientException("Clob in auto-commit mode is read-only.", SQL_STATE_LOCATOR_EXCEPTION);
+		throw clobReadOnly();
+	}
+
+	private static SQLException clobReadOnly() {
+		return new SQLNonTransientException("Clob in auto-commit mode is read-only", SQL_STATE_LOCATOR_EXCEPTION);
 	}
 
 	public Writer setCharacterStream(long pos) throws SQLException {
-		throw new SQLNonTransientException("Clob in auto-commit mode is read-only.", SQL_STATE_LOCATOR_EXCEPTION);
+		throw clobReadOnly();
 	}
 
 	public int setString(long pos, String str) throws SQLException {
-		throw new SQLNonTransientException("Clob in auto-commit mode is read-only.", SQL_STATE_LOCATOR_EXCEPTION);
+		throw clobReadOnly();
 	}
 
 	public int setString(long pos, String str, int offset, int len) throws SQLException {
-		throw new SQLNonTransientException("Clob in auto-commit mode is read-only.", SQL_STATE_LOCATOR_EXCEPTION);
+		throw clobReadOnly();
 	}
 
 	public void truncate(long len) throws SQLException {

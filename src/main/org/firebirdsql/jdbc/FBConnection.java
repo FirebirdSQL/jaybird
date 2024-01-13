@@ -381,12 +381,16 @@ public class FBConnection implements FirebirdConnection {
             }
 
             if (mc.inDistributedTransaction()) {
-                throw new SQLException("Connection enlisted in distributed transaction", SQL_STATE_INVALID_TX_STATE);
+                throw connectionEnlistedInDistributedTransaction();
             }
 
             txCoordinator.commit();
             invalidateTransactionLifetimeObjects();
         }
+    }
+
+    private static SQLException connectionEnlistedInDistributedTransaction() {
+        return new SQLException("Connection enlisted in distributed transaction", SQL_STATE_INVALID_TX_STATE);
     }
 
     @Override
@@ -398,7 +402,7 @@ public class FBConnection implements FirebirdConnection {
             }
 
             if (mc.inDistributedTransaction()) {
-                throw new SQLException("Connection enlisted in distributed transaction", SQL_STATE_INVALID_TX_STATE);
+                throw connectionEnlistedInDistributedTransaction();
             }
 
             txCoordinator.rollback();
@@ -500,6 +504,7 @@ public class FBConnection implements FirebirdConnection {
         }
     }
 
+    @SuppressWarnings({ "ReturnInsideFinallyBlock", "java:S1141", "java:S1143" })
     private boolean isValidImpl(int timeout) {
         try (LockCloseable ignored = withLock()) {
             if (isClosed()) {
@@ -531,7 +536,6 @@ public class FBConnection implements FirebirdConnection {
                     } catch (SQLException e) {
                         log.log(DEBUG, "Exception while resetting connection network timeout", e);
                         // We're interpreting this as an indication the connection is no longer valid
-                        //noinspection ReturnInsideFinallyBlock
                         return false;
                     }
                 }
@@ -588,6 +592,7 @@ public class FBConnection implements FirebirdConnection {
      * @return Always {@code null} as catalogs are not supported.
      */
     @Override
+    @SuppressWarnings("java:S4144")
     public String getCatalog() throws SQLException {
         checkValidity();
         return null;
@@ -836,6 +841,7 @@ public class FBConnection implements FirebirdConnection {
 
     private static final AtomicIntegerFieldUpdater<FBConnection> SAVEPOINT_COUNTER_UPDATE =
             AtomicIntegerFieldUpdater.newUpdater(FBConnection.class, "savepointCounter");
+    @SuppressWarnings("java:S1068")
     private volatile int savepointCounter;
     private final List<FBSavepoint> savepoints = new ArrayList<>();
 
@@ -869,7 +875,7 @@ public class FBConnection implements FirebirdConnection {
         }
 
         if (mc.inDistributedTransaction()) {
-            throw new SQLException("Connection enlisted in distributed transaction", SQL_STATE_INVALID_TX_STATE);
+            throw connectionEnlistedInDistributedTransaction();
         }
 
         txCoordinator.ensureTransaction();
@@ -921,7 +927,7 @@ public class FBConnection implements FirebirdConnection {
                 throw new SQLException("Connection.rollback(Savepoint) method cannot be used in auto-commit mode",
                         SQL_STATE_INVALID_TX_STATE);
             } else if (mc.inDistributedTransaction()) {
-                throw new SQLException("Connection enlisted in distributed transaction", SQL_STATE_INVALID_TX_STATE);
+                throw connectionEnlistedInDistributedTransaction();
             }
 
             FBSavepoint fbSavepoint = validateSavepoint(savepoint);
@@ -1011,6 +1017,7 @@ public class FBConnection implements FirebirdConnection {
      * @return Always {@code null} as schemas ar not supported
      */
     @Override
+    @SuppressWarnings("java:S4144")
     public String getSchema() throws SQLException {
         checkValidity();
         return null;
@@ -1210,6 +1217,7 @@ public class FBConnection implements FirebirdConnection {
     }
 
     @Override
+    @SuppressWarnings("java:S1141")
     public void abort(Executor executor) throws SQLException {
         // NOTE: None of these operations are performed under lock (except maybe very late in the cleanup)
         if (isClosed()) return;
@@ -1232,7 +1240,7 @@ public class FBConnection implements FirebirdConnection {
         executor.execute(() -> {
             try {
                 try {
-                    // Try and close statements and result sets
+                    // Try to close statements and result sets
                     txCoordinator.handleConnectionAbort();
                 } finally {
                     try {

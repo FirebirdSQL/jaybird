@@ -33,6 +33,7 @@ import java.io.OutputStream;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@SuppressWarnings("java:S115")
 public enum ArgumentType {
     TraditionalDpb {
         @Override

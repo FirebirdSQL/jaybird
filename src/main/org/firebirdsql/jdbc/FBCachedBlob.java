@@ -33,6 +33,7 @@ public final class FBCachedBlob implements FirebirdBlob {
     private static final byte[] FREED_MARKER = new byte[0];
     static final String BLOB_READ_ONLY = "Cached blob is read-only";
 
+    @SuppressWarnings("java:S3077")
     private volatile byte[] blobData;
 
     /**
@@ -75,6 +76,7 @@ public final class FBCachedBlob implements FirebirdBlob {
     }
 
     @Override
+    @SuppressWarnings("java:S1168")
     public byte[] getBytes(long pos, int length) throws SQLException {
         if (pos < 1) {
             throw new SQLException("Expected value of pos > 0, got " + pos,

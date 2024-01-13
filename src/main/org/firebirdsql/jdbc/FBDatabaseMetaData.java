@@ -1130,14 +1130,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public boolean supportsTransactionIsolationLevel(int level) throws SQLException {
-        switch (level) {
-        case Connection.TRANSACTION_READ_COMMITTED:
-        case Connection.TRANSACTION_REPEATABLE_READ:
-        case Connection.TRANSACTION_SERIALIZABLE:
-            return true;
-        default:
-            return false;
-        }
+        return switch (level) {
+            case Connection.TRANSACTION_READ_COMMITTED, Connection.TRANSACTION_REPEATABLE_READ,
+                    Connection.TRANSACTION_SERIALIZABLE -> true;
+            default -> false;
+        };
     }
 
     /**
@@ -1434,28 +1431,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public boolean supportsResultSetType(int type) throws SQLException {
         // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
-        switch (type){
-            case ResultSet.TYPE_FORWARD_ONLY:
-            case ResultSet.TYPE_SCROLL_INSENSITIVE :
-            case ResultSet.TYPE_SCROLL_SENSITIVE :
-                return true;
-            default:
-                return false;
-        }
+        return switch (type) {
+            case ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.TYPE_SCROLL_SENSITIVE ->
+                    true;
+            default -> false;
+        };
     }
 
     @Override
     public boolean supportsResultSetConcurrency(int type, int concurrency) throws SQLException {
         // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
-        switch(type) {
-            case ResultSet.TYPE_FORWARD_ONLY:
-            case ResultSet.TYPE_SCROLL_INSENSITIVE :
-            case ResultSet.TYPE_SCROLL_SENSITIVE :
-                return concurrency == ResultSet.CONCUR_READ_ONLY ||
-                    concurrency == ResultSet.CONCUR_UPDATABLE;
-            default:
-                return false;
-        }
+        return switch (type) {
+            case ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.TYPE_SCROLL_SENSITIVE ->
+                    concurrency == ResultSet.CONCUR_READ_ONLY || concurrency == ResultSet.CONCUR_UPDATABLE;
+            default -> false;
+        };
     }
 
     @Override
@@ -1922,6 +1912,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return JDBC_MINOR_VERSION;
     }
 
+    @SuppressWarnings("java:S2160")
     private static class LruPreparedStatementCache extends LinkedHashMap<String, FBPreparedStatement> {
         @Serial
         private static final long serialVersionUID = -6600678461169652270L;

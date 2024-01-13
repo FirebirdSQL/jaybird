@@ -334,6 +334,7 @@ public final class ClientAuthBlock {
         return login.toUpperCase(Locale.ROOT);
     }
 
+    @SuppressWarnings("java:S127")
     private static String normalizeQuotedLogin(String login) {
         final StringBuilder sb = new StringBuilder(login.length() - 2);
         sb.append(login, 1, login.length() - 1);

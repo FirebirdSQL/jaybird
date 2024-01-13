@@ -46,8 +46,8 @@ class FBConnectionPoolDataSourceTest extends FBConnectionPoolTestBase {
      * Tests if the ConnectionPoolDataSource can create a PooledConnection
      */
     @Test
-    void testDataSource_start() throws SQLException {
-        getPooledConnection();
+    void testDataSource_start() {
+        assertDoesNotThrow(this::getPooledConnection);
     }
 
     /**

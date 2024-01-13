@@ -101,7 +101,8 @@ public record DbAttachInfo(String serverName, int portNumber, String attachObjec
         String server;
         String fileName;
         Integer port = null;
-        int pathSep, portSep;
+        int pathSep;
+        int portSep;
         int connectStringLength = connectString.length();
         if (connectString.charAt(0) == '[') {
             // IPv6 address

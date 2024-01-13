@@ -30,7 +30,7 @@ package org.firebirdsql.gds;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unused", "java:S115" , "java:S1214" })
 public interface BlrConstants {
     int blr_text = 14;
     int blr_text2 = 15;

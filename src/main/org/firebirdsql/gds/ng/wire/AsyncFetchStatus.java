@@ -97,6 +97,7 @@ public sealed interface AsyncFetchStatus
     /**
      * Signals an async fetch pending.
      */
+    @SuppressWarnings("java:S6217")
     sealed class Pending implements AsyncFetchStatus permits AsyncFetchStatus.CompletedWithException {
 
         private static final Pending INSTANCE = new Pending();
@@ -117,6 +118,7 @@ public sealed interface AsyncFetchStatus
      * operation is throwing the exception to the caller of a {@code fetch}.
      * </p>
      */
+    @SuppressWarnings("java:S2166")
     final class CompletedWithException extends Pending {
 
         private final SQLException completionException;

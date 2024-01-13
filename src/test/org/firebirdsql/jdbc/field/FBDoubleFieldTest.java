@@ -135,6 +135,7 @@ class FBDoubleFieldTest extends BaseJUnit5TestFBField<FBDoubleField, Double> {
     @Override
     void getBigDecimalIntNonNull() throws SQLException {
         // TODO: Implement test for getBigDecimal(int)
+        fail("test should be disabled");
     }
     
     @Test

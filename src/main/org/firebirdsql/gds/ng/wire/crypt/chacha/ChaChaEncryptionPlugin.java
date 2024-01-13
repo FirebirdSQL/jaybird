@@ -95,6 +95,7 @@ public final class ChaChaEncryptionPlugin implements EncryptionPlugin {
         }
     }
 
+    @SuppressWarnings("java:S5542")
     private Cipher createCipher(int mode, ChaChaIV iv, byte[] key) throws SQLException {
         try {
             var chaChaCipher = Cipher.getInstance(CHA_CHA_20_CIPHER_NAME);

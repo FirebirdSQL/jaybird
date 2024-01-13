@@ -49,6 +49,7 @@ public final class CollectionUtils {
      * @throws UnsupportedOperationException
      *         if {@code list} is unmodifiable or fixed size and its current size is less than {@code size}
      */
+    @SuppressWarnings("java:S1149")
     public static void growToSize(final List<?> list, final int size) {
         if (list.size() >= size) return;
         if (list instanceof ArrayList<?> a) {

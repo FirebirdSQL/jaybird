@@ -138,7 +138,7 @@ class FBBackupManagerTest {
     @ValueSource(ints = { PageSizeConstants.SIZE_1K, PageSizeConstants.SIZE_2K, PageSizeConstants.SIZE_4K,
             PageSizeConstants.SIZE_8K, PageSizeConstants.SIZE_16K, PageSizeConstants.SIZE_32K })
     void testValidPageSizes(int pageSize) {
-        backupManager.setRestorePageSize(pageSize);
+        assertDoesNotThrow(() -> backupManager.setRestorePageSize(pageSize));
     }
 
     @Test
@@ -318,7 +318,7 @@ class FBBackupManagerTest {
         backupManager.backupDatabase();
 
         backupManager.setRestoreReplace(true);
-        backupManager.restoreDatabase();
+        assertDoesNotThrow(() -> backupManager.restoreDatabase());
     }
 
     @Test

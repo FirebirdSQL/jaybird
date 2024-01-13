@@ -59,6 +59,7 @@ class FBBinaryField extends FBField {
     }
 
     @Override
+    @SuppressWarnings("java:S1168")
     public byte[] getBytes() throws SQLException {
         if (isNull()) return null;
         // protect against unintentional modification of cached or shared byte-arrays (e.g. in DatabaseMetaData)

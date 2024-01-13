@@ -94,6 +94,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         super(gdsType);
     }
 
+    @Override
     public void setDatabaseAccessMode(int mode) throws SQLException {
         if (mode != ACCESS_MODE_READ_WRITE && mode != ACCESS_MODE_READ_ONLY) {
             throw new IllegalArgumentException("mode must be one of ACCESS_MODE_READ_WRITE or ACCESS_MODE_READ_ONLY");
@@ -106,6 +107,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         }
     }
 
+    @Override
     public void setDatabaseDialect(int dialect) throws SQLException {
         if (dialect != 1 && dialect != 3) {
             throw new IllegalArgumentException("dialect must be either 1 or 3");
@@ -118,6 +120,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         }
     }
 
+    @Override
     public void setDefaultCacheBuffer(int pageCount) throws SQLException {
         if (pageCount != 0 && pageCount < 50) {
             throw new IllegalArgumentException("page count must be 0 or >= 50, value was: " + pageCount);
@@ -130,6 +133,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         }
     }
 
+    @Override
     public void setForcedWrites(boolean forced) throws SQLException {
         try (FbService service = attachServiceManager()) {
             ServiceRequestBuffer srb = createDefaultPropertiesSRB(service);
@@ -138,6 +142,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         }
     }
 
+    @Override
     public void setPageFill(int pageFill) throws SQLException {
         if (pageFill != PAGE_FILL_FULL && pageFill != PAGE_FILL_RESERVE) {
             throw new IllegalArgumentException("Page fill must be either PAGE_FILL_FULL or PAGE_FILL_RESERVE");
@@ -152,6 +157,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
 
     // ----------- Database Shutdown -------------------
 
+    @Override
     public void shutdownDatabase(int shutdownMode, int timeout) throws SQLException {
         if (shutdownMode != SHUTDOWN_ATTACH
                 && shutdownMode != SHUTDOWN_TRANSACTIONAL
@@ -170,6 +176,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         }
     }
 
+    @Override
     public void shutdownDatabase(byte operationMode, int shutdownModeEx, int timeout) throws SQLException {
         if (operationMode != OPERATION_MODE_MULTI
                 && operationMode != OPERATION_MODE_SINGLE
@@ -195,10 +202,12 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         }
     }
 
+    @Override
     public void bringDatabaseOnline() throws SQLException {
         executePropertiesOperation(isc_spb_prp_db_online);
     }
 
+    @Override
     public void bringDatabaseOnline(byte operationMode) throws SQLException {
         if (operationMode != OPERATION_MODE_NORMAL
                 && operationMode != OPERATION_MODE_MULTI
@@ -216,14 +225,17 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
 
     // -------------- Database Repair ----------------------
 
+    @Override
     public void markCorruptRecords() throws SQLException {
         executeRepairOperation(isc_spb_rpr_mend_db);
     }
 
+    @Override
     public void validateDatabase() throws SQLException {
         executeRepairOperation(isc_spb_rpr_validate_db);
     }
 
+    @Override
     public void validateDatabase(int options) throws SQLException {
         if (options < 0
                 || options != 0 && options != VALIDATE_IGNORE_CHECKSUM
@@ -243,6 +255,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
 
     // ----------- Sweeping -------------------------
 
+    @Override
     public void setSweepThreshold(int transactions) throws SQLException {
         if (transactions < 0) {
             throw new IllegalArgumentException("transactions must be >= 0");
@@ -255,22 +268,27 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         }
     }
 
+    @Override
     public void sweepDatabase() throws SQLException {
         executeRepairOperation(isc_spb_rpr_sweep_db);
     }
 
     // ----------- Shadow Files ------------------------------------
 
+    @Override
     public void activateShadowFile() throws SQLException {
         executePropertiesOperation(isc_spb_prp_activate);
     }
 
+    @Override
     public void killUnavailableShadows() throws SQLException {
         executeRepairOperation(isc_spb_rpr_kill_shadows);
     }
 
     // ----------- Transaction Management ----------------------------
 
+    @Override
+    @SuppressWarnings("java:S2093")
     public List<Long> limboTransactionsAsList() throws SQLException {
         // See also fbscvmgr.cpp method printInfo
         final OutputStream saveOut = getLogger();
@@ -288,42 +306,29 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         int idx = 0;
         while (idx < output.length) {
             switch (output[idx++]) {
-            case isc_spb_single_tra_id:
-            case isc_spb_multi_tra_id: {
+            case isc_spb_single_tra_id, isc_spb_multi_tra_id -> {
                 long trId = iscVaxLong(output, idx, 4);
                 idx += 4;
                 result.add(trId);
-                break;
             }
-            case isc_spb_single_tra_id_64:
-            case isc_spb_multi_tra_id_64: {
+            case isc_spb_single_tra_id_64, isc_spb_multi_tra_id_64 -> {
                 long trId = iscVaxLong(output, idx, 8);
                 idx += 8;
                 result.add(trId);
-                break;
             }
+
             // Information items we will ignore for now
-            case isc_spb_tra_id:
-                idx += 4;
-                break;
-            case isc_spb_tra_id_64:
-                idx += 8;
-                break;
-            case isc_spb_tra_state:
-            case isc_spb_tra_advise:
-                idx++;
-                break;
-            case isc_spb_tra_host_site:
-            case isc_spb_tra_remote_site:
-            case isc_spb_tra_db_path:
+            case isc_spb_tra_id -> idx += 4;
+            case isc_spb_tra_id_64 -> idx += 8;
+            case isc_spb_tra_state, isc_spb_tra_advise -> idx++;
+            case isc_spb_tra_host_site, isc_spb_tra_remote_site, isc_spb_tra_db_path -> {
                 int length = iscVaxInteger2(output, idx);
                 idx += 2;
                 idx += length;
-                break;
-            default:
-                throw FbExceptionBuilder.forException(isc_fbsvcmgr_info_err)
-                        .messageParameter(output[idx - 1] & 0xFF)
-                        .toSQLException();
+            }
+            default -> throw FbExceptionBuilder.forException(isc_fbsvcmgr_info_err)
+                    .messageParameter(output[idx - 1] & 0xFF)
+                    .toSQLException();
             }
         }
         return result;

@@ -75,7 +75,8 @@ public enum ConnectionPropertyType {
 
         @Override
         public Integer toType(Boolean booleanValue) {
-            return booleanValue != null ? (booleanValue ? 1 : 0) : null;
+            if (booleanValue == null) return null;
+            return booleanValue ? 1 : 0;
         }
 
         @Override
@@ -90,6 +91,7 @@ public enum ConnectionPropertyType {
     },
     BOOLEAN(DpbType.SINGLE) {
         @Override
+        @SuppressWarnings("java:S2447")
         public Boolean toType(String stringValue) {
             if (stringValue == null) {
                 return null;
@@ -102,6 +104,7 @@ public enum ConnectionPropertyType {
         }
 
         @Override
+        @SuppressWarnings("java:S2447")
         public Boolean toType(Integer intValue) {
             if (intValue == null) {
                 return null;
@@ -163,6 +166,7 @@ public enum ConnectionPropertyType {
         }
 
         @Override
+        @SuppressWarnings("java:S2447")
         public Boolean asBoolean(Object value) {
             if (value == null) return null;
             throw new IllegalArgumentException("Cannot convert transaction isolation to Boolean");

@@ -49,7 +49,9 @@ final class FBBigDecimalField extends FBField {
     private static final BigInteger MIN_LONG = BigInteger.valueOf(Long.MIN_VALUE);
     private static final BigDecimal BD_MIN_LONG = BigDecimal.valueOf(Long.MIN_VALUE);
 
+    @SuppressWarnings("java:S2111")
     private static final BigDecimal BD_MAX_DOUBLE = new BigDecimal(MAX_DOUBLE_VALUE);
+    @SuppressWarnings("java:S2111")
     private static final BigDecimal BD_MIN_DOUBLE = new BigDecimal(MIN_DOUBLE_VALUE);
 
     private final FieldDataSize fieldDataSize;
@@ -76,10 +78,14 @@ final class FBBigDecimalField extends FBField {
         long longValue = getLong();
         // check if value is within bounds
         if (longValue > MAX_BYTE_VALUE || longValue < MIN_BYTE_VALUE) {
-            throw invalidGetConversion("byte", String.format("value %d out of range", longValue));
+            throw outOfRangeGetConversion("byte", longValue);
         }
 
         return (byte) longValue;
+    }
+
+    private SQLException outOfRangeGetConversion(String type, long value) {
+        return invalidGetConversion(type, "value %d out of range".formatted(value));
     }
 
     @Override
@@ -99,7 +105,7 @@ final class FBBigDecimalField extends FBField {
         long longValue = getLong();
         // check if value is within bounds
         if (longValue > MAX_INT_VALUE || longValue < MIN_INT_VALUE) {
-            throw invalidGetConversion("int", String.format("value %d out of range", longValue));
+            throw outOfRangeGetConversion("int", longValue);
         }
 
         return (int) longValue;
@@ -122,7 +128,7 @@ final class FBBigDecimalField extends FBField {
         long longValue = getLong();
         // check if value is within bounds
         if (longValue > MAX_SHORT_VALUE || longValue < MIN_SHORT_VALUE) {
-            throw invalidGetConversion("short", String.format("value %d out of range", longValue));
+            throw outOfRangeGetConversion("short", longValue);
         }
 
         return (short) longValue;
@@ -202,6 +208,7 @@ final class FBBigDecimalField extends FBField {
      *
      * @author Mark Rotteveel
      */
+    @SuppressWarnings("java:S1168")
     private enum FieldDataSize {
         SHORT {
             @Override

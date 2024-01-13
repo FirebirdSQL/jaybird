@@ -82,75 +82,63 @@ final class ConvertFunction implements SQLFunction {
         String dataType = typeMatcher.group(1).toUpperCase(Locale.ROOT);
         String parameters = typeMatcher.group(2);
         switch (dataType) {
-        case "TINYINT":
-            dataType = "SMALLINT";
-            break;
-        case "DOUBLE":
-            dataType = "DOUBLE PRECISION";
-            break;
-        case "CHAR":
-        case "NCHAR":
+        case "TINYINT" -> dataType = "SMALLINT";
+        case "DOUBLE" -> dataType = "DOUBLE PRECISION";
+        case "CHAR", "NCHAR" -> {
             // Caveat: without parameters, size fixed at 50 (seems a reasonable trade off)
             if (parameters == null) {
                 parameters = "(50)";
             }
-            break;
-        case "VARCHAR":
-        case "NVARCHAR":
+        }
+        case "VARCHAR", "NVARCHAR" -> {
             // Caveat: for blob use of TRIM results in a blob, not VARCHAR
             // Caveat: for NVARCHAR without parameters, this results in a VARCHAR
             // Caveat: if value is a parameter, size fixed at 50 (seems a reasonable trade off)
             if (parameters == null) {
-                if (!"?".equals(value)) {
-                    return "TRIM(TRAILING FROM " + value + ")";
-                } else {
+                if ("?".equals(value)) {
                     parameters = "(50)";
+                } else {
+                    return "TRIM(TRAILING FROM " + value + ")";
                 }
             }
-            break;
-        case "BINARY":
+        }
+        case "BINARY" -> {
             // Caveat: without parameters, size fixed at 50 (seems a reasonable trade off)
+            // For maximum backwards compatibility, we use CHAR, not BINARY (introduced in Firebird 4.0)
+            dataType = "CHAR";
             if (parameters == null) {
-                dataType = "CHAR";
                 parameters = "(50) CHARACTER SET OCTETS";
             } else {
-                dataType = "CHAR";
                 parameters += " CHARACTER SET OCTETS";
             }
-            break;
-        case "VARBINARY":
+        }
+        case "VARBINARY" -> {
             // Caveat: without parameters, size fixed at 50 (seems a reasonable trade off)
+            dataType = "VARCHAR";
             if (parameters == null) {
-                dataType = "VARCHAR";
                 parameters = "(50) CHARACTER SET OCTETS";
             } else {
-                dataType = "VARCHAR";
                 parameters += " CHARACTER SET OCTETS";
             }
-            break;
-        case "LONGVARCHAR":
-        case "LONGNVARCHAR":
-        case "CLOB":
-        case "NCLOB":
+        }
+        case "LONGVARCHAR", "LONGNVARCHAR", "CLOB", "NCLOB" -> {
             // Caveat: LONGNVARCHAR / NCLOB doesn't apply Firebird N(VAR)CHAR semantics of ISO-8859-1 charset
             dataType = "BLOB SUB_TYPE TEXT";
             parameters = null;
-            break;
-        case "LONGVARBINARY":
-        case "BLOB":
+        }
+        case "LONGVARBINARY", "BLOB" -> {
             dataType = "BLOB SUB_TYPE BINARY";
             parameters = null;
-            break;
+        }
         // WITH_TIMEZONE / WITH_TIME_ZONE support for convert is not defined in JDBC or ODBC
-        case "TIME_WITH_TIMEZONE":
-        case "TIME_WITH_TIME_ZONE":
+        case "TIME_WITH_TIMEZONE", "TIME_WITH_TIME_ZONE" -> {
             dataType = "TIME WITH TIME ZONE";
             parameters = null;
-            break;
-        case "TIMESTAMP_WITH_TIMEZONE":
-        case "TIMESTAMP_WITH_TIME_ZONE":
+        }
+        case "TIMESTAMP_WITH_TIMEZONE", "TIMESTAMP_WITH_TIME_ZONE" -> {
             dataType = "TIMESTAMP WITH TIME ZONE";
             parameters = null;
+        }
         }
         return renderCast(value, parameters == null ? dataType : dataType + parameters);
     }

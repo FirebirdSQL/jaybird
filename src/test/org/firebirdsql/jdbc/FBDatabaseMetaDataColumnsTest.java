@@ -25,6 +25,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.sql.*;
 import java.util.*;
@@ -316,219 +318,59 @@ class FBDatabaseMetaDataColumnsTest {
     }
 
     /**
-     * Tests getColumns() metadata for an DECIMAL(18,2) column without further
-     * constraints, defaults and remarks.
+     * Tests getColumns() metadata for a DECIMAL column without further constraints, defaults and remarks.
      */
-    @Test
-    void testDecimal18_2Column() throws Exception {
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            columnName,  expectedSize, expectedDecDigits, expectedPosition
+            COL_DEC18_2, 18,           2,                 6
+            COL_DEC18_0, 18,           0,                 7
+            COL_DEC7_3,  7,            3,                 8
+            COL_DEC7_0,  7,            0,                 9
+            COL_DEC4_3,  4,            3,                 10
+            COL_DEC4_0,  4,            0,                 11
+            """)
+    void testDecimalColumn(String columnName, int expectedSize, int expectedDecDigits, int expectedPosition)
+            throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 18);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 2);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 6);
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, expectedSize);
+        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, expectedDecDigits);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, expectedPosition);
+        if (expectedDecDigits == 0 && expectedSize <= 18) {
+            validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
+        }
 
-        validate(TEST_TABLE, "COL_DEC18_2", validationRules);
+        validate(TEST_TABLE, columnName, validationRules);
     }
 
     /**
-     * Tests getColumns() metadata for an DECIMAL(18,0) column without further
-     * constraints, defaults and remarks.
-     * <p>
-     * Apart from the subtype this is actually identical to a BIGINT
-     * </p>
+     * Tests getColumns() metadata for a NUMERIC column without further constraints, defaults and remarks.
      */
-    @Test
-    void testDecimal18_0Column() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 18);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 7);
-        validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
-
-        validate(TEST_TABLE, "COL_DEC18_0", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for an DECIMAL(7,3) column without further
-     * constraints, defaults and remarks.
-     */
-    @Test
-    void testDecimal7_3Column() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 7);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 3);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 8);
-
-        validate(TEST_TABLE, "COL_DEC7_3", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for an DECIMAL(7,0) column without further
-     * constraints, defaults and remarks.
-     * <p>
-     * Apart from the subtype this is actually identical to an INTEGER
-     * </p>
-     */
-    @Test
-    void testDecimal7_0Column() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 7);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 9);
-        validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
-
-        validate(TEST_TABLE, "COL_DEC7_0", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for an DECIMAL(4,3) column without further
-     * constraints, defaults and remarks.
-     */
-    @Test
-    void testDecimal4_3Column() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 4);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 3);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 10);
-
-        validate(TEST_TABLE, "COL_DEC4_3", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for an DECIMAL(4,0) column without further
-     * constraints, defaults and remarks.
-     * <p>
-     * Apart from the subtype this is actually identical to a SMALLINT
-     * </p>
-     */
-    @Test
-    void testDecimal4_0Column() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 4);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 11);
-        validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
-
-        validate(TEST_TABLE, "COL_DEC4_0", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for an NUMERIC(18,2) column without further
-     * constraints, defaults and remarks.
-     */
-    @Test
-    void testNumeric18_2Column() throws Exception {
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            columnName,  expectedSize, expectedDecDigits, expectedPosition
+            COL_NUM18_2, 18,           2,                 12
+            COL_NUM18_0, 18,           0,                 13
+            COL_NUM7_3,  7,            3,                 14
+            COL_NUM7_0,  7,            0,                 15
+            COL_NUM4_3,  4,            3,                 16
+            COL_NUM4_0,  4,            0,                 17
+            """)
+    void testNumericColumn(String columnName, int expectedSize, int expectedDecDigits, int expectedPosition)
+            throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 18);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 2);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 12);
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, expectedSize);
+        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, expectedDecDigits);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, expectedPosition);
+        if (expectedDecDigits == 0 && expectedSize <= 18) {
+            validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
+        }
 
-        validate(TEST_TABLE, "COL_NUM18_2", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for an NUMERIC(18,0) column without further
-     * constraints, defaults and remarks.
-     * <p>
-     * Apart from the subtype this is actually identical to a BIGINT
-     * </p>
-     */
-    @Test
-    void testNumeric18_0Column() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 18);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 13);
-        validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
-
-        validate(TEST_TABLE, "COL_NUM18_0", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for an NUMERIC(7,3) column without further
-     * constraints, defaults and remarks.
-     */
-    @Test
-    void testNumeric7_3Column() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 7);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 3);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 14);
-
-        validate(TEST_TABLE, "COL_NUM7_3", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for an NUMERIC(7,0) column without further
-     * constraints, defaults and remarks.
-     * <p>
-     * Apart from the subtype this is actually identical to an INTEGER
-     * </p>
-     */
-    @Test
-    void testNumeric7_0Column() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 7);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 15);
-        validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
-
-        validate(TEST_TABLE, "COL_NUM7_0", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for an NUMERIC(4,3) column without further
-     * constraints, defaults and remarks.
-     */
-    @Test
-    void testNumeric4_3Column() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 4);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 3);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 16);
-
-        validate(TEST_TABLE, "COL_NUM4_3", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for an NUMERIC(4,0) column without further
-     * constraints, defaults and remarks.
-     * <p>
-     * Apart from the subtype this is actually identical to a SMALLINT
-     * </p>
-     */
-    @Test
-    void testNumeric4_0Column() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 4);
-        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 17);
-        validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
-
-        validate(TEST_TABLE, "COL_NUM4_0", validationRules);
+        validate(TEST_TABLE, columnName, validationRules);
     }
 
     /**
@@ -674,54 +516,25 @@ class FBDatabaseMetaDataColumnsTest {
     }
 
     /**
-     * Tests getColumns() metadata for a VARCHAR(100) column with explicit
-     * DEFAULT NULL.
+     * Tests getColumns() metadata for a VARCHAR(100) column with explicit DEFAULT value.
      */
-    @Test
-    void testVarchar_DefaultNull() throws Exception {
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, quoteCharacter = '`', textBlock = """
+            columnName,                  expectedPosition, expectedDefault
+            COL_VARCHAR_DEFAULT_NULL,    34,               `NULL`
+            COL_VARCHAR_DEFAULT_USER,    35,               `USER`
+            COL_VARCHAR_DEFAULT_LITERAL, 36,               `'literal'`
+            """)
+    void testVarchar_Default(String columnName, int expectedPosition, String expectedDefault) throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 100);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 34);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, expectedPosition);
         validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 100);
-        validationRules.put(ColumnMetaData.COLUMN_DEF, "NULL");
+        validationRules.put(ColumnMetaData.COLUMN_DEF, expectedDefault);
 
-        validate(TEST_TABLE, "COL_VARCHAR_DEFAULT_NULL", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for a VARCHAR(100) column with explicit
-     * DEFAULT USER.
-     */
-    @Test
-    void testVarchar_DefaultUser() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 100);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 35);
-        validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 100);
-        validationRules.put(ColumnMetaData.COLUMN_DEF, "USER");
-
-        validate(TEST_TABLE, "COL_VARCHAR_DEFAULT_USER", validationRules);
-    }
-
-    /**
-     * Tests getColumns() metadata for a VARCHAR(100) column with literal
-     * DEFAULT (DEFAULT 'literal').
-     */
-    @Test
-    void testVarchar_DefaultLiteral() throws Exception {
-        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 100);
-        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 36);
-        validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 100);
-        validationRules.put(ColumnMetaData.COLUMN_DEF, "'literal'");
-
-        validate(TEST_TABLE, "COL_VARCHAR_DEFAULT_LITERAL", validationRules);
+        validate(TEST_TABLE, columnName, validationRules);
     }
 
     /**

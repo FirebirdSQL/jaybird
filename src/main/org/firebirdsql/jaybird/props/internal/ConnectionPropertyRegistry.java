@@ -119,6 +119,7 @@ public final class ConnectionPropertyRegistry {
         return Stream.of(new StandardConnectionPropertyDefiner());
     }
 
+    @SuppressWarnings("java:S1141")
     private static Stream<ConnectionPropertyDefinerSpi> getCustomDefiners() {
         try {
             ServiceLoader<ConnectionPropertyDefinerSpi> serviceLoader = ServiceLoader.load(

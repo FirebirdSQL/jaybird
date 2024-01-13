@@ -31,6 +31,7 @@ package org.firebirdsql.management;
  *
  * @author David Jencks
  */
+@SuppressWarnings("java:S106")
 public class FBCommandLine {
 
     public static void main(String[] args) throws Exception {

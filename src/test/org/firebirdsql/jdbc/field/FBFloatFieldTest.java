@@ -135,6 +135,7 @@ class FBFloatFieldTest extends BaseJUnit5TestFBField<FBFloatField, Float> {
     @Override
     void getBigDecimalIntNonNull() throws SQLException {
         // TODO: Implement test for getBigDecimal(int)
+        fail("test should be disabled");
     }
 
     @Test

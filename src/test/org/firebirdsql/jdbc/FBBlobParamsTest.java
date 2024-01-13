@@ -77,7 +77,7 @@ class FBBlobParamsTest {
         ps.setObject(1, PreparedStatement.class.getName());
 
         ResultSet rs = ps.executeQuery();
-        rs.next();
+        assertDoesNotThrow(rs::next);
     }
 
     /**

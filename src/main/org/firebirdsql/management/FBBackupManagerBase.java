@@ -92,7 +92,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
     /**
      * Create a new instance of <code>FBBackupManagerBase</code> based on the default GDSType.
      */
-    public FBBackupManagerBase() {
+    protected FBBackupManagerBase() {
     }
 
     /**
@@ -101,7 +101,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
-    public FBBackupManagerBase(String gdsType) {
+    protected FBBackupManagerBase(String gdsType) {
         super(gdsType);
     }
 
@@ -111,7 +111,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
-    public FBBackupManagerBase(GDSType gdsType) {
+    protected FBBackupManagerBase(GDSType gdsType) {
         super(gdsType);
     }
 

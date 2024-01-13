@@ -138,23 +138,25 @@ public abstract class FBField {
             GDSHelper gdsHelper, boolean cached) throws SQLException {
         final int jdbcType = JdbcTypeConverter.toJdbcType(fieldDescriptor);
         switch (jdbcType) {
-        case Types.LONGVARCHAR:
+        case Types.LONGVARCHAR -> {
             if (cached) {
                 return new FBCachedLongVarCharField(fieldDescriptor, dataProvider, jdbcType, gdsHelper);
             } else {
                 return new FBLongVarCharField(fieldDescriptor, dataProvider, jdbcType, gdsHelper);
             }
-        case Types.BLOB:
-        case Types.LONGVARBINARY:
+        }
+        case Types.BLOB, Types.LONGVARBINARY -> {
             if (cached) {
                 return new FBCachedBlobField(fieldDescriptor, dataProvider, jdbcType, gdsHelper);
             } else {
                 return new FBBlobField(fieldDescriptor, dataProvider, jdbcType, gdsHelper);
             }
-        default:
+        }
+        default -> {
             final FBField result = FBField.createField(jdbcType, fieldDescriptor, dataProvider);
             result.setConnection(gdsHelper);
             return result;
+        }
         }
     }
 
@@ -269,6 +271,7 @@ public abstract class FBField {
         throw new FBDriverNotCapableException();
     }
 
+    @SuppressWarnings("java:S1479")
     public <T> T getObject(Class<T> type) throws SQLException {
         if (type == null) {
             throw new SQLNonTransientException("getObject called with type null");
@@ -669,6 +672,7 @@ public abstract class FBField {
      * @throws SQLException
      *         For database access errors, or values that cannot be converted.
      */
+    @SuppressWarnings("java:S1452")
     public Decimal<?> getDecimal() throws SQLException {
         return convertForGet(getBigDecimal(), v -> Decimal128.valueOf(v, OverflowHandling.THROW_EXCEPTION),
                 Decimal128.class, "value %s out of range"::formatted);

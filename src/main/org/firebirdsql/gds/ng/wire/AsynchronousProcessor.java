@@ -163,12 +163,7 @@ public final class AsynchronousProcessor {
                 if (count > 0) {
                     channel.processEventData();
                 } else if (count < 0) {
-                    try {
-                        channel.close();
-                    } catch (SQLException e) {
-                        // ignore
-                        log.log(ERROR, "SQLException closing event channel", e);
-                    }
+                    closeSilently(channel, "SQLException closing event channel");
                 }
             } catch (AsynchronousCloseException e) {
                 // Channel closed
@@ -179,11 +174,15 @@ public final class AsynchronousProcessor {
             } catch (Exception e) {
                 log.log(ERROR, "Exception reading from event channel; attempting to close async channel", e);
                 FbWireAsynchronousChannel channel = (FbWireAsynchronousChannel) selectionKey.attachment();
-                try {
-                    channel.close();
-                } catch (Exception e1) {
-                    log.log(ERROR, "Attempt to close async channel failed", e1);
-                }
+                closeSilently(channel, "Attempt to close async channel failed");
+            }
+        }
+
+        private static void closeSilently(FbWireAsynchronousChannel channel, String logMessageOnException) {
+            try {
+                channel.close();
+            } catch (SQLException e) {
+                log.log(ERROR, logMessageOnException, e);
             }
         }
 

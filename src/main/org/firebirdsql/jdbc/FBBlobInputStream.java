@@ -113,8 +113,12 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
             if (e.getCause() instanceof IOException ioe) {
                 throw ioe;
             }
-            throw new IOException("Blob read problem: " + e, e);
+            throw blobReadProblem(e);
         }
+    }
+
+    private static IOException blobReadProblem(Exception e) {
+        return new IOException("Blob read problem: " + e, e);
     }
 
     /**
@@ -168,7 +172,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
             if (e.getCause() instanceof IOException ioe) {
                 throw ioe;
             }
-            throw new IOException("Blob read problem: " + e, e);
+            throw blobReadProblem(e);
         }
     }
 
@@ -190,7 +194,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
             if (e.getCause() instanceof IOException ioe) {
                 throw ioe;
             }
-            throw new IOException("Blob read problem: " + e, e);
+            throw blobReadProblem(e);
         }
     }
 
@@ -233,7 +237,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
                 if (e.getCause() instanceof IOException ioe) {
                     throw ioe;
                 }
-                throw new IOException("Blob read problem: " + e, e);
+                throw blobReadProblem(e);
             }
         }
     }

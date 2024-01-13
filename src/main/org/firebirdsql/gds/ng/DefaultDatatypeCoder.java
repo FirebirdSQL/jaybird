@@ -285,6 +285,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    @SuppressWarnings("java:S1168")
     public byte[] encodeLocalDateTime(LocalDateTime val) {
         if (val == null) return null;
         byte[] buf = new byte[8];
@@ -340,6 +341,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    @SuppressWarnings("java:S1168")
     public byte[] encodeInt128(BigInteger val) {
         if (val == null) return null;
         if (val.bitLength() > 127) {

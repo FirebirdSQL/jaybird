@@ -30,7 +30,9 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  */
 class FBDoubleField extends FBField {
+    @SuppressWarnings("java:S2111")
     private static final BigDecimal BD_MAX_DOUBLE = new BigDecimal(MAX_DOUBLE_VALUE);
+    @SuppressWarnings("java:S2111")
     private static final BigDecimal BD_MIN_DOUBLE = new BigDecimal(MIN_DOUBLE_VALUE);
 
     FBDoubleField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
@@ -49,10 +51,14 @@ class FBDoubleField extends FBField {
         double value = getDouble();
         // check if value is within bounds
         if (value > MAX_BYTE_VALUE || value < MIN_BYTE_VALUE) {
-            throw invalidGetConversion("byte", String.format("value %f out of range", value));
+            throw outOfRangeGetConversion("byte", value);
         }
 
         return (byte) value;
+    }
+
+    private SQLException outOfRangeGetConversion(String type, double value) {
+        return invalidGetConversion(type, "value %f out of range".formatted(value));
     }
 
     @Override
@@ -60,7 +66,7 @@ class FBDoubleField extends FBField {
         double value = getDouble();
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
-            throw invalidGetConversion("short", String.format("value %f out of range", value));
+            throw outOfRangeGetConversion("short", value);
         }
 
         return (short) value;
@@ -71,7 +77,7 @@ class FBDoubleField extends FBField {
         double value = getDouble();
         // check if value is within bounds
         if (value > MAX_INT_VALUE || value < MIN_INT_VALUE) {
-            throw invalidGetConversion("int", String.format("value %f out of range", value));
+            throw outOfRangeGetConversion("int", value);
         }
 
         return (int) value;
@@ -82,7 +88,7 @@ class FBDoubleField extends FBField {
         double value = getDouble();
         // check if value is within bounds
         if (value > MAX_LONG_VALUE || value < MIN_LONG_VALUE) {
-            throw invalidGetConversion("long", String.format("value %f out of range", value));
+            throw outOfRangeGetConversion("long", value);
         }
 
         return (long) value;
@@ -95,7 +101,7 @@ class FBDoubleField extends FBField {
         float cValue = (float) value;
         // check if value is within bounds
         if (cValue == Float.POSITIVE_INFINITY || cValue == Float.NEGATIVE_INFINITY) {
-            throw invalidGetConversion("float", String.format("value %f out of range", value));
+            throw outOfRangeGetConversion("float", value);
         }
 
         return cValue;

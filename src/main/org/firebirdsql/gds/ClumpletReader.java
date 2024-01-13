@@ -116,8 +116,9 @@ public class ClumpletReader {
             case TpbItems.isc_tpb_lock_read:
             case TpbItems.isc_tpb_lock_timeout:
                 return ClumpletType.TraditionalDpb;
+            default:
+                return ClumpletType.SingleTpb;
             }
-            return ClumpletType.SingleTpb;
         case SpbSendItems:
             switch (tag) {
             case ISCConstants.isc_info_svc_auth_block:
@@ -129,8 +130,9 @@ public class ClumpletReader {
             case ISCConstants.isc_info_length:
             case ISCConstants.isc_info_flag_end:
                 return ClumpletType.SingleTpb;
+            default:
+                return ClumpletType.StringSpb;
             }
-            return ClumpletType.StringSpb;
         case SpbReceiveItems:
             return ClumpletType.SingleTpb;
         case SpbStart:
@@ -165,8 +167,9 @@ public class ClumpletReader {
                     return ClumpletType.SingleTpb;
                 case ISCConstants.isc_spb_res_access_mode:
                     return ClumpletType.ByteSpb;
+                default:
+                    throw invalidStructure("unknown parameter for backup/restore");
                 }
-                throw invalidStructure("unknown parameter for backup/restore");
             case ISCConstants.isc_action_svc_repair:
                 switch (tag) {
                 case SpbItems.isc_spb_dbname:
@@ -180,8 +183,9 @@ public class ClumpletReader {
                 case ISCConstants.isc_spb_rpr_rollback_trans_64:
                 case ISCConstants.isc_spb_rpr_recover_two_phase_64:
                     return ClumpletType.BigIntSpb;
+                default:
+                    throw invalidStructure("unknown parameter for repair");
                 }
-                throw invalidStructure("unknown parameter for repair");
             case ISCConstants.isc_action_svc_add_user:
             case ISCConstants.isc_action_svc_delete_user:
             case ISCConstants.isc_action_svc_modify_user:
@@ -203,8 +207,9 @@ public class ClumpletReader {
                 case ISCConstants.isc_spb_sec_groupid:
                 case ISCConstants.isc_spb_sec_admin:
                     return ClumpletType.IntSpb;
+                default:
+                    throw invalidStructure("unknown parameter for security database operation");
                 }
-                throw invalidStructure("unknown parameter for security database operation");
             case ISCConstants.isc_action_svc_properties:
                 switch (tag) {
                 case SpbItems.isc_spb_dbname:
@@ -226,10 +231,9 @@ public class ClumpletReader {
                 case ISCConstants.isc_spb_prp_shutdown_mode:
                 case ISCConstants.isc_spb_prp_online_mode:
                     return ClumpletType.ByteSpb;
+                default:
+                    throw invalidStructure("unknown parameter for setting database properties");
                 }
-                throw invalidStructure("unknown parameter for setting database properties");
-//		    case ISCConstants.isc_action_svc_add_license:
-//		    case ISCConstants.isc_action_svc_remove_license:
             case ISCConstants.isc_action_svc_db_stats:
                 switch (tag) {
                 case SpbItems.isc_spb_dbname:
@@ -238,8 +242,9 @@ public class ClumpletReader {
                     return ClumpletType.StringSpb;
                 case SpbItems.isc_spb_options:
                     return ClumpletType.IntSpb;
+                default:
+                    throw invalidStructure("unknown parameter for getting statistics");
                 }
-                throw invalidStructure("unknown parameter for getting statistics");
             case ISCConstants.isc_action_svc_get_ib_log:
                 throw invalidStructure("unknown parameter for getting log");
             case ISCConstants.isc_action_svc_nbak:
@@ -257,16 +262,18 @@ public class ClumpletReader {
                     return ClumpletType.IntSpb;
                 case ISCConstants.isc_spb_nbk_clean_history:
                     return ClumpletType.SingleTpb;
+                default:
+                    throw invalidStructure("unknown parameter for nbackup");
                 }
-                throw invalidStructure("unknown parameter for nbackup");
             case ISCConstants.isc_action_svc_nfix:
                 switch (tag) {
                 case SpbItems.isc_spb_dbname:
                     return ClumpletType.StringSpb;
                 case SpbItems.isc_spb_options:
                     return ClumpletType.IntSpb;
+                default:
+                    throw invalidStructure("unknown parameter for nbackup");
                 }
-                throw invalidStructure("unknown parameter for nbackup");
             case ISCConstants.isc_action_svc_trace_start:
             case ISCConstants.isc_action_svc_trace_stop:
             case ISCConstants.isc_action_svc_trace_suspend:
@@ -553,6 +560,7 @@ public class ClumpletReader {
         return FbExceptionBuilder.forException(jb_clumpletReaderUsageError).messageParameter(message).toSQLException();
     }
 
+    @SuppressWarnings("java:S115")
     public enum Kind {
         EndOfList,
         Tagged,
@@ -566,6 +574,7 @@ public class ClumpletReader {
         SpbReceiveItems
     }
 
+    @SuppressWarnings("java:S115")
     public enum ClumpletType {
         TraditionalDpb,
         SingleTpb,

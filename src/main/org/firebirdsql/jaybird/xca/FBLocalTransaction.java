@@ -153,14 +153,14 @@ public final class FBLocalTransaction {
          * Return the global transaction id of this transaction.
          */
         public byte[] getGlobalTransactionId() {
-            return null;
+            return new byte[0];
         }
 
         /**
          * Return the branch qualifier of this transaction.
          */
         public byte[] getBranchQualifier() {
-            return null;
+            return new byte[0];
         }
 
         /**

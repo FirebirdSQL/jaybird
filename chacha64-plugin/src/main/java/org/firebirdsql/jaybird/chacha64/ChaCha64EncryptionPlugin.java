@@ -98,6 +98,7 @@ public class ChaCha64EncryptionPlugin implements EncryptionPlugin {
         }
     }
 
+    @SuppressWarnings("java:S5542")
     private Cipher createCipher(int mode, ChaCha64IV iv, byte[] key) throws SQLException {
         try {
             var chaChaCipher = Cipher.getInstance(CHA_CHA_CIPHER_NAME, provider);
@@ -134,6 +135,7 @@ public class ChaCha64EncryptionPlugin implements EncryptionPlugin {
             nonce = iv.clone();
         }
 
+        @SuppressWarnings("java:S3329")
         IvParameterSpec toParameterSpec() {
             return new IvParameterSpec(nonce);
         }

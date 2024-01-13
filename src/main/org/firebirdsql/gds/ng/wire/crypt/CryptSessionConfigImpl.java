@@ -28,6 +28,7 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 5
  */
+@SuppressWarnings("java:S6218")
 record CryptSessionConfigImpl(
         EncryptionIdentifier encryptionIdentifier, byte[] encryptKey, byte[] decryptKey, byte[] specificData)
         implements CryptSessionConfig {

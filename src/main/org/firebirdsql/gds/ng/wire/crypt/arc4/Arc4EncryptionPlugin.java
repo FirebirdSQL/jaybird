@@ -72,6 +72,7 @@ public final class Arc4EncryptionPlugin implements EncryptionPlugin {
         return createCipher(Cipher.DECRYPT_MODE, cryptSessionConfig.decryptKey());
     }
 
+    @SuppressWarnings({ "java:S5542", "java:S5547" })
     private Cipher createCipher(int mode, byte[] key) throws SQLException {
         try {
             var rc4Cipher = Cipher.getInstance(ARCFOUR_CIPHER_NAME);

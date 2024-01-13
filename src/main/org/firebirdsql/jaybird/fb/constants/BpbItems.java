@@ -24,7 +24,7 @@ package org.firebirdsql.jaybird.fb.constants;
  * @author Mark Rotteveel
  * @since 5
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unused", "java:S115" })
 public final class BpbItems {
 
     public static final int isc_bpb_version1 = 1;

@@ -456,7 +456,7 @@ class FBCallableStatementTest {
         executeDDL(con, CREATE_PROCEDURE_WITHOUT_PARAMS);
 
         try (CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS)) {
-            stmt.execute();
+            assertDoesNotThrow(() -> stmt.execute());
         }
     }
 
@@ -469,7 +469,7 @@ class FBCallableStatementTest {
         executeDDL(con, CREATE_PROCEDURE_WITHOUT_PARAMS);
 
         try (CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_1)) {
-            stmt.execute();
+            assertDoesNotThrow(() -> stmt.execute());
         }
     }
 
@@ -483,12 +483,12 @@ class FBCallableStatementTest {
         executeDDL(con, CREATE_PROCEDURE_WITHOUT_PARAMS);
 
         try (CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_2)) {
-            stmt.execute();
+            assertDoesNotThrow(() -> stmt.execute());
         }
 
         // and now test EXECUTE PROCEDURE syntax
         try (CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_3)) {
-            stmt.execute();
+            assertDoesNotThrow(() -> stmt.execute());
         }
     }
 
@@ -717,7 +717,7 @@ class FBCallableStatementTest {
     void testDoubleClose() throws SQLException {
         CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         stmt.close();
-        stmt.close();
+        assertDoesNotThrow(stmt::close);
     }
 
     /**
@@ -975,8 +975,8 @@ class FBCallableStatementTest {
             cs.registerOutParameter(2, Types.VARCHAR);
 
             // Calling getParameterMetaData and getMetaData should not throw an exception
-            cs.getParameterMetaData();
-            cs.getMetaData();
+            assertDoesNotThrow(cs::getParameterMetaData);
+            assertDoesNotThrow(cs::getMetaData);
         }
     }
 

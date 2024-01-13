@@ -54,11 +54,13 @@ class FBDecfloatFieldTest extends BaseJUnit5TestFBField<FBDecfloatField<?>, BigD
     @Test
     @Disabled("Ignored in favour of more specific tests")
     void getDecimalNonNull() throws SQLException {
+        fail("test should be disabled");
     }
 
     @Test
     @Disabled("Ignored in favour of more specific tests")
     void setDecimalNonNull() throws SQLException {
+        fail("test should be disabled");
     }
 
     @Test
@@ -282,12 +284,14 @@ class FBDecfloatFieldTest extends BaseJUnit5TestFBField<FBDecfloatField<?>, BigD
     @Disabled("Ignored in favor of more specific tests")
     @Override
     void getBigDecimalNonNull() throws SQLException {
+        fail("test should be disabled");
     }
 
     @Test
     @Disabled("Ignored in favor of more specific tests")
     @Override
     void getBigDecimalIntNonNull() throws SQLException {
+        fail("test should be disabled");
     }
 
     @Test
@@ -311,6 +315,7 @@ class FBDecfloatFieldTest extends BaseJUnit5TestFBField<FBDecfloatField<?>, BigD
     @Disabled("Ignored in favor of more specific tests")
     @Override
     void setBigDecimalNonNull() throws SQLException {
+        fail("test should be disabled");
     }
 
     @Test
@@ -389,6 +394,7 @@ class FBDecfloatFieldTest extends BaseJUnit5TestFBField<FBDecfloatField<?>, BigD
     @Disabled("Ignored in favor of more specific tests")
     @Override
     void getBooleanNonNull() throws SQLException {
+        fail("test should be disabled");
     }
 
     @Test
@@ -443,6 +449,7 @@ class FBDecfloatFieldTest extends BaseJUnit5TestFBField<FBDecfloatField<?>, BigD
     @Disabled("Ignored in favor of more specific tests")
     @Override
     void setBoolean() throws SQLException {
+        fail("test should be disabled");
     }
 
     @Test

@@ -140,7 +140,7 @@ class FBMaintenanceManagerTest {
             Statement stmt = conn.createStatement();
 
             // This has to fail unless the db is read-write
-            stmt.executeUpdate("INSERT INTO TEST VALUES (3)");
+            assertDoesNotThrow(() -> stmt.executeUpdate("INSERT INTO TEST VALUES (3)"));
         }
     }
 
@@ -169,7 +169,7 @@ class FBMaintenanceManagerTest {
         maintenanceManager.setDatabaseDialect(3);
 
         // Database has to be in dialect 3 to do this
-        createTestTable(DIALECT3_TABLE);
+        assertDoesNotThrow(() -> createTestTable(DIALECT3_TABLE));
     }
 
     /**
@@ -319,10 +319,10 @@ class FBMaintenanceManagerTest {
     }
 
     @Test
-    void testSetForcedWrites() throws Exception {
+    void testSetForcedWrites() {
         // No test we can really do other than make sure it doesn't just fail
-        maintenanceManager.setForcedWrites(true);
-        maintenanceManager.setForcedWrites(false);
+        assertDoesNotThrow(() -> maintenanceManager.setForcedWrites(true));
+        assertDoesNotThrow(() -> maintenanceManager.setForcedWrites(false));
     }
 
     /**
@@ -340,22 +340,23 @@ class FBMaintenanceManagerTest {
      */
     @Test
     void testSetPageFillBadParam_2() {
-        assertThrows(IllegalArgumentException.class,
-                () -> maintenanceManager.setPageFill(
-                        Math.min(MaintenanceManager.PAGE_FILL_FULL, MaintenanceManager.PAGE_FILL_RESERVE) - 1));
+        final int notPageFillFullOrReserve = 34;
+        assert notPageFillFullOrReserve != MaintenanceManager.PAGE_FILL_FULL
+                && notPageFillFullOrReserve != MaintenanceManager.PAGE_FILL_RESERVE;
+        assertThrows(IllegalArgumentException.class, () -> maintenanceManager.setPageFill(notPageFillFullOrReserve));
     }
 
     @Test
-    void testSetPageFill() throws Exception {
+    void testSetPageFill() {
         // Just make sure it runs without an exception
-        maintenanceManager.setPageFill(MaintenanceManager.PAGE_FILL_FULL);
-        maintenanceManager.setPageFill(MaintenanceManager.PAGE_FILL_RESERVE);
+        assertDoesNotThrow(() -> maintenanceManager.setPageFill(MaintenanceManager.PAGE_FILL_FULL));
+        assertDoesNotThrow(() -> maintenanceManager.setPageFill(MaintenanceManager.PAGE_FILL_RESERVE));
     }
 
     @Test
     void testMarkCorruptRecords() throws Exception {
         // Just make sure it runs without an exception
-        maintenanceManager.markCorruptRecords();
+        assertDoesNotThrow(() -> maintenanceManager.markCorruptRecords());
     }
 
     @Test
@@ -418,26 +419,26 @@ class FBMaintenanceManagerTest {
     @Test
     void testSetSweepThreshold() throws Exception {
         // Just run it to see if it throws an exception
-        maintenanceManager.setSweepThreshold(0);
-        maintenanceManager.setSweepThreshold(2000);
+        assertDoesNotThrow(() -> maintenanceManager.setSweepThreshold(0));
+        assertDoesNotThrow(() -> maintenanceManager.setSweepThreshold(2000));
     }
 
     @Test
     void testSweepDatabase() throws Exception {
         // Just run it to see if it throws an exception
-        maintenanceManager.sweepDatabase();
+        assertDoesNotThrow(() -> maintenanceManager.sweepDatabase());
     }
 
     @Test
     void testActivateShadowFile() throws Exception {
         // Just run it to see if it throws an exception
-        maintenanceManager.activateShadowFile();
+        assertDoesNotThrow(() -> maintenanceManager.activateShadowFile());
     }
 
     @Test
     void testKillUnavailableShadows() throws Exception {
         // Just run it to see if it throws an exception
-        maintenanceManager.killUnavailableShadows();
+        assertDoesNotThrow(() -> maintenanceManager.killUnavailableShadows());
     }
 
     @Test
@@ -581,9 +582,9 @@ class FBMaintenanceManagerTest {
 
     // NOTE: this test only confirms that the repair option can be run
     @Test
-    void testFixIcu() throws Exception {
+    void testFixIcu() {
         assumeTrue(getDefaultSupportInfo().supportsFixIcu(), "test requires fix ICU support");
-        maintenanceManager.fixIcu();
+        assertDoesNotThrow(maintenanceManager::fixIcu);
     }
 
 }

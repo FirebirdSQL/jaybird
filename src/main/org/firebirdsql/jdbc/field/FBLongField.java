@@ -52,10 +52,14 @@ final class FBLongField extends FBField {
         long value = getLong();
         // check if value is within bounds
         if (value > MAX_BYTE_VALUE || value < MIN_BYTE_VALUE) {
-            throw invalidGetConversion("byte", String.format("value %d out of range", value));
+            throw outOfRangeGetConversion("byte", value);
         }
 
         return (byte) value;
+    }
+
+    private SQLException outOfRangeGetConversion(String type, long value) {
+        return invalidGetConversion(type, "value %d out of range".formatted(value));
     }
 
     @Override
@@ -63,7 +67,7 @@ final class FBLongField extends FBField {
         long value = getLong();
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
-            throw invalidGetConversion("short", String.format("value %d out of range", value));
+            throw outOfRangeGetConversion("short", value);
         }
 
         return (short) value;
@@ -74,7 +78,7 @@ final class FBLongField extends FBField {
         long value = getLong();
         // check if value is within bounds
         if (value > MAX_INT_VALUE || value < MIN_INT_VALUE) {
-            throw invalidGetConversion("int", String.format("value %d out of range", value));
+            throw outOfRangeGetConversion("int", value);
         }
 
         return (int) value;
