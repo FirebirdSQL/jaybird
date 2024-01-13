@@ -19,9 +19,15 @@
 package org.firebirdsql.jaybird.util;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EmptySource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StringUtilsTest {
 
@@ -58,6 +64,19 @@ class StringUtilsTest {
         final String value = "ends with space ";
         final String expectedValue = "ends with space";
         assertEquals(expectedValue, StringUtils.trimToNull(value));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @EmptySource
+    void testIsNullOrEmpty_nullOrEmptyYieldsTrue(String value) {
+        assertTrue(StringUtils.isNullOrEmpty(value));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { " ", "a", "\0", "abc" })
+    void testIsNullOrEmpty_nonEmptyYieldsFalse(String value) {
+        assertFalse(StringUtils.isNullOrEmpty(value));
     }
 
 }

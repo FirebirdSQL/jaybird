@@ -22,6 +22,7 @@ package org.firebirdsql.jaybird.util;
  * Helper class for string operations
  *
  * @author Mark Rotteveel
+ * @since 4
  */
 public final class StringUtils {
 
@@ -34,7 +35,7 @@ public final class StringUtils {
      * or empty after trimming.
      *
      * @param value
-     *         Value to trim
+     *         value to trim
      * @return Trimmed string {@code value}, or {@code null} when null, or empty after trim.
      * @see String#trim()
      */
@@ -47,4 +48,17 @@ public final class StringUtils {
         }
         return null;
     }
+
+    /**
+     * Checks if {@code value} is {@code null} or empty.
+     *
+     * @param value
+     *         value to test
+     * @return {@code true} if {@code value} is {@code null} or emoty, {@code false} for non-empty strings
+     * @since 6
+     */
+    public static boolean isNullOrEmpty(String value) {
+        return value == null || value.isEmpty();
+    }
+    
 }

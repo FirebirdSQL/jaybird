@@ -21,7 +21,7 @@ package org.firebirdsql.gds.ng.fields;
 import java.util.Arrays;
 
 /**
- * Collection of values of fields. Usually a row or set of parameters.
+ * Collection of values of fields. Usually row or parameter values.
  *
  * @author Mark Rotteveel
  * @since 3.0
@@ -96,6 +96,8 @@ public sealed class RowValue {
 
     /**
      * Resets the state of this row value to uninitialized.
+     * 
+     * @since 4
      */
     public void reset() {
         Arrays.fill(fieldData, NOT_INITIALIZED);
@@ -108,6 +110,7 @@ public sealed class RowValue {
      * </p>
      *
      * @return {@code true} if this a deleted row marker, {@code false} otherwise
+     * @since 5
      */
     public boolean isDeletedRowMarker() {
         return false;
@@ -115,6 +118,8 @@ public sealed class RowValue {
 
     /**
      * Initializes uninitialized fields with {@code null}.
+     *
+     * @since 5
      */
     public final void initializeFields() {
         for (int idx = 0; idx < fieldData.length; idx++) {
@@ -132,9 +137,24 @@ public sealed class RowValue {
      * @return {@code true} if the field is initialized
      * @throws IndexOutOfBoundsException
      *         if index is not {@code 0 <= index > getCount()}
+     * @since 4
      */
     public final boolean isInitialized(int index) {
         return fieldData[index] != NOT_INITIALIZED;
+    }
+
+    /**
+     * @return number of initialized fields in this row value
+     * @since 6
+     */
+    public final int initializedCount() {
+        int count = 0;
+        for (byte[] fieldDatum : fieldData) {
+            if (fieldDatum != NOT_INITIALIZED) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**
@@ -143,13 +163,11 @@ public sealed class RowValue {
      * @param rowDescriptor
      *         The row descriptor
      * @return {@code RowValue} object
+     * @since 4
      */
     public static RowValue defaultFor(RowDescriptor rowDescriptor) {
         int count = rowDescriptor.getCount();
-        if (count == 0) {
-            return EMPTY_ROW_VALUE;
-        }
-        return new RowValue(count, true);
+        return count == 0 ? EMPTY_ROW_VALUE : new RowValue(count, true);
     }
 
     /**
@@ -193,6 +211,7 @@ public sealed class RowValue {
      *
      * @param count The number of columns
      * @return {@code RowValue} object
+     * @since 5
      */
     public static RowValue deletedRowMarker(int count) {
         return new DeletedRowMarker(count);
@@ -242,10 +261,7 @@ public sealed class RowValue {
         RowValue newRowValue = new RowValue(size, false);
         for (int idx = 0; idx < size; idx++) {
             byte[] value = fieldData[idx];
-            if (value != null && value != NOT_INITIALIZED) {
-                value = value.clone();
-            }
-            newRowValue.fieldData[idx] = value;
+            newRowValue.fieldData[idx] = value == null || value == NOT_INITIALIZED ? value : value.clone();
         }
         return newRowValue;
     }

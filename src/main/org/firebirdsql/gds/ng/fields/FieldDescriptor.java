@@ -32,6 +32,7 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
 import java.util.Objects;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 
 /**
  * The class {@code FieldDescriptor} contains the column metadata of the XSQLVAR server
@@ -56,7 +57,10 @@ public final class FieldDescriptor {
     private final String originalName;
     private final String originalTableName;
     private final String ownerName;
+
+    // cached data derived from immutable state
     private int hash;
+    private byte dbKey;
 
     /**
      * Constructor for metadata FieldDescriptor.
@@ -85,11 +89,11 @@ public final class FieldDescriptor {
      * @param ownerName
      *         Owner of the column/table
      */
+    @SuppressWarnings("java:S107")
     public FieldDescriptor(int position, DatatypeCoder datatypeCoder,
             int type, int subType, int scale, int length,
             String fieldName, String tableAlias, String originalName, String originalTableName,
             String ownerName) {
-        assert datatypeCoder != null : "dataTypeCoder should not be null";
         this.position = position;
         this.datatypeCoder = datatypeCoderForType(datatypeCoder, type, subType, scale);
         this.type = type;
@@ -99,14 +103,20 @@ public final class FieldDescriptor {
         this.fieldName = fieldName;
         // Assign null if table alias is empty string
         // TODO May want to do the reverse, or handle this better; see FirebirdResultSetMetaData contract
-        this.tableAlias = tableAlias == null || !tableAlias.isEmpty() ? tableAlias : null;
+        this.tableAlias = trimToNull(tableAlias);
         this.originalName = originalName;
         this.originalTableName = originalTableName;
         this.ownerName = ownerName;
     }
 
     /**
-     * @return The 0-based position of this field (or {@code -1})
+     * The position of the field in the row or parameter set.
+     * <p>
+     * In general this should be equal to the position of this descriptor in {@link RowDescriptor}, but in some cases
+     * (usually test code), it might be {@code -1} instead.
+     * </p>
+     *
+     * @return The 0-based position of this field in the row or parameter set (or {@code -1} if unknown)
      */
     public int getPosition() {
         return position;
@@ -215,7 +225,7 @@ public final class FieldDescriptor {
      * @return {@code true} if this field is nullable.
      */
     public boolean isNullable() {
-        return (type & 1) == 1;
+        return (type & 1) != 0;
     }
 
     /**
@@ -228,9 +238,13 @@ public final class FieldDescriptor {
      * @since 4.0
      */
     public boolean isDbKey() {
-        return "DB_KEY".equals(originalName)
-                && isFbType(SQL_TEXT)
-                && (subType & 0xFF) == CS_BINARY;
+        return dbKey > 0 || dbKey == 0 && isDbKey0();
+    }
+
+    private boolean isDbKey0() {
+        dbKey = ("DB_KEY".equals(originalName) && isFbType(SQL_TEXT) && (subType & 0xFF) == CS_BINARY)
+                ? (byte) 1 : -1;
+        return dbKey > 0;
     }
 
     /**
@@ -242,17 +256,15 @@ public final class FieldDescriptor {
      * @return Character length, or {@code -1} for non-character types (including blobs)
      */
     public int getCharacterLength() {
-        switch (type & ~1) {
-        case SQL_TEXT:
-        case SQL_VARYING: {
-            int maxBytesPerChar = getDatatypeCoder().getEncodingDefinition().getMaxBytesPerChar();
-            // In Firebird 1.5 and earlier, the CHAR(31) metadata columns are reported with a byte length of 31,
-            // while UNICODE_FSS has maxBytesPerChar 3
-            return maxBytesPerChar > 1 && length % maxBytesPerChar == 0 ? length / maxBytesPerChar : length;
-        }
-        default:
-            return -1;
-        }
+        return switch (type & ~1) {
+            case SQL_TEXT, SQL_VARYING -> {
+                int maxBytesPerChar = getDatatypeCoder().getEncodingDefinition().getMaxBytesPerChar();
+                // In Firebird 1.5 and earlier, the CHAR(31) metadata columns are reported with a byte length of 31,
+                // while UNICODE_FSS has maxBytesPerChar 3
+                yield maxBytesPerChar > 1 && length % maxBytesPerChar == 0 ? length / maxBytesPerChar : length;
+            }
+            default -> -1;
+        };
     }
 
     /**
@@ -291,20 +303,18 @@ public final class FieldDescriptor {
      * is returned
      */
     private static int getCharacterSetId(int type, int subType, int scale) {
-        switch (type & ~1) {
-        case SQL_TEXT:
-        case SQL_VARYING:
-            return subType & 0xFF;
-        case SQL_BLOB:
-            if (subType == BLOB_SUB_TYPE_TEXT) {
-                return scale & 0xFF;
+        return switch (type & ~1) {
+            case SQL_TEXT, SQL_VARYING -> subType & 0xFF;
+            case SQL_BLOB -> {
+                if (subType == BLOB_SUB_TYPE_TEXT) {
+                    yield scale & 0xFF;
+                }
+                // Assume binary/octets (instead of NONE)
+                yield CS_BINARY;
             }
-            // Assume binary/octets (instead of NONE)
-            return CS_BINARY;
-        default:
             // Technically not a character type, but assume connection character set
-            return CS_dynamic;
-        }
+            default -> CS_dynamic;
+        };
     }
 
     /**
@@ -351,21 +361,21 @@ public final class FieldDescriptor {
      * @since 5
      */
     public byte getPaddingByte() {
-        switch (type & ~1) {
-        case SQL_TEXT:
-        case SQL_VARYING:
-            if (getCharacterSetId() == CS_BINARY) {
-                return 0x00;
+        return switch (type & ~1) {
+            case SQL_TEXT, SQL_VARYING -> {
+                if (getCharacterSetId() == CS_BINARY) {
+                    yield 0x00;
+                }
+                yield 0x20;
             }
-            return 0x20;
-        default:
-            return 0x00;
-        }
+            default -> 0x00;
+        };
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        // 180 - 124 literals in appendFieldDescriptor + 56 for values (estimated size)
+        var sb = new StringBuilder(180);
         appendFieldDescriptor(sb);
         return sb.toString();
     }
@@ -388,8 +398,7 @@ public final class FieldDescriptor {
     @Override
     public boolean equals(final Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof FieldDescriptor)) return false;
-        FieldDescriptor other = (FieldDescriptor) obj;
+        if (!(obj instanceof FieldDescriptor other)) return false;
         return this.position == other.position
                 && this.type == other.type
                 && this.subType == other.subType
@@ -406,11 +415,10 @@ public final class FieldDescriptor {
     @Override
     public int hashCode() {
         // Depend on immutability to cache hashCode
-        if (hash == 0) {
-            hash = Objects.hash(position, type, subType, scale, length, fieldName, tableAlias, originalName,
-                    originalTableName, ownerName);
-        }
-        return hash;
+        if (hash != 0) return hash;
+        int newHash = Objects.hash(position, type, subType, scale, length, fieldName, tableAlias, originalName,
+                originalTableName, ownerName);
+        return hash = newHash != 0 ? newHash : 1;
     }
 
 }

@@ -24,7 +24,6 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -83,6 +82,14 @@ class FBResultSetTest {
               very_long_str VARCHAR(20000),
               blob_str BLOB SUB_TYPE 1,
               "CamelStr" VARCHAR(255)
+            )""";
+
+    private static final String CREATE_WITH_COMPOSITE_PK = """
+            create table WITH_COMPOSITE_PK (
+              ID1 integer not null,
+              ID2 integer not null,
+              VAL varchar(50),
+              constraint PK_WITH_COMPOSITE_PK primary key (ID1, ID2)
             )""";
 
     private static final String CREATE_VIEW_STATEMENT = """
@@ -431,57 +438,6 @@ class FBResultSetTest {
         }
     }
 
-    @Disabled
-    @Test
-    void testMemoryGrowth() throws Exception {
-        Properties props = getDefaultPropertiesForConnection();
-        props.put("no_result_set_tracking", "");
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-            connection.setAutoCommit(false);
-
-            System.out.println("Inserting...");
-            int recordCount = 1;
-
-            IntFunction<String> rowData = id -> new String(DataGenerator.createRandomAsciiBytes(19000));
-            createTestData(recordCount, rowData, connection, "very_long_str");
-
-            connection.commit();
-
-            System.gc();
-
-            long memoryBeforeSelects = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-
-            System.out.println("Selecting...");
-            int selectRuns = 10000;
-            for (int i = 0; i < selectRuns; i++) {
-                if ((i % 1000) == 0) System.out.println("Select no. " + i);
-
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
-                    //noinspection StatementWithEmptyBody
-                    while (rs.next()) {
-                        // just loop through result set
-                    }
-                }
-            }
-            System.gc();
-
-            long memoryAfterSelects = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-
-            connection.commit();
-
-            System.gc();
-
-            long memoryAfterCommit = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-
-            System.out.println("Memory before selects " + memoryBeforeSelects);
-            System.out.println("Memory after selects " + memoryAfterSelects);
-            System.out.println("Memory after commit " + memoryAfterCommit);
-            System.out.println("Commit freed " + (memoryAfterSelects - memoryAfterCommit));
-        }
-    }
-
     @Test
     void testResultSetNotClosed() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
@@ -682,15 +638,100 @@ class FBResultSetTest {
             executeCreateTable(connection, CREATE_TABLE_STATEMENT);
             executeCreateTable(connection, CREATE_TABLE_STATEMENT2);
 
-            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
-                 ResultSet rs = stmt.executeQuery(
-                         "select * from test_table t1 left join test_table2 t2 on t1.id = t2.id")) {
-                SQLWarning warning = stmt.getWarnings();
-                assertThat(warning, allOf(
+            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 var rs = stmt.executeQuery("select * from test_table t1 left join test_table2 t2 on t1.id = t2.id")) {
+                assertThat(stmt.getWarnings(), allOf(
                         notNullValue(),
                         fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
 
                 assertEquals(CONCUR_READ_ONLY, rs.getConcurrency(), "Expected downgrade to CONCUR_READ_ONLY");
+            }
+        }
+    }
+
+    /**
+     * Tests if a result set that doesn't contain all PK columns (but only a prefix) will be downgraded to read-only.
+     * <p>
+     * Rationale: a previous implementation was satisfied if at least the first PK column was found
+     * </p>
+     */
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableStatementPrefixPK_downgradeToReadOnly(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_WITH_COMPOSITE_PK);
+            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 var rs = stmt.executeQuery("select id1, val from WITH_COMPOSITE_PK")) {
+                assertThat(stmt.getWarnings(), allOf(
+                        notNullValue(),
+                        fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
+
+                assertEquals(CONCUR_READ_ONLY, rs.getConcurrency(), "Expected downgrade to CONCUR_READ_ONLY");
+            }
+        }
+    }
+
+    /**
+     * Tests if a result set that doesn't contain all PK columns (but only a suffix) will be downgraded to read-only.
+     * <p>
+     * Rationale: a previous implementation was satisfied if at least the first PK column was found
+     * </p>
+     */
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableStatementSuffixPK_downgradeToReadOnly(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_WITH_COMPOSITE_PK);
+            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 var rs = stmt.executeQuery("select id2, val from WITH_COMPOSITE_PK")) {
+                assertThat(stmt.getWarnings(), allOf(
+                        notNullValue(),
+                        fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
+
+                assertEquals(CONCUR_READ_ONLY, rs.getConcurrency(), "Expected downgrade to CONCUR_READ_ONLY");
+            }
+        }
+    }
+
+    /**
+     * Tests if a result set that doesn't contain all PK columns, but does contain RDB$DB_KEY, is updatable.
+     * <p>
+     * Rationale: see also {@link #testUpdatableStatementPrefixPK_downgradeToReadOnly(String)}, and previous
+     * implementation considered either the primary key or RDB$DB_KEY, current implementation falls back to RDB$DB_KEY.
+     * </p>
+     */
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableStatementPartialPKAndDBKey(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_WITH_COMPOSITE_PK);
+            try (var pstmt = connection.prepareStatement(
+                    "insert into WITH_COMPOSITE_PK (ID1, ID2, VAL) values (?, ?, ?)")) {
+                pstmt.setInt(1, 1);
+                pstmt.setInt(2, 1);
+                pstmt.setString(3, "ID_1_1");
+                pstmt.addBatch();
+                pstmt.setInt(2, 2);
+                pstmt.setString(3, "ID_1_2");
+                pstmt.addBatch();
+                pstmt.executeBatch();
+            }
+
+            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE)) {
+                try (var rs = stmt.executeQuery("select ID1, RDB$DB_KEY, VAL from WITH_COMPOSITE_PK where ID2 = 1")) {
+                    assertEquals(CONCUR_UPDATABLE, rs.getConcurrency(), "Expected CONCUR_UPDATABLE result set");
+                    assertTrue(rs.next(), "expected a row");
+                    assertEquals("ID_1_1", rs.getString(3), "unexpected value for VAL");
+
+                    rs.updateString(3, "modified");
+                    rs.updateRow();
+                }
+                try (var rs = stmt.executeQuery("select ID1, ID2, VAL from WITH_COMPOSITE_PK order by ID1, ID2")) {
+                    assertTrue(rs.next(), "expected a row");
+                    assertEquals("modified", rs.getString(3), "expected modified value for VAL of first row");
+                    assertTrue(rs.next(), "expected a row");
+                    assertEquals("ID_1_2", rs.getString(3), "expected original value (ID_1_2) for VAL of second row");
+                }
             }
         }
     }

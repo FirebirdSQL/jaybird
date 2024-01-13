@@ -851,13 +851,6 @@ This contradiction has been removed, and the implementations will now send array
 
 // TODO add major changes
 
-[#potentially-breaking-changes]
-=== Potentially breaking changes
-
-Jaybird 6 contains a number of changes that might break existing applications.
-
-See also <<compatibility-changes>> for details.
-
 [#other-fixes-and-changes]
 === Other fixes and changes
 
@@ -917,6 +910,24 @@ The modified implementation returns an empty array, but given this is unspecifie
 This change was also backported to Jaybird 4.0.10 and Jaybird 5.0.3.
 * `FBResultSetNotUpdatableException` now extends `SQLNonTransientException` instead of `FBSQLException`.
 * Jaybird no longer throws any instances of `FBSQLException`.
+* Fixed: FBRowUpdater incorrectly considers result set with only partial PK updatable (https://github.com/FirebirdSQL/jaybird/issues/780[#780])
++
+This change also improves performance of `updateRow()`, `insertRow()`, `deleteRow()` and `refreshRow()`.
+The best row identifier or `RDB$DB_KEY` were detected _each time_ when calling `updateRow()`, `insertRow()`, `deleteRow()`, or `refreshRow()`.
+This has been improved so this detection is done once, and in a way that non-updatable result sets can now be downgraded to `CONCUR_READ_ONLY` instead of throwing an exception when performing the modification.
++
+This change was backported to Jaybird 5.0.4.
+* Improved detection of (non-)updatable result sets.
++
+If the best row identifier was not matched, but the result set contains `RDB$DB_KEY`, we will now consider the result set updatable.
+However, if the table in question has a primary key, and the columns missing from the result set are not generated, this may still fail when calling `ResultSet.insertRow()`.
+
+[#potentially-breaking-changes]
+=== Potentially breaking changes
+
+Jaybird 6 contains a number of changes that might break existing applications.
+
+See also <<compatibility-changes>> for details.
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
