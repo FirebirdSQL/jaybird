@@ -69,7 +69,6 @@ final class FBRowUpdater implements FirebirdRowUpdater {
     private static final int PARAMETER_DBKEY = 2;
     private static final byte[][] EMPTY_2D_BYTES = new byte[0][];
 
-    private final FBConnection connection;
     private final GDSHelper gdsHelper;
     private final RowDescriptor rowDescriptor;
     private final FBField[] fields;
@@ -81,6 +80,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
     private RowValue oldRow;
     private RowValue insertRow;
     private boolean[] updatedFlags;
+    private final int[] parameterMask;
 
     private String tableName;
 
@@ -92,19 +92,27 @@ final class FBRowUpdater implements FirebirdRowUpdater {
 
     FBRowUpdater(FBConnection connection, RowDescriptor rowDescriptor, boolean cached,
             FBObjectListener.ResultSetListener rsListener) throws SQLException {
+        // find the table name (there can be only one table per result set)
+        for (FieldDescriptor fieldDescriptor : rowDescriptor) {
+            if (tableName == null) {
+                tableName = fieldDescriptor.getOriginalTableName();
+            } else if (!tableName.equals(fieldDescriptor.getOriginalTableName())) {
+                throw new FBResultSetNotUpdatableException(
+                        "Underlying result set references at least two relations: " +
+                        tableName + " and " + fieldDescriptor.getOriginalTableName() + ".");
+            }
+        }
+        parameterMask = getParameterMask(tableName, rowDescriptor, connection.getMetaData());
+
         this.rsListener = rsListener;
-
-        this.connection = connection;
         gdsHelper = connection.getGDSHelper();
-
-        this.rowDescriptor = rowDescriptor;
-        fields = new FBField[rowDescriptor.getCount()];
-
         quoteStrategy = QuoteStrategy.forDialect(gdsHelper.getDialect());
 
+        this.rowDescriptor = rowDescriptor;
         newRow = rowDescriptor.createDefaultFieldValues();
         updatedFlags = new boolean[rowDescriptor.getCount()];
 
+        fields = new FBField[rowDescriptor.getCount()];
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
             final int fieldPos = i;
 
@@ -133,17 +141,6 @@ final class FBRowUpdater implements FirebirdRowUpdater {
             };
 
             fields[i] = FBField.createField(rowDescriptor.getFieldDescriptor(i), dataProvider, gdsHelper, cached);
-        }
-
-        // find the table name (there can be only one table per result set)
-        for (FieldDescriptor fieldDescriptor : rowDescriptor) {
-            if (tableName == null) {
-                tableName = fieldDescriptor.getOriginalTableName();
-            } else if (!tableName.equals(fieldDescriptor.getOriginalTableName())) {
-                throw new FBResultSetNotUpdatableException(
-                        "Underlying result set references at least two relations: " +
-                                tableName + " and " + fieldDescriptor.getOriginalTableName() + ".");
-            }
         }
     }
 
@@ -222,40 +219,39 @@ final class FBRowUpdater implements FirebirdRowUpdater {
      *
      * @return array of booleans that represent parameter mask.
      */
-    private int[] getParameterMask() throws SQLException {
+    private static int[] getParameterMask(String tableName, RowDescriptor rowDescriptor, DatabaseMetaData dbmd)
+            throws SQLException {
         // loop through the "best row identifiers" and set appropriate flags.
-        FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
-
-        try (ResultSet bestRowIdentifier = metaData.getBestRowIdentifier("", "", tableName,
+        try (ResultSet bestRowIdentifier = dbmd.getBestRowIdentifier("", "", tableName,
                 DatabaseMetaData.bestRowTransaction, true)) {
             int[] result = new int[rowDescriptor.getCount()];
             boolean hasParams = false;
             while (bestRowIdentifier.next()) {
                 String columnName = bestRowIdentifier.getString(2);
+                if (columnName == null) continue;
 
-                if (columnName == null)
-                    continue;
-
+                boolean found = false;
                 for (int i = 0; i < rowDescriptor.getCount(); i++) {
                     // special handling for the RDB$DB_KEY columns that must be
                     // selected as RDB$DB_KEY, but in XSQLVAR are represented
                     // as DB_KEY
                     if ("RDB$DB_KEY".equals(columnName) && rowDescriptor.getFieldDescriptor(i).isDbKey()) {
                         result[i] = PARAMETER_DBKEY;
-                        hasParams = true;
+                        found = true;
                     } else if (columnName.equals(rowDescriptor.getFieldDescriptor(i).getOriginalName())) {
                         result[i] = PARAMETER_USED;
-                        hasParams = true;
+                        found = true;
                     }
                 }
 
                 // if we did not find a column from the best row identifier
                 // in our result set, throw an exception, since we cannot
                 // reliably identify the row.
-                if (!hasParams)
+                if (!found) {
                     throw new FBResultSetNotUpdatableException(
-                            "Underlying result set does not contain all columns " +
-                                    "that form 'best row identifier'.");
+                            "Underlying result set does not contain all columns that form 'best row identifier'.");
+                }
+                hasParams = true;
             }
 
             if (!hasParams)
@@ -266,7 +262,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         }
     }
 
-    private void appendWhereClause(StringBuilder sb, int[] parameterMask) {
+    private void appendWhereClause(StringBuilder sb) {
         sb.append("WHERE ");
 
         // handle the RDB$DB_KEY case first
@@ -299,7 +295,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         }
     }
 
-    private String buildUpdateStatement(int[] parameterMask) {
+    private String buildUpdateStatement() {
         StringBuilder sb = new StringBuilder("UPDATE ");
         quoteStrategy.appendQuoted(tableName, sb)
                 .append("\nSET\n");
@@ -319,15 +315,15 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         }
 
         sb.append('\n');
-        appendWhereClause(sb, parameterMask);
+        appendWhereClause(sb);
 
         return sb.toString();
     }
 
-    private String buildDeleteStatement(int[] parameterMask) {
+    private String buildDeleteStatement() {
         StringBuilder sb = new StringBuilder("DELETE FROM ");
         quoteStrategy.appendQuoted(tableName, sb).append('\n');
-        appendWhereClause(sb, parameterMask);
+        appendWhereClause(sb);
 
         return sb.toString();
     }
@@ -360,7 +356,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         return sb.toString();
     }
 
-    private String buildSelectStatement(int[] parameterMask) {
+    private String buildSelectStatement() {
         StringBuilder columns = new StringBuilder();
 
         boolean first = true;
@@ -382,7 +378,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         sb.append(columns).append('\n')
                 .append("FROM ");
         quoteStrategy.appendQuoted(tableName, sb).append('\n');
-        appendWhereClause(sb, parameterMask);
+        appendWhereClause(sb);
         return sb.toString();
     }
 
@@ -487,16 +483,14 @@ final class FBRowUpdater implements FirebirdRowUpdater {
                 ((FBFlushableField) fields[i]).flushCachedData();
         }
 
-        int[] parameterMask = getParameterMask();
-
         String sql;
         switch (statementType) {
         case UPDATE_STATEMENT_TYPE:
-            sql = buildUpdateStatement(parameterMask);
+            sql = buildUpdateStatement();
             break;
 
         case DELETE_STATEMENT_TYPE:
-            sql = buildDeleteStatement(parameterMask);
+            sql = buildDeleteStatement();
             break;
 
         case INSERT_STATEMENT_TYPE:
@@ -504,7 +498,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
             break;
 
         case SELECT_STATEMENT_TYPE:
-            sql = buildSelectStatement(parameterMask);
+            sql = buildSelectStatement();
             break;
 
         default:

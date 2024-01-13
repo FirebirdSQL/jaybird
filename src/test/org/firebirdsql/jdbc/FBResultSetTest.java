@@ -87,6 +87,14 @@ class FBResultSetTest {
         "  \"CamelStr\" VARCHAR(255)" +
         ")";
 
+    private static final String CREATE_WITH_COMPOSITE_PK =
+        "create table WITH_COMPOSITE_PK (\n" +
+        "  ID1 integer not null,\n" +
+        "  ID2 integer not null,\n" +
+        "  VAL varchar(50),\n" +
+        "  constraint PK_WITH_COMPOSITE_PK primary key (ID1, ID2)\n" +
+        ")";
+
     private static final String CREATE_VIEW_STATEMENT =
         "CREATE VIEW test_empty_string_view(marker, id, empty_char) " +
         "  AS  " +
@@ -697,6 +705,50 @@ class FBResultSetTest {
                          "select * from test_table t1 left join test_table2 t2 on t1.id = t2.id")) {
                 SQLWarning warning = stmt.getWarnings();
                 assertThat(warning, allOf(
+                        notNullValue(),
+                        fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
+
+                assertEquals(CONCUR_READ_ONLY, rs.getConcurrency(), "Expected downgrade to CONCUR_READ_ONLY");
+            }
+        }
+    }
+
+    /**
+     * Tests if a result set that doesn't contain all PK columns (but only a prefix) will be downgraded to read-only.
+     * <p>
+     * Rationale: a previous implementation was satisfied if at least the first PK column was found
+     * </p>
+     */
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableStatementPrefixPK_downgradeToReadOnly(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_WITH_COMPOSITE_PK);
+            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 var rs = stmt.executeQuery("select id1, val from WITH_COMPOSITE_PK")) {
+                assertThat(stmt.getWarnings(), allOf(
+                        notNullValue(),
+                        fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
+
+                assertEquals(CONCUR_READ_ONLY, rs.getConcurrency(), "Expected downgrade to CONCUR_READ_ONLY");
+            }
+        }
+    }
+
+    /**
+     * Tests if a result set that doesn't contain all PK columns (but only a suffix) will be downgraded to read-only.
+     * <p>
+     * Rationale: a previous implementation was satisfied if at least the first PK column was found
+     * </p>
+     */
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableStatementSuffixPK_downgradeToReadOnly(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_WITH_COMPOSITE_PK);
+            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 var rs = stmt.executeQuery("select id2, val from WITH_COMPOSITE_PK")) {
+                assertThat(stmt.getWarnings(), allOf(
                         notNullValue(),
                         fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
 

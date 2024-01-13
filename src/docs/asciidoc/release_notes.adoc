@@ -36,6 +36,11 @@ The following has been changed or fixed since Jaybird 5.0.3:
 +
 As part of this change, the constructor `AbstractWireOperations` now explicitly requires the `connection` and `defaultWarningMessageCallback` to be non-``null`` and throws a `NullPointerException` otherwise.
 This may affect custom protocol implementations extending `AbstractWireOperations` and/or calling `ProtocolDescriptor#createWireOperations(WireConnection, WarningMessageCallback)`: make sure you don't pass `null`.
+* Fixed: FBRowUpdater incorrectly considers result set with only partial PK updatable -- backported from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/780[#780])
++
+This change also improves performance of `updateRow()`, `insertRow()`, `deleteRow()` and `refreshRow()`.
+The best row identifier or `RDB$DB_KEY` were detected _each time_ when calling `updateRow()`, `insertRow()`, `deleteRow()`, or `refreshRow()`.
+This has been improved so this detection is done once, and in a way that non-updatable result sets can now be downgraded to `CONCUR_READ_ONLY` instead of throwing an exception when performing the modification.
 * ...
 
 [#jaybird-5-0-3-changelog]
