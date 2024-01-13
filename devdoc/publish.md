@@ -22,7 +22,7 @@ a `<homedir>/.gradle/gradle.properties` with the following properties:
 signing.keyId=<gpg key id>
 signing.secretKeyRingFile=<path to your secring.gpg> 
 
-ossrhUsername=<sonatype OSSRH username>
+ossrhUsername=<sonatype OSSRH usertoken name>
 ```
 
 In addition, you need to set the following credentials
