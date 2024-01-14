@@ -921,6 +921,9 @@ This change was backported to Jaybird 5.0.4.
 +
 If the best row identifier was not matched, but the result set contains `RDB$DB_KEY`, we will now consider the result set updatable.
 However, if the table in question has a primary key, and the columns missing from the result set are not generated, this may still fail when calling `ResultSet.insertRow()`.
+* The user manager API (`UserManager`/`FBUserManager` and `User`/`FBUser`) has been deprecated (https://github.com/FirebirdSQL/jaybird/issues/782[#782])
++
+We do not plan to remove this API at this time, but we recommend that you switch to using the SQL user management statements.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

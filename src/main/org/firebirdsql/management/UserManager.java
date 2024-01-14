@@ -32,7 +32,10 @@ import java.util.Map;
  * The base Firebird Service API functionality.
  *
  * @author Steven Jardine
+ * @deprecated Use the SQL user management statements instead, we currently do not plan to remove this API
  */
+@Deprecated(since = "6")
+@SuppressWarnings("DeprecatedIsStillUsed")
 public interface UserManager extends ServiceManager {
 
     /**

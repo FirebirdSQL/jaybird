@@ -25,28 +25,35 @@ import java.util.Objects;
  *
  * @author Steven Jardine
  * @author Roman Rokytskyy
+ * @deprecated Use the SQL user management statements instead, we currently do not plan to remove this API
  */
+@Deprecated(since = "6")
+@SuppressWarnings("DeprecatedIsStillUsed")
 public class FBUser implements User {
 
-    private String userName = null;
-
-    private String password = null;
-
-    private String firstName = null;
-
-    private String middleName = null;
-
-    private String lastName = null;
-
+    private String userName;
+    private String password;
+    private String firstName;
+    private String middleName;
+    private String lastName;
     private int userId = -1;
-
     private int groupId = -1;
 
     /**
      * Create an instance of this class.
      */
     public FBUser() {
-        super();
+    }
+
+    FBUser(String userName, String password, String firstName, String middleName, String lastName, int userId,
+            int groupId) {
+        this.userName = userName;
+        this.password = password;
+        this.firstName = firstName;
+        this.middleName = middleName;
+        this.lastName = lastName;
+        this.userId = userId;
+        this.groupId = groupId;
     }
 
     @Override
@@ -122,12 +129,8 @@ public class FBUser implements User {
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
-
-        if (!(obj instanceof User))
-            return false;
-
-        User user = (User) obj;
-        return Objects.equals(getUserName(), user.getUserName())
+        return obj instanceof User user
+                && Objects.equals(getUserName(), user.getUserName())
                 && Objects.equals(getFirstName(), user.getFirstName())
                 && Objects.equals(getMiddleName(), user.getMiddleName())
                 && Objects.equals(getLastName(), user.getLastName())

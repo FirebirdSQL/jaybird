@@ -28,7 +28,10 @@ package org.firebirdsql.management;
  * A user in the Firebird Security Database.
  *
  * @author Steven Jardine
+ * @deprecated Use the SQL user management statements instead, we currently do not plan to remove this API
  */
+@Deprecated(since = "6")
+@SuppressWarnings("DeprecatedIsStillUsed")
 public interface User {
 
     /**

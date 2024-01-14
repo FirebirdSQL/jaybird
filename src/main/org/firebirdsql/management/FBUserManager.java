@@ -38,7 +38,10 @@ import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
  *
  * @author Steven Jardine
  * @author Mark Rotteveel
+ * @deprecated Use the SQL user management statements instead, we currently do not plan to remove this API
  */
+@Deprecated(since = "6")
+@SuppressWarnings("DeprecatedIsStillUsed")
 public class FBUserManager extends FBServiceManager implements UserManager {
 
     private int count = 0;
@@ -81,49 +84,31 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      * @return a map of users parsed from the display buffer.
      */
     private Map<String, User> getFBUsers() {
-        User user = null;
         Map<String, User> users = new TreeMap<>();
         byte[] displayBuffer = ((ByteArrayOutputStream) getLogger()).toByteArray();
+        var userBuilder = new FBUserBuilder();
         count = 0;
         while (count < displayBuffer.length && displayBuffer[count] != isc_info_end) {
             switch (displayBuffer[count]) {
-            case isc_spb_sec_username:
-                if (user != null) {
-                    users.put(user.getUserName(), user);
+            case isc_spb_sec_username -> {
+                if (userBuilder.isInitialized()) {
+                    users.put(userBuilder.getUserName(), userBuilder.build());
                 }
-                user = new FBUser();
-                user.setUserName(getSRBString(displayBuffer));
-                break;
-            case isc_spb_sec_firstname:
-                assert user != null : "Should have a non null user";
-                user.setFirstName(getSRBString(displayBuffer));
-                break;
-            case isc_spb_sec_middlename:
-                assert user != null : "Should have a non null user";
-                user.setMiddleName(getSRBString(displayBuffer));
-                break;
-            case isc_spb_sec_lastname:
-                assert user != null : "Should have a non null user";
-                user.setLastName(getSRBString(displayBuffer));
-                break;
-            case isc_spb_sec_userid:
-                assert user != null : "Should have a non null user";
-                user.setUserId(getSRBInteger(displayBuffer));
-                break;
-            case isc_spb_sec_groupid:
-                assert user != null : "Should have a non null user";
-                user.setGroupId(getSRBInteger(displayBuffer));
-                break;
-            default:
-                count++;
-                break;
+                userBuilder.reset();
+                userBuilder.setUserName(getSRBString(displayBuffer));
+            }
+            case isc_spb_sec_firstname -> userBuilder.setFirstName(getSRBString(displayBuffer));
+            case isc_spb_sec_middlename -> userBuilder.setMiddleName(getSRBString(displayBuffer));
+            case isc_spb_sec_lastname -> userBuilder.setLastName(getSRBString(displayBuffer));
+            case isc_spb_sec_userid -> userBuilder.setUserId(getSRBInteger(displayBuffer));
+            case isc_spb_sec_groupid -> userBuilder.setGroupId(getSRBInteger(displayBuffer));
+            default -> count++;
             }
         }
-        if (user != null) {
-            users.put(user.getUserName(), user);
+        if (userBuilder.isInitialized()) {
+            users.put(userBuilder.getUserName(), userBuilder.build());
         }
         return users;
-
     }
 
     /**
@@ -225,31 +210,35 @@ public class FBUserManager extends FBServiceManager implements UserManager {
         }
     }
 
+    @Override
     public void add(User user) throws SQLException, IOException {
-        if (user.getUserName() == null) {
-            throw new SQLException("UserName is required.");
-        }
+        requireUserName(user);
         userAction(isc_action_svc_add_user, user);
     }
 
+    @Override
     public void delete(User user) throws SQLException, IOException {
-        if (user.getUserName() == null) {
-            throw new SQLException("UserName is required.");
-        }
+        requireUserName(user);
         // Only parameter for delete action is username. All others should be null.
         User delUser = new FBUser();
         delUser.setUserName(user.getUserName());
         userAction(isc_action_svc_delete_user, delUser);
     }
 
+    @Override
     public void update(User user) throws SQLException, IOException {
-        if (user.getUserName() == null) {
-            throw new SQLException("UserName is required.");
-        }
+        requireUserName(user);
         userAction(isc_action_svc_modify_user, user);
     }
 
+    private void requireUserName(User user) throws SQLException {
+        if (user.getUserName() == null) {
+            throw new SQLException("UserName is required.");
+        }
+    }
+
     @SuppressWarnings("RedundantThrows")
+    @Override
     public Map<String, User> getUsers() throws SQLException, IOException {
         OutputStream savedStream = getLogger();
         setLogger(new ByteArrayOutputStream());
@@ -261,6 +250,7 @@ public class FBUserManager extends FBServiceManager implements UserManager {
         }
     }
 
+    @Override
     public void setSecurityDatabase(String securityDatabase) {
         this.securityDatabase = securityDatabase;
     }
@@ -281,12 +271,68 @@ public class FBUserManager extends FBServiceManager implements UserManager {
     }
 
     @SuppressWarnings("RedundantThrows")
+    @Override
     public void setAdminRoleMapping() throws SQLException, IOException {
         adminRoleAction(isc_action_svc_set_mapping);
     }
 
     @SuppressWarnings("RedundantThrows")
+    @Override
     public void dropAdminRoleMapping() throws SQLException, IOException {
         adminRoleAction(isc_action_svc_drop_mapping);
+    }
+
+    private static final class FBUserBuilder {
+
+        private String userName;
+        private String firstName;
+        private String middleName;
+        private String lastName;
+        private int userId = -1;
+        private int groupId = -1;
+
+        FBUser build() {
+            return new FBUser(userName, null, firstName, middleName, lastName, userId, groupId);
+        }
+
+        /**
+         * @return {@code true} if at least {@code userName} is set, {@code false} otherwise
+         */
+        boolean isInitialized() {
+            return userName != null;
+        }
+
+        void reset() {
+            userName = firstName = middleName = lastName = null;
+            userId = groupId = -1;
+        }
+
+        void setUserName(String userName) {
+            this.userName = userName;
+        }
+
+        String getUserName() {
+            return userName;
+        }
+
+        void setFirstName(String firstName) {
+            this.firstName = firstName;
+        }
+
+        void setMiddleName(String middleName) {
+            this.middleName = middleName;
+        }
+
+        void setLastName(String lastName) {
+            this.lastName = lastName;
+        }
+
+        void setUserId(int userId) {
+            this.userId = userId;
+        }
+
+        void setGroupId(int groupId) {
+            this.groupId = groupId;
+        }
     }
 }
