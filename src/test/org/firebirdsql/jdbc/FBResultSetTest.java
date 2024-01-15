@@ -724,8 +724,8 @@ class FBResultSetTest {
     void testUpdatableStatementPrefixPK_downgradeToReadOnly(String scrollableCursorPropertyValue) throws Exception {
         try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
             executeCreateTable(connection, CREATE_WITH_COMPOSITE_PK);
-            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
-                 var rs = stmt.executeQuery("select id1, val from WITH_COMPOSITE_PK")) {
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 ResultSet rs = stmt.executeQuery("select id1, val from WITH_COMPOSITE_PK")) {
                 assertThat(stmt.getWarnings(), allOf(
                         notNullValue(),
                         fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
@@ -746,8 +746,8 @@ class FBResultSetTest {
     void testUpdatableStatementSuffixPK_downgradeToReadOnly(String scrollableCursorPropertyValue) throws Exception {
         try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
             executeCreateTable(connection, CREATE_WITH_COMPOSITE_PK);
-            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
-                 var rs = stmt.executeQuery("select id2, val from WITH_COMPOSITE_PK")) {
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 ResultSet rs = stmt.executeQuery("select id2, val from WITH_COMPOSITE_PK")) {
                 assertThat(stmt.getWarnings(), allOf(
                         notNullValue(),
                         fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
