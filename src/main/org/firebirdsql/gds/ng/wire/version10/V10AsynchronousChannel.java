@@ -230,7 +230,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             }
             try {
                 final GenericResponse response = database.readGenericResponse(null);
-                wireEventHandle.setEventId(response.getObjectHandle());
+                wireEventHandle.setEventId(response.objectHandle());
             } catch (IOException e) {
                 throw FbExceptionBuilder.ioWriteError(e);
             }

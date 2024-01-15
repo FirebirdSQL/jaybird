@@ -49,6 +49,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     private final List<Argument> arguments = new ArrayList<>();
 
     private final String defaultEncodingName;
+    @SuppressWarnings("java:S1948")
     private final ParameterBufferMetaData parameterBufferMetaData;
     private transient Encoding defaultEncoding;
 
@@ -227,6 +228,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     @Override
+    @SuppressWarnings("java:S2097")
     public final boolean equals(Object other) {
         if (other == null || !(this.getClass().isAssignableFrom(other.getClass())))
             return false;

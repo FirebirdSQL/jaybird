@@ -122,7 +122,7 @@ public class V10DatabaseTest {
 
         SQLWarning warning = new SQLWarning("test");
 
-        db.getDatabaseWarningCallback().processWarning(warning);
+        assertDoesNotThrow(() -> db.getDatabaseWarningCallback().processWarning(warning));
     }
 
     /**
@@ -166,6 +166,7 @@ public class V10DatabaseTest {
      * Tests if attaching to a non-existent database results in an exception
      */
     @Test
+    @SuppressWarnings("java:S5783")
     public void testAttach_NonExistentDatabase() throws Exception {
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             SQLException exception = assertThrows(SQLException.class, () -> {

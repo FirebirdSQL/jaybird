@@ -100,43 +100,35 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
         while (vectorIndex < statusVector.length) {
             int arg = statusVector[vectorIndex++].intValue();
             switch (arg) {
-            case isc_arg_gds:
+            case isc_arg_gds: {
+                int errorCode = statusVector[vectorIndex++].intValue();
+                if (errorCode != 0) {
+                    builder.exception(errorCode);
+                }
+                break;
+            }
             case isc_arg_warning: {
                 int errorCode = statusVector[vectorIndex++].intValue();
                 if (errorCode != 0) {
-                    if (arg == isc_arg_gds) {
-                        builder.exception(errorCode);
-                    } else {
-                        builder.warning(errorCode);
-                    }
+                    builder.warning(errorCode);
                 }
                 break;
             }
             case isc_arg_interpreted:
-            case isc_arg_string:
+            case isc_arg_string: {
+                String stringValue = getString(statusVector[vectorIndex++]);
+                if (stringValue == null) break processingLoop;
+                builder.messageParameter(stringValue);
+                break;
+            }
             case isc_arg_sql_state: {
-                long stringPointerAddress = statusVector[vectorIndex++].longValue();
-                if (stringPointerAddress == 0L) {
-                    System.getLogger(getClass().getName()).log(WARNING,
-                            "Received NULL pointer address for isc_arg_interpreted, isc_arg_string or isc_arg_sql_state");
-                    break processingLoop;
-                }
-                var stringPointer = new Pointer(stringPointerAddress);
-                String stringValue = stringPointer.getString(0, getEncodingDefinition().getJavaEncodingName());
-                if (arg == isc_arg_sql_state) {
-                    builder.sqlState(stringValue);
-                } else {
-                    builder.messageParameter(stringValue);
-                }
+                String stringValue = getString(statusVector[vectorIndex++]);
+                if (stringValue == null) break processingLoop;
+                builder.sqlState(stringValue);
                 break;
             }
             case isc_arg_cstring: {
-                int stringLength = statusVector[vectorIndex++].intValue();
-                long cStringPointerAddress = statusVector[vectorIndex++].longValue();
-                var cStringPointer = new Pointer(cStringPointerAddress);
-                byte[] stringData = cStringPointer.getByteArray(0, stringLength);
-                String cStringValue = getEncoding().decodeFromCharset(stringData);
-                builder.messageParameter(cStringValue);
+                builder.messageParameter(getCString(statusVector[vectorIndex++], statusVector[vectorIndex++]));
                 break;
             }
             case isc_arg_end:
@@ -158,6 +150,23 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
                 throw exception;
             }
         }
+    }
+
+    private String getCString(ISC_STATUS lengthStatus, ISC_STATUS pointerStatus) {
+        var cStringPointer = new Pointer(pointerStatus.longValue());
+        byte[] stringData = cStringPointer.getByteArray(0, lengthStatus.intValue());
+        return getEncoding().decodeFromCharset(stringData);
+    }
+
+    private String getString(ISC_STATUS iscStatus) {
+        long stringPointerAddress = iscStatus.longValue();
+        if (stringPointerAddress == 0L) {
+            System.getLogger(getClass().getName()).log(WARNING,
+                    "Received NULL pointer address for isc_arg_interpreted, isc_arg_string or isc_arg_sql_state");
+            return null;
+        }
+        var stringPointer = new Pointer(stringPointerAddress);
+        return stringPointer.getString(0, getEncodingDefinition().getJavaEncodingName());
     }
 
     final DatatypeCoder createDatatypeCoder() {

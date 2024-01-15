@@ -30,7 +30,7 @@ package org.firebirdsql.jaybird.fb.constants;
  * @author Mark Rotteveel
  * @since 5
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unused", "java:S115" })
 public final class SpbItems {
 
     public static final int isc_spb_user_name = DpbItems.isc_dpb_user_name;

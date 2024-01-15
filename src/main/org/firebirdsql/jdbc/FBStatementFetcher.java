@@ -61,7 +61,7 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
     private Deque<RowValue> rows;
     private final RowListener rowListener = new RowListener();
     private boolean allRowsFetched;
-    protected RowValue _nextRow;
+    protected RowValue nextRow;
 
     private int rowNum;
 
@@ -71,14 +71,16 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
     private boolean isLast;
     private boolean isAfterLast;
 
+    @SuppressWarnings("java:S1872")
     FBStatementFetcher(GDSHelper gdsHelper, FbStatement stmth, FBObjectListener.FetcherListener fetcherListener,
-            int maxRows, int fetchSize) throws SQLException {
+            int maxRows, int fetchSize) {
         this.gdsHelper = gdsHelper;
         this.stmt = stmth;
         stmt.addStatementListener(rowListener);
         this.fetcherListener = fetcherListener;
         this.maxRows = maxRows;
         this.fetchSize = fetchSize;
+        // Compare by class name because the class might not be loaded
         if (stmth.getClass().getName().equals("org.firebirdsql.gds.ng.jna.JnaStatement")) {
             // Performs only singular fetches, so only need space for one row
             rows = new ArrayDeque<>(1);
@@ -93,16 +95,16 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
 
     protected RowValue getNextRow() throws SQLException {
         if (!wasFetched) fetch();
-        return _nextRow;
+        return nextRow;
     }
 
     protected void setNextRow(RowValue nextRow) {
-        _nextRow = nextRow;
+        this.nextRow = nextRow;
 
         if (!wasFetched) {
             wasFetched = true;
 
-            if (_nextRow == null) {
+            if (nextRow == null) {
                 isEmpty = true;
             } else {
                 isBeforeFirst = true;

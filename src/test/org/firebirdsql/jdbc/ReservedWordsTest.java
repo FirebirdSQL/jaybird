@@ -36,6 +36,9 @@ import java.util.List;
 
 import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
 
 /**
  * Test to check if a list of keywords are actually reserved words by creating a table with a column with that name.
@@ -71,18 +74,19 @@ class ReservedWordsTest {
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
             int count = 1;
+            List<String> keywordWithoutError = new ArrayList<>();
             for (String keyword : RESERVED_WORDS) {
                 try {
                     stmt.execute(format("create table table%d (%s integer)", ++count, keyword));
-                    System.out.println("Keyword \"" + keyword + "\" is not a reserved word");
+                    keywordWithoutError.add(keyword);
                 } catch (SQLException e) {
-                    //System.out.println("Failed for reserved word " + keyword);
                     if (e.getErrorCode() != ISCConstants.isc_dsql_token_unk_err) {
-                        e.printStackTrace();
+                        throw e;
                     }
                     // ignore
                 }
             }
+            assertThat("Some keywords unexpectedly did not result in an error", keywordWithoutError, is(empty()));
         }
     }
 }

@@ -124,6 +124,7 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     @Override
     void getBigDecimalIntNonNull() throws SQLException {
         // TODO Build suitable test
+        fail("test should be disabled");
     }
 
     @Test

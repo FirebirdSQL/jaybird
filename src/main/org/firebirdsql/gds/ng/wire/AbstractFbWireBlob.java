@@ -23,9 +23,16 @@ import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 
+import java.io.IOException;
 import java.sql.SQLException;
+
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_create_blob;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_create_blob2;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_open_blob;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_open_blob2;
 
 /**
  * @author Mark Rotteveel
@@ -77,6 +84,48 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
     protected void releaseBlob(int releaseOperation) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             getDatabase().releaseObject(releaseOperation, getHandle());
+        }
+    }
+
+    /**
+     * Operation codes to open an input or output blob. For use with {@link #sendOpen(BlobOpenOperation)}.
+     */
+    protected enum BlobOpenOperation {
+        INPUT_BLOB(op_open_blob, op_open_blob2),
+        OUTPUT_BLOB(op_create_blob, op_create_blob2);
+
+        private final int opCodeWithoutBpb;
+        private final int opCodeWithBpb;
+
+        BlobOpenOperation(int opCodeWithoutBpb, int opCodeWithBpb) {
+            this.opCodeWithoutBpb = opCodeWithoutBpb;
+            this.opCodeWithBpb = opCodeWithBpb;
+        }
+
+        public final int opCodeWithoutBpb() {
+            return opCodeWithoutBpb;
+        }
+
+        public final int opCodeWithBpb() {
+            return opCodeWithBpb;
+        }
+    }
+
+    protected final void sendOpen(BlobOpenOperation openOperation) throws SQLException {
+        try {
+            XdrOutputStream xdrOut = getXdrOut();
+            BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
+            if (blobParameterBuffer == null) {
+                xdrOut.writeInt(openOperation.opCodeWithoutBpb());
+            } else {
+                xdrOut.writeInt(openOperation.opCodeWithBpb());
+                xdrOut.writeTyped(blobParameterBuffer);
+            }
+            xdrOut.writeInt(getTransaction().getHandle());
+            xdrOut.writeLong(getBlobId());
+            xdrOut.flush();
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioWriteError(e);
         }
     }
 

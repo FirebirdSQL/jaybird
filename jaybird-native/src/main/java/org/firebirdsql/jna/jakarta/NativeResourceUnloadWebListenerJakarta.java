@@ -30,6 +30,7 @@ import org.firebirdsql.gds.ng.jna.NativeResourceUnloadAbstractWebListener;
  * @since 5
  */
 @WebListener
+@SuppressWarnings("java:S1185")
 public class NativeResourceUnloadWebListenerJakarta
         extends NativeResourceUnloadAbstractWebListener<ServletContextEvent> implements ServletContextListener {
 

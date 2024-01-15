@@ -47,6 +47,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
 public abstract class GetPseudoColumns {
 
     private static final String PSEUDOCOLUMNS = "PSEUDOCOLUMNS";
+    public static final String COLUMN_RELATION_NAME = "RDB$RELATION_NAME";
 
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(12)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", PSEUDOCOLUMNS).addField()
@@ -99,7 +100,7 @@ public abstract class GetPseudoColumns {
             List<RowValue> rows = new ArrayList<>();
             RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
             do {
-                String tableName = rs.getString("RDB$RELATION_NAME");
+                String tableName = rs.getString(COLUMN_RELATION_NAME);
 
                 if (retrieveDbKey) {
                     int dbKeyLength = rs.getInt("RDB$DBKEY_LENGTH");
@@ -152,6 +153,7 @@ public abstract class GetPseudoColumns {
         }
     }
 
+    @SuppressWarnings("java:S101")
     private static final class FB2_5 extends GetPseudoColumns {
 
         //@formatter:off
@@ -181,7 +183,7 @@ public abstract class GetPseudoColumns {
 
         @Override
         MetadataQuery createGetPseudoColumnsQuery(String tableNamePattern) {
-            Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
+            Clause tableNameClause = new Clause(COLUMN_RELATION_NAME, tableNamePattern);
             String sql = GET_PSEUDO_COLUMNS_FRAGMENT_2_5
                     + tableNameClause.getCondition("where ", "\n")
                     + GET_PSEUDO_COLUMNS_END_2_5;
@@ -222,7 +224,7 @@ public abstract class GetPseudoColumns {
 
         @Override
         MetadataQuery createGetPseudoColumnsQuery(String tableNamePattern) {
-            Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
+            Clause tableNameClause = new Clause(COLUMN_RELATION_NAME, tableNamePattern);
             String sql = GET_PSEUDO_COLUMNS_FRAGMENT_3
                     + tableNameClause.getCondition("where ", "\n")
                     + GET_PSEUDO_COLUMNS_END_3;

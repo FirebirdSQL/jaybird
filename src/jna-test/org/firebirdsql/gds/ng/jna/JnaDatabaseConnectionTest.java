@@ -82,7 +82,7 @@ class JnaDatabaseConnectionTest {
     }
 
     // NOTE: This test only works if it is run in isolation, and requires custom (system specific) paths
-    @Disabled
+    @Disabled("Can only run in isolation")
     @Test
     void getClientLibrary_withSpecificPath_libraryFile() {
         var libraryFile = new File("D:\\DevSoft\\Firebird\\Firebird-3.0.10.33601-0_x64\\fbclient.dll");
@@ -91,7 +91,7 @@ class JnaDatabaseConnectionTest {
     }
 
     // NOTE: This test only works if it is run in isolation, and requires custom (system specific) paths
-    @Disabled
+    @Disabled("Can only run in isolation")
     @Test
     void getClientLibrary_withSpecificPath_libraryDirectory() {
         var libraryFile = new File("D:\\DevSoft\\Firebird\\Firebird-3.0.10.33601-0_x64\\fbclient.dll");

@@ -67,41 +67,44 @@ final class StringLiteralToken extends AbstractToken implements LiteralToken {
         // We assume text contains correct literals, so if it starts with ', then it ends with ', etc.
         final int textLength = length();
         if (textLength < STRING_LITERAL_MIN_SIZE) {
-            throw new IllegalStateException("String literal too short, full text: " + text());
+            throw literalTooShort(text());
         }
         final char firstChar = charAt(0);
-        switch (firstChar) {
-        case '\'': {
+        return switch (firstChar) {
+        case '\'' -> {
             checkEndsInQuote();
             // remove enclosing quotes
             String value = subSequence(1, textLength - 1).toString();
-            return value.indexOf('\'') == -1
+            yield value.indexOf('\'') == -1
                     ? value
                     // unescape single quotes
                     : value.replace("''", "'");
         }
-        case 'q':
-        case 'Q':
+        case 'q', 'Q' -> {
             if (textLength < Q_LITERAL_MIN_SIZE) {
-                throw new IllegalStateException("String literal too short, full text: " + text());
+                throw literalTooShort(text());
             }
             checkEndsInQuote();
             // not checking further syntax
             // remove Q<quote><start> and <end><quote>
-            return subSequence(3, textLength - 2).toString();
-        case 'x':
-        case 'X':
+            yield subSequence(3, textLength - 2).toString();
+        }
+        case 'x', 'X' -> {
             if (textLength < X_LITERAL_MIN_SIZE) {
-                throw new IllegalStateException("String literal too short, full text: " + text());
+                throw literalTooShort(text());
             }
             checkEndsInQuote();
             // not checking further syntax
             // remove X<quote> and <quote>
-            return subSequence(2, textLength - 1).toString();
-        default:
-            throw new IllegalStateException(
-                    format("String literal starts with unexpected character '%s', full text: %s", firstChar, text()));
+            yield subSequence(2, textLength - 1).toString();
         }
+        default -> throw new IllegalStateException(
+                format("String literal starts with unexpected character '%s', full text: %s", firstChar, text()));
+        };
+    }
+
+    private static IllegalStateException literalTooShort(String text) {
+        return new IllegalStateException("String literal too short, full text: " + text);
     }
 
     private void checkEndsInQuote() {

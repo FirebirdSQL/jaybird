@@ -36,6 +36,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
+
 /**
  * This is a simple implementation of {@link DataSource} interface. Connections
  * are physically opened in {@link DataSource#getConnection()} method and
@@ -204,6 +206,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
      * @throws SQLException
      *         if something went wrong.
      */
+    @SuppressWarnings("java:S2583")
     protected DataSource getDataSource() throws SQLException {
         Lock readLock = dsLock.readLock();
         readLock.lock();
@@ -221,7 +224,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
                 return ds;
             }
 
-            if (mcf.getDatabaseName() == null || "".equals(mcf.getDatabaseName().trim())) {
+            if (trimToNull(mcf.getDatabaseName()) == null) {
                 throw new SQLException("Database was not specified. Cannot provide connections.");
             }
             return ds = (FBDataSource) mcf.createConnectionFactory();

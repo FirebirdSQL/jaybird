@@ -54,6 +54,7 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
  * @since 4.0
  */
 @InternalApi
+@SuppressWarnings({ "java:S1192", "java:S5665" })
 public abstract class GetFunctionColumns extends AbstractMetadataMethod {
 
     private static final String FUNCTION_COLUMNS = "FUNCTION_COLUMNS";
@@ -145,6 +146,7 @@ public abstract class GetFunctionColumns extends AbstractMetadataMethod {
         }
     }
 
+    @SuppressWarnings("java:S101")
     private static final class FB2_5 extends GetFunctionColumns {
 
         //@formatter:off

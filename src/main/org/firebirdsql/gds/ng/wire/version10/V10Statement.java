@@ -124,47 +124,62 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             }
             resetAll();
 
-            final FbWireDatabase db = getDatabase();
             if (initialState == StatementState.NEW) {
-                try {
-                    sendAllocate();
-                    getXdrOut().flush();
-                } catch (IOException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.ioWriteError(e);
-                }
-                try {
-                    processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
-                    switchState(StatementState.ALLOCATED);
-                } catch (IOException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.ioReadError(e);
-                } catch (SQLException e) {
-                    forceState(StatementState.NEW);
-                    throw e;
-                }
+                sendAllocate0();
+                receiveAllocate0Response();
             } else {
                 checkStatementValid();
             }
 
-            try {
-                sendPrepare(statementText);
-                getXdrOut().flush();
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
-            try {
-                processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.ioReadError(e);
-            } catch (SQLException e) {
-                switchState(StatementState.ALLOCATED);
-                throw e;
-            }
+            sendPrepare0(statementText);
+            receivePrepare0Response();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    private void sendAllocate0() throws SQLException {
+        try {
+            sendAllocate();
+            getXdrOut().flush();
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioWriteError(e);
+        }
+    }
+
+    private void receiveAllocate0Response() throws SQLException {
+        try {
+            processAllocateResponse(getDatabase().readGenericResponse(getStatementWarningCallback()));
+            switchState(StatementState.ALLOCATED);
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioReadError(e);
+        } catch (SQLException e) {
+            forceState(StatementState.NEW);
+            throw e;
+        }
+    }
+
+    private void sendPrepare0(String statementText) throws SQLException {
+        try {
+            sendPrepare(statementText);
+            getXdrOut().flush();
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioWriteError(e);
+        }
+    }
+
+    private void receivePrepare0Response() throws SQLException {
+        try {
+            processPrepareResponse(getDatabase().readGenericResponse(getStatementWarningCallback()));
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioReadError(e);
+        } catch (SQLException e) {
+            switchState(StatementState.ALLOCATED);
             throw e;
         }
     }
@@ -194,7 +209,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         GenericResponse
      */
     protected void processPrepareResponse(final GenericResponse genericResponse) throws SQLException {
-        parseStatementInfo(genericResponse.getData());
+        parseStatementInfo(genericResponse.data());
         switchState(StatementState.PREPARED);
     }
 
@@ -356,7 +371,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         SQL response object
      */
     protected void processExecuteSingletonResponse(SqlResponse sqlResponse) throws SQLException, IOException {
-        if (sqlResponse.getCount() > 0) {
+        if (sqlResponse.count() > 0) {
             queueRowData(readSqlData());
         }
     }
@@ -367,6 +382,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @param genericResponse
      *         Generic response object
      */
+    @SuppressWarnings("unused")
     protected void processExecuteResponse(GenericResponse genericResponse) {
         // Nothing to do here
     }
@@ -383,23 +399,31 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     // operation was synchronously cancelled from an OperationAware implementation
                     throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
                 }
-                try {
-                    sendFetch(fetchSize);
-                    getXdrOut().flush();
-                } catch (IOException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.ioWriteError(e);
-                }
-                try {
-                    processFetchResponse(FetchDirection.FORWARD);
-                } catch (IOException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.ioReadError(e);
-                }
+                sendFetch0(fetchSize);
+                receiveFetch0Response();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    private void sendFetch0(int fetchSize) throws SQLException {
+        try {
+            sendFetch(fetchSize);
+            getXdrOut().flush();
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioWriteError(e);
+        }
+    }
+
+    private void receiveFetch0Response() throws SQLException {
+        try {
+            processFetchResponse(FetchDirection.FORWARD);
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 
@@ -428,10 +452,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         }
         do {
             if (!(response instanceof FetchResponse fetchResponse)) break;
-            if (fetchResponse.getCount() > 0 && fetchResponse.getStatus() == ISCConstants.FETCH_OK) {
+            if (fetchResponse.count() > 0 && fetchResponse.status() == ISCConstants.FETCH_OK) {
                 queueRowData(readSqlData());
                 rowsFetched++;
-            } else if (fetchResponse.getStatus() == ISCConstants.FETCH_NO_MORE_ROWS) {
+            } else if (fetchResponse.status() == ISCConstants.FETCH_NO_MORE_ROWS) {
                 switch (direction) {
                 case IN_PLACE -> {
                     if (isBeforeFirst()) {
@@ -590,9 +614,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @param response
      *         GenericResponse
      */
+    @SuppressWarnings("java:S1130")
     protected void processAllocateResponse(GenericResponse response) throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            setHandle(response.getObjectHandle());
+            setHandle(response.objectHandle());
             reset();
             setType(StatementType.NONE);
         }

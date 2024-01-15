@@ -31,6 +31,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version12.V12Database}, reuses test for V11.
@@ -52,6 +53,7 @@ public class V12DatabaseTest extends V11DatabaseTest {
     @Disabled("disable is supported by V12 and higher")
     @Override
     public void testCancelOperation_raiseNotSupported() {
+        fail("test should be disabled");
     }
 
     /**
@@ -70,6 +72,7 @@ public class V12DatabaseTest extends V11DatabaseTest {
     @Disabled("disable is supported by V12 and higher")
     @Override
     public void testCancelOperation_disableNotSupported() {
+        fail("test should be disabled");
     }
 
     /**
@@ -88,6 +91,7 @@ public class V12DatabaseTest extends V11DatabaseTest {
     @Disabled("disable is supported by V12 and higher")
     @Override
     public void testCancelOperation_enableNotSupported() {
+        fail("test should be disabled");
     }
 
     /**

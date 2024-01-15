@@ -36,6 +36,7 @@ import com.sun.jna.win32.StdCallLibrary;
  *
  * @since 3.0
  */
+@SuppressWarnings({ "UnusedReturnValue", "java:S100" })
 public interface WinFbClientLibrary extends FbClientLibrary, StdCallLibrary {
     /**
      * FbShutdown Callback following the StdCall conventions

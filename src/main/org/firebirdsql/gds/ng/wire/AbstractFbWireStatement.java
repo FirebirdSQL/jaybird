@@ -239,6 +239,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     private static final class CleanupAction implements Runnable, StatementListener, DatabaseListener {
 
         private final int handle;
+        @SuppressWarnings("java:S3077")
         private volatile FbWireDatabase database;
 
         private CleanupAction(AbstractFbWireStatement statement) {

@@ -63,34 +63,23 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
                 throw FbExceptionBuilder.forNonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
             }
 
-            final FbWireDatabase database = getDatabase();
-            try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
-                if (blobParameterBuffer == null) {
-                    xdrOut.writeInt(op_create_blob);
-                } else {
-                    xdrOut.writeInt(op_create_blob2);
-                    xdrOut.writeTyped(blobParameterBuffer);
-                }
-                xdrOut.writeInt(getTransaction().getHandle());
-                xdrOut.writeLong(FbBlob.NO_BLOB_ID);
-                xdrOut.flush();
-            } catch (IOException e) {
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
-            try {
-                final GenericResponse genericResponse = database.readGenericResponse(null);
-                setHandle(genericResponse.getObjectHandle());
-                setBlobId(genericResponse.getBlobId());
-                setOpen(true);
-            } catch (IOException e) {
-                throw FbExceptionBuilder.ioReadError(e);
-            }
+            sendOpen(BlobOpenOperation.OUTPUT_BLOB);
+            receiveCreateResponse();
             // TODO Request information on the blob?
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    private void receiveCreateResponse() throws SQLException {
+        try {
+            final GenericResponse genericResponse = getDatabase().readGenericResponse(null);
+            setHandle(genericResponse.objectHandle());
+            setBlobId(genericResponse.blobId());
+            setOpen(true);
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 

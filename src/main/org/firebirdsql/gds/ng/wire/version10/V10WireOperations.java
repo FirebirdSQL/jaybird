@@ -40,6 +40,7 @@ public class V10WireOperations extends AbstractWireOperations {
     }
 
     @Override
+    @SuppressWarnings("java:S4274")
     public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback,
             ProcessAttachCallback processAttachCallback) throws IOException, SQLException {
         assert acceptPacket == null : "Should not be called with non-null acceptPacket in V12 or earlier";

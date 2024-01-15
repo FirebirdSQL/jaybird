@@ -173,6 +173,7 @@ public final class MetadataPattern {
         return METADATA_SPECIALS.matcher(objectName).replaceAll("\\\\$1");
     }
 
+    @SuppressWarnings("java:S127")
     private static MetadataPattern parsePattern(String metadataPattern) {
         ConditionType conditionType = ConditionType.SQL_EQUALS;
         boolean hasEscape = false;
@@ -181,33 +182,32 @@ public final class MetadataPattern {
         for (int idx = 0; idx < patternLength; idx++) {
             char ch = metadataPattern.charAt(idx);
             switch (ch) {
-            case '%':
+            case '%' -> {
                 if (idx == patternLength - 1 && conditionType == ConditionType.SQL_EQUALS) {
                     // No other unescaped LIKE pattern characters: we can use STARTING_WITH
                     conditionType = ConditionType.SQL_STARTING_WITH;
                     // Pattern complete (without the final %)
-                    break;
+                } else {
+                    conditionType = ConditionType.SQL_LIKE;
+                    likePattern.append(ch);
                 }
-                // Intentional fallthrough
-            case '_':
+            }
+            case '_' -> {
                 conditionType = ConditionType.SQL_LIKE;
                 likePattern.append(ch);
-                break;
-            case '\\':
+            }
+            case '\\' -> {
                 hasEscape = true;
-                if (idx < patternLength - 1
-                        && isPatternSpecialChar(metadataPattern.charAt(idx + 1))) {
-                    // We add the character here so we skip it in the next iteration to distinguish
+                if (idx < patternLength - 1 && isPatternSpecialChar(metadataPattern.charAt(idx + 1))) {
+                    // We add the character here, so we skip it in the next iteration to distinguish
                     // unescaped wildcards (which trigger SQL_LIKE) from escaped wildcards
                     likePattern.append('\\').append(metadataPattern.charAt(++idx));
                 } else {
                     // Escape followed by non-special or end of string: introduce escape
                     likePattern.append('\\').append('\\');
                 }
-                break;
-            default:
-                likePattern.append(ch);
-                break;
+            }
+            default -> likePattern.append(ch);
             }
         }
 

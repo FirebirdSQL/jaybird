@@ -45,6 +45,8 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_batch_cancel;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_batch_rls;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
@@ -85,16 +87,20 @@ public class V16Statement extends V13Statement {
     public void deferredBatchCreate(FbBatchConfig batchConfig, DeferredResponse<Void> onResponse) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
-            try {
-                sendBatchCreate(batchConfig);
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
+            sendBatchCreate0(batchConfig);
             getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null, true));
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    private void sendBatchCreate0(FbBatchConfig batchConfig) throws SQLException {
+        try {
+            sendBatchCreate(batchConfig);
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioWriteError(e);
         }
     }
 
@@ -188,51 +194,55 @@ public class V16Statement extends V13Statement {
             checkStatementValid();
             FbTransaction transaction = getTransaction();
             checkTransactionActive(transaction);
-            try {
-                XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_batch_exec);
-                xdrOut.writeInt(getHandle());
-                xdrOut.writeInt(transaction.getHandle());
-                xdrOut.flush();
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
-            try {
-                BatchCompletionResponse response = (BatchCompletionResponse) getDatabase()
-                        .readResponse(getStatementWarningCallback());
-                return response.batchCompletion();
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
+            sendBatchExec(transaction);
+            return receiveBatchExecResponse();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
     }
 
+    private void sendBatchExec(FbTransaction transaction) throws SQLException {
+        try {
+            XdrOutputStream xdrOut = getXdrOut();
+            xdrOut.writeInt(WireProtocolConstants.op_batch_exec);
+            xdrOut.writeInt(getHandle());
+            xdrOut.writeInt(transaction.getHandle());
+            xdrOut.flush();
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioWriteError(e);
+        }
+    }
+
+    private BatchCompletion receiveBatchExecResponse() throws SQLException {
+        try {
+            BatchCompletionResponse response = (BatchCompletionResponse) getDatabase()
+                    .readResponse(getStatementWarningCallback());
+            return response.batchCompletion();
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioWriteError(e);
+        }
+    }
+
     @Override
     public void batchCancel() throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            try {
-                XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_batch_cancel);
-                xdrOut.writeInt(getHandle());
-                xdrOut.flush();
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
-            try {
-                getDatabase().readResponse(getStatementWarningCallback());
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.ioReadError(e);
-            }
+            sendBatchRelease(op_batch_cancel);
+            receiveBatchCancelResponse();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    private void receiveBatchCancelResponse() throws SQLException {
+        try {
+            getDatabase().readResponse(getStatementWarningCallback());
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 
@@ -240,19 +250,25 @@ public class V16Statement extends V13Statement {
     public void deferredBatchRelease(DeferredResponse<Void> onResponse) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
-            try {
-                XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_batch_rls);
-                xdrOut.writeInt(getHandle());
-                xdrOut.flush();
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
+            sendBatchRelease(op_batch_rls);
             getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null, true));
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    private void sendBatchRelease(int operation) throws SQLException {
+        assert operation == op_batch_cancel || operation == op_batch_rls
+                : "Unexpected operation for batch release: " + operation;
+        try {
+            XdrOutputStream xdrOut = getXdrOut();
+            xdrOut.writeInt(operation);
+            xdrOut.writeInt(getHandle());
+            xdrOut.flush();
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioWriteError(e);
         }
     }
 

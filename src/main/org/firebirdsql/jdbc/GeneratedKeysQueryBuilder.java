@@ -263,6 +263,7 @@ final class GeneratedKeysQueryBuilder {
         }
     }
 
+    @SuppressWarnings("java:S135")
     private GeneratedKeysSupport.Query addColumnsByNameImpl(List<String> columnNames, QuoteStrategy quoteStrategy) {
         assert columnNames != null && !columnNames.isEmpty() : "Column names are required";
 

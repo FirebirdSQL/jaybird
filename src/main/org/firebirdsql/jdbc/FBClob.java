@@ -202,6 +202,7 @@ public final class FBClob implements Clob, NClob {
 	 * 
 	 * @return FBBlob instance
 	 */
+	@SuppressWarnings({ "RedundantThrows", "java:S1130" })
 	public FBBlob getWrappedBlob() throws SQLException {
 		return wrappedBlob;
 	}

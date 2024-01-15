@@ -249,12 +249,12 @@ class WireDatabaseConnectionTest {
     }
 
     /**
-     * Tests if calling {@link WireConnection#close()} does not throw an
-     * exception when not connected.
+     * Tests if calling {@link WireConnection#close()} does not throw an exception when not connected.
      */
     @Test
+    @SuppressWarnings("resource")
     void testUnconnected_Disconnect() throws Exception {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
-        gdsConnection.close();
+        assertDoesNotThrow(gdsConnection::close);
     }
 }

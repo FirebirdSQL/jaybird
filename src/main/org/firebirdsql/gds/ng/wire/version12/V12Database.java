@@ -62,21 +62,25 @@ public class V12Database extends V11Database {
                 forceClose();
             } else {
                 checkConnected();
-                try {
-                    // We circumvent the normal xdrOut to minimize the chance of interleaved writes
-                    ByteArrayOutputStream out = new ByteArrayOutputStream(8);
-                    try (XdrOutputStream xdr = new XdrOutputStream(out, 8)) {
-                        xdr.writeInt(WireProtocolConstants.op_cancel);
-                        xdr.writeInt(kind);
-                    }
-                    wireOperations.writeDirect(out.toByteArray());
-                } catch (IOException e) {
-                    throw FbExceptionBuilder.ioWriteError(e);
-                }
+                sendCancel(kind);
             }
         } catch (SQLException ex) {
             exceptionListenerDispatcher.errorOccurred(ex);
             throw ex;
+        }
+    }
+
+    private void sendCancel(int kind) throws SQLException {
+        try {
+            // We circumvent the normal xdrOut to minimize the chance of interleaved writes
+            ByteArrayOutputStream out = new ByteArrayOutputStream(8);
+            try (XdrOutputStream xdr = new XdrOutputStream(out, 8)) {
+                xdr.writeInt(WireProtocolConstants.op_cancel);
+                xdr.writeInt(kind);
+            }
+            wireOperations.writeDirect(out.toByteArray());
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioWriteError(e);
         }
     }
 

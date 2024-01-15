@@ -161,6 +161,7 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
     }
 
     @Override
+    @SuppressWarnings("java:S4274")
     public void notRegistered(ConnectionProperty connectionProperty) {
         // Built-in connection properties must be registered, if they cannot be registered,
         // there is something wrong in the implementation

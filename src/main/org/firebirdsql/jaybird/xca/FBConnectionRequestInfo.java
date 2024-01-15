@@ -36,6 +36,7 @@ public final class FBConnectionRequestInfo implements Serializable {
     @Serial
     private static final long serialVersionUID = 2L;
 
+    @SuppressWarnings("java:S1948")
     private final IConnectionProperties connectionProperties;
 
     /**

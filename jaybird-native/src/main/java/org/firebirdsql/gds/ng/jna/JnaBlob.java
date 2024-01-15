@@ -228,7 +228,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
         }
     }
 
-    private int getBlobBufferSize() throws SQLException {
+    private int getBlobBufferSize() {
         return getDatabase().getConnectionProperties().getBlobBufferSize();
     }
 

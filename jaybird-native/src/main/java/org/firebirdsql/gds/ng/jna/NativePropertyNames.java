@@ -24,6 +24,7 @@ package org.firebirdsql.gds.ng.jna;
  * @author Mark Rotteveel
  * @since 6
  */
+@SuppressWarnings("java:S115")
 public final class NativePropertyNames {
 
     // NOTE: Only used/works for first native or embedded connection

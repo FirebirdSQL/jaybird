@@ -150,6 +150,7 @@ public class TimeZoneDatatypeCoder {
         return datatypeCoder.decodeLocalDateTime(timestampTzBytes).toInstant(ZoneOffset.UTC);
     }
 
+    @SuppressWarnings("java:S1168")
     private byte[] encodeOffsetDateTimeToTimestampTz(OffsetDateTime offsetDateTime, int bufferSize) {
         if (offsetDateTime == null) return null;
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(offsetDateTime.getOffset());
@@ -158,6 +159,7 @@ public class TimeZoneDatatypeCoder {
         return encodeTimestampTz(utcDateTime, firebirdZoneId, bufferSize);
     }
 
+    @SuppressWarnings("java:S1168")
     private byte[] encodeZonedDateTimeToTimestampTz(ZonedDateTime zonedDateTime, int bufferSize) {
         if (zonedDateTime == null) return null;
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(zonedDateTime.getZone());
@@ -185,10 +187,10 @@ public class TimeZoneDatatypeCoder {
         LocalTime utcTime = decodeTimeTzToUtcLocalTime(timeTzBytes);
         ZoneId zoneId = decodeTimeZoneId(timeTzBytes, 4);
 
-        if (zoneId instanceof ZoneOffset) {
+        if (zoneId instanceof ZoneOffset zoneOffset) {
             // Simple case: can be done with offsets only
             return OffsetTime.of(utcTime, ZoneOffset.UTC)
-                    .withOffsetSameInstant((ZoneOffset) zoneId);
+                    .withOffsetSameInstant(zoneOffset);
         }
 
         // We need to base on a date to determine value, we use the 2020-01-01 date,
@@ -205,11 +207,11 @@ public class TimeZoneDatatypeCoder {
         LocalTime utcTime = decodeTimeTzToUtcLocalTime(timeTzBytes);
         ZoneId zoneId = decodeTimeZoneId(timeTzBytes, 4);
 
-        if (zoneId instanceof ZoneOffset) {
+        if (zoneId instanceof ZoneOffset zoneOffset) {
             // Simple case: can be done with offsets only
             LocalDate utcToday = OffsetDateTime.ofInstant(utcClock.instant(), ZoneOffset.UTC).toLocalDate();
             return OffsetDateTime.of(utcToday, utcTime, ZoneOffset.UTC)
-                    .withOffsetSameInstant((ZoneOffset) zoneId);
+                    .withOffsetSameInstant(zoneOffset);
         }
 
         return decodeTimeTzToZonedDateTime(utcTime, zoneId)
@@ -234,6 +236,7 @@ public class TimeZoneDatatypeCoder {
         return timeAtBaseDate.with(TemporalAdjusters.ofDateAdjuster(date -> currentDateInZone));
     }
 
+    @SuppressWarnings("java:S1168")
     private byte[] encodeOffsetTimeToTimeTz(OffsetTime offsetTime, int bufferSize) {
         if (offsetTime == null) return null;
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(offsetTime.getOffset());
@@ -242,6 +245,7 @@ public class TimeZoneDatatypeCoder {
         return encodeTimeTz(utcTime, firebirdZoneId, bufferSize);
     }
 
+    @SuppressWarnings("java:S1168")
     private byte[] encodeZonedDateTimeToTimeTz(ZonedDateTime zonedDateTime, int bufferSize) {
         if (zonedDateTime == null) return null;
         ZoneId zone = zonedDateTime.getZone();
@@ -375,6 +379,7 @@ public class TimeZoneDatatypeCoder {
         }
 
         @Override
+        @SuppressWarnings("java:S1168")
         public byte[] encodeOffsetDateTime(OffsetDateTime offsetDateTime) {
             if (offsetDateTime == null) return null;
             return encodeOffsetTime(offsetDateTime.toOffsetTime());
@@ -432,6 +437,7 @@ public class TimeZoneDatatypeCoder {
         }
 
         @Override
+        @SuppressWarnings("java:S1168")
         public byte[] encodeOffsetTime(OffsetTime offsetTime) {
             if (offsetTime == null) return null;
             // We need to base on a date to determine value, we use the current date; this will be inconsistent depending

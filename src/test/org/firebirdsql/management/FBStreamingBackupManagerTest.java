@@ -34,6 +34,7 @@ import java.nio.file.Path;
 
 import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -124,7 +125,7 @@ class FBStreamingBackupManagerTest {
     @ParameterizedTest
     @ValueSource(ints = { PageSizeConstants.SIZE_4K, PageSizeConstants.SIZE_8K, PageSizeConstants.SIZE_16K })
     void testValidPageSizes(int pageSize) {
-        backupManager.setRestorePageSize(pageSize);
+        assertDoesNotThrow(() -> backupManager.setRestorePageSize(pageSize));
     }
 
     @Test

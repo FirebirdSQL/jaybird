@@ -39,6 +39,7 @@ package org.firebirdsql.gds;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@SuppressWarnings({ "java:S115", "java:S1214" })
 public interface JaybirdErrorCodes {
 
     @SuppressWarnings("unused")
@@ -48,7 +49,7 @@ public interface JaybirdErrorCodes {
     /**
      * @deprecated Jaybird no longer uses this error code
      */
-    @Deprecated
+    @Deprecated(since = "6")
     int jb_blobPutSegmentTooLong    = 337248259;
     int jb_blobIdAlreadySet         = 337248260;
     int jb_invalidClumpletStructure = 337248261;

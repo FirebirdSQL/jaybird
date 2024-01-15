@@ -54,6 +54,7 @@ public final class FbImmutableConnectionProperties extends AbstractImmutableAtta
     }
 
     @Override
+    @SuppressWarnings("java:S1206")
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof FbImmutableConnectionProperties)) return false;

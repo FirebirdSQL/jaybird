@@ -85,7 +85,7 @@ class FBStatementTest {
     void testDoubleClose() throws SQLException {
         Statement stmt = con.createStatement();
         stmt.close();
-        stmt.close();
+        assertDoesNotThrow(stmt::close);
     }
 
     /**

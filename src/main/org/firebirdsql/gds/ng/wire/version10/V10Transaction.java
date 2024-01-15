@@ -123,31 +123,39 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     public void prepare(byte[] recoveryInformation) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             switchState(TransactionState.PREPARING);
-            try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                if (recoveryInformation != null) {
-                    xdrOut.writeInt(op_prepare2);
-                    xdrOut.writeInt(handle);
-                    xdrOut.writeBuffer(recoveryInformation);
-                } else {
-                    xdrOut.writeInt(op_prepare);
-                    xdrOut.writeInt(handle);
-                }
-                xdrOut.flush();
-            } catch (IOException e) {
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
-            try {
-                getDatabase().readResponse(null);
-            } catch (IOException e) {
-                throw FbExceptionBuilder.ioReadError(e);
-            }
-            switchState(TransactionState.PREPARED);
+            sendPrepare(recoveryInformation);
+            receivePrepareResponse();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
             logUnexpectedState(TransactionState.PREPARED, log);
+        }
+    }
+
+    private void sendPrepare(byte[] recoveryInformation) throws SQLException {
+        try {
+            XdrOutputStream xdrOut = getXdrOut();
+            if (recoveryInformation != null) {
+                xdrOut.writeInt(op_prepare2);
+                xdrOut.writeInt(handle);
+                xdrOut.writeBuffer(recoveryInformation);
+            } else {
+                xdrOut.writeInt(op_prepare);
+                xdrOut.writeInt(handle);
+            }
+            xdrOut.flush();
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioWriteError(e);
+        }
+    }
+
+    private void receivePrepareResponse() throws SQLException {
+        try {
+            getDatabase().readResponse(null);
+            switchState(TransactionState.PREPARED);
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 

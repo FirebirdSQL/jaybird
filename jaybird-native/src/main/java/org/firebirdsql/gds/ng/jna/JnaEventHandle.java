@@ -59,6 +59,7 @@ public final class JnaEventHandle extends AbstractEventHandle {
         Cleaners.getJbCleaner().register(this, new CleanupAction(eventBuffer, resultBuffer));
     }
 
+    @SuppressWarnings("java:S1185")
     @Override
     protected void setEventCount(int eventCount) {
         super.setEventCount(eventCount);

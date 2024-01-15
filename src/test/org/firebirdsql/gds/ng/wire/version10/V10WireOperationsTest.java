@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -72,7 +73,7 @@ public class V10WireOperationsTest {
         AbstractWireOperations wire = createDummyWireOperations();
 
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, null);
-        wire.processResponse(genericResponse);
+        assertDoesNotThrow(() -> wire.processResponse(genericResponse));
     }
 
     /**
@@ -97,7 +98,7 @@ public class V10WireOperationsTest {
         SQLException testException = new SQLWarning("test");
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, testException);
 
-        wire.processResponse(genericResponse);
+        assertDoesNotThrow(() -> wire.processResponse(genericResponse));
     }
 
     /**

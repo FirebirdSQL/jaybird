@@ -165,6 +165,7 @@ public class JnaTransaction extends AbstractFbTransaction {
     private static final class CleanupAction implements Runnable, DatabaseListener {
 
         private final IntByReference handle;
+        @SuppressWarnings("java:S3077")
         private volatile JnaDatabase database;
 
         private CleanupAction(IntByReference handle, JnaDatabase database) {

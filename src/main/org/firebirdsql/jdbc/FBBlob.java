@@ -66,6 +66,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
 
     private boolean isNew;
     private long blobId;
+    @SuppressWarnings("java:S3077")
     private volatile GDSHelper gdsHelper;
     private FBObjectListener.BlobListener blobListener;
     private final Config config;

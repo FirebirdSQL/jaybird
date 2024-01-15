@@ -483,19 +483,14 @@ public final class FirebirdSupportInfo {
      * @return {@code true} if supported, {@code false} otherwise.
      */
     public boolean supportsAuthenticationPlugin(String pluginName) {
-        switch (pluginName) {
-        case LegacyAuthenticationPluginSpi.LEGACY_AUTH_NAME:
-            return true;
-        case SrpAuthenticationPluginSpi.SRP_AUTH_NAME:
-            return isVersionEqualOrAbove(3);
-        case Srp224AuthenticationPluginSpi.SRP_224_AUTH_NAME:
-        case Srp256AuthenticationPluginSpi.SRP_256_AUTH_NAME:
-        case Srp384AuthenticationPluginSpi.SRP_384_AUTH_NAME:
-        case Srp512AuthenticationPluginSpi.SRP_512_AUTH_NAME:
-            return isVersionEqualOrAbove(3, 0, 4);
-        default:
-            return false;
-        }
+        return switch (pluginName) {
+            case LegacyAuthenticationPluginSpi.LEGACY_AUTH_NAME -> true;
+            case SrpAuthenticationPluginSpi.SRP_AUTH_NAME -> isVersionEqualOrAbove(3);
+            case Srp224AuthenticationPluginSpi.SRP_224_AUTH_NAME, Srp256AuthenticationPluginSpi.SRP_256_AUTH_NAME,
+                    Srp384AuthenticationPluginSpi.SRP_384_AUTH_NAME, Srp512AuthenticationPluginSpi.SRP_512_AUTH_NAME ->
+                    isVersionEqualOrAbove(3, 0, 4);
+            default -> false;
+        };
     }
 
     /**
@@ -661,6 +656,7 @@ public final class FirebirdSupportInfo {
     /**
      * @return {@code true} when this Firebird version has the {@code RDB$CONFIG} table
      */
+    @SuppressWarnings("java:S100")
     public boolean supportsRDB$CONFIG() {
         return isVersionEqualOrAbove(4);
     }

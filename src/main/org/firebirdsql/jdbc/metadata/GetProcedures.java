@@ -47,6 +47,7 @@ import static org.firebirdsql.jdbc.metadata.NameHelper.toSpecificName;
 public abstract class GetProcedures extends AbstractMetadataMethod {
 
     private static final String PROCEDURES = "PROCEDURES";
+    private static final String COLUMN_PROCEDURE_NAME = "RDB$PROCEDURE_NAME";
     
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(9)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", PROCEDURES).addField()
@@ -106,6 +107,7 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
         }
     }
 
+    @SuppressWarnings("java:S101")
     private static final class FB2_5 extends GetProcedures {
 
         private static final String GET_PROCEDURES_FRAGMENT_2_5 = """
@@ -128,7 +130,7 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
 
         @Override
         MetadataQuery createGetProceduresQuery(String catalog, String procedureNamePattern) {
-            Clause procedureNameClause = new Clause("RDB$PROCEDURE_NAME", procedureNamePattern);
+            Clause procedureNameClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
             String queryText = GET_PROCEDURES_FRAGMENT_2_5
                     + procedureNameClause.getCondition("\nwhere ", "")
                     + GET_PROCEDURES_ORDER_BY_2_5;
@@ -160,7 +162,7 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
 
         @Override
         MetadataQuery createGetProceduresQuery(String catalog, String procedureNamePattern) {
-            Clause procedureNameClause = new Clause("RDB$PROCEDURE_NAME", procedureNamePattern);
+            Clause procedureNameClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
             String queryText = GET_PROCEDURES_FRAGMENT_3
                     + procedureNameClause.getCondition("\nand ", "")
                     + GET_PROCEDURES_ORDER_BY_3;
@@ -203,7 +205,7 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
                     clauses.add(Clause.equalsClause("RDB$PACKAGE_NAME", catalog));
                 }
             }
-            clauses.add(new Clause("RDB$PROCEDURE_NAME", procedureNamePattern));
+            clauses.add(new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern));
             //@formatter:off
             String sql = GET_PROCEDURES_FRAGMENT_3_W_PKG
                     + (Clause.anyCondition(clauses)

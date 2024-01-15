@@ -38,6 +38,7 @@ import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceS
  */
 final class FbClientResource extends NativeResourceTracker.NativeResource {
 
+    @SuppressWarnings("java:S3077")
     private volatile FbClientLibrary library;
     private final AbstractNativeDatabaseFactory owner;
     private final Cleaner.Cleanable cleanable;

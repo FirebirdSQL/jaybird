@@ -32,6 +32,7 @@ import com.sun.jna.Structure;
  */
 @Structure.FieldOrder({ "blob_desc_subtype", "blob_desc_charset", "blob_desc_segment_size", "blob_desc_field_name",
 		"blob_desc_relation_name" })
+@SuppressWarnings({ "unused", "java:S101", "java:S116", "java:S117", "java:S1104", "java:S1197", "java:S2160" })
 public class ISC_BLOB_DESC extends Structure {
 	public short blob_desc_subtype;
 	public short blob_desc_charset;
@@ -60,8 +61,10 @@ public class ISC_BLOB_DESC extends Structure {
 			throw new IllegalArgumentException("Wrong array size !");
 		this.blob_desc_relation_name = blob_desc_relation_name;
 	}
+
 	public static class ByReference extends ISC_BLOB_DESC implements Structure.ByReference {
 	}
+	
 	public static class ByValue extends ISC_BLOB_DESC implements Structure.ByValue {
 	}
 }

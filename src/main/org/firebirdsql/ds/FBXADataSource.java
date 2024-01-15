@@ -47,6 +47,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
 
     private static final System.Logger LOG = System.getLogger(FBXADataSource.class.getName());
 
+    @SuppressWarnings("java:S3077")
     private volatile FBDataSource internalDs;
 
     public XAConnection getXAConnection() throws SQLException {

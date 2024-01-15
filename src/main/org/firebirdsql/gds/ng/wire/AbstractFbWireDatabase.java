@@ -322,7 +322,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
             }
             try {
                 final GenericResponse genericResponse = readGenericResponse(null);
-                return genericResponse.getData();
+                return genericResponse.data();
             } catch (IOException e) {
                 throw FbExceptionBuilder.ioReadError(e);
             }

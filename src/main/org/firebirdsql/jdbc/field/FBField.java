@@ -107,6 +107,7 @@ public abstract class FBField {
     /**
      * @return {@code true} if the corresponding field is {@code null}, otherwise {@code false}
      */
+    @SuppressWarnings("java:S1130")
     public final boolean isNull() throws SQLException {
         return getFieldData() == null;
     }

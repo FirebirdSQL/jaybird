@@ -43,7 +43,7 @@ import org.firebirdsql.jaybird.fb.constants.StandardBlobTypes;
  * @author David Jencks
  * @version 1.0
  */
-@SuppressWarnings({ "unused", "DanglingJavadoc" })
+@SuppressWarnings({ "unused", "DanglingJavadoc", "java:S115", "java:S1214" })
 public interface ISCConstants {
 
     int SQLDA_VERSION1             = 1;
@@ -2414,8 +2414,8 @@ public interface ISCConstants {
     int SQL_INT128    = 32752;
     int SQL_TIMESTAMP_TZ    = 32754;
     int SQL_TIME_TZ   = 32756;
-    // Replaced by SQL_INT128 in 4.0.0.1604
-    @Deprecated
+    // Replaced by SQL_INT128 in 4.0.0.1604, retained for informational purposes
+    @Deprecated(since = "4")
     int SQL_DEC_FIXED = 32758;
     int SQL_DEC16     = 32760;
     int SQL_DEC34     = 32762;

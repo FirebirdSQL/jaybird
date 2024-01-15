@@ -129,32 +129,22 @@ abstract class MessageStore implements FirebirdErrorStore {
 
     private static String saveConvert(String theString, boolean escapeSpace) {
         int len = theString.length();
-        StringBuilder outBuffer = new StringBuilder(len * 2);
+        var outBuffer = new StringBuilder(len * 2);
 
         for (int x = 0; x < len; x++) {
             char aChar = theString.charAt(x);
             switch (aChar) {
-            case ' ':
+            case ' ' -> {
                 if (x == 0 || escapeSpace) outBuffer.append('\\');
 
                 outBuffer.append(' ');
-                break;
-            case '\\':
-                outBuffer.append('\\').append('\\');
-                break;
-            case '\t':
-                outBuffer.append('\\').append('t');
-                break;
-            case '\n':
-                outBuffer.append('\\').append('n');
-                break;
-            case '\r':
-                outBuffer.append('\\').append('r');
-                break;
-            case '\f':
-                outBuffer.append('\\').append('f');
-                break;
-            default:
+            }
+            case '\\' -> outBuffer.append('\\').append('\\');
+            case '\t' -> outBuffer.append('\\').append('t');
+            case '\n' -> outBuffer.append('\\').append('n');
+            case '\r' -> outBuffer.append('\\').append('r');
+            case '\f' -> outBuffer.append('\\').append('f');
+            default -> {
                 if ((aChar < 0x0020) || (aChar > 0x007e)) {
                     outBuffer.append('\\').append('u')
                             .append(toHex(aChar >> 12))
@@ -167,6 +157,7 @@ abstract class MessageStore implements FirebirdErrorStore {
                     }
                     outBuffer.append(aChar);
                 }
+            }
             }
         }
         return outBuffer.toString();

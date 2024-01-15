@@ -30,6 +30,7 @@ final class MessageConverter {
         // no instances
     }
 
+    @SuppressWarnings("java:S127")
     static String toJaybirdMessageFormat(String fbMessage) {
         char[] chars = fbMessage.toCharArray();
 
@@ -41,21 +42,16 @@ final class MessageConverter {
                 i++;
 
                 switch (chars[i]) {
-                case 's':
-                case 'd':
-                    sb.append('{').append(counter++).append('}');
-                    break;
-                case 'l':
+                case 's', 'd' -> sb.append('{').append(counter++).append('}');
+                case 'l' -> {
                     i++;
                     if (chars[i] == 'd') {
                         sb.append('{').append(counter++).append('}');
                     } else {
                         sb.append("%l").append(chars[i]);
                     }
-                    break;
-                default:
-                    sb.append('%').append(chars[i]);
-                    break;
+                }
+                default -> sb.append('%').append(chars[i]);
                 }
             } else if (chars[i] == '@') {
                 i++;
@@ -93,38 +89,30 @@ final class MessageConverter {
      *         message to unescape
      * @return unescaped message
      */
+    @SuppressWarnings("java:S127")
     static String unescapeSource(String message) {
         int length = message.length();
-        StringBuilder sb = new StringBuilder(length);
+        var sb = new StringBuilder(length);
         for (int x = 0; x < length; x++) {
             char ch = message.charAt(x);
             if (ch == '\\' && x + 1 < length) {
                 // Unconditionally increment position, we restore this in the default of the switch
-                x = x + 1;
-                char nextCh = message.charAt(x);
+                char nextCh = message.charAt(++x);
                 switch (nextCh) {
-                case '\\':
-                case '"':
-                    sb.append(nextCh);
-                    continue;
-                case 't':
-                    sb.append('\t');
-                    continue;
-                case 'n':
-                    sb.append('\n');
-                    continue;
-                case 'r':
-                    sb.append('\r');
-                    continue;
-                case 'f':
-                    sb.append('\f');
-                    continue;
-                default:
+                case '\\', '"' -> sb.append(nextCh);
+                case 't' -> sb.append('\t');
+                case 'n' -> sb.append('\n');
+                case 'r' -> sb.append('\r');
+                case 'f' -> sb.append('\f');
+                default -> {
                     // Restore position
-                    x = x - 1;
+                    x--;
+                    sb.append(ch);
                 }
+                }
+            } else {
+                sb.append(ch);
             }
-            sb.append(ch);
         }
         return sb.toString();
     }

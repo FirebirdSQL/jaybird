@@ -60,12 +60,13 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
 public abstract class GetTables extends AbstractMetadataMethod {
 
     private static final String TABLES = "TABLES";
-    
+    private static final String TABLE_TYPE = "TABLE_TYPE";
+
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(12)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", TABLES).addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", TABLES).addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", TABLES).addField()
-            .at(3).simple(SQL_VARYING, 20, "TABLE_TYPE", TABLES).addField()
+            .at(3).simple(SQL_VARYING, 20, TABLE_TYPE, TABLES).addField()
             // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
             .at(4).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", TABLES).addField()
             .at(5).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TYPE_CAT", TABLES).addField()
@@ -79,7 +80,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
             .toRowDescriptor();
 
     private static final RowDescriptor ROW_DESCRIPTOR_TABLE_TYPES = DbMetadataMediator.newRowDescriptorBuilder(1)
-            .at(0).simple(SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES").addField()
+            .at(0).simple(SQL_VARYING, 31, TABLE_TYPE, "TABLETYPES").addField()
             .toRowDescriptor();
 
     private GetTables(DbMetadataMediator mediator) {
@@ -103,7 +104,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
     final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
         return valueBuilder
                 .at(2).setString(rs.getString("TABLE_NAME"))
-                .at(3).setString(rs.getString("TABLE_TYPE"))
+                .at(3).setString(rs.getString(TABLE_TYPE))
                 .at(4).setString(rs.getString("REMARKS"))
                 .at(10).setString(rs.getString("OWNER_NAME"))
                 .at(11).setShort(rs.getShort("JB_RELATION_ID"))
@@ -152,6 +153,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
         }
     }
 
+    @SuppressWarnings("java:S101")
     private static final class FB2_1 extends GetTables {
 
         private static final String TABLE_COLUMNS_SYSTEM_2_1 =
@@ -223,6 +225,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
         }
     }
 
+    @SuppressWarnings("java:S101")
     private static final class FB2_5 extends GetTables {
 
         private static final String GET_TABLE_ORDER_BY_2_5 = "\norder by 2, 1";

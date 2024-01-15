@@ -31,11 +31,13 @@ import com.sun.jna.Structure;
  * @since 3.0
  */
 @Structure.FieldOrder({ "timestamp_date", "timestamp_time" })
+@SuppressWarnings({ "unused", "java:S101", "java:S116", "java:S117", "java:S1104", "java:S2160" })
 public class ISC_TIMESTAMP extends Structure {
 	/// C type : ISC_DATE
 	public int timestamp_date;
 	/// C type : ISC_TIME
 	public int timestamp_time;
+	
 	public ISC_TIMESTAMP() {
 		super();
 	}
@@ -49,8 +51,10 @@ public class ISC_TIMESTAMP extends Structure {
 		this.timestamp_date = timestamp_date;
 		this.timestamp_time = timestamp_time;
 	}
+
 	public static class ByReference extends ISC_TIMESTAMP implements Structure.ByReference {
 	}
+
 	public static class ByValue extends ISC_TIMESTAMP implements Structure.ByValue {
 	}
 }

@@ -31,9 +31,11 @@ import com.sun.jna.Structure;
  * @since 3.0
  */
 @Structure.FieldOrder({ "array_bound_lower", "array_bound_upper" })
+@SuppressWarnings({ "unused", "java:S101", "java:S116", "java:S117", "java:S1104", "java:S2160" })
 public class ISC_ARRAY_BOUND extends Structure {
 	public short array_bound_lower;
 	public short array_bound_upper;
+
 	public ISC_ARRAY_BOUND() {
 		super();
 	}
@@ -43,8 +45,10 @@ public class ISC_ARRAY_BOUND extends Structure {
 		this.array_bound_lower = array_bound_lower;
 		this.array_bound_upper = array_bound_upper;
 	}
+
 	public static class ByReference extends ISC_ARRAY_BOUND implements Structure.ByReference {
 	}
+	
 	public static class ByValue extends ISC_ARRAY_BOUND implements Structure.ByValue {
 	}
 }

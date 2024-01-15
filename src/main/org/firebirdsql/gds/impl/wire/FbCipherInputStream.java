@@ -143,6 +143,7 @@ final class FbCipherInputStream extends FilterInputStream {
                 try {
                     cipher.doFinal(outBuf, 0);
                 } catch (BadPaddingException | IllegalBlockSizeException | ShortBufferException ignored) {
+                    // ignore this during close (and unlikely to happen with the ciphers we use)
                 }
             }
         } finally {

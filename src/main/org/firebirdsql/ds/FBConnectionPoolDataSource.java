@@ -47,7 +47,8 @@ public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource imple
         Referenceable {
 
     // TODO Implement in terms of FBManagedConnectionFactory
-
+    
+    @SuppressWarnings("java:S3077")
     private volatile FBDataSource internalDs;
 
     public PooledConnection getPooledConnection() throws SQLException {

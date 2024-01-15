@@ -45,6 +45,7 @@ import java.util.Arrays;
  * @author Hajime Nakagami
  * @author Mark Rotteveel
  */
+@SuppressWarnings("java:S117")
 public final class SrpClient {
     
     private static final int SRP_KEY_SIZE = 128;
@@ -72,7 +73,7 @@ public final class SrpClient {
             sha1Md = MessageDigest.getInstance("SHA-1");
         } catch (NoSuchAlgorithmException e) {
             // Should not happen
-            throw new RuntimeException("SHA-1 MessageDigest not available", e);
+            throw new IllegalStateException("SHA-1 MessageDigest not available", e);
         }
     }
 

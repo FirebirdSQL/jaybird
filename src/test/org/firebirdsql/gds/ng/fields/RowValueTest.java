@@ -147,7 +147,7 @@ class RowValueTest {
 
     @Test
     void reset_onEmpty_noException() {
-        RowValue.EMPTY_ROW_VALUE.reset();
+        assertDoesNotThrow(RowValue.EMPTY_ROW_VALUE::reset);
     }
 
     @Test

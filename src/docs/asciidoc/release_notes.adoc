@@ -1151,7 +1151,8 @@ Though this class was publicly accessible through `ResultSet.getObject/updateObj
 
 The following classes are no longer accessible in Jaybird 6:
 
-* `RowValueBuilder` is now package private.
+* `RowValueBuilder` is now package private
+* `StoredProcedureMetaData` is now package private
 
 The following classes are no longer extensible in Jaybird 6 as they are now `sealed` or `final`:
 
@@ -1161,6 +1162,8 @@ The following classes are no longer extensible in Jaybird 6 as they are now `sea
 ** Visibility was also reduced to package-private
 * `PooledConnectionHandler`
 * `XAConnectionHandler`
+** Visibility was also reduced to package-private
+* `StoredProcedureMetaDataFactory`
 ** Visibility was also reduced to package-private
 
 [#removal-of-constants-without-deprecation]
@@ -1419,6 +1422,9 @@ use `decodeLocalDate(byte[])`
 use `encodeLocalDate(LocalDate)`
 ** `decodeDateRaw(byte[])` was removed;
 use `decodeLocalDate(byte[])`
+* `FetchResponse` was converted to a record, and its getters (`getStatus()` and `getCount()`) have been replaced by accessor methods (`status()` and `count()`)
+* `GenericResponse` was converted to a record, and its getters (`getObjectHandle()`, `getBlobId()`, `getData()` and `exception()`) have been replaced by accessor methods (`objectHandle()`, `blobId()`, `data()` and `exception()`)
+* `SQLResponse` was converted to a record, and its getter (`getCount()`) has been replaced by an accessor method (`count()`)
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

@@ -31,11 +31,13 @@ import com.sun.jna.Structure;
  * @since 3.0
  */
 @Structure.FieldOrder({ "gds_quad_high", "gds_quad_low" })
+@SuppressWarnings({ "unused", "java:S101", "java:S116", "java:S117", "java:S1104", "java:S2160" })
 public class GDS_QUAD_t extends Structure {
 	/// C type : ISC_LONG
 	public int gds_quad_high;
 	/// C type : ISC_ULONG
 	public int gds_quad_low;
+
 	public GDS_QUAD_t() {
 		super();
 	}
@@ -49,8 +51,10 @@ public class GDS_QUAD_t extends Structure {
 		this.gds_quad_high = gds_quad_high;
 		this.gds_quad_low = gds_quad_low;
 	}
+
 	public static class ByReference extends GDS_QUAD_t implements Structure.ByReference {
 	}
+
 	public static class ByValue extends GDS_QUAD_t implements Structure.ByValue {
 	}
 }

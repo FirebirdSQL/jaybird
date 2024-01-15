@@ -82,8 +82,7 @@ final class ServerBatch implements Batch, StatementListener {
         }
 
         switch (newState) {
-        case ALLOCATED:
-        case PREPARING:
+        case ALLOCATED, PREPARING -> {
             // NOTE: These state transition shouldn't occur for usage in FBPreparedStatement; included for robustness
             // Server-side batch is deallocated when unprepared or when preparing a new statement text
             if (state != BatchState.INITIAL) {
@@ -96,14 +95,12 @@ final class ServerBatch implements Batch, StatementListener {
                     log.log(DEBUG, "Unexpected exception clearing batch, this might indicate a bug in Jaybird", e);
                 }
             }
-            break;
-        case CLOSED:
-            // Normal usage from FBPreparedStatement will have already closed it; included for robustness
-            close();
-            break;
-        default:
+        }
+        // Normal usage from FBPreparedStatement will have already closed it; included for robustness
+        case CLOSED -> close();
+        default -> {
             // do nothing
-            break;
+        }
         }
     }
 
@@ -439,56 +436,38 @@ final class ServerBatch implements Batch, StatementListener {
          * @return new state on sending batch data.
          */
         BatchState onSend() throws SQLException {
-            switch (this) {
-            case INITIAL:
+            return switch (this) {
+                case INITIAL, PARTIAL_SEND -> PARTIAL_SEND;
                 // Assume we open as part of the send operation
-            case SERVER_OPEN:
-            case PARTIAL_SEND:
-                return PARTIAL_SEND;
-            // Assume we send more data as part of executing a very large batch
-            case EXECUTING:
-                return EXECUTING;
-            case CLOSED:
-                throw new SQLNonTransientException("Cannot send in state CLOSED");
-            default:
-                throw new SQLNonTransientException("Unexpected state " + this);
-            }
+                case SERVER_OPEN -> PARTIAL_SEND;
+                // Assume we send more data as part of executing a very large batch
+                case EXECUTING -> EXECUTING;
+                case CLOSED -> throw new SQLNonTransientException("Cannot send in state CLOSED");
+            };
         }
 
         /**
          * @return new state on execute
          */
         BatchState onExecute() throws SQLException {
-            switch (this) {
-            case INITIAL:
-                // Assume we open as part of the execute operation
-            case SERVER_OPEN:
-            case PARTIAL_SEND:
-                // Assume we execute as part of executing a very large batch
-            case EXECUTING:
-                return EXECUTING;
-            case CLOSED:
+            if (this == CLOSED) {
                 throw new SQLNonTransientException("Cannot execute in state CLOSED");
-            default:
-                throw new SQLNonTransientException("Unexpected state " + this);
             }
+            return EXECUTING;
         }
 
         /**
          * @return new state on completing batch execute
          */
         BatchState onBatchComplete() throws SQLException {
-            switch (this) {
-            case EXECUTING:
-                return SERVER_OPEN;
-            case CLOSED:
-                throw new SQLNonTransientException("Cannot complete in state CLOSED");
-            default:
-                throw new SQLNonTransientException("Unexpected state " + this);
-            }
+            return switch (this) {
+                case EXECUTING -> SERVER_OPEN;
+                case CLOSED -> throw new SQLNonTransientException("Cannot complete in state CLOSED");
+                default -> throw new SQLNonTransientException("Unexpected state " + this);
+            };
         }
 
-        BatchState onServerCancel() throws SQLException {
+        BatchState onServerCancel() {
             if (this == CLOSED || this == INITIAL) {
                 return this;
             }

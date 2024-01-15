@@ -35,6 +35,7 @@ package org.firebirdsql.gds.ng.wire.auth.legacy;
  * @author Greg Wilkins (gregw)
  * @version UnixCrypt.java,v 1.5 2004/10/11 00:28:41 gregwilkins Exp
  */
+@SuppressWarnings("java:S117")
 public final class LegacyHash {
 
     //@formatter:off
@@ -254,21 +255,19 @@ public final class LegacyHash {
             perm[i] = P32Tr[ExpandTr[i] - 1];
         for (int t = 0; t < 8; t++) {
             for (int j = 0; j < 64; j++) {
-                int k = (j >> 0 & 0x01) << 5 | (j >> 1 & 0x01) << 3 |
+                int k = (j & 0x01) << 5 | (j >> 1 & 0x01) << 3 |
                         (j >> 2 & 0x01) << 2 | (j >> 3 & 0x01) << 1 |
-                        (j >> 4 & 0x01) << 0 | (j >> 5 & 0x01) << 4;
+                        (j >> 4 & 0x01) | (j >> 5 & 0x01) << 4;
                 k = S[t][k];
-                k = (k >> 3 & 0x01) << 0 | (k >> 2 & 0x01) << 1 |
-                    (k >> 1 & 0x01) << 2 | (k >> 0 & 0x01) << 3;
+                k = (k >> 3 & 0x01) | (k >> 2 & 0x01) << 1 |
+                    (k >> 1 & 0x01) << 2 | (k & 0x01) << 3;
                 for (int i = 0; i < 32; i++) temp[i] = 0;
                 for (int i = 0; i < 4; i++) temp[4 * t + i] = (byte) ((k >> i) & 0x01);
                 long kk = 0;
                 for (int i = 24; --i >= 0; )
-                    kk = kk << 1 |
-                         (long) temp[perm[i] - 1] << 32 |
-                         (long) temp[perm[i + 24] - 1];
+                    kk = kk << 1 | (long) temp[perm[i] - 1] << 32 | temp[perm[i + 24] - 1];
 
-                SPE[t][j] = to_six_bit(kk);
+                SPE[t][j] = toSixBit(kk);
             }
         }
     }
@@ -280,7 +279,7 @@ public final class LegacyHash {
     /**
      * Returns the transposed and split code of two 24-bit code into two 4-byte code, each having 6 bits.
      */
-    private static long to_six_bit(long num) {
+    private static long toSixBit(long num) {
         return num << 26 & 0xfc000000fc000000L | num << 12 & 0xfc000000fc0000L |
                num >> 2 & 0xfc000000fc00L | num >> 16 & 0xfc000000fcL;
     }
@@ -322,29 +321,13 @@ public final class LegacyHash {
     private static long desCipher(long[] KS) {
         long L = 0;
         long R = 0;
-        long kp, B, k;
-
         for (int iter = 0; iter < ITERATIONS; iter++) {
             for (int loopCount = 0; loopCount < 8; loopCount++) {
-                kp = KS[loopCount << 1];
-                k = ((R >> 32) ^ R) & FB_SALT;
-                k |= k << 32;
-                B = k ^ R ^ kp;
-
-                L ^= SPE[0][(int) (B >> 58 & 0x3f)] ^ SPE[1][(int) (B >> 50 & 0x3f)] ^
-                     SPE[2][(int) (B >> 42 & 0x3f)] ^ SPE[3][(int) (B >> 34 & 0x3f)] ^
-                     SPE[4][(int) (B >> 26 & 0x3f)] ^ SPE[5][(int) (B >> 18 & 0x3f)] ^
-                     SPE[6][(int) (B >> 10 & 0x3f)] ^ SPE[7][(int) (B >> 2 & 0x3f)];
+                long kp = KS[loopCount << 1];
+                L ^= opSPE(opSALT(R) ^ R ^ kp);
 
                 kp = KS[(loopCount << 1) + 1];
-                k = ((L >> 32) ^ L) & FB_SALT;
-                k |= k << 32;
-                B = k ^ L ^ kp;
-
-                R ^= SPE[0][(int) (B >> 58 & 0x3f)] ^ SPE[1][(int) (B >> 50 & 0x3f)] ^
-                     SPE[2][(int) (B >> 42 & 0x3f)] ^ SPE[3][(int) (B >> 34 & 0x3f)] ^
-                     SPE[4][(int) (B >> 26 & 0x3f)] ^ SPE[5][(int) (B >> 18 & 0x3f)] ^
-                     SPE[6][(int) (B >> 10 & 0x3f)] ^ SPE[7][(int) (B >> 2 & 0x3f)];
+                R ^= opSPE(opSALT(L) ^ L ^ kp);
             }
             // swap L and R
             L ^= R;
@@ -357,6 +340,21 @@ public final class LegacyHash {
         L = perm6464(L, CF6464);
 
         return L;
+    }
+
+    // NOTE: name is essentially meaningless, just named so because it uses FB_SALT
+    private static long opSALT(long R) {
+        long k = ((R >> 32) ^ R) & FB_SALT;
+        k |= k << 32;
+        return k;
+    }
+
+    // NOTE: name is essentially meaningless, just named so because it uses SPE
+    private static long opSPE(long B) {
+        return SPE[0][(int) (B >> 58 & 0x3f)] ^ SPE[1][(int) (B >> 50 & 0x3f)] ^
+                SPE[2][(int) (B >> 42 & 0x3f)] ^ SPE[3][(int) (B >> 34 & 0x3f)] ^
+                SPE[4][(int) (B >> 26 & 0x3f)] ^ SPE[5][(int) (B >> 18 & 0x3f)] ^
+                SPE[6][(int) (B >> 10 & 0x3f)] ^ SPE[7][(int) (B >> 2 & 0x3f)];
     }
 
     /**

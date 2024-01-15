@@ -27,6 +27,7 @@ import org.firebirdsql.util.InternalApi;
  * @since 4.0
  */
 @InternalApi
+@SuppressWarnings("java:S115")
 public final class FbMetadataConstants {
 
     public static final int SUBTYPE_NUMERIC = 1;

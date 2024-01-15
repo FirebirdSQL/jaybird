@@ -64,8 +64,11 @@ public abstract class AbstractFbStatement implements FbStatement {
     private boolean fetched;
     private volatile StatementState state = StatementState.NEW;
     private volatile StatementType type = StatementType.NONE;
+    @SuppressWarnings("java:S3077")
     private volatile RowDescriptor parameterDescriptor;
+    @SuppressWarnings("java:S3077")
     private volatile RowDescriptor fieldDescriptor;
+    @SuppressWarnings("java:S3077")
     private volatile FbTransaction transaction;
     private String cursorName;
     private long timeout;

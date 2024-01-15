@@ -41,6 +41,7 @@ import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -80,8 +81,8 @@ class FBXADataSourceTest {
      * Tests if the ConnectionPoolDataSource can create a PooledConnection
      */
     @Test
-    void testDataSource_start() throws SQLException {
-        getXAConnection();
+    void testDataSource_start() {
+        assertDoesNotThrow(this::getXAConnection);
     }
 
     /**

@@ -245,6 +245,7 @@ final class RowValueBuilder {
         }
     }
 
+    @SuppressWarnings("java:S2160")
     private static final class LruEncodedStringCache extends LinkedHashMap<String, byte[]> {
 
         @Serial

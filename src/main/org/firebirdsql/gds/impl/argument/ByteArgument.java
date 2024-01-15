@@ -69,6 +69,7 @@ public final class ByteArgument extends TypedArgument {
     }
 
     @Override
+    @SuppressWarnings("java:S4144")
     public long getValueAsLong() {
         return value;
     }

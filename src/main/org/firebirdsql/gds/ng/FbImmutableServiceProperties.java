@@ -53,6 +53,7 @@ public final class FbImmutableServiceProperties extends AbstractImmutableAttachP
     }
 
     @Override
+    @SuppressWarnings("java:S1206")
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof FbImmutableServiceProperties)) return false;

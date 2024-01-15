@@ -34,6 +34,7 @@ package org.firebirdsql.jaybird.props;
  * @author Mark Rotteveel
  * @since 5
  */
+@SuppressWarnings("java:S115")
 public final class PropertyNames {
 
     // attachment

@@ -21,14 +21,21 @@ package org.firebirdsql.jna.fbclient;
 import com.sun.jna.IntegerType;
 import com.sun.jna.Native;
 
+import java.io.Serial;
+
 /**
  * JNA wrapper for ISC_STATUS. Size depends on pointer size of the target platform.
  *
  * @author Mark Rotteveel
  */
+@SuppressWarnings({ "unused", "java:S101" })
 public class ISC_STATUS extends IntegerType {
+    
     /** Size of an ISC_STATUS, in bytes. */
     public static final int SIZE = Native.POINTER_SIZE;
+    
+    @Serial
+    private static final long serialVersionUID = 5394203292501996292L;
 
     /** Create a zero-valued ISC_STATUS. */
     public ISC_STATUS() {

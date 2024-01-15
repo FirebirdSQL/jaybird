@@ -44,7 +44,9 @@ import static org.firebirdsql.jaybird.util.ReflectionHelper.*;
 class StatementHandler implements InvocationHandler {
 
     private final PooledConnectionHandler owner;
+    @SuppressWarnings("java:S3077")
     private volatile Statement stmt;
+    @SuppressWarnings("java:S3077")
     private volatile Statement proxy;
 
     /**
@@ -67,43 +69,34 @@ class StatementHandler implements InvocationHandler {
         // Methods from object
         if (method.equals(TO_STRING)) {
             return "Proxy for " + stmt;
-        }
-        if (method.equals(EQUALS)) {
-            // Using parameter proxy (and not field) on purpose as field is
-            // nulled after closing
+        } else if (method.equals(EQUALS)) {
+            // Using parameter proxy (and not field) on purpose as field is nulled after closing
             return proxy == args[0];
-        }
-        if (method.equals(HASH_CODE)) {
-            // Using parameter proxy (and not field) on purpose as field is
-            // nulled after closing
+        } else if (method.equals(HASH_CODE)) {
+            // Using parameter proxy (and not field) on purpose as field is nulled after closing
             return System.identityHashCode(proxy);
-        }
-        // Other methods from object
-        if (method.getDeclaringClass().equals(Object.class)) {
+        } else if (method.getDeclaringClass().equals(Object.class)) {
+            // Other methods from object
             try {
                 return method.invoke(stmt, args);
             } catch (InvocationTargetException e) {
                 throw e.getTargetException();
             }
-        }
-
-        // Methods of statement and subinterfaces
-        if (method.equals(STATEMENT_IS_CLOSED) || method.equals(FIREBIRD_STATEMENT_IS_CLOSED)) {
+        } else if (method.equals(STATEMENT_IS_CLOSED) || method.equals(FIREBIRD_STATEMENT_IS_CLOSED)) {
             return isClosed();
-        }
-        if (isClosed() && !method.equals(STATEMENT_CLOSE)) {
+        } else if (isClosed() && !method.equals(STATEMENT_CLOSE)) {
             throw new SQLNonTransientException("Statement is already closed",
                     SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID);
         }
-        
+
+        // Methods of statement and subinterfaces
         try {
             if (method.equals(STATEMENT_CLOSE)) {
                 if (!isClosed()) {
                     handleClose();
                 }
                 return null;
-            }
-            if (method.equals(GET_CONNECTION)) {
+            } else if (method.equals(GET_CONNECTION)) {
                 // Ensure we do not leak the physical connection by returning the proxy
                 return owner.getProxy();
             }

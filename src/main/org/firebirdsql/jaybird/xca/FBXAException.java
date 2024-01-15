@@ -65,8 +65,6 @@ public class FBXAException extends XAException {
         this.errorCode = errorCode;
     }
 
-    private Exception reason;
-
     /**
      * Create a new instance of {@code FBXAException} wrapped around an underlying exception.
      *
@@ -77,7 +75,6 @@ public class FBXAException extends XAException {
      */
     public FBXAException(int errorCode, Exception reason) {
         this(errorCode);
-        this.reason = reason;
         initCause(reason);
     }
 
@@ -93,7 +90,6 @@ public class FBXAException extends XAException {
      */
     public FBXAException(String msg, int errorCode, Exception reason) {
         this(msg, errorCode);
-        this.reason = reason;
         initCause(reason);
     }
 
@@ -104,10 +100,11 @@ public class FBXAException extends XAException {
      */
     @Override
     public String getMessage() {
+        Throwable cause = getCause();
         String s = super.getMessage();
-        if (reason == null) return s;
-        if (s == null) return reason.getMessage();
-        return s + "\nReason: " + reason.getMessage();
+        if (cause == null) return s;
+        if (s == null) return cause.getMessage();
+        return s + "\nReason: " + cause.getMessage();
     }
 
 }

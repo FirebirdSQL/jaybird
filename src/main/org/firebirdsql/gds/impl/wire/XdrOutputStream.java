@@ -326,6 +326,7 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      *         if an error occurs while writing to the underlying output stream
      */
     @Override
+    @SuppressWarnings({ "java:S1185", "java:S3551" })
     public void write(byte[] b, int off, int len) throws IOException {
         super.write(b, off, len);
     }
@@ -389,6 +390,7 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
         out.flush();
     }
 
+    @SuppressWarnings("java:S2177")
     private void flushBuffer() throws IOException {
         if (count > 0) {
             out.write(buf, 0, count);

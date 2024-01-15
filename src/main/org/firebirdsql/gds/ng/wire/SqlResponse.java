@@ -25,18 +25,10 @@
 package org.firebirdsql.gds.ng.wire;
 
 /**
+ * @param count
+ *         number of rows following (either {@code 0} or {@code 1})
  * @author Mark Rotteveel
  * @since 3.0
  */
-public final class SqlResponse implements Response {
-
-    private final int count;
-    
-    public SqlResponse(int count) {
-        this.count = count;
-    }
-    
-    public int getCount() {
-        return count;
-    }
+public record SqlResponse(int count) implements Response {
 }

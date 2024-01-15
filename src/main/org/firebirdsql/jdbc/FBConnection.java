@@ -68,6 +68,7 @@ public class FBConnection implements FirebirdConnection {
     private static final SQLPermission PERMISSION_SET_NETWORK_TIMEOUT = new SQLPermission("setNetworkTimeout");
     private static final SQLPermission PERMISSION_CALL_ABORT = new SQLPermission("callAbort");
 
+    @SuppressWarnings("java:S3077")
     protected volatile FBManagedConnection mc;
 
     private FBLocalTransaction localTransaction;

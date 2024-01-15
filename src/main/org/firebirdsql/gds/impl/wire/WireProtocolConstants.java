@@ -29,6 +29,7 @@ package org.firebirdsql.gds.impl.wire;
  *
  * @author Mark Rotteveel
  */
+@SuppressWarnings({ "unused", "java:S115", "java:S1214" })
 public interface WireProtocolConstants {
 
     int INVALID_OBJECT = 0xFFFF;

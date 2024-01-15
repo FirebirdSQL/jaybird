@@ -25,7 +25,7 @@ import java.util.function.Supplier;
  *
  * @author Mark Rotteveel
  */
-enum OutputFormat {
+public enum OutputFormat {
 
     /**
      * One file for messages, one file for SQLSTATE.

@@ -31,6 +31,7 @@ import static org.firebirdsql.gds.ISCConstants.SQL_LONG;
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_TEXT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 
 /**
@@ -76,8 +77,9 @@ public final class GetIndexInfo extends AbstractMetadataMethod {
         super(ROW_DESCRIPTOR, mediator);
     }
 
+    @SuppressWarnings("unused")
     public ResultSet getIndexInfo(String table, boolean unique, boolean approximate) throws SQLException {
-        if (table == null || "".equals(table)) {
+        if (isNullOrEmpty(table)) {
             return createEmpty();
         }
 

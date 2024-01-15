@@ -111,6 +111,7 @@ public final class PluginLoader {
      *         type of the plugin SPI
      * @return collection of plugin SPI instances
      */
+    @SuppressWarnings("java:S1141")
     public static <T> Collection<T> findPlugins(
             Class<T> spiClass, Collection<String> fallbackClassNames, Set<ClassSource> classSources) {
         if (!spiClass.isInterface()) {

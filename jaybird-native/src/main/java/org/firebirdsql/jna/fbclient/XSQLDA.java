@@ -32,6 +32,7 @@ import org.firebirdsql.gds.ISCConstants;
  * @since 3.0
  */
 @Structure.FieldOrder({ "version", "sqldaid", "sqldabc", "sqln", "sqld", "sqlvar" })
+@SuppressWarnings({ "unused", "java:S1104", "java:S1197", "java:S2160" })
 public class XSQLDA extends Structure {
 	/// C type : ISC_SHORT
 	public short version = ISCConstants.SQLDA_VERSION1;

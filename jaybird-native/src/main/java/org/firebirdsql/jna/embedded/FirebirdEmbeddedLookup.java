@@ -51,6 +51,7 @@ public final class FirebirdEmbeddedLookup {
      *
      * @return the first embedded instance matching the current platform that installed without errors
      */
+    @SuppressWarnings("java:S1141")
     public static Optional<FirebirdEmbeddedLibrary> findFirebirdEmbedded() {
         try {
             ServiceLoader<FirebirdEmbeddedProvider> firebirdEmbeddedProviders =

@@ -38,7 +38,11 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
 /**
  * Factory to retrieve meta-data on stored procedures in a Firebird database.
  */
-public abstract class StoredProcedureMetaDataFactory {
+final class StoredProcedureMetaDataFactory {
+
+    private StoredProcedureMetaDataFactory() {
+        // no instances
+    }
 
     /**
      * Retrieve a {@link StoredProcedureMetaData} object for a Connection.

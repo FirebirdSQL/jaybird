@@ -25,6 +25,7 @@ import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +45,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
 
     private static final Pattern GMT_WITH_OFFSET = Pattern.compile("^GMT([+-]\\d{2}:\\d{2})$");
 
+    @SuppressWarnings("java:S1948")
     private FbImmutableConnectionProperties immutableConnectionPropertiesCache;
 
     /**
@@ -88,14 +90,11 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
 
     @Override
     protected Object resolveStoredDefaultValue(ConnectionProperty property) {
-        switch (property.name()) {
-        case PropertyNames.sessionTimeZone:
-            return defaultTimeZone();
-        case PropertyNames.sqlDialect:
-            return PropertyConstants.DEFAULT_DIALECT;
-        default:
-            return super.resolveStoredDefaultValue(property);
-        }
+        return switch (property.name()) {
+            case PropertyNames.sessionTimeZone -> defaultTimeZone();
+            case PropertyNames.sqlDialect -> PropertyConstants.DEFAULT_DIALECT;
+            default -> super.resolveStoredDefaultValue(property);
+        };
     }
 
     private static String defaultTimeZone() {
@@ -110,6 +109,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     }
 
     @Override
+    @SuppressWarnings("java:S1206")
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -121,16 +121,19 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
         immutableConnectionPropertiesCache = null;
     }
 
+    @Serial
     private void readObject(ObjectInputStream stream) throws InvalidObjectException {
         throw new InvalidObjectException("Serialization proxy required");
     }
 
+    @Serial
     private Object writeReplace() {
         return new SerializationProxy(this);
     }
 
     private static class SerializationProxy implements Serializable {
 
+        @Serial
         private static final long serialVersionUID = 1L;
 
         private final Map<String, Serializable> propValues;
@@ -141,6 +144,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             srcProps.forEach((k, v) -> propValues.put(k.name(), (Serializable) v));
         }
 
+        @Serial
         protected Object readResolve() {
             HashMap<ConnectionProperty, Object> targetProps = new HashMap<>(propValues.size());
             ConnectionPropertyRegistry propertyRegistry = ConnectionPropertyRegistry.getInstance();

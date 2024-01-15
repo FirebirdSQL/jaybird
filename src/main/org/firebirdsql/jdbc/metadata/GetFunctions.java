@@ -45,6 +45,7 @@ import static org.firebirdsql.jdbc.metadata.NameHelper.toSpecificName;
 public abstract class GetFunctions extends AbstractMetadataMethod {
 
     private static final String FUNCTIONS = "FUNCTIONS";
+    private static final String COLUMN_FUNCTION_NAME = "RDB$FUNCTION_NAME";
     
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(11)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_CAT", FUNCTIONS).addField()
@@ -124,6 +125,7 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
     /**
      * Implementation suitable for Firebird 2.5 and earlier.
      */
+    @SuppressWarnings("java:S101")
     private static final class FB2_5 extends GetFunctions {
 
         private static final String GET_FUNCTIONS_FRAGMENT_2_5 = """
@@ -151,7 +153,7 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
 
         @Override
         MetadataQuery createGetFunctionsQuery(String catalog, String functionNamePattern) {
-            Clause functionNameClause = new Clause("RDB$FUNCTION_NAME", functionNamePattern);
+            Clause functionNameClause = new Clause(COLUMN_FUNCTION_NAME, functionNamePattern);
             String queryText = GET_FUNCTIONS_FRAGMENT_2_5
                     + functionNameClause.getCondition("\nwhere ", "")
                     + GET_FUNCTIONS_ORDER_BY_2_5;
@@ -194,7 +196,7 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
 
         @Override
         MetadataQuery createGetFunctionsQuery(String catalog, String functionNamePattern) {
-            Clause functionNameClause = new Clause("RDB$FUNCTION_NAME", functionNamePattern);
+            Clause functionNameClause = new Clause(COLUMN_FUNCTION_NAME, functionNamePattern);
             String queryText = GET_FUNCTIONS_FRAGMENT_3
                     + functionNameClause.getCondition("\nand ", "")
                     + GET_FUNCTIONS_ORDER_BY_3;
@@ -222,6 +224,8 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
 
         private static final String GET_FUNCTIONS_ORDER_BY_3_W_PKG =
                 "\norder by RDB$PACKAGE_NAME nulls first, RDB$FUNCTION_NAME";
+        
+        private static final String COLUMN_CATALOG_NAME = "RDB$PACKAGE_NAME";
 
         private FB3CatalogAsPackage(DbMetadataMediator mediator) {
             super(mediator);
@@ -238,13 +242,13 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
                 // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
                 // should not be used to narrow the search
                 if (catalog.isEmpty()) {
-                    clauses.add(Clause.isNullClause("RDB$PACKAGE_NAME"));
+                    clauses.add(Clause.isNullClause(COLUMN_CATALOG_NAME));
                 } else {
                     // Exact matches only
-                    clauses.add(Clause.equalsClause("RDB$PACKAGE_NAME", catalog));
+                    clauses.add(Clause.equalsClause(COLUMN_CATALOG_NAME, catalog));
                 }
             }
-            clauses.add(new Clause("RDB$FUNCTION_NAME", functionNamePattern));
+            clauses.add(new Clause(COLUMN_FUNCTION_NAME, functionNamePattern));
             //@formatter:off
             String sql = GET_FUNCTIONS_FRAGMENT_3_W_PKG
                     + (Clause.anyCondition(clauses)

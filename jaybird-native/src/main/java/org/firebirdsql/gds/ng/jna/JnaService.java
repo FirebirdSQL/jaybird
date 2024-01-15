@@ -134,35 +134,37 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
             if (isAttached()) {
                 throw new SQLException("Already attached to a service");
             }
-            final ServiceParameterBuffer spb = PARAMETER_CONVERTER.toServiceParameterBuffer(connection);
-            final byte[] serviceName = getEncoding().encodeToCharset(connection.getAttachUrl());
-            final byte[] spbArray = spb.toBytesWithType();
-
             try (LockCloseable ignored = withLock()) {
-                try {
-                    clientLibrary.isc_service_attach(statusVector, (short) serviceName.length, serviceName, handle,
-                            (short) spbArray.length, spbArray);
-                    if (handle.getValue() != 0) {
-                        cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(handle, clientLibrary));
-                    }
-                    processStatusVector();
-                } catch (SQLException ex) {
-                    safelyDetach();
-                    throw ex;
-                } catch (Exception ex) {
-                    safelyDetach();
-                    // TODO Replace with specific error (eg native client error)
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_network_error)
-                            .messageParameter(connection.getAttachUrl())
-                            .cause(ex)
-                            .toSQLException();
-                }
+                attachImpl();
                 setAttached();
                 afterAttachActions();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    private void attachImpl() throws SQLException {
+        try {
+            byte[] spbArray = PARAMETER_CONVERTER.toServiceParameterBuffer(connection).toBytesWithType();
+            byte[] serviceName = getEncoding().encodeToCharset(connection.getAttachUrl());
+            clientLibrary.isc_service_attach(statusVector, (short) serviceName.length, serviceName, handle,
+                    (short) spbArray.length, spbArray);
+            if (handle.getValue() != 0) {
+                cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(handle, clientLibrary));
+            }
+            processStatusVector();
+        } catch (SQLException ex) {
+            safelyDetach();
+            throw ex;
+        } catch (Exception ex) {
+            safelyDetach();
+            // TODO Replace with specific error (eg native client error)
+            throw FbExceptionBuilder.forException(ISCConstants.isc_network_error)
+                    .messageParameter(connection.getAttachUrl())
+                    .cause(ex)
+                    .toSQLException();
         }
     }
 

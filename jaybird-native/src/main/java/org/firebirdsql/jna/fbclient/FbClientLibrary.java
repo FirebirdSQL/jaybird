@@ -45,7 +45,7 @@ import java.nio.ShortBuffer;
  * </p>
  * @since 3.0
  */
-@SuppressWarnings("UnusedDeclaration")
+@SuppressWarnings({ "UnusedDeclaration", "UnusedReturnValue", "java:S100", "java:S117", "java:S1197" })
 public interface FbClientLibrary extends com.sun.jna.Library {
 
     /**

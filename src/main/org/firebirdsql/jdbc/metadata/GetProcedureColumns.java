@@ -53,9 +53,12 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
  * @author Mark Rotteveel
  * @since 5
  */
+@SuppressWarnings("java:S1192")
 public abstract class GetProcedureColumns extends AbstractMetadataMethod {
 
     private static final String COLUMNINFO = "COLUMNINFO";
+    private static final String COLUMN_PROCEDURE_NAME = "PP.RDB$PROCEDURE_NAME";
+    private static final String COLUMN_PARAMETER_NAME = "PP.RDB$PARAMETER_NAME";
     
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(20)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", COLUMNINFO).addField()
@@ -155,6 +158,7 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
         }
     }
 
+    @SuppressWarnings("java:S101")
     private static class FB2_5 extends GetProcedureColumns {
 
         //@formatter:off
@@ -191,8 +195,8 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
         @Override
         MetadataQuery createGetProcedureColumnsQuery(String catalog, String procedureNamePattern,
                 String columnNamePattern) {
-            Clause procedureClause = new Clause("PP.RDB$PROCEDURE_NAME", procedureNamePattern);
-            Clause columnClause = new Clause("PP.RDB$PARAMETER_NAME", columnNamePattern);
+            Clause procedureClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
+            Clause columnClause = new Clause(COLUMN_PARAMETER_NAME, columnNamePattern);
             String query = GET_PROCEDURE_COLUMNS_FRAGMENT_2_5
                     + (anyCondition(procedureClause, columnClause)
                     ? "\nwhere " + procedureClause.getCondition(columnClause.hasCondition())
@@ -242,8 +246,8 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
         @Override
         MetadataQuery createGetProcedureColumnsQuery(String catalog, String procedureNamePattern,
                 String columnNamePattern) {
-            Clause procedureClause = new Clause("PP.RDB$PROCEDURE_NAME", procedureNamePattern);
-            Clause columnClause = new Clause("PP.RDB$PARAMETER_NAME", columnNamePattern);
+            Clause procedureClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
+            Clause columnClause = new Clause(COLUMN_PARAMETER_NAME, columnNamePattern);
             String query = GET_PROCEDURE_COLUMNS_FRAGMENT_3
                     + procedureClause.getCondition("\nand ", "")
                     + columnClause.getCondition("\nand ", "")
@@ -279,6 +283,8 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
                 + "PP.RDB$PARAMETER_NUMBER";
         //@formatter:on
 
+        private static final String COLUMN_PACKAGE_NAME = "PP.RDB$PACKAGE_NAME";
+
         private FB3CatalogAsPackage(DbMetadataMediator mediator) {
             super(mediator);
         }
@@ -295,14 +301,14 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
                 // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
                 // should not be used to narrow the search
                 if (catalog.isEmpty()) {
-                    clauses.add(Clause.isNullClause("PP.RDB$PACKAGE_NAME"));
+                    clauses.add(Clause.isNullClause(COLUMN_PACKAGE_NAME));
                 } else {
                     // Exact matches only
-                    clauses.add(Clause.equalsClause("PP.RDB$PACKAGE_NAME", catalog));
+                    clauses.add(Clause.equalsClause(COLUMN_PACKAGE_NAME, catalog));
                 }
             }
-            clauses.add(new Clause("PP.RDB$PROCEDURE_NAME", procedureNamePattern));
-            clauses.add(new Clause("PP.RDB$PARAMETER_NAME", columnNamePattern));
+            clauses.add(new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern));
+            clauses.add(new Clause(COLUMN_PARAMETER_NAME, columnNamePattern));
             //@formatter:off
             String sql = GET_PROCEDURE_COLUMNS_FRAGMENT_3_W_PKG
                     + (Clause.anyCondition(clauses)

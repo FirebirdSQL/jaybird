@@ -30,7 +30,7 @@ package org.firebirdsql.jaybird.fb.constants;
  * @author Mark Rotteveel
  * @since 5
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unused", "java:S115" })
 public class TpbItems {
 
     public static final int isc_tpb_consistency = 1;

@@ -33,6 +33,7 @@ import java.util.Map;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -121,9 +122,9 @@ class FBUnmanagedConnectionTest {
     @Test
     void testCommitsWithNoWork() throws Exception {
         connection.setAutoCommit(false);
-        connection.commit();
-        connection.commit();
-        connection.commit();
+        assertDoesNotThrow(connection::commit);
+        assertDoesNotThrow(connection::commit);
+        assertDoesNotThrow(connection::commit);
     }
 
 }

@@ -100,6 +100,7 @@ public final class GetBestRowIdentifier extends AbstractMetadataMethod {
         super(ROW_DESCRIPTOR, mediator);
     }
 
+    @SuppressWarnings("unused")
     public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
             throws SQLException {
         if (table == null || table.isEmpty()) {

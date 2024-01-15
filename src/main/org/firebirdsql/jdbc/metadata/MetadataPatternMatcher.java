@@ -151,6 +151,7 @@ public abstract sealed class MetadataPatternMatcher {
      *         database metadata pattern
      * @return Pattern for the provided like string.
      */
+    @SuppressWarnings("java:S127")
     public static String patternToRegex(final String metadataPattern) {
         final int patternLength = metadataPattern.length();
         // Derivation of additional 10: 8 chars for 2x quote pair (\Q..\E) + 2 chars for .*
@@ -159,15 +160,14 @@ public abstract sealed class MetadataPatternMatcher {
         for (int idx = 0; idx < patternLength; idx++) {
             char charVal = metadataPattern.charAt(idx);
             switch (charVal) {
-            case '_':
-            case '%':
-                if (subPattern.length() > 0) {
+            case '_', '%' -> {
+                if (!subPattern.isEmpty()) {
                     patternString.append(Pattern.quote(subPattern.toString()));
                     subPattern.setLength(0);
                 }
                 patternString.append(charVal == '_' ? "." : ".*");
-                break;
-            case '\\':
+            }
+            case '\\' -> {
                 idx += 1;
                 if (idx < patternLength) {
                     char nextChar = metadataPattern.charAt(idx);
@@ -182,14 +182,12 @@ public abstract sealed class MetadataPatternMatcher {
                     // NOTE: given the use of MetadataPattern, this situation will not occur
                     subPattern.append('\\');
                 }
-                break;
-            default:
-                subPattern.append(charVal);
-                break;
+            }
+            default -> subPattern.append(charVal);
             }
         }
 
-        if (subPattern.length() > 0) {
+        if (!subPattern.isEmpty()) {
             patternString.append(Pattern.quote(subPattern.toString()));
         }
 

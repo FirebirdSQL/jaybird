@@ -61,34 +61,23 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
             checkTransactionActive();
             checkBlobClosed();
 
-            final FbWireDatabase database = getDatabase();
-            try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
-                if (blobParameterBuffer == null) {
-                    xdrOut.writeInt(op_open_blob);
-                } else {
-                    xdrOut.writeInt(op_open_blob2);
-                    xdrOut.writeTyped(blobParameterBuffer);
-                }
-                xdrOut.writeInt(getTransaction().getHandle());
-                xdrOut.writeLong(getBlobId());
-                xdrOut.flush();
-            } catch (IOException e) {
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
-            try {
-                final GenericResponse genericResponse = database.readGenericResponse(null);
-                setHandle(genericResponse.getObjectHandle());
-                setOpen(true);
-                resetEof();
-            } catch (IOException e) {
-                throw FbExceptionBuilder.ioReadError(e);
-            }
+            sendOpen(BlobOpenOperation.INPUT_BLOB);
+            receiveOpenResponse();
             // TODO Request information on the blob?
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    private void receiveOpenResponse() throws SQLException {
+        try {
+            GenericResponse genericResponse = getDatabase().readGenericResponse(null);
+            setHandle(genericResponse.objectHandle());
+            setOpen(true);
+            resetEof();
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 
@@ -115,7 +104,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                 }
                 try {
                     response = getDatabase().readGenericResponse(null);
-                    if (response.getObjectHandle() == STATE_END_OF_BLOB) {
+                    if (response.objectHandle() == STATE_END_OF_BLOB) {
                         // TODO what if I seek on a stream blob?
                         setEof();
                     }
@@ -124,7 +113,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                 }
             }
 
-            final byte[] responseBuffer = response.getData();
+            final byte[] responseBuffer = response.data();
             if (responseBuffer.length == 0) {
                 return responseBuffer;
             }
@@ -263,26 +252,33 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
             checkDatabaseAttached();
             checkTransactionActive();
 
-            final FbWireDatabase database = getDatabase();
-            try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(op_seek_blob);
-                xdrOut.writeInt(getHandle());
-                xdrOut.writeInt(seekMode.getSeekModeId());
-                xdrOut.writeInt(offset);
-                xdrOut.flush();
-            } catch (IOException e) {
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
-            try {
-                database.readResponse(null);
-                // object handle in response is the current position in the blob (see .NET provider source)
-            } catch (IOException e) {
-                throw FbExceptionBuilder.ioReadError(e);
-            }
+            sendSeek(offset, seekMode);
+            receiveSeekResponse();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    private void sendSeek(int offset, SeekMode seekMode) throws SQLException {
+        try {
+            XdrOutputStream xdrOut = getXdrOut();
+            xdrOut.writeInt(op_seek_blob);
+            xdrOut.writeInt(getHandle());
+            xdrOut.writeInt(seekMode.getSeekModeId());
+            xdrOut.writeInt(offset);
+            xdrOut.flush();
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioWriteError(e);
+        }
+    }
+
+    private void receiveSeekResponse() throws SQLException {
+        try {
+            getDatabase().readResponse(null);
+            // object handle in response is the current position in the blob (see .NET provider source)
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 }

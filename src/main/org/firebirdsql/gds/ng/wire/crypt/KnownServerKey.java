@@ -79,6 +79,7 @@ public final class KnownServerKey {
      *         plugin specific data (can be {@code null})
      * @since 5
      */
+    @SuppressWarnings("java:S6218")
     public record PluginSpecificData(EncryptionIdentifier encryptionIdentifier, byte[] specificData) {
 
         public PluginSpecificData {

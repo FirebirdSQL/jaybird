@@ -433,17 +433,22 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public void insertRow(RowValue data) throws SQLException {
-        throw new UnsupportedOperationException("Implementation error: FBServerScrollFetcher should be decorated with FBUpdatableFetcher");
+        throw calledUndecorated();
     }
 
     @Override
     public void deleteRow() throws SQLException {
-        throw new UnsupportedOperationException("Implementation error: FBServerScrollFetcher should be decorated with FBUpdatableFetcher");
+        throw calledUndecorated();
     }
 
     @Override
     public void updateRow(RowValue data) throws SQLException {
-        throw new UnsupportedOperationException("Implementation error: FBServerScrollFetcher should be decorated with FBUpdatableFetcher");
+        throw calledUndecorated();
+    }
+
+    private static UnsupportedOperationException calledUndecorated() {
+        return new UnsupportedOperationException(
+                "Implementation error: FBServerScrollFetcher should be decorated with FBUpdatableFetcher");
     }
 
     private int actualFetchSize() {

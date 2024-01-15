@@ -120,6 +120,7 @@ public final class GDSHelper {
      * @throws SQLException
      *         if a Firebird-specific database error occurs
      */
+    @SuppressWarnings("java:S2095")
     public FbBlob openBlob(long blobId, BlobConfig blobConfig) throws SQLException {
         FbBlob blob = database.createBlobForInput(getCurrentTransaction(), blobConfig, blobId);
         blob.open();
@@ -134,6 +135,7 @@ public final class GDSHelper {
      * @throws SQLException
      *         if a Firebird-specific database error occurs
      */
+    @SuppressWarnings("java:S2095")
     public FbBlob createBlob(BlobConfig blobConfig) throws SQLException {
         FbBlob blob = database.createBlobForOutput(getCurrentTransaction(), blobConfig);
         blob.open();

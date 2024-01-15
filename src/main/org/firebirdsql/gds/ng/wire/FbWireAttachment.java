@@ -78,8 +78,9 @@ public interface FbWireAttachment extends FbAttachment {
     void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException;
 
     /**
-     * Struct-like class, reduced equivalent of Firebird p_acpd so we can store data for handling op_cond_accept.
+     * Struct-like class, reduced equivalent of Firebird p_acpd to store data for handling op_cond_accept.
      */
+    @SuppressWarnings({ "java:S116", "java:S1104" })
     class AcceptPacket {
         public int operation;
         public byte[] p_acpt_data;

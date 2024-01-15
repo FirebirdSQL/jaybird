@@ -118,6 +118,7 @@ public final class FBTpbMapper implements Serializable, Cloneable {
     }
 
     // ConcurrentHashMap because changes can - potentially - be made concurrently
+    @SuppressWarnings("java:S1948")
     private Map<Integer, TransactionParameterBuffer> mapping = new ConcurrentHashMap<>();
     private int defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED;
 
@@ -204,11 +205,19 @@ public final class FBTpbMapper implements Serializable, Cloneable {
                 isolationLevel = getTransactionIsolationLevel(jdbcTxIsolation);
             } catch (IllegalArgumentException ex) {
                 // TODO More specific exception, Jaybird error code
-                throw new SQLException("Transaction isolation " + jdbcTxIsolation + " is not supported.");
+                throw new SQLException(unsupportedIsolationLevel(jdbcTxIsolation));
             }
             TransactionParameterBuffer tpb = processMapping(entry.getValue());
             mapping.put(isolationLevel, tpb);
         }
+    }
+
+    private static String unsupportedIsolationLevel(int isolationLevel) {
+        return unsupportedIsolationLevel(String.valueOf(isolationLevel));
+    }
+
+    private static String unsupportedIsolationLevel(String jdbcTxIsolation) {
+        return "Transaction isolation " + jdbcTxIsolation + " is not supported.";
     }
 
     /**
@@ -357,22 +366,13 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      *         if specified transaction isolation level is unknown.
      */
     public TransactionParameterBuffer getMapping(int transactionIsolation) {
-        switch (transactionIsolation) {
-        case Connection.TRANSACTION_SERIALIZABLE:
-        case Connection.TRANSACTION_REPEATABLE_READ:
-        case Connection.TRANSACTION_READ_COMMITTED:
-            return mapping.get(transactionIsolation).deepCopy();
-
-        case Connection.TRANSACTION_READ_UNCOMMITTED:
-            // promote transaction
-            return mapping.get(Connection.TRANSACTION_READ_COMMITTED).deepCopy();
-
-        case Connection.TRANSACTION_NONE:
-        default:
-            // TODO Throw SQLException instead?
-            throw new IllegalArgumentException(
-                    "Transaction isolation level " + transactionIsolation + " is not supported.");
+        // promote READ UNCOMMITTED to READ COMMITTED
+        TransactionParameterBuffer tpb = mapping.get(transactionIsolation != Connection.TRANSACTION_READ_UNCOMMITTED
+                ? transactionIsolation : Connection.TRANSACTION_READ_COMMITTED);
+        if (tpb == null) {
+            throw new IllegalArgumentException(unsupportedIsolationLevel(transactionIsolation));
         }
+        return tpb.deepCopy();
     }
 
     /**
@@ -385,20 +385,13 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      * @throws IllegalArgumentException
      *         if incorrect isolation level is specified.
      */
+    @SuppressWarnings("java:S1301")
     public void setMapping(int transactionIsolation, TransactionParameterBuffer tpb) {
         switch (transactionIsolation) {
-        case Connection.TRANSACTION_SERIALIZABLE:
-        case Connection.TRANSACTION_REPEATABLE_READ:
-        case Connection.TRANSACTION_READ_COMMITTED:
-            mapping.put(transactionIsolation, tpb.deepCopy());
-            break;
-
-        case Connection.TRANSACTION_READ_UNCOMMITTED:
-        case Connection.TRANSACTION_NONE:
-        default:
-            // TODO Throw SQLException instead?
-            throw new IllegalArgumentException(
-                    "Transaction isolation level " + transactionIsolation + " is not supported.");
+        case Connection.TRANSACTION_SERIALIZABLE, Connection.TRANSACTION_REPEATABLE_READ,
+                Connection.TRANSACTION_READ_COMMITTED -> mapping.put(transactionIsolation, tpb.deepCopy());
+        // TODO Throw SQLException instead?
+        default -> throw new IllegalArgumentException(unsupportedIsolationLevel(transactionIsolation));
         }
     }
 
@@ -471,24 +464,20 @@ public final class FBTpbMapper implements Serializable, Cloneable {
 
             for (Field field : fields) {
                 final String name = field.getName();
-                if (!(name.startsWith(TPB_PREFIX) && field.getType().equals(int.class))) {
-                    continue;
-                }
+                if (!(name.startsWith(TPB_PREFIX) && field.getType().equals(int.class))) continue;
 
-                final Integer value;
                 try {
-                    value = field.getInt(null);
-                } catch (IllegalAccessException iaex) {
-                    continue;
+                    final Integer value = field.getInt(null);
+                    // put the correct parameter name
+                    tempTpbTypes.put(name.substring(TPB_PREFIX.length()), value);
+                    // put the full name for compatibility
+                    tempTpbTypes.put(name, value);
+                } catch (IllegalAccessException ignored) {
+                    // skip field
                 }
-
-                // put the correct parameter name
-                tempTpbTypes.put(name.substring(TPB_PREFIX.length()), value);
-                // put the full name to tolerate people's mistakes
-                tempTpbTypes.put(name, value);
             }
 
-            tpbTypes = Collections.unmodifiableMap(tempTpbTypes);
+            tpbTypes = Map.copyOf(tempTpbTypes);
         }
 
         /**

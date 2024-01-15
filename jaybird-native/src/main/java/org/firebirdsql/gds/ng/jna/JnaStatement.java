@@ -154,45 +154,52 @@ public class JnaStatement extends AbstractFbStatement {
 
                 final JnaDatabase db = getDatabase();
                 if (initialState == StatementState.NEW) {
-                    try {
-                        clientLibrary.isc_dsql_allocate_statement(statusVector, db.getJnaHandle(), handle);
-                        if (handle.getValue() != 0) {
-                            cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(handle, database));
-                        }
-                        processStatusVector();
-                        reset();
-                        switchState(StatementState.ALLOCATED);
-                        setType(StatementType.NONE);
-                    } catch (SQLException e) {
-                        forceState(StatementState.NEW);
-                        throw e;
-                    }
+                    allocateImpl(db);
                 } else {
                     checkStatementValid();
                 }
-
-                switchState(StatementState.PREPARING);
-                try {
-                    // Information in tempXSqlDa is ignored, as we are retrieving more detailed information using getSqlInfo
-                    final XSQLDA tempXSqlDa = new XSQLDA();
-                    tempXSqlDa.setAutoRead(false);
-                    clientLibrary.isc_dsql_prepare(statusVector, getTransaction().getJnaHandle(), handle,
-                            useNulTerminated ? 0 : (short) statementArray.length, statementArray,
-                            db.getConnectionDialect(), tempXSqlDa);
-                    processStatusVector();
-
-                    final byte[] statementInfoRequestItems = getStatementInfoRequestItems();
-                    final int responseLength = getDefaultSqlInfoSize();
-                    byte[] statementInfo = getSqlInfo(statementInfoRequestItems, responseLength);
-                    parseStatementInfo(statementInfo);
-                    switchState(StatementState.PREPARED);
-                } catch (SQLException e) {
-                    switchState(StatementState.ALLOCATED);
-                    throw e;
-                }
+                prepareImpl(useNulTerminated, statementArray, db);
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    private void allocateImpl(JnaDatabase db) throws SQLException {
+        try {
+            clientLibrary.isc_dsql_allocate_statement(statusVector, db.getJnaHandle(), handle);
+            if (handle.getValue() != 0) {
+                cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(handle, database));
+            }
+            processStatusVector();
+            reset();
+            switchState(StatementState.ALLOCATED);
+            setType(StatementType.NONE);
+        } catch (SQLException e) {
+            forceState(StatementState.NEW);
+            throw e;
+        }
+    }
+
+    private void prepareImpl(boolean useNulTerminated, byte[] statementArray, JnaDatabase db) throws SQLException {
+        switchState(StatementState.PREPARING);
+        try {
+            // Information in tempXSqlDa is ignored, as we are retrieving more detailed information using getSqlInfo
+            final XSQLDA tempXSqlDa = new XSQLDA();
+            tempXSqlDa.setAutoRead(false);
+            clientLibrary.isc_dsql_prepare(statusVector, getTransaction().getJnaHandle(), handle,
+                    useNulTerminated ? 0 : (short) statementArray.length, statementArray,
+                    db.getConnectionDialect(), tempXSqlDa);
+            processStatusVector();
+
+            final byte[] statementInfoRequestItems = getStatementInfoRequestItems();
+            final int responseLength = getDefaultSqlInfoSize();
+            byte[] statementInfo = getSqlInfo(statementInfoRequestItems, responseLength);
+            parseStatementInfo(statementInfo);
+            switchState(StatementState.PREPARED);
+        } catch (SQLException e) {
+            switchState(StatementState.ALLOCATED);
             throw e;
         }
     }
@@ -492,6 +499,7 @@ public class JnaStatement extends AbstractFbStatement {
     private static final class CleanupAction implements Runnable, DatabaseListener {
 
         private final IntByReference handle;
+        @SuppressWarnings("java:S3077")
         private volatile JnaDatabase database;
 
         private CleanupAction(IntByReference handle, JnaDatabase database) {

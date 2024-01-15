@@ -35,6 +35,7 @@ import com.sun.jna.ptr.ShortByReference;
  */
 @Structure.FieldOrder({ "sqltype", "sqlscale", "sqlsubtype", "sqllen", "sqldata", "sqlind", "sqlname_length", "sqlname",
 		"relname_length", "relname", "ownname_length", "ownname", "aliasname_length", "aliasname" })
+@SuppressWarnings({ "unused", "java:S116", "java:S1104", "java:S2160" })
 public class XSQLVAR extends Structure {
 
     public static final short SQLIND_NULL = -1;

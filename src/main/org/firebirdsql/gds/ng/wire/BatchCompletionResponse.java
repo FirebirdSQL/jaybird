@@ -29,18 +29,10 @@ import org.firebirdsql.gds.ng.BatchCompletion;
 /**
  * Data from the {@link org.firebirdsql.gds.impl.wire.WireProtocolConstants#op_batch_cs} response.
  *
+ * @param batchCompletion
+ *         batch completion information
  * @author Mark Rotteveel
  * @since 5
  */
-public final class BatchCompletionResponse implements Response {
-
-    private final BatchCompletion batchCompletion;
-
-    public BatchCompletionResponse(BatchCompletion batchCompletion) {
-        this.batchCompletion = batchCompletion;
-    }
-
-    public BatchCompletion batchCompletion() {
-        return batchCompletion;
-    }
+public record BatchCompletionResponse(BatchCompletion batchCompletion) implements Response {
 }

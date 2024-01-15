@@ -172,7 +172,8 @@ public final class FbExceptionBuilder {
      * @since 6
      */
     public static SQLException ioWriteError(IOException e) {
-        class Holder {
+        @SuppressWarnings("java:S1118")
+        final class Holder {
             // Cache message and SQLSTATE to avoid constructing through builder every time
             private static final CachedMessage IO_WRITE_ERROR = CachedMessage.of(isc_net_write_err);
         }
@@ -189,7 +190,8 @@ public final class FbExceptionBuilder {
      * @since 6
      */
     public static SQLException ioReadError(IOException e) {
-        class Holder {
+        @SuppressWarnings("java:S1118")
+        final class Holder {
             // Cache message and SQLSTATE to avoid constructing through builder every time
             private static final CachedMessage IO_READ_ERROR = CachedMessage.of(isc_net_read_err);
         }

@@ -144,17 +144,7 @@ public class V11Statement extends V10Statement {
                 || getCursorName() != null
                 || isCursorFlagSet(CursorFlag.CURSOR_TYPE_SCROLLABLE)) return;
 
-            try (OperationCloseHandle operationCloseHandle = signalAsyncFetchStart()){
-                if (operationCloseHandle.isCancelled()) {
-                    // operation was synchronously cancelled from an OperationAware implementation
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
-                }
-                sendFetch(fetchSize);
-                getXdrOut().flush();
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
+            sendAsyncFetch(fetchSize);
             asyncFetchStatus = AsyncFetchStatus.pending();
             getDatabase().enqueueDeferredAction(wrapDeferredResponse(
                     new DeferredResponse<>() {
@@ -181,6 +171,20 @@ public class V11Statement extends V10Statement {
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    private void sendAsyncFetch(int fetchSize) throws SQLException {
+        try (OperationCloseHandle operationCloseHandle = signalAsyncFetchStart()){
+            if (operationCloseHandle.isCancelled()) {
+                // operation was synchronously cancelled from an OperationAware implementation
+                throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
+            }
+            sendFetch(fetchSize);
+            getXdrOut().flush();
+        } catch (IOException e) {
+            switchState(StatementState.ERROR);
+            throw FbExceptionBuilder.ioWriteError(e);
         }
     }
 

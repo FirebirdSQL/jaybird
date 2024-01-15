@@ -165,6 +165,7 @@ public abstract class GetColumns extends AbstractMetadataMethod {
         }
     }
 
+    @SuppressWarnings("java:S101")
     private static class FB2_5 extends GetColumns {
 
         //@formatter:off

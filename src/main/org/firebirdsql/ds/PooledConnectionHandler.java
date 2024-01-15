@@ -54,7 +54,9 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
     static final String FORCIBLY_CLOSED_MESSAGE =
             "Logical connection was forcibly closed by the connection pool";
     private final FBPooledConnection owner;
+    @SuppressWarnings("java:S3077")
     volatile Connection connection;
+    @SuppressWarnings("java:S3077")
     private volatile Connection proxy;
     private volatile boolean forcedClose;
 
@@ -228,7 +230,8 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
         return connection == null || proxy == null;
     }
 
-    void statementErrorOccurred(@SuppressWarnings("UnusedParameters") StatementHandler stmtHandler, SQLException sqle) {
+    @SuppressWarnings("UnusedParameters")
+    void statementErrorOccurred(StatementHandler stmtHandler, SQLException sqle) {
         owner.fireConnectionError(sqle);
     }
 

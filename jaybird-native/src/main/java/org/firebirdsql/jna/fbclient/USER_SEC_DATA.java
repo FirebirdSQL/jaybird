@@ -33,6 +33,7 @@ import com.sun.jna.Structure;
  */
 @Structure.FieldOrder({ "sec_flags", "uid", "gid", "protocol", "server", "user_name", "password", "group_name",
 		"first_name", "middle_name", "last_name", "dba_user_name", "dba_password" })
+@SuppressWarnings({ "unused", "java:S101", "java:S116", "java:S1104", "java:S2160" })
 public class USER_SEC_DATA extends Structure {
 	/// which fields are specified
 	public short sec_flags;
@@ -87,12 +88,14 @@ public class USER_SEC_DATA extends Structure {
 	 * C type : ISC_SCHAR*
 	 */
 	public Pointer dba_password;
+
 	public USER_SEC_DATA() {
 		super();
 	}
 
 	public static class ByReference extends USER_SEC_DATA implements Structure.ByReference {
 	}
+	
 	public static class ByValue extends USER_SEC_DATA implements Structure.ByValue {
 	}
 }

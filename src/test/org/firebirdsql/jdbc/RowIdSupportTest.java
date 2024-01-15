@@ -181,7 +181,7 @@ class RowIdSupportTest {
             int rowCount = 0;
             while (rs1.next()) {
                 rowCount++;
-                RowId rowId = rs1.getRowId("rdb$db_key");
+                RowId rowId = rs1.getRowId("RDB$DB_KEY");
                 pstmt2.setRowId(1, rowId);
                 try (ResultSet rs2 = pstmt2.executeQuery()) {
                     assertTrue(rs2.next(), "Expected row matching rowid");
@@ -201,7 +201,7 @@ class RowIdSupportTest {
             assertTrue(rs.next(), "Expected a row");
 
             assertThrows(FBDriverNotCapableException.class,
-                    () -> rs.updateRowId("rdb$db_key", new FBRowId(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 })));
+                    () -> rs.updateRowId("RDB$DB_KEY", new FBRowId(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 })));
         }
     }
 

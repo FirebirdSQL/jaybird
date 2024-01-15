@@ -121,6 +121,7 @@ public final class FatalErrorHelper {
      *         exception to check
      * @return {@code true} if the error code is signals a (possibly) broken connection
      */
+    @SuppressWarnings({ "RedundantIfStatement", "java:S1126" })
     public static boolean isBrokenConnection(Exception exception) {
         if (exception == null) {
             return false;
@@ -133,12 +134,8 @@ public final class FatalErrorHelper {
             return true;
         }
 
-        if (findException(exception, SocketTimeoutException.class) != null) {
-            return true;
-        }
-
-        //noinspection RedundantIfStatement
-        if (findException(exception, SocketException.class) != null) {
+        if (findException(exception, SocketTimeoutException.class) != null
+                || findException(exception, SocketException.class) != null) {
             return true;
         }
 

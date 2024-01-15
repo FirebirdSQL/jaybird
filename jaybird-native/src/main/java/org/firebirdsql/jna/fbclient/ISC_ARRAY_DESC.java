@@ -32,6 +32,7 @@ import com.sun.jna.Structure;
  */
 @Structure.FieldOrder({ "array_desc_dtype", "array_desc_scale", "array_desc_length", "array_desc_field_name",
 		"array_desc_relation_name", "array_desc_dimensions", "array_desc_flags", "array_desc_bounds" })
+@SuppressWarnings({ "unused", "java:S101", "java:S116", "java:S117", "java:S1104", "java:S1197", "java:S2160" })
 public class ISC_ARRAY_DESC extends Structure {
 	/// C type : ISC_UCHAR
 	public byte array_desc_dtype;
@@ -46,6 +47,7 @@ public class ISC_ARRAY_DESC extends Structure {
 	public short array_desc_flags;
 	/// C type : ISC_ARRAY_BOUND[16]
 	public ISC_ARRAY_BOUND[] array_desc_bounds = new ISC_ARRAY_BOUND[16];
+
 	public ISC_ARRAY_DESC() {
 		super();
 	}
@@ -57,6 +59,7 @@ public class ISC_ARRAY_DESC extends Structure {
 	 * @param array_desc_relation_name C type : ISC_SCHAR[32]<br>
 	 * @param array_desc_bounds C type : ISC_ARRAY_BOUND[16]
 	 */
+	@SuppressWarnings("java:S1192")
 	public ISC_ARRAY_DESC(byte array_desc_dtype, byte array_desc_scale, short array_desc_length, byte array_desc_field_name[], byte array_desc_relation_name[], short array_desc_dimensions, short array_desc_flags, ISC_ARRAY_BOUND array_desc_bounds[]) {
 		super();
 		this.array_desc_dtype = array_desc_dtype;
@@ -74,8 +77,10 @@ public class ISC_ARRAY_DESC extends Structure {
 			throw new IllegalArgumentException("Wrong array size !");
 		this.array_desc_bounds = array_desc_bounds;
 	}
+
 	public static class ByReference extends ISC_ARRAY_DESC implements Structure.ByReference {
 	}
+
 	public static class ByValue extends ISC_ARRAY_DESC implements Structure.ByValue {
 	}
 }

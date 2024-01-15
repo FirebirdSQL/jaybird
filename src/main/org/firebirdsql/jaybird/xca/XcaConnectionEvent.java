@@ -62,6 +62,7 @@ public final class XcaConnectionEvent {
      * @param exception
      *         Exception associated with the event
      */
+    @SuppressWarnings("java:S4274")
     public XcaConnectionEvent(FBManagedConnection source, EventType eventType, Exception exception) {
         assert exception != null || eventType != EventType.CONNECTION_ERROR_OCCURRED
                 : "Exception required for CONNECTION_ERROR_OCCURRED";

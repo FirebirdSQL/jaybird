@@ -45,9 +45,13 @@ import java.io.*;
  * @author David Jencks
  * @author Mark Rotteveel
  */
+@SuppressWarnings("java:S4929")
 public final class XdrInputStream extends FilterInputStream implements EncryptedStreamSupport {
 
-    private static final int BUF_SIZE = Math.max(1024, JaybirdSystemProperties.getWireInputBufferSize(16384));
+    private static final int MIN_BUF_SIZE = 1024;
+    private static final int DEFAULT_BUF_SIZE = 16384;
+    private static final int BUF_SIZE =
+            Math.max(MIN_BUF_SIZE, JaybirdSystemProperties.getWireInputBufferSize(DEFAULT_BUF_SIZE));
     private boolean compressed;
     private boolean encrypted;
 

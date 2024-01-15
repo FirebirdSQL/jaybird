@@ -304,13 +304,14 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
     }
 
-    static class AutoCommitCoordinator extends AbstractTransactionCoordinator {
+    static final class AutoCommitCoordinator extends AbstractTransactionCoordinator {
 
         public AutoCommitCoordinator(FBConnection connection, FBLocalTransaction localTransaction) {
             super(connection, localTransaction);
         }
 
         @Override
+        @SuppressWarnings("resource")
         public void executionStarted(FBStatement stmt) throws SQLException {
             List<FBStatement> tempList = new ArrayList<>(statements);
             SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
@@ -380,8 +381,8 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void executionCompleted(FirebirdBlob blob) throws SQLException {
-
+        public void executionCompleted(FirebirdBlob blob) {
+            // nothing to do
         }
 
         @Override
@@ -416,7 +417,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
     }
 
-    static class LocalTransactionCoordinator extends AbstractTransactionCoordinator {
+    static sealed class LocalTransactionCoordinator extends AbstractTransactionCoordinator {
 
         public LocalTransactionCoordinator(FBConnection connection, FBLocalTransaction localTransaction) {
             super(connection, localTransaction);
@@ -472,8 +473,8 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void executionCompleted(FirebirdBlob blob) throws SQLException {
-
+        public void executionCompleted(FirebirdBlob blob) {
+            // nothing to do
         }
 
         @Override
@@ -482,13 +483,14 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
     }
 
-    static class FirebirdAutoCommitCoordinator extends LocalTransactionCoordinator {
+    static final class FirebirdAutoCommitCoordinator extends LocalTransactionCoordinator {
 
         public FirebirdAutoCommitCoordinator(FBConnection connection, FBLocalTransaction localTransaction) {
             super(connection, localTransaction);
         }
 
         @Override
+        @SuppressWarnings("resource")
         public void executionStarted(FBStatement stmt) throws SQLException {
             List<FBStatement> tempList = new ArrayList<>(statements);
             SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
@@ -578,7 +580,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
     }
 
-    static class ManagedTransactionCoordinator extends LocalTransactionCoordinator {
+    static final class ManagedTransactionCoordinator extends LocalTransactionCoordinator {
 
         /**
          * Create instance of this class for the specified connection.
@@ -591,12 +593,12 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void ensureTransaction() throws SQLException {
+        public void ensureTransaction() {
             // do nothing, we are in managed environment.
         }
 
         @Override
-        public void executionStarted(FBStatement stmt) throws SQLException {
+        public void executionStarted(FBStatement stmt) {
             // NO TRANSACTION MANAGEMENT HERE - empty method
         }
 
@@ -611,17 +613,17 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void executionStarted(FirebirdBlob blob) throws SQLException {
-
+        public void executionStarted(FirebirdBlob blob) {
+            // nothing to do
         }
 
         @Override
-        void handleConnectionClose() throws SQLException {
+        void handleConnectionClose() {
             // do nothing, we are in a managed environment
         }
     }
 
-    static class MetaDataTransactionCoordinator extends AbstractTransactionCoordinator {
+    static final class MetaDataTransactionCoordinator extends AbstractTransactionCoordinator {
 
         private final InternalTransactionCoordinator tc;
 
@@ -631,7 +633,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void ensureTransaction() throws SQLException {
+        public void ensureTransaction() {
             throw new UnsupportedOperationException();
         }
 
@@ -646,7 +648,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        void handleConnectionClose() throws SQLException {
+        void handleConnectionClose() {
             throw new UnsupportedOperationException();
         }
 
@@ -661,23 +663,23 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void statementCompleted(FBStatement stmt) throws SQLException {
+        public void statementCompleted(FBStatement stmt) {
             statementCompleted(stmt, true);
         }
 
         @Override
-        public void statementCompleted(FBStatement stmt, boolean success) throws SQLException {
-
+        public void statementCompleted(FBStatement stmt, boolean success) {
+            // nothing to do
         }
 
         @Override
-        public void executionCompleted(FirebirdBlob blob) throws SQLException {
-
+        public void executionCompleted(FirebirdBlob blob) {
+            // nothing to do
         }
 
         @Override
-        public void executionStarted(FirebirdBlob blob) throws SQLException {
-
+        public void executionStarted(FirebirdBlob blob) {
+            // nothing to do
         }
 
         @Override

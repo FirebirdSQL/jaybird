@@ -86,22 +86,19 @@ class UnregisteredDpbDefiner implements ConnectionPropertyDefinerSpi {
         Map<String, Integer> items = new HashMap<>();
         for (Field field : clazz.getFields()) {
             String name = field.getName();
-            if (!(name.startsWith(prefix) && field.getType() == int.class)) continue;
+            if (knownPropertyNames.contains(name) || field.getType() != int.class || !name.startsWith(prefix)) {
+                continue;
+            }
 
-            int value;
             try {
-                value = field.getInt(null);
-            } catch (IllegalAccessException iaex) {
-                continue;
+                int value = field.getInt(null);
+                String shortName = name.substring(prefixLength);
+                if (!knownPropertyNames.contains(shortName) && !excludedShortNames.contains(shortName)) {
+                    items.put(shortName, value);
+                }
+            } catch (IllegalAccessException ignored) {
+                // ignore field
             }
-
-            String shortName = name.substring(prefixLength);
-            if (knownPropertyNames.contains(shortName) || knownPropertyNames.contains(name)
-                    || excludedShortNames.contains(shortName)) {
-                continue;
-            }
-
-            items.put(shortName, value);
         }
         return items;
     }

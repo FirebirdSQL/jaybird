@@ -278,7 +278,7 @@ class FBXAResourceTest {
             xa.start(xid, XAResource.TMNOFLAGS);
 
             try {
-                con.close();
+                assertDoesNotThrow(con::close);
 
                 xa.end(xid, XAResource.TMSUCCESS);
                 xa.commit(xid, true);

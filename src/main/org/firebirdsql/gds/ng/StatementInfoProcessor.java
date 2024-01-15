@@ -60,26 +60,19 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
 
         while ((info.currentItem = info.buffer[info.currentIndex++]) != ISCConstants.isc_info_end) {
             switch (info.currentItem) {
-            case ISCConstants.isc_info_sql_stmt_type:
-                info.statementType = StatementType.valueOf(readIntValue(info));
-                break;
-
-            case ISCConstants.isc_info_truncated:
-                handleTruncatedInfo(info);
-                break;
-
-            case ISCConstants.isc_info_sql_select:
-            case ISCConstants.isc_info_sql_bind:
+            case ISCConstants.isc_info_sql_stmt_type -> info.statementType = StatementType.valueOf(readIntValue(info));
+            case ISCConstants.isc_info_truncated -> handleTruncatedInfo(info);
+            case ISCConstants.isc_info_sql_select, ISCConstants.isc_info_sql_bind -> {
                 if (info.buffer[info.currentIndex] == ISCConstants.isc_info_truncated) {
                     // break to get normal handling of isc_info_truncated
                     break;
                 }
                 handleDescriptors(info);
-                break;
-
-            default:
+            }
+            default -> {
                 log.log(System.Logger.Level.DEBUG, "Unexpected item type %d", info.currentItem);
                 throw FbExceptionBuilder.forException(ISCConstants.isc_dsql_sqlda_err).toSQLException();
+            }
             }
         }
         return info;
@@ -98,24 +91,19 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
         int newIndex = 0;
         for (final byte infoItem : originalInfo) {
             assert newIndex < newInfoItems.length : "newInfoItems size too short";
-            switch (infoItem) {
-            case ISCConstants.isc_info_sql_select:
-            case ISCConstants.isc_info_sql_bind:
+            if (infoItem == ISCConstants.isc_info_sql_select || infoItem == ISCConstants.isc_info_sql_bind) {
                 final RowDescriptorBuilder currentBuilder =
                         infoItem == ISCConstants.isc_info_sql_select ? info.fieldBuilder : info.parameterBuilder;
                 // Index of first descriptor to request; adding 1 to descriptor index as Firebird uses 1-based index for fields/parameters and builders are 0-based
-                final int descriptorIndex =
-                        currentBuilder != null ? currentBuilder.getFirstUnprocessedIndex() + 1 : 1;
+                final int descriptorIndex = currentBuilder != null ? currentBuilder.getFirstUnprocessedIndex() + 1 : 1;
                 // Request server to resend info starting at the specified index of the fields or parameters
                 newInfoItems[newIndex++] = ISCConstants.isc_info_sql_sqlda_start;
                 newInfoItems[newIndex++] = 2; // size of short
                 newInfoItems[newIndex++] = (byte) (descriptorIndex & 0xFF);
                 newInfoItems[newIndex++] = (byte) (descriptorIndex >> 8);
                 newInfoItems[newIndex++] = infoItem;
-                break;
-            default:
+            } else {
                 newInfoItems[newIndex++] = infoItem;
-                break;
             }
         }
         assert newIndex == newInfoItems.length : "newInfoItems size too long";
@@ -138,19 +126,16 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
         if (descriptorCount == 0) {
             return;
         }
-        switch (info.currentItem) {
-        case ISCConstants.isc_info_sql_select:
+        if (info.currentItem == ISCConstants.isc_info_sql_select) {
             if (info.fieldBuilder == null) {
                 info.fieldBuilder = new RowDescriptorBuilder(descriptorCount, database.getDatatypeCoder());
             }
             processDescriptors(info, info.fieldBuilder);
-            break;
-        case ISCConstants.isc_info_sql_bind:
+        } else if (info.currentItem == ISCConstants.isc_info_sql_bind) {
             if (info.parameterBuilder == null) {
                 info.parameterBuilder = new RowDescriptorBuilder(descriptorCount, database.getDatatypeCoder());
             }
             processDescriptors(info, info.parameterBuilder);
-            break;
         }
     }
 

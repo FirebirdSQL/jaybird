@@ -41,6 +41,7 @@ final class FbDatabaseOperation implements Operation, OperationCloseHandle {
     private static final Runnable NO_OP = () -> {};
 
     private final Type type;
+    @SuppressWarnings("java:S3077")
     private volatile FbDatabase fbDatabase;
     private volatile boolean cancelled;
     private Runnable onCompletion;

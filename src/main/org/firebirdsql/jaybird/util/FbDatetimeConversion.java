@@ -331,7 +331,7 @@ public final class FbDatetimeConversion {
     private static final class FbTimeField implements TemporalField {
 
         // max is number of 100 microseconds in a day
-        private static final ValueRange RANGE = ValueRange.of(0, 24 * 60 * 60 * 10_000 - 1);
+        private static final ValueRange RANGE = ValueRange.of(0, 24 * 60 * 60 * 10_000L - 1);
 
         private FbTimeField() {
             // effectively singleton

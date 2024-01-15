@@ -37,6 +37,7 @@ import static org.firebirdsql.internal.tools.MessageConverter.unescapeSource;
  * @author Mark Rotteveel
  * @since 5
  */
+@SuppressWarnings("java:S106")
 public class MessageExtractor {
 
     private final Path messageRoot;
@@ -74,6 +75,7 @@ public class MessageExtractor {
         }
     }
 
+    @SuppressWarnings("java:S127")
     public static void main(String[] args) {
         String messageRootString = null;
         OutputFormat outputFormat = OutputFormat.SINGLE;
@@ -96,7 +98,6 @@ public class MessageExtractor {
                     System.err.println("Option --format expects a value; using default");
                 }
             }
-
         }
         if (messageRootString == null || messageRootString.isEmpty()) {
             System.err.println("Option --message-root <path> with path the Firebird error messages files required");

@@ -76,6 +76,7 @@ public final class NumericArgument extends TypedArgument {
     }
 
     @Override
+    @SuppressWarnings("java:S4144")
     public long getValueAsLong() {
         return value;
     }

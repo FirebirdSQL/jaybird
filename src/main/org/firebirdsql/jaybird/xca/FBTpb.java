@@ -36,6 +36,7 @@ public final class FBTpb implements Serializable {
     @Serial
     private static final long serialVersionUID = 966376319390599431L;
 
+    @SuppressWarnings("java:S1948")
     private TransactionParameterBuffer transactionParams;
 
     /**

@@ -29,7 +29,7 @@ import java.sql.SQLException;
 /**
  * Meta-information on stored procedures in a Firebird database.
  */
-public interface StoredProcedureMetaData {
+interface StoredProcedureMetaData {
 
     /**
      * Determine if the "selectability" of procedures is available. 

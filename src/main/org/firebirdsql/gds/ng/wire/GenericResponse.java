@@ -27,36 +27,17 @@ package org.firebirdsql.gds.ng.wire;
 import java.sql.SQLException;
 
 /**
+ * @param objectHandle
+ *         object handle associated with the response
+ * @param blobId
+ *         blob id or status value
+ * @param data
+ *         data
+ * @param exception
+ *         exception or warning (or {@code null} for no exception or warning)
  * @author Mark Rotteveel
  * @since 3.0
  */
-public final class GenericResponse implements Response {
-
-    private final int objectHandle;
-    private final long blobId;
-    private final byte[] data;
-    private final SQLException exception;
-
-    public GenericResponse(int objectHandle, long blobId, byte[] data, SQLException exception) {
-        this.objectHandle = objectHandle;
-        this.blobId = blobId;
-        this.data = data;
-        this.exception = exception;
-    }
-
-    public int getObjectHandle() {
-        return objectHandle;
-    }
-
-    public long getBlobId() {
-        return blobId;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public SQLException getException() {
-        return exception;
-    }
+@SuppressWarnings("java:S6218")
+public record GenericResponse(int objectHandle, long blobId, byte[] data, SQLException exception) implements Response {
 }

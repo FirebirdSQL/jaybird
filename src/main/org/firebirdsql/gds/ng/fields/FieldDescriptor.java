@@ -89,7 +89,6 @@ public final class FieldDescriptor {
      * @param ownerName
      *         Owner of the column/table
      */
-    @SuppressWarnings("java:S107")
     public FieldDescriptor(int position, DatatypeCoder datatypeCoder,
             int type, int subType, int scale, int length,
             String fieldName, String tableAlias, String originalName, String originalTableName,

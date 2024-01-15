@@ -119,6 +119,7 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
     }
 
     @Override
+    @SuppressWarnings("java:S1168")
     protected byte[] networkOrder(final byte[] buf) {
         if (buf == null) return null;
         final byte[] newArray = new byte[buf.length];

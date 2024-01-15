@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.io.Serial;
 import java.sql.SQLException;
 
 /**
@@ -35,11 +36,15 @@ import java.sql.SQLException;
  */
 public class FBSQLExceptionInfo extends SQLException {
 
-    public FBSQLExceptionInfo(String reason, String SQLState, int vendorCode) {
-        super(reason, SQLState, vendorCode);
+    @Serial
+    private static final long serialVersionUID = -686564056327297128L;
+
+    public FBSQLExceptionInfo(String reason, String sqlState, int vendorCode) {
+        super(reason, sqlState, vendorCode);
     }
 
     @Override
+    @SuppressWarnings("java:S3551")
     public Throwable fillInStackTrace() {
         // Not filling in stacktrace as this is purely informational
         return this;
