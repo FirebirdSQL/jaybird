@@ -21,6 +21,7 @@ dependencyResolutionManagement {
 
             library('junit-bom', 'org.junit', 'junit-bom').versionRef('junit')
             library('junit-jupiter', 'org.junit.jupiter', 'junit-jupiter').withoutVersion()
+            library('junit-platform-launcher', 'org.junit.platform', 'junit-platform-launcher').withoutVersion()
             library('hamcrest', 'org.hamcrest', 'hamcrest').version('2.2')
             library('assertj-core', 'org.assertj', 'assertj-core').version('3.24.2')
             library('mockito-bom', 'org.mockito', 'mockito-bom').versionRef('mockito')

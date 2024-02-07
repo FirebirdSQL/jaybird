@@ -48,6 +48,7 @@ dependencies {
     // Use JUnit Jupiter API for testing.
     testImplementation platform(testLibs.junit.bom)
     testImplementation testLibs.bundles.junit
+    testRuntimeOnly testLibs.junit.platform.launcher
 
     testImplementation testLibs.bundles.hamcrest
     testImplementation testLibs.assertj.core
