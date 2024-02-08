@@ -20,7 +20,7 @@ plugins {
     id 'nu.studer.credentials' version '3.0'
     id 'maven-publish'
     id 'signing'
-    id 'org.asciidoctor.jvm.convert' version '4.0.0-alpha.1'
+    id 'org.asciidoctor.jvm.convert' version '4.0.2'
 }
 
 defaultTasks 'clean', 'build'
@@ -140,6 +140,7 @@ asciidoctorj {
 }
 
 tasks.named('asciidoctor', AsciidoctorTask).configure {
+    executionMode = OUT_OF_PROCESS
     attributes 'version_simple': project.'version.simple',
             'version_wo_target': "${project.'version.simple'}${project.'version.tag'}",
             'version_tag': project.'version.tag',
@@ -147,10 +148,11 @@ tasks.named('asciidoctor', AsciidoctorTask).configure {
             'stylesdir': file('src/docs/theme/jaybird-html'),
             'stylesheet': 'firebird.css',
             'docinfo': 'shared',
-            'docinfodir': file('src/docs/theme/jaybird-html/docinfo')
+            'docinfodir': file('src/docs/theme/jaybird-html/docinfo'),
+            'revnumber': false
 
     if (JavaVersion.current().isJava9Compatible()) {
-        forkOptions {
+        jvm {
             jvmArgs "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens", "java.base/java.io=ALL-UNNAMED"
         }
     }
