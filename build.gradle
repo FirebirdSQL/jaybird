@@ -78,9 +78,9 @@ dependencies {
     compileOnly 'jakarta.servlet:jakarta.servlet-api:5.0.0'
 
     // Use JUnit Jupiter API for testing.
-    testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_jupiter"
-    testImplementation "org.junit.jupiter:junit-jupiter-params:$junit_jupiter"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_jupiter"
+    testImplementation platform("org.junit:junit-bom:$junit_jupiter")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
     testImplementation "org.hamcrest:hamcrest-library:$hamcrest"
