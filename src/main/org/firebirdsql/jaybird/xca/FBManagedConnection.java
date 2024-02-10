@@ -611,7 +611,7 @@ public final class FBManagedConnection implements ExceptionListener {
         }
     }
 
-    private int getTransactionTimeout() throws XAException {
+    private int getTransactionTimeout() {
         return timeout;
     }
 
@@ -912,7 +912,7 @@ public final class FBManagedConnection implements ExceptionListener {
      * @param timeout
      *         The timeout to be set in seconds
      */
-    private boolean setTransactionTimeout(int timeout) throws XAException {
+    private boolean setTransactionTimeout(int timeout) {
         this.timeout = timeout;
         return true;
     }
@@ -1281,18 +1281,18 @@ public final class FBManagedConnection implements ExceptionListener {
          * @return {@code true} if {@code res} uses the same ResourceManager, {@code false} otherwise
          */
         @Override
-        public boolean isSameRM(XAResource res) throws XAException {
+        public boolean isSameRM(XAResource res) {
             return res == this
                     || res instanceof FbMcXaResource fbMcXaResource && database == fbMcXaResource.getMc().database;
         }
 
         @Override
-        public int getTransactionTimeout() throws XAException {
+        public int getTransactionTimeout() {
             return FBManagedConnection.this.getTransactionTimeout();
         }
 
         @Override
-        public boolean setTransactionTimeout(int seconds) throws XAException {
+        public boolean setTransactionTimeout(int seconds) {
             return FBManagedConnection.this.setTransactionTimeout(seconds);
         }
     }
