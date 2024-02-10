@@ -440,33 +440,35 @@ public class FBConnection implements FirebirdConnection {
                 chainBuilder.append(e);
             } finally {
                 metaData = null;
-                FBManagedConnection mc = this.mc;
-                if (mc != null) {
-                    // leave managed transactions alone, they are normally
-                    // committed after the Connection handle is closed.
-                    if (!mc.inDistributedTransaction()) {
-                        try {
-                            txCoordinator.handleConnectionClose();
-                        } catch (SQLException e) {
-                            chainBuilder.append(e);
-                        } finally {
-                            try {
-                                setAutoCommit(true);
-                            } catch (SQLException e) {
-                                if (!SQL_STATE_CONNECTION_CLOSED.equals(e.getSQLState())) {
-                                    chainBuilder.append(e);
-                                }
-                            }
-                        }
-                    }
-
-                    mc.close(this);
-                }
+                closeMc(chainBuilder);
             }
         }
         if (chainBuilder.hasException()) {
             throw chainBuilder.getException();
         }
+    }
+
+    private void closeMc(SQLExceptionChainBuilder<SQLException> chainBuilder) {
+        FBManagedConnection mc = this.mc;
+        if (mc == null) return;
+        // leave managed transactions alone, they are normally committed after the Connection handle is closed.
+        if (!mc.inDistributedTransaction()) {
+            try {
+                txCoordinator.handleConnectionClose();
+            } catch (SQLException e) {
+                chainBuilder.append(e);
+            } finally {
+                try {
+                    setAutoCommit(true);
+                } catch (SQLException e) {
+                    if (!SQL_STATE_CONNECTION_CLOSED.equals(e.getSQLState())) {
+                        chainBuilder.append(e);
+                    }
+                }
+            }
+        }
+
+        mc.close(this);
     }
 
     @Override
