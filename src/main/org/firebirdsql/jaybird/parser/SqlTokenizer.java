@@ -37,6 +37,8 @@ import static java.lang.String.format;
 @InternalApi
 public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
 
+    private static final int EOF = -1;
+
     private final String src;
     private final ReservedWords reservedWords;
     private int pos = 0;
@@ -84,11 +86,11 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
 
     @Override
     public void close() {
-        pos = -1;
+        pos = EOF;
     }
 
     private boolean isClosed() {
-        return pos == -1;
+        return pos == EOF;
     }
 
     private int read() {
@@ -97,13 +99,13 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
             return src.charAt(pos++);
         } else {
             pos = length;
-            return -1;
+            return EOF;
         }
     }
 
     private char requireChar() {
         int c = read();
-        if (c == -1) {
+        if (c == EOF) {
             int originalPosition = pos;
             close();
             throw new UnexpectedEndOfInputException(
@@ -134,7 +136,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
 
     private void unread(int c) {
         // We don't check if the 'unread' character is actually at this position
-        if (c != -1) {
+        if (c != EOF) {
             pos--;
         }
     }
@@ -146,191 +148,162 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     }
 
     private int peek() {
-        return pos < src.length() ? src.charAt(pos) : -1;
+        return pos < src.length() ? src.charAt(pos) : EOF;
     }
 
+    @SuppressWarnings({ "java:S1479", "java:S3776" })
     private Token nextToken() {
         if (isClosed()) return null;
         int start = pos;
         int c = read();
-        switch (c) {
-        case -1:
+        return switch (c) {
+        case EOF -> {
             close();
-            return null;
-        case '\t':
-        case '\n':
-        case '\r':
-        case ' ':
-            return readWhitespaceToken(start);
-        case '(':
-            return new ParenthesisOpen(start);
-        case ')':
-            return new ParenthesisClose(start);
-        // curly braces aren't part of the SQL syntax, but of the JDBC escape syntax
-        case '{':
-            return new CurlyBraceOpen(start);
-        case '}':
-            return new CurlyBraceClose(start);
-        case '[':
-            return new SquareBracketOpen(start);
-        case ']':
-            return new SquareBracketClose(start);
-        case ';':
-            return new SemicolonToken(start);
-        case ',':
-            return new CommaToken(start);
-        case '.':
-            if (isDigit(peek())) {
-                return readNumericLiteral(start, '.');
-            }
-            return new PeriodToken(start);
-        case '+':
-        case '*': // Can also signify 'all' (as in select * or select alias.*)
-        case '=':
-            return new OperatorToken(start, src, start, pos);
-        case '-':
-            if (peek() == '-') {
-                return readLineComment(start);
-            }
-            return new OperatorToken(start, src, start, pos);
-        case '/':
-            if (peek() == '*') {
-                return readBlockComment(start);
-            }
-            return new OperatorToken(start, src, start, pos);
-        case '<': {
-            int cNext = read();
-            switch (cNext) {
-            case '>':
-            case '=':
-                return new OperatorToken(start, src, start, pos);
-            default:
-                unread(cNext);
-                return new OperatorToken(start, src, start, pos);
-            }
+            yield null;
         }
-        case '>': {
+        case '\t', '\n', '\r', ' ' -> readWhitespaceToken(start);
+        case '(' -> new ParenthesisOpen(start);
+        case ')' -> new ParenthesisClose(start);
+        // curly braces aren't part of the SQL syntax, but of the JDBC escape syntax
+        case '{' -> new CurlyBraceOpen(start);
+        case '}' -> new CurlyBraceClose(start);
+        case '[' -> new SquareBracketOpen(start);
+        case ']' -> new SquareBracketClose(start);
+        case ';' -> new SemicolonToken(start);
+        case ',' -> new CommaToken(start);
+        case '.' -> {
+            if (isDigit(peek())) {
+                yield readNumericLiteral(start, '.');
+            }
+            yield new PeriodToken(start);
+        }
+        case '+',
+                '*', // Can also signify 'all' (as in select * or select alias.*)
+                '=' -> new OperatorToken(start, src, start, pos);
+        case '-' -> {
+            if (peek() == '-') {
+                yield readLineComment(start);
+            }
+            yield new OperatorToken(start, src, start, pos);
+        }
+        case '/' -> {
+            if (peek() == '*') {
+                yield readBlockComment(start);
+            }
+            yield new OperatorToken(start, src, start, pos);
+        }
+        case '<' -> {
+            int cNext = read();
+            yield switch (cNext) {
+                case '>', '=' -> new OperatorToken(start, src, start, pos);
+                default -> {
+                    unread(cNext);
+                    yield new OperatorToken(start, src, start, pos);
+                }
+            };
+        }
+        case '>' -> {
             int cNext = read();
             if (cNext == '=') {
-                return new OperatorToken(start, src, start, pos);
+                yield new OperatorToken(start, src, start, pos);
             }
             unread(cNext);
-            return new OperatorToken(start, src, start, pos);
+            yield new OperatorToken(start, src, start, pos);
         }
-        case '!':
-        case '~':
-        case '^': {
+        case '!', '~', '^'-> {
             int cNext = read();
-            switch (cNext) {
-            case '=':
-            case '>':
-            case '<':
-                return new OperatorToken(start, src, start, pos);
-            default:
-                unread(cNext);
-                // shouldn't occur, but handle as singular operator
-                return new OperatorToken(start, src, start, pos);
-            }
+            yield switch (cNext) {
+                case '=', '>', '<' -> new OperatorToken(start, src, start, pos);
+                default -> {
+                    unread(cNext);
+                    // shouldn't occur, but handle as singular operator
+                    yield new OperatorToken(start, src, start, pos);
+                }
+            };
         }
-        case '|': {
+        case '|' -> {
             int cNext = read();
             if (cNext == '|') {
-                return new OperatorToken(start, src, start, pos);
+                yield new OperatorToken(start, src, start, pos);
             }
             unread(cNext);
             // shouldn't occur, but handle as singular operator
-            return new OperatorToken(start, src, start, pos);
+            yield new OperatorToken(start, src, start, pos);
         }
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            return readNumericLiteral(start, (char) c);
-        case '\'':
-            return readStringLiteral(start);
-        case 'a':
-        case 'A':
+        case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> readNumericLiteral(start, (char) c);
+        case '\'' -> readStringLiteral(start);
+        case 'a', 'A' -> {
             if (detectAnd()) {
-                return readTokenByLength(start, 2, OperatorToken::new);
+                yield readTokenByLength(start, 2, OperatorToken::new);
             }
-            return readOtherToken(start);
-        case 'f':
-        case 'F':
+            yield readOtherToken(start);
+        }
+        case 'f', 'F' -> {
             if (detectFalse()) {
-                return readTokenByLength(start, 4, BooleanLiteralToken::falseToken);
+                yield readTokenByLength(start, 4, BooleanLiteralToken::falseToken);
             }
-            return readOtherToken(start);
-        case 'i':
-        case 'I':
+            yield readOtherToken(start);
+        }
+        case 'i', 'I' -> {
             if (detectIs()) {
-                return readTokenByLength(start, 1, OperatorToken::new);
+                yield readTokenByLength(start, 1, OperatorToken::new);
             }
-            return readOtherToken(start);
-        case 'l':
-        case 'L':
+            yield readOtherToken(start);
+        }
+        case 'l', 'L' -> {
             if (detectLike()) {
-                return readTokenByLength(start, 3, OperatorToken::new);
+                yield readTokenByLength(start, 3, OperatorToken::new);
             }
-            return readOtherToken(start);
-        case 'n':
-        case 'N':
+            yield readOtherToken(start);
+        }
+        case 'n', 'N' -> {
             if (detectNull()) {
-                return readTokenByLength(start, 3, NullLiteralToken::new);
+                yield readTokenByLength(start, 3, NullLiteralToken::new);
             }
             if (detectNot()) {
-                return readTokenByLength(start, 2, OperatorToken::new);
+                yield readTokenByLength(start, 2, OperatorToken::new);
             }
-            return readOtherToken(start);
-        case 'o':
-        case 'O':
+            yield readOtherToken(start);
+        }
+        case 'o', 'O' -> {
             if (detectOr()) {
-                return readTokenByLength(start, 1, OperatorToken::new);
+                yield readTokenByLength(start, 1, OperatorToken::new);
             }
-            return readOtherToken(start);
-        case 'q':
-        case 'Q':
+            yield readOtherToken(start);
+        }
+        case 'q', 'Q' -> {
             if (peek() == '\'') {
-                return readQStringLiteral(start);
+                yield readQStringLiteral(start);
             }
-            return readOtherToken(start);
-        case 't':
-        case 'T':
+            yield readOtherToken(start);
+        }
+        case 't', 'T' -> {
             if (detectTrue()) {
-                return readTokenByLength(start, 3, BooleanLiteralToken::trueToken);
+                yield readTokenByLength(start, 3, BooleanLiteralToken::trueToken);
             }
-            return readOtherToken(start);
-        case 'u':
-        case 'U':
+            yield readOtherToken(start);
+        }
+        case 'u', 'U' -> {
             if (detectUnknown()) {
-                return readTokenByLength(start, 6, BooleanLiteralToken::unknownToken);
+                yield readTokenByLength(start, 6, BooleanLiteralToken::unknownToken);
             }
-            return readOtherToken(start);
-        case 'x':
-        case 'X': {
+            yield readOtherToken(start);
+        }
+        case 'x', 'X' -> {
             int cNext = read();
             if (cNext == '\'') {
-                return readHexStringLiteral(start);
+                yield readHexStringLiteral(start);
             }
             unread(cNext);
-            return readOtherToken(start);
+            yield readOtherToken(start);
         }
-        case '?':
-            return new PositionalParameterToken(start);
-        case ':':
-            // signals named parameter or array dimension
-            return new ColonToken(start);
-        case '"':
-            // or a string literal in dialect 1
-            return readQuotedIdentifier(start);
-        default:
-            return readOtherToken(start);
-        }
+        case '?' -> new PositionalParameterToken(start);
+        // signals named parameter or array dimension
+        case ':' -> new ColonToken(start);
+        // signals quoted identifier, or a string literal in dialect 1
+        case '"' -> readQuotedIdentifier(start);
+        default -> readOtherToken(start);
+        };
     }
 
     private static final char[][] UNKNOWN_SUFFIX =
@@ -392,6 +365,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
         int c;
         //noinspection StatementWithEmptyBody
         while (isWhitespace(c = read())) {
+            // consume whitespace
         }
         unread(c);
         return new WhitespaceToken(start, src, start, pos);
@@ -403,6 +377,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
         int c;
         //noinspection StatementWithEmptyBody
         while (!isEndOfLine(c = read())) {
+            // consume remainder of line
         }
         unread(c);
         return new CommentToken(start, src, start, pos);
@@ -441,6 +416,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
             // We're allowing invalid literals like 1.0E or 1.0E+
             //noinspection StatementWithEmptyBody
             while (isDigit(c = read())) {
+                // consume exponent
             }
         }
         unread(c);
@@ -448,10 +424,12 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     }
 
     private NumericLiteralToken continueBinaryNumericLiteral(int start) {
+        // skip the x/X (already checked by caller using peek())
         skip();
         int c;
         //noinspection StatementWithEmptyBody
         while (isHexDigit(c = read())) {
+            // consume binary numeric literal
         }
         unread(c);
         return new NumericLiteralToken(start, src, start, pos);
@@ -487,18 +465,13 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     }
 
     private char computeCloseQuote(char specialChar) {
-        switch (specialChar) {
-        case '[':
-            return ']';
-        case '(':
-            return ')';
-        case '{':
-            return '}';
-        case '<':
-            return '>';
-        default:
-            return specialChar;
-        }
+        return switch (specialChar) {
+            case '[' -> ']';
+            case '(' -> ')';
+            case '{' -> '}';
+            case '<' -> '>';
+            default -> specialChar;
+        };
     }
 
     private QuotedIdentifierToken readQuotedIdentifier(int start) {
@@ -515,6 +488,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
         int c;
         //noinspection StatementWithEmptyBody
         while (!isNormalTokenBoundary(c = read())) {
+            // consume remainder of normal token
         }
         unread(c);
         int end = pos;
@@ -530,6 +504,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
         return tokenConstructor.construct(start, src, start, pos);
     }
 
+    @SuppressWarnings("java:S1119")
     private boolean detectToken(char[][] expectedChars) {
         int maxChars = expectedChars.length;
         int[] readChars = new int[maxChars + 1];
@@ -553,61 +528,25 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     }
 
     private static boolean isNormalTokenBoundary(int c) {
-        switch (c) {
-        case -1:
-        case '\t':
-        case '\n':
-        case '\r':
-        case ' ':
-        case '(':
-        case ')':
-        case '{':
-        case '}':
-        case '[':
-        case ']':
-        case '\'':
-        case '"':
-        case ':':
-        case ';':
-        case '.':
-        case '+':
-        case '-':
-        case '/':
-        case '*':
-        case '=':
-        case '>':
-        case '<':
-        case '~':
-        case '^':
-        case '!':
-        case '?':
-            return true;
-        default:
-            return false;
-        }
+        return switch (c) {
+            case EOF, '\t', '\n', '\r', ' ', '(', ')', '{', '}', '[', ']', '\'', '"', ':', ';', '.', '+', '-', '/', '*',
+                    '=', '>', '<', '~', '^', '!', '?' -> true;
+            default -> false;
+        };
     }
 
     private static boolean isWhitespace(int c) {
-        switch (c) {
-        case '\t':
-        case '\n':
-        case '\r':
-        case ' ':
-            return true;
-        default:
-            return false;
-        }
+        return switch (c) {
+            case '\t', '\n', '\r', ' ' -> true;
+            default -> false;
+        };
     }
 
     private static boolean isEndOfLine(int c) {
-        switch (c) {
-        case -1:
-        case '\n':
-        case '\r':
-            return true;
-        default:
-            return false;
-        }
+        return switch (c) {
+            case EOF, '\n', '\r' -> true;
+            default -> false;
+        };
     }
 
     private static boolean isDigit(int c) {
