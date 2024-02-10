@@ -34,6 +34,7 @@ import java.sql.DriverManager;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -77,8 +78,9 @@ class SpecialEmbeddedServerUrlsTest {
         try (FBManager testFBManager = createFBManager()) {
             testFBManager.start();
 
-            testFBManager.dropDatabase(absoluteDatabasePath.toString(), DB_USER, DB_PASSWORD);
-            testFBManager.createDatabase(absoluteDatabasePath.toString(), DB_USER, DB_PASSWORD);
+            assertDoesNotThrow(() -> testFBManager.dropDatabase(absoluteDatabasePath.toString(), DB_USER, DB_PASSWORD));
+            assertDoesNotThrow(() ->
+                    testFBManager.createDatabase(absoluteDatabasePath.toString(), DB_USER, DB_PASSWORD));
         }
     }
 
@@ -88,7 +90,7 @@ class SpecialEmbeddedServerUrlsTest {
             testFBManager.setDropOnStop(true);
             testFBManager.start();
 
-            testFBManager.createDatabase(relativeDatabasePath, DB_USER, DB_PASSWORD);
+            assertDoesNotThrow(() -> testFBManager.createDatabase(relativeDatabasePath, DB_USER, DB_PASSWORD));
         }
     }
 

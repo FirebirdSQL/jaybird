@@ -36,15 +36,13 @@ class FBManagedConnectionFactoryTest {
 
     @Test
     void testCreateMcf() {
-        // TODO Test doesn't assert anything
-        createDefaultMcf();
+        assertDoesNotThrow(() -> createDefaultMcf());
     }
 
     @Test
     void testCreateMc() throws Exception {
-        // TODO Test doesn't assert anything
         FBManagedConnectionFactory mcf = createDefaultMcf();
-        FBManagedConnection mc = mcf.createManagedConnection();
+        FBManagedConnection mc = assertDoesNotThrow(() -> mcf.createManagedConnection());
         mc.destroy();
     }
 

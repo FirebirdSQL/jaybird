@@ -35,6 +35,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -206,7 +207,7 @@ class FBSavepointTest {
         connection = DriverManager.getConnection(getUrl(), info);
         connection.setAutoCommit(false);
 
-        connection.setSavepoint("named");
+        assertDoesNotThrow(() -> connection.setSavepoint("named"));
     }
 
     @Test
