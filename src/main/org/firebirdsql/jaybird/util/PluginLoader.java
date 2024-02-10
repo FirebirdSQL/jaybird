@@ -18,15 +18,8 @@
  */
 package org.firebirdsql.jaybird.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.ServiceConfigurationError;
-import java.util.ServiceLoader;
-import java.util.Set;
+import java.lang.System.Logger.Level;
+import java.util.*;
 
 import static java.util.Collections.unmodifiableSet;
 
@@ -111,7 +104,6 @@ public final class PluginLoader {
      *         type of the plugin SPI
      * @return collection of plugin SPI instances
      */
-    @SuppressWarnings("java:S1141")
     public static <T> Collection<T> findPlugins(
             Class<T> spiClass, Collection<String> fallbackClassNames, Set<ClassSource> classSources) {
         if (!spiClass.isInterface()) {
@@ -119,62 +111,77 @@ public final class PluginLoader {
         }
         if (classSources.isEmpty()) throw new IllegalArgumentException("at least one ClassSource is required");
 
-        final var log = System.getLogger(PluginLoader.class.getName());
-        final var plugins = new LinkedHashSet<T>();
         final Collection<ClassLoader> classLoaders = classLoadersForLoading(spiClass, classSources);
 
+        final var plugins = new LinkedHashSet<T>();
         for (ClassLoader cl : classLoaders) {
-            var pluginLoader = ServiceLoader.load(spiClass, cl);
-            // We can't use foreach here, because the descriptors are lazily loaded, which might trigger a ServiceConfigurationError
-            Iterator<T> pluginIterator = pluginLoader.iterator();
-            int retry = 0;
-            while (retry < 2) {
-                try {
-                    while (pluginIterator.hasNext()) {
-                        try {
-                            plugins.add(pluginIterator.next());
-                        } catch (Exception | ServiceConfigurationError e) {
-                            String message = "Could not load " + spiClass.getSimpleName() + " (skipping)";
-                            log.log(System.Logger.Level.ERROR, message + "; see debug level for stacktrace");
-                            log.log(System.Logger.Level.DEBUG, message, e);
-                        }
-                    }
-                    break;
-                } catch (ServiceConfigurationError e) {
-                    log.log(System.Logger.Level.ERROR, "Error finding next " + spiClass.getSimpleName(), e);
-                    retry++;
-                }
-            }
+            plugins.addAll(findPlugins(spiClass, cl));
         }
 
-        if (plugins.isEmpty()) {
-            log.log(System.Logger.Level.WARNING, "Could not find any {0} through service loader; using fallback strategy",
-                    spiClass.getSimpleName());
-            for (ClassLoader cl : classLoaders) {
-                for (String className : fallbackClassNames) {
+        if (!plugins.isEmpty()) {
+            return plugins;
+        }
+        return loadFallbackPlugins(spiClass, fallbackClassNames, classLoaders);
+    }
+
+    @SuppressWarnings("java:S1141")
+    private static <T> Set<T> findPlugins(Class<T> spiClass, ClassLoader cl) {
+        var pluginLoader = ServiceLoader.load(spiClass, cl);
+        // We can't use foreach here, because the descriptors are lazily loaded, which might trigger a ServiceConfigurationError
+        Iterator<T> pluginIterator = pluginLoader.iterator();
+        int retry = 0;
+        var plugins =  new LinkedHashSet<T>();
+        while (retry < 2) {
+            try {
+                while (pluginIterator.hasNext()) {
                     try {
-                        Class<?> clazz = Class.forName(className, false, cl);
-                        if (!spiClass.isAssignableFrom(clazz)) {
-                            log.log(System.Logger.Level.WARNING, "Class {0} is not an instance of plugin type {1}",
-                                    className, spiClass.getName());
-                            continue;
-                        }
-                        plugins.add(spiClass.cast(clazz.getDeclaredConstructor().newInstance()));
-
-                    } catch (Exception e) {
-                        if (log.isLoggable(System.Logger.Level.WARNING)) {
-                            String message = "Unable to load " + spiClass.getSimpleName() + " " + className
-                                             + " as fallback; skipping";
-                            log.log(System.Logger.Level.WARNING, message + "; see debug level for stacktrace");
-                            log.log(System.Logger.Level.DEBUG, message, e);
-                        }
+                        plugins.add(pluginIterator.next());
+                    } catch (Exception | ServiceConfigurationError e) {
+                        String message = "Could not load " + spiClass.getSimpleName() + " (skipping)";
+                        var log = System.getLogger(PluginLoader.class.getName());
+                        log.log(Level.ERROR, message + "; see debug level for stacktrace");
+                        log.log(Level.DEBUG, message, e);
                     }
                 }
-                if (!plugins.isEmpty()) break;
+                break;
+            } catch (ServiceConfigurationError e) {
+                System.getLogger(PluginLoader.class.getName())
+                        .log(Level.ERROR, "Error finding next " + spiClass.getSimpleName(), e);
+                retry++;
             }
         }
-
         return plugins;
+    }
+
+    private static <T> Set<T> loadFallbackPlugins(Class<T> spiClass, Collection<String> fallbackClassNames,
+            Collection<ClassLoader> classLoaders) {
+        System.getLogger(PluginLoader.class.getName()).log(Level.WARNING,
+                "Could not find any {0} through service loader; using fallback strategy", spiClass.getSimpleName());
+        LinkedHashSet<T> plugins = new LinkedHashSet<>();
+        for (ClassLoader cl : classLoaders) {
+            for (String className : fallbackClassNames) {
+                try {
+                    Class<?> clazz = Class.forName(className, false, cl);
+                    if (!spiClass.isAssignableFrom(clazz)) {
+                        System.getLogger(PluginLoader.class.getName()).log(Level.WARNING,
+                                "Class {0} is not an instance of plugin type {1}", className, spiClass.getName());
+                        continue;
+                    }
+                    plugins.add(spiClass.cast(clazz.getDeclaredConstructor().newInstance()));
+
+                } catch (Exception e) {
+                    var log = System.getLogger(PluginLoader.class.getName());
+                    if (log.isLoggable(Level.WARNING)) {
+                        String message = "Unable to load " + spiClass.getSimpleName() + " " + className
+                                + " as fallback; skipping";
+                        log.log(Level.WARNING, message + "; see debug level for stacktrace");
+                        log.log(Level.DEBUG, message, e);
+                    }
+                }
+            }
+            if (!plugins.isEmpty()) return plugins;
+        }
+        return Set.of();
     }
 
     /**
