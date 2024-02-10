@@ -168,43 +168,39 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     public void processEventData() {
         eventBuffer.flip();
         try {
-            if (log.isLoggable(TRACE)) {
-                if (eventBuffer.hasArray()) {
-                    log.log(TRACE, eventBuffer + ": " + ByteArrayHelper.toHexString(eventBuffer.array()).substring(0, 2 * eventBuffer.limit()));
-                } else {
-                    log.log(TRACE, eventBuffer.toString());
-                }
-            }
-            bufferProcessing:
-            while (eventBuffer.remaining() >= 4) {
-                eventBuffer.mark();
-                final int operation = eventBuffer.getInt();
-                switch (operation) {
-                case op_dummy:
-                    continue;
-                case op_exit:
-                case op_disconnect:
-                    close();
-                    break bufferProcessing;
-                case op_event:
-                    if (!processSingleEvent()) {
-                        log.log(DEBUG, "Could not process entire event, resetting position for next channel read");
-                        // Restoring position so we reprocess the event if the rest of the data has been received
-                        eventBuffer.reset();
-                        break bufferProcessing;
-                    }
-                    break;
-                default:
-                    log.log(ERROR, "Unexpected event operation received: {0}, position {1}, limit {2}", operation,
-                            eventBuffer.position(), eventBuffer.limit());
-                    break;
-                }
-            }
+            traceLogEventBuffer(eventBuffer);
+            processBuffer();
             eventBuffer.compact();
         } catch (SQLException e) {
             log.log(ERROR, "SQLException processing event data", e);
         } catch (Exception e) {
             log.log(ERROR, "Unexpected exception processing events", e);
+        }
+    }
+
+    private void processBuffer() throws SQLException {
+        while (eventBuffer.remaining() >= 4) {
+            eventBuffer.mark();
+            int operation = eventBuffer.getInt();
+            switch (operation) {
+            case op_dummy -> {
+                // do nothing
+            }
+            case op_exit, op_disconnect -> {
+                close();
+                return;
+            }
+            case op_event -> {
+                if (!processSingleEvent()) {
+                    log.log(DEBUG, "Could not process entire event, resetting position for next channel read");
+                    // Restoring position, so we reprocess the event if the rest of the data has been received
+                    eventBuffer.reset();
+                    return;
+                }
+            }
+            default -> log.log(ERROR, "Unexpected event operation received: {0}, position {1}, limit {2}", operation,
+                    eventBuffer.position(), eventBuffer.limit());
+            }
         }
     }
 
@@ -302,6 +298,16 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         } catch (BufferUnderflowException ex) {
             // Insufficient data to process full event
             return false;
+        }
+    }
+
+    private static void traceLogEventBuffer(ByteBuffer eventBuffer) {
+        if (log.isLoggable(TRACE)) {
+            if (eventBuffer.hasArray()) {
+                log.log(TRACE, eventBuffer + ": " + ByteArrayHelper.toHexString(eventBuffer.array()).substring(0, 2 * eventBuffer.limit()));
+            } else {
+                log.log(TRACE, eventBuffer.toString());
+            }
         }
     }
 
