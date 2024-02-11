@@ -129,7 +129,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public boolean nullsAreSortedLow() throws SQLException {
         // in Firebird 1.5.x NULLs are always sorted at the end
         // in Firebird 2.0.x NULLs are sorted low
-        return gdsHelper.compareToVersion(2, 0) >= 0;
+        return gdsHelper.compareToVersion(2) >= 0;
     }
 
     @Override
@@ -143,7 +143,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public boolean nullsAreSortedAtEnd() throws SQLException {
         // in Firebird 1.5.x NULLs are always sorted at the end
         // in Firebird 2.0.x NULLs are sorted low
-        return gdsHelper.compareToVersion(2, 0) < 0;
+        return gdsHelper.compareToVersion(2) < 0;
     }
 
     @Override
@@ -1017,7 +1017,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public int getMaxIndexLength() throws SQLException {
-        if (gdsHelper.compareToVersion(2, 0) < 0) {
+        if (gdsHelper.compareToVersion(2) < 0) {
             return 252; // See http://www.firebirdsql.org/en/firebird-technical-specifications/
         } else {
             return 0; // 1/4 of page size, maybe retrieve page size and use that?
@@ -1069,7 +1069,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public int getMaxStatementLength() throws SQLException {
-        if (gdsHelper.compareToVersion(3, 0) >= 0) {
+        if (gdsHelper.compareToVersion(3) >= 0) {
             // 10 MB
             return 10 * 1024 * 1024;
         } else {

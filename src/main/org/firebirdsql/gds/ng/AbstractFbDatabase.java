@@ -364,6 +364,9 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                     case isc_info_db_sql_dialect -> setDatabaseDialect((short) value);
                     case isc_info_ods_version -> setOdsMajor(value);
                     case isc_info_ods_minor_version -> setOdsMinor(value);
+                    default -> {
+                        assert false : "Missing switch case (must cover parent case): " + arg;
+                    }
                     }
                 }
                 case isc_info_firebird_version -> {

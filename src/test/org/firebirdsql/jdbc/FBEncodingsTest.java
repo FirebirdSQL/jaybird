@@ -179,6 +179,7 @@ class FBEncodingsTest {
 
     private static final int UKRAINIAN_TEST_ID = 1;
 
+    @SuppressWarnings("java:S5783")
     @Test
     void testUkrainian() throws Exception {
         Properties props = new Properties();
@@ -350,6 +351,7 @@ class FBEncodingsTest {
 
     private static final int GERMAN_TEST_ID = 2;
 
+    @SuppressWarnings("java:S5783")
     @Test
     void testGerman() throws Exception {
         Properties props = new Properties();
@@ -404,6 +406,7 @@ class FBEncodingsTest {
 
     private static final int HUNGARIAN_TEST_ID = 3;
 
+    @SuppressWarnings("java:S5783")
     @Test
     void testHungarian() throws Exception {
         Properties props = new Properties();

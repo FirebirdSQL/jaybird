@@ -71,12 +71,14 @@ class CollectionUtilsTest {
         assertEquals(Arrays.asList("item1", "item2", "item3", "item4", "item5"), list);
     }
 
+    @SuppressWarnings("java:S5778")
     @Test
     void growToSize_fixedSizeList() {
         assertThrows(UnsupportedOperationException.class,
                 () -> CollectionUtils.growToSize(Collections.singletonList("item1"), 4));
     }
 
+    @SuppressWarnings("java:S5778")
     @Test
     void growToSize_immutableList() {
         assertThrows(UnsupportedOperationException.class,

@@ -494,39 +494,41 @@ public abstract class FBField {
         case BIG_INTEGER_CLASS_NAME -> setBigInteger((BigInteger) value);
         case FB_ROW_ID_CLASS_NAME -> setRowId((RowId) value);
         case DECIMAL32_CLASS_NAME, DECIMAL64_CLASS_NAME, DECIMAL128_CLASS_NAME -> setDecimal((Decimal<?>) value);
-        default -> {
-            if (value instanceof BigDecimal bigDecimal) {
-                setBigDecimal(bigDecimal);
-            } else if (value instanceof BigInteger bigInteger) {
-                setBigInteger(bigInteger);
-            } else if (value instanceof RowId rowId) {
-                setRowId(rowId);
-            } else if (value instanceof InputStream inputStream) {
-                setBinaryStream(inputStream);
-            } else if (value instanceof Reader reader) {
-                setCharacterStream(reader);
-            } else if (value instanceof FBClob fbClob) {
-                setClob(fbClob);
-            } else if (value instanceof Clob clob) {
-                setCharacterStream(clob.getCharacterStream());
-            } else if (value instanceof FBBlob fbBlob) {
-                setBlob(fbBlob);
-            }  else if (value instanceof Blob blob) {
-                setBinaryStream(blob.getBinaryStream());
-            } else if (value instanceof Date date) {
-                setDate(date);
-            } else if (value instanceof Time time) {
-                setTime(time);
-            } else if (value instanceof Timestamp timestamp) {
-                setTimestamp(timestamp);
-            } else if (value instanceof java.util.Date juDate) {
-                setTimestamp(new Timestamp(juDate.getTime()));
-            } else if (value instanceof Decimal<?> decimal) {
-                setDecimal(decimal);
-            } else {
-                throw invalidSetConversion(value.getClass());
-            }
+        default -> setObjectWithInstanceOf(value);
         }
+    }
+
+    private void setObjectWithInstanceOf(Object value) throws SQLException {
+        if (value instanceof BigDecimal bigDecimal) {
+            setBigDecimal(bigDecimal);
+        } else if (value instanceof BigInteger bigInteger) {
+            setBigInteger(bigInteger);
+        } else if (value instanceof RowId rowId) {
+            setRowId(rowId);
+        } else if (value instanceof InputStream inputStream) {
+            setBinaryStream(inputStream);
+        } else if (value instanceof Reader reader) {
+            setCharacterStream(reader);
+        } else if (value instanceof FBClob fbClob) {
+            setClob(fbClob);
+        } else if (value instanceof Clob clob) {
+            setCharacterStream(clob.getCharacterStream());
+        } else if (value instanceof FBBlob fbBlob) {
+            setBlob(fbBlob);
+        }  else if (value instanceof Blob blob) {
+            setBinaryStream(blob.getBinaryStream());
+        } else if (value instanceof Date date) {
+            setDate(date);
+        } else if (value instanceof Time time) {
+            setTime(time);
+        } else if (value instanceof Timestamp timestamp) {
+            setTimestamp(timestamp);
+        } else if (value instanceof java.util.Date juDate) {
+            setTimestamp(new Timestamp(juDate.getTime()));
+        } else if (value instanceof Decimal<?> decimal) {
+            setDecimal(decimal);
+        } else {
+            throw invalidSetConversion(value.getClass());
         }
     }
 

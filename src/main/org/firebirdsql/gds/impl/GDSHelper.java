@@ -199,12 +199,10 @@ public final class GDSHelper {
     }
 
     /**
-     * Compares the version of this database to the specified major and
-     * minor version.
+     * Compares the version of this database to the specified major and minor version.
      * <p>
-     * This method follows the semantics of {@link Comparable}: returns a
-     * negative value if the version of this database connection is smaller than
-     * the supplied arguments, 0 if they are equal or positive if its bigger.
+     * This method follows the semantics of {@link Comparable}: returns a negative value if the version of this database 
+     * connection is smaller than the supplied arguments, 0 if they are equal or positive if its bigger.
      * </p>
      *
      * @param major
@@ -213,6 +211,7 @@ public final class GDSHelper {
      *         Minor version to compare
      * @return a negative integer, zero, or a positive integer as this database version is less than, equal to,
      * or greater than the specified major and minor version
+     * @see #compareToVersion(int) 
      */
     public int compareToVersion(int major, int minor) {
         int differenceMajor = getDatabaseProductMajorVersion() - major;
@@ -220,6 +219,23 @@ public final class GDSHelper {
             return getDatabaseProductMinorVersion() - minor;
         }
         return differenceMajor;
+    }
+
+    /**
+     * Compares the version of this database to the specified major version.
+     * <p>
+     * This method follows the semantics of {@link Comparable}: returns a negative value if the version of this database 
+     * connection is smaller than the supplied arguments, 0 if they are equal or positive if its bigger.
+     * </p>
+     *
+     * @param major
+     *         Major version to compare
+     * @return a negative integer, zero, or a positive integer as this database version is less than, equal to,
+     * or greater than the specified major version
+     * @see #compareToVersion(int, int) 
+     */
+    public int compareToVersion(int major) {
+        return getDatabaseProductMajorVersion() - major;
     }
 
     /**

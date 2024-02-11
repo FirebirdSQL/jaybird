@@ -106,9 +106,9 @@ public final class FBEscapedParser {
 
         ParserState state = ParserState.INITIAL_STATE;
         // Note initialising to 8 as that is the minimum size in Oracle Java, and we (usually) need less than the default of 16
-        final Deque<StringBuilder> bufferStack = new ArrayDeque<>(8);
+        final var bufferStack = new ArrayDeque<StringBuilder>(8);
         final int sqlLength = sql.length();
-        StringBuilder buffer = new StringBuilder(sqlLength);
+        var buffer = new StringBuilder(sqlLength);
 
         for (int i = 0; i < sqlLength; i++) {
             char currentChar = sql.charAt(i);
@@ -155,11 +155,10 @@ public final class FBEscapedParser {
             default -> throw new FBSQLParseException("Unexpected parser state " + state);
             }
         }
-        if (bufferStack.isEmpty()) {
-            return buffer.toString();
-        } else {
+        if (!bufferStack.isEmpty()) {
             throw new FBSQLParseException("Unbalanced JDBC escape, too many '{'");
         }
+        return buffer.toString();
     }
 
     private static char qLiteralEndChar(char startChar) {

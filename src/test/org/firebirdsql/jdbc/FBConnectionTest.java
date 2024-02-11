@@ -161,7 +161,7 @@ class FBConnectionTest {
 
             try (Statement stmt = connection.createStatement()) {
                 stmt.executeQuery("SELECT * FROM rdb$database");
-                stmt.executeQuery("SELECT * FROM rdb$database");
+                assertDoesNotThrow(() -> stmt.executeQuery("SELECT * FROM rdb$database"));
             }
         }
     }
@@ -254,7 +254,7 @@ class FBConnectionTest {
         try (Connection connection = getConnectionViaDriverManager()) {
             connection.setAutoCommit(true);
             DatabaseMetaData metaData = connection.getMetaData();
-            ResultSet rs = metaData.getTables(null, null, "RDB$DATABASE", null);
+            ResultSet rs = assertDoesNotThrow(() -> metaData.getTables(null, null, "RDB$DATABASE", null));
             rs.close();
         }
     }

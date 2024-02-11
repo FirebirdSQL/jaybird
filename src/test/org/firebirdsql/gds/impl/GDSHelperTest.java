@@ -36,10 +36,12 @@ class GDSHelperTest {
     void testCompareToVersion() throws Exception {
         try (FBConnection connection = (FBConnection) getConnectionViaDriverManager()) {
             GDSHelper gdsHelper = connection.getGDSHelper();
-            int actualMajor = gdsHelper.getDatabaseProductMajorVersion();
-            int actualMinor = gdsHelper.getDatabaseProductMinorVersion();
+            final int actualMajor = gdsHelper.getDatabaseProductMajorVersion();
+            final int actualMinor = gdsHelper.getDatabaseProductMinorVersion();
 
             assertEquals(0, gdsHelper.compareToVersion(actualMajor, actualMinor),
+                    "compareToVersion should return 0 for identical versions");
+            assertEquals(0, gdsHelper.compareToVersion(actualMajor),
                     "compareToVersion should return 0 for identical versions");
             assertTrue(gdsHelper.compareToVersion(actualMajor, actualMinor + 1) < 0,
                     "compareToVersion should return negative value for comparison with same major and bigger minor");
@@ -47,7 +49,11 @@ class GDSHelperTest {
                     "compareToVersion should return positive value for comparison with same major and smaller minor");
             assertTrue(gdsHelper.compareToVersion(actualMajor + 1, 0) < 0,
                     "compareToVersion should return negative value for comparison with bigger major");
+            assertTrue(gdsHelper.compareToVersion(actualMajor + 1) < 0,
+                    "compareToVersion should return negative value for comparison with bigger major");
             assertTrue(gdsHelper.compareToVersion(actualMajor - 1, 999999) > 0,
+                    "compareToVersion should return positive value for comparison with smaller major");
+            assertTrue(gdsHelper.compareToVersion(actualMajor - 1) > 0,
                     "compareToVersion should return positive value for comparison with smaller major");
         }
     }

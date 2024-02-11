@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 class ConnectionPropertyTest {
 
+    @SuppressWarnings("java:S5778")
     @ParameterizedTest
     @NullSource
     @EmptySource

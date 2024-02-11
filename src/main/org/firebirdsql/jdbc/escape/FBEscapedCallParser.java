@@ -66,13 +66,13 @@ public final class FBEscapedCallParser {
             }
         }
         case ',' -> {
-            if (state != LITERAL_STATE && state != BRACE_STATE) {
+            if (state != LITERAL_STATE && state != PARENS_STATE) {
                 state = COMMA_STATE;
             }
         }
         case '(', ')' -> {
             if (state != LITERAL_STATE) {
-                state = BRACE_STATE;
+                state = PARENS_STATE;
             }
         }
         case '{', '}' -> {
@@ -81,7 +81,7 @@ public final class FBEscapedCallParser {
             }
         }
         default -> {
-            if (state != LITERAL_STATE && state != BRACE_STATE) {
+            if (state != LITERAL_STATE && state != PARENS_STATE) {
                 state = NORMAL_STATE;
             }
         }
@@ -135,6 +135,17 @@ public final class FBEscapedCallParser {
                 (isExecuteWordProcessed && isProcedureWordProcessed);
     }
 
+    private void reset() {
+        procedureCall = new FBProcedureCall();
+
+        isExecuteWordProcessed = false;
+        isProcedureWordProcessed = false;
+        isCallWordProcessed = false;
+        isNameProcessed = false;
+
+        state = NORMAL_STATE;
+    }
+
     /**
      * Converts escaped parts in {@code sql} to native representation.
      *
@@ -146,32 +157,25 @@ public final class FBEscapedCallParser {
     public FBProcedureCall parseCall(String sql) throws SQLException {
         sql = cleanUpCall(sql);
 
-        procedureCall = new FBProcedureCall();
-
-        isExecuteWordProcessed = false;
-        isProcedureWordProcessed = false;
-        isCallWordProcessed = false;
-        isNameProcessed = false;
+        reset();
 
         boolean isFirstOutParam = false;
         int paramCount = 0;
         int paramPosition = 0;
 
-        state = NORMAL_STATE;
-
-        final StringBuilder buffer = new StringBuilder(INITIAL_CAPACITY);
+        final var buffer = new StringBuilder(INITIAL_CAPACITY);
 
         for (int i = 0, length = sql.length(); i < length; i++) {
             char currentChar = sql.charAt(i);
             switchState(currentChar);
 
             switch (state) {
-            case NORMAL_STATE:
-                // if we have an equal sign, most likely {? = call ...} syntax is used (there's hardly any place for
+            case NORMAL_STATE -> {
+                // If we have an equals sign, most likely {? = call ...} syntax is used (there's hardly any place for
                 // this symbol in procedure parameters).
                 // To be sure, we check if no brace is open and if buffer contains only '?'.
                 if (currentChar == '=' && openBraceCount <= 0 && !buffer.isEmpty() && buffer.charAt(0) == '?'
-                    && !isFirstOutParam && !isNameProcessed) {
+                        && !isFirstOutParam && !isNameProcessed) {
                     FBProcedureParam param = procedureCall.addParam(paramPosition, "?");
                     paramCount++;
                     param.setIndex(paramCount);
@@ -181,42 +185,37 @@ public final class FBEscapedCallParser {
                 } else {
                     buffer.append(currentChar);
                 }
-                break;
-            case SPACE_STATE:
+            }
+            case SPACE_STATE -> {
                 if (buffer.isEmpty()) {
                     state = NORMAL_STATE;
                 } else if (openBraceCount > 0 || isNameProcessed) {
                     buffer.append(currentChar);
                     state = NORMAL_STATE;
                 } else {
-                    // If procedure name was not yet processed, process the token. We look for the sequence
-                    // EXECUTE PROCEDURE <name>.
+                    // If procedure name was not yet processed, process the token.
+                    // We look for the sequence EXECUTE PROCEDURE <name>.
                     boolean tokenProcessed = processToken(buffer.toString().trim());
                     if (tokenProcessed) {
                         buffer.setLength(0);
                         state = NORMAL_STATE;
                         if (isNameProcessed) {
-                            // If we just found a name, fast-forward to the 
-                            // opening parenthesis, if there is one
+                            // If we just found a name, fast-forward to the opening parenthesis, if there is one.
                             int j = i;
-                            while (j < length - 1
-                                    && Character.isWhitespace(sql.charAt(j))) j++;
-                            if (sql.charAt(j) == '(')
+                            while (j < length - 1 && Character.isWhitespace(sql.charAt(j))) {
+                                j++;
+                            }
+                            if (sql.charAt(j) == '(') {
                                 i = j;
+                            }
                         }
                     }
                 }
-                break;
-            case BRACE_STATE:
-                // if we have an opening brace and we already processed
-                // EXECUTE PROCEDURE words, but still do not have procedure
-                // name set, we can be sure that buffer contains procedure
-                // name.
-                boolean isProcedureName =
-                        currentChar == '(' &&
-                                isCallKeywordProcessed() &&
-                                !isNameProcessed;
-
+            }
+            case PARENS_STATE -> {
+                // if we have an opening brace, and we already processed EXECUTE PROCEDURE words, but still do not have
+                // procedure name set, we can be sure that buffer contains procedure name.
+                boolean isProcedureName = currentChar == '(' && isCallKeywordProcessed() && !isNameProcessed;
                 if (isProcedureName) {
                     if (buffer.isEmpty()) {
                         throw new FBSQLParseException("Procedure name is empty.");
@@ -234,12 +233,12 @@ public final class FBEscapedCallParser {
                     }
                 }
                 state = NORMAL_STATE;
-                break;
-            case CURLY_BRACE_STATE:
+            }
+            case CURLY_BRACE_STATE -> {
                 buffer.append(currentChar);
                 state = NORMAL_STATE;
-                break;
-            case COMMA_STATE:
+            }
+            case COMMA_STATE -> {
                 if (openBraceCount > 0) {
                     buffer.append(currentChar);
                     continue;
@@ -256,9 +255,8 @@ public final class FBEscapedCallParser {
                 paramPosition++;
 
                 state = NORMAL_STATE;
-                break;
-            case LITERAL_STATE:
-                buffer.append(currentChar);
+            }
+            case LITERAL_STATE -> buffer.append(currentChar);
             }
         }
 
@@ -277,15 +275,13 @@ public final class FBEscapedCallParser {
             endIndex--;
         }
 
-        // if buffer starts with '(', remove it,
-        // we do not want this thing to bother us
+        // If buffer starts with '(', remove it, we do not want this thing to bother us
         if (startIndex < endIndex && buffer.charAt(startIndex) == '(') {
             startIndex++;
         }
 
-        // if buffer ends with ')', remove it
-        // it should match an opening brace right after the procedure
-        // name, and we assume that all syntax check was already done.
+        // If buffer ends with ')', remove it,  it should match an opening brace right after the procedure name, and
+        // we assume that all syntax checks were already done.
         if (startIndex < endIndex && buffer.charAt(endIndex - 1) == ')') {
             endIndex--;
         }
@@ -367,7 +363,7 @@ public final class FBEscapedCallParser {
     enum ParserState {
         NORMAL_STATE,
         LITERAL_STATE,
-        BRACE_STATE,
+        PARENS_STATE,
         CURLY_BRACE_STATE,
         SPACE_STATE,
         COMMA_STATE,

@@ -273,8 +273,8 @@ public final class FBEscapedFunctionHelper {
         }
         final String paramsString = functionCall.substring(parenthesisStart + 1, functionCall.length() - 1);
 
-        final List<String> params = new ArrayList<>();
-        final StringBuilder sb = new StringBuilder();
+        final var params = new ArrayList<String>();
+        final var sb = new StringBuilder();
         boolean inQuotes = false;
         boolean inDoubleQuotes = false;
         // ignore initial whitespace
@@ -283,8 +283,7 @@ public final class FBEscapedFunctionHelper {
 
         for (int i = 0, n = paramsString.length(); i < n; i++) {
             char currentChar = paramsString.charAt(i);
-            // we coalesce spaces, tabs and new lines into a single space if
-            // we are not in a string literal
+            // we coalesce spaces, tabs and new lines into a single space if we are not in a string literal
             if (Character.isWhitespace(currentChar)) {
                 if (inQuotes || inDoubleQuotes) {
                     sb.append(currentChar);
@@ -295,26 +294,26 @@ public final class FBEscapedFunctionHelper {
                 continue;
             }
             switch (currentChar) {
-            case '\'':
+            case '\'' -> {
                 sb.append(currentChar);
                 if (!inDoubleQuotes)
                     inQuotes = !inQuotes;
                 coalesceSpace = false;
-                break;
-            case '"':
+            }
+            case '"' -> {
                 sb.append(currentChar);
                 if (!inQuotes)
                     inDoubleQuotes = !inDoubleQuotes;
                 coalesceSpace = false;
-                break;
-            case '(':
+            }
+            case '(' -> {
                 if (!(inQuotes || inDoubleQuotes)) {
                     nestedParentheses++;
                 }
                 sb.append('(');
                 coalesceSpace = false;
-                break;
-            case ')':
+            }
+            case ')' -> {
                 if (!(inQuotes || inDoubleQuotes)) {
                     nestedParentheses--;
                     if (nestedParentheses < 0) {
@@ -323,10 +322,9 @@ public final class FBEscapedFunctionHelper {
                 }
                 sb.append(')');
                 coalesceSpace = false;
-                break;
-            // comma is considered parameter separator
-            // if it is not within the string literal or within parentheses 
-            case ',':
+            }
+            // comma is a parameter separator if it is not within the string literal or within parentheses
+            case ',' -> {
                 if (inQuotes || inDoubleQuotes || nestedParentheses > 0) {
                     sb.append(currentChar);
                 } else {
@@ -335,19 +333,21 @@ public final class FBEscapedFunctionHelper {
                     // Ignore whitespace after parameter
                     coalesceSpace = true;
                 }
-                break;
-            // by default we add chars to the buffer  
-            default:
+            }
+            // by default, we add chars to the buffer
+            default -> {
                 sb.append(currentChar);
                 coalesceSpace = false;
+            }
             }
         }
 
         // add last parameter if present
-        if (sb.length() > 0)
+        if (!sb.isEmpty()) {
             params.add(sb.toString());
+        }
 
-        // after processing all parameters all string literals should be closed
+        // after processing all parameters, all string literals should be closed
         if (inQuotes || inDoubleQuotes) {
             throw new FBSQLParseException("String literal is not properly closed.");
         }

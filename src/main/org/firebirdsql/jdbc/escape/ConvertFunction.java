@@ -103,7 +103,7 @@ final class ConvertFunction implements SQLFunction {
             }
         }
         case "BINARY" -> {
-            // Caveat: without parameters, size fixed at 50 (seems a reasonable trade off)
+            // Caveat: without parameters, size fixed at 50 (seems a reasonable trade-off)
             // For maximum backwards compatibility, we use CHAR, not BINARY (introduced in Firebird 4.0)
             dataType = "CHAR";
             if (parameters == null) {
@@ -113,7 +113,7 @@ final class ConvertFunction implements SQLFunction {
             }
         }
         case "VARBINARY" -> {
-            // Caveat: without parameters, size fixed at 50 (seems a reasonable trade off)
+            // Caveat: without parameters, size fixed at 50 (seems a reasonable trade-off)
             dataType = "VARCHAR";
             if (parameters == null) {
                 parameters = "(50) CHARACTER SET OCTETS";
@@ -138,6 +138,9 @@ final class ConvertFunction implements SQLFunction {
         case "TIMESTAMP_WITH_TIMEZONE", "TIMESTAMP_WITH_TIME_ZONE" -> {
             dataType = "TIMESTAMP WITH TIME ZONE";
             parameters = null;
+        }
+        default -> {
+            // do nothing
         }
         }
         return renderCast(value, parameters == null ? dataType : dataType + parameters);

@@ -21,6 +21,7 @@ package org.firebirdsql.jaybird.xca;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
@@ -520,58 +521,15 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
                 tempLocalTx = tempMc.getLocalTransaction();
                 tempLocalTx.begin();
 
-                long fbTransactionId = 0;
-                boolean found = false;
-
-                if (tempMc.getGDSHelper().compareToVersion(2, 0) < 0) {
-                    // Find Xid by scanning
-                    FBXid[] inLimboIds = (FBXid[]) tempMc.getXAResource().recover(XAResource.TMSTARTRSCAN);
-                    for (FBXid inLimboId : inLimboIds) {
-                        if (inLimboId.equals(xid)) {
-                            found = true;
-                            fbTransactionId = inLimboId.getFirebirdTransactionId();
-                        }
-                    }
-                } else {
-                    // Find Xid by intelligent scan
-                    FBXid foundXid = (FBXid) tempMc.findSingleXid(xid);
-                    if (foundXid != null && foundXid.equals(xid)) {
-                        found = true;
-                        fbTransactionId = foundXid.getFirebirdTransactionId();
-                    }
-                }
-
-                if (!found) {
+                long fbTransactionId = findTransaction(tempMc, xid);
+                if (fbTransactionId == -1) {
                     throw new FBXAException((commit ? "Commit" : "Rollback") + " called with unknown transaction.",
                             XAException.XAER_NOTA);
                 }
 
-                FbDatabase dbHandle = tempMc.getGDSHelper().getCurrentDatabase();
-                FbTransaction trHandle = dbHandle.reconnectTransaction(fbTransactionId);
-
-                // complete transaction by commit or rollback
-                if (commit) {
-                    trHandle.commit();
-                } else {
-                    trHandle.rollback();
-                }
-
-                if (tempMc.getGDSHelper().compareToVersion(3, 0) < 0) {
-                    // remove heuristic data from rdb$transactions (only possible in versions before Firebird 3)
-                    try {
-                        String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
-
-                        FbTransaction trHandle2 = dbHandle.startTransaction(getDefaultTpb().getTransactionParameterBuffer());
-                        try (FbStatement stmtHandle2 = dbHandle.createStatement(trHandle2)) {
-                            stmtHandle2.prepare(query);
-                            stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
-                        } finally {
-                            trHandle2.commit();
-                        }
-                    } catch (SQLException sqle) {
-                        throw new FBXAException("unable to remove in limbo transaction from rdb$transactions where rdb$transaction_id = " + fbTransactionId, XAException.XAER_RMERR);
-                    }
-                }
+                GDSHelper gdsHelper = tempMc.getGDSHelper();
+                completeTransaction(gdsHelper, fbTransactionId, commit);
+                tryDeleteTransactionInfo(gdsHelper, fbTransactionId);
             } catch (SQLException e) {
                 throw new FBXAException("unable to complete in limbo transaction",
                         determineLimboCompletionErrorCode(e), e);
@@ -586,6 +544,87 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
             }
         } catch (SQLException ex) {
             throw new FBXAException(XAException.XAER_RMERR, ex);
+        }
+    }
+
+    /**
+     * Finds the transaction id associated with {@code xid}.
+     *
+     * @param xid
+     *         XID to find
+     * @param mc
+     *         managed connection to use for the query
+     * @return the transaction id, or {@code -1} if no transaction was found for {@code xid}
+     */
+    private static long findTransaction(FBManagedConnection mc, Xid xid) throws SQLException, XAException {
+        if (mc.getGDSHelper().compareToVersion(2) < 0) {
+            // Find Xid by scanning
+            FBXid[] inLimboIds = (FBXid[]) mc.getXAResource().recover(XAResource.TMSTARTRSCAN);
+            for (FBXid inLimboId : inLimboIds) {
+                if (inLimboId.equals(xid)) {
+                    return inLimboId.getFirebirdTransactionId();
+                }
+            }
+        } else {
+            // Find Xid by intelligent scan
+            FBXid foundXid = (FBXid) mc.findSingleXid(xid);
+            if (foundXid != null && foundXid.equals(xid)) {
+                return foundXid.getFirebirdTransactionId();
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Completes the specified transaction id by reconnecting and commiting or rolling back.
+     *
+     * @param gdsHelper
+     *         GDS helper
+     * @param fbTransactionId
+     *         transaction id
+     * @param commit
+     *         {@code true} to complete by <em>commit</em>, {@code false} to complete by <em>rollback</em>
+     * @throws SQLException
+     *         if it is not possible to reconnect the transaction, or the commit or rollback fails
+     */
+    private static void completeTransaction(GDSHelper gdsHelper, long fbTransactionId, boolean commit)
+            throws SQLException {
+        FbDatabase dbHandle = gdsHelper.getCurrentDatabase();
+        FbTransaction trHandle = dbHandle.reconnectTransaction(fbTransactionId);
+        // complete transaction by commit or rollback
+        if (commit) {
+            trHandle.commit();
+        } else {
+            trHandle.rollback();
+        }
+    }
+
+    /**
+     * Attempts to delete the transaction information from the database (only on Firebird 2.5 and older).
+     *
+     * @param gdsHelper
+     *         GDS helper
+     * @param fbTransactionId
+     *         transaction id to attempt to delete
+     * @throws FBXAException
+     *         if an attempt was made to delete, and this failed with an exception
+     */
+    private void tryDeleteTransactionInfo(GDSHelper gdsHelper, long fbTransactionId) throws FBXAException {
+        if (gdsHelper.compareToVersion(3) >= 0) return;
+        // remove heuristic data from rdb$transactions (only possible in versions before Firebird 3)
+        try {
+            String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
+
+            FbDatabase dbHandle = gdsHelper.getCurrentDatabase();
+            FbTransaction trHandle = dbHandle.startTransaction(getDefaultTpb().getTransactionParameterBuffer());
+            try (FbStatement stmtHandle = dbHandle.createStatement(trHandle)) {
+                stmtHandle.prepare(query);
+                stmtHandle.execute(RowValue.EMPTY_ROW_VALUE);
+            } finally {
+                trHandle.commit();
+            }
+        } catch (SQLException sqle) {
+            throw new FBXAException("unable to remove in limbo transaction from rdb$transactions where rdb$transaction_id = " + fbTransactionId, XAException.XAER_RMERR);
         }
     }
 
