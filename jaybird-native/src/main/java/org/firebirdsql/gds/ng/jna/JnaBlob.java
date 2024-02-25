@@ -28,6 +28,7 @@ import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
@@ -129,7 +130,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             if (blobParameterBuffer != null) {
                 bpb = blobParameterBuffer.toBytesWithType();
             } else {
-                bpb = new byte[0];
+                bpb = ByteArrayHelper.emptyByteArray();
             }
             try (LockCloseable ignored = withLock()) {
                 checkDatabaseAttached();

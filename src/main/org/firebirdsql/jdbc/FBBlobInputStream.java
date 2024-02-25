@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -33,9 +34,7 @@ import java.util.Objects;
  */
 public final class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobInputStream {
 
-    private static final byte[] EMPTY_BUFFER = new byte[0];
-
-    private byte[] buffer = EMPTY_BUFFER;
+    private byte[] buffer = ByteArrayHelper.emptyByteArray();
     private FbBlob blobHandle;
     private int pos;
     private int lim;
@@ -256,7 +255,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
             } finally {
                 blobHandle = null;
                 closed = true;
-                buffer = EMPTY_BUFFER;
+                buffer = ByteArrayHelper.emptyByteArray();
                 pos = 0;
                 lim = 0;
             }

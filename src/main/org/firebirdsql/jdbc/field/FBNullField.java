@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -38,8 +39,6 @@ import java.util.Calendar;
 final class FBNullField extends FBField {
 
     private static final String NULL_CONVERSION_ERROR = "Received non-NULL value of a NULL field.";
-
-    private static final byte[] DUMMY_OBJECT = new byte[0];
 
     FBNullField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -61,7 +60,7 @@ final class FBNullField extends FBField {
     // TODO set/getClob and set/getBlob are missing, relevant to add?
 
     private void setDummyObject() {
-        setFieldData(DUMMY_OBJECT);
+        setFieldData(ByteArrayHelper.emptyByteArray());
     }
 
     private void checkNull() throws SQLException {

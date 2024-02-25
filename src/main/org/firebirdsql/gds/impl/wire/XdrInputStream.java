@@ -29,6 +29,7 @@ package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.JaybirdSystemProperties;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.util.InternalApi;
 
 import javax.crypto.Cipher;
@@ -112,7 +113,7 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
      *         if an error occurs while reading from the underlying input stream
      */
     public byte[] readBuffer(int len) throws IOException {
-        if (len == 0) return new byte[0];
+        if (len == 0) return ByteArrayHelper.emptyByteArray();
         byte[] buffer = readRawBuffer(len);
         skipPadding(len);
         return buffer;

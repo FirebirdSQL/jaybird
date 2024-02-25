@@ -25,25 +25,29 @@
  */
 package org.firebirdsql.jaybird.xca;
 
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
+
 import javax.transaction.xa.Xid;
+import java.io.Serial;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * This object encapsulates the ID of a transaction.
- * This implementation is immutable and always serializable at runtime.
+ * This object encapsulates the ID of a transaction. This implementation is immutable and always serializable at
+ * runtime.
  *
  * @author Rickard Oberg (rickard.oberg@telkel.com)
  * @author Ole Husgaard
+ * @author Mark Rotteveel
  */
 public class XidImpl implements Xid, Serializable {
 
     public static final int JBOSS_FORMAT_ID = 0x0101;
+    @Serial
     private static final long serialVersionUID = 1L;
-
-    // Attributes ----------------------------------------------------
 
     /**
      * Hash code of this instance. This is really a sequence number.
@@ -53,25 +57,22 @@ public class XidImpl implements Xid, Serializable {
     /**
      * Global transaction id of this instance.
      * <p>
-     * The coding of this class depends on the fact that this variable is
-     * initialized in the constructor and never modified. References to
-     * this array are never given away, instead a clone is delivered.
+     * The coding of this class depends on the fact that this variable is initialized in the constructor and never
+     * modified. References to this array are never given away, instead a clone is delivered.
      * </p>
      */
     private final byte[] globalId;
 
     /**
-     * Branch qualifier of this instance.
-     * This identifies the branch of a transaction.
+     * Branch qualifier of this instance. This identifies the branch of a transaction.
      */
     private final byte[] branchId;
 
     /**
      * The host name of this host, followed by a slash.
      * <p>
-     * This is used for building globally unique transaction identifiers.
-     * It would be safer to use the IP address, but a host name is better
-     * for humans to read and will do for now.
+     * This is used for building globally unique transaction identifiers. It would be safer to use the IP address, but
+     * a host name is better for humans to read and will do for now.
      * </p>
      */
     private static final String HOST_NAME;
@@ -88,14 +89,7 @@ public class XidImpl implements Xid, Serializable {
         return nextId.getAndIncrement();
     }
 
-    /**
-     * Singleton for no branch qualifier.
-     */
-    private static final byte[] noBranchQualifier = new byte[0];
-
-    /*
-     *  Initialize the <code>hostName</code> class variable.
-     */
+    // Initialize the hostName class variable.
     static {
         String tempHostName;
         try {
@@ -115,8 +109,7 @@ public class XidImpl implements Xid, Serializable {
      * Return a string that describes any Xid instance.
      */
     static String toString(Xid id) {
-        if (id == null)
-            return "[NULL Xid]";
+        if (id == null) return "[NULL Xid]";
 
         String s = id.getClass().getName();
         s = s.substring(s.lastIndexOf('.') + 1);
@@ -127,15 +120,13 @@ public class XidImpl implements Xid, Serializable {
         return s;
     }
 
-    // Constructors --------------------------------------------------
-
     /**
      * Create a new instance.
      */
     public XidImpl() {
         hash = getNextId();
         globalId = (HOST_NAME + hash).getBytes();
-        branchId = noBranchQualifier;
+        branchId = ByteArrayHelper.emptyByteArray();
     }
 
     /**
@@ -150,7 +141,8 @@ public class XidImpl implements Xid, Serializable {
      */
     public byte[] getBranchQualifier() {
         if (branchId.length == 0) {
-            return branchId; // Zero length arrays are immutable.
+            // Zero length arrays are immutable.
+            return branchId;
         } else {
             return branchId.clone();
         }
@@ -159,8 +151,8 @@ public class XidImpl implements Xid, Serializable {
     /**
      * Return the format identifier of this transaction.
      * <p>
-     * The format identifier augments the global id and specifies
-     * how the global id and branch qualifier should be interpreted.
+     * The format identifier augments the global id and specifies how the global id and branch qualifier should be
+     * interpreted.
      */
     public int getFormatId() {
         // The id we return here should be different from all other transaction
@@ -181,31 +173,13 @@ public class XidImpl implements Xid, Serializable {
     /**
      * Compare for equality.
      * <p>
-     * Instances are considered equal if they are both instances of XidImpl,
-     * and if they have the same global transaction id and transaction
-     * branch qualifier.
+     * Instances are considered equal if they are both instances of XidImpl, and if they have the same global
+     * transaction id and transaction branch qualifier.
+     * </p>
      */
     public boolean equals(Object obj) {
-        if (obj instanceof XidImpl) {
-            XidImpl other = (XidImpl) obj;
-
-            if (globalId.length != other.globalId.length || branchId.length != other.branchId.length) {
-                return false;
-            }
-
-            for (int i = 0; i < globalId.length; ++i) {
-                if (globalId[i] != other.globalId[i]) {
-                    return false;
-                }
-            }
-
-            for (int i = 0; i < branchId.length; ++i) {
-                if (branchId[i] != other.branchId[i]) {
-                    return false;
-                }
-            }
-
-            return true;
+        if (obj instanceof XidImpl other && Arrays.equals(globalId, other.globalId)) {
+            return Arrays.equals(branchId, other.branchId);
         }
         return false;
     }
@@ -217,4 +191,5 @@ public class XidImpl implements Xid, Serializable {
     public String toString() {
         return toString(this);
     }
+
 }

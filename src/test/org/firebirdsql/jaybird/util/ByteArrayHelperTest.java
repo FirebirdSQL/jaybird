@@ -141,4 +141,9 @@ class ByteArrayHelperTest {
         assertEquals(1, ByteArrayHelper.indexOf(new byte[] { 2, 1, 3, 4, 1 }, (byte) 1));
     }
 
+    @Test
+    void emptyByteArray() {
+        assertArrayEquals(new byte[0], ByteArrayHelper.emptyByteArray(), "expected a zero-length byte array");
+    }
+
 }

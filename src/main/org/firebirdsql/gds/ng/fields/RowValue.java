@@ -31,6 +31,7 @@ public sealed class RowValue {
     /**
      * Marker array object for uninitialized fields
      */
+    // NOTE: Do not assign ByteArrayHelper.empty(), as this must be a unique instance
     private static final byte[] NOT_INITIALIZED = new byte[0];
 
     public static final RowValue EMPTY_ROW_VALUE = new RowValue(0, false);

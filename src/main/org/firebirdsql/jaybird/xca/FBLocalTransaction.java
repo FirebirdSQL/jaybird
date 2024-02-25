@@ -21,6 +21,7 @@ package org.firebirdsql.jaybird.xca;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -153,14 +154,14 @@ public final class FBLocalTransaction {
          * Return the global transaction id of this transaction.
          */
         public byte[] getGlobalTransactionId() {
-            return new byte[0];
+            return ByteArrayHelper.emptyByteArray();
         }
 
         /**
          * Return the branch qualifier of this transaction.
          */
         public byte[] getBranchQualifier() {
-            return new byte[0];
+            return ByteArrayHelper.emptyByteArray();
         }
 
         /**

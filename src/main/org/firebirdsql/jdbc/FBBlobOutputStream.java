@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -30,8 +31,6 @@ import java.util.Objects;
  * {@link java.io.OutputStream} for writing Firebird blobs.
  */
 public final class FBBlobOutputStream extends OutputStream implements FirebirdBlob.BlobOutputStream {
-
-    private static final byte[] EMPTY_BUFFER = new byte[0];
 
     private FbBlob blobHandle;
     private final FBBlob owner;
@@ -157,7 +156,7 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
             throw new IOException("could not close blob: " + ge.getMessage(), ge);
         } finally {
             blobHandle = null;
-            buf = EMPTY_BUFFER;
+            buf = ByteArrayHelper.emptyByteArray();
             count = 0;
         }
     }

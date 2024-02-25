@@ -30,6 +30,7 @@ import java.io.*;
  */
 public final class FBCachedBlob implements FirebirdBlob {
 
+    // NOTE: Do not assign ByteArrayHelper.empty(), as this must be a unique instance
     private static final byte[] FREED_MARKER = new byte[0];
     static final String BLOB_READ_ONLY = "Cached blob is read-only";
 

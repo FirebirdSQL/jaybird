@@ -30,6 +30,7 @@ import java.util.HexFormat;
 public final class ByteArrayHelper {
 
     private static final HexFormat HEX_FORMAT = HexFormat.of().withUpperCase();
+    private static final byte[] EMPTY = new byte[0];
 
     private ByteArrayHelper() {
         // no instances
@@ -99,6 +100,13 @@ public final class ByteArrayHelper {
             if (array[idx] == b) return idx;
         }
         return -1;
+    }
+
+    /**
+     * @return an empty array (length == 0)
+     */
+    public static byte[] emptyByteArray() {
+        return EMPTY;
     }
 
 }
