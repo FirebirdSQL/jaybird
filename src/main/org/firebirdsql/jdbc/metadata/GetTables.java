@@ -188,15 +188,15 @@ public abstract class GetTables extends AbstractMetadataMethod {
 
         @Override
         MetadataQuery createGetTablesQuery(String tableNamePattern, Set<String> types) {
-            Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
-            List<Clause> clauses = new ArrayList<>(types.size());
-            StringBuilder queryBuilder = new StringBuilder(2000);
+            var tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
+            var clauses = new ArrayList<Clause>(types.size());
+            var queryBuilder = new StringBuilder(2000);
             String tableNameCondition = tableNameClause.getCondition("\nand ", "");
             QUERY_PER_TYPE.entrySet().stream()
                     .filter(typeAndQuery -> types.contains(typeAndQuery.getKey()))
                     .map(Map.Entry::getValue)
                     .forEach(query -> {
-                        if (queryBuilder.length() > 0) {
+                        if (!queryBuilder.isEmpty()) {
                             queryBuilder.append("\nunion all\n");
                         }
                         queryBuilder.append(query).append(tableNameCondition);
@@ -266,9 +266,9 @@ public abstract class GetTables extends AbstractMetadataMethod {
 
         @Override
         MetadataQuery createGetTablesQuery(String tableNamePattern, Set<String> types) {
-            Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
+            var tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
 
-            StringBuilder queryBuilder = new StringBuilder(1000).append(TABLE_COLUMNS_2_5);
+            var queryBuilder = new StringBuilder(1000).append(TABLE_COLUMNS_2_5);
             List<String> params;
             if (tableNameClause.hasCondition()) {
                 queryBuilder.append("\nwhere ").append(tableNameClause.getCondition(false));
@@ -279,37 +279,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
 
             if (!types.containsAll(ALL_TYPES_2_5)) {
                 // Only construct conditions when we don't query for all
-                StringBuilder typeCondition = new StringBuilder(120);
-                if (types.contains(SYSTEM_TABLE) && types.contains(TABLE)) {
-                    typeCondition.append("(rdb$relation_type in (0, 2, 3) or " + LEGACY_IS_TABLE + ")");
-                } else if (types.contains(SYSTEM_TABLE)) {
-                    // We assume that external tables are never system and that virtual tables are always system
-                    typeCondition.append("(rdb$relation_type in (0, 3) or " + LEGACY_IS_TABLE + ") and rdb$system_flag = 1");
-                } else if (types.contains(TABLE)) {
-                    // We assume that external tables are never system and that virtual tables are always system
-                    typeCondition.append("(rdb$relation_type in (0, 2) or " + LEGACY_IS_TABLE + ") and rdb$system_flag = 0");
-                }
-
-                if (types.contains(VIEW)) {
-                    if (typeCondition.length() > 0) {
-                        typeCondition.append(" or ");
-                    }
-                    // We assume (but don't check) that views are never system
-                    typeCondition.append("(rdb$relation_type = 1 or " + LEGACY_IS_VIEW + ")");
-                }
-
-                if (types.contains(GLOBAL_TEMPORARY)) {
-                    if (typeCondition.length() > 0) {
-                        typeCondition.append(" or ");
-                    }
-                    typeCondition.append("rdb$relation_type in (4, 5)");
-                }
-
-                if (typeCondition.length() == 0) {
-                    // Requested types are unknown, query nothing
-                    typeCondition.append("1 = 0");
-                }
-
+                StringBuilder typeCondition = buildTypeCondition(types);
                 if (tableNameClause.hasCondition()) {
                     queryBuilder.append("\nand (").append(typeCondition).append(")");
                 } else {
@@ -319,6 +289,40 @@ public abstract class GetTables extends AbstractMetadataMethod {
             queryBuilder.append(GET_TABLE_ORDER_BY_2_5);
 
             return new MetadataQuery(queryBuilder.toString(), params);
+        }
+
+        private static StringBuilder buildTypeCondition(Set<String> types) {
+            var typeCondition = new StringBuilder(120);
+            if (types.contains(SYSTEM_TABLE) && types.contains(TABLE)) {
+                typeCondition.append("(rdb$relation_type in (0, 2, 3) or " + LEGACY_IS_TABLE + ")");
+            } else if (types.contains(SYSTEM_TABLE)) {
+                // We assume that external tables are never system and that virtual tables are always system
+                typeCondition.append("(rdb$relation_type in (0, 3) or " + LEGACY_IS_TABLE + ") and rdb$system_flag = 1");
+            } else if (types.contains(TABLE)) {
+                // We assume that external tables are never system and that virtual tables are always system
+                typeCondition.append("(rdb$relation_type in (0, 2) or " + LEGACY_IS_TABLE + ") and rdb$system_flag = 0");
+            }
+
+            if (types.contains(VIEW)) {
+                if (!typeCondition.isEmpty()) {
+                    typeCondition.append(" or ");
+                }
+                // We assume (but don't check) that views are never system
+                typeCondition.append("(rdb$relation_type = 1 or " + LEGACY_IS_VIEW + ")");
+            }
+
+            if (types.contains(GLOBAL_TEMPORARY)) {
+                if (!typeCondition.isEmpty()) {
+                    typeCondition.append(" or ");
+                }
+                typeCondition.append("rdb$relation_type in (4, 5)");
+            }
+
+            if (typeCondition.isEmpty()) {
+                // Requested types are unknown, query nothing
+                typeCondition.append("1 = 0");
+            }
+            return typeCondition;
         }
 
         @Override

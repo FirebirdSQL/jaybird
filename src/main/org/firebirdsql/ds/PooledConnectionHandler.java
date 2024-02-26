@@ -73,38 +73,28 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
         // Methods from object
         if (method.equals(TO_STRING)) {
             return "Proxy for " + connection;
-        }
-        if (method.equals(EQUALS)) {
-            // Using parameter proxy (and not field) on purpose as field is
-            // nulled after closing
+        } else if (method.equals(EQUALS)) {
+            // Using parameter proxy (and not field) on purpose as field is nulled after closing
             return proxy == args[0];
-        }
-        if (method.equals(HASH_CODE)) {
-            // Using parameter proxy (and not field) on purpose as field is
-            // nulled after closing
+        } else if (method.equals(HASH_CODE)) {
+            // Using parameter proxy (and not field) on purpose as field is nulled after closing
             return System.identityHashCode(proxy);
-        }
-        // Other methods from object
-        if (method.getDeclaringClass().equals(Object.class)) {
+        } else if (method.getDeclaringClass().equals(Object.class)) {
+            // Other methods from object
             try {
                 return method.invoke(connection, args);
             } catch (InvocationTargetException e) {
                 throw e.getTargetException();
             }
-        }
-
-        // Methods from Connection or FirebirdConnection
-        if (method.equals(CONNECTION_IS_CLOSED)) {
+        } else if (method.equals(CONNECTION_IS_CLOSED)) {
             return isClosed();
-        }
-        if (method.equals(RESET_KNOWN_CLIENT_INFO_PROPERTIES)) {
+        } else if (method.equals(RESET_KNOWN_CLIENT_INFO_PROPERTIES)) {
             try {
                 method.invoke(connection, args);
             } catch (InvocationTargetException e) {
                 throw e.getTargetException();
             }
-        }
-        if (isClosed() && !method.equals(CONNECTION_CLOSE)) {
+        } else if (isClosed() && !method.equals(CONNECTION_CLOSE)) {
             String message = forcedClose ? FORCIBLY_CLOSED_MESSAGE : CLOSED_MESSAGE;
             throw new SQLNonTransientConnectionException(message, SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
         }
@@ -116,9 +106,7 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
                     handleClose(true);
                 }
                 return null;
-            }
-
-            if (method.getDeclaringClass().equals(Connection.class)
+            } else if (method.getDeclaringClass().equals(Connection.class)
                     && STATEMENT_CREATION_METHOD_NAMES.contains(method.getName())) {
                 Statement pstmt = (Statement) method.invoke(connection, args);
                 StatementHandler stmtHandler = new StatementHandler(this, pstmt);
@@ -127,7 +115,6 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
                 }
                 return stmtHandler.getProxy();
             }
-
             // All other methods
             return method.invoke(connection, args);
         } catch (InvocationTargetException ite) {

@@ -37,25 +37,24 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TableReservationTest {
 
-    private static final String CREATE_TABLE_1 = ""
-            + "CREATE TABLE table_1("
-            + "  ID INTEGER NOT NULL PRIMARY KEY"
-            + ")";
+    private static final String CREATE_TABLE_1 = """
+            CREATE TABLE table_1(
+              ID INTEGER NOT NULL PRIMARY KEY
+            )""";
 
-    private static final String CREATE_TABLE_2 = ""
-            + "CREATE TABLE table_2("
-            + "  ID INTEGER NOT NULL PRIMARY KEY"
-            + ")";
+    private static final String CREATE_TABLE_2 = """
+            CREATE TABLE table_2(
+              ID INTEGER NOT NULL PRIMARY KEY
+            )""";
 
-    private static final String INSERT_TABLE_1 =
-            "INSERT INTO table_1 VALUES(?)";
+    private static final String INSERT_TABLE_1 = "INSERT INTO table_1 VALUES(?)";
 
-    private static final String SELECT_TABLE_1 =
-            "SELECT id FROM table_1 WHERE id = ?";
+    private static final String SELECT_TABLE_1 = "SELECT id FROM table_1 WHERE id = ?";
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
@@ -174,8 +173,8 @@ class TableReservationTest {
         prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
         prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
 
-        execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
-        execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
+        assertDoesNotThrow(() -> execute(connection1, SELECT_TABLE_1, new Object[] { 1 }));
+        assertDoesNotThrow(() -> execute(connection2, SELECT_TABLE_1, new Object[] { 1 }));
     }
 
     @Test
@@ -183,8 +182,8 @@ class TableReservationTest {
         prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
         prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
 
-        execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
-        execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
+        assertDoesNotThrow(() -> execute(connection1, SELECT_TABLE_1, new Object[] { 1 }));
+        assertDoesNotThrow(() -> execute(connection2, SELECT_TABLE_1, new Object[] { 1 }));
     }
 
     @Test
@@ -192,8 +191,8 @@ class TableReservationTest {
         prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
         prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
 
-        execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
-        execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
+        assertDoesNotThrow(() -> execute(connection1, SELECT_TABLE_1, new Object[] { 1 }));
+        assertDoesNotThrow(() -> execute(connection2, SELECT_TABLE_1, new Object[] { 1 }));
     }
 
     @Test
@@ -210,8 +209,8 @@ class TableReservationTest {
         prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
         prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
 
-        execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
-        execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
+        assertDoesNotThrow(() -> execute(connection1, SELECT_TABLE_1, new Object[] { 1 }));
+        assertDoesNotThrow(() -> execute(connection2, SELECT_TABLE_1, new Object[] { 1 }));
     }
 
     private void assertLockConflict(Executable executable) {

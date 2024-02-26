@@ -219,17 +219,17 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
     }
 
     private void executeServiceRestoreOperation(FbService service, ServiceRequestBuffer srb) throws SQLException {
+        OutputStream currentLogger = getLogger();
+        if (this.verbose && currentLogger == null) {
+            throw new SQLException("Verbose mode was requested but there is no logger provided.");
+        }
         try {
             service.startServiceAction(srb);
 
-            OutputStream currentLogger = getLogger();
             ServiceRequestBuffer infoSRB = service.createServiceRequestBuffer();
-            ServiceParameterBuffer infoSPB = null;
             infoSRB.addArgument(isc_info_svc_stdin);
             infoSRB.addArgument(isc_info_svc_line);
-
-            if (this.verbose && currentLogger == null)
-                throw new SQLException("Verbose mode was requested but there is no logger provided.");
+            ServiceParameterBuffer infoSPB = null;
 
             int bufferSize = BUFFER_SIZE;
             byte[] stdinBuffer = new byte[MAX_RESTORE_CHUNK];
@@ -249,53 +249,54 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
 
                 infoSPB = null;
 
-                for (int codePos = 0; codePos < buffer.length && buffer[codePos] != isc_info_end;) {
+                int codePos = 0;
+                while (codePos < buffer.length && buffer[codePos] != isc_info_end) {
                     switch (buffer[codePos]) {
-                    case isc_info_svc_stdin:
+                    case isc_info_svc_stdin -> {
                         int requestedBytes = Math.min(iscVaxInteger(buffer, ++codePos, 4), stdinBuffer.length);
                         codePos += 4;
                         if (requestedBytes > 0) {
                             int actuallyReadBytes = restoreInputStream.read(stdinBuffer, 0, requestedBytes);
                             if (actuallyReadBytes > 0) {
                                 infoSPB = service.createServiceParameterBuffer();
-                                if (stdinBuffer.length == actuallyReadBytes)
+                                if (stdinBuffer.length == actuallyReadBytes) {
                                     infoSPB.addArgument(isc_info_svc_line, stdinBuffer);
-                                else
+                                } else {
                                     infoSPB.addArgument(isc_info_svc_line,
                                             Arrays.copyOfRange(stdinBuffer, 0, actuallyReadBytes));
+                                }
                             }
 
                             restoreInputStream.mark(2);
-                            if (restoreInputStream.read() < 0)
+                            if (restoreInputStream.read() < 0) {
                                 sending = false;
-                            else
+                            } else {
                                 restoreInputStream.reset();
+                            }
                         }
-                        break;
-                    case isc_info_truncated:
+                    }
+                    case isc_info_truncated -> {
                         bufferSize *= 2;
                         ++codePos;
-                        break;
-                    case isc_info_svc_line:
+                    }
+                    case isc_info_svc_line -> {
                         int bytesToLog = readOutput(buffer, codePos, currentLogger);
                         codePos += 3;
                         switch (bytesToLog) {
-                        case DATA_NOT_READY:
-                            ++codePos;
-                            break;
-                        case END_OF_STREAM:
-                            processing = false;
-                            break;
-                        default:
+                        case DATA_NOT_READY -> ++codePos;
+                        case END_OF_STREAM -> processing = false;
+                        default -> {
                             codePos += bytesToLog;
-                            if (currentLogger != null)
+                            if (currentLogger != null) {
                                 currentLogger.write(newLine);
+                            }
                         }
-                        break;
-                    case isc_info_end:
-                        break;
-                    default:
-                        throw new SQLException("Unexpected response from service.");
+                        }
+                    }
+                    case isc_info_end -> {
+                        // Shouldn't actually happen due to condition of while-loop
+                    }
+                    default -> throw new SQLException("Unexpected response from service.");
                     }
                 }
             }
@@ -307,14 +308,11 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
     private int readOutput(byte[] buffer, int offset, OutputStream out) throws SQLException, IOException {
         int dataLength = iscVaxInteger2(buffer, offset + 1);
         if (dataLength == 0) {
-            switch (buffer[offset + 3]) {
-            case isc_info_data_not_ready:
-                return DATA_NOT_READY;
-            case isc_info_end:
-                return END_OF_STREAM;
-            default:
-                throw new SQLException("Unexpected end of stream reached.");
-            }
+            return switch (buffer[offset + 3]) {
+                case isc_info_data_not_ready -> DATA_NOT_READY;
+                case isc_info_end -> END_OF_STREAM;
+                default -> throw new SQLException("Unexpected end of stream reached.");
+            };
         }
         if (out != null) {
             out.write(buffer, offset + 3, dataLength);

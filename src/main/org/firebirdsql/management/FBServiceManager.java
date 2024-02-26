@@ -36,6 +36,7 @@ import java.util.Map;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.ISCConstants.isc_info_svc_to_eof;
 import static org.firebirdsql.gds.ISCConstants.isc_info_truncated;
+import static org.firebirdsql.gds.ISCConstants.isc_infunk;
 import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
 import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_options;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
@@ -371,31 +372,20 @@ public class FBServiceManager implements ServiceManager {
             byte[] buffer = service.getServiceInfo(null, infoSRB, bufferSize);
 
             switch (buffer[0]) {
-            case isc_info_svc_to_eof:
-
+            case isc_info_svc_to_eof -> {
                 int dataLength = iscVaxInteger2(buffer, 1);
                 if (dataLength == 0) {
-                    if (buffer[3] != isc_info_end)
+                    if (buffer[3] != isc_info_end) {
                         throw new SQLException("Unexpected end of stream reached.");
-                    else {
-                        processing = false;
-                        break;
                     }
-                }
-
-                if (currentLogger != null) {
+                    processing = false;
+                } else if (currentLogger != null) {
                     currentLogger.write(buffer, 3, dataLength);
                 }
-
-                break;
-
-            case isc_info_truncated:
-                bufferSize = bufferSize * 2;
-                break;
-
-            case isc_info_end:
-                processing = false;
-                break;
+            }
+            case isc_info_truncated -> bufferSize = bufferSize * 2;
+            case isc_info_end -> processing = false;
+            default -> throw FbExceptionBuilder.forException(isc_infunk).toSQLException();
             }
         }
     }

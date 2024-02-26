@@ -148,42 +148,37 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
 
     @Override
     public boolean absolute(int row) throws SQLException {
-        notScrollable();
-        return false;
+        throw notScrollable();
     }
 
     @Override
     public boolean first() throws SQLException {
-        notScrollable();
-        return false;
+        throw notScrollable();
     }
 
     @Override
     public boolean last() throws SQLException {
-        notScrollable();
-        return false;
+        throw notScrollable();
     }
 
     @Override
     public boolean previous() throws SQLException {
-        notScrollable();
-        return false;
+        throw notScrollable();
     }
 
     @Override
     public boolean relative(int row) throws SQLException {
-        notScrollable();
-        return false;
+        throw notScrollable();
     }
 
     @Override
     public void beforeFirst() throws SQLException {
-        notScrollable();
+        throw notScrollable();
     }
 
     @Override
     public void afterLast() throws SQLException {
-        notScrollable();
+        throw notScrollable();
     }
 
     public void fetch() throws SQLException {
@@ -336,8 +331,8 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
         return fetchSize;
     }
 
-    private void notScrollable() throws SQLException {
-        throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
+    private SQLException notScrollable() {
+        return FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
                 .toSQLException();
     }
 

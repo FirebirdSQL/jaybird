@@ -306,20 +306,12 @@ class FBPreparedStatementTest {
     @Test
     void testLongParameter() throws Exception {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
-        try (Statement stmt = con.createStatement()) {
+        try (var stmt = con.createStatement()) {
             stmt.execute("INSERT INTO testtab(id, field1, field6) VALUES(1, '', 'a')");
         }
 
-        con.setAutoCommit(false);
-
-        try (PreparedStatement ps = con.prepareStatement("UPDATE testtab SET field6=? WHERE id = 1")) {
-            try {
-                ps.setString(1, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                ps.execute();
-                con.commit();
-            } catch (SQLException ex) {
-                con.rollback();
-            }
+        try (var ps = con.prepareStatement("UPDATE testtab SET field6=? WHERE id = 1")) {
+            assertThrows(SQLException.class, () -> ps.setString(1, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"));
         }
     }
 

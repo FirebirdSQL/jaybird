@@ -99,6 +99,7 @@ public interface JaybirdErrorCodes {
     /**
      * @deprecated use {@link #jb_stmtInErrorRequireClose}
      */
+    @SuppressWarnings("java:S1845")
     @Deprecated(forRemoval = true, since = "6")
     int jb_stmtInErrorRequireCLose  = jb_stmtInErrorRequireClose;
     int jb_invalidTransactionStateTransition             = 337248305;

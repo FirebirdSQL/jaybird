@@ -463,7 +463,7 @@ public final class FbExceptionBuilder {
                 interestingExceptionInfo = info;
             }
 
-            if (fullExceptionMessage.length() > 0) {
+            if (!fullExceptionMessage.isEmpty()) {
                 fullExceptionMessage.append("; ");
             }
             fullExceptionMessage.append(info.toMessage());

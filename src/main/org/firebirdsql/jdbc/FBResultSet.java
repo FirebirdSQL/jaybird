@@ -58,6 +58,7 @@ import java.util.function.Predicate;
 public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListener.FetcherListener {
 
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported";
+    private static final String TYPE_SQLXML = "SQLXML";
 
     private final FBStatement fbStatement;
     private FBFetcher fbFetcher;
@@ -1802,12 +1803,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public SQLXML getSQLXML(int columnIndex) throws SQLException {
-        throw typeNotSupported("SQLXML");
+        throw typeNotSupported(TYPE_SQLXML);
     }
 
     @Override
     public SQLXML getSQLXML(String columnLabel) throws SQLException {
-        throw typeNotSupported("SQLXML");
+        throw typeNotSupported(TYPE_SQLXML);
     }
 
     /**
@@ -1893,12 +1894,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {
-        throw typeNotSupported("SQLXML");
+        throw typeNotSupported(TYPE_SQLXML);
     }
 
     @Override
     public void updateSQLXML(String columnLabel, SQLXML xmlObject) throws SQLException {
-        throw typeNotSupported("SQLXML");
+        throw typeNotSupported(TYPE_SQLXML);
     }
 
     @Override
