@@ -95,44 +95,53 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                 checkTransactionActive();
                 checkBlobOpen();
 
-                int actualSize = segmentRequestSize(sizeRequested);
-                try {
-                    sendGetSegment(actualSize);
-                    getXdrOut().flush();
-                } catch (IOException e) {
-                    throw FbExceptionBuilder.ioWriteError(e);
-                }
-                try {
-                    response = getDatabase().readGenericResponse(null);
-                    if (response.objectHandle() == STATE_END_OF_BLOB) {
-                        // TODO what if I seek on a stream blob?
-                        setEof();
-                    }
-                } catch (IOException e) {
-                    throw FbExceptionBuilder.ioReadError(e);
-                }
+                requestGetSegment(sizeRequested);
+                response = receiveGetSegmentResponse();
             }
 
-            final byte[] responseBuffer = response.data();
-            if (responseBuffer.length == 0) {
-                return responseBuffer;
-            }
-
-            final byte[] data = new byte[getTotalSegmentSize(responseBuffer)];
-            int responsePos = 0;
-            int dataPos = 0;
-            while (responsePos < responseBuffer.length) {
-                int segmentLength = iscVaxInteger2(responseBuffer, responsePos);
-                responsePos += 2;
-                System.arraycopy(responseBuffer, responsePos, data, dataPos, segmentLength);
-                responsePos += segmentLength;
-                dataPos += segmentLength;
-            }
-            return data;
+            return extractGetSegmentResponse(response.data());
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
+    }
+
+    private void requestGetSegment(int sizeRequested) throws SQLException {
+        try {
+            sendGetSegment(segmentRequestSize(sizeRequested));
+            getXdrOut().flush();
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioWriteError(e);
+        }
+    }
+
+    private GenericResponse receiveGetSegmentResponse() throws SQLException {
+        try {
+            GenericResponse response = getDatabase().readGenericResponse(null);
+            if (response.objectHandle() == STATE_END_OF_BLOB) {
+                // TODO what if I seek on a stream blob?
+                setEof();
+            }
+            return response;
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioReadError(e);
+        }
+    }
+
+    private static byte[] extractGetSegmentResponse(byte[] responseBuffer) {
+        if (responseBuffer.length == 0) return responseBuffer;
+
+        final byte[] data = new byte[getTotalSegmentSize(responseBuffer)];
+        int responsePos = 0;
+        int dataPos = 0;
+        while (responsePos < responseBuffer.length) {
+            int segmentLength = iscVaxInteger2(responseBuffer, responsePos);
+            responsePos += 2;
+            System.arraycopy(responseBuffer, responsePos, data, dataPos, segmentLength);
+            responsePos += segmentLength;
+            dataPos += segmentLength;
+        }
+        return data;
     }
 
     /**
@@ -159,12 +168,23 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
         return Math.min(Math.max(size, size + 2), getMaximumSegmentSize());
     }
 
+    /**
+     * Sends the {@code op_get_segment} request for {@code len}, without flushing.
+     *
+     * @param len
+     *         requested length (should not exceed {@link #getMaximumSegmentSize()}, but this is not enforced)
+     * @throws SQLException
+     *         for errors obtaining the XDR output stream
+     * @throws IOException
+     *         for errors writing data to the output stream
+     */
     protected void sendGetSegment(int len) throws SQLException, IOException {
         XdrOutputStream xdrOut = getXdrOut();
         xdrOut.writeInt(op_get_segment);
         xdrOut.writeInt(getHandle());
         xdrOut.writeInt(len);
-        xdrOut.writeInt(0); // length of segment send buffer (always 0 in get)
+        // length of segment send buffer (always 0 in get)
+        xdrOut.writeInt(0);
     }
 
     @Override
@@ -180,69 +200,87 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
             checkTransactionActive();
             checkBlobOpen();
 
-            final FbWireOperations wireOps = getDatabase().getWireOperations();
-            final XdrOutputStream xdrOut = getXdrOut();
-            final XdrInputStream xdrIn = getXdrIn();
             int count = 0;
             while (count < minLen && !isEof()) {
-                try {
-                    sendGetSegment(segmentRequestSize(len - count));
-                    xdrOut.flush();
-                } catch (IOException e) {
-                    throw FbExceptionBuilder.ioWriteError(e);
-                }
-                try {
-                    final int opCode = wireOps.readNextOperation();
-                    if (opCode != op_response) {
-                        wireOps.readOperationResponse(opCode, null);
-                        throw new SQLException("Unexpected response to op_get_segment: " + opCode);
-                    }
-                    final int objHandle = xdrIn.readInt();
-                    xdrIn.skipNBytes(8); // blob-id (unused)
-
-                    final int bufferLength = xdrIn.readInt();
-                    if (bufferLength > 0) {
-                        int bufferRemaining = bufferLength;
-                        while (bufferRemaining > 2) {
-                            int segmentLength = VaxEncoding.decodeVaxInteger2WithoutLength(xdrIn);
-                            bufferRemaining -= 2;
-                            if (segmentLength > bufferRemaining) {
-                                throw new IOException(
-                                        "Inconsistent segment buffer: segment length %d, remaining buffer was %d"
-                                                .formatted(segmentLength, bufferRemaining));
-                            } else if (segmentLength > len - count) {
-                                throw new IOException("Returned segment length %d exceeded remaining size %d"
-                                        .formatted(segmentLength, len - count));
-                            }
-                            xdrIn.readFully(b, off + count, segmentLength);
-                            bufferRemaining -= segmentLength;
-                            count += segmentLength;
-                        }
-
-                        // Safety measure: read remaining (shouldn't happen in practice)
-                        xdrIn.skipNBytes(bufferRemaining);
-                        // Skip buffer padding
-                        xdrIn.skipPadding(bufferLength);
-                    }
-
-                    SQLException exception = wireOps.readStatusVector();
-                    if (exception != null && !(exception instanceof SQLWarning)) {
-                        // NOTE: SQLWarning is unlikely for this operation, so we don't do anything to report it
-                        throw exception;
-                    }
-
-                    if (objHandle == STATE_END_OF_BLOB) {
-                        setEof();
-                    }
-                } catch (IOException e) {
-                    throw FbExceptionBuilder.ioReadError(e);
-                }
+                int sizeRequested = len - count;
+                requestGetSegment(sizeRequested);
+                count += extractGetSegmentResponse(b, off + count, sizeRequested);
             }
 
             return count;
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    /**
+     * Extracts the get segment response to byte array {@code b}.
+     *
+     * @param b
+     *         destination byte array
+     * @param off
+     *         offset to start
+     * @param len
+     *         maximum number of bytes (actual number depends on the response)
+     * @return actual number of bytes read
+     * @throws SQLException
+     *         for database access errors, or wrong segment lengths, or more bytes are returned than {@code len}
+     */
+    private int extractGetSegmentResponse(byte[] b, int off, int len) throws SQLException {
+        try {
+            final FbWireOperations wireOps = getDatabase().getWireOperations();
+            requireOpResponse(wireOps);
+            final XdrInputStream xdrIn = getXdrIn();
+            final int objHandle = xdrIn.readInt();
+            xdrIn.skipNBytes(8); // blob-id (unused)
+
+            final int bufferLength = xdrIn.readInt();
+            int count = 0;
+            if (bufferLength > 0) {
+                int bufferRemaining = bufferLength;
+                while (bufferRemaining > 2) {
+                    int segmentLength = VaxEncoding.decodeVaxInteger2WithoutLength(xdrIn);
+                    bufferRemaining -= 2;
+                    if (segmentLength > bufferRemaining) {
+                        throw new IOException("Inconsistent segment buffer: segment length %d, remaining buffer was %d"
+                                .formatted(segmentLength, bufferRemaining));
+                    } else if (segmentLength > len - count) {
+                        throw new IOException("Returned segment length %d exceeded remaining size %d"
+                                .formatted(segmentLength, len - count));
+                    }
+                    xdrIn.readFully(b, off + count, segmentLength);
+                    bufferRemaining -= segmentLength;
+                    count += segmentLength;
+                }
+
+                // Safety measure: read remaining (shouldn't happen in practice)
+                xdrIn.skipNBytes(bufferRemaining);
+                // Skip buffer padding
+                xdrIn.skipPadding(bufferLength);
+            }
+
+            SQLException exception = wireOps.readStatusVector();
+            if (exception != null && !(exception instanceof SQLWarning)) {
+                // NOTE: SQLWarning is unlikely for this operation, so we don't do anything to report it
+                throw exception;
+            }
+
+            if (objHandle == STATE_END_OF_BLOB) {
+                setEof();
+            }
+
+            return count;
+        } catch (IOException e) {
+            throw FbExceptionBuilder.ioReadError(e);
+        }
+    }
+
+    private static void requireOpResponse(FbWireOperations wireOps) throws SQLException, IOException {
+        final int opCode = wireOps.readNextOperation();
+        if (opCode != op_response) {
+            wireOps.readOperationResponse(opCode, null);
+            throw new SQLException("Unexpected response to op_get_segment: " + opCode);
         }
     }
 
