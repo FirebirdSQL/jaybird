@@ -563,39 +563,62 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     protected void writeColumnData(XdrOutputStream xdrOut, int len, byte[] buffer, FieldDescriptor fieldDescriptor)
             throws IOException {
-        // Nothing to write for SQL_NULL (except null indicator, which happens at end in writeSqlData)
+        // Nothing to write for SQL_NULL (except null indicator in v10 - v12, which happens at end in writeSqlData)
         if (fieldDescriptor.isFbType(ISCConstants.SQL_NULL)) return;
 
         if (len == 0) {
-            if (buffer != null) {
-                len = buffer.length;
-                xdrOut.writeInt(len);
+            writeLengthPrefixedBuffer(xdrOut, buffer, fieldDescriptor);
+        } else if (len < 0) {
+            writeFixedLengthBuffer(xdrOut, -len, buffer);
+        } else {
+            // decrement length because it was incremented before; increment happens in BlrCalculator.calculateIoLength
+            writePaddedBuffer(xdrOut, len - 1, buffer, fieldDescriptor);
+        }
+    }
+
+    /**
+     * Writes the entire buffer prefixed with length and suffixed with padding using the padding byte of the descriptor.
+     */
+    private static void writeLengthPrefixedBuffer(XdrOutputStream xdrOut, byte[] buffer,
+            FieldDescriptor fieldDescriptor) throws IOException {
+        if (buffer != null) {
+            int len = buffer.length;
+            xdrOut.writeInt(len);
+            xdrOut.write(buffer, 0, len);
+            xdrOut.writePadding((4 - len) & 3, fieldDescriptor.getPaddingByte());
+        } else {
+            xdrOut.writeInt(0);
+        }
+    }
+
+    /**
+     * Writes {@code len} bytes of the buffer, or if {@code buffer == null}, {@code len} bytes of zero padding.
+     */
+    private static void writeFixedLengthBuffer(XdrOutputStream xdrOut, int len, byte[] buffer) throws IOException {
+        if (buffer != null) {
+            xdrOut.write(buffer, 0, len);
+        } else {
+            xdrOut.writeZeroPadding(len);
+        }
+    }
+
+    /**
+     * Writes at most {@code len} bytes from {@code buffer}, padding upto {@code len} if the buffer is shorter or
+     * {@code null}, suffixed with the normal buffer padding. Padding is done with the padding byte from the descriptor.
+     */
+    private static void writePaddedBuffer(XdrOutputStream xdrOut, int len, byte[] buffer,
+            FieldDescriptor fieldDescriptor) throws IOException {
+        if (buffer != null) {
+            final int buflen = buffer.length;
+            if (buflen >= len) {
                 xdrOut.write(buffer, 0, len);
                 xdrOut.writePadding((4 - len) & 3, fieldDescriptor.getPaddingByte());
             } else {
-                xdrOut.writeInt(0);
-            }
-        } else if (len < 0) {
-            if (buffer != null) {
-                xdrOut.write(buffer, 0, -len);
-            } else {
-                xdrOut.writeZeroPadding(-len);
+                xdrOut.write(buffer, 0, buflen);
+                xdrOut.writePadding(len - buflen + ((4 - len) & 3), fieldDescriptor.getPaddingByte());
             }
         } else {
-            // decrement length because it was incremented before; increment happens in BlrCalculator.calculateIoLength
-            len--;
-            if (buffer != null) {
-                final int buflen = buffer.length;
-                if (buflen >= len) {
-                    xdrOut.write(buffer, 0, len);
-                    xdrOut.writePadding((4 - len) & 3, fieldDescriptor.getPaddingByte());
-                } else {
-                    xdrOut.write(buffer, 0, buflen);
-                    xdrOut.writePadding(len - buflen + ((4 - len) & 3), fieldDescriptor.getPaddingByte());
-                }
-            } else {
-                xdrOut.writePadding(len + ((4 - len) & 3), fieldDescriptor.getPaddingByte());
-            }
+            xdrOut.writePadding(len + ((4 - len) & 3), fieldDescriptor.getPaddingByte());
         }
     }
 
