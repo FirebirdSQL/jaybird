@@ -121,30 +121,35 @@ final class FBServerScrollFetcher implements FBFetcher {
     private void updateWindow(RowListener listener, ServerPositionCalculation serverPositionCalculation,
             FetchDirection fetchDirection) throws SQLException {
         rows.clear();
-        List<RowValue> newRows = listener.rowValues;
-        int rowCount = newRows.size();
-        int serverPosition = this.serverPosition = serverPositionCalculation.newServerPosition(rowCount, listener);
+        int rowCount = listener.rowValues.size();
+        serverPosition = serverPositionCalculation.newServerPosition(rowCount, listener);
         if (rowCount == 0) {
             rowsOffset = 0;
         } else {
-            // NOTE: This is safe as long as the fetcher isn't closed, and afterwards, this shouldn't get called
-            ArrayList<RowValue> rows = (ArrayList<RowValue>) this.rows;
-            rows.ensureCapacity(rowCount);
-            if (fetchDirection == FetchDirection.REVERSE) {
-                if (rowCount == 1) {
-                    rows.add(newRows.get(0));
-                } else {
-                    // Rows are received from high to low, but we need them from low to high
-                    ListIterator<RowValue> iter = newRows.listIterator(rowCount);
-                    while (iter.hasPrevious()) {
-                        rows.add(iter.previous());
-                    }
-                }
-                rowsOffset = listener.beforeFirst ? 1 : serverPosition;
+            addRowsToWindow(listener, fetchDirection);
+        }
+    }
+
+    private void addRowsToWindow(RowListener listener, FetchDirection fetchDirection) {
+        // NOTE: This is safe as long as the fetcher isn't closed, and afterward, this shouldn't get called
+        ArrayList<RowValue> rows = (ArrayList<RowValue>) this.rows;
+        List<RowValue> newRows = listener.rowValues;
+        int rowCount = newRows.size();
+        rows.ensureCapacity(rowCount);
+        if (fetchDirection == FetchDirection.REVERSE) {
+            if (rowCount == 1) {
+                rows.add(newRows.get(0));
             } else {
-                rows.addAll(newRows);
-                rowsOffset = serverPosition - rowCount + (listener.afterLast ? 0 : 1);
+                // Rows are received from high to low, but we need them from low to high
+                ListIterator<RowValue> iter = newRows.listIterator(rowCount);
+                while (iter.hasPrevious()) {
+                    rows.add(iter.previous());
+                }
             }
+            rowsOffset = listener.beforeFirst ? 1 : serverPosition;
+        } else {
+            rows.addAll(newRows);
+            rowsOffset = serverPosition - rowCount + (listener.afterLast ? 0 : 1);
         }
     }
 
