@@ -91,63 +91,51 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
 
     protected void processStatusVector(ISC_STATUS[] statusVector, WarningMessageCallback warningMessageCallback)
             throws SQLException {
-        if (warningMessageCallback == null) {
-            throw new NullPointerException("warningMessageCallback is null");
+        requireNonNull(warningMessageCallback, "warningMessageCallback");
+        final var builder = new FbExceptionBuilder();
+        populateExceptionBuilder(statusVector, builder);
+
+        if (builder.isEmpty()) return;
+        SQLException exception = builder.toFlatSQLException();
+        if (exception instanceof SQLWarning warning) {
+            warningMessageCallback.processWarning(warning);
+        } else {
+            throw exception;
         }
-        final FbExceptionBuilder builder = new FbExceptionBuilder();
+    }
+
+    private void populateExceptionBuilder(ISC_STATUS[] statusVector, FbExceptionBuilder builder) {
         int vectorIndex = 0;
-        processingLoop:
         while (vectorIndex < statusVector.length) {
-            int arg = statusVector[vectorIndex++].intValue();
-            switch (arg) {
-            case isc_arg_gds: {
+            switch (statusVector[vectorIndex++].intValue()) {
+            case isc_arg_gds -> {
                 int errorCode = statusVector[vectorIndex++].intValue();
                 if (errorCode != 0) {
                     builder.exception(errorCode);
                 }
-                break;
             }
-            case isc_arg_warning: {
+            case isc_arg_warning -> {
                 int errorCode = statusVector[vectorIndex++].intValue();
                 if (errorCode != 0) {
                     builder.warning(errorCode);
                 }
-                break;
             }
-            case isc_arg_interpreted:
-            case isc_arg_string: {
+            case isc_arg_interpreted, isc_arg_string -> {
                 String stringValue = getString(statusVector[vectorIndex++]);
-                if (stringValue == null) break processingLoop;
+                if (stringValue == null) return;
                 builder.messageParameter(stringValue);
-                break;
             }
-            case isc_arg_sql_state: {
+            case isc_arg_sql_state -> {
                 String stringValue = getString(statusVector[vectorIndex++]);
-                if (stringValue == null) break processingLoop;
+                if (stringValue == null) return;
                 builder.sqlState(stringValue);
-                break;
             }
-            case isc_arg_cstring: {
-                builder.messageParameter(getCString(statusVector[vectorIndex++], statusVector[vectorIndex++]));
-                break;
+            case isc_arg_cstring ->
+                    builder.messageParameter(getCString(statusVector[vectorIndex++], statusVector[vectorIndex++]));
+            case isc_arg_end -> {
+                return;
             }
-            case isc_arg_end:
-                break processingLoop;
-            case isc_arg_number:
-            default: {
-                int e = statusVector[vectorIndex++].intValue();
-                builder.messageParameter(e);
-                break;
-            }
-            }
-        }
-
-        if (!builder.isEmpty()) {
-            SQLException exception = builder.toFlatSQLException();
-            if (exception instanceof SQLWarning warning) {
-                warningMessageCallback.processWarning(warning);
-            } else {
-                throw exception;
+            default -> builder.messageParameter(statusVector[vectorIndex++].intValue());
             }
         }
     }
