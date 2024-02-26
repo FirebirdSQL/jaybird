@@ -212,38 +212,37 @@ public final class FBTableStatisticsManager implements AutoCloseable {
         @Override
         public Map<String, TableStatistics> process(byte[] infoResponse) throws SQLException {
             try {
-                int idx = 0;
-                decodeLoop:
-                while (idx < infoResponse.length) {
-                    int infoItem = infoResponse[idx++];
-                    switch (infoItem) {
-                    case isc_info_end:
-                        break decodeLoop;
-                    case isc_info_truncated:
-                        throw new InfoTruncatedException("Received isc_info_truncated, and this processor cannot recover automatically", infoResponse.length);
-                    case isc_info_read_seq_count:
-                    case isc_info_read_idx_count:
-                    case isc_info_insert_count:
-                    case isc_info_update_count:
-                    case isc_info_delete_count:
-                    case isc_info_backout_count:
-                    case isc_info_purge_count:
-                    case isc_info_expunge_count:
-                        int length = VaxEncoding.iscVaxInteger2(infoResponse, idx);
-                        idx += 2;
-                        processStatistics(infoItem, infoResponse, idx, idx += length);
-                        break;
-                    default:
-                        System.getLogger(TableStatisticsProcessor.class.getName()).log(System.Logger.Level.DEBUG,
-                                "Received unexpected info item {0}, this is likely an implementation bug", infoItem);
-                        break decodeLoop;
-                    }
-                }
-
+                decodeResponse(infoResponse);
                 return statisticsBuilders.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toTableStatistics()));
             } finally {
                 statisticsBuilders.clear();
+            }
+        }
+
+        private void decodeResponse(byte[] infoResponse) throws SQLException {
+            int idx = 0;
+            while (idx < infoResponse.length) {
+                int infoItem = infoResponse[idx++];
+                switch (infoItem) {
+                case isc_info_end -> {
+                    return;
+                }
+                case isc_info_truncated -> throw new InfoTruncatedException(
+                        "Received isc_info_truncated, and this processor cannot recover automatically",
+                        infoResponse.length);
+                case isc_info_read_seq_count, isc_info_read_idx_count, isc_info_insert_count, isc_info_update_count,
+                        isc_info_delete_count, isc_info_backout_count, isc_info_purge_count, isc_info_expunge_count -> {
+                    int length = VaxEncoding.iscVaxInteger2(infoResponse, idx);
+                    idx += 2;
+                    processStatistics(infoItem, infoResponse, idx, idx += length);
+                }
+                default -> {
+                    System.getLogger(TableStatisticsProcessor.class.getName()).log(System.Logger.Level.DEBUG,
+                            "Received unexpected info item {0}, this is likely an implementation bug", infoItem);
+                    return;
+                }
+                }
             }
         }
 
