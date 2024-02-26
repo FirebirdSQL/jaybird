@@ -94,62 +94,68 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
             checkTransactionActive();
             checkBlobOpen();
 
-            FbWireDatabase db = getDatabase();
-            int requestCount = 0;
-            try {
-                XdrOutputStream xdrOut = getXdrOut();
-                int count = 0;
-                while (count < len) {
-                    int segmentLength = Math.min(len - count, getMaximumSegmentSize());
-                    xdrOut.writeInt(op_put_segment);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.writeInt(segmentLength);
-                    xdrOut.writeBuffer(b, off + count, segmentLength);
-                    count += segmentLength;
-                    if (++requestCount >= OUTSTANDING_PUT_SEGMENT_PACKETS) {
-                        xdrOut.flush();
-                        try {
-                            consumePutSegmentResponses(db, requestCount);
-                        } finally {
-                            requestCount = 0;
-                        }
-                    }
-                }
-                xdrOut.flush();
-            } catch (IOException e) {
-                db.consumePackets(requestCount, w -> {});
-                throw FbExceptionBuilder.ioWriteError(e);
-            }
-
-            consumePutSegmentResponses(db, requestCount);
-
+            batchPutSegment(b, off, len);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
     }
 
-    protected void consumePutSegmentResponses(FbWireDatabase db, int requestCount) throws SQLException {
+    private void batchPutSegment(byte[] b, int off, int len) throws SQLException {
+        int requestCount = 0;
+        try {
+            XdrOutputStream xdrOut = getXdrOut();
+            int count = 0;
+            while (count < len) {
+                int segmentLength = Math.min(len - count, getMaximumSegmentSize());
+                xdrOut.writeInt(op_put_segment);
+                xdrOut.writeInt(getHandle());
+                xdrOut.writeInt(segmentLength);
+                xdrOut.writeBuffer(b, off + count, segmentLength);
+                count += segmentLength;
+                if (++requestCount >= OUTSTANDING_PUT_SEGMENT_PACKETS) {
+                    xdrOut.flush();
+                    try {
+                        consumePutSegmentResponses(requestCount);
+                    } finally {
+                        requestCount = 0;
+                    }
+                }
+            }
+            xdrOut.flush();
+        } catch (IOException e) {
+            getDatabase().consumePackets(requestCount, w -> {});
+            throw FbExceptionBuilder.ioWriteError(e);
+        }
+
+        consumePutSegmentResponses(requestCount);
+    }
+
+    protected void consumePutSegmentResponses(int requestCount) throws SQLException {
         if (requestCount == 0) return;
         var chain = new SQLExceptionChainBuilder<>();
         try {
             while (requestCount-- > 0) {
-                try {
-                    db.readResponse(null);
-                } catch (SQLException e) {
-                    chain.append(e);
-                }
+                consumePutSegmentResponse(chain);
             }
             if (chain.hasException()) {
                 throw chain.getException();
             }
         } catch (IOException e) {
-            db.consumePackets(requestCount, w -> {});
+            getDatabase().consumePackets(requestCount, w -> {});
             SQLException exception = FbExceptionBuilder.ioReadError(e);
             if (chain.hasException()) {
                 exception.addSuppressed(chain.getException());
             }
             throw exception;
+        }
+    }
+
+    private void consumePutSegmentResponse(SQLExceptionChainBuilder<SQLException> chain) throws IOException {
+        try {
+            getDatabase().readResponse(null);
+        } catch (SQLException e) {
+            chain.append(e);
         }
     }
 
