@@ -47,6 +47,7 @@ import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.Optional;
 
 import static java.lang.String.format;
 import static java.lang.System.Logger.Level.DEBUG;
@@ -179,60 +180,78 @@ public class V13WireOperations extends V11WireOperations {
     }
 
     private void tryKnownServerKeys() throws IOException, SQLException {
-        boolean initializedEncryption = false;
-        SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
+        var chainBuilder = new SQLExceptionChainBuilder<>();
 
+        EncryptionIdentifier selectedEncryption = null;
         for (KnownServerKey.PluginSpecificData pluginSpecificData : getPluginSpecificData()) {
-            EncryptionIdentifier encryptionIdentifier = pluginSpecificData.encryptionIdentifier();
-            EncryptionPluginSpi currentEncryptionSpi =
-                    EncryptionPluginRegistry.getEncryptionPluginSpi(encryptionIdentifier);
-            if (currentEncryptionSpi == null) {
-                log.log(TRACE, "No wire encryption plugin available for {0}", encryptionIdentifier);
-                continue;
+            Optional<EncryptionIdentifier> selectedEncryptionOpt = tryKnownServerKey(pluginSpecificData, chainBuilder);
+            if (selectedEncryptionOpt.isPresent()) {
+                selectedEncryption = selectedEncryptionOpt.get();
+                break;
             }
-            try (CryptSessionConfig cryptSessionConfig =
-                         getCryptSessionConfig(encryptionIdentifier, pluginSpecificData.specificData())) {
-                EncryptionPlugin encryptionPlugin = currentEncryptionSpi.createEncryptionPlugin(cryptSessionConfig);
-                EncryptionInitInfo encryptionInitInfo = encryptionPlugin.initializeEncryption();
-                if (encryptionInitInfo.isSuccess()) {
-                    enableEncryption(encryptionInitInfo);
+        }
 
-                    clearServerKeys();
+        if (selectedEncryption == null) {
+            throwIfWireCryptRequired(chainBuilder.getException());
+        }
 
-                    initializedEncryption = true;
-                    log.log(TRACE, "Wire encryption established with {0}", encryptionIdentifier);
-                    break;
+        logWireCryptPluginFailures(chainBuilder, selectedEncryption);
+    }
+
+    private Optional<EncryptionIdentifier> tryKnownServerKey(KnownServerKey.PluginSpecificData pluginSpecificData,
+            SQLExceptionChainBuilder<SQLException> chainBuilder) throws IOException {
+        EncryptionIdentifier encryptionIdentifier = pluginSpecificData.encryptionIdentifier();
+        EncryptionPluginSpi currentEncryptionSpi =
+                EncryptionPluginRegistry.getEncryptionPluginSpi(encryptionIdentifier);
+        if (currentEncryptionSpi == null) {
+            log.log(TRACE, "No wire encryption plugin available for {0}", encryptionIdentifier);
+            return Optional.empty();
+        }
+        try (CryptSessionConfig cryptSessionConfig =
+                     getCryptSessionConfig(encryptionIdentifier, pluginSpecificData.specificData())) {
+            EncryptionPlugin encryptionPlugin = currentEncryptionSpi.createEncryptionPlugin(cryptSessionConfig);
+            EncryptionInitInfo encryptionInitInfo = encryptionPlugin.initializeEncryption();
+            if (encryptionInitInfo.isSuccess()) {
+                enableEncryption(encryptionInitInfo);
+
+                clearServerKeys();
+
+                if (chainBuilder.hasException() && log.isLoggable(WARNING)) {
+                    log.log(WARNING, "Wire encryption established with {0}, but some plugins failed; see debug level for stacktraces\n{1}",
+                            encryptionIdentifier, ExceptionHelper.collectAllMessages(chainBuilder.getException()));
                 } else {
-                    chainBuilder.append(encryptionInitInfo.getException());
+                    log.log(TRACE, "Wire encryption established with {0}", encryptionIdentifier);
                 }
-            } catch (SQLException e) {
-                chainBuilder.append(e);
+                return Optional.of(encryptionIdentifier);
+            } else {
+                chainBuilder.append(encryptionInitInfo.getException());
             }
+        } catch (SQLException e) {
+            chainBuilder.append(e);
         }
+        return Optional.empty();
+    }
 
-        if (!initializedEncryption
-                && getAttachProperties().getWireCryptAsEnum() == WireCrypt.REQUIRED) {
-            FbExceptionBuilder exceptionBuilder =
-                    FbExceptionBuilder.forNonTransientException(ISCConstants.isc_wirecrypt_incompatible);
-            if (chainBuilder.hasException()) {
-                exceptionBuilder.cause(chainBuilder.getException());
+    private void throwIfWireCryptRequired(SQLException encryptionException) throws SQLException {
+        if (getAttachProperties().getWireCryptAsEnum() == WireCrypt.REQUIRED) {
+            throw FbExceptionBuilder.forNonTransientException(ISCConstants.isc_wirecrypt_incompatible)
+                    .cause(encryptionException)
+                    .toSQLException();
+        }
+    }
+
+    private static void logWireCryptPluginFailures(SQLExceptionChainBuilder<SQLException> chainBuilder,
+            EncryptionIdentifier selectedEncryption) {
+        if (chainBuilder.hasException() && log.isLoggable(WARNING)) {
+            if (selectedEncryption == null) {
+                log.log(WARNING, "No wire encryption established because of plugin failures; see debug level for stacktraces:\n{0}",
+                        ExceptionHelper.collectAllMessages(chainBuilder.getException()));
             }
-            throw exceptionBuilder.toSQLException();
-        }
-
-        if (chainBuilder.hasException()) {
-            SQLException current = chainBuilder.getException();
-            if (log.isLoggable(WARNING)) {
-                log.log(WARNING, initializedEncryption
-                        ? "Wire encryption established, but some plugins failed; see other loglines for details"
-                        : "No wire encryption established because of errors");
-                log.log(WARNING, "Encryption plugin failed; see debug level for stacktraces:\n{0}",
-                        ExceptionHelper.collectAllMessages(current));
-                if (log.isLoggable(DEBUG)) {
-                    do {
-                        log.log(DEBUG, "Encryption plugin failed", current);
-                    } while ((current = current.getNextException()) != null);
-                }
+            if (log.isLoggable(DEBUG)) {
+                SQLException current = chainBuilder.getException();
+                do {
+                    log.log(DEBUG, "Encryption plugin failed", current);
+                } while ((current = current.getNextException()) != null);
             }
         }
     }
