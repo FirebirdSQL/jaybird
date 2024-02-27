@@ -54,8 +54,9 @@ class SQLExceptionChainBuilderTest {
 
         builder.append(root);
         
-        assertTrue(builder.hasException(), "SQLExceptionChainBuilder has a exception");
+        assertTrue(builder.hasException(), "SQLExceptionChainBuilder should have an exception");
         assertSame(root, builder.getException(), "Expected root exception to be identical to returned exception");
+        checkExceptionChain(root, List.of());
     }
     
     /**
@@ -76,7 +77,7 @@ class SQLExceptionChainBuilderTest {
             builder.append(ex);
         }
         
-        assertTrue(builder.hasException(), "SQLExceptionChainBuilder has a exception");
+        assertTrue(builder.hasException(), "SQLExceptionChainBuilder should have an exception");
         SQLException resultException = builder.getException();
         assertSame(root, resultException, "Expected root exception to be identical to returned exception");
         checkExceptionChain(resultException, additionalExceptions);
@@ -93,7 +94,7 @@ class SQLExceptionChainBuilderTest {
 
         builder.append(initialRoot).addFirst(finalRoot);
 
-        assertTrue(builder.hasException(), "SQLExceptionChainBuilder has a exception");
+        assertTrue(builder.hasException(), "SQLExceptionChainBuilder should have an exception");
         SQLException resultException = builder.getException();
         assertSame(finalRoot, resultException, "Expected final root exception to be the returned exception");
         checkExceptionChain(resultException, List.of(initialRoot));
@@ -111,7 +112,7 @@ class SQLExceptionChainBuilderTest {
         while((nextException = nextException.getNextException()) != null) {
             count++;
             if (count <= expectedExceptions.size()) {
-                assertSame(expectedExceptions.get(count - 1), nextException, "Unexpected Exception for count " + count);
+                assertSame(expectedExceptions.get(count - 1), nextException, "Unexpected exception for count " + count);
             } else {
                 // Break to avoid circular reference chains
                 break;
