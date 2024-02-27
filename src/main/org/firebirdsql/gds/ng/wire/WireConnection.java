@@ -292,107 +292,13 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             xdrIn = new XdrInputStream(socket.getInputStream());
             xdrOut = new XdrOutputStream(socket.getOutputStream());
 
-            xdrOut.writeInt(op_connect);
-            xdrOut.writeInt(op_attach); // p_cnct_operation
-            xdrOut.writeInt(CONNECT_VERSION3); // p_cnct_cversion
-            xdrOut.writeInt(arch_generic); // p_cnct_client
-
-            xdrOut.writeString(getCnctFile(), getEncoding()); // p_cnct_file
-            xdrOut.writeInt(protocols.getProtocolCount()); // Count of protocols understood
-            xdrOut.writeBuffer(createUserIdentificationBlock());
-
-            for (ProtocolDescriptor protocol : protocols) {
-                xdrOut.writeInt(protocol.getVersion()); // Protocol version
-                xdrOut.writeInt(protocol.getArchitecture()); // Architecture of client
-                xdrOut.writeInt(protocol.getMinimumType()); // Minimum type
-                if (protocol.supportsWireCompression() && attachProperties.isWireCompression()) {
-                    xdrOut.writeInt(protocol.getMaximumType() | pflag_compress);
-                } else {
-                    xdrOut.writeInt(protocol.getMaximumType()); // Maximum type
-                }
-                xdrOut.writeInt(protocol.getWeight()); // Preference weight
-            }
-
-            xdrOut.flush();
+            sendConnectAttach(xdrOut);
+            int operation = handleCryptKeyCallbackBeforeAttachResponse();
             
-            FbWireOperations cryptKeyCallbackWireOperations = null;
-            DbCryptCallback dbCryptCallback = null;
-            int operation = readNextOperation();
-            while (operation == op_crypt_key_callback) {
-                if (cryptKeyCallbackWireOperations == null) {
-                    cryptKeyCallbackWireOperations = getCryptKeyCallbackWireOperations();
-                }
-                if (dbCryptCallback == null) {
-                    dbCryptCallback = createDbCryptCallback();
-                }
-                cryptKeyCallbackWireOperations.handleCryptKeyCallback(dbCryptCallback);
-                operation = readNextOperation();
-            }
-
             if (operation == op_accept || operation == op_cond_accept || operation == op_accept_data) {
-                FbWireAttachment.AcceptPacket acceptPacket = new FbWireAttachment.AcceptPacket();
-                acceptPacket.operation = operation;
-                protocolVersion = xdrIn.readInt(); // p_acpt_version - Protocol version
-                protocolArchitecture = xdrIn.readInt(); // p_acpt_architecture - Architecture for protocol
-                int acceptType = xdrIn.readInt(); // p_acpt_type - Minimum type
-                protocolMinimumType = acceptType & ptype_MASK;
-                final boolean compress = (acceptType & pflag_compress) != 0;
-
-                if (protocolVersion < 0) {
-                    protocolVersion = (protocolVersion & FB_PROTOCOL_MASK) | FB_PROTOCOL_FLAG;
-                }
-
-                if (operation == op_cond_accept || operation == op_accept_data) {
-                    byte[] data = acceptPacket.p_acpt_data = xdrIn.readBuffer();
-                    acceptPacket.p_acpt_plugin = xdrIn.readString(getEncoding());
-                    final int isAuthenticated = xdrIn.readInt();
-                    byte[] serverKeys = acceptPacket.p_acpt_keys = xdrIn.readBuffer();
-
-                    clientAuthBlock.setServerData(data);
-                    clientAuthBlock.setAuthComplete(isAuthenticated == 1);
-                    addServerKeys(serverKeys);
-                    clientAuthBlock.resetClient(serverKeys);
-                    clientAuthBlock.switchPlugin(acceptPacket.p_acpt_plugin);
-                } else {
-                    clientAuthBlock.resetClient(null);
-                }
-
-                if (compress) {
-                    xdrOut.enableCompression();
-                    xdrIn.enableDecompression();
-                }
-
-                ProtocolDescriptor descriptor = protocols.getProtocolDescriptor(protocolVersion);
-                if (descriptor == null) {
-                    throw new SQLException(String.format(
-                            "Unsupported or unexpected protocol version %d connecting to database %s. Supported version(s): %s",
-                            protocolVersion, getServerName(), protocols.getProtocolVersions()));
-                }
-                C connectionHandle = createConnectionHandle(descriptor);
-                if (operation == op_cond_accept) {
-                    connectionHandle.authReceiveResponse(acceptPacket);
-                }
-                return connectionHandle;
+                return handleConnectAttachAccept(xdrIn, operation);
             } else {
-                try {
-                    if (operation == op_response) {
-                        // Handle exception from response
-                        AbstractWireOperations wireOperations = getDefaultWireOperations();
-                        wireOperations.processResponse(wireOperations.processOperation(operation));
-                    } else if (operation == op_reject) {
-                        throw FbExceptionBuilder.forException(ISCConstants.isc_connect_reject)
-                                .messageParameter(REJECTION_POSSIBLE_REASON).toSQLException();
-                    }
-                    log.log(DEBUG, "Reached end of identify without error or connection, last operation: {0}", operation);
-                    // If we reach here, authentication failed (or never authenticated for lack of username and password)
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_login).toSQLException();
-                } finally {
-                    try {
-                        close();
-                    } catch (Exception ex) {
-                        log.log(DEBUG, "Ignoring exception on disconnect in connect phase of protocol", ex);
-                    }
-                }
+                throw handleConnectAttachReject(operation);
             }
         } catch (SocketTimeoutException ste) {
             throw FbExceptionBuilder.forTimeoutException(ISCConstants.isc_network_error)
@@ -400,6 +306,125 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         } catch (IOException ioex) {
             throw FbExceptionBuilder.forException(ISCConstants.isc_network_error)
                     .messageParameter(getServerName()).cause(ioex).toSQLException();
+        }
+    }
+
+    private void sendConnectAttach(XdrOutputStream xdrOut) throws IOException, SQLException {
+        xdrOut.writeInt(op_connect);
+        xdrOut.writeInt(op_attach); // p_cnct_operation
+        xdrOut.writeInt(CONNECT_VERSION3); // p_cnct_cversion
+        xdrOut.writeInt(arch_generic); // p_cnct_client
+
+        xdrOut.writeString(getCnctFile(), getEncoding()); // p_cnct_file
+        xdrOut.writeInt(protocols.getProtocolCount()); // Count of protocols understood
+        xdrOut.writeBuffer(createUserIdentificationBlock());
+
+        for (ProtocolDescriptor protocol : protocols) {
+            writeProtocolDescriptor(xdrOut, protocol);
+        }
+
+        xdrOut.flush();
+    }
+
+    private void writeProtocolDescriptor(XdrOutputStream xdrOut, ProtocolDescriptor protocol) throws IOException {
+        xdrOut.writeInt(protocol.getVersion()); // Protocol version
+        xdrOut.writeInt(protocol.getArchitecture()); // Architecture of client
+        xdrOut.writeInt(protocol.getMinimumType()); // Minimum type
+        if (protocol.supportsWireCompression() && attachProperties.isWireCompression()) {
+            xdrOut.writeInt(protocol.getMaximumType() | pflag_compress);
+        } else {
+            xdrOut.writeInt(protocol.getMaximumType()); // Maximum type
+        }
+        xdrOut.writeInt(protocol.getWeight()); // Preference weight
+    }
+
+    private int handleCryptKeyCallbackBeforeAttachResponse() throws IOException, SQLException {
+        int operation = readNextOperation();
+        FbWireOperations cryptKeyCallbackWireOperations = null;
+        DbCryptCallback dbCryptCallback = null;
+        while (operation == op_crypt_key_callback) {
+            if (cryptKeyCallbackWireOperations == null) {
+                cryptKeyCallbackWireOperations = getCryptKeyCallbackWireOperations();
+            }
+            if (dbCryptCallback == null) {
+                dbCryptCallback = createDbCryptCallback();
+            }
+            cryptKeyCallbackWireOperations.handleCryptKeyCallback(dbCryptCallback);
+            operation = readNextOperation();
+        }
+        return operation;
+    }
+
+    private C handleConnectAttachAccept(XdrInputStream xdrIn, int operation) throws IOException, SQLException {
+        var acceptPacket = new FbWireAttachment.AcceptPacket();
+        acceptPacket.operation = operation;
+        protocolVersion = xdrIn.readInt(); // p_acpt_version - Protocol version
+        protocolArchitecture = xdrIn.readInt(); // p_acpt_architecture - Architecture for protocol
+        int acceptType = xdrIn.readInt(); // p_acpt_type - Minimum type
+        protocolMinimumType = acceptType & ptype_MASK;
+        final boolean compress = (acceptType & pflag_compress) != 0;
+
+        if (protocolVersion < 0) {
+            protocolVersion = (protocolVersion & FB_PROTOCOL_MASK) | FB_PROTOCOL_FLAG;
+        }
+
+        if (operation == op_cond_accept || operation == op_accept_data) {
+            byte[] data = acceptPacket.p_acpt_data = xdrIn.readBuffer();
+            acceptPacket.p_acpt_plugin = xdrIn.readString(getEncoding());
+            final boolean authComplete = xdrIn.readInt() == 1;
+            byte[] serverKeys = acceptPacket.p_acpt_keys = xdrIn.readBuffer();
+
+            clientAuthBlock.setServerData(data);
+            clientAuthBlock.setAuthComplete(authComplete);
+            addServerKeys(serverKeys);
+            clientAuthBlock.resetClient(serverKeys);
+            clientAuthBlock.switchPlugin(acceptPacket.p_acpt_plugin);
+        } else {
+            clientAuthBlock.resetClient(null);
+        }
+
+        if (compress) {
+            xdrOut.enableCompression();
+            xdrIn.enableDecompression();
+        }
+
+        ProtocolDescriptor descriptor = protocols.getProtocolDescriptor(protocolVersion);
+        if (descriptor == null) {
+            throw new SQLException(String.format(
+                    "Unsupported or unexpected protocol version %d connecting to database %s. Supported version(s): %s",
+                    protocolVersion, getServerName(), protocols.getProtocolVersions()));
+        }
+        C connectionHandle = createConnectionHandle(descriptor);
+        if (operation == op_cond_accept) {
+            connectionHandle.authReceiveResponse(acceptPacket);
+        }
+        return connectionHandle;
+    }
+
+    private SQLException handleConnectAttachReject(int operation) throws IOException {
+        try {
+            if (operation == op_response) {
+                // Handle exception from response
+                AbstractWireOperations wireOperations = getDefaultWireOperations();
+                Response response = wireOperations.processOperation(operation);
+                if (response instanceof GenericResponse genericResponse && genericResponse.exception() != null) {
+                    return genericResponse.exception();
+                }
+            } else if (operation == op_reject) {
+                return FbExceptionBuilder.forException(ISCConstants.isc_connect_reject)
+                        .messageParameter(REJECTION_POSSIBLE_REASON).toSQLException();
+            }
+            log.log(DEBUG, "Reached end of identify without error or connection, last operation: {0}", operation);
+            // If we reach here, authentication failed (or never authenticated for lack of username and password)
+            return FbExceptionBuilder.forException(ISCConstants.isc_login).toSQLException();
+        } catch (SQLException e) {
+            return e;
+        } finally {
+            try {
+                close();
+            } catch (Exception ex) {
+                log.log(DEBUG, "Ignoring exception on disconnect in connect phase of protocol", ex);
+            }
         }
     }
 
