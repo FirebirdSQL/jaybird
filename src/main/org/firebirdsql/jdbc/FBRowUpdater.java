@@ -175,7 +175,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         processing = false;
     }
 
-    private void deallocateStatement(FbStatement handle, SQLExceptionChainBuilder<SQLException> chain) {
+    private void deallocateStatement(FbStatement handle, SQLExceptionChainBuilder chain) {
         if (handle == null) return;
         try {
             handle.close();
@@ -187,7 +187,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
     @Override
     public void close() throws SQLException {
         closed = true;
-        var chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder();
         for (FbStatement statement : statements) {
             deallocateStatement(statement, chain);
         }

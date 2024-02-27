@@ -123,7 +123,7 @@ final class ServerBatch implements Batch, StatementListener {
                 return emptyList();
             }
             Collection<RowValue> rowValues = toRowValues();
-            SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+            var chain = new SQLExceptionChainBuilder();
             // Create server-side batch
             if (!state.isOpenOnServer()) {
                 createBatch(chain);
@@ -156,7 +156,7 @@ final class ServerBatch implements Batch, StatementListener {
      *         For database access errors (I/O errors)
      */
     @SuppressWarnings("NonAtomicOperationOnVolatileField")
-    private void createBatch(SQLExceptionChainBuilder<SQLException> chain) throws SQLException {
+    private void createBatch(SQLExceptionChainBuilder chain) throws SQLException {
         try {
             statement.deferredBatchCreate(batchConfig,
                     new BatchDeferredAction(chain, "exception creating batch") {
@@ -183,7 +183,7 @@ final class ServerBatch implements Batch, StatementListener {
      *         For database access errors (I/O errors)
      */
     @SuppressWarnings("NonAtomicOperationOnVolatileField")
-    private void sendBatch(Collection<RowValue> rowValues, SQLExceptionChainBuilder<SQLException> chain)
+    private void sendBatch(Collection<RowValue> rowValues, SQLExceptionChainBuilder chain)
             throws SQLException {
         try {
             statement.deferredBatchSend(rowValues,
@@ -212,7 +212,7 @@ final class ServerBatch implements Batch, StatementListener {
      *         for database access errors
      */
     @SuppressWarnings("NonAtomicOperationOnVolatileField")
-    private BatchCompletion executeBatch(SQLExceptionChainBuilder<SQLException> chain) throws SQLException {
+    private BatchCompletion executeBatch(SQLExceptionChainBuilder chain) throws SQLException {
         try {
             state = state.onExecute();
             BatchCompletion batchCompletion = statement.batchExecute();
@@ -368,10 +368,10 @@ final class ServerBatch implements Batch, StatementListener {
 
     private static class BatchDeferredAction implements DeferredResponse<Void> {
 
-        private final SQLExceptionChainBuilder<? super SQLException> chain;
+        private final SQLExceptionChainBuilder chain;
         private final String genericExceptionMessage;
 
-        BatchDeferredAction(SQLExceptionChainBuilder<? super SQLException> chain, String genericExceptionMessage) {
+        BatchDeferredAction(SQLExceptionChainBuilder chain, String genericExceptionMessage) {
             this.chain = chain;
             this.genericExceptionMessage = genericExceptionMessage;
         }

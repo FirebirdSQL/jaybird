@@ -170,7 +170,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     public void free() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             try {
-                SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+                var chain = new SQLExceptionChainBuilder();
 
                 for (FBBlobInputStream blobIS : new ArrayList<>(inputStreams)) {
                     try {

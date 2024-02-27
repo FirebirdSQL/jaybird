@@ -164,7 +164,7 @@ public class FBConnection implements FirebirdConnection {
         List<Statement> statements = new ArrayList<>(activeStatements);
 
         // iterate through the set, close statements and collect exceptions
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder();
         for (Statement stmt : statements) {
             try {
                 stmt.close();
@@ -431,7 +431,7 @@ public class FBConnection implements FirebirdConnection {
         if (log.isLoggable(TRACE)) {
             log.log(TRACE, "Connection closed requested at", new RuntimeException("Connection close logging"));
         }
-        var chainBuilder = new SQLExceptionChainBuilder<>();
+        var chainBuilder = new SQLExceptionChainBuilder();
         try (LockCloseable ignored = withLock()) {
             try {
                 if (metaData != null) metaData.close();
@@ -448,7 +448,7 @@ public class FBConnection implements FirebirdConnection {
         }
     }
 
-    private void closeMc(SQLExceptionChainBuilder<SQLException> chainBuilder) {
+    private void closeMc(SQLExceptionChainBuilder chainBuilder) {
         FBManagedConnection mc = this.mc;
         if (mc == null) return;
         // leave managed transactions alone, they are normally committed after the Connection handle is closed.

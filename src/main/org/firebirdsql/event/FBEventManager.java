@@ -162,7 +162,7 @@ public class FBEventManager implements EventManager {
         if (!connected) {
             throw new IllegalStateException("Disconnect called while not connected");
         }
-        var chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder();
         try (LockCloseable ignored = withLock()) {
             try {
                 for (String eventName : new HashSet<>(handlerMap.keySet())) {

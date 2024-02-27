@@ -179,7 +179,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
     private void setCoordinator(AbstractTransactionCoordinator coordinator) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (this.coordinator != null) {
-                SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+                var chain = new SQLExceptionChainBuilder();
                 try {
                     this.coordinator.completeStatements(CompletionReason.COMMIT);
                 } catch (SQLException ex) {
@@ -234,7 +234,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         protected void completeStatements(CompletionReason reason) throws SQLException {
-            SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+            var chain = new SQLExceptionChainBuilder();
 
             // we have to loop through the array, since the statement.completeStatement() call causes
             // ConcurrentModificationException
@@ -314,7 +314,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         @SuppressWarnings("resource")
         public void executionStarted(FBStatement stmt) throws SQLException {
             List<FBStatement> tempList = new ArrayList<>(statements);
-            SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+            var chain = new SQLExceptionChainBuilder();
 
             // complete all open statements for the connection (there should be only one anyway)
             for (Iterator<FBStatement> iter = tempList.iterator(); iter.hasNext(); ) {
@@ -493,7 +493,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         @SuppressWarnings("resource")
         public void executionStarted(FBStatement stmt) throws SQLException {
             List<FBStatement> tempList = new ArrayList<>(statements);
-            SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+            var chain = new SQLExceptionChainBuilder();
 
             // complete all open statements for the connection (there should be only one anyway)
             for (Iterator<FBStatement> iter = tempList.iterator(); iter.hasNext(); ) {

@@ -27,31 +27,12 @@ import java.sql.SQLException;
  * a single thread or with proper external synchronisation.
  * </p>
  *
- * @param <E>
- *         type of SQLException (definition: {@code E extends SQLException})
  * @author Mark Rotteveel
  * @since 2.2
  */
-public final class SQLExceptionChainBuilder<E extends SQLException> {
+public final class SQLExceptionChainBuilder {
 
-    private E root;
-
-    /**
-     * Create SQLExceptionChainBuilder
-     */
-    public SQLExceptionChainBuilder() {
-        this(null);
-    }
-
-    /**
-     * Create SQLExceptionChainBuilder with the specified root exception.
-     *
-     * @param root
-     *         root SQLException
-     */
-    public SQLExceptionChainBuilder(E root) {
-        this.root = root;
-    }
+    private SQLException root;
 
     /**
      * Appends the passed SQLException to the exception chain.
@@ -63,7 +44,7 @@ public final class SQLExceptionChainBuilder<E extends SQLException> {
      *         SQLException to add to the chain.
      * @return this SQLExceptionChainBuilder
      */
-    public SQLExceptionChainBuilder<E> append(E sqle) {
+    public SQLExceptionChainBuilder append(SQLException sqle) {
         if (root == null) {
             root = sqle;
         } else {
@@ -84,7 +65,7 @@ public final class SQLExceptionChainBuilder<E extends SQLException> {
      * @return this SQLExceptionChainBuilder
      * @since 5
      */
-    public SQLExceptionChainBuilder<E> addFirst(E sqle) {
+    public SQLExceptionChainBuilder addFirst(SQLException sqle) {
         SQLException originalRoot = root;
         if (originalRoot != null) {
             sqle.setNextException(originalRoot);
@@ -103,7 +84,7 @@ public final class SQLExceptionChainBuilder<E extends SQLException> {
     /**
      * @return the root SQLException or {@code null} if no SQLException was added to this SQLExceptionChainBuilder
      */
-    public E getException() {
+    public SQLException getException() {
         return root;
     }
 }

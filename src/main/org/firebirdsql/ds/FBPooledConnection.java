@@ -109,7 +109,7 @@ sealed class FBPooledConnection implements PooledConnection permits FBXAConnecti
     @Override
     public void close() throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            var chain = new SQLExceptionChainBuilder<>();
+            var chain = new SQLExceptionChainBuilder();
             if (handler != null) {
                 try {
                     handler.close();

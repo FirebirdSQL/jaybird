@@ -411,7 +411,7 @@ public final class FbExceptionBuilder {
      */
     public SQLException toSQLException() {
         checkNonEmpty();
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder();
         for (ExceptionInformation info : exceptionInfo) {
             chain.append(info.toSQLException());
         }
@@ -452,8 +452,8 @@ public final class FbExceptionBuilder {
     public SQLException toFlatSQLException() {
         checkNonEmpty();
         // We are recording the unflattened state if people need the details
-        SQLExceptionChainBuilder<FBSQLExceptionInfo> chain = new SQLExceptionChainBuilder<>();
-        StringBuilder fullExceptionMessage = new StringBuilder();
+        var chain = new SQLExceptionChainBuilder();
+        var fullExceptionMessage = new StringBuilder();
         ExceptionInformation interestingExceptionInfo = null;
 
         for (ExceptionInformation info : exceptionInfo) {

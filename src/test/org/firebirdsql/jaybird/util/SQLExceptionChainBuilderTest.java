@@ -37,33 +37,20 @@ class SQLExceptionChainBuilderTest {
      * Test for empty SQLExceptionChainBuilder.
      */
     @Test
-    void testBuilder_EmptyOnConstruct_NoAppend() {
-        SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<>();
+    void testBuilder_NoAppend() {
+        var builder = new SQLExceptionChainBuilder();
         
         assertFalse(builder.hasException(), "Empty SQLExceptionChainBuilder should have no Exception");
         assertNull(builder.getException(), "Empty SQLExceptionChainBuilder should have null Exception");
     }
     
     /**
-     * Test for SQLExceptionChainBuilder constructed with a root SQLException and no further appends.
+     * Test for SQLExceptionChainBuilder with one append
      */
     @Test
-    void testBuilder_RootOnConstruct_NoAppend() {
-        SQLException root = new SQLException();
-        
-        SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<>(root);
-        
-        assertTrue(builder.hasException(), "SQLExceptionChainBuilder has a exception");
-        assertSame(root, builder.getException(), "Expected root exception to be identical to returned exception");
-    }
-    
-    /**
-     * Test for SQLExceptionChainBuilder constructed empty with one append
-     */
-    @Test
-    void testBuilder_EmptyOnConstruct_OneAppend() {
-        SQLException root = new SQLException();
-        SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<>();
+    void testBuilder_OneAppend() {
+        var root = new SQLException();
+        var builder = new SQLExceptionChainBuilder();
 
         builder.append(root);
         
@@ -72,39 +59,18 @@ class SQLExceptionChainBuilderTest {
     }
     
     /**
-     * Test for SQLExceptionChainBuilder constructed with a root SQLException and multiple appends.
+     * Test for SQLExceptionChainBuilder with multiple appends.
      */
     @Test
-    void testBuilder_RootOnConstruct_MultipleAppends() {
-        SQLException root = new SQLException();
-        List<SQLException> additionalExceptions = new ArrayList<>();
+    void testBuilder_MultipleAppends() {
+        var root = new SQLException();
+        var additionalExceptions = new ArrayList<SQLException>();
         for (int count = 1; count <= 3; count++) {
             additionalExceptions.add(new SQLException(Integer.toString(count)));
         }
         
-        SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<>(root);
-        for (SQLException ex : additionalExceptions) {
-            builder.append(ex);
-        }
-        
-        assertTrue(builder.hasException(), "SQLExceptionChainBuilder has a exception");
-        SQLException resultException = builder.getException();
-        assertSame(root, resultException, "Expected root exception to be identical to returned exception");
-        checkExceptionChain(resultException, additionalExceptions);
-    }
-    
-    /**
-     * Test for SQLExceptionChainBuilder constructed with an empty root and multiple appends.
-     */
-    @Test
-    void testBuilder_EmptyOnConstruct_MultipleAppends() {
-        SQLException root = new SQLException();
-        List<SQLException> additionalExceptions = new ArrayList<>();
-        for (int count = 1; count <= 3; count++) {
-            additionalExceptions.add(new SQLException(Integer.toString(count)));
-        }
-        
-        SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<>();
+        var builder = new SQLExceptionChainBuilder();
+
         builder.append(root);
         for (SQLException ex : additionalExceptions) {
             builder.append(ex);
@@ -122,7 +88,7 @@ class SQLExceptionChainBuilderTest {
      * @param root The root SQLException
      * @param expectedExceptions SQLExceptions expected in the chain (excluding the root)
      */
-    private void checkExceptionChain(SQLException root, List<SQLException> expectedExceptions) {
+    private static void checkExceptionChain(SQLException root, List<SQLException> expectedExceptions) {
         int count = 0;
         SQLException nextException = root;
         while((nextException = nextException.getNextException()) != null) {

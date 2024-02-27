@@ -150,7 +150,7 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
      *         if underlying connection threw an exception.
      */
     void handleClose(boolean notifyOwner) throws SQLException {
-        var chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder();
         try {
             closeStatements();
         } catch (SQLException ex) {
@@ -229,7 +229,7 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
     }
 
     void closeStatements() throws SQLException {
-        var chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder();
         try (LockCloseable ignored = owner.withLock()) {
             // Make copy as the StatementHandler close will remove itself from openStatements
             for (StatementHandler stmt : new ArrayList<>(openStatements)) {

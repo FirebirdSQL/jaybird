@@ -1425,6 +1425,14 @@ use `decodeLocalDate(byte[])`
 * `FetchResponse` was converted to a record, and its getters (`getStatus()` and `getCount()`) have been replaced by accessor methods (`status()` and `count()`)
 * `GenericResponse` was converted to a record, and its getters (`getObjectHandle()`, `getBlobId()`, `getData()` and `exception()`) have been replaced by accessor methods (`objectHandle()`, `blobId()`, `data()` and `exception()`)
 * `SQLResponse` was converted to a record, and its getter (`getCount()`) has been replaced by an accessor method (`count()`)
+* `SQLExceptionChainBuilder`
+** Moved to package `org.firebirdsql.jaybird.util`;
+this package is internal API only, and not exported from the module (see also earlier)
+** The generics `<E extends SQLException>` were removed from this class
+*** `append` and `addFirst` now always expect `SQLException`
+*** `getException()` now always returns `SQLException`
+** Constructor `SQLExceptionChainBuilder(SQLException)` was removed, as in practice this was never used;
+replacement is `new SQLExceptionChainBuilder().append(exception)`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

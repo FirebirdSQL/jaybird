@@ -374,7 +374,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         if (closeableFields.isEmpty())
             return;
 
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder();
         // close current fields, so that resources are freed.
         for (final FBCloseableField field : closeableFields) {
             try {
@@ -413,7 +413,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     void close(boolean notifyListener, CompletionReason completionReason) throws SQLException {
         if (isClosed()) return;
         closed = true;
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder();
 
         try {
             closeFields();

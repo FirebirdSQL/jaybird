@@ -133,7 +133,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
 
     protected void consumePutSegmentResponses(int requestCount) throws SQLException {
         if (requestCount == 0) return;
-        var chain = new SQLExceptionChainBuilder<>();
+        var chain = new SQLExceptionChainBuilder();
         try {
             while (requestCount-- > 0) {
                 consumePutSegmentResponse(chain);
@@ -151,7 +151,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
         }
     }
 
-    private void consumePutSegmentResponse(SQLExceptionChainBuilder<SQLException> chain) throws IOException {
+    private void consumePutSegmentResponse(SQLExceptionChainBuilder chain) throws IOException {
         try {
             getDatabase().readResponse(null);
         } catch (SQLException e) {
