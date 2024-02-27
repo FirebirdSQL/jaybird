@@ -81,6 +81,23 @@ class SQLExceptionChainBuilderTest {
         assertSame(root, resultException, "Expected root exception to be identical to returned exception");
         checkExceptionChain(resultException, additionalExceptions);
     }
+
+    /**
+     * Test for SQLExceptionChainBuilder with one append and one addFirst
+     */
+    @Test
+    void testBuilder_OneAppendOneAddFirst() {
+        var initialRoot = new SQLException("initial root");
+        var finalRoot = new SQLException("final root");
+        var builder = new SQLExceptionChainBuilder();
+
+        builder.append(initialRoot).addFirst(finalRoot);
+
+        assertTrue(builder.hasException(), "SQLExceptionChainBuilder has a exception");
+        SQLException resultException = builder.getException();
+        assertSame(finalRoot, resultException, "Expected final root exception to be the returned exception");
+        checkExceptionChain(resultException, List.of(initialRoot));
+    }
     
     /**
      * Checks the exception chain returned from getNextException (root itself is not checked).
