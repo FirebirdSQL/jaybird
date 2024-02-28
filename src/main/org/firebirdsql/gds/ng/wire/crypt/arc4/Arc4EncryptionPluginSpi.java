@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire.crypt.arc4;
 
+import org.firebirdsql.gds.ng.wire.crypt.CryptConnectionInfo;
 import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
@@ -42,4 +43,11 @@ public final class Arc4EncryptionPluginSpi implements EncryptionPluginSpi {
     public EncryptionPlugin createEncryptionPlugin(CryptSessionConfig cryptSessionConfig) {
         return new Arc4EncryptionPlugin(cryptSessionConfig);
     }
+
+    @Override
+    public boolean isSupported(CryptConnectionInfo cryptConnectionInfo) {
+        // TODO Maybe check if ARC4 requirements are allowed by the security config?
+        return true;
+    }
+
 }

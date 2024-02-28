@@ -45,7 +45,7 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptInvalidKey;
  * @author Mark Rotteveel
  * @since 6
  */
-public class ChaCha64EncryptionPlugin implements EncryptionPlugin {
+public final class ChaCha64EncryptionPlugin implements EncryptionPlugin {
 
     private static final String CHA_CHA_CIPHER_NAME = "ChaCha";
 

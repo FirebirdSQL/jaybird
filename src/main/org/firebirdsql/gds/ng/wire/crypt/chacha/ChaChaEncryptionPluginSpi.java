@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.gds.ng.wire.crypt.chacha;
 
+import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
+import org.firebirdsql.gds.ng.wire.crypt.CryptConnectionInfo;
 import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
@@ -42,4 +44,10 @@ public final class ChaChaEncryptionPluginSpi implements EncryptionPluginSpi {
     public EncryptionPlugin createEncryptionPlugin(CryptSessionConfig cryptSessionConfig) {
         return new ChaChaEncryptionPlugin(cryptSessionConfig);
     }
+
+    @Override
+    public boolean isSupported(CryptConnectionInfo cryptConnectionInfo) {
+        return cryptConnectionInfo.protocolVersion() >= WireProtocolConstants.PROTOCOL_VERSION16;
+    }
+
 }

@@ -33,6 +33,7 @@ import org.firebirdsql.gds.ng.wire.FbWireOperations;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
 import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
+import org.firebirdsql.gds.ng.wire.crypt.CryptConnectionInfo;
 import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionInitInfo;
@@ -200,16 +201,23 @@ public class V13WireOperations extends V11WireOperations {
 
     private Optional<EncryptionIdentifier> tryKnownServerKey(KnownServerKey.PluginSpecificData pluginSpecificData,
             SQLExceptionChainBuilder chainBuilder) throws IOException {
+        record ConnectionInfoImpl(int protocolVersion) implements CryptConnectionInfo {
+        }
+
         EncryptionIdentifier encryptionIdentifier = pluginSpecificData.encryptionIdentifier();
-        EncryptionPluginSpi currentEncryptionSpi =
+        EncryptionPluginSpi encryptionPluginSpi =
                 EncryptionPluginRegistry.getEncryptionPluginSpi(encryptionIdentifier);
-        if (currentEncryptionSpi == null) {
+        if (encryptionPluginSpi == null) {
             log.log(TRACE, "No wire encryption plugin available for {0}", encryptionIdentifier);
             return Optional.empty();
+        } else if (!encryptionPluginSpi.isSupported(new ConnectionInfoImpl(getConnection().getProtocolVersion()))) {
+            log.log(TRACE, "Wire encryption plugin {0} skipped, not supported", encryptionIdentifier);
+            return Optional.empty();
         }
+        
         try (CryptSessionConfig cryptSessionConfig =
                      getCryptSessionConfig(encryptionIdentifier, pluginSpecificData.specificData())) {
-            EncryptionPlugin encryptionPlugin = currentEncryptionSpi.createEncryptionPlugin(cryptSessionConfig);
+            EncryptionPlugin encryptionPlugin = encryptionPluginSpi.createEncryptionPlugin(cryptSessionConfig);
             EncryptionInitInfo encryptionInitInfo = encryptionPlugin.initializeEncryption();
             if (encryptionInitInfo.isSuccess()) {
                 enableEncryption(encryptionInitInfo);

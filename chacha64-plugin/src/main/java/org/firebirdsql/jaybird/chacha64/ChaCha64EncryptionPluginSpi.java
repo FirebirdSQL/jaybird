@@ -19,6 +19,8 @@
 package org.firebirdsql.jaybird.chacha64;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
+import org.firebirdsql.gds.ng.wire.crypt.CryptConnectionInfo;
 import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
@@ -35,7 +37,7 @@ import static java.util.Objects.requireNonNullElseGet;
  * @author Mark Rotteveel
  * @since 6
  */
-public class ChaCha64EncryptionPluginSpi implements EncryptionPluginSpi {
+public final class ChaCha64EncryptionPluginSpi implements EncryptionPluginSpi {
 
     static final EncryptionIdentifier CHA_CHA_64_ID = new EncryptionIdentifier("Symmetric", "ChaCha64");
     // Use registered Bouncy Castle if possible, otherwise use our own unregistered instance
@@ -50,6 +52,11 @@ public class ChaCha64EncryptionPluginSpi implements EncryptionPluginSpi {
     @Override
     public EncryptionPlugin createEncryptionPlugin(CryptSessionConfig cryptSessionConfig) {
         return new ChaCha64EncryptionPlugin(cryptSessionConfig, provider);
+    }
+
+    @Override
+    public boolean isSupported(CryptConnectionInfo cryptConnectionInfo) {
+        return cryptConnectionInfo.protocolVersion() >= WireProtocolConstants.PROTOCOL_VERSION16;
     }
 
     private static Provider createProvider() {
