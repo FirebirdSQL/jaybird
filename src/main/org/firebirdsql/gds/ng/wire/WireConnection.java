@@ -294,7 +294,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
             sendConnectAttach(xdrOut);
             int operation = handleCryptKeyCallbackBeforeAttachResponse();
-            
+
             if (operation == op_accept || operation == op_cond_accept || operation == op_accept_data) {
                 return handleConnectAttachAccept(xdrIn, operation);
             } else {
@@ -465,51 +465,50 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     }
 
     void addServerKeys(byte[] serverKeys) throws SQLException {
-        final ClumpletReader newKeys = new ClumpletReader(ClumpletReader.Kind.UnTagged, serverKeys);
+        final var newKeys = new ClumpletReader(ClumpletReader.Kind.UnTagged, serverKeys);
         for (newKeys.rewind(); !newKeys.isEof(); newKeys.moveNext()) {
-            int currentTag = newKeys.getClumpTag();
-            switch (currentTag) {
-            case TAG_KNOWN_PLUGINS:
-                // Nothing to do (yet)
-                break;
-            case TAG_PLUGIN_SPECIFIC:
+            addServerKey(newKeys);
+        }
+    }
+
+    private void addServerKey(ClumpletReader newKeys) throws SQLException {
+        int currentTag = newKeys.getClumpTag();
+        switch (currentTag) {
+        case TAG_KNOWN_PLUGINS -> {
+            // Nothing to do (yet)
+        }
+        case TAG_PLUGIN_SPECIFIC ->
                 // Nothing to do (yet)
                 log.log(DEBUG, "Possible implementation problem, found TAG_PLUGIN_SPECIFIC without TAG_KEY_TYPE");
-                break;
-            case TAG_KEY_TYPE: {
-                String keyType = newKeys.getString(StandardCharsets.ISO_8859_1);
+        case TAG_KEY_TYPE -> {
+            String keyType = newKeys.getString(StandardCharsets.ISO_8859_1);
 
-                newKeys.moveNext();
-                if (newKeys.isEof()) {
-                    break;
-                }
-                currentTag = newKeys.getClumpTag();
-                if (currentTag != TAG_KEY_PLUGINS) {
-                    throw new SQLException("Unexpected tag type: " + currentTag);
-                }
-                String keyPlugins = newKeys.getString(StandardCharsets.ISO_8859_1);
+            newKeys.moveNext();
+            if (newKeys.isEof()) return;
+            
+            currentTag = newKeys.getClumpTag();
+            if (currentTag != TAG_KEY_PLUGINS) {
+                throw new SQLException("Unexpected tag type: " + currentTag);
+            }
+            String keyPlugins = newKeys.getString(StandardCharsets.ISO_8859_1);
 
-                Map<String, byte[]> pluginSpecificData = null;
-                while (newKeys.directNext(TAG_PLUGIN_SPECIFIC)) {
-                    byte[] data = newKeys.getBytes();
-                    int sepIdx = ByteArrayHelper.indexOf(data, (byte) 0);
-                    if (sepIdx > 0) {
-                        String plugin = new String(data, 0, sepIdx, StandardCharsets.ISO_8859_1);
-                        byte[] specificData = Arrays.copyOfRange(data, sepIdx + 1, data.length);
-                        if (pluginSpecificData == null) {
-                            pluginSpecificData = new HashMap<>();
-                        }
-                        pluginSpecificData.put(plugin, specificData);
+            Map<String, byte[]> pluginSpecificData = null;
+            while (newKeys.directNext(TAG_PLUGIN_SPECIFIC)) {
+                byte[] data = newKeys.getBytes();
+                int sepIdx = ByteArrayHelper.indexOf(data, (byte) 0);
+                if (sepIdx > 0) {
+                    String plugin = new String(data, 0, sepIdx, StandardCharsets.ISO_8859_1);
+                    byte[] specificData = Arrays.copyOfRange(data, sepIdx + 1, data.length);
+                    if (pluginSpecificData == null) {
+                        pluginSpecificData = new HashMap<>();
                     }
+                    pluginSpecificData.put(plugin, specificData);
                 }
+            }
 
-                knownServerKeys.add(new KnownServerKey(keyType, keyPlugins, pluginSpecificData));
-                break;
-            }
-            default:
-                log.log(DEBUG, "Ignored unexpected tag type: {0}", currentTag);
-                break;
-            }
+            knownServerKeys.add(new KnownServerKey(keyType, keyPlugins, pluginSpecificData));
+        }
+        default -> log.log(DEBUG, "Ignored unexpected tag type: {0}", currentTag);
         }
     }
 
@@ -564,30 +563,12 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
      * @throws IOException
      *         if closing fails
      */
+    @SuppressWarnings("EmptyTryBlock")
     public final void close() throws IOException {
-        IOException ioex = null;
-        try {
-            if (socket != null) {
-                try {
-                    if (xdrOut != null) xdrOut.close();
-                } catch (IOException ex) {
-                    ioex = ex;
-                }
-
-                try {
-                    if (xdrIn != null) xdrIn.close();
-                } catch (IOException ex) {
-                    if (ioex == null) ioex = ex;
-                }
-
-                try {
-                    socket.close();
-                } catch (IOException ex) {
-                    if (ioex == null) ioex = ex;
-                }
-
-                if (ioex != null) throw ioex;
-            }
+        try (var ignored1 = socket;
+             var ignored2 = xdrIn;
+             var ignored3 = xdrOut) {
+            // Ignored: Use try-with-resources to close
         } finally {
             xdrOut = null;
             xdrIn = null;
