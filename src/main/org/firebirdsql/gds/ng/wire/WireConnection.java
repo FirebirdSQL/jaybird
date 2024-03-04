@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.System.Logger.Level.DEBUG;
@@ -480,36 +481,38 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         case TAG_PLUGIN_SPECIFIC ->
                 // Nothing to do (yet)
                 log.log(DEBUG, "Possible implementation problem, found TAG_PLUGIN_SPECIFIC without TAG_KEY_TYPE");
-        case TAG_KEY_TYPE -> {
-            String keyType = newKeys.getString(StandardCharsets.ISO_8859_1);
-
-            newKeys.moveNext();
-            if (newKeys.isEof()) return;
-            
-            currentTag = newKeys.getClumpTag();
-            if (currentTag != TAG_KEY_PLUGINS) {
-                throw new SQLException("Unexpected tag type: " + currentTag);
-            }
-            String keyPlugins = newKeys.getString(StandardCharsets.ISO_8859_1);
-
-            Map<String, byte[]> pluginSpecificData = null;
-            while (newKeys.directNext(TAG_PLUGIN_SPECIFIC)) {
-                byte[] data = newKeys.getBytes();
-                int sepIdx = ByteArrayHelper.indexOf(data, (byte) 0);
-                if (sepIdx > 0) {
-                    String plugin = new String(data, 0, sepIdx, StandardCharsets.ISO_8859_1);
-                    byte[] specificData = Arrays.copyOfRange(data, sepIdx + 1, data.length);
-                    if (pluginSpecificData == null) {
-                        pluginSpecificData = new HashMap<>();
-                    }
-                    pluginSpecificData.put(plugin, specificData);
-                }
-            }
-
-            knownServerKeys.add(new KnownServerKey(keyType, keyPlugins, pluginSpecificData));
-        }
+        case TAG_KEY_TYPE -> extractServerKey(newKeys).ifPresent(knownServerKeys::add);
         default -> log.log(DEBUG, "Ignored unexpected tag type: {0}", currentTag);
         }
+    }
+
+    private static Optional<KnownServerKey> extractServerKey(ClumpletReader newKeys) throws SQLException {
+        String keyType = newKeys.getString(StandardCharsets.ISO_8859_1);
+
+        newKeys.moveNext();
+        if (newKeys.isEof()) return Optional.empty();
+
+        int currentTag = newKeys.getClumpTag();
+        if (currentTag != TAG_KEY_PLUGINS) {
+            throw new SQLException("Unexpected tag type: " + currentTag);
+        }
+        String keyPlugins = newKeys.getString(StandardCharsets.ISO_8859_1);
+
+        Map<String, byte[]> pluginSpecificData = null;
+        while (newKeys.directNext(TAG_PLUGIN_SPECIFIC)) {
+            byte[] data = newKeys.getBytes();
+            int sepIdx = ByteArrayHelper.indexOf(data, (byte) 0);
+            if (sepIdx > 0) {
+                String plugin = new String(data, 0, sepIdx, StandardCharsets.ISO_8859_1);
+                byte[] specificData = Arrays.copyOfRange(data, sepIdx + 1, data.length);
+                if (pluginSpecificData == null) {
+                    pluginSpecificData = new HashMap<>();
+                }
+                pluginSpecificData.put(plugin, specificData);
+            }
+        }
+
+        return Optional.of(new KnownServerKey(keyType, keyPlugins, pluginSpecificData));
     }
 
     void clearServerKeys() {
