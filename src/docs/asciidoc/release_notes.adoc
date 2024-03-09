@@ -924,6 +924,9 @@ However, if the table in question has a primary key, and the columns missing fro
 * The user manager API (`UserManager`/`FBUserManager` and `User`/`FBUser`) has been deprecated (https://github.com/FirebirdSQL/jaybird/issues/782[#782])
 +
 We do not plan to remove this API at this time, but we recommend that you switch to using the SQL user management statements.
+* Fixed: Use of offset timezone names (e.g. `+05:00`) for `sessionTimeZone` would result in a warning being logged, and an incorrect conversion applied (in UTC instead of the offset) when using the legacy time types (https://github.com/FirebirdSQL/jaybird/issues/786[#786])
++
+This change was also backported to Jaybird 5.0.4.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

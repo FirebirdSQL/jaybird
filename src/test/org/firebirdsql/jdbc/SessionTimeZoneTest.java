@@ -20,11 +20,14 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -36,6 +39,7 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -109,6 +113,33 @@ class SessionTimeZoneTest {
         assertThat(exception, allOf(
                 errorCodeEquals(ISCConstants.isc_invalid_timezone_region),
                 fbMessageStartsWith(ISCConstants.isc_invalid_timezone_region, "does_not_exist")));
+    }
+
+    /**
+     * Rationale: Firebird expects offset name {@code [+-]HH:MM}, while Java expects {@code GMT[+-]HH:MM}.
+     */
+    @Test
+    void verifyOffsetTimeZoneBehaviour() throws Exception {
+        final String firebirdZoneName = "+05:17";
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.sessionTimeZone, firebirdZoneName);
+        try (var connection = DriverManager.getConnection(getUrl(), props);
+             var stmt = connection.createStatement();
+             var rs = stmt.executeQuery("""
+                     select
+                       rdb$get_context('SYSTEM', 'SESSION_TIMEZONE') as TZ_NAME,
+                       localtimestamp as LOCAL_TS
+                     from RDB$DATABASE""")) {
+            assertTrue(rs.next(), "expected a row");
+            assertEquals(firebirdZoneName, rs.getString(1));
+            Timestamp timestampValue = rs.getTimestamp(2);
+            assertEquals((double) System.currentTimeMillis(), timestampValue.getTime(), 1000,
+                    "Unexpected value with offset time zone");
+
+            assertNotEquals(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES),
+                    rs.getObject(2, LocalDateTime.class).truncatedTo(ChronoUnit.MINUTES),
+                    "sanity check: expected a value not equal to the current default zone");
+        }
     }
 
     @SuppressWarnings("SameParameterValue")
