@@ -927,6 +927,7 @@ We do not plan to remove this API at this time, but we recommend that you switch
 * Fixed: Use of offset timezone names (e.g. `+05:00`) for `sessionTimeZone` would result in a warning being logged, and an incorrect conversion applied (in UTC instead of the offset) when using the legacy time types (https://github.com/FirebirdSQL/jaybird/issues/786[#786])
 +
 This change was also backported to Jaybird 5.0.4.
+* Improvement: `sessionTimeZone` now also accepts the Java offset names (`GMT[{plus}-]HH:MM`), which will be automatically converted to the Firebird compatible name (`[{plus}-]HH:MM`).
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

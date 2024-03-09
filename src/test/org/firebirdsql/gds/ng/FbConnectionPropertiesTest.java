@@ -243,7 +243,7 @@ class FbConnectionPropertiesTest {
     }
 
     @Test
-    void testSessionTimeZoneSpecialGmtOffsetHandling() {
+    void testSessionTimeZoneDefaultSpecialGmtOffsetHandling() {
         final TimeZone before = TimeZone.getDefault();
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("GMT-08:00"));
@@ -254,4 +254,11 @@ class FbConnectionPropertiesTest {
             TimeZone.setDefault(before);
         }
     }
+
+    @Test
+    void testSessionTimeZoneNormalizationOfOffsets() {
+        info.setSessionTimeZone("GMT+05:00");
+        assertEquals("+05:00", info.getSessionTimeZone());
+    }
+
 }
