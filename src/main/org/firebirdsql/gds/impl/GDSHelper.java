@@ -31,7 +31,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.TimeZone;
-import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.util.Objects.requireNonNull;
@@ -42,8 +42,7 @@ import static org.firebirdsql.jaybird.props.PropertyConstants.SESSION_TIME_ZONE_
  */
 public final class GDSHelper {
 
-    private static final Predicate<String> OFFSET_ZONE_NAME_PREDICATE =
-            Pattern.compile("[+-]\\d{2}:\\d{2}").asMatchPredicate();
+    private static final Pattern OFFSET_ZONE_NAME_PATTERN= Pattern.compile("[+-]\\d{2}:\\d{2}");
 
     /**
      * @deprecated will be removed in Jaybird 6, use {@link org.firebirdsql.jaybird.props.PropertyConstants#DEFAULT_BLOB_BUFFER_SIZE}
@@ -283,7 +282,8 @@ public final class GDSHelper {
     }
 
     private static TimeZone getTimeZone(String timeZoneName) {
-        if (OFFSET_ZONE_NAME_PREDICATE.test(timeZoneName)) {
+        Matcher matcher = OFFSET_ZONE_NAME_PATTERN.matcher(timeZoneName);
+        if (matcher.matches()) {
             timeZoneName = "GMT" + timeZoneName;
         }
         return TimeZone.getTimeZone(timeZoneName);
