@@ -41,6 +41,7 @@ This may affect custom protocol implementations extending `AbstractWireOperation
 This change also improves performance of `updateRow()`, `insertRow()`, `deleteRow()` and `refreshRow()`.
 The best row identifier or `RDB$DB_KEY` were detected _each time_ when calling `updateRow()`, `insertRow()`, `deleteRow()`, or `refreshRow()`.
 This has been improved so this detection is done once, and in a way that non-updatable result sets can now be downgraded to `CONCUR_READ_ONLY` instead of throwing an exception when performing the modification.
+* Fixed: Use of offset timezone names (e.g. `+05:00`) for `sessionTimeZone` would result in a warning being logged, and an incorrect conversion applied (in UTC instead of the offset) when using the legacy time types -- backported from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/787[#787])
 * ...
 
 [#jaybird-5-0-3-changelog]

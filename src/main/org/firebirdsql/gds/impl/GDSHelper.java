@@ -31,6 +31,8 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.TimeZone;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jaybird.props.PropertyConstants.SESSION_TIME_ZONE_SERVER;
@@ -39,6 +41,9 @@ import static org.firebirdsql.jaybird.props.PropertyConstants.SESSION_TIME_ZONE_
  * Helper class for all GDS-related operations.
  */
 public final class GDSHelper {
+
+    private static final Predicate<String> OFFSET_ZONE_NAME_PREDICATE =
+            Pattern.compile("[+-]\\d{2}:\\d{2}").asMatchPredicate();
 
     /**
      * @deprecated will be removed in Jaybird 6, use {@link org.firebirdsql.jaybird.props.PropertyConstants#DEFAULT_BLOB_BUFFER_SIZE}
@@ -268,13 +273,20 @@ public final class GDSHelper {
         if (sessionTimeZoneName == null || SESSION_TIME_ZONE_SERVER.equalsIgnoreCase(sessionTimeZoneName)) {
             return sessionTimeZone = TimeZone.getDefault();
         }
-        TimeZone timeZone = TimeZone.getTimeZone(sessionTimeZoneName);
+        TimeZone timeZone = getTimeZone(sessionTimeZoneName);
         if ("GMT".equals(timeZone.getID()) && !"GMT".equalsIgnoreCase(sessionTimeZoneName)) {
             LoggerFactory.getLogger(getClass()).warnf("TimeZone fallback to GMT from %s; possible cause: value of "
                     + "sessionTimeZone unknown in Java. Time and Timestamp values may yield unexpected values. "
                     + "Consider setting a different value for sessionTimeZone.", sessionTimeZoneName);
         }
         return sessionTimeZone = timeZone;
+    }
+
+    private static TimeZone getTimeZone(String timeZoneName) {
+        if (OFFSET_ZONE_NAME_PREDICATE.test(timeZoneName)) {
+            timeZoneName = "GMT" + timeZoneName;
+        }
+        return TimeZone.getTimeZone(timeZoneName);
     }
 
     /**
