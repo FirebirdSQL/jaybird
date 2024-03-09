@@ -23,6 +23,8 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
@@ -118,11 +120,17 @@ class SessionTimeZoneTest {
     /**
      * Rationale: Firebird expects offset name {@code [+-]HH:MM}, while Java expects {@code GMT[+-]HH:MM}.
      */
-    @Test
-    void verifyOffsetTimeZoneBehaviour() throws Exception {
-        final String firebirdZoneName = "+05:17";
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            sessionTimeZone, expectedFirebirdZoneName
+            +05:17,          +05:17
+            GMT+05:17,       +05:17
+            -08:17,          -08:17
+            GMT-08:17,       -08:17
+            """)
+    void verifyOffsetTimeZoneBehaviour(String sessionTimeZone, String expectedFirebirdZoneName) throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(PropertyNames.sessionTimeZone, firebirdZoneName);
+        props.setProperty(PropertyNames.sessionTimeZone, sessionTimeZone);
         try (var connection = DriverManager.getConnection(getUrl(), props);
              var stmt = connection.createStatement();
              var rs = stmt.executeQuery("""
@@ -131,7 +139,7 @@ class SessionTimeZoneTest {
                        localtimestamp as LOCAL_TS
                      from RDB$DATABASE""")) {
             assertTrue(rs.next(), "expected a row");
-            assertEquals(firebirdZoneName, rs.getString(1));
+            assertEquals(expectedFirebirdZoneName, rs.getString(1));
             Timestamp timestampValue = rs.getTimestamp(2);
             assertEquals((double) System.currentTimeMillis(), timestampValue.getTime(), 1000,
                     "Unexpected value with offset time zone");

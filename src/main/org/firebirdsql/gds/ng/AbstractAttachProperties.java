@@ -18,12 +18,15 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 import org.firebirdsql.util.InternalApi;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.util.Collections.unmodifiableMap;
 
@@ -46,6 +49,8 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
             // do nothing
         }
     };
+
+    private static final Pattern GMT_WITH_OFFSET = Pattern.compile("^GMT([+-]\\d{2}:\\d{2})$");
 
     private final Map<ConnectionProperty, Object> propertyValues;
     private PropertyUpdateListener propertyUpdateListener = NULL_LISTENER;
@@ -118,6 +123,10 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
         if (value == null) {
             value = resolveStoredDefaultValue(property);
         }
+        // TODO Maybe this should be pushed down into property#validate(String)?
+        if (PropertyNames.sessionTimeZone.equals(property.name())) {
+            value = normalizeTimezone(String.valueOf(value));
+        }
         // Exceptions thrown from the listener will prevent update from property
         propertyUpdateListener.beforeUpdate(property, value);
         if (value != null) {
@@ -132,6 +141,22 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
             System.getLogger(getClass().getName()).log(System.Logger.Level.WARNING,
                     "Ignored exception calling propertyUpdateListener.afterUpdate", e);
         }
+    }
+
+    /**
+     * Normalizes timezone name, specifically converts Java's {@code GMT[+-]HH:MM} to Firebird's {@code [+-]HH:MM}.
+     *
+     * @param timezone
+     *         timezone name
+     * @return original or modified timezone name
+     */
+    private static String normalizeTimezone(String timezone) {
+        if (timezone == null) return null;
+        Matcher matcher = GMT_WITH_OFFSET.matcher(timezone);
+        if (matcher.matches()) {
+            return matcher.group(1);
+        }
+        return timezone;
     }
 
     /**

@@ -27,8 +27,6 @@ package org.firebirdsql.jaybird.props;
 import org.firebirdsql.jdbc.FirebirdCallableStatement;
 
 import java.sql.DatabaseMetaData;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Properties for database connections.
@@ -198,26 +196,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @since 4.0
      */
     default void setSessionTimeZone(String sessionTimeZone) {
-        setProperty(PropertyNames.sessionTimeZone, normalizeTimeZone(sessionTimeZone));
-    }
-
-    /**
-     * Normalizes timezone name, specifically converts Java's {@code GMT[+-]HH:MM} to Firebird's {@code [+-]HH:MM}.
-     *
-     * @param timeZone timezone name
-     * @return original or modified timezone name
-     */
-    private static String normalizeTimeZone(String timeZone) {
-        @SuppressWarnings("java:S1118")
-        final class Holder {
-            static final Pattern GMT_WITH_OFFSET = Pattern.compile("^GMT([+-]\\d{2}:\\d{2})$");
-        }
-        if (timeZone == null) return null;
-        Matcher matcher = Holder.GMT_WITH_OFFSET.matcher(timeZone);
-        if (matcher.matches()) {
-            return matcher.group(1);
-        }
-        return timeZone;
+        setProperty(PropertyNames.sessionTimeZone, sessionTimeZone);
     }
 
     /**
