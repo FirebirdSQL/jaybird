@@ -129,6 +129,7 @@ class SessionTimeZoneTest {
             GMT-08:17,       -08:17
             """)
     void verifyOffsetTimeZoneBehaviour(String sessionTimeZone, String expectedFirebirdZoneName) throws Exception {
+        requireTimeZoneSupport();
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty(PropertyNames.sessionTimeZone, sessionTimeZone);
         try (var connection = DriverManager.getConnection(getUrl(), props);
