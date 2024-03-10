@@ -7,7 +7,7 @@
 :source-highlighter: prettify
 :toc: left
 :icons: font
-:jaybird5-full-version: 5.0.3
+:jaybird5-full-version: 5.0.4
 :jaybird5-template-version: {jaybird5-full-version}.<java>
 :jaybird5-example-version: {jaybird5-full-version}.java11
 :jaybird4-full-version: 4.0.10
@@ -225,7 +225,7 @@ When deploying to a JavaEE environment, exclude the `javax.resource connector-ap
 [#download]
 === Download
 
-Firebird can be downloaded from the Firebird website, under Downloads, https://www.firebirdsql.org/en/jdbc-driver/[JDBC Driver].
+Jaybird can be downloaded from the Firebird website, under Downloads, https://firebirdsql.org/en/jdbc-driver/[JDBC Driver].
 
 Alternatively, you can go directly to GitHub and download Jaybird from the https://github.com/FirebirdSQL/jaybird/releases[jaybird releases].
 
@@ -249,8 +249,8 @@ Using Jaybird (by importing Jaybird's public interfaces in your Java code), and 
 Hence, our interpretation of the LGPL is that the use of the unmodified Jaybird source does not affect the license of your application code.
 
 Even more, all extension interfaces to which an application might want to link are released under dual LGPL/modified BSD license.
-Latter is basically "AS IS" license that allows any kind of use of that source code.
-Jaybird should be viewed as an implementation of that interfaces and the LGPL section for dynamic linking is applicable in this case.
+The latter is basically an "AS IS" license that allows any kind of use of that source code.
+Jaybird should be viewed as an implementation of those interfaces and the LGPL section for dynamic linking is applicable in this case.
 
 [#which-version-of-the-lgpl-applies]
 === Which version of the LGPL applies?
@@ -327,8 +327,7 @@ Jaybird 6 will be modular.
 [discrete]
 === Jaybird 5
 
-Jaybird 5 supports Firebird version 2.5, 3.0 and 4.0, and provides tentative support for Firebird 5.0.
-Firebird 5.0 will become fully supported in the first release after Firebird 5.0.0.
+Jaybird 5 supports Firebird version 2.5, 3.0, 4.0, and 5.0.
 
 Jaybird 5 is the last version to support Firebird 2.5.
 Future versions of Jaybird are not guaranteed to work with version 2.5 and earlier.
@@ -359,7 +358,7 @@ Future versions of Jaybird are not guaranteed to work with version 2.1 and earli
 
 Jaybird 2.2 supports Firebird versions 1.0 - 4.0.
 Jaybird 2.2.4 added support for new features of Firebird 3.0 (e.g. `BOOLEAN` support).
-Support for Firebird 4 is limited to the Firebird 3.0 feature set.
+Support for Firebird 4.0 is limited to the Firebird 3.0 feature set.
 
 Jaybird 2.2 is the last version to support Firebird 1.0 and 1.5.
 Future versions of Jaybird are not guaranteed to work with these versions.
@@ -385,15 +384,15 @@ Instead, we recommend building a webservice (e.g. REST-based) to mediate between
 Apart from this FAQ, you can get additional information from:
 
 * https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html[Jaybird JDBC Driver Java Programmer's Manual] (HTML, https://firebirdsql.github.io/jaybird-manual/jaybird_manual.pdf[PDF version]) (covers Jaybird 2.2 and higher)
-* https://www.firebirdsql.org/en/devel-jdbc-driver/[Firebird Website: Development, JDBC Driver]
+* https://firebirdsql.org/en/devel-jdbc-driver/[Firebird Website: Development, JDBC Driver]
 * https://github.com/FirebirdSQL/jaybird/wiki/[Jaybird wiki]
 
 For version specific details, consult the release notes
 
-* https://www.firebirdsql.org/file/documentation/drivers_documentation/java/5.0.x/release_notes.html[Jaybird 5.0.x release notes]
-* https://www.firebirdsql.org/file/documentation/drivers_documentation/java/4.0.x/release_notes.html[Jaybird 4.0.x release notes]
-* https://www.firebirdsql.org/file/documentation/drivers_documentation/java/3.0.x/release_notes.html[Jaybird 3.0.x release notes]
-* https://www.firebirdsql.org/file/documentation/drivers_documentation/java/2.2.x/release_notes.html[Jaybird 2.2.x release notes]
+* https://firebirdsql.org/file/documentation/drivers_documentation/java/5.0.x/release_notes.html[Jaybird 5.0.x release notes]
+* https://firebirdsql.org/file/documentation/drivers_documentation/java/4.0.x/release_notes.html[Jaybird 4.0.x release notes]
+* https://firebirdsql.org/file/documentation/drivers_documentation/java/3.0.x/release_notes.html[Jaybird 3.0.x release notes]
+* https://firebirdsql.org/file/documentation/drivers_documentation/java/2.2.x/release_notes.html[Jaybird 2.2.x release notes]
 
 [#where-to-get-help]
 == Where to get help
@@ -405,20 +404,20 @@ You can subscribe to the mailing list by sending an email to link:mailto:firebir
 
 * Looking for professional support of Jaybird?
 Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription].
-* The https://www.firebirdsql.org[Firebird project home page]
-* Firebird support and other https://www.firebirdsql.org/en/mailing-lists/[Firebird mailing lists] for questions not directly related to Jaybird and java.
+* The https://firebirdsql.org[Firebird project home page]
+* Firebird support and other https://firebirdsql.org/en/mailing-lists/[Firebird mailing lists] for questions not directly related to Jaybird and java.
 
 [#contributing]
 == Contributing
 
 There are several ways you can contribute to Jaybird or Firebird in general:
 
-* Participate on the mailing lists (see https://www.firebirdsql.org/en/mailing-lists/)
+* Participate on the mailing lists (see https://firebirdsql.org/en/mailing-lists/)
 * Report bugs or submit patches on the tracker (see <<reporting-bugs,Reporting Bugs>>)
 * Create pull requests on GitHub (https://github.com/FirebirdSQL/jaybird)
 * Become a developer (for Jaybird contact us on firebird-java, for Firebird in general, use the Firebird-devel mailing list)
-* Donate to the Firebird Foundation (see https://www.firebirdsql.org/en/donate/)
-* Become a paying member or sponsor of the Firebird Foundation (see https://www.firebirdsql.org/en/firebird-foundation/)
+* Donate to the Firebird Foundation (see https://firebirdsql.org/en/donate/)
+* Become a paying member or sponsor of the Firebird Foundation (see https://firebirdsql.org/en/firebird-foundation/)
 
 [#reporting-bugs]
 == Reporting Bugs
@@ -427,7 +426,7 @@ The developers follow the https://groups.google.com/g/firebird-java[firebird-jav
 Join the list and post information about suspected bugs.
 List members may be able to help out to determine if it is an actual bug, provide a workaround and get you going again, whereas bug fixes might take a while.
 
-You can report bugs in the Firebird bug tracker, https://github.com/FirebirdSQL/jaybird/issues/.
+You can report bugs in the Jaybird bug tracker, https://github.com/FirebirdSQL/jaybird/issues/.
 
 When reporting bugs, please provide a minimal, but complete reproduction, including databases and sourcecode to reproduce the problem.
 Patches to fix bugs are also appreciated.
@@ -597,12 +596,12 @@ Jaybird 3.0.0 and 3.0.1, however, will reject the connection, see <<how-can-i-so
 
 In Jaybird 3 it is possible to override the default connection character set by specifying system property `org.firebirdsql.jdbc.defaultConnectionEncoding` with a valid Firebird character set name.
 
-Jaybird 3.0.2 introduces the system property `org.firebirdsql.jdbc.requireConnectionEncoding`, which -- when set to `true` -- will reject connections without a character set (which  was the default behavior in Jaybird 3.0.0 and 3.0.1).
+Jaybird 3.0.2 introduces the system property `org.firebirdsql.jdbc.requireConnectionEncoding`, which -- when set to `true` -- will reject connections without a character set (which was the default behavior in Jaybird 3.0.0 and 3.0.1).
 
 [#how-can-i-solve-the-error-connection-rejected-no-connection-character-set-specified]
 === How can I solve the error "Connection rejected: No connection character set specified"
 
-If no character set has been set, Jaybird 3 will reject the connection with an `SQLNonTransientConnectionException` with message _"Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding).
+If no character set has been set, Jaybird 3 and higher will reject the connection with an `SQLNonTransientConnectionException` with message _"Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding).
 Please specify a connection character set (e.g. property charSet=utf-8) or consult the Jaybird documentation for more information."_
 
 In Jaybird 3.0.0 and 3.0.1 this error will be thrown if the character set has not been set explicitly.
@@ -622,7 +621,7 @@ Jaybird will apply the specified character set as the default when no character 
 This property only supports Firebird character set names.
 +
 Use `-Dorg.firebirdsql.jdbc.defaultConnectionEncoding=NONE` to revert to the default behavior (with some caveats, see <<how-does-character-set-none-work,How does character set `NONE` work?>>).
-With Jaybird 3.0.2 or higher, it is better to just not set system property  `org.firebirdsql.jdbc.requireConnectionEncoding` if you want to apply `NONE`.
+With Jaybird 3.0.2 or higher, it is better to just not set system property `org.firebirdsql.jdbc.requireConnectionEncoding` if you want to apply `NONE`.
 
 [#how-can-i-enable-the-windows-tcp-loopback-fast-path-introduced-in-firebird-3-0-2]
 == How can I enable the Windows "TCP Loopback Fast Path" introduced in Firebird 3.0.2?
@@ -716,13 +715,11 @@ SERVER	Sat Oct 28 10:07:26 2017
 ----
 
 With Jaybird 2.2 connecting to Firebird 3.0 or higher, this means that the setting `AuthServer` does not include the `Legacy_Auth` plugin.
-
 Enable `Legacy_Auth` (in `firebird.conf`) by adding this value to the property  `AuthServer`, for example: `AuthServer = Srp, Legacy_Auth`.
+You also need to make sure your user is created with the legacy user manager, see https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3[Jaybird Wiki -- Jaybird and Firebird 3] for details.
 
 With Jaybird 4 and higher, this can also mean that none of the default authentication plugins, or those specified using connection property  `authPlugins`, are listed in the `AuthServer` setting.
 Either revise the Firebird configuration, or explicitly configure connection property `authPlugins` with authentication plugins that are configured in Firebird.
-
-You also need to make sure your user is created with the legacy user manager, see https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3[Jaybird Wiki -- Jaybird and Firebird 3] for details.
 
 [#encryption-key-did-not-meet-algorithm-requirements-of-symmetricarc4-337248282]
 === Encryption key did not meet algorithm requirements of Symmetric/Arc4 (337248282)
