@@ -32,6 +32,7 @@ For known issues, consult <<known-issues>>.
 
 The following has been changed or fixed since Jaybird 5.0.3:
 
+* Firebird 5.0 is now formally supported
 * Fixed: Potential NPE when `warningMessageCallback` is `null` while reading operations or consuming packets (https://github.com/FirebirdSQL/jaybird/issues/778[#778])
 +
 As part of this change, the constructor `AbstractWireOperations` now explicitly requires the `connection` and `defaultWarningMessageCallback` to be non-``null`` and throws a `NullPointerException` otherwise.
@@ -42,7 +43,6 @@ This change also improves performance of `updateRow()`, `insertRow()`, `deleteRo
 The best row identifier or `RDB$DB_KEY` were detected _each time_ when calling `updateRow()`, `insertRow()`, `deleteRow()`, or `refreshRow()`.
 This has been improved so this detection is done once, and in a way that non-updatable result sets can now be downgraded to `CONCUR_READ_ONLY` instead of throwing an exception when performing the modification.
 * Fixed: Use of offset timezone names (e.g. `+05:00`) for `sessionTimeZone` would result in a warning being logged, and an incorrect conversion applied (in UTC instead of the offset) when using the legacy time types -- backported from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/787[#787])
-* ...
 
 [#jaybird-5-0-3-changelog]
 === Jaybird 5.0.3
@@ -126,7 +126,7 @@ You can subscribe by sending an email to link:mailto:firebird-java+subscribe@goo
 Looking for professional support of Jaybird?
 Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription].
 
-See also https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#where-to-get-help[Where to get help]
+See also https://firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#where-to-get-help[Where to get help]
 
 [#general-notes]
 == General Notes
@@ -166,7 +166,7 @@ Feedback can be sent to the https://groups.google.com/g/firebird-java[Firebird-j
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.11, and 4.0.4, and a recent snapshot of Firebird 5.0, but should also support other Firebird versions from 2.5 and up.
+Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.11, 4.0.4, and 5.0.0, but should also support other Firebird versions from 2.5 and up.
 
 This driver does not support InterBase servers due to Firebird-specific changes in the protocol and database attachment parameters that are sent to the server.
 
@@ -231,7 +231,7 @@ artifactId:: `jaybird`
 version:: `{version_simple}.<java>{version_tag}` (where `<java>` is `java11` or `java8`)
 
 ifeval::["{version_tag}" == "-SNAPSHOT"]
-NOTE: SNAPSHOT releases are only available from the Sonatype snapshot  repository, https://oss.sonatype.org/content/repositories/snapshots
+NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://oss.sonatype.org/content/repositories/snapshots
 endif::[]
 
 For example:
@@ -264,9 +264,9 @@ See also <<type-2-native-and-embedded-driver>>.
 [#download]
 ==== Download
 
-You can download the latest versions from https://www.firebirdsql.org/en/jdbc-driver/
+You can download the latest versions from https://firebirdsql.org/en/jdbc-driver/
 
-At minimum Jaybird 5 requires `jaybird-{version_simple}.<java>{version_tag}.jar`  (where `<java>` is `java11` or `java8`).
+At minimum, Jaybird 5 requires `jaybird-{version_simple}.<java>{version_tag}.jar`  (where `<java>` is `java11` or `java8`).
 
 For native or embedded support, you will need to include `jna-5.12.1.jar` on your classpath.
 See also <<type-2-native-and-embedded-driver>>.
@@ -368,8 +368,7 @@ Jaybird 5 is the last version to support Java versions earlier than Java 17.
 [#firebird-support]
 === Firebird support
 
-Jaybird 5 supports Firebird version 2.5, 3.0 and 4.0, and provides tentative support for Firebird 5.0.
-Firebird 5.0 will become fully supported in the first release after Firebird 5.0.0.
+Jaybird 5 supports Firebird version 2.5, 3.0, 4.0, and 5.0.
 
 Jaybird 5 is the last version to support Firebird 2.5.
 
@@ -407,7 +406,7 @@ If you used connection properties starting with `isc_dpb_`, the solution is to r
 * `get/setDatabase` -- use `get/setDatabaseName` (see also <<#unify-db-address>>).
 * `get/setPort` -- use `get/setPortNumber`  (see also <<#unify-db-address>>).
 * `get/setHost` -- use `get/setServerName`  (see also <<#unify-db-address>>).
-* `get/setUserName` -- use `get/setUser`, only deprecated, will not be removed in Jaybird 6
+* `get/setUserName` -- use `get/setUser`, only deprecated, will not be removed
 * `get/setConnectionDialect()` -- use `get/setSqlDialect()`.
 * `get/setBuffersNumber` -- use `get/setPageCacheSize`.
 * `get/setBlobBufferLength` -- use `get/setBlobBufferSize`.
@@ -605,7 +604,7 @@ Jaybird always emulates batch support for `CallableStatement`.
 The implementation might be rewritten in a future Jaybird version, if there is sufficient interest.
 As a workaround, use `execute procedure` or `++{call procedure_name(...)}++` from a `PreparedStatement`.
 * Requesting generated-keys will fall back to emulated behaviour as server-side batches do not support returning values produced by the `RETURNING` clause.
-* Firebird 4.0 has additional facilities to send `BLOB` values as part of the batch update.
+* The server-side batch update feature in Firebird 4.0 and higher has additional facilities to send `BLOB` values as part of the batch update.
 This is not yet used by Jaybird.
 
 When server-side batch support is unavailable, either because the server doesn't support it, or because of above limitations, or if the connection property `useServerBatch` is `false`, Jaybird will fall back to the emulated behaviour.
@@ -649,7 +648,7 @@ Compared to emulated scrollable cursor, server-side scrollable cursors exhibit s
 * Result sets now report `true` for `rowUpdated()`, `rowDeleted()` and `rowInserted()` for rows updated, deleted or inserted through the result set.
 +
 This is not yet reflected in `updatesAreDetected()`, `deletesAreDetected()` and `insertsAreDetected()` of `DatabaseMetaData`.
-This will be corrected when we retrofit the new behaviour for _emulated_ as well.
+This will be corrected if and when we retrofit the new behaviour for _emulated_ as well.
 
 See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md.md[jdp-2021-04].
 
@@ -706,7 +705,7 @@ The solution for not closing the cursor on all code paths -- introduced in Jaybi
 +
 This change was contributed by https://github.com/vasiliy-yashkov[Vasiliy Yashkov].
 * Improvement: add `setForceWrite`/`getForceWrite` to `FBManager` to allow disabling force write on database creation (https://github.com/FirebirdSQL/jaybird/issues/671[#671])
-* Improvement: Attempts to connect without username and password with pure-java protocol will now result in error `isc_login` ("`Your user name and password are not defined. Ask your database administrator to set up a Firebird login.`") instead of `isc_connect_reject` ("`connection rejected by remote interface`") (https://github.com/FirebirdSQL/jaybird/issues/583[#583])
+* Improvement: Attempts to connect without username and password with the pure-java protocol will now result in error `isc_login` ("`Your user name and password are not defined. Ask your database administrator to set up a Firebird login.`") instead of `isc_connect_reject` ("`connection rejected by remote interface`") (https://github.com/FirebirdSQL/jaybird/issues/583[#583])
 * Improvement: Don't send cursor close to server when closing `ResultSet` in response to `Statement` close (https://github.com/FirebirdSQL/jaybird/issues/669[#669])
 +
 This provides a small performance increase in cases where a result set was not already closed (e.g. no explicit `ResultSet.close()` or result set not fully read) before the statement close.
@@ -753,7 +752,7 @@ This feature was also backported to Jaybird 4.0.7.
 * Improvement: Allow statements longer than 64KB with native and embedded connections (https://github.com/FirebirdSQL/jaybird/issues/713[#713])
 +
 This requires Firebird 3.0 or higher server and a Firebird 3.0 or higher fbclient.
-Longer statement texts were already supported for pure-java connections.
+Long statement texts were already supported for pure-java connections.
 * Fixed: `DatabaseMetaData.getIdentifierQuoteString()` should return `" "` (space) for connection dialect 1 (https://github.com/FirebirdSQL/jaybird/issues/714[#714])
 * Improvement: A column `JB_GRANTEE_TYPE` was added to `getColumnPrivileges` and `getTablePrivileges` in `DatabaseMetaData`.
 It returns the object type of the grantee (e.g. `USER`, `ROLE`).
@@ -898,7 +897,7 @@ there is no replacement
 * `FBPreparedStatement`
 ** `setStringForced(int, String)`;
 there is no replacement with the same behaviour, use `setString(int, String)`
-* `FBRowUpdater`, parameter `Synchronizable syncProvider` was removed from constructor
+* `FBRowUpdater`, parameter `Synchronizable syncProvider` was removed from its constructor
 * `GDSHelper`
 ** `getDatabaseParameterBuffer()`, the significant refactoring of Jaybird's internals resulted in this method no longer making any sense.
 There is no direct replacement, though `GDSHelper.getConnectionProperties()` can be considered its successor.
@@ -991,7 +990,7 @@ Use the constants with the same name from `java.sql.Types`.
 The following packages have been removed in Jaybird 5:
 
 * `org.firebirdsql.jca`;
-its replacement is in `org.firebirdsql.jaybird.xca`, but this API is not entirely binary compatible and is considered internal API.
+its replacement is in `org.firebirdsql.jaybird.xca`, but this API is not binary compatible and is considered internal API.
 See also <<jca-removed>>.
 
 [#removal-of-deprecated-methods]
@@ -1000,7 +999,7 @@ See also <<jca-removed>>.
 The following methods have been removed in Jaybird 5:
 
 * `MaintenanceManager.listLimboTransactions()`, use `MaintenanceManager.limboTransactionsAsList()` or  `MaintenanceManager.getLimboTransactions()` instead.
-* `TraceManager.loadConfigurationFromFile(String)`, use standard Java  functionality like `new String(Files.readAllBytes(Paths.get(fileName)), <charset>)`
+* `TraceManager.loadConfigurationFromFile(String)`, use standard Java functionality like `new String(Files.readAllBytes(Paths.get(fileName)), <charset>)`
 * `FBDatabaseMetaData.hasNoWildcards(String pattern)`
 * `FBDatabaseMetaData.stripEscape(String pattern)`
 * `FbStatement.getFieldDescriptor()`, use `FbStatement.getRowDescriptor()`
@@ -1232,7 +1231,7 @@ The replacement for most constants can be found in `org.firebirdsql.jaybird.prop
 [#type-2-native-and-embedded-driver]
 === Type 2 (native) and embedded driver
 
-Jaybird uses JNA to access the client library.
+Jaybird uses JNA (Java Native Access) to access the client library.
 If you want to use the Type 2 driver, or Firebird embedded, then you need to include `jna-5.12.1.jar` on the classpath.
 
 When using Maven, you need to specify the dependency on JNA yourself, as we don't depend on it by default (it is specified as an optional dependency):
