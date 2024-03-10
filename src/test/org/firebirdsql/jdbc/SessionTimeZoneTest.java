@@ -121,6 +121,7 @@ class SessionTimeZoneTest {
      */
     @Test
     void verifyOffsetTimeZoneBehaviour() throws Exception {
+        requireTimeZoneSupport();
         final String firebirdZoneName = "+05:17";
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty(PropertyNames.sessionTimeZone, firebirdZoneName);
