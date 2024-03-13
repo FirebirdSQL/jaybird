@@ -349,130 +349,116 @@ class FBPreparedStatementTest {
     @Test
     void testTimestampWithCalendar() throws Exception {
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
-        Properties props = new Properties();
-        props.putAll(getDefaultPropertiesForConnection());
-        props.setProperty("timestamp_uses_local_timezone", "true");
 
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            try (PreparedStatement stmt = connection.prepareStatement(
-                    "INSERT INTO test_blob(id, ts_field) VALUES (?, ?)")) {
-                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+01"));
-                Calendar utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        try (var stmt = con.prepareStatement("INSERT INTO test_blob(id, ts_field) VALUES (?, ?)")) {
+            var calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+01"));
+            var utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-                Timestamp ts = new Timestamp(calendar.getTime().getTime());
+            var ts = new Timestamp(calendar.getTime().getTime());
 
-                stmt.setInt(1, 2);
-                stmt.setTimestamp(2, ts, calendar);
-                stmt.execute();
+            stmt.setInt(1, 2);
+            stmt.setTimestamp(2, ts, calendar);
+            stmt.execute();
 
-                stmt.setInt(1, 3);
-                stmt.setTimestamp(2, ts, utcCalendar);
-                stmt.execute();
+            stmt.setInt(1, 3);
+            stmt.setTimestamp(2, ts, utcCalendar);
+            stmt.execute();
+        }
+
+        try (var selectStmt = con.createStatement()) {
+            var rs = selectStmt.executeQuery("SELECT id, CAST(ts_field AS VARCHAR(30)), ts_field FROM test_blob");
+
+            Timestamp ts2 = null;
+            Timestamp ts3 = null;
+
+            String ts2AsStr = null;
+            String ts3AsStr = null;
+
+            final int maxLength = 22;
+
+            while (rs.next()) {
+                switch (rs.getInt(1)) {
+                case 2:
+                    ts2 = rs.getTimestamp(3);
+                    ts2AsStr = rs.getString(2);
+                    ts2AsStr = ts2AsStr.substring(0, Math.min(ts2AsStr.length(), maxLength));
+                    break;
+
+                case 3:
+                    ts3 = rs.getTimestamp(3);
+                    ts3AsStr = rs.getString(2);
+                    ts3AsStr = ts3AsStr.substring(0, Math.min(ts3AsStr.length(), maxLength));
+                    break;
+                }
             }
 
-            try (Statement selectStmt = connection.createStatement()) {
-                ResultSet rs = selectStmt.executeQuery(
-                        "SELECT id, CAST(ts_field AS VARCHAR(30)), ts_field FROM test_blob");
+            assertNotNull(ts2);
+            assertNotNull(ts3);
 
-                Timestamp ts2 = null;
-                Timestamp ts3 = null;
-
-                String ts2AsStr = null;
-                String ts3AsStr = null;
-
-                final int maxLength = 22;
-
-                while (rs.next()) {
-                    switch (rs.getInt(1)) {
-                    case 2:
-                        ts2 = rs.getTimestamp(3);
-                        ts2AsStr = rs.getString(2);
-                        ts2AsStr = ts2AsStr.substring(0, Math.min(ts2AsStr.length(), maxLength));
-                        break;
-
-                    case 3:
-                        ts3 = rs.getTimestamp(3);
-                        ts3AsStr = rs.getString(2);
-                        ts3AsStr = ts3AsStr.substring(0, Math.min(ts3AsStr.length(), maxLength));
-                        break;
-                    }
-                }
-
-                assertNotNull(ts2);
-                assertNotNull(ts3);
-
-                assertEquals(3600 * 1000, Math.abs(ts2.getTime() - ts3.getTime()),
-                        "Timestamps 2 and 3 should differ for 3600 seconds");
-                String ts2ToStr = ts2.toString();
-                ts2ToStr = ts2ToStr.substring(0, Math.min(ts2ToStr.length(), maxLength));
-                if (ts2ToStr.length() == ts2AsStr.length() - 1) {
-                    // Account for presentation difference with trailing 0
-                    ts2ToStr += '0';
-                }
-                assertEquals(ts2AsStr, ts2ToStr, "Server should see the same timestamp");
-                String ts3ToStr = ts3.toString();
-                ts3ToStr = ts3ToStr.substring(0, Math.min(ts3ToStr.length(), maxLength));
-                assertEquals(ts3AsStr, ts3ToStr, "Server should see the same timestamp");
+            assertEquals(3600 * 1000, Math.abs(ts2.getTime() - ts3.getTime()),
+                    "Timestamps 2 and 3 should differ for 3600 seconds");
+            String ts2ToStr = ts2.toString();
+            ts2ToStr = ts2ToStr.substring(0, Math.min(ts2ToStr.length(), maxLength));
+            if (ts2ToStr.length() == ts2AsStr.length() - 1) {
+                // Account for presentation difference with trailing 0
+                ts2ToStr += '0';
             }
+            assertEquals(ts2AsStr, ts2ToStr, "Server should see the same timestamp");
+            String ts3ToStr = ts3.toString();
+            ts3ToStr = ts3ToStr.substring(0, Math.min(ts3ToStr.length(), maxLength));
+            assertEquals(ts3AsStr, ts3ToStr, "Server should see the same timestamp");
         }
     }
 
     @Test
     void testTimeWithCalendar() throws Exception {
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
-        Properties props = new Properties();
-        props.putAll(getDefaultPropertiesForConnection());
-        props.setProperty("timestamp_uses_local_timezone", "true");
 
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            try (PreparedStatement stmt = connection.prepareStatement(
-                    "INSERT INTO test_blob(id, t_field) VALUES (?, ?)")) {
-                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+01"));
-                Calendar utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        try (var stmt = con.prepareStatement("INSERT INTO test_blob(id, t_field) VALUES (?, ?)")) {
+            var calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+01"));
+            var utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-                Time t = new Time(calendar.getTime().getTime());
+            var t = new Time(calendar.getTime().getTime());
 
-                stmt.setInt(1, 2);
-                stmt.setTime(2, t, calendar);
-                stmt.execute();
+            stmt.setInt(1, 2);
+            stmt.setTime(2, t, calendar);
+            stmt.execute();
 
-                stmt.setInt(1, 3);
-                stmt.setTime(2, t, utcCalendar);
-                stmt.execute();
-            }
+            stmt.setInt(1, 3);
+            stmt.setTime(2, t, utcCalendar);
+            stmt.execute();
+        }
 
-            try (Statement selectStmt = connection.createStatement()) {
-                ResultSet rs = selectStmt.executeQuery(
-                        "SELECT id, CAST(t_field AS VARCHAR(30)), t_field FROM test_blob");
+        try (var selectStmt = con.createStatement()) {
+            var rs = selectStmt.executeQuery("SELECT id, CAST(t_field AS VARCHAR(30)), t_field FROM test_blob");
 
-                Time t2 = null;
-                Time t3 = null;
+            Time t2 = null;
+            Time t3 = null;
 
-                String t2Str = null;
-                String t3Str = null;
+            String t2Str = null;
+            String t3Str = null;
 
-                while (rs.next()) {
-                    switch (rs.getInt(1)) {
-                    case 2:
-                        t2 = rs.getTime(3);
-                        t2Str = rs.getString(2);
-                        break;
+            while (rs.next()) {
+                switch (rs.getInt(1)) {
+                case 2:
+                    t2 = rs.getTime(3);
+                    t2Str = rs.getString(2);
+                    break;
 
-                    case 3:
-                        t3 = rs.getTime(3);
-                        t3Str = rs.getString(2);
-                        break;
-                    }
+                case 3:
+                    t3 = rs.getTime(3);
+                    t3Str = rs.getString(2);
+                    break;
                 }
-
-                assertNotNull(t2);
-                assertNotNull(t3);
-
-                assertEquals(3600 * 1000, Math.abs(t2.getTime() - t3.getTime()),
-                        "Timestamps 2 and 3 should differ for 3600 seconds");
-                assertEquals(t2Str.substring(0, 8), t2.toString(), "Server should see the same timestamp");
-                assertEquals(t3Str.substring(0, 8), t3.toString(), "Server should see the same timestamp");
             }
+
+            assertNotNull(t2);
+            assertNotNull(t3);
+
+            assertEquals(3600 * 1000, Math.abs(t2.getTime() - t3.getTime()),
+                    "Timestamps 2 and 3 should differ for 3600 seconds");
+            assertEquals(t2Str.substring(0, 8), t2.toString(), "Server should see the same timestamp");
+            assertEquals(t3Str.substring(0, 8), t3.toString(), "Server should see the same timestamp");
         }
     }
 
