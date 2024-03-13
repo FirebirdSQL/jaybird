@@ -43,6 +43,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -688,34 +691,24 @@ class FBPreparedStatementTest {
     void testCancelStatement() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsCancelOperation(), "Test requires fb_cancel_operations support");
         assumeTrue(getDefaultSupportInfo().supportsExecuteBlock(), "Test requires EXECUTE BLOCK support");
-        final var cancelFailed = new AtomicBoolean(false);
         try (var stmt = con.createStatement()) {
-            var cancelThread = new Thread(() -> {
+            final var cancelFailed = new AtomicBoolean(true);
+            ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+            executor.schedule(() -> {
                 try {
-                    Thread.sleep(5);
                     stmt.cancel();
-                } catch (SQLException ex) {
-                    cancelFailed.set(true);
-                } catch (InterruptedException ex) {
-                    // empty
+                    cancelFailed.set(false);
+                } catch (SQLException ignored) {
                 }
-            }, "cancel-thread");
+            }, 10, TimeUnit.MILLISECONDS);
+            executor.shutdown();
 
-            cancelThread.start();
-
-            try {
-                long start = System.currentTimeMillis();
-                SQLException exception = assertThrows(SQLException.class, () -> stmt.execute(LONG_RUNNING_STATEMENT),
-                        "Statement should raise a cancel exception");
-                long end = System.currentTimeMillis();
-                System.out.println("testCancelStatement: statement cancelled after " + (end - start) + " milliseconds");
-                assertThat("Unexpected exception for cancellation", exception, allOf(
-                        message(startsWith(getFbMessage(ISCConstants.isc_cancelled))),
-                        errorCode(equalTo(ISCConstants.isc_cancelled)),
-                        sqlState(equalTo("HY008"))));
-            } finally {
-                cancelThread.join();
-            }
+            SQLException exception = assertThrows(SQLException.class, () -> stmt.execute(LONG_RUNNING_STATEMENT),
+                    "Statement should raise a cancel exception");
+            assertThat("Unexpected exception for cancellation", exception, allOf(
+                    message(startsWith(getFbMessage(ISCConstants.isc_cancelled))),
+                    errorCode(equalTo(ISCConstants.isc_cancelled)),
+                    sqlState(equalTo("HY008"))));
             assertFalse(cancelFailed.get(), "Issuing statement cancel failed");
         }
     }
