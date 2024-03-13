@@ -130,19 +130,17 @@ class FBPreparedStatementTest {
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
         final int id = 1;
 
-        try (PreparedStatement insertPs = con.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?)")) {
+        try (var insertPs = con.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?)")) {
             insertPs.setInt(1, id);
             insertPs.setBytes(2, TEST_STRING.getBytes());
 
-            int inserted = insertPs.executeUpdate();
-
-            assertEquals(1, inserted, "Row should be inserted");
+            assertEquals(1, insertPs.executeUpdate(), "Row should be inserted with update count 1");
         }
 
         checkSelectString(TEST_STRING, id);
 
         // Update item
-        try (PreparedStatement updatePs = con.prepareStatement("UPDATE test_blob SET obj_data=? WHERE id=?")) {
+        try (var updatePs = con.prepareStatement("UPDATE test_blob SET obj_data=? WHERE id=?")) {
             updatePs.setBytes(1, ANOTHER_TEST_STRING.getBytes());
             updatePs.setInt(2, id);
             updatePs.execute();
@@ -153,12 +151,11 @@ class FBPreparedStatementTest {
 
             updatePs.setBytes(1, TEST_STRING.getBytes());
             updatePs.setInt(2, id + 1);
-            int updated = updatePs.executeUpdate();
 
-            assertEquals(0, updated, "No rows should be updated");
-
-            checkSelectString(ANOTHER_TEST_STRING, id);
+            assertEquals(0, updatePs.executeUpdate(), "No rows should be updated (update count 0)");
         }
+
+        checkSelectString(ANOTHER_TEST_STRING, id);
     }
 
     /**
@@ -166,7 +163,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testUnsupportedExecuteQuery_String() throws Exception {
-        try (PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
+        try (var ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
             assertStatementOnlyException(() -> ps.executeQuery("SELECT * FROM test_blob"));
         }
     }
@@ -176,7 +173,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testUnsupportedExecuteUpdate_String() throws Exception {
-        try (PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
+        try (var ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
             assertStatementOnlyException(() -> ps.executeUpdate("SELECT * FROM test_blob"));
         }
     }
@@ -186,7 +183,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testUnsupportedExecute_String() throws Exception {
-        try (PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
+        try (var ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
             assertStatementOnlyException(() -> ps.execute("SELECT * FROM test_blob"));
         }
     }
@@ -196,7 +193,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testUnsupportedAddBatch_String() throws Exception {
-        try (PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
+        try (var ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
             assertStatementOnlyException(() -> ps.addBatch("SELECT * FROM test_blob"));
         }
     }
@@ -206,7 +203,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testUnsupportedExecuteUpdate_String_int() throws Exception {
-        try (PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
+        try (var ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
             assertStatementOnlyException(
                     () -> ps.executeUpdate("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS));
         }
@@ -217,7 +214,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testUnsupportedExecuteUpdate_String_intArr() throws Exception {
-        try (PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
+        try (var ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
             assertStatementOnlyException(() -> ps.executeUpdate("SELECT * FROM test_blob", new int[] { 1 }));
         }
     }
@@ -227,7 +224,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testUnsupportedExecuteUpdate_String_StringArr() throws Exception {
-        try (PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
+        try (var ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
             assertStatementOnlyException(() -> ps.executeUpdate("SELECT * FROM test_blob", new String[] { "col" }));
         }
     }
@@ -237,7 +234,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testUnsupportedExecute_String_int() throws Exception {
-        try (PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
+        try (var ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
             assertStatementOnlyException(() -> ps.execute("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS));
         }
     }
@@ -247,7 +244,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testUnsupportedExecute_String_intArr() throws Exception {
-        try (PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
+        try (var ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
             assertStatementOnlyException(() -> ps.execute("SELECT * FROM test_blob", new int[] { 1 }));
         }
     }
@@ -257,7 +254,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testUnsupportedExecute_String_StringArr() throws Exception {
-        try (PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
+        try (var ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE")) {
             assertStatementOnlyException(() -> ps.execute("SELECT * FROM test_blob", new String[] { "col" }));
         }
     }
@@ -271,9 +268,9 @@ class FBPreparedStatementTest {
 
     @SuppressWarnings("SameParameterValue")
     private void checkSelectString(String stringToTest, int id) throws Exception {
-        try (PreparedStatement selectPs = con.prepareStatement("SELECT obj_data FROM test_blob WHERE id = ?")) {
+        try (var selectPs = con.prepareStatement("SELECT obj_data FROM test_blob WHERE id = ?")) {
             selectPs.setInt(1, id);
-            ResultSet rs = selectPs.executeQuery();
+            var rs = selectPs.executeQuery();
 
             assertTrue(rs.next(), "There must be at least one row available");
             assertEquals(stringToTest, rs.getString(1), "Selected string must be equal to inserted one");
@@ -288,9 +285,8 @@ class FBPreparedStatementTest {
         executeDDL(con, DROP_GENERATOR, ISCConstants.isc_no_meta_update);
         executeDDL(con, CREATE_GENERATOR);
 
-        try (PreparedStatement ps = con.prepareStatement(
-                "SELECT gen_id(test_generator, 1) as new_value FROM rdb$database");
-             ResultSet rs = ps.executeQuery()) {
+        try (var ps = con.prepareStatement("SELECT gen_id(test_generator, 1) as new_value FROM rdb$database")) {
+            var rs = ps.executeQuery();
 
             assertTrue(rs.next(), "Should get at least one row");
 
@@ -324,15 +320,17 @@ class FBPreparedStatementTest {
         if (useServerBatch) {
             assumeServerBatchSupport();
         }
-        executeCreateTable(con, "RECREATE TABLE foo ("
-                    + "bar varchar(64) NOT NULL, "
-                    + "baz varchar(8) NOT NULL, "
-                    + "CONSTRAINT pk_foo PRIMARY KEY (bar, baz))");
+        executeCreateTable(con, """
+                RECREATE TABLE foo (
+                 bar varchar(64) NOT NULL,
+                 baz varchar(8) NOT NULL,
+                 CONSTRAINT pk_foo PRIMARY KEY (bar, baz)
+                )""");
 
-        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        Properties props = getDefaultPropertiesForConnection();
         props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
-        try (Connection con = DriverManager.getConnection(FBTestProperties.getUrl(), props);
-             PreparedStatement ps = con.prepareStatement("Insert into foo values (?, ?)")) {
+        try (var con = DriverManager.getConnection(FBTestProperties.getUrl(), props);
+             var ps = con.prepareStatement("insert into foo values (?, ?)")) {
             ps.setString(1, "one");
             ps.setString(2, "two");
             ps.addBatch();
@@ -343,6 +341,14 @@ class FBPreparedStatementTest {
             ps.addBatch();
             ps.executeBatch();
             ps.clearBatch();
+        }
+        try (var stmt = con.createStatement()) {
+            var rs = stmt.executeQuery("select * from foo");
+            var rowValues = new HashSet<String>();
+            while (rs.next()) {
+                rowValues.add(rs.getString(1) + '#' + rs.getString(2));
+            }
+            assertEquals(Set.of("one#two", "one#three"), rowValues, "Mismatch in expected values in table foo");
         }
     }
 
@@ -471,7 +477,7 @@ class FBPreparedStatementTest {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
         con.setAutoCommit(false);
 
-        try (PreparedStatement ps = con.prepareStatement("UPDATE testtab SET field1 = ? WHERE id = ?")) {
+        try (var ps = con.prepareStatement("UPDATE testtab SET field1 = ? WHERE id = ?")) {
             assertThrows(DataTruncation.class,
                     // Failure to set leaves parameter uninitialized
                     () -> ps.setString(1, "veeeeeeeeeeeeeeeeeeeeery looooooooooooooooooooooong striiiiiiiiiiiiiiiiiiing"),
@@ -483,8 +489,9 @@ class FBPreparedStatementTest {
             assertThat(exception, message(startsWith("Parameter with index 1 was not set")));
         }
 
-        try (Statement stmt = con.createStatement()) {
-            stmt.execute("SELECT 1 FROM RDB$DATABASE");
+        // verify connection still valid
+        try (var stmt = con.createStatement()) {
+            assertDoesNotThrow(() -> stmt.execute("SELECT 1 FROM RDB$DATABASE"));
         }
     }
 
@@ -498,7 +505,6 @@ class FBPreparedStatementTest {
 
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("lc_ctype", connectionCharset);
-
         try (var con = DriverManager.getConnection(getUrl(), props)) {
             con.setAutoCommit(false);
             try (var pstmt = con.prepareStatement("insert into test_varchar_5_utf8 (varchar_field) values (?)")) {
@@ -535,7 +541,7 @@ class FBPreparedStatementTest {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
         con.setAutoCommit(false);
 
-        try (PreparedStatement ps = con.prepareStatement("SELECT * FROM testtab WHERE field7 LIKE ?")) {
+        try (var ps = con.prepareStatement("SELECT * FROM testtab WHERE field7 LIKE ?")) {
             assertThrows(DataTruncation.class, () -> ps.setString(1, tooLongValue),
                     "expected not to be able to set too long value");
 
@@ -544,7 +550,7 @@ class FBPreparedStatementTest {
         }
 
         // verify connection still valid
-        try (Statement stmt = con.createStatement()) {
+        try (var stmt = con.createStatement()) {
             stmt.execute("SELECT 1 FROM RDB$DATABASE");
         }
     }
@@ -553,7 +559,7 @@ class FBPreparedStatementTest {
     void testGetExecutionPlan() throws SQLException {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
 
-        try (FBPreparedStatement stmt = (FBPreparedStatement) con.prepareStatement("SELECT * FROM TESTTAB WHERE ID = 2")) {
+        try (var stmt = con.prepareStatement("SELECT * FROM TESTTAB WHERE ID = 2").unwrap(FBPreparedStatement.class)) {
             String executionPlan = stmt.getExecutionPlan();
             assertThat("Ensure that a valid execution plan is retrieved", executionPlan, containsString("TESTTAB"));
         }
@@ -566,18 +572,19 @@ class FBPreparedStatementTest {
 
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
 
-        try (FBPreparedStatement stmt = (FBPreparedStatement) con.prepareStatement("SELECT * FROM TESTTAB WHERE ID = 2")) {
+        try (var stmt = con.prepareStatement("SELECT * FROM TESTTAB WHERE ID = 2").unwrap(FBPreparedStatement.class)) {
             String detailedExecutionPlan = stmt.getExplainedExecutionPlan();
             assertThat("Ensure that a valid detailed execution plan is retrieved",
                     detailedExecutionPlan, containsString("TESTTAB"));
         }
     }
 
+    @SuppressWarnings("SqlSourceToSinkFlow")
     @ParameterizedTest
     @MethodSource
     void testGetStatementType(String query, int expectedStatementType, String assertionMessage) throws SQLException {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
-        try (FBPreparedStatement stmt = (FBPreparedStatement) con.prepareStatement(query)) {
+        try (var stmt = con.prepareStatement(query).unwrap(FBPreparedStatement.class)) {
             assertEquals(expectedStatementType, stmt.getStatementType(), assertionMessage);
         }
     }
@@ -603,14 +610,14 @@ class FBPreparedStatementTest {
     void testLikeFullLength() throws Exception {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
 
-        try (Statement stmt = con.createStatement()) {
+        try (var stmt = con.createStatement()) {
             stmt.execute("INSERT INTO testtab(field1) VALUES('abcdefghij')");
         }
 
-        try (PreparedStatement ps = con.prepareStatement("SELECT field1 FROM testtab WHERE field1 LIKE ?")) {
+        try (var ps = con.prepareStatement("SELECT field1 FROM testtab WHERE field1 LIKE ?")) {
             ps.setString(1, "%abcdefghi%");
 
-            ResultSet rs = ps.executeQuery();
+            var rs = ps.executeQuery();
             assertTrue(rs.next(), "Should find a record");
         }
     }
@@ -624,13 +631,13 @@ class FBPreparedStatementTest {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("sqlDialect", "1");
 
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            try (Statement stmt = connection.createStatement()) {
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+            try (var stmt = connection.createStatement()) {
                 stmt.execute("INSERT INTO testtab(id, field1, num_field) VALUES(1, '', 10.02)");
             }
 
-            try (PreparedStatement ps = connection.prepareStatement("SELECT num_field FROM testtab WHERE id = 1")) {
-                ResultSet rs = ps.executeQuery();
+            try (var ps = connection.prepareStatement("SELECT num_field FROM testtab WHERE id = 1")) {
+                var rs = ps.executeQuery();
 
                 assertTrue(rs.next());
 
@@ -651,11 +658,12 @@ class FBPreparedStatementTest {
         executeDDL(con, DROP_GENERATOR, ISCConstants.isc_no_meta_update);
         executeDDL(con, CREATE_GENERATOR);
 
-        try (FirebirdPreparedStatement stmt = (FirebirdPreparedStatement) con.prepareStatement(
-                "INSERT INTO testtab(id, field1) VALUES(gen_id(test_generator, 1), 'a') RETURNING id")) {
+        try (var stmt = con
+                .prepareStatement("INSERT INTO testtab(id, field1) VALUES(gen_id(test_generator, 1), 'a') RETURNING id")
+                .unwrap(FirebirdPreparedStatement.class)) {
             assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, stmt.getStatementType(),
                     "TYPE_EXEC_PROCEDURE should be returned for an INSERT...RETURNING statement");
-            ResultSet rs = stmt.executeQuery();
+            var rs = stmt.executeQuery();
 
             assertTrue(rs.next(), "Should return at least 1 row");
             assertThat("Generator value should be > 0", rs.getInt(1), OrderingComparison.greaterThan(0));
@@ -663,28 +671,26 @@ class FBPreparedStatementTest {
         }
     }
 
-    //@formatter:off
-    private static final String LONG_RUNNING_STATEMENT =
-            "execute block " +
-            " as" +
-            "     declare variable i integer;" +
-            "     declare variable a varchar(100);" +
-            " begin" +
-            "    i = 1;" +
-            "    while(i < 1000000) do begin" +
-            "      EXECUTE STATEMENT 'SELECT ' || :i || ' FROM rdb$database' INTO :a;" +
-            "      i = i + 1;" +
-            "    end" +
-            " end";
-    //@formatter:on
+    private static final String LONG_RUNNING_STATEMENT = """
+            execute block
+            as
+             declare variable i integer;
+             declare variable a varchar(100);
+            begin
+             i = 1;
+             while(i < 1000000) do  begin
+              EXECUTE STATEMENT 'SELECT ' || :i || ' FROM rdb$database' INTO :a;
+              i = i + 1;
+             end
+            end""";
 
     @Test
     void testCancelStatement() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsCancelOperation(), "Test requires fb_cancel_operations support");
         assumeTrue(getDefaultSupportInfo().supportsExecuteBlock(), "Test requires EXECUTE BLOCK support");
-        final AtomicBoolean cancelFailed = new AtomicBoolean(false);
-        try (Statement stmt = con.createStatement()) {
-            Thread cancelThread = new Thread(() -> {
+        final var cancelFailed = new AtomicBoolean(false);
+        try (var stmt = con.createStatement()) {
+            var cancelThread = new Thread(() -> {
                 try {
                     Thread.sleep(5);
                     stmt.cancel();
@@ -724,12 +730,11 @@ class FBPreparedStatementTest {
 
         createIsNullTestData();
 
-        try (PreparedStatement ps = con.prepareStatement(
-                "SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1")) {
+        try (var ps = con.prepareStatement("SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1")) {
             ps.setNull(1, Types.VARCHAR);
             ps.setNull(2, Types.VARCHAR);
 
-            ResultSet rs = ps.executeQuery();
+            var rs = ps.executeQuery();
 
             assertTrue(rs.next(), "Step 1.1 - should get a record");
             assertEquals(1, rs.getInt(1), "Step 1.1 - ID should be equal 1");
@@ -748,12 +753,11 @@ class FBPreparedStatementTest {
 
         createIsNullTestData();
 
-        try (PreparedStatement ps = con.prepareStatement(
-                "SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1")) {
+        try (var ps = con.prepareStatement("SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1")) {
             ps.setString(1, "a");
             ps.setString(2, "a");
 
-            ResultSet rs = ps.executeQuery();
+            var rs = ps.executeQuery();
 
             assertTrue(rs.next(), "Step 2.1 - should get a record");
             assertEquals(1, rs.getInt(1), "Step 2.1 - ID should be equal 1");
@@ -771,12 +775,11 @@ class FBPreparedStatementTest {
 
         createIsNullTestData();
 
-        try (PreparedStatement ps = con.prepareStatement(
-                "SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1")) {
+        try (var ps = con.prepareStatement("SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1")) {
             ps.setString(1, null);
             ps.setString(2, null);
 
-            ResultSet rs = ps.executeQuery();
+            var rs = ps.executeQuery();
 
             assertTrue(rs.next(), "Step 1.1 - should get a record");
             assertEquals(1, rs.getInt(1), "Step 1.1 - ID should be equal 1");
@@ -787,7 +790,7 @@ class FBPreparedStatementTest {
 
     private void createIsNullTestData() throws SQLException {
         con.setAutoCommit(false);
-        try (Statement stmt = con.createStatement()) {
+        try (var stmt = con.createStatement()) {
             stmt.execute("INSERT INTO testtab(id, field1, field2) VALUES (1, '1', 'a')");
             stmt.execute("INSERT INTO testtab(id, field1, field2) VALUES (2, '2', NULL)");
         } finally {
@@ -800,13 +803,13 @@ class FBPreparedStatementTest {
      */
     @Test
     void testDoubleClose() throws SQLException {
-        PreparedStatement stmt = con.prepareStatement("SELECT 1, 2 FROM RDB$DATABASE");
+        var stmt = con.prepareStatement("SELECT 1, 2 FROM RDB$DATABASE");
         stmt.close();
         assertDoesNotThrow(stmt::close);
     }
 
     /**
-     * Test if an implicit close (by fully reading the resultset) while closeOnCompletion is true, will close
+     * Test if an implicit close (by fully reading the result set) while closeOnCompletion is true, will close
      * the statement.
      * <p>
      * JDBC 4.1 feature
@@ -817,10 +820,10 @@ class FBPreparedStatementTest {
         executeCreateTable(con, CREATE_TABLE);
         prepareTestData();
 
-        try (PreparedStatement stmt = con.prepareStatement(SELECT_DATA)) {
+        try (var stmt = con.prepareStatement(SELECT_DATA)) {
             stmt.closeOnCompletion();
             stmt.execute();
-            ResultSet rs = stmt.getResultSet();
+            var rs = stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
                 assertFalse(rs.isClosed(), "Result set should be open");
@@ -848,18 +851,17 @@ class FBPreparedStatementTest {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("lc_ctype", "UTF8");
 
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+        try (var connection = DriverManager.getConnection(getUrl(), props)) {
             final int id = 1;
             final String testString = "\u27F0"; // using high unicode character
-            try (PreparedStatement pstmt = connection.prepareStatement(
+            try (var pstmt = connection.prepareStatement(
                     "INSERT INTO testtab (id, field1, UTFFIELD) values (?, '01234567', ?)")) {
                 pstmt.setInt(1, id);
                 pstmt.setString(2, testString);
                 pstmt.executeUpdate();
             }
 
-            try (PreparedStatement pstmt2 = connection.prepareStatement(
-                    "SELECT UTFFIELD FROM testtab WHERE id = ?")) {
+            try (var pstmt2 = connection.prepareStatement("SELECT UTFFIELD FROM testtab WHERE id = ?")) {
                 pstmt2.setInt(1, id);
                 ResultSet rs = pstmt2.executeQuery();
 
@@ -877,12 +879,11 @@ class FBPreparedStatementTest {
      */
     @Test
     void testNullParameterWithCast() throws Exception {
-        try (PreparedStatement stmt = con.prepareStatement("SELECT CAST(? AS VARCHAR(1)) FROM RDB$DATABASE")) {
+        try (var stmt = con.prepareStatement("SELECT CAST(? AS VARCHAR(1)) FROM RDB$DATABASE")) {
             stmt.setObject(1, null);
-            try (ResultSet rs = stmt.executeQuery()) {
-                assertTrue(rs.next(), "Expected a row");
-                assertNull(rs.getString(1), "Expected column to have NULL value");
-            }
+            var rs = stmt.executeQuery();
+            assertTrue(rs.next(), "Expected a row");
+            assertNull(rs.getString(1), "Expected column to have NULL value");
         }
     }
 
@@ -899,18 +900,18 @@ class FBPreparedStatementTest {
             assumeServerBatchSupport();
         }
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
-        List<byte[]> expectedData = new ArrayList<>();
-        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        var expectedData = new ArrayList<byte[]>();
+        Properties props = getDefaultPropertiesForConnection();
         props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
-        try (Connection con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
+        try (var con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
             con.setAutoCommit(false);
             // Execute two separate batches inserting a random blob
-            try (PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?)")) {
+            try (var insert = con.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?)")) {
                 for (int i = 0; i < 2; i++) {
                     byte[] testData = DataGenerator.createRandomBytes(50);
                     expectedData.add(testData.clone());
                     insert.setInt(1, i);
-                    InputStream in = new ByteArrayInputStream(testData);
+                    var in = new ByteArrayInputStream(testData);
                     insert.setBinaryStream(2, in, testData.length);
                     insert.addBatch();
                     insert.executeBatch();
@@ -918,8 +919,8 @@ class FBPreparedStatementTest {
             }
 
             // Check if the stored data matches the retrieved data
-            try (Statement select = con.createStatement();
-                 ResultSet rs = select.executeQuery("SELECT id, obj_data FROM test_blob ORDER BY id")) {
+            try (var select = con.createStatement()) {
+                var rs = select.executeQuery("SELECT id, obj_data FROM test_blob ORDER BY id");
                 int count = 0;
                 while (rs.next()) {
                     count++;
@@ -946,19 +947,18 @@ class FBPreparedStatementTest {
             assumeServerBatchSupport();
         }
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
-        List<byte[]> expectedData = new ArrayList<>();
-        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        var expectedData = new ArrayList<byte[]>();
+        Properties props = getDefaultPropertiesForConnection();
         props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
-        try (Connection con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
+        try (var con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
             con.setAutoCommit(false);
             // Execute two separate batches inserting a random blob
-            try (PreparedStatement insert = con.prepareStatement(
-                    "INSERT INTO test_blob (id, clob_data) VALUES (?,?)")) {
+            try (var insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)")) {
                 for (int i = 0; i < 2; i++) {
                     byte[] testData = DataGenerator.createRandomBytes(50);
                     expectedData.add(testData.clone());
                     insert.setInt(1, i);
-                    InputStream in = new ByteArrayInputStream(testData);
+                    var in = new ByteArrayInputStream(testData);
                     insert.setBinaryStream(2, in, testData.length);
                     insert.addBatch();
                     insert.executeBatch();
@@ -966,8 +966,8 @@ class FBPreparedStatementTest {
             }
 
             // Check if the stored data matches the retrieved data
-            try (Statement select = con.createStatement();
-                 ResultSet rs = select.executeQuery("SELECT id, clob_data FROM test_blob ORDER BY id")) {
+            try (var select = con.createStatement()) {
+                var rs = select.executeQuery("SELECT id, clob_data FROM test_blob ORDER BY id");
                 int count = 0;
                 while (rs.next()) {
                     count++;
@@ -996,13 +996,13 @@ class FBPreparedStatementTest {
             assumeServerBatchSupport();
         }
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
-        List<String> expectedData = new ArrayList<>();
-        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        var expectedData = new ArrayList<String>();
+        Properties props = getDefaultPropertiesForConnection();
         props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
-        try (Connection con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
+        try (var con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
             con.setAutoCommit(false);
             // Execute two separate batches inserting a random blob
-            try (PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)")) {
+            try (var insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)")) {
                 for (int i = 0; i < 2; i++) {
                     byte[] testData = DataGenerator.createRandomBytes(50);
                     String testString = new String(testData, "Cp1252");
@@ -1015,8 +1015,8 @@ class FBPreparedStatementTest {
             }
 
             // Check if the stored data matches the retrieved data
-            try (Statement select = con.createStatement();
-                 ResultSet rs = select.executeQuery("SELECT id, clob_data FROM test_blob ORDER BY id")) {
+            try (var select = con.createStatement()) {
+                var rs = select.executeQuery("SELECT id, clob_data FROM test_blob ORDER BY id");
                 int count = 0;
                 while (rs.next()) {
                     count++;
@@ -1036,13 +1036,13 @@ class FBPreparedStatementTest {
                 Arguments.of("VARCHAR_OCTETS", Types.VARBINARY));
     }
 
+    @SuppressWarnings("SqlSourceToSinkFlow")
     @ParameterizedTest
     @MethodSource
     void testOctetsInsertAndSelect(String columName, int jdbcType) throws Exception {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
 
-        try (PreparedStatement insert = con.prepareStatement(
-                "INSERT INTO TESTTAB(ID, " + columName + ", FIELD1) VALUES (?, ?, ?)")) {
+        try (var insert = con.prepareStatement("INSERT INTO TESTTAB(ID, " + columName + ", FIELD1) VALUES (?, ?, ?)")) {
             ParameterMetaData pmd = insert.getParameterMetaData();
             assertEquals(jdbcType, pmd.getParameterType(2));
             final int fieldLength = pmd.getPrecision(2);
@@ -1062,8 +1062,8 @@ class FBPreparedStatementTest {
             insert.setInt(3, 2);
             insert.execute();
 
-            try (Statement select = con.createStatement();
-                 ResultSet rs = select.executeQuery("SELECT ID, " + columName + " FROM TESTTAB ORDER BY ID")) {
+            try (var select = con.createStatement()) {
+                var rs = select.executeQuery("SELECT ID, " + columName + " FROM TESTTAB ORDER BY ID");
                 ResultSetMetaData rsmd = rs.getMetaData();
                 assertEquals(jdbcType, rsmd.getColumnType(2));
 
@@ -1082,15 +1082,15 @@ class FBPreparedStatementTest {
     void testSetBigIntegerParameters() throws Exception {
         executeCreateTable(con, CREATE_TEST_BIG_INTEGER_TABLE);
         final String testBigIntegerValueString = "1" + Long.MAX_VALUE;
-        try (PreparedStatement pstmt = con.prepareStatement(
+        try (var pstmt = con.prepareStatement(
                 "insert into test_big_integer(bigintfield, varcharfield) values (?, ?)")) {
             pstmt.setObject(1, BigInteger.ONE);
             pstmt.setObject(2, new BigInteger(testBigIntegerValueString));
             pstmt.executeUpdate();
         }
 
-        try (PreparedStatement pstmt = con.prepareStatement("select bigintfield, varcharfield from test_big_integer");
-             ResultSet rs = pstmt.executeQuery()) {
+        try (var pstmt = con.prepareStatement("select bigintfield, varcharfield from test_big_integer")) {
+            var rs = pstmt.executeQuery();
             assertTrue(rs.next(), "Expected a row");
             assertEquals(1, rs.getLong("bigintfield"), "Unexpected value for bigintfield");
             assertEquals(BigInteger.ONE, rs.getObject("bigintfield", BigInteger.class),
@@ -1212,16 +1212,16 @@ class FBPreparedStatementTest {
 
                 END""");
 
-        try (Statement stmt = con.createStatement()) {
+        try (var stmt = con.createStatement()) {
             stmt.executeUpdate("insert into example_table(id, example_date) values (1, current_date - 5)");
         }
 
         con.setAutoCommit(false);
 
-        try (PreparedStatement pstmt = con.prepareStatement("execute procedure EXAMPLE_PROCEDURE(?)")) {
+        try (var pstmt = con.prepareStatement("execute procedure EXAMPLE_PROCEDURE(?)")) {
 //            for (int cnt = 0; cnt < 100; cnt++) {
                 pstmt.setInt(1, 1);
-                pstmt.executeUpdate();
+                assertDoesNotThrow(() -> pstmt.executeUpdate());
 //            }
             con.commit();
         } catch (SQLException e) {
@@ -1235,22 +1235,21 @@ class FBPreparedStatementTest {
      */
     @Test
     void testLongStringInsertAndRetrieve() throws Exception {
-        executeDDL(con, "recreate table long_string ( "
-                + " id integer primary key, "
-                + " stringcolumn varchar(1024)"
-                + ")");
+        executeDDL(con, """
+                recreate table long_string (
+                 id integer primary key,
+                 stringcolumn varchar(1024)
+                )""");
         char[] chars = new char[1024];
         Arrays.fill(chars, 'a');
         final String testvalue = new String(chars);
-        try (PreparedStatement pstmt = con.prepareStatement(
-                "insert into long_string (id, stringcolumn) values (?, ?)")) {
+        try (var pstmt = con.prepareStatement("insert into long_string (id, stringcolumn) values (?, ?)")) {
             pstmt.setInt(1, 1);
             pstmt.setString(2, testvalue);
             pstmt.executeUpdate();
         }
-        try (Statement stmt = con.createStatement();
-             ResultSet rs = stmt.executeQuery(
-                     "select char_length(stringcolumn), stringcolumn from long_string where id = 1")) {
+        try (var stmt = con.createStatement()) {
+            var rs = stmt.executeQuery("select char_length(stringcolumn), stringcolumn from long_string where id = 1");
             assertTrue(rs.next(), "expected a row");
             assertEquals(chars.length, rs.getInt(1), "Unexpected string length in Firebird");
             assertEquals(testvalue, rs.getString(2), "Selected string value does not match inserted");
@@ -1270,8 +1269,7 @@ class FBPreparedStatementTest {
                 + " id integer primary key, "
                 + " stringcolumn varchar(10) character set NONE"
                 + ")");
-        try (PreparedStatement pstmt = con.prepareStatement(
-                "insert into encoding_error (id, stringcolumn) values (?, ?)")) {
+        try (var pstmt = con.prepareStatement("insert into encoding_error (id, stringcolumn) values (?, ?)")) {
             pstmt.setInt(1, 1);
             pstmt.setBytes(2, new byte[] { (byte) 0xFF, (byte) 0xFF });
             pstmt.executeUpdate();
@@ -1280,11 +1278,11 @@ class FBPreparedStatementTest {
             pstmt.executeUpdate();
         }
         con.setAutoCommit(false);
-        try (PreparedStatement pstmt = con.prepareStatement(
+        try (var pstmt = con.prepareStatement(
                 "select cast(stringcolumn as varchar(10) character set UTF8) from encoding_error",
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT)) {
             assertThrows(SQLException.class, () -> {
-                ResultSet rs = pstmt.executeQuery();
+                var rs = pstmt.executeQuery();
                 rs.next();
             });
 
@@ -1303,7 +1301,7 @@ class FBPreparedStatementTest {
         executeCreateTable(con, CREATE_TABLE);
         prepareTestData();
 
-        try (PreparedStatement stmt = con.prepareStatement(SELECT_DATA)) {
+        try (var stmt = con.prepareStatement(SELECT_DATA)) {
             assertTrue(stmt.execute(), "expected a result set");
             ResultSet rs = stmt.getResultSet();
             int count = 0;
@@ -1320,13 +1318,13 @@ class FBPreparedStatementTest {
         }
     }
 
+    @SuppressWarnings("SqlSourceToSinkFlow")
     @ParameterizedTest
     @ValueSource(strings = { "binary", "text" })
     void testSetClobNullClob(String subType) throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement(
-                "select cast(? as blob sub_type " + subType + ") from rdb$database")) {
+        try (var pstmt = con.prepareStatement("select cast(? as blob sub_type " + subType + ") from rdb$database")) {
             pstmt.setClob(1, (Clob) null);
-            ResultSet rs = pstmt.executeQuery();
+            var rs = pstmt.executeQuery();
             assertTrue(rs.next(), "expected a row");
             assertNull(rs.getClob(1));
         }
@@ -1334,9 +1332,9 @@ class FBPreparedStatementTest {
 
     @Test
     void testSetClobNullReader() throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
+        try (var pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
             pstmt.setClob(1, (Reader) null);
-            ResultSet rs = pstmt.executeQuery();
+            var rs = pstmt.executeQuery();
             assertTrue(rs.next(), "expected a row");
             assertNull(rs.getClob(1));
         }
@@ -1344,21 +1342,21 @@ class FBPreparedStatementTest {
 
     @Test
     void testSetClobNullReaderWithLength() throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
+        try (var pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
             pstmt.setClob(1, null, 1);
-            ResultSet rs = pstmt.executeQuery();
+            var rs = pstmt.executeQuery();
             assertTrue(rs.next(), "expected a row");
             assertNull(rs.getClob(1));
         }
     }
 
+    @SuppressWarnings("SqlSourceToSinkFlow")
     @ParameterizedTest
     @ValueSource(strings = { "binary", "text" })
     void testSetBlobNullBlob(String subType) throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement(
-                "select cast(? as blob sub_type " + subType + ") from rdb$database")) {
+        try (var pstmt = con.prepareStatement("select cast(? as blob sub_type " + subType + ") from rdb$database")) {
             pstmt.setBlob(1, (Blob) null);
-            ResultSet rs = pstmt.executeQuery();
+            var rs = pstmt.executeQuery();
             assertTrue(rs.next(), "expected a row");
             assertNull(rs.getBlob(1));
         }
@@ -1366,10 +1364,9 @@ class FBPreparedStatementTest {
 
     @Test
     void testSetBlobNullInputStream() throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement(
-                "select cast(? as blob sub_type binary) from rdb$database")) {
+        try (var pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
             pstmt.setBlob(1, (InputStream) null);
-            ResultSet rs = pstmt.executeQuery();
+            var rs = pstmt.executeQuery();
             assertTrue(rs.next(), "expected a row");
             assertNull(rs.getBlob(1));
         }
@@ -1377,10 +1374,9 @@ class FBPreparedStatementTest {
 
     @Test
     void testSetBlobNullInputStreamWithLength() throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement(
-                "select cast(? as blob sub_type binary) from rdb$database")) {
+        try (var pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
             pstmt.setBlob(1, null, 1);
-            ResultSet rs = pstmt.executeQuery();
+            var rs = pstmt.executeQuery();
             assertTrue(rs.next(), "expected a row");
             assertNull(rs.getBlob(1));
         }
@@ -1397,8 +1393,8 @@ class FBPreparedStatementTest {
                   val = 'A';
                 end""");
 
-        try (PreparedStatement stmt = con.prepareStatement("execute procedure char_return");
-             ResultSet rs = stmt.executeQuery()) {
+        try (var stmt = con.prepareStatement("execute procedure char_return")) {
+            var rs = stmt.executeQuery();
             assertTrue(rs.next(), "Expected a row");
             assertAll(
                     () -> assertEquals("A    ", rs.getObject(1), "Unexpected trim by getObject"),
@@ -1414,15 +1410,15 @@ class FBPreparedStatementTest {
     void executeBatchWithoutParameters(boolean useServerBatch) throws Exception {
         executeCreateTable(con, CREATE_TABLE);
 
-        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        Properties props = getDefaultPropertiesForConnection();
         props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
         try (var con = DriverManager.getConnection(FBTestProperties.getUrl(), props);
              var pstmt = con.prepareStatement("insert into test default values")) {
             pstmt.addBatch();
             assertDoesNotThrow(pstmt::executeBatch);
         }
-        try (var stmt = con.createStatement();
-             var rs = stmt.executeQuery("select count(*) from test")) {
+        try (var stmt = con.createStatement()) {
+            var rs = stmt.executeQuery("select count(*) from test");
             assertTrue(rs.next(), "expected a row");
             assertEquals(1, rs.getInt(1), "Expected one row in table test");
         }
@@ -1430,7 +1426,7 @@ class FBPreparedStatementTest {
 
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);
-        try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {
+        try (var pstmt = con.prepareStatement(INSERT_DATA)) {
             for (int i = 0; i < DATA_ITEMS; i++) {
                 pstmt.setInt(1, i);
                 pstmt.addBatch();
