@@ -125,19 +125,37 @@ public final class FBTestProperties {
      * @return Default database connection properties for this testrun
      */
     public static Properties getDefaultPropertiesForConnection() {
-        final Properties returnValue = new Properties();
+        var props = new Properties();
 
-        returnValue.setProperty("user", DB_USER);
-        returnValue.setProperty("password", DB_PASSWORD);
-        returnValue.setProperty("lc_ctype", DB_LC_CTYPE);
+        props.setProperty("user", DB_USER);
+        props.setProperty("password", DB_PASSWORD);
+        props.setProperty("lc_ctype", DB_LC_CTYPE);
         if (USE_FIREBIRD_AUTOCOMMIT) {
-            returnValue.setProperty("useFirebirdAutocommit", "true");
+            props.setProperty("useFirebirdAutocommit", "true");
         }
         if (ENABLE_PROTOCOL != null) {
-            returnValue.setProperty("enableProtocol", ENABLE_PROTOCOL);
+            props.setProperty("enableProtocol", ENABLE_PROTOCOL);
         }
 
-        return returnValue;
+        return props;
+    }
+
+    /**
+     * @return default database connection properties, with {@code k1 = v1} added
+     */
+    public static Properties getPropertiesForConnection(String k1, String v1) {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(k1, v1);
+        return props;
+    }
+
+    /**
+     * @return default database connection properties, with {@code additionalProperties} added
+     */
+    public static Properties getPropertiesForConnection(Map<String, String> additionalProperties) {
+        Properties props = getDefaultPropertiesForConnection();
+        additionalProperties.forEach(props::setProperty);
+        return props;
     }
 
     public static FbConnectionProperties getDefaultFbConnectionProperties() {
@@ -288,8 +306,27 @@ public final class FBTestProperties {
     }
 
     public static FirebirdConnection getConnectionViaDriverManager() throws SQLException {
-        return (FirebirdConnection) DriverManager.getConnection(getUrl(),
-                getDefaultPropertiesForConnection());
+        return getConnectionViaDriverManager(getDefaultPropertiesForConnection());
+    }
+
+    public static FirebirdConnection getConnectionViaDriverManager(Properties props) throws SQLException {
+        return DriverManager.getConnection(getUrl(), props).unwrap(FirebirdConnection.class);
+    }
+
+    /**
+     * The property {@code k1 = v1} is used in addition (and possibly overwriting) the default properties
+     */
+    public static FirebirdConnection getConnectionViaDriverManager(String k1, String v1) throws SQLException {
+        return getConnectionViaDriverManager(getPropertiesForConnection(k1, v1));
+    }
+
+    /**
+     * The properties {@code additionalProperties) are used in addition (and possibly overwriting) the default
+     * properties.
+     */
+    public static FirebirdConnection getConnectionViaDriverManager(Map<String, String> additionalProperties)
+            throws SQLException {
+        return getConnectionViaDriverManager(getPropertiesForConnection(additionalProperties));
     }
 
     public static <T extends FBManager> T configureFBManager(T fbManager) throws Exception {
