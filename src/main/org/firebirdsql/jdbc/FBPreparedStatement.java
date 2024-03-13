@@ -606,9 +606,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     // NOTE: This is not used for FBCallableStatement!
     private Batch createBatch() throws SQLException {
-        if (connection != null && connection.isUseServerBatch()
-                && fbStatement != null && fbStatement.supportBatchUpdates()
-                && !isGeneratedKeyQuery()) {
+        if (canExecuteUsingServerBatch()) {
             return new ServerBatch(
                     FbBatchConfig.of(FbBatchConfig.HALT_AT_FIRST_ERROR, FbBatchConfig.UPDATE_COUNTS,
                             FbBatchConfig.SERVER_DEFAULT_DETAILED_ERRORS, connection.getServerBatchBufferSize()),
@@ -616,6 +614,17 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         } else {
             return new EmulatedPreparedStatementBatch();
         }
+    }
+
+    private boolean canExecuteUsingServerBatch() {
+        // enabled for connection
+        return connection != null && connection.isUseServerBatch()
+                // supported by statement implementation
+                && fbStatement != null && fbStatement.supportBatchUpdates()
+                // server batch execution throws isc_batch_param when executing a statement without parameters
+                && fbStatement.getParameterDescriptor().getCount() != 0
+                // server batch execution cannot produce rows from RETURNING
+                && !isGeneratedKeyQuery();
     }
 
     @Override

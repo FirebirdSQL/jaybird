@@ -1420,6 +1420,28 @@ class FBPreparedStatementTest {
         }
     }
 
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/788">jaybird#788</a>
+     */
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
+    void executeBatchWithoutParameters(boolean useServerBatch) throws Exception {
+        executeCreateTable(con, CREATE_TABLE);
+
+        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
+        try (var con = DriverManager.getConnection(FBTestProperties.getUrl(), props);
+             var pstmt = con.prepareStatement("insert into test default values")) {
+            pstmt.addBatch();
+            assertDoesNotThrow(pstmt::executeBatch);
+        }
+        try (var stmt = con.createStatement();
+             var rs = stmt.executeQuery("select count(*) from test")) {
+            assertTrue(rs.next(), "expected a row");
+            assertEquals(1, rs.getInt(1), "Expected one row in table test");
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);
         try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {
