@@ -389,14 +389,12 @@ class FBPreparedStatementTest {
                 switch (rs.getInt(1)) {
                 case 2:
                     ts2 = rs.getTimestamp(3);
-                    ts2AsStr = rs.getString(2);
-                    ts2AsStr = ts2AsStr.substring(0, Math.min(ts2AsStr.length(), maxLength));
+                    ts2AsStr = truncate(rs.getString(2), maxLength);
                     break;
 
                 case 3:
                     ts3 = rs.getTimestamp(3);
-                    ts3AsStr = rs.getString(2);
-                    ts3AsStr = ts3AsStr.substring(0, Math.min(ts3AsStr.length(), maxLength));
+                    ts3AsStr = truncate(rs.getString(2), maxLength);
                     break;
                 }
             }
@@ -406,17 +404,43 @@ class FBPreparedStatementTest {
 
             assertEquals(3600 * 1000, Math.abs(ts2.getTime() - ts3.getTime()),
                     "Timestamps 2 and 3 should differ for 3600 seconds");
-            String ts2ToStr = ts2.toString();
-            ts2ToStr = ts2ToStr.substring(0, Math.min(ts2ToStr.length(), maxLength));
-            if (ts2ToStr.length() == ts2AsStr.length() - 1) {
-                // Account for presentation difference with trailing 0
-                ts2ToStr += '0';
-            }
+            String ts2ToStr = truncate(fixTimestampString(ts2.toString(), ts2AsStr.length()), maxLength);
             assertEquals(ts2AsStr, ts2ToStr, "Server should see the same timestamp");
-            String ts3ToStr = ts3.toString();
-            ts3ToStr = ts3ToStr.substring(0, Math.min(ts3ToStr.length(), maxLength));
+            String ts3ToStr = truncate(fixTimestampString(ts3.toString(), ts3AsStr.length()), maxLength);
             assertEquals(ts3AsStr, ts3ToStr, "Server should see the same timestamp");
         }
+    }
+
+    /**
+     * Account for presentation difference with trailing 0.
+     *
+     * @param timestampString
+     *         timestamp string
+     * @param expectedLength
+     *         expected length
+     * @return value padded with one {@code 0} if {@code timestampString} is one character shorter than
+     * {@code expectedLength}, otherwise {@code timestampString}
+     */
+    private static String fixTimestampString(String timestampString, int expectedLength) {
+        if (timestampString.length() == expectedLength - 1) {
+            //
+            return timestampString + '0';
+        }
+        return timestampString;
+    }
+
+    /**
+     * Truncate string to {@code maxLength}.
+     *
+     * @param stringToTruncate
+     *         string to truncate
+     * @param maxLength
+     *         maximum length
+     * @return either {@code stringToTruncate} if shorter than {@code maxLength}, or a string of the requested length
+     */
+    @SuppressWarnings("SameParameterValue")
+    private static String truncate(String stringToTruncate, int maxLength) {
+        return stringToTruncate.substring(0, Math.min(stringToTruncate.length(), maxLength));
     }
 
     @Test
