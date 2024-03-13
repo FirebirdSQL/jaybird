@@ -58,8 +58,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * Tests for {@link FBPreparedStatement}.
+ *
+ * @author Roman Rokytskyy
+ * @author Mark Rotteveel
  */
 class FBPreparedStatementTest {
 
@@ -1427,6 +1429,28 @@ class FBPreparedStatementTest {
             assertAll(
                     () -> assertEquals("A    ", rs.getObject(1), "Unexpected trim by getObject"),
                     () -> assertEquals("A    ", rs.getString(1), "Unexpected trim by getString"));
+        }
+    }
+
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/788">jaybird#788</a>
+     */
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
+    void executeBatchWithoutParameters(boolean useServerBatch) throws Exception {
+        executeCreateTable(con, CREATE_TABLE);
+
+        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
+        try (Connection con = DriverManager.getConnection(FBTestProperties.getUrl(), props);
+             PreparedStatement pstmt = con.prepareStatement("insert into test default values")) {
+            pstmt.addBatch();
+            assertDoesNotThrow(pstmt::executeBatch);
+        }
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("select count(*) from test")) {
+            assertTrue(rs.next(), "expected a row");
+            assertEquals(1, rs.getInt(1), "Expected one row in table test");
         }
     }
 
