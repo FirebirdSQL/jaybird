@@ -21,7 +21,6 @@ package org.firebirdsql.common.extension;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -77,19 +76,18 @@ public class DatabaseUserExtension implements AfterEachCallback {
      * @param username
      *         username
      * @param plugin
-     *         The user manager plugin to use, or {@code null} for the default (or Firebird 2.5)
+     *         the user manager plugin to use, or {@code null} for the default (or Firebird 2.5)
      * @throws SQLException
-     *         For errors creating the user.
+     *         for errors creating the user
      */
     public void createUser(String username, String password, String plugin) throws SQLException {
-        StringBuilder createUserSql = new StringBuilder("CREATE USER ").append(username)
-                .append(" PASSWORD ").append('\'').append(password).append('\'');
-        if (plugin != null) {
-            createUserSql.append(" USING PLUGIN ").append(plugin);
-        }
-
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement statement = connection.createStatement()) {
+        try (var connection = getConnectionViaDriverManager();
+             var statement = connection.createStatement()) {
+            var createUserSql = new StringBuilder("CREATE USER ").append(statement.enquoteIdentifier(username, false))
+                    .append(" PASSWORD ").append(statement.enquoteLiteral(password));
+            if (plugin != null) {
+                createUserSql.append(" USING PLUGIN ").append(statement.enquoteIdentifier(plugin, false));
+            }
             statement.execute(createUserSql.toString());
         }
 
@@ -101,9 +99,9 @@ public class DatabaseUserExtension implements AfterEachCallback {
         if (createdUsers.isEmpty()) {
             return;
         }
-        try (Connection connection = getConnectionViaDriverManager()) {
+        try (var connection = getConnectionViaDriverManager()) {
             connection.setAutoCommit(false);
-            try (Statement statement = connection.createStatement()) {
+            try (var statement = connection.createStatement()) {
                 for (User user : createdUsers) {
                     dropUser(statement, user);
                 }
@@ -117,9 +115,9 @@ public class DatabaseUserExtension implements AfterEachCallback {
 
     private void dropUser(Statement statement, User user) {
         try {
-            StringBuilder dropUserSql = new StringBuilder("DROP USER ").append(user.name);
+            var dropUserSql = new StringBuilder("DROP USER ").append(statement.enquoteIdentifier(user.name, false));
             if (user.plugin != null) {
-                dropUserSql.append(" USING PLUGIN ").append(user.plugin);
+                dropUserSql.append(" USING PLUGIN ").append(statement.enquoteIdentifier(user.plugin, false));
             }
             statement.execute(dropUserSql.toString());
         } catch (SQLException e) {
@@ -127,14 +125,7 @@ public class DatabaseUserExtension implements AfterEachCallback {
         }
     }
 
-    private static class User {
-        private final String name;
-        private final String plugin;
-
-        private User(String name, String plugin) {
-            this.name = name;
-            this.plugin = plugin;
-        }
+    private record User(String name, String plugin) {
 
         @Override
         public String toString() {

@@ -26,9 +26,7 @@ import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -240,8 +238,8 @@ public abstract class UsesDatabaseExtension {
     private void executeInitStatements() throws SQLException {
         if (initStatements.isEmpty()) return;
 
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement()) {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
             connection.setAutoCommit(false);
             for (String initStatement : initStatements) {
                 if ("COMMIT WORK".equalsIgnoreCase(initStatement)) {

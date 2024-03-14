@@ -18,13 +18,15 @@
  */
 package org.firebirdsql.common.extension;
 
-import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.management.FBStatisticsManager;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.opentest4j.TestAbortedException;
 
 import java.sql.SQLException;
+
+import static org.firebirdsql.common.FBTestProperties.configureDefaultServiceProperties;
+import static org.firebirdsql.common.FBTestProperties.getGdsType;
 
 /**
  * JUnit extension that checks if a database exists.
@@ -52,11 +54,8 @@ public class DatabaseExistsExtension implements BeforeAllCallback {
     }
 
     private void checkDatabaseExists() {
-        FBStatisticsManager statisticsManager = new FBStatisticsManager(FBTestProperties.getGdsType());
-        statisticsManager.setServerName(FBTestProperties.DB_SERVER_URL);
-        statisticsManager.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        statisticsManager.setUser(FBTestProperties.DB_USER);
-        statisticsManager.setPassword(FBTestProperties.DB_PASSWORD);
+        var statisticsManager = new FBStatisticsManager(getGdsType());
+        configureDefaultServiceProperties(statisticsManager);
         statisticsManager.setDatabase(databaseName);
         try {
             statisticsManager.getHeaderPage();

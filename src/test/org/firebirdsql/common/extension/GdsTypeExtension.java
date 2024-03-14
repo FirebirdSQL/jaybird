@@ -25,8 +25,6 @@ import org.hamcrest.Matcher;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
@@ -60,8 +58,7 @@ public class GdsTypeExtension implements BeforeAllCallback {
      * @return Instance
      */
     public static GdsTypeExtension supports(String... supportedTypes) {
-        final Set<String> supportedTypesSet = new HashSet<>(Arrays.asList(supportedTypes));
-        return new GdsTypeExtension(is(in(supportedTypesSet)));
+        return new GdsTypeExtension(is(in(Set.of(supportedTypes))));
     }
 
     /**
@@ -71,8 +68,7 @@ public class GdsTypeExtension implements BeforeAllCallback {
      * @return Instance
      */
     public static GdsTypeExtension excludes(String... excludedTypes) {
-        final Set<String> excludedTypesSet = new HashSet<>(Arrays.asList(excludedTypes));
-        return new GdsTypeExtension(not(in(excludedTypesSet)));
+        return new GdsTypeExtension(not(in(Set.of(excludedTypes))));
     }
 
     /**

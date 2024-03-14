@@ -40,8 +40,7 @@ public class RunEnvironmentExtension implements BeforeAllCallback {
     private final List<EnvironmentRequirement> unmetRequirements;
 
     private RunEnvironmentExtension(EnumSet<EnvironmentRequirement> environmentRequirements) {
-        this.unmetRequirements = unmodifiableList(
-                environmentRequirements.stream().filter(EnvironmentRequirement::isNotMet).collect(toList()));
+        this.unmetRequirements = environmentRequirements.stream().filter(EnvironmentRequirement::isNotMet).toList();
     }
 
     public List<EnvironmentRequirement> getUnmetRequirements() {
