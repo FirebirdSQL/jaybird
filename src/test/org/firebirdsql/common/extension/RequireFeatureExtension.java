@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.common.extension;
 
+import org.firebirdsql.common.FeatureCheck;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -28,7 +29,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Extension to check features.
@@ -76,39 +76,6 @@ public class RequireFeatureExtension implements BeforeAllCallback {
             return new RequireFeatureExtension(new ArrayList<>(featureChecks));
         }
 
-    }
-
-    /**
-     * Check for presence of a feature.
-     */
-    public static final class FeatureCheck implements Consumer<FirebirdSupportInfo> {
-
-        private final Predicate<FirebirdSupportInfo> featureTest;
-        private final String failureMessage;
-
-        /**
-         * Creates a feature check.
-         *
-         * @param featureTest
-         *         predicate that returns {@code true} when the feature is supported
-         * @param failureMessage
-         *         message to report when the feature is not supported
-         */
-        public FeatureCheck(Predicate<FirebirdSupportInfo> featureTest, String failureMessage) {
-            this.featureTest = featureTest;
-            this.failureMessage = failureMessage;
-        }
-
-        /**
-         * Tests if the feature is available, otherwise throws a {@link org.opentest4j.TestAbortedException}.
-         *
-         * @param firebirdSupportInfo
-         *         support info object
-         */
-        @Override
-        public void accept(FirebirdSupportInfo firebirdSupportInfo) {
-            assumeTrue(featureTest.test(firebirdSupportInfo), failureMessage);
-        }
     }
 
 }

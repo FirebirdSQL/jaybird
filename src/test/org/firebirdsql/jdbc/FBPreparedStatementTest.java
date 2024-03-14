@@ -22,6 +22,7 @@ import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.Unstable;
 import org.hamcrest.number.OrderingComparison;
 import org.junit.jupiter.api.AfterEach;
@@ -52,13 +53,13 @@ import java.util.stream.Stream;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.FbAssumptions.assumeServerBatchSupport;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * @author Roman Rokytskyy
@@ -585,7 +586,7 @@ class FBPreparedStatementTest {
 
     @Test
     void testGetExplainedExecutionPlan() throws SQLException {
-        assumeTrue(getDefaultSupportInfo().supportsExplainedExecutionPlan(),
+        assumeFeature(FirebirdSupportInfo::supportsExplainedExecutionPlan,
                 "Test requires explained execution plan support");
 
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
@@ -701,8 +702,8 @@ class FBPreparedStatementTest {
 
     @Test
     void testCancelStatement() throws Exception {
-        assumeTrue(getDefaultSupportInfo().supportsCancelOperation(), "Test requires fb_cancel_operations support");
-        assumeTrue(getDefaultSupportInfo().supportsExecuteBlock(), "Test requires EXECUTE BLOCK support");
+        assumeFeature(FirebirdSupportInfo::supportsCancelOperation, "Test requires fb_cancel_operations support");
+        assumeFeature(FirebirdSupportInfo::supportsExecuteBlock, "Test requires EXECUTE BLOCK support");
 
         try (var stmt = con.createStatement()) {
             final var cancelFailed = new AtomicBoolean(true);
@@ -731,7 +732,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testParameterIsNullQuerySetNull() throws Throwable {
-        assumeTrue(getDefaultSupportInfo().supportsNullDataType(), "test requires support for ? IS NULL");
+        assumeFeature(FirebirdSupportInfo::supportsNullDataType, "test requires support for ? IS NULL");
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
 
         createIsNullTestData();
@@ -755,7 +756,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testParameterIsNullQueryWithValues() throws Throwable {
-        assumeTrue(getDefaultSupportInfo().supportsNullDataType(), "test requires support for ? IS NULL");
+        assumeFeature(FirebirdSupportInfo::supportsNullDataType, "test requires support for ? IS NULL");
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
 
         createIsNullTestData();
@@ -777,7 +778,7 @@ class FBPreparedStatementTest {
      */
     @Test
     void testParameterIsNullQueryWithNull() throws Throwable {
-        assumeTrue(getDefaultSupportInfo().supportsNullDataType(), "test requires support for ? IS NULL");
+        assumeFeature(FirebirdSupportInfo::supportsNullDataType, "test requires support for ? IS NULL");
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
 
         createIsNullTestData();
