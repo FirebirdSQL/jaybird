@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.encodings.Encoding;
@@ -38,11 +37,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.*;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
+import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeFeatureMissing;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
@@ -52,7 +53,6 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.*;
 
 /**
  * Generic tests for FbStatement.
@@ -134,8 +134,8 @@ public abstract class AbstractStatementTest {
 
     @BeforeEach
     public final void setUp() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement()) {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
             stmt.execute("delete from keyvalue");
         }
         db = createDatabase();
@@ -157,7 +157,7 @@ public abstract class AbstractStatementTest {
         assertNotNull(fields, "Fields");
         final FirebirdSupportInfo supportInfo = supportInfoFor(db);
         final int metadataCharSetId = supportInfo.reportedMetadataCharacterSetId();
-        List<FieldDescriptor> expectedFields = Arrays.asList(
+        var expectedFields = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_BLOB | 1, 1,
                         supportInfo.reportsBlobCharSetInDescriptor() ? metadataCharSetId : 0, 8, "Description", null,
                         "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
@@ -220,18 +220,16 @@ public abstract class AbstractStatementTest {
         final boolean supportsTableAlias = supportInfo.supportsTableAlias();
         final int metadataCharSetId = supportInfo.reportedMetadataCharacterSetId();
 
-        List<FieldDescriptor> expectedFields =
-                Collections.singletonList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
-                                supportInfo.maxReportedIdentifierLengthBytes(), "RDB$CHARACTER_SET_NAME",
-                                supportsTableAlias ? "A" : null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS",
-                                "SYSDBA")
-                );
+        var expectedFields = List.of(
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
+                        supportInfo.maxReportedIdentifierLengthBytes(), "RDB$CHARACTER_SET_NAME",
+                        supportsTableAlias ? "A" : null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS", "SYSDBA")
+        );
         assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull(parameters, "Parameters");
-        List<FieldDescriptor> expectedParameters = Arrays.asList(
+        var expectedParameters = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
                         null, null, null, null, null),
                 new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
@@ -247,7 +245,7 @@ public abstract class AbstractStatementTest {
         statement.prepare(SELECT_CHARSET_BY_ID_OR_SIZE);
 
         final DatatypeCoder coder = db.getDatatypeCoder();
-        RowValue rowValue = RowValue.of(
+        var rowValue = RowValue.of(
                 coder.encodeShort(3),  // smallint = 3 (id of UNICODE_FSS)
                 coder.encodeShort(1)); // smallint = 1 (single byte character sets)
 
@@ -285,7 +283,7 @@ public abstract class AbstractStatementTest {
 
         final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull(fields, "Fields");
-        List<FieldDescriptor> expectedFields = Collections.singletonList(
+        var expectedFields = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
                         "OUTVALUE", "INCREMENT", "SYSDBA")
         );
@@ -293,7 +291,7 @@ public abstract class AbstractStatementTest {
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull(parameters, "Parameters");
-        List<FieldDescriptor> expectedParameters = Collections.singletonList(
+        var expectedParameters = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
                         null, null)
         );
@@ -306,7 +304,7 @@ public abstract class AbstractStatementTest {
         statement.addStatementListener(listener);
         statement.prepare(EXECUTE_EXECUTABLE_STORED_PROCEDURE);
 
-        RowValue rowValue = RowValue.of(
+        var rowValue = RowValue.of(
                 db.getDatatypeCoder().encodeInt(1)); // Byte representation of 1
         statement.execute(rowValue);
 
@@ -330,7 +328,7 @@ public abstract class AbstractStatementTest {
 
         final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull(fields, "Fields");
-        List<FieldDescriptor> expectedFields = Collections.singletonList(
+        var expectedFields = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
                         "OUTVALUE", "RANGE", "SYSDBA")
         );
@@ -338,7 +336,7 @@ public abstract class AbstractStatementTest {
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull(parameters, "Parameters");
-        List<FieldDescriptor> expectedParameters = Arrays.asList(
+        var expectedParameters = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
                         null, null),
                 new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
@@ -349,7 +347,7 @@ public abstract class AbstractStatementTest {
 
     @Test
     public void test_PrepareInsertReturning() throws Exception {
-        assumeTrue(getDefaultSupportInfo().supportsInsertReturning(), "Test requires INSERT .. RETURNING ... support");
+        assumeFeature(FirebirdSupportInfo::supportsInsertReturning, "Test requires INSERT .. RETURNING ... support");
 
         allocateStatement();
         statement.prepare(INSERT_RETURNING_KEY_VALUE);
@@ -359,7 +357,7 @@ public abstract class AbstractStatementTest {
 
         final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull(fields, "Fields");
-        List<FieldDescriptor> expectedFields = Collections.singletonList(
+        var expectedFields = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "THEKEY", null,
                         "THEKEY", "KEYVALUE", "SYSDBA")
         );
@@ -367,7 +365,7 @@ public abstract class AbstractStatementTest {
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull(parameters, "Parameters");
-        List<FieldDescriptor> expectedParameters = Collections.singletonList(
+        var expectedParameters = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 0, 0, 5, null, null,
                         null, null, null)
         );
@@ -388,7 +386,7 @@ public abstract class AbstractStatementTest {
     public void test_GetExecutionPlan_noStatementPrepared() throws Exception {
         allocateStatement();
 
-        SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExecutionPlan);
+        var exception = assertThrows(SQLNonTransientException.class, statement::getExecutionPlan);
         assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_stmtNotAllocated));
     }
 
@@ -398,26 +396,25 @@ public abstract class AbstractStatementTest {
         statement.prepare(SELECT_FROM_RDB$DATABASE);
         statement.close();
 
-        SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExecutionPlan);
+        var exception = assertThrows(SQLNonTransientException.class, statement::getExecutionPlan);
         assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_stmtClosed));
     }
 
     @Test
     public void test_GetExplainedExecutionPlan_unsupportedVersion() throws Exception {
-        assumeFalse(getDefaultSupportInfo().supportsExplainedExecutionPlan(),
+        assumeFeatureMissing(FirebirdSupportInfo::supportsExplainedExecutionPlan,
                 "Test expects explained execution plan not supported");
 
         allocateStatement();
         statement.prepare(SELECT_FROM_RDB$DATABASE);
 
-        SQLException exception = assertThrows(SQLFeatureNotSupportedException.class,
-                statement::getExplainedExecutionPlan);
+        var exception = assertThrows(SQLFeatureNotSupportedException.class, statement::getExplainedExecutionPlan);
         assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_explainedExecutionPlanNotSupported));
     }
 
     @Test
     public void test_GetExplainedExecutionPlan_withStatementPrepared() throws Exception {
-        assumeTrue(getDefaultSupportInfo().supportsExplainedExecutionPlan(),
+        assumeFeature(FirebirdSupportInfo::supportsExplainedExecutionPlan,
                 "Test requires explained execution plan support");
 
         allocateStatement();
@@ -425,15 +422,16 @@ public abstract class AbstractStatementTest {
 
         String executionPlan = statement.getExplainedExecutionPlan();
 
-        assertEquals("Select Expression\n" +
-                "    -> Table \"RDB$DATABASE\" Full Scan", executionPlan, "Unexpected plan for prepared statement");
+        assertEquals("""
+                Select Expression
+                    -> Table "RDB$DATABASE" Full Scan""", executionPlan, "Unexpected plan for prepared statement");
     }
 
     @Test
     public void test_GetExplainedExecutionPlan_noStatementPrepared() throws Exception {
         allocateStatement();
 
-        SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExplainedExecutionPlan);
+        var exception = assertThrows(SQLNonTransientException.class, statement::getExplainedExecutionPlan);
         assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_stmtNotAllocated));
     }
 
@@ -443,7 +441,7 @@ public abstract class AbstractStatementTest {
         statement.prepare(SELECT_FROM_RDB$DATABASE);
         statement.close();
 
-        SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExplainedExecutionPlan);
+        var exception = assertThrows(SQLNonTransientException.class, statement::getExplainedExecutionPlan);
         assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_stmtClosed));
     }
 
@@ -453,7 +451,7 @@ public abstract class AbstractStatementTest {
         statement.addStatementListener(listener);
         statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
 
-        RowValue rowValue = RowValue.of(
+        var rowValue = RowValue.of(
                 db.getDatatypeCoder().encodeInt(4096),
                 db.getEncoding().encodeToCharset("test"));
 
@@ -549,8 +547,7 @@ public abstract class AbstractStatementTest {
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
         assertEquals(Boolean.TRUE, listener.hasResultSet(), "Expected hasResultSet to be set to true");
-        assertEquals(Boolean.FALSE, listener.hasSingletonResult(),
-                "Expected hasSingletonResult to be set to false");
+        assertEquals(Boolean.FALSE, listener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
         assertNotEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast not set yet");
         assertEquals(0, listener.getRows().size(), "Expected no rows to be fetched yet");
 
@@ -621,7 +618,7 @@ public abstract class AbstractStatementTest {
         final String aEuro = "a\u20AC";
         final byte[] insertFieldData = utf8Encoding.encodeToCharset(aEuro);
         final RowDescriptor parametersInsert = statement.getParameterDescriptor();
-        final RowValue parameterValuesInsert = RowValue.of(parametersInsert,
+        final var parameterValuesInsert = RowValue.of(parametersInsert,
                 db.getDatatypeCoder().encodeInt(1),
                 insertFieldData,
                 insertFieldData);
@@ -630,7 +627,7 @@ public abstract class AbstractStatementTest {
         // Retrieve the just inserted UTF8 values from the database for comparison
         statement.prepare(SELECT_THEUTFVALUE);
         final RowDescriptor parametersSelect = statement.getParameterDescriptor();
-        final RowValue parameterValuesSelect = RowValue.of(parametersSelect,
+        final var parameterValuesSelect = RowValue.of(parametersSelect,
                 db.getDatatypeCoder().encodeInt(1));
         statement.addStatementListener(listener);
         statement.execute(parameterValuesSelect);
@@ -654,9 +651,7 @@ public abstract class AbstractStatementTest {
         assertEquals(aEuro, decodedChar.trim(), "Unexpected value for trimmed char");
         // Note artificial result from the way UTF8 is handled
         assertEquals(18, decodedChar.length(), "Unexpected length for char");
-        char[] spaceChars16 = new char[16];
-        Arrays.fill(spaceChars16, ' ');
-        assertEquals(new String(spaceChars16), decodedChar.substring(2), "Unexpected trailing characters for char");
+        assertEquals(" ".repeat(16), decodedChar.substring(2), "Unexpected trailing characters for char");
     }
 
     @Test
@@ -664,7 +659,7 @@ public abstract class AbstractStatementTest {
         allocateStatement();
         statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
 
-        RowValue rowValue = RowValue.of(
+        var rowValue = RowValue.of(
                 db.getDatatypeCoder().encodeInt(4096),
                 db.getEncoding().encodeToCharset("test"));
 
@@ -676,7 +671,7 @@ public abstract class AbstractStatementTest {
         statement.addStatementListener(listener);
 
         // Insert another value
-        RowValue differentRowValue = RowValue.of(
+        var differentRowValue = RowValue.of(
                 db.getDatatypeCoder().encodeInt(4097),
                 db.getEncoding().encodeToCharset("test"));
         statement.execute(differentRowValue);
@@ -694,7 +689,7 @@ public abstract class AbstractStatementTest {
         allocateStatement();
         statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
 
-        RowValue rowValue = RowValue.of(
+        var rowValue = RowValue.of(
                 db.getDatatypeCoder().encodeInt(4096),
                 db.getEncoding().encodeToCharset("test"));
 
@@ -704,7 +699,7 @@ public abstract class AbstractStatementTest {
         assertThrows(SQLException.class, () -> statement.execute(rowValue));
 
         statement.prepare("INSERT INTO keyvalue (thekey, theUTFVarcharValue) VALUES (?, ?)");
-        RowValue differentRowValue = RowValue.of(
+        var differentRowValue = RowValue.of(
                 db.getDatatypeCoder().encodeInt(4097),
                 db.getEncoding().encodeToCharset("test"));
         statement.execute(differentRowValue);
@@ -725,11 +720,11 @@ public abstract class AbstractStatementTest {
         assumeThat("Test requires 63 character identifier support",
                 getDefaultSupportInfo().maxIdentifierLengthCharacters(), not(lessThan(63)));
 
-        String tableName = generateIdentifier('A', 63);
-        String column1 = generateIdentifier('B', 63);
-        String column2 = generateIdentifier('C', 63);
+        String tableName = "A".repeat(63);
+        String column1 = "B".repeat(63);
+        String column2 = "C".repeat(63);
         try (Connection con = getConnectionViaDriverManager()) {
-            DdlHelper.executeCreateTable(con,
+            executeCreateTable(con,
                     "create table " + tableName + " (" + column1 + " varchar(10) character set UTF8, " + column2 + " varchar(20) character set UTF8)");
         }
 
@@ -741,7 +736,7 @@ public abstract class AbstractStatementTest {
 
         final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull(fields, "Fields");
-        List<FieldDescriptor> expectedFields = Arrays.asList(
+        var expectedFields = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
                         0, 40, column1, null, column1, tableName, "SYSDBA"),
                 new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
@@ -751,10 +746,10 @@ public abstract class AbstractStatementTest {
         RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull(parameters, "Parameters");
 
-        List<FieldDescriptor> expectedParameters =
-                Collections.singletonList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
-                                0, 40, null, null, null, null, null));
+        var expectedParameters = List.of(
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4, 0, 40, null, null, null,
+                        null, null)
+        );
         assertEquals(expectedParameters, parameters.getFieldDescriptors(), "Unexpected values for parameters");
     }
 
@@ -784,7 +779,7 @@ public abstract class AbstractStatementTest {
     public void setTimeout_negativeValue_throwsException() throws Exception {
         allocateStatement();
 
-        SQLException exception = assertThrows(SQLNonTransientException.class, () -> statement.setTimeout(-1));
+        var exception = assertThrows(SQLNonTransientException.class, () -> statement.setTimeout(-1));
         assertThat(exception, errorCodeEquals(JaybirdErrorCodes.jb_invalidTimeout));
     }
 
@@ -797,19 +792,20 @@ public abstract class AbstractStatementTest {
 
     @Test
     public void testVerifyUnprepare() throws Exception {
-        assumeTrue(supportInfoFor(db).supportsStatementUnprepare(), "Test requires support for statement unprepare");
+        assumeFeature(FirebirdSupportInfo::supportsStatementUnprepare, "Test requires support for statement unprepare");
 
         allocateStatement();
         String statementText = "SELECT * FROM RDB$DATABASE";
         statement.prepare(statementText);
 
-        try (Connection connection = getConnectionViaDriverManager();
-             PreparedStatement pstmt = connection.prepareStatement(
-                     "select count(*) from mon$statements "
-                             + "where mon$attachment_id <> current_connection and mon$sql_text = cast(? as varchar(50))")) {
+        try (var connection = getConnectionViaDriverManager();
+             var pstmt = connection.prepareStatement("""
+                             select count(*) from mon$statements
+                             where mon$attachment_id <> current_connection
+                             and mon$sql_text = cast(? as varchar(50))""")) {
             pstmt.setString(1, statementText);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                assertTrue(rs.next(), "Expected a row");
+            try (var rs = pstmt.executeQuery()) {
+                assertNextRow(rs);
                 assertEquals(1, rs.getInt(1), "Expected prepared statement");
             }
 
@@ -820,8 +816,8 @@ public abstract class AbstractStatementTest {
                 db.getDatabaseInfo(new byte[] { ISCConstants.isc_info_end }, 10);
             }
 
-            try (ResultSet rs = pstmt.executeQuery()) {
-                assertTrue(rs.next(), "Expected a row");
+            try (var rs = pstmt.executeQuery()) {
+                assertNextRow(rs);
                 assertEquals(0, rs.getInt(1), "Expected no prepared statement");
             }
         }
@@ -847,40 +843,13 @@ public abstract class AbstractStatementTest {
 
     @AfterEach
     public final void tearDown() throws Exception {
-        if (statement != null) {
-            try {
-                statement.close();
-            } catch (SQLException ex) {
-                System.out.println("Exception on statement close");
-                ex.printStackTrace();
-            }
-        }
-        if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
-            try {
+        // ensures that transaction is committed if still active, and that statement and db are closed
+        try (var ignored1 = db;
+             var ignored2 = statement) {
+            if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
                 transaction.commit();
-            } catch (SQLException ex) {
-                System.out.println("Exception on transaction commit");
-                ex.printStackTrace();
-            }
-        }
-        if (db != null) {
-            try {
-                db.close();
-            } catch (SQLException ex) {
-                System.out.println("Exception on detach");
-                ex.printStackTrace();
             }
         }
     }
 
-    @SuppressWarnings("SameParameterValue")
-    protected static String generateIdentifier(final char identifierChar,final int length) {
-        StringBuilder sb = new StringBuilder(length);
-        int tempLength = length;
-        while (tempLength-- > 0) {
-            sb.append(identifierChar);
-        }
-        assert sb.length() == length;
-        return sb.toString();
-    }
 }
