@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DataGenerator;
-import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
@@ -41,6 +40,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -53,7 +53,7 @@ import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.FbAssumptions.assumeServerBatchSupport;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -125,7 +125,7 @@ class FBPreparedStatementTest {
 
     @AfterEach
     void tearDown() throws Exception {
-        closeQuietly(con);
+        con.close();
     }
 
     @Test
@@ -263,7 +263,7 @@ class FBPreparedStatementTest {
     }
 
     private void assertStatementOnlyException(Executable executable) {
-        SQLException exception = assertThrows(SQLException.class, executable);
+        var exception = assertThrows(SQLException.class, executable);
         assertThat(exception, allOf(
                 sqlState(equalTo(SQLStateConstants.SQL_STATE_GENERAL_ERROR)),
                 message(equalTo(FBPreparedStatement.METHOD_NOT_SUPPORTED))));
@@ -275,11 +275,9 @@ class FBPreparedStatementTest {
             selectPs.setInt(1, id);
             var rs = selectPs.executeQuery();
 
-            assertTrue(rs.next(), "There must be at least one row available");
+            assertNextRow(rs);
             assertEquals(stringToTest, rs.getString(1), "Selected string must be equal to inserted one");
-            assertFalse(rs.next(), "There must be exactly one row");
-
-            rs.close();
+            assertNoNextRow(rs);
         }
     }
 
@@ -291,11 +289,9 @@ class FBPreparedStatementTest {
         try (var ps = con.prepareStatement("SELECT gen_id(test_generator, 1) as new_value FROM rdb$database")) {
             var rs = ps.executeQuery();
 
-            assertTrue(rs.next(), "Should get at least one row");
-
-            rs.getLong("new_value");
-
-            assertFalse(rs.next(), "should have only one row");
+            assertNextRow(rs);
+            assertThat("Generator value should be > 0", rs.getInt("new_value"), OrderingComparison.greaterThan(0));
+            assertNoNextRow(rs);
         }
     }
 
@@ -330,9 +326,7 @@ class FBPreparedStatementTest {
                  CONSTRAINT pk_foo PRIMARY KEY (bar, baz)
                 )""");
 
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
-        try (var con = DriverManager.getConnection(FBTestProperties.getUrl(), props);
+        try (var con = getConnectionViaDriverManager(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
              var ps = con.prepareStatement("insert into foo values (?, ?)")) {
             ps.setString(1, "one");
             ps.setString(2, "two");
@@ -346,12 +340,12 @@ class FBPreparedStatementTest {
             ps.clearBatch();
         }
         try (var stmt = con.createStatement()) {
-            var rs = stmt.executeQuery("select * from foo");
-            var rowValues = new HashSet<String>();
-            while (rs.next()) {
-                rowValues.add(rs.getString(1) + '#' + rs.getString(2));
-            }
-            assertEquals(Set.of("one#two", "one#three"), rowValues, "Mismatch in expected values in table foo");
+            var rs = stmt.executeQuery("select * from foo order by bar, baz");
+            assertNextRow(rs);
+            assertRowEquals("Mismatch in expected values in table foo", rs, "one", "three");
+            assertNextRow(rs);
+            assertRowEquals("Mismatch in expected values in table foo", rs, "one", "two");
+            assertNoNextRow(rs);
         }
     }
 
@@ -423,7 +417,6 @@ class FBPreparedStatementTest {
      */
     private static String fixTimestampString(String timestampString, int expectedLength) {
         if (timestampString.length() == expectedLength - 1) {
-            //
             return timestampString + '0';
         }
         return timestampString;
@@ -512,7 +505,7 @@ class FBPreparedStatementTest {
 
             ps.setInt(2, 1);
 
-            SQLException exception = assertThrows(SQLException.class, ps::execute, "expected exception on execute");
+            var exception = assertThrows(SQLException.class, ps::execute, "expected exception on execute");
             assertThat(exception, message(startsWith("Parameter with index 1 was not set")));
         }
 
@@ -530,9 +523,7 @@ class FBPreparedStatementTest {
     void testBindParameterUtf8_396(String connectionCharset) throws Exception {
         executeCreateTable(con, CREATE_TEST_VARCHAR_5_UTF8_TABLE);
 
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("lc_ctype", connectionCharset);
-        try (var con = DriverManager.getConnection(getUrl(), props)) {
+        try (var con = getConnectionViaDriverManager("lc_ctype", connectionCharset)) {
             con.setAutoCommit(false);
             try (var pstmt = con.prepareStatement("insert into test_varchar_5_utf8 (varchar_field) values (?)")) {
                 // 20 bytes, 5 codepoints (for WIN1252: 5 bytes, 5 codepoints, all '?'))
@@ -542,7 +533,7 @@ class FBPreparedStatementTest {
                 pstmt.clearParameters();
 
                 // 6 bytes, 6 codepoints
-                DataTruncation exceptionOnSetString = assertThrows(DataTruncation.class,
+                var exceptionOnSetString = assertThrows(DataTruncation.class,
                         // Failure to set leaves parameter uninitialized
                         () -> pstmt.setString(1, "abcdef"),
                         "Expected data truncation");
@@ -550,7 +541,7 @@ class FBPreparedStatementTest {
                         () -> assertEquals(5, exceptionOnSetString.getTransferSize(),
                                 "expected transfer size in codepoints"),
                         () -> assertEquals(6, exceptionOnSetString.getDataSize(), "expected data size in codepoints"));
-                SQLException exceptionOnExecute = assertThrows(SQLException.class, pstmt::execute,
+                var exceptionOnExecute = assertThrows(SQLException.class, pstmt::execute,
                         "expected exception on execute");
                 assertThat(exceptionOnExecute, message(startsWith("Parameter with index 1 was not set")));
             }
@@ -572,7 +563,7 @@ class FBPreparedStatementTest {
             assertThrows(DataTruncation.class, () -> ps.setString(1, tooLongValue),
                     "expected not to be able to set too long value");
 
-            SQLException exception = assertThrows(SQLException.class, ps::execute, "expected exception on execute");
+            var exception = assertThrows(SQLException.class, ps::execute, "expected exception on execute");
             assertThat(exception, message(startsWith("Parameter with index 1 was not set")));
         }
 
@@ -587,8 +578,8 @@ class FBPreparedStatementTest {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
 
         try (var stmt = con.prepareStatement("SELECT * FROM TESTTAB WHERE ID = 2").unwrap(FBPreparedStatement.class)) {
-            String executionPlan = stmt.getExecutionPlan();
-            assertThat("Ensure that a valid execution plan is retrieved", executionPlan, containsString("TESTTAB"));
+            assertThat("Ensure that a valid execution plan is retrieved",
+                    stmt.getExecutionPlan(), containsString("TESTTAB"));
         }
     }
 
@@ -600,9 +591,8 @@ class FBPreparedStatementTest {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
 
         try (var stmt = con.prepareStatement("SELECT * FROM TESTTAB WHERE ID = 2").unwrap(FBPreparedStatement.class)) {
-            String detailedExecutionPlan = stmt.getExplainedExecutionPlan();
             assertThat("Ensure that a valid detailed execution plan is retrieved",
-                    detailedExecutionPlan, containsString("TESTTAB"));
+                    stmt.getExplainedExecutionPlan(), containsString("TESTTAB"));
         }
     }
 
@@ -645,7 +635,7 @@ class FBPreparedStatementTest {
             ps.setString(1, "%abcdefghi%");
 
             var rs = ps.executeQuery();
-            assertTrue(rs.next(), "Should find a record");
+            assertNextRow(rs);
         }
     }
 
@@ -655,10 +645,8 @@ class FBPreparedStatementTest {
     @Test
     void testNumeric15_2() throws Exception {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("sqlDialect", "1");
 
-        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+        try (var connection = getConnectionViaDriverManager(PropertyNames.sqlDialect, "1")) {
             try (var stmt = connection.createStatement()) {
                 stmt.execute("INSERT INTO testtab(id, field1, num_field) VALUES(1, '', 10.02)");
             }
@@ -666,7 +654,7 @@ class FBPreparedStatementTest {
             try (var ps = connection.prepareStatement("SELECT num_field FROM testtab WHERE id = 1")) {
                 var rs = ps.executeQuery();
 
-                assertTrue(rs.next());
+                assertNextRow(rs);
 
                 float floatValue = rs.getFloat(1);
                 double doubleValue = rs.getDouble(1);
@@ -692,9 +680,9 @@ class FBPreparedStatementTest {
                     "TYPE_EXEC_PROCEDURE should be returned for an INSERT...RETURNING statement");
             var rs = stmt.executeQuery();
 
-            assertTrue(rs.next(), "Should return at least 1 row");
+            assertNextRow(rs);
             assertThat("Generator value should be > 0", rs.getInt(1), OrderingComparison.greaterThan(0));
-            assertFalse(rs.next(), "Should return exactly one row");
+            assertNoNextRow(rs);
         }
     }
 
@@ -715,6 +703,7 @@ class FBPreparedStatementTest {
     void testCancelStatement() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsCancelOperation(), "Test requires fb_cancel_operations support");
         assumeTrue(getDefaultSupportInfo().supportsExecuteBlock(), "Test requires EXECUTE BLOCK support");
+
         try (var stmt = con.createStatement()) {
             final var cancelFailed = new AtomicBoolean(true);
             ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -727,7 +716,7 @@ class FBPreparedStatementTest {
             }, 10, TimeUnit.MILLISECONDS);
             executor.shutdown();
 
-            SQLException exception = assertThrows(SQLException.class, () -> stmt.execute(LONG_RUNNING_STATEMENT),
+            var exception = assertThrows(SQLException.class, () -> stmt.execute(LONG_RUNNING_STATEMENT),
                     "Statement should raise a cancel exception");
             assertThat("Unexpected exception for cancellation", exception, allOf(
                     message(startsWith(getFbMessage(ISCConstants.isc_cancelled))),
@@ -753,10 +742,11 @@ class FBPreparedStatementTest {
 
             var rs = ps.executeQuery();
 
-            assertTrue(rs.next(), "Step 1.1 - should get a record");
+            assertNextRow(rs, "Step 1.1 - should get a record");
             assertEquals(1, rs.getInt(1), "Step 1.1 - ID should be equal 1");
-            assertTrue(rs.next(), "Step 1.2 - should get a record");
+            assertNextRow(rs, "Step 1.2 - should get a record");
             assertEquals(2, rs.getInt(1), "Step 1.2 - ID should be equal 2");
+            assertNoNextRow(rs);
         }
     }
 
@@ -776,9 +766,9 @@ class FBPreparedStatementTest {
 
             var rs = ps.executeQuery();
 
-            assertTrue(rs.next(), "Step 2.1 - should get a record");
+            assertNextRow(rs, "Step 2.1 - should get a record");
             assertEquals(1, rs.getInt(1), "Step 2.1 - ID should be equal 1");
-            assertFalse(rs.next(), "Step 2 - should get only one record");
+            assertNoNextRow(rs, "Step 2 - should get only one record");
         }
     }
 
@@ -798,10 +788,11 @@ class FBPreparedStatementTest {
 
             var rs = ps.executeQuery();
 
-            assertTrue(rs.next(), "Step 1.1 - should get a record");
+            assertNextRow(rs, "Step 1.1 - should get a record");
             assertEquals(1, rs.getInt(1), "Step 1.1 - ID should be equal 1");
-            assertTrue(rs.next(), "Step 1.2 - should get a record");
+            assertNextRow(rs, "Step 1.2 - should get a record");
             assertEquals(2, rs.getInt(1), "Step 1.2 - ID should be equal 2");
+            assertNoNextRow(rs);
         }
     }
 
@@ -816,7 +807,7 @@ class FBPreparedStatementTest {
     }
 
     /**
-     * Closing a statement twice should not result in an Exception.
+     * Closing a statement twice should not result in an exception.
      */
     @Test
     void testDoubleClose() throws SQLException {
@@ -843,13 +834,13 @@ class FBPreparedStatementTest {
             var rs = stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
-                assertFalse(rs.isClosed(), "Result set should be open");
+                assertResultSetOpen(rs);
                 assertFalse(stmt.isClosed(), "Statement should be open");
                 assertEquals(count, rs.getInt(1));
                 count++;
             }
             assertEquals(DATA_ITEMS, count);
-            assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
+            assertResultSetClosed(rs, "Result set should be closed (automatically closed after last result read)");
             assertTrue(stmt.isClosed(), "Statement should be closed");
         }
     }
@@ -865,10 +856,8 @@ class FBPreparedStatementTest {
     @Test
     void testInsertSingleCharOnUTF8() throws Exception {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("lc_ctype", "UTF8");
 
-        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+        try (var connection = getConnectionViaDriverManager("lc_ctype", "UTF8")) {
             final int id = 1;
             final String testString = "\u27F0"; // using high unicode character
             try (var pstmt = connection.prepareStatement(
@@ -882,8 +871,9 @@ class FBPreparedStatementTest {
                 pstmt2.setInt(1, id);
                 ResultSet rs = pstmt2.executeQuery();
 
-                assertTrue(rs.next(), "Expected a row");
+                assertNextRow(rs);
                 assertEquals(testString, rs.getString(1), "Unexpected value");
+                assertNoNextRow(rs);
             }
         }
     }
@@ -898,9 +888,11 @@ class FBPreparedStatementTest {
     void testNullParameterWithCast() throws Exception {
         try (var stmt = con.prepareStatement("SELECT CAST(? AS VARCHAR(1)) FROM RDB$DATABASE")) {
             stmt.setObject(1, null);
+
             var rs = stmt.executeQuery();
-            assertTrue(rs.next(), "Expected a row");
+            assertNextRow(rs);
             assertNull(rs.getString(1), "Expected column to have NULL value");
+            assertNoNextRow(rs);
         }
     }
 
@@ -918,9 +910,8 @@ class FBPreparedStatementTest {
         }
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
         var expectedData = new ArrayList<byte[]>();
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
-        try (var con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
+
+        try (var con = getConnectionViaDriverManager(PropertyNames.useServerBatch, String.valueOf(useServerBatch))) {
             con.setAutoCommit(false);
             // Execute two separate batches inserting a random blob
             try (var insert = con.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?)")) {
@@ -944,7 +935,7 @@ class FBPreparedStatementTest {
                     int id = rs.getInt(1);
                     byte[] data = rs.getBytes(2);
 
-                    assertArrayEquals(expectedData.get(id), data, String.format("Unexpected blob data for id %d", id));
+                    assertArrayEquals(expectedData.get(id), data, "Unexpected blob data for id" + id);
                 }
                 assertEquals(2, count, "Unexpected number of blobs in table");
             }
@@ -965,9 +956,8 @@ class FBPreparedStatementTest {
         }
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
         var expectedData = new ArrayList<byte[]>();
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
-        try (var con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
+
+        try (var con = getConnectionViaDriverManager(PropertyNames.useServerBatch, String.valueOf(useServerBatch))) {
             con.setAutoCommit(false);
             // Execute two separate batches inserting a random blob
             try (var insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)")) {
@@ -1006,7 +996,6 @@ class FBPreparedStatementTest {
      */
     @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
     @ValueSource(booleans = { true, false })
-    @Disabled("Due to instability")
     @Unstable("Susceptible to character set transliteration issues")
     void testRepeatedBatchExecutionWithClobFromString(boolean useServerBatch) throws Exception {
         if (useServerBatch) {
@@ -1014,15 +1003,16 @@ class FBPreparedStatementTest {
         }
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
         var expectedData = new ArrayList<String>();
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
-        try (var con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
+
+        try (var con = getConnectionViaDriverManager(Map.of(
+                PropertyNames.useServerBatch, String.valueOf(useServerBatch),
+                PropertyNames.encoding, "ISO8859_1"))) {
             con.setAutoCommit(false);
             // Execute two separate batches inserting a random blob
             try (var insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)")) {
                 for (int i = 0; i < 2; i++) {
                     byte[] testData = DataGenerator.createRandomBytes(50);
-                    String testString = new String(testData, "Cp1252");
+                    String testString = new String(testData, StandardCharsets.ISO_8859_1);
                     expectedData.add(testString);
                     insert.setInt(1, i);
                     insert.setString(2, testString);
@@ -1040,7 +1030,7 @@ class FBPreparedStatementTest {
                     int id = rs.getInt(1);
                     String data = rs.getString(2);
 
-                    assertEquals(expectedData.get(id), data, String.format("Unexpected blob data for id %d", id));
+                    assertEquals(expectedData.get(id), data, "Unexpected blob data for id " + id);
                 }
                 assertEquals(2, count, "Unexpected number of blobs in table");
             }
@@ -1084,13 +1074,15 @@ class FBPreparedStatementTest {
                 ResultSetMetaData rsmd = rs.getMetaData();
                 assertEquals(jdbcType, rsmd.getColumnType(2));
 
-                assertTrue(rs.next());
+                assertNextRow(rs);
                 assertEquals(1, rs.getInt(1));
                 assertArrayEquals(data1, rs.getBytes(2));
 
-                assertTrue(rs.next());
+                assertNextRow(rs);
                 assertEquals(2, rs.getInt(1));
                 assertArrayEquals(expectedData2, rs.getBytes(2));
+
+                assertNoNextRow(rs);
             }
         }
     }
@@ -1108,13 +1100,14 @@ class FBPreparedStatementTest {
 
         try (var pstmt = con.prepareStatement("select bigintfield, varcharfield from test_big_integer")) {
             var rs = pstmt.executeQuery();
-            assertTrue(rs.next(), "Expected a row");
+            assertNextRow(rs);
             assertEquals(1, rs.getLong("bigintfield"), "Unexpected value for bigintfield");
             assertEquals(BigInteger.ONE, rs.getObject("bigintfield", BigInteger.class),
                     "Unexpected value for bigintfield as BigInteger");
             assertEquals(testBigIntegerValueString, rs.getString("varcharfield"), "Unexpected value for varcharfield");
             assertEquals(new BigInteger(testBigIntegerValueString), rs.getObject("varcharfield", BigInteger.class),
                     "Unexpected value for varcharfield as BigInteger");
+            assertNoNextRow(rs);
         }
     }
 
@@ -1257,9 +1250,8 @@ class FBPreparedStatementTest {
                  id integer primary key,
                  stringcolumn varchar(1024)
                 )""");
-        char[] chars = new char[1024];
-        Arrays.fill(chars, 'a');
-        final String testvalue = new String(chars);
+        final int testLength = 1024;
+        final String testvalue = "a".repeat(testLength);
         try (var pstmt = con.prepareStatement("insert into long_string (id, stringcolumn) values (?, ?)")) {
             pstmt.setInt(1, 1);
             pstmt.setString(2, testvalue);
@@ -1267,9 +1259,10 @@ class FBPreparedStatementTest {
         }
         try (var stmt = con.createStatement()) {
             var rs = stmt.executeQuery("select char_length(stringcolumn), stringcolumn from long_string where id = 1");
-            assertTrue(rs.next(), "expected a row");
-            assertEquals(chars.length, rs.getInt(1), "Unexpected string length in Firebird");
+            assertNextRow(rs);
+            assertEquals(testLength, rs.getInt(1), "Unexpected string length in Firebird");
             assertEquals(testvalue, rs.getString(2), "Selected string value does not match inserted");
+            assertNoNextRow(rs);
         }
     }
 
@@ -1303,7 +1296,7 @@ class FBPreparedStatementTest {
                 rs.next();
             });
 
-            SQLException exception = assertThrows(SQLException.class, () -> {
+            var exception = assertThrows(SQLException.class, () -> {
                 ResultSet rs2 = pstmt.executeQuery();
                 rs2.next();
             });
@@ -1320,16 +1313,16 @@ class FBPreparedStatementTest {
 
         try (var stmt = con.prepareStatement(SELECT_DATA)) {
             assertTrue(stmt.execute(), "expected a result set");
-            ResultSet rs = stmt.getResultSet();
+            var rs = stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
-                assertFalse(rs.isClosed(), "Result set should be open");
+                assertResultSetOpen(rs);
                 assertFalse(stmt.isClosed(), "Statement should be open");
                 assertEquals(count, rs.getInt(1));
                 count++;
             }
             assertEquals(DATA_ITEMS, count);
-            assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
+            assertResultSetClosed(rs, "Result set should be closed (automatically closed after last result read)");
             assertFalse(stmt.getMoreResults(), "expected no result set for getMoreResults");
             assertEquals(-1, stmt.getUpdateCount(), "no update count (-1) was expected");
         }
@@ -1341,9 +1334,11 @@ class FBPreparedStatementTest {
     void testSetClobNullClob(String subType) throws Exception {
         try (var pstmt = con.prepareStatement("select cast(? as blob sub_type " + subType + ") from rdb$database")) {
             pstmt.setClob(1, (Clob) null);
+
             var rs = pstmt.executeQuery();
-            assertTrue(rs.next(), "expected a row");
+            assertNextRow(rs);
             assertNull(rs.getClob(1));
+            assertNoNextRow(rs);
         }
     }
 
@@ -1351,9 +1346,11 @@ class FBPreparedStatementTest {
     void testSetClobNullReader() throws Exception {
         try (var pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
             pstmt.setClob(1, (Reader) null);
+
             var rs = pstmt.executeQuery();
-            assertTrue(rs.next(), "expected a row");
+            assertNextRow(rs);
             assertNull(rs.getClob(1));
+            assertNoNextRow(rs);
         }
     }
 
@@ -1361,9 +1358,11 @@ class FBPreparedStatementTest {
     void testSetClobNullReaderWithLength() throws Exception {
         try (var pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
             pstmt.setClob(1, null, 1);
+
             var rs = pstmt.executeQuery();
-            assertTrue(rs.next(), "expected a row");
+            assertNextRow(rs);
             assertNull(rs.getClob(1));
+            assertNoNextRow(rs);
         }
     }
 
@@ -1373,9 +1372,11 @@ class FBPreparedStatementTest {
     void testSetBlobNullBlob(String subType) throws Exception {
         try (var pstmt = con.prepareStatement("select cast(? as blob sub_type " + subType + ") from rdb$database")) {
             pstmt.setBlob(1, (Blob) null);
+
             var rs = pstmt.executeQuery();
-            assertTrue(rs.next(), "expected a row");
+            assertNextRow(rs);
             assertNull(rs.getBlob(1));
+            assertNoNextRow(rs);
         }
     }
 
@@ -1383,9 +1384,11 @@ class FBPreparedStatementTest {
     void testSetBlobNullInputStream() throws Exception {
         try (var pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
             pstmt.setBlob(1, (InputStream) null);
+
             var rs = pstmt.executeQuery();
-            assertTrue(rs.next(), "expected a row");
+            assertNextRow(rs);
             assertNull(rs.getBlob(1));
+            assertNoNextRow(rs);
         }
     }
 
@@ -1393,9 +1396,11 @@ class FBPreparedStatementTest {
     void testSetBlobNullInputStreamWithLength() throws Exception {
         try (var pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
             pstmt.setBlob(1, null, 1);
+
             var rs = pstmt.executeQuery();
-            assertTrue(rs.next(), "expected a row");
+            assertNextRow(rs);
             assertNull(rs.getBlob(1));
+            assertNoNextRow(rs);
         }
     }
 
@@ -1412,10 +1417,11 @@ class FBPreparedStatementTest {
 
         try (var stmt = con.prepareStatement("execute procedure char_return")) {
             var rs = stmt.executeQuery();
-            assertTrue(rs.next(), "Expected a row");
+            assertNextRow(rs);
             assertAll(
                     () -> assertEquals("A    ", rs.getObject(1), "Unexpected trim by getObject"),
                     () -> assertEquals("A    ", rs.getString(1), "Unexpected trim by getString"));
+            assertNoNextRow(rs);
         }
     }
 
@@ -1427,17 +1433,16 @@ class FBPreparedStatementTest {
     void executeBatchWithoutParameters(boolean useServerBatch) throws Exception {
         executeCreateTable(con, CREATE_TABLE);
 
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
-        try (var con = DriverManager.getConnection(FBTestProperties.getUrl(), props);
+        try (var con = getConnectionViaDriverManager(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
              var pstmt = con.prepareStatement("insert into test default values")) {
             pstmt.addBatch();
             assertDoesNotThrow(pstmt::executeBatch);
         }
         try (var stmt = con.createStatement()) {
             var rs = stmt.executeQuery("select count(*) from test");
-            assertTrue(rs.next(), "expected a row");
+            assertNextRow(rs);
             assertEquals(1, rs.getInt(1), "Expected one row in table test");
+            assertNoNextRow(rs);
         }
     }
 
