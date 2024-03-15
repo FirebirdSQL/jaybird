@@ -60,5 +60,17 @@ public final class StringUtils {
     public static boolean isNullOrEmpty(String value) {
         return value == null || value.isEmpty();
     }
+
+    /**
+     * Null-safe trim.
+     *
+     * @param stringToTrim
+     *         String to trim
+     * @return result of {@code stringToTrim.trim()} (or {@code null} if {@code stringToTrim} was null
+     * @since 6
+     */
+    public static String trim(String stringToTrim) {
+        return stringToTrim == null ? null : stringToTrim.trim();
+    }
     
 }

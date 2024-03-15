@@ -20,6 +20,7 @@ package org.firebirdsql.jaybird.util;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -77,6 +78,20 @@ class StringUtilsTest {
     @ValueSource(strings = { " ", "a", "\0", "abc" })
     void testIsNullOrEmpty_nonEmptyYieldsFalse(String value) {
         assertFalse(StringUtils.isNullOrEmpty(value));
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            input, expectedOutput
+            ,
+            '',    ''
+            ' ',   ''
+            'a ',  a
+            ' a',  a
+            ' a ', a
+            """)
+    void testTrim(String input, String expectedOutput) {
+        assertEquals(expectedOutput, StringUtils.trim(input));
     }
 
 }

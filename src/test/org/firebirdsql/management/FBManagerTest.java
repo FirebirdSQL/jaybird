@@ -18,9 +18,9 @@
  */
 package org.firebirdsql.management;
 
-import org.firebirdsql.common.StringHelper;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.jaybird.util.StringUtils;
 import org.firebirdsql.jdbc.FBConnection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -205,7 +205,7 @@ class FBManagerTest {
                      ResultSet rs = stmt.executeQuery("select RDB$CHARACTER_SET_NAME from rdb$database")) {
 
                     assertTrue(rs.next(), "expected a row");
-                    assertEquals("UTF8", StringHelper.trim(rs.getString(1)), "Unexpected default character set");
+                    assertEquals("UTF8", StringUtils.trim(rs.getString(1)), "Unexpected default character set");
                 }
             } finally {
                 m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
