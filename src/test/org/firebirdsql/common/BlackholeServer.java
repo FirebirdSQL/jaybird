@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -26,9 +24,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
+import static java.lang.System.Logger.Level.ERROR;
+
 /**
  * Simple socket server that consumes everything sent to it, but never responds; for testing (connect) timeouts.
- * <p> 
+ * <p>
  * Assumption of this implementation is that there will only be one
  * client at a time!
  * </p>
@@ -38,97 +38,74 @@ public final class BlackholeServer implements Runnable {
     private volatile boolean active = true;
     private ServerSocket server;
     public static final int LIVENESS_TIMEOUT = 500;
-    
+
     /**
      * Constructs the ServerSocket with an ephemeral port, this port can be retrieved using {@link #getPort()}.
-     * 
+     *
      * @throws IOException If an I/O error occurs when opening the socket.
      */
     public BlackholeServer() throws IOException {
         this(0);
     }
-    
+
     /**
      * Constructs the ServerSocket with the specified port.
-     * 
+     *
      * @throws IOException If an I/O error occurs when opening the socket.
      */
     public BlackholeServer(int port) throws IOException {
-        server = new ServerSocket(port);
+        server = new ServerSocket(port, 1);
         server.setSoTimeout(LIVENESS_TIMEOUT);
     }
-    
+
     /**
      * Stops the server after (at max) 2x the LIVENESS_TIMEOUT
      */
     public void stop() {
         active = false;
     }
-    
+
     /**
      * Port number
      * @return The portnumber if connected, or -1 if not connected
      */
     public int getPort() {
-        if (server == null) {
-            return -1;
-        } else {
-            return server.getLocalPort();  
-        }
+        return server != null ? server.getLocalPort() : -1;
     }
-    
+
     @Override
     public void run() {
-        try {
+        try (var ignored = server) {
             while (active) {
-                Socket socket = null;
-                try {
-                    socket = server.accept();
+                try (Socket socket = server.accept()) {
+                    readFromSocket(socket);
                 } catch (SocketTimeoutException e) {
                     // Expected timeout for liveness of checking active
-                    continue;
                 }
-                readFromSocket(socket);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.getLogger(getClass().getName()).log(ERROR, "BlackHoleServer terminated with exception", e);
         } finally {
-            try {
-                server.close();
-            } catch (Exception ex) {
-                // Ignore
-                ex.printStackTrace();
-            } finally {
-                server = null;
-            }
+            server = null;
         }
     }
 
     private void readFromSocket(Socket socket) {
-        try {
+        try (var ignored = socket) {
             socket.setSoTimeout(LIVENESS_TIMEOUT);
             InputStream in = socket.getInputStream();
             while (active) {
                 try {
-                    if (in.read() == -1) {
-                        break;
-                    }
+                    if (in.read() == -1) return;
                 } catch (SocketTimeoutException e) {
                     // Expected timeout for liveness of checking active
-                    continue;
                 } catch (IOException ioe) {
                     // Other errors: end read
-                    break;
+                    return;
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (socket != null) socket.close();
-            } catch (Exception e) {
-                // Ignore
-            }
+            System.getLogger(getClass().getName()).log(ERROR, "readFromSocket terminated with exception", e);
         }
     }
 }

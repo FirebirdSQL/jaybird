@@ -59,7 +59,7 @@ public final class FBTestProperties {
         try {
             Class.forName(FBDriver.class.getName());
         } catch (ClassNotFoundException ex) {
-            throw new ExceptionInInitializerError("No suitable driver.");
+            throw new ExceptionInInitializerError("Could not load FBDriver class");
         }
     }
     

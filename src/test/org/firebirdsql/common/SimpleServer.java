@@ -100,6 +100,7 @@ public final class SimpleServer implements AutoCloseable {
     /**
      * Closes the open connection and the server socket.
      */
+    @Override
     public void close() throws IOException {
         try (serverSocket){
             closeConnection();

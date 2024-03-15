@@ -56,10 +56,7 @@ public final class ConfigHelper {
      *         when {@code connection} does not support {@code RDB$CONFIG} (i.e. Firebird 3.0 or earlier)
      */
     public static String getConfigValue(Connection connection, String configOption) throws SQLException {
-        var supportInfo = FirebirdSupportInfo.supportInfoFor(connection);
-        if (!supportInfo.supportsRDB$CONFIG()) {
-            throw new UnsupportedOperationException("This Firebird server does not support RDB$CONFIG");
-        }
+        requireRDB$CONFIGSupport(connection);
         try (var pstmt = connection.prepareStatement(
                 "select RDB$CONFIG_VALUE from RDB$CONFIG where RDB$CONFIG_NAME = ?")) {
             pstmt.setString(1, configOption);
@@ -68,6 +65,13 @@ public final class ConfigHelper {
                 return rs.getString(1);
             }
             return null;
+        }
+    }
+
+    private static void requireRDB$CONFIGSupport(Connection connection) {
+        var supportInfo = FirebirdSupportInfo.supportInfoFor(connection);
+        if (!supportInfo.supportsRDB$CONFIG()) {
+            throw new UnsupportedOperationException("This Firebird server does not support RDB$CONFIG");
         }
     }
 
