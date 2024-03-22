@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jaybird.parser;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Comparator;
 
@@ -45,6 +46,7 @@ final class CharSequenceComparison {
 
         private static final Comparator<CharSequence> INSTANCE = new CaseInsensitiveComparator();
 
+        @Serial
         private static final long serialVersionUID = -3287107010439420474L;
 
         public int compare(CharSequence s1, CharSequence s2) {
@@ -70,6 +72,7 @@ final class CharSequenceComparison {
         }
 
         /** Replaces the de-serialized object. */
+        @Serial
         private Object readResolve() { return INSTANCE; }
 
     }
