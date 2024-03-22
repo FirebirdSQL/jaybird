@@ -1,0 +1,140 @@
+= jdp-2024-01: Explicit support for transaction statements
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+Firebird has a set of statements for https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-transacs.html[transaction control^]:
+
+* https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-transacs.html#fblangref50-transacs-settransac[`SET TRANSACTION`^]
+* https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-transacs.html#fblangref50-transacs-commit[`COMMIT`^]
+* https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-transacs.html#fblangref50-transacs-rollback[`ROLLBACK`^]
+* https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-transacs.html#fblangref50-transacs-savepoint[`SAVEPOINT`^]
+* https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-transacs.html#fblangref50-transacs-releasesp[`RELEASE SAVEPOINT`^]
+
+Jaybird supports these options through the JDBC API, and JDBC formally discourages use of statements or functionality which is accessible through the JDBC API:
+
+[quote,java.sql.Connection,JDBC API documentation]
+____
+*Note:* When configuring a `Connection`, JDBC applications should use the appropriate `Connection` method such as `setAutoCommit` or `setTransactionIsolation`.
+Applications should not invoke SQL commands directly to change the connection's configuration when there is a JDBC method available.
+____
+
+In Jaybird 5 and earlier, attempts to use these transaction control statements have various problems:
+
+`SET TRANSACTION`::
+Fails with an error because the statement is executed with a valid transaction handle, while Firebird expects it to be executed without a transaction handle (that is, handle `-1`).
+`COMMIT`::
+Without `RETAIN`:::
+This will seem to work, but subsequent use of the connection will fail as Jaybird assumes it still has a valid transaction.
+Also, listeners will not be notified of the commit, so objects might incorrectly remain open, and produce unexpected errors when used subsequently.
+With `RETAIN`:::
+Will work fine.
+`ROLLBACK`::
+With/Without `RETAIN`:::
+See `COMMIT` above
+`TO SAVEPOINT`:::
+Will work, but Jaybird may incorrectly retain intermediate savepoint names if the savepoint was created through the JDBC API.
+`SAVEPOINT`::
+Will work, but Jaybird will not record the savepoint name, which might cause issues if other savepoint operations are handled through the JDBC API.
+`RELEASE SAVEPOINT`::
+Will work, but Jaybird may incorrectly retain savepoint names if the savepoint was created through the JDBC API.
+
+Jaybird provides an extension API in https://firebirdsql.org/file/documentation/drivers_documentation/java/latest/docs/org/firebirdsql/jdbc/FirebirdConnection.html[`FirebirdConnection`^] to customize transaction options.
+However, it is not always possible to access this (think of script execution, but also cases where unwrapping to `FirebirdConnection` is not possible -- e.g. blocked by the wrapping class).
+
+There are three possible directions to handle this:
+
+. Explicitly forbid the statements that don't work (i.e. `SET TRANSACTION`, and `COMMIT`/`ROLLBACK` without `RETAIN`), and leave the others as-is.
+. Explicitly support these statements by performing the same operations which would normally be applied through the API (notify listeners, etc.).
+. Make it configurable, that is, default to disallowing `SET TRANSACTION`, and `COMMIT`/`ROLLBACK` without `RETAIN`, and provide a configuration property to allow their use.
+The other transaction statements listed above will always work, but will do no additional work (like trying to add or remove savepoints from the list maintained by the connection implementation).
+
+(Other combinations of "`leave as-is`"/support/forbid would be possible as well, but those listed seem to make the most sense.)
+
+== Decision
+
+The third option will be implemented: by default Jaybird will disallow `SET TRANSACTION` and `COMMIT`/`ROLLBACK` without `RETAIN`, but provide a connection property `allowTxStmts`.
+
+When `allowTxStmts` is set to `true`, the following will happen:
+
+`SET TRANSACTION`::
+When a transaction is active, or auto-commit is enabled, `SET TRANSACTION` will fail with an exception, otherwise it will execute `SET TRANSACTION` and register the resulting transaction handle as the current transaction.
+Listeners will be notified in the same way as when starting a new transaction.
+
+`COMMIT`/`ROLLBACK`::
+These statements will always invoke `commit()` or `rollback()` of the current connection instead of executing the `COMMIT` or `ROLLBACK` statement.
+Given the methods are called, listeners will be notified in the same way as when committing or rolling back a transaction through `commit()` or `rollback()`, and behaviour will be the same as when calling those methods instead of executing the statement (e.g. when in auto-commit mode, an exception is raised, and when no transaction is active when auto-commit is disabled, it will be silently ignored).
+
+When set to `false` (the default), any attempt to execute `SET TRANSACTION`, `COMMIT`, or `ROLLBACK` (without `RETAIN` or `RELEASE SAVEPOINT`) will result in an exception, regardless of auto-commit status and/or status of the current transaction.
+
+With regard to `CallableStatement` (`prepareCall`), nothing will be changed, and execution will continue to fail, because the implementation currently unconditionally converts anything it can't parse to -- for example -- `EXECUTE PROCEDURE COMMIT`, which will obviously fail.
+
+The behaviour of other transaction management statements will be left untouched (at least by this JDP), even when they don't make sense, like using `SAVEPOINT`, `ROLLBACK TO SAVEPOINT` or `RELEASE SAVEPOINT` in an auto-commit transaction.
+
+=== Rejected design decisions
+
+Always reject::
+The current behaviour actually allows execution of `COMMIT` and `ROLLBACK` (though not `SET TRANSACTION`), but results in subsequent errors when continuing to use the connection.
+Closing this off entirely reduces flexibility for users;
+closing it off by default will prevent incorrect or unintentional use.
+
+Always allow::
+We think allowing explicit use of `COMMIT`, `ROLLBACK` and `SET TRANSACTION` (e.g. in scripts) should be a conscious decision by the application developer, and that normally they should use the JDBC API or Jaybird extension API.
++
+And otherwise, we can always change the default of `allowTxStmts` to `true` in a future version.
+
+Switch auto-commit off for `SET TRANSACTION`::
+We considered to have execution of `SET TRANSACTION` in auto-commit mode switch off auto-commit (and thus commit the current transaction), but we think that goes too far in managing state of the connection by means of statements.
+
+Commit active transaction for `SET TRANSACTION`::
+We considered to have execution of `SET TRANSACTION` implicitly commit the current transaction, but we think this should be handled explicitly and intentionally by the program or script by either calling `commit()` or by explicitly executing `COMMIT` in the script.
+
+Manage savepoints created/released through statements::
+We assume that people will either handle savepoints through statements, or use the JDBC API, and not mix this.
+Managing the savepoints on the connection for those statements (add on `SAVEPOINT`, remove on `RELEASE ... ONLY`, or remove and remove all following on `RELEASE`) thus seems like unnecessary complexity.
+
+Executing `COMMIT`/`ROLLBACK` as statements::
+Invoking `java.sql.Connection#commit()` and `java.sql.Connection#rollback()` instead of actually executing the statements avoids duplication and complexity surrounding notification and state management of the transaction handle.
+
+Allow execution through `CallableStatement`::
+Using `CallableStatement` for this doesn't make much sense, and the current implementation doesn't allow for this (in practice, it can only handle call-escapes and execute procedure) and would need to be heavily refactored to address this one edge-case.
+
+== Consequences
+
+By default, Jaybird will block execution of `SET TRANSACTION`, `COMMIT` (without retain) and `ROLLBACK` (without retain or release savepoint) with an exception explaining this is blocked and how it can be enabled.
+
+When `allowTxStmts` is set to `true`, the following is supported:
+
+=== `SET TRANSACTION`
+
+* If auto-commit is enabled, an exception is thrown that execution of `SET TRANSACTION` is not supported in auto-commit.
+* If a transaction is active, an exception is thrown that the current transaction must be explicitly committed or rolled back.
+* Otherwise, `SET TRANSACTION` is executed appropriately and its transaction registered, and listeners notified where relevant (similar as when a transaction is started implicitly by the connection).
+
+=== `COMMIT`
+
+Attempts to execute `COMMIT [WORK]` will unconditionally call `commit()` on the connection, and exhibit the same behaviour for commit required by the JDBC specification.
+This means that if auto-commit is enabled, or the connection is participating in a distributed transaction, an exception is thrown that explicit commit is not allowed.
+
+=== `ROLLBACK`
+
+Attempts to execute `ROLLBACK [WORK]` will unconditionally call `rollback()` on the connection, and exhibit the same behaviour for rollback required by the JDBC specification.
+This means that if auto-commit is enabled, or the connection is participating in a distributed transaction, an exception is thrown that explicit rollback is not allowed.
+
+=== Limitations
+
+These changes only affect execution through the JDBC API.
+In the lower-level GDS-ng API, callers will need to handle this explicitly and intentionally.
+However, the GDS-ng API or implementation may require modification so -- for example -- transactions created with `SET TRANSACTION` are registered properly similar to transactions created with `FbDatabase.startTransaction`.
+For example, maybe `FbDatabase` will receive a method `startTransaction(String)` where the `String` is the `SET TRANSACTION` statement text, but the exact needs and consequences will be explored during implementation.
+
+Handling these statements with `PreparedStatement` may require some extra thought, for example, by adding special implementation(s) of `PreparedStatement` purely for execution/handling of these statements.
+This will also be decided during implementation.
