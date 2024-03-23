@@ -59,8 +59,9 @@ public final class StatementDetector implements TokenVisitor {
         nextAfterStart.put("DELETE", new StateAfterStart(ParserState.DELETE, LocalStatementType.DELETE));
         nextAfterStart.put("INSERT", new StateAfterStart(ParserState.INSERT, LocalStatementType.INSERT));
         nextAfterStart.put("MERGE", new StateAfterStart(ParserState.MERGE, LocalStatementType.MERGE));
-        nextAfterStart.put("COMMIT", new StateAfterStart(ParserState.COMMIT, LocalStatementType.HARD_COMMIT));
-        nextAfterStart.put("ROLLBACK", new StateAfterStart(ParserState.ROLLBACK, LocalStatementType.HARD_ROLLBACK));
+        nextAfterStart.put("COMMIT", new StateAfterStart(ParserState.COMMIT_ROLLBACK, LocalStatementType.HARD_COMMIT));
+        nextAfterStart.put("ROLLBACK",
+                new StateAfterStart(ParserState.COMMIT_ROLLBACK, LocalStatementType.HARD_ROLLBACK));
         nextAfterStart.put("SET", new StateAfterStart(ParserState.SET, LocalStatementType.OTHER));
         NEXT_AFTER_START = unmodifiableMap(nextAfterStart);
     }
@@ -154,7 +155,8 @@ public final class StatementDetector implements TokenVisitor {
                 if (!(token instanceof ReservedToken)) {
                     return forceOther(detector);
                 }
-                StateAfterStart stateAfterStart = NEXT_AFTER_START.getOrDefault(token.textAsCharSequence(), INITIAL_OTHER);
+                StateAfterStart stateAfterStart =
+                        NEXT_AFTER_START.getOrDefault(token.textAsCharSequence(), INITIAL_OTHER);
                 detector.updateStatementType(stateAfterStart.type);
                 return stateAfterStart.state;
             }
@@ -272,7 +274,7 @@ public final class StatementDetector implements TokenVisitor {
         },
         // finding itself is offloaded to ReturningClauseDetector
         FIND_RETURNING,
-        COMMIT {
+        COMMIT_ROLLBACK {
             @Override
             ParserState next(Token token, StatementDetector detector) {
                 if (token instanceof GenericToken && token.equalsIgnoreCase("WORK")) {
@@ -280,12 +282,6 @@ public final class StatementDetector implements TokenVisitor {
                 }
                 // RETAIN or syntax error
                 return forceOther(detector);
-            }
-        },
-        ROLLBACK {
-            @Override
-            ParserState next(Token token, StatementDetector detector) {
-                return COMMIT.next(token, detector);
             }
         },
         COMMIT_ROLLBACK_WORK {
