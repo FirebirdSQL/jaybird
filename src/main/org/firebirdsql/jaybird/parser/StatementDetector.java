@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import static java.util.Collections.unmodifiableMap;
+import static org.firebirdsql.jaybird.parser.CharSequenceComparison.caseInsensitiveComparator;
 
 /**
  * Detects the type of statement, and - optionally - whether a DML statement has a {@code RETURNING} clause.
@@ -42,20 +43,25 @@ import static java.util.Collections.unmodifiableMap;
 @InternalApi
 public final class StatementDetector implements TokenVisitor {
 
-    private static final Map<CharSequence, ParserState> NEXT_AFTER_START;
+    private static final StateAfterStart INITIAL_OTHER =
+            new StateAfterStart(ParserState.OTHER, LocalStatementType.OTHER);
+    private static final Map<CharSequence, StateAfterStart> NEXT_AFTER_START;
 
     static {
-        TreeMap<CharSequence, ParserState> nextAfterStart =
-                new TreeMap<>(CharSequenceComparison.caseInsensitiveComparator());
-        nextAfterStart.put("SELECT", ParserState.SELECT);
+        var nextAfterStart = new TreeMap<CharSequence, StateAfterStart>(caseInsensitiveComparator());
+        var selectState = new StateAfterStart(ParserState.SELECT, LocalStatementType.SELECT);
+        nextAfterStart.put("SELECT", selectState);
         // NOTE: This is a shortcut, if WITH is ever allowed as the first token of another statement type,
         // this must be changed to detect the first keyword after the entire WITH clause
-        nextAfterStart.put("WITH", ParserState.SELECT);
-        nextAfterStart.put("EXECUTE", ParserState.EXECUTE);
-        nextAfterStart.put("UPDATE", ParserState.UPDATE);
-        nextAfterStart.put("DELETE", ParserState.DELETE);
-        nextAfterStart.put("INSERT", ParserState.INSERT);
-        nextAfterStart.put("MERGE", ParserState.MERGE);
+        nextAfterStart.put("WITH", selectState);
+        nextAfterStart.put("EXECUTE", new StateAfterStart(ParserState.EXECUTE, LocalStatementType.OTHER));
+        nextAfterStart.put("UPDATE", new StateAfterStart(ParserState.UPDATE, LocalStatementType.UPDATE));
+        nextAfterStart.put("DELETE", new StateAfterStart(ParserState.DELETE, LocalStatementType.DELETE));
+        nextAfterStart.put("INSERT", new StateAfterStart(ParserState.INSERT, LocalStatementType.INSERT));
+        nextAfterStart.put("MERGE", new StateAfterStart(ParserState.MERGE, LocalStatementType.MERGE));
+        nextAfterStart.put("COMMIT", new StateAfterStart(ParserState.COMMIT, LocalStatementType.HARD_COMMIT));
+        nextAfterStart.put("ROLLBACK", new StateAfterStart(ParserState.ROLLBACK, LocalStatementType.HARD_ROLLBACK));
+        nextAfterStart.put("SET", new StateAfterStart(ParserState.SET, LocalStatementType.OTHER));
         NEXT_AFTER_START = unmodifiableMap(nextAfterStart);
     }
 
@@ -86,6 +92,7 @@ public final class StatementDetector implements TokenVisitor {
 
     @Override
     public void visitToken(Token token, VisitorRegistrar visitorRegistrar) {
+        if (token.isWhitespaceOrComment()) return;
         parserState = parserState.next(token, this);
         if (parserState.isFinalState()) {
             // We're not interested anymore
@@ -143,77 +150,54 @@ public final class StatementDetector implements TokenVisitor {
     private enum ParserState {
         START {
             @Override
-            ParserState next0(Token token, StatementDetector detector) {
+            ParserState next(Token token, StatementDetector detector) {
                 if (!(token instanceof ReservedToken)) {
-                    detector.updateStatementType(LocalStatementType.OTHER);
-                    return OTHER;
+                    return forceOther(detector);
                 }
-                ParserState nextState = NEXT_AFTER_START.getOrDefault(token.textAsCharSequence(), ParserState.OTHER);
-                switch (nextState) {
-                case SELECT:
-                    detector.updateStatementType(LocalStatementType.SELECT);
-                    break;
-                case UPDATE:
-                    // Might be UPDATE OR INSERT
-                    detector.updateStatementType(LocalStatementType.UPDATE);
-                    break;
-                case DELETE:
-                    detector.updateStatementType(LocalStatementType.DELETE);
-                    break;
-                case INSERT:
-                    detector.updateStatementType(LocalStatementType.INSERT);
-                    break;
-                case MERGE:
-                    detector.updateStatementType(LocalStatementType.MERGE);
-                    break;
-                default:
-                    detector.updateStatementType(LocalStatementType.OTHER);
-                    break;
-                }
-                return nextState;
+                StateAfterStart stateAfterStart = NEXT_AFTER_START.getOrDefault(token.textAsCharSequence(), INITIAL_OTHER);
+                detector.updateStatementType(stateAfterStart.type);
+                return stateAfterStart.state;
             }
         },
         SELECT(true),
         EXECUTE {
             @Override
-            ParserState next0(Token token, StatementDetector detector) {
+            ParserState next(Token token, StatementDetector detector) {
                 if (token instanceof ReservedToken && token.equalsIgnoreCase("PROCEDURE")) {
                     detector.updateStatementType(LocalStatementType.EXECUTE_PROCEDURE);
                     return EXECUTE_PROCEDURE;
                 }
-                return OTHER;
+                return forceOther(detector);
             }
         },
         EXECUTE_PROCEDURE(true),
         UPDATE {
             @Override
-            ParserState next0(Token token, StatementDetector detector) {
+            ParserState next(Token token, StatementDetector detector) {
                 if (token instanceof OperatorToken && token.equalsIgnoreCase("OR")) {
                     detector.updateStatementType(LocalStatementType.UNKNOWN);
                     return POSSIBLY_UPDATE_OR_INSERT;
                 } else {
-                    return DML_TARGET.next0(token, detector);
+                    return DML_TARGET.next(token, detector);
                 }
             }
         },
         POSSIBLY_UPDATE_OR_INSERT {
             @Override
-            ParserState next0(Token token, StatementDetector detector) {
+            ParserState next(Token token, StatementDetector detector) {
                 if (token instanceof ReservedToken && token.equalsIgnoreCase("INSERT")) {
                     detector.updateStatementType(LocalStatementType.UPDATE_OR_INSERT);
                     // Further detection can use the insert path
                     return INSERT;
                 }
-                detector.updateStatementType(LocalStatementType.OTHER);
-                return OTHER;
+                return forceOther(detector);
             }
         },
         DELETE {
             @Override
-            ParserState next0(Token token, StatementDetector detector) {
+            ParserState next(Token token, StatementDetector detector) {
                 if (!(token instanceof ReservedToken && token.equalsIgnoreCase("FROM"))) {
-                    detector.updateStatementType(LocalStatementType.OTHER);
-                    return OTHER;
+                    return forceOther(detector);
                 }
                 return DML_TARGET;
             }
@@ -221,20 +205,18 @@ public final class StatementDetector implements TokenVisitor {
         // Shared by UPDATE, DELETE and MERGE
         DML_TARGET {
             @Override
-            ParserState next0(Token token, StatementDetector detector) {
+            ParserState next(Token token, StatementDetector detector) {
                 if (token.isValidIdentifier()) {
                     detector.setTableNameToken(token);
                     return DML_POSSIBLE_ALIAS;
-                } else {
-                    detector.updateStatementType(LocalStatementType.OTHER);
-                    return OTHER;
                 }
+                return forceOther(detector);
             }
         },
         // Shared by UPDATE, DELETE and MERGE
         DML_POSSIBLE_ALIAS {
             @Override
-            ParserState next0(Token token, StatementDetector detector) {
+            ParserState next(Token token, StatementDetector detector) {
                 if (token.isValidIdentifier()) {
                     // either alias or possibly returning clause
                     return FIND_RETURNING;
@@ -243,59 +225,87 @@ public final class StatementDetector implements TokenVisitor {
                         return DML_ALIAS;
                     }
                     return FIND_RETURNING;
-                } else {
-                    // Unexpected or invalid token at this point
-                    detector.updateStatementType(LocalStatementType.OTHER);
-                    return OTHER;
                 }
+                // Unexpected or invalid token at this point
+                return forceOther(detector);
             }
         },
         DML_ALIAS {
             @Override
-            ParserState next0(Token token, StatementDetector detector) {
+            ParserState next(Token token, StatementDetector detector) {
                 if (token.isValidIdentifier()) {
                     return FIND_RETURNING;
                 }
                 // syntax error
-                detector.updateStatementType(LocalStatementType.OTHER);
-                return OTHER;
+                return forceOther(detector);
             }
         },
         INSERT {
             @Override
-            ParserState next0(Token token, StatementDetector detector) {
+            ParserState next(Token token, StatementDetector detector) {
                 if (token instanceof ReservedToken && token.equalsIgnoreCase("INTO")) {
                     return INSERT_INTO;
                 }
-                detector.updateStatementType(LocalStatementType.OTHER);
-                return OTHER;
+                return forceOther(detector);
             }
         },
         INSERT_INTO {
             @Override
-            ParserState next0(Token token, StatementDetector detector) {
+            ParserState next(Token token, StatementDetector detector) {
                 if (token.isValidIdentifier()) {
                     detector.setTableNameToken(token);
                     return FIND_RETURNING;
                 }
                 // Syntax error
-                detector.updateStatementType(LocalStatementType.OTHER);
-                return OTHER;
+                return forceOther(detector);
             }
         },
         MERGE {
             @Override
-            ParserState next0(Token token, StatementDetector detector) {
+            ParserState next(Token token, StatementDetector detector) {
                 if (token instanceof ReservedToken && token.equalsIgnoreCase("INTO")) {
                     return DML_TARGET;
                 }
                 // Syntax error
-                detector.updateStatementType(LocalStatementType.OTHER);
-                return OTHER;
+                return forceOther(detector);
             }
         },
         // finding itself is offloaded to ReturningClauseDetector
         FIND_RETURNING,
+        COMMIT {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (token instanceof GenericToken && token.equalsIgnoreCase("WORK")) {
+                    return COMMIT_ROLLBACK_WORK;
+                }
+                // RETAIN or syntax error
+                return forceOther(detector);
+            }
+        },
+        ROLLBACK {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                return COMMIT.next(token, detector);
+            }
+        },
+        COMMIT_ROLLBACK_WORK {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                // RETAIN or syntax error
+                return forceOther(detector);
+            }
+        },
+        SET {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (token instanceof GenericToken && token.equalsIgnoreCase("TRANSACTION")) {
+                    detector.updateStatementType(LocalStatementType.SET_TRANSACTION);
+                    return SET_TRANSACTION;
+                }
+                return forceOther(detector);
+            }
+        },
+        SET_TRANSACTION(true),
         OTHER(true);
 
         private final boolean finalState;
@@ -312,19 +322,26 @@ public final class StatementDetector implements TokenVisitor {
             return finalState;
         }
 
-        final ParserState next(Token token, StatementDetector detector) {
-            if (token.isWhitespaceOrComment()) {
-                // Ignore whitespace and comments
-                return this;
-            }
-            return next0(token, detector);
-        }
-
-        ParserState next0(Token token, StatementDetector detector) {
+        ParserState next(Token token, StatementDetector detector) {
             throw new IllegalStateException(
                     "State " + this + " is a terminal state and next(..) should not be invoked");
         }
 
+        /**
+         * Update {@code detector} to {@link LocalStatementType#OTHER}, and return {@link ParserState#OTHER}.
+         *
+         * @param detector
+         *         detector to update
+         * @return always {@link ParserState#OTHER}
+         */
+        private static ParserState forceOther(StatementDetector detector) {
+            detector.updateStatementType(LocalStatementType.OTHER);
+            return OTHER;
+        }
+
+    }
+
+    private record StateAfterStart(ParserState state, LocalStatementType type) {
     }
 
 }

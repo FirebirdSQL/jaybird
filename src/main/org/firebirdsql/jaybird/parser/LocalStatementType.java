@@ -48,25 +48,43 @@ public enum LocalStatementType {
      */
     EXECUTE_PROCEDURE,
     /**
-     * {@code UPDATE} statement (or {@code UPDATE OR INSERT} before detection is complete)
+     * {@code UPDATE} statement (or {@code UPDATE OR INSERT} before detection is complete).
      */
     UPDATE,
     /**
-     * {@code DELETE} statement
+     * {@code DELETE} statement.
      */
     DELETE,
     /**
-     * {@code INSERT} statement
+     * {@code INSERT} statement.
      */
     INSERT,
     /**
-     * {@code UPDATE OR INSERT} statement
+     * {@code UPDATE OR INSERT} statement.
      */
     UPDATE_OR_INSERT,
     /**
-     * {@code MERGE} statement
+     * {@code MERGE} statement.
      */
     MERGE,
+    /**
+     * {@code COMMIT [WORK]} (i.e. without {@code RETAIN}).
+     *
+     * @since 6
+     */
+    HARD_COMMIT,
+    /**
+     * {@code ROLLBACK [WORK]} (i.e. without {@code RETAIN} or {@code TO SAVEPOINT ...}).
+     *
+     * @since 6
+     */
+    HARD_ROLLBACK,
+    /**
+     * {@code SET TRANSACTION} statement.
+     *
+     * @since 6
+     */
+    SET_TRANSACTION,
     /**
      * No specific classification applied (i.e. Jaybird is not (yet) interested in this type), or detection failed.
      */

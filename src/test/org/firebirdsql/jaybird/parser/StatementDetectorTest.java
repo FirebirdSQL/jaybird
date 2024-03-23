@@ -163,6 +163,37 @@ class StatementDetectorTest {
                 detectReturning("update returning returning set returning = not returning where returning returning returning returning",
                         LocalStatementType.UPDATE, new GenericToken(7, "returning"), true, true),
 
+                // Transaction statements
+
+                // COMMIT (including retain, which is detected as OTHER)
+                noDetect("commit", LocalStatementType.HARD_COMMIT, true),
+                noDetect("commit work", LocalStatementType.HARD_COMMIT, true),
+                noDetect("commit retain", LocalStatementType.OTHER, true),
+                noDetect("commit work retain", LocalStatementType.OTHER, true),
+
+                // ROLLBACK (including retain and to savepoint, which are detected as OTHER)
+                noDetect("rollback", LocalStatementType.HARD_ROLLBACK, true),
+                noDetect("rollback work", LocalStatementType.HARD_ROLLBACK, true),
+                noDetect("rollback retain", LocalStatementType.OTHER, true),
+                noDetect("rollback work retain", LocalStatementType.OTHER, true),
+                noDetect("rollback to savepoint 'XYZ'", LocalStatementType.OTHER, false),
+                noDetect("rollback work to savepoint 'XYZ'", LocalStatementType.OTHER, false),
+
+                // SET TRANSACTION
+                noDetect("set transaction",
+                        LocalStatementType.SET_TRANSACTION, true),
+                detectReturning("set transaction read write wait isolation level snapshot",
+                        LocalStatementType.SET_TRANSACTION, false),
+                noDetect("set transaction read write wait isolation level snapshot",
+                        LocalStatementType.SET_TRANSACTION, false),
+                // We ignore everything after SET TRANSACTION, the server will do further parsing
+                noDetect("set transaction syntax error", LocalStatementType.SET_TRANSACTION, false),
+
+                // Other savepoint statements
+                noDetect("savepoint 'XYZ'", LocalStatementType.OTHER, false),
+                noDetect("release savepoint 'XYZ'", LocalStatementType.OTHER, false),
+                noDetect("release savepoint 'XYZ' only", LocalStatementType.OTHER, false),
+
                 // invalid syntax
                 detectReturning("update or invalid", LocalStatementType.OTHER, true),
                 noDetect("update or invalid", LocalStatementType.OTHER, true),
@@ -180,12 +211,17 @@ class StatementDetectorTest {
                         LocalStatementType.OTHER, false),
                 noDetect("execute block returns (id integer) as begin id = 1; suspend; end",
                         LocalStatementType.OTHER, false),
-                detectReturning("set transaction read write wait isolation level snapshot",
-                        LocalStatementType.OTHER, false),
                 detectReturning("alter session reset", LocalStatementType.OTHER, false),
                 detectReturning("create table test (col1 integer)", LocalStatementType.OTHER, false),
+                noDetect("set time zone 'UTC'", LocalStatementType.OTHER, false),
                 detectReturning("invalid tokens not recognized", LocalStatementType.OTHER, false),
-                noDetect("invalid tokens not recognized", LocalStatementType.OTHER, false)
+                noDetect("invalid tokens not recognized", LocalStatementType.OTHER, false),
+                noDetect("commit syntax error", LocalStatementType.OTHER, false),
+                noDetect("commit work work", LocalStatementType.OTHER, true),
+                noDetect("commit work syntax error", LocalStatementType.OTHER, false),
+                noDetect("rollback syntax error", LocalStatementType.OTHER, false),
+                noDetect("rollback work work", LocalStatementType.OTHER, true),
+                noDetect("rollback work syntax error", LocalStatementType.OTHER, false)
         );
     }
 
