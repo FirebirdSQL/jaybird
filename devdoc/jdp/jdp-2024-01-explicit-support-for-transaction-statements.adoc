@@ -77,7 +77,23 @@ When set to `false` (the default), any attempt to execute `SET TRANSACTION`, `CO
 
 With regard to `CallableStatement` (`prepareCall`), nothing will be changed, and execution will continue to fail, because the implementation currently unconditionally converts anything it can't parse to -- for example -- `EXECUTE PROCEDURE COMMIT`, which will obviously fail.
 
+Execution of the transaction management statements with any form of `executeQuery` will fail with an exception *before* executing the statement (or equivalent) on the server, because these statements do not produce a result set.
+
+It will not be possible to call `PreparedStatement.addBatch()` on a prepared statement with a transaction management statement, only execution with `execute`, `executeUpdate` or `executeLargeUpdate` is allowed.
+
 The behaviour of other transaction management statements will be left untouched (at least by this JDP), even when they don't make sense, like using `SAVEPOINT`, `ROLLBACK TO SAVEPOINT` or `RELEASE SAVEPOINT` in an auto-commit transaction.
+
+=== Open questions
+
+==== How to handle `Statement.addBatch(String)`?
+
+The implementation of `executeBatch()` executes all statements in a single transaction, even in auto-commit mode.
+Supporting the transaction management statements in a basic `Statement` batch complicates matters a lot.
+
+Always rejecting transaction management statements in `addBatch(String)` seems the simplest.
+Supporting it in batch execution requires careful handling of statement/transaction start and completion boundaries after `COMMIT`/`ROLLBACK` and for `SET TRANSACTION` as first statement, or after `COMMIT`/`ROLLBACK`.
+
+If we don't implement it now, we can always add it later if there is a demand/need for this.
 
 === Rejected design decisions
 
