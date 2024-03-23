@@ -78,9 +78,9 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    void close(boolean ignoreAlreadyClosed) throws SQLException {
+    public void close() throws SQLException {
         batchList = null;
-        super.close(ignoreAlreadyClosed);
+        super.close();
     }
 
     @Override

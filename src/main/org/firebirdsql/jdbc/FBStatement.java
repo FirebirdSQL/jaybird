@@ -355,34 +355,19 @@ public class FBStatement implements FirebirdStatement {
 
     @Override
     public void close() throws  SQLException {
-        close(true);
-    }
+        if (isClosed()) return;
 
-    void close(boolean ignoreAlreadyClosed) throws SQLException {
-        if (isClosed()) {
-            if (ignoreAlreadyClosed) return;
-
-            throw new SQLException("Statement is already closed", SQL_STATE_INVALID_STATEMENT_ID);
-        }
-
-        try (LockCloseable ignored = withLock()) {
-            if (fbStatement != null) {
-                try {
-                    try {
-                        closeResultSet(false, CompletionReason.STATEMENT_CLOSE);
-                    } finally {
-                        //may need ensureTransaction?
-                        fbStatement.close();
-                    }
-                } finally {
-                    fbStatement = null;
-                    batchList = null;
-                }
+        try (LockCloseable ignored = withLock();
+             FbStatement handle = fbStatement) {
+            if (handle != null) {
+                closeResultSet(false, CompletionReason.STATEMENT_CLOSE);
             }
+        } finally {
+            closed = true;
+            fbStatement = null;
+            batchList = null;
+            statementListener.statementClosed(this);
         }
-
-        closed = true;
-        statementListener.statementClosed(this);
     }
 
     @Override

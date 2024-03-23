@@ -212,7 +212,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    void close(boolean ignoreAlreadyClosed) throws SQLException {
+    public void close() throws SQLException {
         try {
             Batch batch = this.batch;
             if (batch != null) {
@@ -220,7 +220,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
                 batch.close();
             }
         } finally {
-            super.close(ignoreAlreadyClosed);
+            super.close();
         }
     }
 
