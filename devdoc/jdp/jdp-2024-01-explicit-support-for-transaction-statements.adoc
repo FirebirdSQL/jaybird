@@ -79,21 +79,13 @@ With regard to `CallableStatement` (`prepareCall`), nothing will be changed, and
 
 Execution of the transaction management statements with any form of `executeQuery` will fail with an exception *before* executing the statement (or equivalent) on the server, because these statements do not produce a result set.
 
-It will not be possible to call `PreparedStatement.addBatch()` on a prepared statement with a transaction management statement, only execution with `execute`, `executeUpdate` or `executeLargeUpdate` is allowed.
+Using `Statement.addBatch(String)` with `COMMIT`, `ROLLBACK` or `SET TRANSACTION` will not be allowed and throw an exception.
+Supporting these statements in batch execution requires careful handling of statement/transaction start and completion boundaries after `COMMIT`/`ROLLBACK` and for `SET TRANSACTION` as first statement, or after `COMMIT`/`ROLLBACK`.
+If there is demand for this, we can consider implementing this at a later time.
+
+It will not be possible to call `PreparedStatement.addBatch()` on a prepared statement with `COMMIT`, `ROLLBACK` or `SET TRANSACTION`, only execution with `execute`, `executeUpdate` or `executeLargeUpdate` is allowed.
 
 The behaviour of other transaction management statements will be left untouched (at least by this JDP), even when they don't make sense, like using `SAVEPOINT`, `ROLLBACK TO SAVEPOINT` or `RELEASE SAVEPOINT` in an auto-commit transaction.
-
-=== Open questions
-
-==== How to handle `Statement.addBatch(String)`?
-
-The implementation of `executeBatch()` executes all statements in a single transaction, even in auto-commit mode.
-Supporting the transaction management statements in a basic `Statement` batch complicates matters a lot.
-
-Always rejecting transaction management statements in `addBatch(String)` seems the simplest.
-Supporting it in batch execution requires careful handling of statement/transaction start and completion boundaries after `COMMIT`/`ROLLBACK` and for `SET TRANSACTION` as first statement, or after `COMMIT`/`ROLLBACK`.
-
-If we don't implement it now, we can always add it later if there is a demand/need for this.
 
 === Rejected design decisions
 
@@ -121,7 +113,8 @@ Executing `COMMIT`/`ROLLBACK` as statements::
 Invoking `java.sql.Connection#commit()` and `java.sql.Connection#rollback()` instead of actually executing the statements avoids duplication and complexity surrounding notification and state management of the transaction handle.
 
 Allow execution through `CallableStatement`::
-Using `CallableStatement` for this doesn't make much sense, and the current implementation doesn't allow for this (in practice, it can only handle call-escapes and execute procedure) and would need to be heavily refactored to address this one edge-case.
+Using `CallableStatement` for this doesn't make much sense, and the current implementation doesn't allow for this (in practice, it can only handle call-escapes and execute procedure).
+It would need to be heavily refactored to address this one edge-case.
 
 == Consequences
 
@@ -154,3 +147,5 @@ For example, maybe `FbDatabase` will receive a method `startTransaction(String)`
 
 Handling these statements with `PreparedStatement` may require some extra thought, for example, by adding special implementation(s) of `PreparedStatement` purely for execution/handling of these statements.
 This will also be decided during implementation.
+
+Batch execution of `COMMIT`, `ROLLBACK` or `SET TRANSACTION` will not be possible, neither on `Statement` nor `PreparedStatement`.
