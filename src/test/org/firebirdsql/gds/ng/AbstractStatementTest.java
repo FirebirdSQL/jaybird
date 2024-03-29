@@ -270,8 +270,7 @@ public abstract class AbstractStatementTest {
         statement.getSqlCounts();
 
         assertNotNull(listener.getSqlCounts(), "Expected SQL counts");
-        assertEquals(listener.getRows().size(), listener.getSqlCounts().getLongSelectCount(),
-                "Unexpected select count");
+        assertEquals(listener.getRows().size(), listener.getSqlCounts().selectCount(), "Unexpected select count");
     }
 
     @Test
@@ -462,7 +461,7 @@ public abstract class AbstractStatementTest {
         statement.getSqlCounts();
 
         assertNotNull(listener.getSqlCounts(), "Expected SQL counts on listener");
-        assertEquals(1, listener.getSqlCounts().getLongInsertCount(), "Expected one row to have been inserted");
+        assertEquals(1, listener.getSqlCounts().insertCount(), "Expected one row to have been inserted");
     }
 
     /**
@@ -681,7 +680,7 @@ public abstract class AbstractStatementTest {
         statement.getSqlCounts();
 
         assertNotNull(listener.getSqlCounts(), "Expected SQL counts on listener");
-        assertEquals(1, listener.getSqlCounts().getLongInsertCount(), "Expected one row to have been inserted");
+        assertEquals(1, listener.getSqlCounts().insertCount(), "Expected one row to have been inserted");
     }
 
     @Test

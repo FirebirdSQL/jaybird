@@ -21,28 +21,26 @@ package org.firebirdsql.gds.ng;
 /**
  * Class for holding the SQL counts (update, delete, select, insert) for a statement execution.
  * <p>
- * The <code>long</code> values returned from the <code>getLongXXXCount</code> methods should be considered as unsigned
+ * The {@code long} values returned from the {@code getLongXXXCount} methods should be considered as unsigned.
  * </p>
- * 
+ *
+ * @param updateCount
+ *         record count affected by an update
+ * @param deleteCount
+ *         record count affected by a delete
+ * @param insertCount
+ *         record count affected by an insert
+ * @param selectCount
+ *         record count selected
  * @author Mark Rotteveel
  * @since 3.0
  */
-public final class SqlCountHolder {
+public record SqlCountHolder(long updateCount, long deleteCount, long insertCount, long selectCount) {
 
-    private final long updateCount;
-    private final long deleteCount;
-    private final long insertCount;
-    private final long selectCount;
-
-    public SqlCountHolder(final long updateCount, final long deleteCount, final long insertCount, final long selectCount) {
-        this.updateCount = updateCount;
-        this.deleteCount = deleteCount;
-        this.insertCount = insertCount;
-        this.selectCount = selectCount;
-    }
+    private static final SqlCountHolder EMPTY = new SqlCountHolder(0, 0, 0, 0);
 
     /**
-     * Returns the count as an <code>int</code>. Values larger than {@link Integer#MAX_VALUE} are returned as 0.
+     * Returns the count as an {@code int}. Values larger than {@link Integer#MAX_VALUE} are returned as 0.
      *
      * @param count The count value to convert
      * @return Converted value
@@ -55,8 +53,8 @@ public final class SqlCountHolder {
     }
 
     /**
-     * @return Update count as <code>int</code>, or 0 if the update count was too large.
-     * @see #getLongUpdateCount()
+     * @return Update count as {@code int}, or 0 if the update count was too large.
+     * @see #updateCount()
      */
     public int getIntegerUpdateCount() {
         return countAsInteger(updateCount);
@@ -64,14 +62,17 @@ public final class SqlCountHolder {
 
     /**
      * @return Number of updated records
+     * @see #updateCount()
+     * @deprecated Use {@link #updateCount()}, will be removed in Jaybird 7
      */
+    @Deprecated(forRemoval = true, since = "6")
     public long getLongUpdateCount() {
         return updateCount;
     }
 
     /**
-     * @return Delete count as <code>int</code>, or 0 if the delete count was too large.
-     * @see #getLongDeleteCount()
+     * @return Delete count as {@code int}, or 0 if the delete count was too large.
+     * @see #deleteCount()
      */
     public int getIntegerDeleteCount() {
         return countAsInteger(deleteCount);
@@ -79,14 +80,17 @@ public final class SqlCountHolder {
 
     /**
      * @return Number of deleted records
+     * @see #deleteCount()
+     * @deprecated Use {@link #deleteCount()}, will be removed in Jaybird 7
      */
+    @Deprecated(forRemoval = true, since = "6")
     public long getLongDeleteCount() {
         return deleteCount;
     }
 
     /**
-     * @return Insert count as <code>int</code>, or 0 if the insert count was too large.
-     * @see #getLongInsertCount()
+     * @return Insert count as {@code int}, or 0 if the insert count was too large.
+     * @see #insertCount()
      */
     public int getIntegerInsertCount() {
         return countAsInteger(insertCount);
@@ -94,14 +98,17 @@ public final class SqlCountHolder {
 
     /**
      * @return Number of inserted records
+     * @see #insertCount()
+     * @deprecated Use {@link #insertCount()}, will be removed in Jaybird 7
      */
+    @Deprecated(forRemoval = true, since = "6")
     public long getLongInsertCount() {
         return insertCount;
     }
 
     /**
-     * @return Select count as <code>int</code>, or 0 if the select count was too large.
-     * @see #getLongSelectCount()
+     * @return Select count as {@code int}, or 0 if the select count was too large.
+     * @see #selectCount()
      */
     public int getIntegerSelectCount() {
         return countAsInteger(selectCount);
@@ -109,8 +116,19 @@ public final class SqlCountHolder {
 
     /**
      * @return Number of selected records
+     * @see #selectCount()
+     * @deprecated Use {@link #selectCount()}, will be removed in Jaybird 7
      */
+    @Deprecated(forRemoval = true, since = "6")
     public long getLongSelectCount() {
         return selectCount;
     }
+
+    /**
+     * @return a {@code SqlCountHolder} with all values set to 0, representing empty, or no counts
+     */
+    public static SqlCountHolder empty() {
+        return EMPTY;
+    }
+
 }

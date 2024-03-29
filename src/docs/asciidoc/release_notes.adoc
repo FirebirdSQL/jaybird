@@ -1490,6 +1490,11 @@ It may get removed in Jaybird 7 or later.
 * `FirebirdStatement`
 ** `getCurrentResultSet()` -- use `getResultSet()`.
 Will be removed in Jaybird 7.
+* `SqlCountHolder` (internal API)
+** `getLongUpdateCount()` -- use `updateCount()`
+** `getLongDeleteCount()` -- use `deleteCount()`
+** `getLongInsertCount()` -- use `insertCount()`
+** `getLongSelectCount()` -- use `selectCount()`
 
 [#removal-of-deprecated-classes-7]
 ===== Removal of deprecated classes

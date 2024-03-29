@@ -31,17 +31,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class SqlCountHolderTest {
 
     @Test
-    void testLongUpdateCount_basic() {
+    void testUpdateCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals(7, counts.getLongUpdateCount(), "Unexpected long update count");
+        assertEquals(7, counts.updateCount(), "Unexpected update count");
     }
 
     @Test
-    void testLongUpdateCount_LongMax() {
+    void testUpdateCount_LongMax() {
         final SqlCountHolder counts = new SqlCountHolder(Long.MAX_VALUE, 8, 9, 10);
 
-        assertEquals(Long.MAX_VALUE, counts.getLongUpdateCount());
+        assertEquals(Long.MAX_VALUE, counts.updateCount());
     }
 
     @Test
@@ -67,17 +67,17 @@ class SqlCountHolderTest {
     }
 
     @Test
-    void testLongDeleteCount_basic() {
+    void testDeleteCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals(8, counts.getLongDeleteCount(), "Unexpected long delete count");
+        assertEquals(8, counts.deleteCount(), "Unexpected delete count");
     }
 
     @Test
-    void testLongDeleteCount_LongMax() {
+    void testDeleteCount_LongMax() {
         final SqlCountHolder counts = new SqlCountHolder(7, Long.MAX_VALUE, 9, 10);
 
-        assertEquals(Long.MAX_VALUE, counts.getLongDeleteCount(), "Unexpected long delete count");
+        assertEquals(Long.MAX_VALUE, counts.deleteCount(), "Unexpected delete count");
     }
 
     @Test
@@ -103,17 +103,17 @@ class SqlCountHolderTest {
     }
 
     @Test
-    void testLongInsertCount_basic() {
+    void testInsertCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals(9, counts.getLongInsertCount(), "Unexpected long insert count");
+        assertEquals(9, counts.insertCount(), "Unexpected insert count");
     }
 
     @Test
-    void testLongInsertCount_LongMax() {
+    void testInsertCount_LongMax() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, Long.MAX_VALUE, 10);
 
-        assertEquals(Long.MAX_VALUE, counts.getLongInsertCount(), "Unexpected long insert count");
+        assertEquals(Long.MAX_VALUE, counts.insertCount(), "Unexpected insert count");
     }
 
     @Test
@@ -139,17 +139,17 @@ class SqlCountHolderTest {
     }
 
     @Test
-    void testLongSelectCount_basic() {
+    void testSelectCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals(10, counts.getLongSelectCount(), "Unexpected long select count");
+        assertEquals(10, counts.selectCount(), "Unexpected select count");
     }
 
     @Test
-    void testLongSelectCount_LongMax() {
+    void testSelectCount_LongMax() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, Long.MAX_VALUE);
 
-        assertEquals(Long.MAX_VALUE, counts.getLongSelectCount(), "Unexpected long select count");
+        assertEquals(Long.MAX_VALUE, counts.selectCount(), "Unexpected select count");
     }
 
     @Test

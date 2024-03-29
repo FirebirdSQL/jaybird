@@ -1048,9 +1048,9 @@ public class FBStatement implements FirebirdStatement {
             return -1;
         }
         populateSqlCounts();
-        final long insCount = sqlCountHolder.getLongInsertCount();
-        final long updCount = sqlCountHolder.getLongUpdateCount();
-        final long delCount = sqlCountHolder.getLongDeleteCount();
+        final long insCount = sqlCountHolder.insertCount();
+        final long updCount = sqlCountHolder.updateCount();
+        final long delCount = sqlCountHolder.deleteCount();
         return Math.max(Math.max(insCount, updCount), delCount);
     }
 

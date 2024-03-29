@@ -83,7 +83,7 @@ public final class SqlCountProcessor implements InfoProcessor<SqlCountHolder> {
             // NOTE: we assume we always use a sufficiently large buffer
         } else if (infoResponse[0] == ISCConstants.isc_info_end) {
             // Happens with statement types that don't have update counts, etc (eg DDL)
-            return new SqlCountHolder(0, 0, 0, 0);
+            return SqlCountHolder.empty();
         } else {
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unexpectedInfoResponse)
                     .messageParameter("sql", "isc_info_sql_records or isc_info_end",
