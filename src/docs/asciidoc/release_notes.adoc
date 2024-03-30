@@ -777,7 +777,7 @@ We have now addressed this inconsistency, by also introducing support for settin
 * `setObject(..., localDate)` sets a `LocalDateTime` derived as `localDate.atStartOfDay()` (i.e. at 00:00:00)
 
 [#blob-performance]
-=== Performance improvements blobs
+=== Blob performance improvements
 
 [#blob-performance-read]
 ==== Reading blobs
