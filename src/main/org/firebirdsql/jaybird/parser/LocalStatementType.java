@@ -38,55 +38,72 @@ public enum LocalStatementType {
     /**
      * Null-state before detection.
      */
-    UNKNOWN,
+    UNKNOWN(LocalStatementClass.UNKNOWN),
     /**
      * {@code SELECT} statement, including selectable stored procedures.
      */
-    SELECT,
+    SELECT(LocalStatementClass.DML),
     /**
      * {@code EXECUTE PROCEDURE} statement.
      */
-    EXECUTE_PROCEDURE,
+    EXECUTE_PROCEDURE(LocalStatementClass.DML),
     /**
      * {@code UPDATE} statement (or {@code UPDATE OR INSERT} before detection is complete).
      */
-    UPDATE,
+    UPDATE(LocalStatementClass.DML),
     /**
      * {@code DELETE} statement.
      */
-    DELETE,
+    DELETE(LocalStatementClass.DML),
     /**
      * {@code INSERT} statement.
      */
-    INSERT,
+    INSERT(LocalStatementClass.DML),
     /**
      * {@code UPDATE OR INSERT} statement.
      */
-    UPDATE_OR_INSERT,
+    UPDATE_OR_INSERT(LocalStatementClass.DML),
     /**
      * {@code MERGE} statement.
      */
-    MERGE,
+    MERGE(LocalStatementClass.DML),
     /**
      * {@code COMMIT [WORK]} (i.e. without {@code RETAIN}).
      *
      * @since 6
      */
-    HARD_COMMIT,
+    HARD_COMMIT(LocalStatementClass.TRANSACTION_BOUNDARY),
     /**
      * {@code ROLLBACK [WORK]} (i.e. without {@code RETAIN} or {@code TO SAVEPOINT ...}).
      *
      * @since 6
      */
-    HARD_ROLLBACK,
+    HARD_ROLLBACK(LocalStatementClass.TRANSACTION_BOUNDARY),
     /**
      * {@code SET TRANSACTION} statement.
      *
      * @since 6
      */
-    SET_TRANSACTION,
+    SET_TRANSACTION(LocalStatementClass.TRANSACTION_BOUNDARY),
     /**
      * No specific classification applied (i.e. Jaybird is not (yet) interested in this type), or detection failed.
      */
-    OTHER
+    OTHER(LocalStatementClass.UNKNOWN);
+
+    private final LocalStatementClass statementClass;
+
+    LocalStatementType(LocalStatementClass statementClass) {
+        this.statementClass = statementClass;
+    }
+
+    /**
+     * Class of the statement.
+     *
+     * @return statement class
+     * @since 6
+     */
+    public LocalStatementClass statementClass() {
+        return statementClass;
+    }
+
 }

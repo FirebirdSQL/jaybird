@@ -849,6 +849,50 @@ This method will read until `len` bytes have been read, and only return less tha
 The documentation of method `FbBlob.putSegment(byte[])` contradicted itself, by requiring implementations to batch larger arrays, but also requiring them to throw an exception for larger arrays, and the actual implementations provided by Jaybird threw an exception.
 This contradiction has been removed, and the implementations will now send arrays longer than the maximum segment size to the server in multiple _put_ requests.
 
+[#allow-tx-stmts]
+=== Support for executing transaction management statements
+
+In Jaybird 5 and earlier, it was not possible to execute the transaction management statements `COMMIT`, `ROLLBACK` (without retain or savepoints) and `SET TRANSACTION`.
+For `COMMIT` and `ROLLBACK` it would seem to work, but subsequent use of the connection would then break because the connection assumed it still had an active transaction.
+
+Formally, the JDBC specification says -- paraphrased -- that if something can be done through the JDBC API, that those API methods should be used, and not using equivalent statements.
+However, from a perspective of flexibility, and for example for executing scripts, it can be useful to be able to execute those statements.
+
+Jaybird now optionally allows you to execute `COMMIT [WORK]`, `ROLLBACK [WORK]` and `SET TRANSACTION [...]`.
+By default, Jaybird 6 explicitly rejects attempts to execute those statements, instead of the half-working/half-broken situation of previous versions.
+
+To allow execution of `COMMIT [WORK]`, `ROLLBACK [WORK]` and `SET TRANSACTION [...]`, the connection property `allowTxStmts` needs to be set to `true`.
+This can be done using a JDBC connection property `allowTxStmts`, or `setAllowTxStmts(boolean)` on `DataSource` instances.
+
+[NOTE]
+====
+Just because you can, doesn't mean you should use this.
+For code solutions, you should use the normal methods in the JDBC API whenever possible.
+Only use this solution for scripts, or in case it is cumbersome or not possible to access the Jaybird extensions to the JDBC API to control the transaction configuration.
+====
+
+In the implementation, the use of `COMMIT` and `ROLLBACK` will not be executed as such, but instead call `Connection.commit()` and `Connection.rollback()`.
+The `SET TRANSACTION` statement -- if allowed -- is executed with execute immediate, and not through a statement handle.
+
+Enabling this feature can also make it easier to use the table reservation feature, compared to `FirebirdConnection.setTransactionParameters(TransactionParameterBuffer)` or `FirebirdConnection.setTransactionParameters(int TransactionParameterBuffer)`, which requires access to the Jaybird API interfaces.
+
+[NOTE]
+====
+Contrary to its name, and the SQL standard behaviour, Firebird's `SET TRANSACTION` immediately *starts* a transaction.
+====
+
+This feature has the following limitations:
+
+* Transaction management statements cannot be executed when auto-commit is enabled, or if the connection is participating in a distributed transaction.
+This is the same behaviour as implemented for `Connection.commit()` and `Connection.rollback()`.
+* Executing `COMMIT` or `ROLLBACK` -- when auto-commit is disabled -- is silently ignored if there is no active transaction.
+This is the same behaviour as implemented for `Connection.commit()` and `Connection.rollback()`.
+* `SET TRANSACTION` cannot be executed if there is an active transaction.
+In other words, you will need to call `Connection.commit()` or execute `COMMIT` (or roll back) before you can start a new transaction this way.
+* Transaction management statements are not supported by `Statement.addBatch(String)`, `PreparedStatement.addBatch()`, and `Connection.prepareCall(...)`.
+
+For more information, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-01-explicit-support-for-transaction-statements.adoc[jdp-2024-01: Explicit support for transaction statements^].
+
 // TODO add major changes
 
 [#other-fixes-and-changes]
@@ -1057,6 +1101,36 @@ Though it can parse it, the resulting value will not include fractional seconds.
 * `setDate(..., Calendar)` on a `CHAR`/`VARCHAR`/`BLOB SUB_TYPE TEXT` field will now use the `Calendar` to rebase the date, this can result in an off-by-one difference in the date compared to previous versions (depending on the time zone set on the `Calendar`)
 * `getDate(..., Calendar)`  on a `CHAR`/`VARCHAR`/`BLOB SUB_TYPE TEXT` field will now use the `Calendar` to rebase the date, this can result in an off-by-one difference in the date compared to previous versions (depending on the time zone set on the `Calendar`)
 * The `TypeConversionException` thrown by `getDate(...)`, `getTime(...)` and `getTimestamp(...)` on unsupported types may now report `java.time.LocalDate`, `java.time.LocalTime` or `java.time.LocalDateTime` as the type in its error message instead of `java.sql.Date`, `java.sql.Time`, or `java.sql.Timestamp`
+
+[#compat-allow-tx-stmts]
+=== Execution of `COMMIT` and `ROLLBACK` rejected by default
+
+Attempts to prepare or execute `COMMIT` or `ROLLBACK` (without retain) will now fail by default.
+In previous versions, executing these statements would work, but leave the connection in an unusable state.
+The exact error will -- generally -- be one of the following:
+
+[horizontal]
+`337248313`::
+"`__Execution of COMMIT statement is not allowed, use Connection.commit(), or set connection property allowTxStmts to true__`"
+`337248314`::
+"`__Execution of ROLLBACK statement is not allowed, use Connection.rollback(), or set connection property allowTxStmts to true__`"
+`337248319`::
+"`__Using addBatch with a transaction management statement is not supported__`"
+`337248320`::
+"`__Using prepareCall with a transaction management statement is not supported__`"
+
+In the case of the `execute`, `executeUpdate` or `executeLargeUpdate` methods of `Statement`, or the `prepareStatement` methods of `Connection`, this can be resolved by allowing the execution with connection property `allowTxStmts` set to `true`.
+
+In the case of `Statement.executeQuery(String)` and `PreparedStatement.executeQuery()`, you will need to switch to using one of the other `execute`, `executeUpdate` or `executeLargeUpdate` methods.
+
+It is not possible to use the `prepareCall` methods of `Connection` with these statements.
+In previous versions of Jaybird, subsequent execution wouldn't work either -- or attempt to execute stored procedures called `COMMIT` or `ROLLBACK`, but it is now rejected early in the `prepareCall` methods of `Connection`.
+Switch to using `prepareStatement`.
+
+Additionally, using `Statement.addBatch(String)` and `PreparedStatement.addBatch()` will not work with these statements.
+Switch to using one of the normal execute methods.
+
+See also <<allow-tx-stmts>>.
 
 // TODO Document compatibility issues
 
@@ -1487,6 +1561,9 @@ The following methods will be removed in Jaybird 7:
 It may get removed in Jaybird 7 or later.
 ** `getSupportedProtocols` -- use `getSupportedProtocolList()`.
 It may get removed in Jaybird 7 or later.
+* `GDSHelper` (internal API)
+** `startTransaction(TransactionParameterBuffer)` -- use `FbDatabase.startTransaction(TransactionParameterBuffer)` followed by `GDSHelper.setCurrentTransaction(FbTransaction)`
+It will be removed in Jaybird 7.
 * `FirebirdStatement`
 ** `getCurrentResultSet()` -- use `getResultSet()`.
 Will be removed in Jaybird 7.

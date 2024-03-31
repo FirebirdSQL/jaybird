@@ -57,6 +57,7 @@ public final class PropertyConstants {
     static final boolean DEFAULT_USE_SERVER_BATCH = true;
     public static final int DEFAULT_SERVER_BATCH_BUFFER_SIZE = 0;
     static final boolean DEFAULT_USE_CATALOG_AS_PACKAGE = false;
+    static final boolean DEFAULT_ALLOW_TX_STMTS = false;
 
     public static final int DEFAULT_TRANSACTION_ISOLATION_VALUE = Connection.TRANSACTION_READ_COMMITTED;
     public static final String DEFAULT_TRANSACTION_ISOLATION_NAME = TransactionNameMapping.TRANSACTION_READ_COMMITTED;

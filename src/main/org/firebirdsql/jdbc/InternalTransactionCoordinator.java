@@ -18,7 +18,9 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
@@ -153,6 +155,27 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
     public void ensureTransaction() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             coordinator.ensureTransaction();
+        }
+    }
+
+    /**
+     * Starts a new transaction using {@code setTransactionSql}.
+     *
+     * @param sql
+     *         the {@code SET TRANSACTION} statement to execute
+     * @throws SQLException
+     *         if executing transaction management statements is not allowed ({@code allowTxStmts=false}),
+     *         the connection is in auto-commit mode, or if a transaction is currently active (including distributed
+     *         transactions)
+     * @since 6
+     */
+    void startSqlTransaction(String sql) throws SQLException {
+        if (!connection.isAllowTxStmts()) {
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_setTransactionStatementNotAllowed)
+                    .toSQLException();
+        }
+        try (LockCloseable ignored = withLock()) {
+            coordinator.startSqlTransaction(sql);
         }
     }
 
@@ -302,6 +325,12 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         boolean isAutoCommit() throws SQLException {
             return false;
         }
+
+        /**
+         * @see InternalTransactionCoordinator#startSqlTransaction(String)
+         */
+        abstract void startSqlTransaction(String setTransactionSql) throws SQLException;
+
     }
 
     static final class AutoCommitCoordinator extends AbstractTransactionCoordinator {
@@ -415,6 +444,12 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         boolean isAutoCommit() {
             return true;
         }
+
+        @Override
+        void startSqlTransaction(String setTransactionSql) throws SQLException {
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_setTransactionNotAllowedInAutoCommit)
+                    .toSQLException();
+        }
     }
 
     static sealed class LocalTransactionCoordinator extends AbstractTransactionCoordinator {
@@ -480,6 +515,11 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         @Override
         public void executionStarted(FirebirdBlob blob) throws SQLException {
             ensureTransaction();
+        }
+
+        @Override
+        void startSqlTransaction(String sql) throws SQLException {
+            localTransaction.begin(sql);
         }
     }
 
@@ -578,6 +618,12 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         boolean isAutoCommit() {
             return true;
         }
+
+        @Override
+        void startSqlTransaction(String sql) throws SQLException {
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_setTransactionNotAllowedInAutoCommit)
+                    .toSQLException();
+        }
     }
 
     static final class ManagedTransactionCoordinator extends LocalTransactionCoordinator {
@@ -621,6 +667,13 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         void handleConnectionClose() {
             // do nothing, we are in a managed environment
         }
+
+        @Override
+        void startSqlTransaction(String sql) throws SQLException {
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_setTransactionNotAllowedActiveTx)
+                    .toSQLException();
+        }
+        
     }
 
     static final class MetaDataTransactionCoordinator extends AbstractTransactionCoordinator {
@@ -634,17 +687,17 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         public void ensureTransaction() {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException("ensureTransaction");
         }
 
         @Override
         public void commit() throws SQLException {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException("commit");
         }
 
         @Override
         public void rollback() throws SQLException {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException("rollback");
         }
 
         @Override
@@ -685,6 +738,11 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         @Override
         boolean isAutoCommit() throws SQLException {
             return tc.getAutoCommit();
+        }
+
+        @Override
+        void startSqlTransaction(String setTransactionSql) {
+            throw new UnsupportedOperationException("startSqlTransaction");
         }
     }
 }

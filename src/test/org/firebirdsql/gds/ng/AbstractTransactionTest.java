@@ -150,6 +150,19 @@ public abstract class AbstractTransactionTest {
         assertValueForKey(key, false, null);
     }
 
+    @Test
+    public void testStartTransactionWithSqlStatement() throws Exception {
+        FbTransaction transaction = db.startTransaction("set transaction");
+        assertEquals(TransactionState.ACTIVE, transaction.getState());
+        final int key = 23;
+        final String value = "TheValueIs23";
+        insertKeyValue(transaction, key, value);
+        transaction.commit();
+        assertEquals(TransactionState.COMMITTED, transaction.getState());
+
+        assertValueForKey(key, true, value);
+    }
+
     @SuppressWarnings("SameParameterValue")
     protected final void assertValueForKey(int key, boolean hasRow, String expectedValue) throws SQLException {
         try (Connection connection = getConnectionViaDriverManager();

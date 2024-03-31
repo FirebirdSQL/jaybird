@@ -91,6 +91,27 @@ public final class StatementDetector implements TokenVisitor {
         this.detectReturning = detectReturning;
     }
 
+    /**
+     * Determines the local statement type of {@code sql}.
+     * <p>
+     * The return values of this method are decided by the needs of Jaybird, and do not necessarily cover all statement
+     * types, and they may change between point releases.
+     * </p>
+     *
+     * @param sql
+     *         statement text
+     * @return local statement type
+     * @since 6
+     */
+    public static LocalStatementType determineLocalStatementType(String sql) {
+        var detector = new StatementDetector(false);
+        SqlParser.withReservedWords(FirebirdReservedWords.latest())
+                .withVisitor(detector)
+                .of(sql)
+                .parse();
+        return detector.getStatementType();
+    }
+
     @Override
     public void visitToken(Token token, VisitorRegistrar visitorRegistrar) {
         if (token.isWhitespaceOrComment()) return;

@@ -993,6 +993,24 @@ public final class FBManagedConnection implements ExceptionListener {
         findIscTrHandle(id, flags);
     }
 
+    /**
+     * Starts a transaction defined by {@code setTransactionSql}, and associate it with a JDBC connection.
+     *
+     * @param xid
+     *         global transaction identifier to be associated with the resource
+     * @param sql
+     *         {@code SET TRANSACTION} statement text
+     * @throws XAException
+     *         if this connection cannot participate in the distributed transaction
+     * @throws SQLException
+     *         for database access errors
+     */
+    public void internalStart(Xid xid, String sql) throws XAException, SQLException {
+        clearCurrentTransaction();
+        requireNewXid(xid);
+        registerNewTransaction(xid, database.startTransaction(sql));
+    }
+
     // FB public methods. Could be package if packages reorganized.
 
     /**
@@ -1074,22 +1092,46 @@ public final class FBManagedConnection implements ExceptionListener {
             return;
         }
 
+        requireNewXid(xid);
+
+        // new xid for us
+        try {
+            registerNewTransaction(xid, database.startTransaction(tpb.getTransactionParameterBuffer()));
+        } catch (SQLException e) {
+            throw new FBXAException(e.getMessage(), XAException.XAER_RMERR, e);
+        }
+    }
+
+    /**
+     * Registers {@code newTx} as the current transaction of the current GDS helper, and associates it with {@code xid}.
+     * <p>
+     * If there is no current GDS helper, the transaction will be ended (by commit), and not registered with the xid.
+     * </p>
+     *
+     * @param xid Xid
+     * @param newTx new transaction
+     * @throws SQLException if there is no current GDS helper
+     */
+    private void registerNewTransaction(Xid xid, FbTransaction newTx) throws SQLException {
+        try {
+            setCurrentTransaction(newTx);
+            xidMap.put(xid, newTx);
+        } catch (SQLException e) {
+            // failed to register tx, so commit it to prevent dangling tx
+            newTx.commit();
+            throw e;
+        }
+    }
+
+    private void requireNewXid(Xid xid) throws XAException {
         for (Xid knownXid : xidMap.keySet()) {
             boolean sameFormatId = knownXid.getFormatId() == xid.getFormatId();
             boolean sameGtrid = Arrays.equals(knownXid.getGlobalTransactionId(), xid.getGlobalTransactionId());
             boolean sameBqual = Arrays.equals(knownXid.getBranchQualifier(), xid.getBranchQualifier());
-            if (sameFormatId && sameGtrid && sameBqual)
-                throw new FBXAException(
-                        "A transaction with the same XID has already been started",
+            if (sameFormatId && sameGtrid && sameBqual) {
+                throw new FBXAException("A transaction with the same XID has already been started",
                         XAException.XAER_DUPID);
-        }
-
-        // new xid for us
-        try {
-            FbTransaction transaction = getGDSHelper().startTransaction(tpb.getTransactionParameterBuffer());
-            xidMap.put(xid, transaction);
-        } catch (SQLException e) {
-            throw new FBXAException(e.getMessage(), XAException.XAER_RMERR, e);
+            }
         }
     }
 

@@ -96,6 +96,18 @@ public interface FbDatabase extends FbAttachment {
     FbTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException;
 
     /**
+     * Creates and starts a transaction using a SQL statement
+     *
+     * @param statementText
+     *         statement which starts a transaction
+     * @return FbTransaction
+     * @throws SQLException
+     *         for database access error
+     * @since 6
+     */
+    FbTransaction startTransaction(String statementText) throws SQLException;
+
+    /**
      * Reconnects a prepared transaction.
      * <p>
      * Reconnecting transactions is only allowed for transactions in limbo (prepared, but not committed or rolled back).

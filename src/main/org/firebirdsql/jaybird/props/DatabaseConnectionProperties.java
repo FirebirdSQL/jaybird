@@ -607,4 +607,45 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
         setBooleanProperty(PropertyNames.useCatalogAsPackage, useCatalogAsPackage);
     }
 
+    /**
+     * @return {@code true} if execution of {@code COMMIT [WORK]}, {@code ROLLBACK [WORK]} or
+     * {@code SET TRANSACTION [..]} is allowed, {@code false} (default) to throw an exception when attempting to execute
+     * or prepare such statements
+     * @see #setAllowTxStmts(boolean) 
+     * @since 6
+     */
+    default boolean isAllowTxStmts() {
+        return getBooleanProperty(PropertyNames.allowTxStmts, PropertyConstants.DEFAULT_ALLOW_TX_STMTS);
+    }
+
+    /**
+     * Sets whether transaction management statements with (hard) transaction boundaries are allowed to be prepared or
+     * executed.
+     * <p>
+     * Setting to {@code true} will enable Jaybird to execute <em>equivalent</em> operations through the JDBC API
+     * (specifically, {@link java.sql.Statement#execute(String)}, {@link java.sql.Statement#executeUpdate(String)},
+     * {@link java.sql.Statement#executeLargeUpdate(String)} and siblings, and statements prepared with
+     * {@link java.sql.Connection#prepareStatement(String)} and siblings. Using callable statements (e.g. using
+     * {@link java.sql.Connection#prepareCall(String)}), {@link java.sql.Statement#executeQuery(String)}, or batch
+     * execution is never supported.
+     * </p>
+     * <p>
+     * The implementation is free to execute the provided statement text or use an equivalent operation that has
+     * the same effect.
+     * </p>
+     * <p>
+     * Setting this configuration to {@code true} only affects the JDBC API, and has no effect on direct use of the
+     * GDS-ng API.
+     * </p>
+     *
+     * @param allowTxStmts
+     *      {@code true} to allow execution of {@code COMMIT [WORK]}, {@code ROLLBACK [WORK]} or
+     *      {@code SET TRANSACTION [..]}, {@code false} (default) to throw an exception when attempting to execute or
+     *      prepare such statements
+     * @since 6
+     */
+    default void setAllowTxStmts(boolean allowTxStmts) {
+        setBooleanProperty(PropertyNames.allowTxStmts, allowTxStmts);
+    }
+
 }

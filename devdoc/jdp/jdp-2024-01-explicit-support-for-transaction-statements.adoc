@@ -2,8 +2,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 6
+* Published: 2024-03-30
+* Implemented in: Jaybird 6
 
 == Type
 
@@ -30,7 +30,7 @@ ____
 In Jaybird 5 and earlier, attempts to use these transaction control statements have various problems:
 
 `SET TRANSACTION`::
-Fails with an error because the statement is executed with a valid transaction handle, while Firebird expects it to be executed without a transaction handle (that is, handle `-1`).
+Fails with an error because the statement is executed with a valid transaction handle, while Firebird expects it to be executed without a transaction handle (that is, handle `0`).
 `COMMIT`::
 Without `RETAIN`:::
 This will seem to work, but subsequent use of the connection will fail as Jaybird assumes it still has a valid transaction.
@@ -55,6 +55,7 @@ There are three possible directions to handle this:
 . Explicitly forbid the statements that don't work (i.e. `SET TRANSACTION`, and `COMMIT`/`ROLLBACK` without `RETAIN`), and leave the others as-is.
 . Explicitly support these statements by performing the same operations which would normally be applied through the API (notify listeners, etc.).
 . Make it configurable, that is, default to disallowing `SET TRANSACTION`, and `COMMIT`/`ROLLBACK` without `RETAIN`, and provide a configuration property to allow their use.
+
 The other transaction statements listed above will always work, but will do no additional work (like trying to add or remove savepoints from the list maintained by the connection implementation).
 
 (Other combinations of "`leave as-is`"/support/forbid would be possible as well, but those listed seem to make the most sense.)
@@ -75,15 +76,15 @@ Given the methods are called, listeners will be notified in the same way as when
 
 When set to `false` (the default), any attempt to execute `SET TRANSACTION`, `COMMIT`, or `ROLLBACK` (without `RETAIN` or `RELEASE SAVEPOINT`) will result in an exception, regardless of auto-commit status and/or status of the current transaction.
 
-With regard to `CallableStatement` (`prepareCall`), nothing will be changed, and execution will continue to fail, because the implementation currently unconditionally converts anything it can't parse to -- for example -- `EXECUTE PROCEDURE COMMIT`, which will obviously fail.
+With regard to `prepareCall`, the implementation will explicitly reject attempts to prepare these statements.
+Although the current implementation of `CallableStatement` would fail anyway, we thought it prudent to disallow it explicitly, in case future changes to `CallableStatement` would accidentally allow it.
 
 Execution of the transaction management statements with any form of `executeQuery` will fail with an exception *before* executing the statement (or equivalent) on the server, because these statements do not produce a result set.
 
 Using `Statement.addBatch(String)` with `COMMIT`, `ROLLBACK` or `SET TRANSACTION` will not be allowed and throw an exception.
-Supporting these statements in batch execution requires careful handling of statement/transaction start and completion boundaries after `COMMIT`/`ROLLBACK` and for `SET TRANSACTION` as first statement, or after `COMMIT`/`ROLLBACK`.
-If there is demand for this, we can consider implementing this at a later time.
 
 It will not be possible to call `PreparedStatement.addBatch()` on a prepared statement with `COMMIT`, `ROLLBACK` or `SET TRANSACTION`, only execution with `execute`, `executeUpdate` or `executeLargeUpdate` is allowed.
+The methods `PreparedStatement.executeBatch()` and `PreparedStatement.executeLargeBatch()` methods will not throw an exception, but effectively do nothing (as the batch will always be empty).
 
 The behaviour of other transaction management statements will be left untouched (at least by this JDP), even when they don't make sense, like using `SAVEPOINT`, `ROLLBACK TO SAVEPOINT` or `RELEASE SAVEPOINT` in an auto-commit transaction.
 
@@ -115,6 +116,18 @@ Invoking `java.sql.Connection#commit()` and `java.sql.Connection#rollback()` ins
 Allow execution through `CallableStatement`::
 Using `CallableStatement` for this doesn't make much sense, and the current implementation doesn't allow for this (in practice, it can only handle call-escapes and execute procedure).
 It would need to be heavily refactored to address this one edge-case.
++
+Instead, we explicitly disallowed preparing these statements with `prepareCall` to prevent future changes to the `CallableStatement` implementation from partially or incorrectly supporting these statements.
+
+Supporting `Statement.addBatch(String)`::
+Supporting these statements in batch execution requires careful handling of statement/transaction start and completion boundaries after `COMMIT`/`ROLLBACK` and for `SET TRANSACTION` as first statement, or after `COMMIT`/`ROLLBACK`.
++
+If there is demand for this, we can consider implementing this at a later time.
+
+Supporting `PreparedStatement.addBatch()`::
+Executing prepared statement batches of these statements does not make sense.
+In the case of `COMMIT` and `ROLLBACK`, the second and subsequent entries in the batch would effectively do nothing.
+In the case of `SET TRANSACTION`, the second and subsequent entries would fail with an error as the connection would have an active transaction from the first entry.
 
 == Consequences
 
@@ -130,12 +143,12 @@ When `allowTxStmts` is set to `true`, the following is supported:
 
 === `COMMIT`
 
-Attempts to execute `COMMIT [WORK]` will unconditionally call `commit()` on the connection, and exhibit the same behaviour for commit required by the JDBC specification.
+Attempts to execute `COMMIT [WORK]` will call `commit()` on the connection, and exhibit the same behaviour for commit required by the JDBC specification.
 This means that if auto-commit is enabled, or the connection is participating in a distributed transaction, an exception is thrown that explicit commit is not allowed.
 
 === `ROLLBACK`
 
-Attempts to execute `ROLLBACK [WORK]` will unconditionally call `rollback()` on the connection, and exhibit the same behaviour for rollback required by the JDBC specification.
+Attempts to execute `ROLLBACK [WORK]` will call `rollback()` on the connection, and exhibit the same behaviour for rollback required by the JDBC specification.
 This means that if auto-commit is enabled, or the connection is participating in a distributed transaction, an exception is thrown that explicit rollback is not allowed.
 
 === Limitations

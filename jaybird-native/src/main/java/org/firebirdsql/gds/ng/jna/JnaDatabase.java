@@ -225,14 +225,35 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public JnaTransaction startTransaction(final TransactionParameterBuffer tpb) throws SQLException {
         try {
             checkConnected();
-            final IntByReference transactionHandle = new IntByReference(0);
-            final byte[] tpbArray = tpb.toBytesWithType();
+            var transactionHandle = new IntByReference(0);
+            byte[] tpbArray = tpb.toBytesWithType();
             try (LockCloseable ignored = withLock()) {
                 clientLibrary.isc_start_transaction(statusVector, transactionHandle, (short) 1, handle,
                         (short) tpbArray.length, tpbArray);
                 processStatusVector();
 
-                final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.ACTIVE);
+                var transaction = new JnaTransaction(this, transactionHandle, TransactionState.ACTIVE);
+                transactionAdded(transaction);
+                return transaction;
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    @Override
+    public FbTransaction startTransaction(String statementText) throws SQLException {
+        try {
+            checkConnected();
+            var transactionHandle = new IntByReference(0);
+            byte[] statementArray = getEncoding().encodeToCharset(statementText);
+            try (LockCloseable ignored = withLock()) {
+                clientLibrary.isc_dsql_execute_immediate(statusVector, handle, transactionHandle,
+                        (short) statementArray.length, statementArray, getConnectionDialect(), null);
+                processStatusVector();
+
+                var transaction = new JnaTransaction(this, transactionHandle, TransactionState.ACTIVE);
                 transactionAdded(transaction);
                 return transaction;
             }

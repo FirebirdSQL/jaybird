@@ -109,6 +109,15 @@ public interface JaybirdErrorCodes {
     int jb_localTransactionActive   = 337248309;
     int jb_invalidFetchSize         = 337248310;
     int jb_operationNotCancellable  = 337248311;
+    int jb_executeQueryWithTxStmt   = 337248312;
+    int jb_commitStatementNotAllowed                     = 337248313;
+    int jb_rollbackStatementNotAllowed                   = 337248314;
+    int jb_setTransactionStatementNotAllowed             = 337248315;
+    int jb_setTransactionNotAllowedInAutoCommit          = 337248316;
+    int jb_setTransactionNotAllowedActiveTx              = 337248317;
+    int jb_statementNotAssociatedWithConnection          = 337248318;
+    int jb_addBatchWithTxStmt       = 337248319;
+    int jb_prepareCallWithTxStmt    = 337248320;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

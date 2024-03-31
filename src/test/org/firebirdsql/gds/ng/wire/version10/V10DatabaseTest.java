@@ -60,6 +60,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@SuppressWarnings("java:S5786")
 public class V10DatabaseTest {
 
     @RegisterExtension
@@ -100,7 +101,7 @@ public class V10DatabaseTest {
      * contains an exception that is a warning.
      */
     @Test
-    public void testWarningOnCallback_warningOnListener() throws Exception {
+    void testWarningOnCallback_warningOnListener() throws Exception {
         AbstractFbWireDatabase db = createDummyDatabase();
         SimpleDatabaseListener callback = new SimpleDatabaseListener();
         db.addDatabaseListener(callback);

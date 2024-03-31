@@ -743,6 +743,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     @Override
     public ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
+        // TODO Return null for statements without result set?
         return new FBResultSetMetaData(fbStatement.getRowDescriptor(), connection);
     }
 

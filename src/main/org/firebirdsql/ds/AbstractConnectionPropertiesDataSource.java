@@ -456,6 +456,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setUseCatalogAsPackage(useCatalogAsPackage);
     }
 
+    @Override
+    public boolean isAllowTxStmts() {
+        return FirebirdConnectionProperties.super.isAllowTxStmts();
+    }
+
+    @Override
+    public void setAllowTxStmts(boolean allowTxStmts) {
+        FirebirdConnectionProperties.super.setAllowTxStmts(allowTxStmts);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated(since = "5")
     @Override

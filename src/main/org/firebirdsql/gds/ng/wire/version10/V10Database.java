@@ -301,6 +301,18 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         }
     }
 
+    @Override
+    public FbTransaction startTransaction(String statementText) throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            checkAttached();
+            sendExecuteImmediate(statementText, null);
+            return receiveTransactionResponse(TransactionState.ACTIVE);
+        } catch (SQLException ex) {
+            exceptionListenerDispatcher.errorOccurred(ex);
+            throw ex;
+        }
+    }
+
     private void sendStartTransaction(TransactionParameterBuffer tpb) throws SQLException {
         try {
             final XdrOutputStream xdrOut = getXdrOut();

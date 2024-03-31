@@ -83,6 +83,28 @@ public final class FBLocalTransaction {
         }
     }
 
+    public void begin(String sql) throws SQLException {
+        if (inTransaction()) {
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_setTransactionNotAllowedActiveTx)
+                    .toSQLException();
+        } else if (xid != null && mc.isXidActive(xid)) {
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_localTransactionActive).toSQLException();
+        }
+
+        xid = new FBLocalXid();
+
+        try {
+            mc.internalStart(xid, sql);
+        } catch (XAException ex) {
+            xid = null;
+            if (ex.getCause() instanceof SQLException sqle) {
+                throw sqle;
+            }
+            // TODO More specific exception, Jaybird error code (or is this flow unlikely to hit?)
+            throw new SQLException(ex.getMessage(), ex);
+        }
+    }
+
     /**
      * Commit a local transaction.
      *

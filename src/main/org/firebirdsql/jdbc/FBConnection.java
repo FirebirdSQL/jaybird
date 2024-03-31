@@ -26,6 +26,9 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.jaybird.parser.LocalStatementClass;
+import org.firebirdsql.jaybird.parser.LocalStatementType;
+import org.firebirdsql.jaybird.parser.StatementDetector;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
@@ -142,13 +145,14 @@ public class FBConnection implements FirebirdConnection {
      * @param stmt
      *         statement that was closed.
      */
-    void notifyStatementClosed(FBStatement stmt) {
+    void notifyStatementClosed(FirebirdStatement stmt) {
         if (!activeStatements.remove(stmt)) {
             if (stmt instanceof FBPreparedStatement pstmt && !pstmt.isInitialized()) {
                 // Close was likely triggered by finalizer of a prepared statement that failed on prepare in
                 // the constructor: Do not log warning
                 return;
             }
+            // NOTE: Can also mean notifyStatementClosed was called multiple times for a statement
             log.log(WARNING, "Specified statement was not created by this connection: {0}", stmt);
         }
     }
@@ -417,6 +421,38 @@ public class FBConnection implements FirebirdConnection {
     protected void invalidateTransactionLifetimeObjects() {
         invalidateSavepoints();
         storedProcedureMetaData = null;
+    }
+
+    boolean isAllowTxStmts() {
+        DatabaseConnectionProperties props = connectionProperties();
+        return props != null && props.isAllowTxStmts();
+    }
+
+    void handleHardCommitStatement() throws SQLException {
+        if (isAllowTxStmts()) {
+            commit();
+        } else {
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_commitStatementNotAllowed)
+                    .toSQLException();
+        }
+    }
+
+    void handleHardRollbackStatement() throws SQLException {
+        if (isAllowTxStmts()) {
+            rollback();
+        } else {
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_rollbackStatementNotAllowed)
+                    .toSQLException();
+        }
+    }
+
+    void handleSetTransactionStatement(String sql) throws SQLException {
+        if (isAllowTxStmts()) {
+            txCoordinator.startSqlTransaction(sql);
+        } else {
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_setTransactionStatementNotAllowed)
+                    .toSQLException();
+        }
     }
 
     /**
@@ -763,22 +799,100 @@ public class FBConnection implements FirebirdConnection {
             int resultSetHoldability, boolean metaData, boolean generatedKeys) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            resultSetType = verifyResultSetType(resultSetType, resultSetHoldability);
 
+            Optional<PreparedStatement> txStmt =
+                    prepareIfTransactionStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            if (txStmt.isPresent()) return txStmt.get();
+
+            resultSetType = verifyResultSetType(resultSetType, resultSetHoldability);
             checkHoldability(resultSetType, resultSetHoldability);
 
             FBObjectListener.StatementListener coordinator = txCoordinator;
-            if (metaData)
-                coordinator = new InternalTransactionCoordinator.MetaDataTransactionCoordinator(txCoordinator);
+            FBObjectListener.BlobListener blobCoordinator = txCoordinator;
+            if (metaData) {
+                coordinator =  new InternalTransactionCoordinator.MetaDataTransactionCoordinator(txCoordinator);
+                blobCoordinator = null;
+            }
 
-            FBObjectListener.BlobListener blobCoordinator = metaData ? null : txCoordinator;
-
-            PreparedStatement stmt = new FBPreparedStatement(getGDSHelper(), sql, resultSetType, resultSetConcurrency,
+            var stmt = new FBPreparedStatement(getGDSHelper(), sql, resultSetType, resultSetConcurrency,
                     resultSetHoldability, coordinator, blobCoordinator, metaData, false, generatedKeys);
 
             activeStatements.add(stmt);
             return stmt;
         }
+    }
+
+    /**
+     * Prepares the statement if {@code sql} is a transaction management.
+     * <p>
+     * The result set type, concurrency and holdability are only used to let the {@link PreparedStatement} report
+     * the requested values. Given transaction management statements have no result set, they are otherwise unused.
+     * </p>
+     *
+     * @param sql
+     *         statement text
+     * @param resultSetType
+     *         result set type
+     * @param resultSetConcurrency
+     *         result set concurrency
+     * @param resultSetHoldability
+     *         result set holdability
+     * @return non-empty with a prepared statement which can execute the equivalent of {@code sql} if {@code sql}
+     * contains a transaction management statement, empty if the statement was not a transaction management statement
+     * @throws SQLException
+     *         if {@code sql} was a transaction management statement, but connection configuration does not allow
+     *         execution of transaction management statements
+     * @since 6
+     */
+    private Optional<PreparedStatement> prepareIfTransactionStatement(String sql, int resultSetType,
+            int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+        LocalStatementType localStatementType = StatementDetector.determineLocalStatementType(sql);
+        if (localStatementType.statementClass() == LocalStatementClass.TRANSACTION_BOUNDARY) {
+            PreparedStatement stmt = prepareTxStatement(sql, localStatementType, resultSetType,
+                    resultSetConcurrency, resultSetHoldability);
+            activeStatements.add(stmt);
+            return Optional.of(stmt);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * If execution of transaction statements is allowed, this creates an appropriate prepared statement instance to
+     * perform the equivalent of the requested operation when executed.
+     * <p>
+     * The result set type, concurrency and holdability are only used to let the {@link PreparedStatement} report
+     * the requested values. Given transaction management statements have no result set, they are otherwise unused.
+     * </p>
+     *
+     * @param sql
+     *         statement text
+     * @param statementType
+     *         statement type for {@code sql} as previous determined
+     * @param resultSetType
+     *         result set type
+     * @param resultSetConcurrency
+     *         result set concurrency
+     * @param resultSetHoldability
+     *         result set holdability
+     * @return a prepared statement handle which can execute the equivalent of {@code sql} if {@code sql} contains
+     * a transaction management statement
+     * @throws SQLException
+     *         if the connection configuration does not allow execution of transaction management statements
+     * @since 6
+     */
+    private PreparedStatement prepareTxStatement(String sql, LocalStatementType statementType, int resultSetType,
+            int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+        if (isAllowTxStmts()) {
+            return new FBTxPreparedStatement(this, statementType, sql, resultSetType, resultSetConcurrency,
+                    resultSetHoldability);
+        }
+        int errorCode = switch (statementType) {
+            case HARD_COMMIT -> JaybirdErrorCodes.jb_commitStatementNotAllowed;
+            case HARD_ROLLBACK -> JaybirdErrorCodes.jb_rollbackStatementNotAllowed;
+            case SET_TRANSACTION -> JaybirdErrorCodes.jb_setTransactionStatementNotAllowed;
+            default -> throw new IllegalArgumentException("Unexpected statementType: " + statementType);
+        };
+        throw FbExceptionBuilder.forNonTransientException(errorCode).toSQLException();
     }
 
     private int verifyResultSetType(int resultSetType, int resultSetHoldability) {
@@ -809,6 +923,10 @@ public class FBConnection implements FirebirdConnection {
             int resultSetHoldability) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
+            // With the current implementation of FBCallableStatement, transaction statements would fail, but we
+            // explicitly don't allow them, even if FBCallableStatement were to change so execution could work.
+            FBStatement.rejectIfTxStmt(sql, JaybirdErrorCodes.jb_prepareCallWithTxStmt);
+
             resultSetType = verifyResultSetType(resultSetType, resultSetHoldability);
 
             if (resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) {

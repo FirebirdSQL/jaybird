@@ -23,13 +23,13 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
-import org.firebirdsql.jaybird.parser.FirebirdReservedWords;
+import org.firebirdsql.jaybird.parser.LocalStatementClass;
 import org.firebirdsql.jaybird.parser.LocalStatementType;
-import org.firebirdsql.jaybird.parser.SqlParser;
 import org.firebirdsql.jaybird.parser.StatementDetector;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.util.Primitives;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.*;
 import java.util.*;
@@ -56,7 +56,7 @@ public class FBStatement implements FirebirdStatement {
 
     private static final AtomicInteger STATEMENT_ID_GENERATOR = new AtomicInteger();
 
-    private final int localStatementId = STATEMENT_ID_GENERATOR.incrementAndGet();
+    private final int localStatementId = nextLocalStatementId();
     protected final GDSHelper gdsHelper;
     protected final FBObjectListener.StatementListener statementListener;
 
@@ -178,8 +178,6 @@ public class FBStatement implements FirebirdStatement {
 
         // TODO Find out if connection is actually ever null, because some parts of the code expect it not to be null
         this.connection = statementListener != null ? statementListener.getConnection() : null;
-
-        closed = false;
     }
 
     String getCursorName() {
@@ -226,6 +224,7 @@ public class FBStatement implements FirebirdStatement {
     public ResultSet executeQuery(String sql) throws  SQLException {
         checkValidity();
         currentStatementGeneratedKeys = false;
+        rejectIfTxStmt(sql, JaybirdErrorCodes.jb_executeQueryWithTxStmt);
         try (LockCloseable ignored = withLock()) {
             notifyStatementStarted();
             if (!internalExecute(sql)) {
@@ -233,6 +232,29 @@ public class FBStatement implements FirebirdStatement {
             }
 
             return getResultSet();
+        }
+    }
+
+    /**
+     * Throws an exception if {@code sql} demarcates a transaction boundary (e.g. {@code COMMIT}).
+     *
+     * @param sql
+     *         statement text
+     * @param errorCode
+     *         error code to use for the exception
+     * @throws SQLException
+     *         if {@code sql} starts or ends a transaction
+     * @since 6
+     */
+    static void rejectIfTxStmt(String sql, int errorCode) throws SQLException {
+        if (StatementDetector.determineLocalStatementType(sql).statementClass() == LocalStatementClass.TRANSACTION_BOUNDARY) {
+            FbExceptionBuilder exceptionBuilder = switch (errorCode) {
+                // Special handling to ensure a SQLFeatureNotSupportedException is thrown
+                case JaybirdErrorCodes.jb_addBatchWithTxStmt, JaybirdErrorCodes.jb_prepareCallWithTxStmt ->
+                        FbExceptionBuilder.forException(errorCode);
+                default -> FbExceptionBuilder.forNonTransientException(errorCode);
+            };
+            throw exceptionBuilder.toSQLException();
         }
     }
 
@@ -267,6 +289,7 @@ public class FBStatement implements FirebirdStatement {
         checkValidity();
         currentStatementGeneratedKeys = false;
         try (LockCloseable ignored = withLock()) {
+            if (executeIfTransactionStatement(sql)) return 0;
             notifyStatementStarted();
             try {
                 if (internalExecute(sql)) {
@@ -277,6 +300,51 @@ public class FBStatement implements FirebirdStatement {
                 notifyStatementCompleted();
             }
         }
+    }
+
+    /**
+     * If {@code sql} is a transaction management, executes it appropriately.
+     *
+     * @param sql
+     *         statement text
+     * @return {@code true} if {@code sql} contains a transaction management statement, and it was handled,
+     * {@code false} if the statement was not a transaction management statement
+     * @throws SQLException
+     *         if {@code sql} was a transaction management statement, but connection configuration does not allow
+     *         execution of transaction management statements, or if handling of the transaction management statement
+     *         failed
+     * @since 6
+     */
+    boolean executeIfTransactionStatement(String sql) throws SQLException {
+        LocalStatementType statementType = StatementDetector.determineLocalStatementType(sql);
+        return switch (statementType) {
+            case HARD_COMMIT -> {
+                requireConnection().handleHardCommitStatement();
+                sqlCountHolder = SqlCountHolder.empty();
+                yield true;
+            }
+            case HARD_ROLLBACK -> {
+                requireConnection().handleHardRollbackStatement();
+                sqlCountHolder = SqlCountHolder.empty();
+                yield true;
+            }
+            case SET_TRANSACTION -> {
+                requireConnection().handleSetTransactionStatement(sql);
+                sqlCountHolder = SqlCountHolder.empty();
+                yield true;
+            }
+            default -> false;
+        };
+    }
+
+    private FBConnection requireConnection() throws SQLException {
+        FBConnection connection = this.connection;
+        if (connection == null) {
+            // This may occur for some types of internal statements
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_statementNotAssociatedWithConnection)
+                    .toSQLException();
+        }
+        return connection;
     }
 
     private static SQLException updateReturnedResultSet() {
@@ -498,6 +566,7 @@ public class FBStatement implements FirebirdStatement {
      */
     protected boolean executeImpl(String sql) throws SQLException {
         try (LockCloseable ignored = withLock()) {
+            if (executeIfTransactionStatement(sql)) return false;
             notifyStatementStarted();
             boolean hasResultSet = false;
             try {
@@ -608,16 +677,12 @@ public class FBStatement implements FirebirdStatement {
             return -1;
         }
         populateSqlCounts();
-        switch (type) {
-        case INSERTED_ROWS_COUNT:
-            return sqlCountHolder.getIntegerInsertCount();
-        case UPDATED_ROWS_COUNT:
-            return sqlCountHolder.getIntegerUpdateCount();
-        case DELETED_ROWS_COUNT:
-            return sqlCountHolder.getIntegerDeleteCount();
-        default:
-            throw new IllegalArgumentException(format("Specified type %d is unknown", type));
-        }
+        return switch (type) {
+            case INSERTED_ROWS_COUNT -> sqlCountHolder.getIntegerInsertCount();
+            case UPDATED_ROWS_COUNT -> sqlCountHolder.getIntegerUpdateCount();
+            case DELETED_ROWS_COUNT -> sqlCountHolder.getIntegerDeleteCount();
+            default -> throw new IllegalArgumentException(format("Specified type %d is unknown", type));
+        };
     }
 
     @Override
@@ -708,6 +773,7 @@ public class FBStatement implements FirebirdStatement {
     @Override
     public void addBatch(String sql) throws  SQLException {
         checkValidity();
+        rejectIfTxStmt(sql, JaybirdErrorCodes.jb_addBatchWithTxStmt);
         try (LockCloseable ignored = withLock()) {
             batchList.add(sql);
         }
@@ -904,17 +970,7 @@ public class FBStatement implements FirebirdStatement {
         fbStatement.prepare(statementText);
         StatementType fbStatementType = fbStatement.getType();
         jbStatementType = fbStatementType == StatementType.SELECT || fbStatementType == StatementType.STORED_PROCEDURE
-                ? determineJaybirdStatementType(statementText)
-                : LocalStatementType.OTHER;
-    }
-
-    private static LocalStatementType determineJaybirdStatementType(String statementText) {
-        StatementDetector detector = new StatementDetector(false);
-        SqlParser.withReservedWords(FirebirdReservedWords.latest())
-                .withVisitor(detector)
-                .of(statementText)
-                .parse();
-        return detector.getStatementType();
+                ? StatementDetector.determineLocalStatementType(statementText) : LocalStatementType.OTHER;
     }
 
     protected FbStatement requireStatement() throws SQLException {
@@ -1017,10 +1073,11 @@ public class FBStatement implements FirebirdStatement {
     }
 
     /**
-     * Check if this statement is valid. This method should be invoked before
-     * executing any action which requires a valid connection.
+     * Check if this statement is valid. This method should be invoked before executing any action which requires a
+     * valid/open statement.
      *
-     * @throws SQLException if this Statement has been closed and cannot be used anymore.
+     * @throws SQLException
+     *         if this Statement has been closed and cannot be used anymore.
      */
     protected void checkValidity() throws SQLException {
         if (isClosed()) {
@@ -1214,6 +1271,11 @@ public class FBStatement implements FirebirdStatement {
         return localStatementId;
     }
 
+    @InternalApi
+    static int nextLocalStatementId() {
+        return STATEMENT_ID_GENERATOR.incrementAndGet();
+    }
+
     @Override
     public final int hashCode() {
         return localStatementId;
@@ -1221,9 +1283,9 @@ public class FBStatement implements FirebirdStatement {
 
     @Override
     public final boolean equals(Object other) {
-        if (!(other instanceof FirebirdStatement otherStmt)) return false;
+        return other instanceof FirebirdStatement otherStmt
+                && this.localStatementId == otherStmt.getLocalStatementId();
 
-        return this.localStatementId == otherStmt.getLocalStatementId();
     }
 
     /**
