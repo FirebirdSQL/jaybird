@@ -22,6 +22,7 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -63,7 +64,7 @@ class FBResultSetMetaDataTest {
               three_byte_field VARCHAR(60) CHARACTER SET UNICODE_FSS,
               long_field NUMERIC(15, 2),
               int_field NUMERIC(8, 2),
-              short_field NUMERIC(4, 2),
+              short_field NUMERIC(3, 2),
               char_octets_field CHAR(10) CHARACTER SET OCTETS,
               varchar_octets_field VARCHAR(15) CHARACTER SET OCTETS,
               calculated_field computed by (int_field + short_field)
@@ -104,7 +105,7 @@ class FBResultSetMetaDataTest {
             assertEquals(60, metaData.getPrecision(3), "three_byte_field must have size 60");
             assertEquals(15, metaData.getPrecision(4), "long_field must have precision 15");
             assertEquals(8, metaData.getPrecision(5), "int_field must have precision 8");
-            assertEquals(4, metaData.getPrecision(6), "short_field must have precision 4");
+            assertEquals(3, metaData.getPrecision(6), "short_field must have precision 4");
 
             for (int idx = 1; idx <= 6; idx++) {
                 assertFalse(metaData.isAutoIncrement(idx),
@@ -437,6 +438,36 @@ class FBResultSetMetaDataTest {
             var rs = stmt.executeQuery(TEST_QUERY_AUTO_INC);
             ResultSetMetaData rsmd = rs.getMetaData();
             assertTrue(rsmd.isAutoIncrement(1), "Expected autoIncrement true");
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = JDBCType.class, names = { "SMALLINT", "INTEGER", "BIGINT" })
+    void isAutoIncrement_extendedMetadataDisabled(JDBCType columnType) throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsIdentityColumns, "Test requires identity column support");
+        try (var connection = getConnectionViaDriverManager(PropertyNames.extendedMetadata, "false");
+             var stmt = connection.createStatement()) {
+            stmt.execute(RECREATE_AUTO_INC_TABLE_TEMPLATE.formatted(columnType.name()));
+
+            var rs = stmt.executeQuery(TEST_QUERY_AUTO_INC);
+            ResultSetMetaData rsmd = rs.getMetaData();
+            assertFalse(rsmd.isAutoIncrement(1), "Expected autoIncrement false when extendedMetadata=false");
+        }
+    }
+
+    @Test
+    void getPrecision_extendedMetadataDisabled() throws Exception {
+        try (var connection = getConnectionViaDriverManager(PropertyNames.extendedMetadata, "false");
+             var stmt = connection.createStatement()) {
+            var rs = stmt.executeQuery("select long_field, int_field, short_field from test_rs_metadata");
+
+            ResultSetMetaData rsmd = rs.getMetaData();
+            assertEquals(18, rsmd.getPrecision(1),
+                    "Expected estimated precision 18 for long_field when extendedMetadata = false");
+            assertEquals(9, rsmd.getPrecision(2),
+                    "Expected estimated precision 9 for int_field when extendedMetadata = false");
+            assertEquals(4, rsmd.getPrecision(3),
+                    "Expected estimated precision 4 for short_field when extendedMetadata = false");
         }
     }
 

@@ -1480,4 +1480,9 @@ public class FBConnection implements FirebirdConnection {
         return props != null ? props.getServerBatchBufferSize() : PropertyConstants.DEFAULT_SERVER_BATCH_BUFFER_SIZE;
     }
 
+    boolean isExtendedMetadata() {
+        DatabaseConnectionProperties props = connectionProperties();
+        return props != null && props.isExtendedMetadata();
+    }
+
 }

@@ -286,7 +286,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     @Override
     @SuppressWarnings({ "java:S1994", "java:S135" })
     protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException {
-        if (connection == null) return Collections.emptyMap();
+        if (connection == null || !connection.isExtendedMetadata()) return Collections.emptyMap();
 
         final int fieldCount = getFieldCount();
         int currentColumn = 1;
