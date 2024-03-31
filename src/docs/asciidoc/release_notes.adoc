@@ -973,6 +973,9 @@ We do not plan to remove this API at this time, but we recommend that you switch
 This change was also backported to Jaybird 5.0.4.
 * Improvement: `sessionTimeZone` now also accepts the Java offset names (`GMT[{plus}-]HH:MM`), which will be automatically converted to the Firebird compatible name (`[{plus}-]HH:MM`).
 * New feature: `ResultSetMetaData.isAutoIncrement(int)` reports `true` for identity columns *if* Jaybird can identify the underlying table and column (https://github.com/FirebirdSQL/jaybird/issues/793[#793])
+* New feature: Boolean connection property `extendedMetadata` (default `true`) to disable querying of extended metadata for `getPrecision(int)` and `isAutoIncrement(int)` of `ResultSetMetaData` (https://github.com/FirebirdSQL/jaybird/issues/795[#795])
++
+Disabling extended metadata may improve performance of these `ResultSetMetaData` methods in exchange for estimated precision information of `NUMERIC` and `DECIMAL` columns, and not being able to determine the auto-increment status of `INTEGER`, `BIGINT` or `SMALLINT` columns.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

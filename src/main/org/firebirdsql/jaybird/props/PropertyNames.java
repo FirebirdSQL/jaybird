@@ -84,6 +84,7 @@ public final class PropertyNames {
     public static final String serverBatchBufferSize = "serverBatchBufferSize";
     public static final String useCatalogAsPackage = "useCatalogAsPackage";
     public static final String allowTxStmts = "allowTxStmts";
+    public static final String extendedMetadata = "extendedMetadata";
 
     // service connection
     public static final String expectedDb = "expectedDb";

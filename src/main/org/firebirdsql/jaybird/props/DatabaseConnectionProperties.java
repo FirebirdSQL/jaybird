@@ -648,4 +648,35 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
         setBooleanProperty(PropertyNames.allowTxStmts, allowTxStmts);
     }
 
+    /**
+     * @return {@code true} (default) if metadata (e.g. {@code ResultSetMetaData}) will perform additional queries for
+     * more detailed information, {@code false} if only the available bind information will be used
+     * @see #setExtendedMetadata(boolean)
+     * @since 6
+     */
+    default boolean isExtendedMetadata() {
+        return getBooleanProperty(PropertyNames.extendedMetadata, PropertyConstants.DEFAULT_EXTENDED_METADATA);
+    }
+
+    /**
+     * Sets if certain metadata classes will perform additional queries to enrich the information for certain types.
+     * <p>
+     * Currently this is used only by {@code ResultSetMetaData} for its {@code getPrecision} and {@code isAutoIncrement}
+     * methods. If disabled, these methods will return an estimated precision, or {@code false} for auto-increment
+     * instead of actual precision and identity column state information.
+     * </p>
+     * <p>
+     * Disabling this setting may improve performance of querying metadata information, in exchange for less precise
+     * information.
+     * </p>
+     *
+     * @param extendedMetadata
+     *         {@code true} (default) - metadata (e.g. {@code ResultSetMetaData}) will perform additional queries for
+     *         more detailed information, {@code false} - only the available bind information will be used
+     * @since 6
+     */
+    default void setExtendedMetadata(boolean extendedMetadata) {
+        setBooleanProperty(PropertyNames.extendedMetadata, extendedMetadata);
+    }
+
 }
