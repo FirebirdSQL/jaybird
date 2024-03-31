@@ -25,6 +25,8 @@ import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
@@ -35,10 +37,13 @@ import java.util.List;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.gds.ISCConstants.SQL_DOUBLE;
 import static org.firebirdsql.gds.ISCConstants.SQL_FLOAT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -50,30 +55,35 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  */
 class FBResultSetMetaDataTest {
 
-    //@formatter:off
-    private static final String CREATE_TABLE =
-        "CREATE TABLE test_rs_metadata (" + 
-        "  id INTEGER NOT NULL PRIMARY KEY, " +
-        "  simple_field VARCHAR(60) CHARACTER SET WIN1250, " +
-        "  two_byte_field VARCHAR(60) CHARACTER SET BIG_5, " +
-        "  three_byte_field VARCHAR(60) CHARACTER SET UNICODE_FSS, " +
-        "  long_field NUMERIC(15, 2), " +
-        "  int_field NUMERIC(8, 2), " +
-        "  short_field NUMERIC(4, 2), " +
-        "  char_octets_field CHAR(10) CHARACTER SET OCTETS, " +
-        "  varchar_octets_field VARCHAR(15) CHARACTER SET OCTETS, " +
-        "  calculated_field computed by (int_field + short_field) " +
-        ")";
+    private static final String CREATE_TABLE = """
+            CREATE TABLE test_rs_metadata (
+              id INTEGER NOT NULL PRIMARY KEY,
+              simple_field VARCHAR(60) CHARACTER SET WIN1250,
+              two_byte_field VARCHAR(60) CHARACTER SET BIG_5,
+              three_byte_field VARCHAR(60) CHARACTER SET UNICODE_FSS,
+              long_field NUMERIC(15, 2),
+              int_field NUMERIC(8, 2),
+              short_field NUMERIC(4, 2),
+              char_octets_field CHAR(10) CHARACTER SET OCTETS,
+              varchar_octets_field VARCHAR(15) CHARACTER SET OCTETS,
+              calculated_field computed by (int_field + short_field)
+            )""";
         
-    private static final String TEST_QUERY =
-        "SELECT " + 
-        "simple_field, two_byte_field, three_byte_field, " + 
-        "long_field, int_field, short_field " + 
-        "FROM test_rs_metadata";
+    private static final String TEST_QUERY = """
+            SELECT
+             simple_field, two_byte_field, three_byte_field,
+             long_field, int_field, short_field
+            FROM test_rs_metadata""";
+
+    private static final String RECREATE_AUTO_INC_TABLE_TEMPLATE = """
+            recreate table TEST_AUTO_INC_RS_METADATA (
+              ID %s generated always as identity primary key
+            )
+            """;
+
+    private static final String TEST_QUERY_AUTO_INC = "select ID from TEST_AUTO_INC_RS_METADATA";
     
-    private static final String TEST_QUERY2 =
-        "SELECT * from RDB$DATABASE";
-    //@formatter:on
+    private static final String TEST_QUERY2 = "SELECT * from RDB$DATABASE";
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
@@ -95,6 +105,11 @@ class FBResultSetMetaDataTest {
             assertEquals(15, metaData.getPrecision(4), "long_field must have precision 15");
             assertEquals(8, metaData.getPrecision(5), "int_field must have precision 8");
             assertEquals(4, metaData.getPrecision(6), "short_field must have precision 4");
+
+            for (int idx = 1; idx <= 6; idx++) {
+                assertFalse(metaData.isAutoIncrement(idx),
+                        "Expected autoIncrement is false for " + metaData.getColumnName(idx));
+            }
         }
     }
 
@@ -339,20 +354,21 @@ class FBResultSetMetaDataTest {
         assumeTrue(supportInfo.isVersionEqualOrAbove(3, 0, 3), "Test for CORE-5713, broken in version before 3.0.3");
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
-            for (String query : new String[] {
-                    "select 1 a1, 2 a2\n"
-                            + "from rdb$database\n"
-                            + "union all\n"
-                            + "select 1 a1, coalesce(cast(null as varchar(64)), 0) a2\n"
-                            + "from rdb$database ",
-                    "select a1, a2\n"
-                            + "from\n"
-                            + "  (select 1 a1, 2 a2\n"
-                            + "  from rdb$database)\n"
-                            + "group by 1, 2\n"
-                            + "union all\n"
-                            + "select 1 a1, coalesce(cast(null as varchar(64)), 0) a2\n"
-                            + "from rdb$database"
+            for (String query : new String[] { """
+                    select 1 a1, 2 a2
+                    from rdb$database
+                    union all
+                    select 1 a1, coalesce(cast(null as varchar(64)), 0) a2
+                    from rdb$database""",
+                    """
+                    select a1, a2
+                    from
+                      (select 1 a1, 2 a2
+                      from rdb$database)
+                    group by 1, 2
+                    union all
+                    select 1 a1, coalesce(cast(null as varchar(64)), 0) a2
+                    from rdb$database"""
             }) {
                 try (ResultSet rs = stmt.executeQuery(query)) {
                     FirebirdResultSetMetaData rsmd = rs.getMetaData().unwrap(FirebirdResultSetMetaData.class);
@@ -409,4 +425,19 @@ class FBResultSetMetaDataTest {
             }
         }
     }
+
+    @ParameterizedTest
+    @EnumSource(value = JDBCType.class, names = { "SMALLINT", "INTEGER", "BIGINT" })
+    void isAutoIncrement_identityColumn(JDBCType columnType) throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsIdentityColumns, "Test requires identity column support");
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            stmt.execute(RECREATE_AUTO_INC_TABLE_TEMPLATE.formatted(columnType.name()));
+
+            var rs = stmt.executeQuery(TEST_QUERY_AUTO_INC);
+            ResultSetMetaData rsmd = rs.getMetaData();
+            assertTrue(rsmd.isAutoIncrement(1), "Expected autoIncrement true");
+        }
+    }
+
 }

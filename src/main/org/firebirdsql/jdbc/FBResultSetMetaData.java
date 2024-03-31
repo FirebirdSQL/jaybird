@@ -80,13 +80,16 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
 
     /**
      * {@inheritDoc}
-     * <p>
-     * The current implementation always returns {@code false}.
-     * </p>
      */
     @Override
     public boolean isAutoIncrement(int column) throws SQLException {
-        return false;
+        return switch (getColumnType(column)) {
+            case Types.SMALLINT, Types.INTEGER, Types.BIGINT -> {
+                ExtendedFieldInfo extFieldInfo = getExtFieldInfo(column);
+                yield extFieldInfo != null && extFieldInfo.autoIncrement();
+            }
+            default -> false;
+        };
     }
 
     /**
@@ -254,12 +257,24 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     private static final int FIELD_INFO_RELATION_NAME = 1;
     private static final int FIELD_INFO_FIELD_NAME = 2;
     private static final int FIELD_INFO_FIELD_PRECISION = 3;
+    private static final int FIELD_INFO_FIELD_AUTO_INC = 4;
 
-    private static final String GET_FIELD_INFO = """
+    private static final String GET_FIELD_INFO_25 = """
             select
               RF.RDB$RELATION_NAME as RELATION_NAME,
               RF.RDB$FIELD_NAME as FIELD_NAME,
-              F.RDB$FIELD_PRECISION as FIELD_PRECISION
+              F.RDB$FIELD_PRECISION as FIELD_PRECISION,
+              'F' as FIELD_AUTO_INC
+            from RDB$RELATION_FIELDS RF inner join RDB$FIELDS F
+              on RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME
+            where RF.RDB$FIELD_NAME = ? and RF.RDB$RELATION_NAME = ?""";
+
+    private static final String GET_FIELD_INFO_30 = """
+            select
+              RF.RDB$RELATION_NAME as RELATION_NAME,
+              RF.RDB$FIELD_NAME as FIELD_NAME,
+              F.RDB$FIELD_PRECISION as FIELD_PRECISION,
+              RF.RDB$IDENTITY_TYPE is not null as FIELD_AUTO_INC
             from RDB$RELATION_FIELDS RF inner join RDB$FIELDS F
               on RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME
             where RF.RDB$FIELD_NAME = ? and RF.RDB$RELATION_NAME = ?""";
@@ -279,13 +294,15 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
         var params = new ArrayList<String>();
         var sb = new StringBuilder();
+        boolean fb3OrHigher = metaData.getDatabaseMajorVersion() >= 3;
+        String getFieldInfoQuery = fb3OrHigher ? GET_FIELD_INFO_30 : GET_FIELD_INFO_25;
         while (currentColumn <= fieldCount) {
             params.clear();
             sb.setLength(0);
 
             for (int unionCount = 0; currentColumn <= fieldCount && unionCount < MAX_FIELD_INFO_UNIONS; currentColumn++) {
                 FieldDescriptor fieldDescriptor = getFieldDescriptor(currentColumn);
-                if (!needsExtendedFieldInfo(fieldDescriptor)) continue;
+                if (!needsExtendedFieldInfo(fieldDescriptor, fb3OrHigher)) continue;
 
                 String relationName = fieldDescriptor.getOriginalTableName();
                 String fieldName = fieldDescriptor.getOriginalName();
@@ -295,7 +312,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
                 if (unionCount != 0) {
                     sb.append("\nunion all\n");
                 }
-                sb.append(GET_FIELD_INFO);
+                sb.append(getFieldInfoQuery);
 
                 params.add(fieldName);
                 params.add(relationName);
@@ -307,7 +324,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
 
             try (ResultSet rs = metaData.doQuery(sb.toString(), params, true)) {
                 while (rs.next()) {
-                    var fieldInfo = extractExtendedFieldInfo(rs);
+                    ExtendedFieldInfo fieldInfo = extractExtendedFieldInfo(rs);
                     result.put(fieldInfo.fieldKey(), fieldInfo);
                 }
             }
@@ -317,15 +334,19 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
 
     private static ExtendedFieldInfo extractExtendedFieldInfo(ResultSet rs) throws SQLException {
         return new ExtendedFieldInfo(rs.getString(FIELD_INFO_RELATION_NAME), rs.getString(FIELD_INFO_FIELD_NAME),
-                rs.getInt(FIELD_INFO_FIELD_PRECISION));
+                rs.getInt(FIELD_INFO_FIELD_PRECISION), rs.getBoolean(FIELD_INFO_FIELD_AUTO_INC));
     }
 
     /**
-     * @return {@code true} when the field descriptor needs extended field info (currently only NUMERIC and DECIMAL)
+     * @return {@code true} when the field descriptor needs extended field info (currently only NUMERIC and DECIMAL,
+     * and - when {@code fb3OrHigher == true} - INTEGER, BIGINT and SMALLINT)
      */
-    private static boolean needsExtendedFieldInfo(FieldDescriptor fieldDescriptor) {
-        int jdbcType = JdbcTypeConverter.toJdbcType(fieldDescriptor);
-        return jdbcType == Types.NUMERIC || jdbcType == Types.DECIMAL;
+    private static boolean needsExtendedFieldInfo(FieldDescriptor fieldDescriptor, boolean fb3OrHigher) {
+        return switch (JdbcTypeConverter.toJdbcType(fieldDescriptor)) {
+            case Types.NUMERIC, Types.DECIMAL -> true;
+            case Types.INTEGER, Types.BIGINT, Types.SMALLINT -> fb3OrHigher;
+            default -> false;
+        };
     }
 
     /**

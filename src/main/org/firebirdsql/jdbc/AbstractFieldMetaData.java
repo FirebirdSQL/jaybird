@@ -262,9 +262,9 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     /**
      * Stores additional information about fields in a database.
      */
-    protected record ExtendedFieldInfo(FieldKey fieldKey, int fieldPrecision) {
-        public ExtendedFieldInfo(String relationName, String fieldName, int precision) {
-            this(new FieldKey(relationName, fieldName), precision);
+    protected record ExtendedFieldInfo(FieldKey fieldKey, int fieldPrecision, boolean autoIncrement) {
+        public ExtendedFieldInfo(String relationName, String fieldName, int precision, boolean autoIncrement) {
+            this(new FieldKey(relationName, fieldName), precision, autoIncrement);
         }
     }
 
