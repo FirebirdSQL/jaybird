@@ -922,7 +922,11 @@ Previously almost all types returned `true` (including -- for example -- `BOOLEA
 * Switched blob identification in message BLR from `blr_quad` to `blr_blob2` (https://github.com/FirebirdSQL/jaybird/issues/726[#726])
 * Removed `finalize()` methods and -- where it made sense -- replaced them with use of `Cleaner` (https://github.com/FirebirdSQL/jaybird/issues/727[#727])
 * Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DECIMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (https://github.com/FirebirdSQL/jaybird/issues/731[#731])
++
+This fix was backported to Jaybird 5.0.5.
 * Optimized the query to retrieve extended field info for `ResultSetMetaData.getPrecision` to only retrieve columns of type `NUMERIC` or `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/732[#732])
++
+This improvement was backported to Jaybird 5.0.5.
 * Added methods `List<String> getTypeAliasList()` and `List<String> getSupportedProtocolList()` to `GDSFactoryPlugin`, and deprecated `String[] getTypeAliases()` and `String[] getSupportedProtocols()` for removal in Jaybird 7 or later
 * Fixed formatting of `isc_formatted_exception` to not repeat the original parameters of the exception (https://github.com/FirebirdSQL/jaybird/issues/749[#749])
 * Added aliases `ApplicationName` and `applicationName` for connection property `processName` (https://github.com/FirebirdSQL/jaybird/issues/751[#751])
@@ -973,9 +977,13 @@ We do not plan to remove this API at this time, but we recommend that you switch
 This change was also backported to Jaybird 5.0.4.
 * Improvement: `sessionTimeZone` now also accepts the Java offset names (`GMT[{plus}-]HH:MM`), which will be automatically converted to the Firebird compatible name (`[{plus}-]HH:MM`).
 * New feature: `ResultSetMetaData.isAutoIncrement(int)` reports `true` for identity columns *if* Jaybird can identify the underlying table and column (https://github.com/FirebirdSQL/jaybird/issues/793[#793])
++
+This feature was backported to Jaybird 5.0.5.
 * New feature: Boolean connection property `extendedMetadata` (default `true`) to disable querying of extended metadata for `getPrecision(int)` and `isAutoIncrement(int)` of `ResultSetMetaData` (https://github.com/FirebirdSQL/jaybird/issues/795[#795])
 +
 Disabling extended metadata may improve performance of these `ResultSetMetaData` methods in exchange for estimated precision information of `NUMERIC` and `DECIMAL` columns, and not being able to determine the auto-increment status of `INTEGER`, `BIGINT` or `SMALLINT` columns.
++
+This feature was backported to Jaybird 5.0.5.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

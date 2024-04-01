@@ -652,7 +652,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @return {@code true} (default) if metadata (e.g. {@code ResultSetMetaData}) will perform additional queries for
      * more detailed information, {@code false} if only the available bind information will be used
      * @see #setExtendedMetadata(boolean)
-     * @since 6
+     * @since 5.0.5
      */
     default boolean isExtendedMetadata() {
         return getBooleanProperty(PropertyNames.extendedMetadata, PropertyConstants.DEFAULT_EXTENDED_METADATA);
@@ -673,7 +673,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @param extendedMetadata
      *         {@code true} (default) - metadata (e.g. {@code ResultSetMetaData}) will perform additional queries for
      *         more detailed information, {@code false} - only the available bind information will be used
-     * @since 6
+     * @since 5.0.5
      */
     default void setExtendedMetadata(boolean extendedMetadata) {
         setBooleanProperty(PropertyNames.extendedMetadata, extendedMetadata);
