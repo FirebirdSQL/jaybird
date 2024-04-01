@@ -1400,7 +1400,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <p>
      * Jaybird defines these additional columns:
      * <ol start="7">
-     * <li><b>JB_INDEX_NAME</b> String  =&gt; Index backing the primary key</li>
+     * <li><b>JB_PK_INDEX_NAME</b> String  =&gt; Index backing the primary key</li>
      * </ol>
      * </p>
      */

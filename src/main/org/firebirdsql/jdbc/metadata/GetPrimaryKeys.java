@@ -48,7 +48,7 @@ public final class GetPrimaryKeys extends AbstractMetadataMethod {
             .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", COLUMNINFO).addField()
             .at(4).simple(SQL_SHORT, 0, "KEY_SEQ", COLUMNINFO).addField()
             .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", COLUMNINFO).addField()
-            .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_INDEX_NAME", COLUMNINFO).addField()
+            .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_PK_INDEX_NAME", COLUMNINFO).addField()
             .toRowDescriptor();
 
     private static final String GET_PRIMARY_KEYS_START = """
@@ -57,7 +57,7 @@ public final class GetPrimaryKeys extends AbstractMetadataMethod {
               ISGMT.RDB$FIELD_NAME as COLUMN_NAME,
               ISGMT.RDB$FIELD_POSITION + 1 as KEY_SEQ,
               RC.RDB$CONSTRAINT_NAME as PK_NAME,
-              RC.RDB$INDEX_NAME as JB_INDEX_NAME
+              RC.RDB$INDEX_NAME as JB_PK_INDEX_NAME
             from RDB$RELATION_CONSTRAINTS RC
             inner join RDB$INDEX_SEGMENTS ISGMT
               on RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME
@@ -91,7 +91,7 @@ public final class GetPrimaryKeys extends AbstractMetadataMethod {
                 .at(3).setString(rs.getString("COLUMN_NAME"))
                 .at(4).setShort(rs.getShort("KEY_SEQ"))
                 .at(5).setString(rs.getString("PK_NAME"))
-                .at(6).setString(rs.getString("JB_INDEX_NAME"))
+                .at(6).setString(rs.getString("JB_PK_INDEX_NAME"))
                 .toRowValue(false);
     }
 

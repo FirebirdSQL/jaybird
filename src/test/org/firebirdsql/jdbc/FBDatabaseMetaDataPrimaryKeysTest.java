@@ -159,7 +159,7 @@ class FBDatabaseMetaDataPrimaryKeysTest {
         rules.put(PrimaryKeysMetaData.KEY_SEQ, (short) keySeq);
         rules.put(PrimaryKeysMetaData.PK_NAME,
                 UNNAMED_PK_PREFIX.equals(pkName) ? Matchers.startsWith(UNNAMED_PK_PREFIX) : pkName);
-        rules.put(PrimaryKeysMetaData.JB_INDEX_NAME,
+        rules.put(PrimaryKeysMetaData.JB_PK_INDEX_NAME,
                 UNNAMED_INDEX_PREFIX.equals(jbIndexName) ? Matchers.startsWith(UNNAMED_INDEX_PREFIX) : jbIndexName);
         return rules;
     }
@@ -186,7 +186,7 @@ class FBDatabaseMetaDataPrimaryKeysTest {
         COLUMN_NAME(4, String.class),
         KEY_SEQ(5, Short.class),
         PK_NAME(6, String.class),
-        JB_INDEX_NAME(7, String.class);
+        JB_PK_INDEX_NAME(7, String.class);
 
         private final int position;
         private final Class<?> columnClass;
