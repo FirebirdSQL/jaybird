@@ -473,4 +473,28 @@ class FBResultSetMetaDataTest {
         }
     }
 
+    /**
+     * Rationale: in auto-commit mode, queries close other queries, verify the internal query doesn't do this.
+     */
+    @Test
+    void extendedInfoQueryDoesNotCloseResultSet() throws Exception {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            stmt.execute("insert into test_rs_metadata (id, long_field) values (1, 1)");
+            stmt.execute("insert into test_rs_metadata (id, long_field) values (2, 2)");
+            connection.setAutoCommit(true);
+
+            try (var rs = stmt.executeQuery(TEST_QUERY)) {
+                assertTrue(rs.next(), "Expected a row");
+                ResultSetMetaData metaData = rs.getMetaData();
+                assertEquals(15, metaData.getPrecision(4), "long_field must have precision 15");
+                assertFalse(rs.isClosed());
+                assertEquals(1, rs.getLong(4));
+                assertTrue(rs.next(), "Expected a row");
+                assertEquals(2, rs.getLong(4));
+            }
+        }
+    }
+
 }
