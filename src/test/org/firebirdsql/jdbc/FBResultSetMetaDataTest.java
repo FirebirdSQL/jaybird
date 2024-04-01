@@ -39,6 +39,7 @@ import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.gds.ISCConstants.SQL_DOUBLE;
 import static org.firebirdsql.gds.ISCConstants.SQL_FLOAT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -468,6 +469,30 @@ class FBResultSetMetaDataTest {
                     "Expected estimated precision 9 for int_field when extendedMetadata = false");
             assertEquals(4, rsmd.getPrecision(3),
                     "Expected estimated precision 4 for short_field when extendedMetadata = false");
+        }
+    }
+
+    /**
+     * Rationale: in auto-commit mode, queries close other queries, verify the internal query doesn't do this.
+     */
+    @Test
+    void extendedInfoQueryDoesNotCloseResultSet() throws Exception {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            stmt.execute("insert into test_rs_metadata (id, long_field) values (1, 1)");
+            stmt.execute("insert into test_rs_metadata (id, long_field) values (2, 2)");
+            connection.setAutoCommit(true);
+
+            try (var rs = stmt.executeQuery(TEST_QUERY)) {
+                assertNextRow(rs);
+                ResultSetMetaData metaData = rs.getMetaData();
+                assertEquals(15, metaData.getPrecision(4), "long_field must have precision 15");
+                assertFalse(rs.isClosed());
+                assertEquals(1, rs.getLong(4));
+                assertNextRow(rs);
+                assertEquals(2, rs.getLong(4));
+            }
         }
     }
 
