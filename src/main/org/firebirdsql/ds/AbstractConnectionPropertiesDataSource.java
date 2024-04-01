@@ -448,6 +448,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setParallelWorkers(parallelWorkers);
     }
 
+    @Override
+    public boolean isExtendedMetadata() {
+        return FirebirdConnectionProperties.super.isExtendedMetadata();
+    }
+
+    @Override
+    public void setExtendedMetadata(boolean extendedMetadata) {
+        FirebirdConnectionProperties.super.setExtendedMetadata(extendedMetadata);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated
     @Override

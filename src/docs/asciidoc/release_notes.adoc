@@ -32,9 +32,23 @@ For known issues, consult <<known-issues>>.
 
 The following has been changed or fixed since Jaybird 5.0.4:
 
+* Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DECIMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (https://github.com/FirebirdSQL/jaybird/issues/731[#731])
++
+This fix was backported from Jaybird 6.
+* Optimized the query to retrieve extended field info for `ResultSetMetaData.getPrecision` to only retrieve columns of type `NUMERIC` or `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/732[#732])
++
+This improvement was backported from Jaybird 6.
 * Fixed: `PreparedStatement.executeBatch()` of statement without parameters throws "`Statement used in batch must have parameters [SQLState:07001, ISC error code:335545186]`" on Firebird 4.0 or higher (https://github.com/FirebirdSQL/jaybird/issues/788[#788])
 +
 Given the Firebird server-side batch facility doesn't support executing parameterless statements, the implementation now falls back to emulated batch execution for this case.
+* New feature: `ResultSetMetaData.isAutoIncrement(int)` reports `true` for identity columns *if* Jaybird can identify the underlying table and column (https://github.com/FirebirdSQL/jaybird/issues/793[#793])
++
+This feature was backported from Jaybird 6.
+* New feature: Boolean connection property `extendedMetadata` (default `true`) to disable querying of extended metadata for `getPrecision(int)` and `isAutoIncrement(int)` of `ResultSetMetaData` (https://github.com/FirebirdSQL/jaybird/issues/795[#795])
++
+Disabling extended metadata may improve performance of these `ResultSetMetaData` methods in exchange for estimated precision information of `NUMERIC` and `DECIMAL` columns, and not being able to determine the auto-increment status of `INTEGER`, `BIGINT` or `SMALLINT` columns.
++
+This feature was backported from Jaybird 6.
 * ...
 
 [#jaybird-5-0-4-changelog]

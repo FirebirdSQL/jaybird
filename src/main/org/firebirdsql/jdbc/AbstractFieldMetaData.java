@@ -438,10 +438,12 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     protected static class ExtendedFieldInfo {
         final FieldKey fieldKey;
         final int fieldPrecision;
+        final boolean autoIncrement;
 
-        public ExtendedFieldInfo(String relationName, String fieldName, int precision) {
+        public ExtendedFieldInfo(String relationName, String fieldName, int precision, boolean autoIncrement) {
             fieldKey = new FieldKey(relationName, fieldName);
             fieldPrecision = precision;
+            this.autoIncrement = autoIncrement;
         }
     }
 

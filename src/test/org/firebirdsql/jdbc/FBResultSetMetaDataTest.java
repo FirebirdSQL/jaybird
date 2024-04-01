@@ -23,9 +23,12 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
@@ -39,7 +42,9 @@ import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.gds.ISCConstants.SQL_DOUBLE;
 import static org.firebirdsql.gds.ISCConstants.SQL_FLOAT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -71,6 +76,13 @@ class FBResultSetMetaDataTest {
         "simple_field, two_byte_field, three_byte_field, " + 
         "long_field, int_field, short_field " + 
         "FROM test_rs_metadata";
+
+    private static final String RECREATE_AUTO_INC_TABLE_TEMPLATE =
+        "recreate table TEST_AUTO_INC_RS_METADATA (" +
+        "  ID %s generated always as identity primary key" +
+        ")";
+
+    private static final String TEST_QUERY_AUTO_INC = "select ID from TEST_AUTO_INC_RS_METADATA";
     
     private static final String TEST_QUERY2 =
         "SELECT * from RDB$DATABASE";
@@ -96,6 +108,11 @@ class FBResultSetMetaDataTest {
             assertEquals(15, metaData.getPrecision(4), "long_field must have precision 15");
             assertEquals(8, metaData.getPrecision(5), "int_field must have precision 8");
             assertEquals(4, metaData.getPrecision(6), "short_field must have precision 4");
+
+            for (int idx = 1; idx <= 6; idx++) {
+                assertFalse(metaData.isAutoIncrement(idx),
+                        "Expected autoIncrement is false for " + metaData.getColumnName(idx));
+            }
         }
     }
     
@@ -377,4 +394,83 @@ class FBResultSetMetaDataTest {
         assertEquals(24, rsmd.getPrecision(1));
         assertEquals(53, rsmd.getPrecision(2));
     }
+
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/731">jaybird#731</a>.
+     */
+    @Test
+    void extendedFieldInfo_moreThan70Columns_731() throws Exception {
+        try (FirebirdConnection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+
+            StringBuilder createTable = new StringBuilder(28 + 71 * 22).append("create table extfieldtest (");
+            StringBuilder selectStmt = new StringBuilder(25 + 71 * 9).append("select ");
+            for (int colIdx = 1; colIdx <= 70; colIdx++) {
+                createTable.append("column").append(colIdx).append(" numeric(3,1),");
+                selectStmt.append("column").append(colIdx).append(',');
+            }
+            createTable.append("column71 numeric(2,1))");
+            selectStmt.append("column71 from extfieldtest");
+
+            stmt.execute(createTable.toString());
+
+            try (ResultSet rs = stmt.executeQuery(selectStmt.toString())) {
+                ResultSetMetaData rsmd = rs.getMetaData();
+
+                assertEquals(3, rsmd.getPrecision(70),
+                        "expected actual precision of 3 instead of estimated precision of 4");
+                assertEquals(2, rsmd.getPrecision(71),
+                        "expected actual precision of 2 instead of estimated precision of 4");
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = JDBCType.class, names = { "SMALLINT", "INTEGER", "BIGINT" })
+    void isAutoIncrement_identityColumn(JDBCType columnType) throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsIdentityColumns(), "Test requires identity column support");
+        try (FirebirdConnection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            stmt.execute(String.format(RECREATE_AUTO_INC_TABLE_TEMPLATE, columnType.name()));
+
+            ResultSet rs = stmt.executeQuery(TEST_QUERY_AUTO_INC);
+            ResultSetMetaData rsmd = rs.getMetaData();
+            assertTrue(rsmd.isAutoIncrement(1), "Expected autoIncrement true");
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = JDBCType.class, names = { "SMALLINT", "INTEGER", "BIGINT" })
+    void isAutoIncrement_extendedMetadataDisabled(JDBCType columnType) throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsIdentityColumns(), "Test requires identity column support");
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.extendedMetadata, "false");
+        try (Connection connection = DriverManager.getConnection(getUrl(), props);
+             Statement stmt = connection.createStatement()) {
+            stmt.execute(String.format(RECREATE_AUTO_INC_TABLE_TEMPLATE, columnType.name()));
+
+            ResultSet rs = stmt.executeQuery(TEST_QUERY_AUTO_INC);
+            ResultSetMetaData rsmd = rs.getMetaData();
+            assertFalse(rsmd.isAutoIncrement(1), "Expected autoIncrement false when extendedMetadata=false");
+        }
+    }
+
+    @Test
+    void getPrecision_extendedMetadataDisabled() throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.extendedMetadata, "false");
+        try (Connection connection = DriverManager.getConnection(getUrl(), props);
+             Statement stmt = connection.createStatement()) {
+            ResultSet rs = stmt.executeQuery("select long_field, int_field, short_field from test_rs_metadata");
+
+            ResultSetMetaData rsmd = rs.getMetaData();
+            assertEquals(18, rsmd.getPrecision(1),
+                    "Expected estimated precision 18 for long_field when extendedMetadata = false");
+            assertEquals(9, rsmd.getPrecision(2),
+                    "Expected estimated precision 9 for int_field when extendedMetadata = false");
+            assertEquals(4, rsmd.getPrecision(3),
+                    "Expected estimated precision 4 for short_field when extendedMetadata = false");
+        }
+    }
+
 }

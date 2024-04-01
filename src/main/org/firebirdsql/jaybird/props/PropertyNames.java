@@ -80,6 +80,7 @@ public final class PropertyNames {
     public static final String scrollableCursor = "scrollableCursor";
     public static final String useServerBatch = "useServerBatch";
     public static final String serverBatchBufferSize = "serverBatchBufferSize";
+    public static final String extendedMetadata = "extendedMetadata";
 
     // service connection
     public static final String expectedDb = "expectedDb";

@@ -22,12 +22,15 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
+
+import static org.firebirdsql.util.StringUtils.isNullOrEmpty;
 
 /**
  * An object that can be used to get information about the types and properties of the columns in
@@ -80,13 +83,18 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
 
     /**
      * {@inheritDoc}
-     * <p>
-     * The current implementation always returns <code>false</code>.
-     * </p>
      */
     @Override
     public boolean isAutoIncrement(int column) throws SQLException {
-        return false;
+        switch (getColumnType(column)) {
+        case Types.SMALLINT:
+        case Types.INTEGER:
+        case Types.BIGINT:
+            ExtendedFieldInfo extFieldInfo = getExtFieldInfo(column);
+            return extFieldInfo != null && extFieldInfo.autoIncrement;
+        default:
+            return false;
+        }
     }
 
     /**
@@ -259,72 +267,106 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         return getFieldClassName(column);
     }
 
+    private static final int FIELD_INFO_RELATION_NAME = 1;
+    private static final int FIELD_INFO_FIELD_NAME = 2;
+    private static final int FIELD_INFO_FIELD_PRECISION = 3;
+    private static final int FIELD_INFO_FIELD_AUTO_INC = 4;
+
     //@formatter:off
-    private static final String GET_FIELD_INFO =
-            "SELECT "
-            + "  RF.RDB$RELATION_NAME as RELATION_NAME"
-            + ", RF.RDB$FIELD_NAME as FIELD_NAME"
-            + ", F.RDB$FIELD_PRECISION as FIELD_PRECISION"
-            + " FROM"
-            + "  RDB$RELATION_FIELDS RF "
-            + ", RDB$FIELDS F "
-            + " WHERE "
-            + "  RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME"
-            + " AND"
-            + "  RF.RDB$FIELD_NAME = ?"
-            + " AND"
-            + "  RF.RDB$RELATION_NAME = ?";
+    private static final String GET_FIELD_INFO_25 =
+            "select\n" +
+            "  RF.RDB$RELATION_NAME as RELATION_NAME,\n" +
+            "  RF.RDB$FIELD_NAME as FIELD_NAME,\n" +
+            "  F.RDB$FIELD_PRECISION as FIELD_PRECISION,\n" +
+            "  'F' as FIELD_AUTO_INC\n" +
+            "from RDB$RELATION_FIELDS RF inner join RDB$FIELDS F\n" +
+            "  on RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME\n" +
+            "where RF.RDB$FIELD_NAME = ? and RF.RDB$RELATION_NAME = ?";;
+
+    private static final String GET_FIELD_INFO_30 =
+            "select\n" +
+            "  RF.RDB$RELATION_NAME as RELATION_NAME,\n" +
+            "  RF.RDB$FIELD_NAME as FIELD_NAME,\n" +
+            "  F.RDB$FIELD_PRECISION as FIELD_PRECISION,\n" +
+            "  RF.RDB$IDENTITY_TYPE is not null as FIELD_AUTO_INC\n" +
+            "from RDB$RELATION_FIELDS RF inner join RDB$FIELDS F\n" +
+            "  on RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME\n" +
+            "where RF.RDB$FIELD_NAME = ? and RF.RDB$RELATION_NAME = ?";
     //@formatter:on
+
+    // Apparently there is a limit in the UNION. It is necessary to split in several queries. Although the problem
+    // reported with 93 UNION, use only 70.
+    private static final int MAX_FIELD_INFO_UNIONS = 70;
 
     @Override
     protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException {
-        if (connection == null) return Collections.emptyMap();
+        if (connection == null || !connection.isExtendedMetadata()) return Collections.emptyMap();
 
-        // Apparently there is a limit in the UNION
-        // It is necessary to split in several queries
-        // Although the problem reported with 93 UNION use only 70
-        int pending = getFieldCount();
+        final int fieldCount = getFieldCount();
+        int currentColumn = 1;
         Map<FieldKey, ExtendedFieldInfo> result = new HashMap<>();
-        final FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
-        while (pending > 0) {
-            StringBuilder sb = new StringBuilder();
+        FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
+        List<String> params = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        boolean fb3OrHigher = metaData.getDatabaseMajorVersion() >= 3;
+        String getFieldInfoQuery = fb3OrHigher ? GET_FIELD_INFO_30 : GET_FIELD_INFO_25;
+        while (currentColumn <= fieldCount) {
+            params.clear();
+            sb.setLength(0);
 
-            int maxLength = Math.min(pending, 70);
-            List<String> params = new ArrayList<>(2 * maxLength);
-            for (int i = 1; i <= maxLength; i++) {
+            for (int unionCount = 0; currentColumn <= fieldCount && unionCount < MAX_FIELD_INFO_UNIONS; currentColumn++) {
+                FieldDescriptor fieldDescriptor = getFieldDescriptor(currentColumn);
+                if (!needsExtendedFieldInfo(fieldDescriptor, fb3OrHigher)) continue;
 
-                String relationName = getFieldDescriptor(i).getOriginalTableName();
-                String fieldName = getFieldDescriptor(i).getOriginalName();
+                String relationName = fieldDescriptor.getOriginalTableName();
+                String fieldName = fieldDescriptor.getOriginalName();
 
-                if (relationName == null || relationName.equals("")
-                        || fieldName == null || fieldName.equals("")) continue;
+                if (isNullOrEmpty(relationName) || isNullOrEmpty(fieldName)) continue;
 
-                if (sb.length() > 0) {
-                    sb.append('\n').append("UNION ALL").append('\n');
+                if (unionCount != 0) {
+                    sb.append("\nunion all\n");
                 }
-                sb.append(GET_FIELD_INFO);
+                sb.append(getFieldInfoQuery);
 
                 params.add(fieldName);
                 params.add(relationName);
-            }
 
-            pending -= maxLength;
+                unionCount++;
+            }
 
             if (sb.length() == 0) continue;
 
             try (ResultSet rs = metaData.doQuery(sb.toString(), params, true)) {
                 while (rs.next()) {
-                    String relationName = rs.getString("RELATION_NAME");
-                    String fieldName = rs.getString("FIELD_NAME");
-                    int precision = rs.getInt("FIELD_PRECISION");
-                    ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo(relationName, fieldName, precision);
-
+                    ExtendedFieldInfo fieldInfo = extractExtendedFieldInfo(rs);
                     result.put(fieldInfo.fieldKey, fieldInfo);
                 }
             }
-            params.clear();
         }
         return result;
+    }
+
+    private static ExtendedFieldInfo extractExtendedFieldInfo(ResultSet rs) throws SQLException {
+        return new ExtendedFieldInfo(rs.getString(FIELD_INFO_RELATION_NAME), rs.getString(FIELD_INFO_FIELD_NAME),
+                rs.getInt(FIELD_INFO_FIELD_PRECISION), rs.getBoolean(FIELD_INFO_FIELD_AUTO_INC));
+    }
+
+    /**
+     * @return {@code true} when the field descriptor needs extended field info (currently only NUMERIC and DECIMAL,
+     * and - when {@code fb3OrHigher == true} - INTEGER, BIGINT and SMALLINT)
+     */
+    private static boolean needsExtendedFieldInfo(FieldDescriptor fieldDescriptor, boolean fb3OrHigher) {
+        switch (JdbcTypeConverter.toJdbcType(fieldDescriptor)) {
+        case Types.NUMERIC:
+        case Types.DECIMAL:
+            return true;
+        case Types.INTEGER:
+        case Types.BIGINT:
+        case Types.SMALLINT:
+            return fb3OrHigher;
+        default:
+            return false;
+        }
     }
 
     /**

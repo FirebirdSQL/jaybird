@@ -47,4 +47,17 @@ public final class StringUtils {
         }
         return null;
     }
+
+    /**
+     * Checks if {@code value} is {@code null} or empty.
+     *
+     * @param value
+     *         value to test
+     * @return {@code true} if {@code value} is {@code null} or emoty, {@code false} for non-empty strings
+     * @since 6
+     */
+    public static boolean isNullOrEmpty(String value) {
+        return value == null || value.isEmpty();
+    }
+    
 }
