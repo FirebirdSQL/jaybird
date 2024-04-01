@@ -28,6 +28,7 @@ import java.sql.SQLException;
 
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 
 /**
@@ -40,13 +41,14 @@ public final class GetPrimaryKeys extends AbstractMetadataMethod {
 
     private static final String COLUMNINFO = "COLUMNINFO";
     
-    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(6)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(7)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", COLUMNINFO).addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", COLUMNINFO).addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", COLUMNINFO).addField()
             .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", COLUMNINFO).addField()
             .at(4).simple(SQL_SHORT, 0, "KEY_SEQ", COLUMNINFO).addField()
             .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", COLUMNINFO).addField()
+            .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_INDEX_NAME", COLUMNINFO).addField()
             .toRowDescriptor();
 
     private static final String GET_PRIMARY_KEYS_START = """
@@ -54,7 +56,8 @@ public final class GetPrimaryKeys extends AbstractMetadataMethod {
               RC.RDB$RELATION_NAME as TABLE_NAME,
               ISGMT.RDB$FIELD_NAME as COLUMN_NAME,
               ISGMT.RDB$FIELD_POSITION + 1 as KEY_SEQ,
-              RC.RDB$CONSTRAINT_NAME as PK_NAME
+              RC.RDB$CONSTRAINT_NAME as PK_NAME,
+              RC.RDB$INDEX_NAME as JB_INDEX_NAME
             from RDB$RELATION_CONSTRAINTS RC
             inner join RDB$INDEX_SEGMENTS ISGMT
               on RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME
@@ -68,7 +71,7 @@ public final class GetPrimaryKeys extends AbstractMetadataMethod {
     }
 
     public ResultSet getPrimaryKeys(String table) throws SQLException {
-        if (table == null || "".equals(table)) {
+        if (isNullOrEmpty(table)) {
             return createEmpty();
         }
         Clause tableClause = Clause.equalsClause("RC.RDB$RELATION_NAME", table);
@@ -88,6 +91,7 @@ public final class GetPrimaryKeys extends AbstractMetadataMethod {
                 .at(3).setString(rs.getString("COLUMN_NAME"))
                 .at(4).setShort(rs.getShort("KEY_SEQ"))
                 .at(5).setString(rs.getString("PK_NAME"))
+                .at(6).setString(rs.getString("JB_INDEX_NAME"))
                 .toRowValue(false);
     }
 

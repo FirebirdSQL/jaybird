@@ -18,12 +18,15 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.hamcrest.Matcher;
+
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
 import static java.lang.String.format;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -105,24 +108,27 @@ public interface MetaDataInfo {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void assertObjectColumnValue(ResultSet rs, Object expectedValue) throws SQLException {
         if (expectedValue == IGNORE_DURING_VALIDATION) return;
         Object value = rs.getObject(name());
         if (expectedValue == ANY_NON_NULL_VALUE) {
-            assertNotNull(value, format("Expected non-null value for %s, but was null", name()));
+            assertNotNull(value, "Expected non-null value for " + name() + ", but was null");
+        } else if (expectedValue instanceof Matcher<?> matcher) {
+            assertThat("Unexpected value for " + name(), value, (Matcher<Object>) matcher);
         } else {
-            assertEquals(expectedValue, value, () -> format("Unexpected value for %s", name()));
+            assertEquals(expectedValue, value, () -> "Unexpected value for " + name());
         }
     }
 
     private void assertShortColumnValue(ResultSet rs, Short expectedValue) throws SQLException {
         short value = rs.getShort(name());
         if (expectedValue != null) {
-            assertEquals(expectedValue.shortValue(), value, () -> format("Unexpected value for %s", name()));
-            assertFalse(rs.wasNull(), () -> format("%s should not be actual NULL", name()));
+            assertEquals(expectedValue.shortValue(), value, () -> "Unexpected value for " + name());
+            assertFalse(rs.wasNull(), () -> name() + " should not be actual NULL");
         } else {
-            assertEquals(0, value, () -> format("Unexpected value for %s (expected NULL/0)", name()));
-            assertTrue(rs.wasNull(), () -> format("%s should be actual NULL", name()));
+            assertEquals(0, value, () -> "Unexpected value for " + name() + " (expected NULL/0)");
+            assertTrue(rs.wasNull(), () -> name() + " should be actual NULL");
         }
     }
 
@@ -140,7 +146,7 @@ public interface MetaDataInfo {
     private void assertStringColumnValue(ResultSet rs, String expectedValue)
             throws SQLException {
         String value = rs.getString(name());
-        assertEquals(expectedValue, value, () -> format("Unexpected value for %s", name()));
+        assertEquals(expectedValue, value, () -> "Unexpected value for " + name());
     }
 
     private boolean isAllowedSqlType(int sqlType) {

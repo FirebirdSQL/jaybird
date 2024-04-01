@@ -1395,6 +1395,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .getVersionColumns(catalog, schema, table);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird defines these additional columns:
+     * <ol start="7">
+     * <li><b>JB_INDEX_NAME</b> String  =&gt; Index backing the primary key</li>
+     * </ol>
+     * </p>
+     */
     @Override
     public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
         return GetPrimaryKeys.create(getDbMetadataMediator()).getPrimaryKeys(table);
