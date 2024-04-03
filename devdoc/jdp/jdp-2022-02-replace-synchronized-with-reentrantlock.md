@@ -4,6 +4,7 @@
 
 - Published: 2022-09-12
 - Implemented in: Jaybird 5
+- Updated: 2024-03-04
 
 ## Type
 
@@ -74,7 +75,7 @@ synchronized (getSynchronizationObject()) {
 can be replaced with
 
 ```java
-synchronized (withLock()) {
+try (LockCloseable ignored = withLock()) {
     // ...
 }
 ```
