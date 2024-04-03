@@ -478,14 +478,14 @@ class FBResultSetMetaDataTest {
      */
     @Test
     void extendedInfoQueryDoesNotCloseResultSet() throws Exception {
-        try (var connection = getConnectionViaDriverManager();
-             var stmt = connection.createStatement()) {
+        try (FirebirdConnection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
             connection.setAutoCommit(false);
             stmt.execute("insert into test_rs_metadata (id, long_field) values (1, 1)");
             stmt.execute("insert into test_rs_metadata (id, long_field) values (2, 2)");
             connection.setAutoCommit(true);
 
-            try (var rs = stmt.executeQuery(TEST_QUERY)) {
+            try (ResultSet rs = stmt.executeQuery(TEST_QUERY)) {
                 assertTrue(rs.next(), "Expected a row");
                 ResultSetMetaData metaData = rs.getMetaData();
                 assertEquals(15, metaData.getPrecision(4), "long_field must have precision 15");
