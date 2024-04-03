@@ -28,6 +28,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -221,6 +222,7 @@ abstract class FBDatabaseMetaDataAbstractKeysTest {
 
     static {
         var defaults = new EnumMap<>(KeysMetaData.class);
+        Arrays.stream(KeysMetaData.values()).forEach(key -> defaults.put(key, null));
         defaults.put(KeysMetaData.UPDATE_RULE, DatabaseMetaData.importedKeyNoAction);
         defaults.put(KeysMetaData.DELETE_RULE, DatabaseMetaData.importedKeyNoAction);
         defaults.put(KeysMetaData.DEFERRABILITY, DatabaseMetaData.importedKeyNotDeferrable);

@@ -29,10 +29,12 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.unmodifiableMap;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
@@ -179,8 +181,16 @@ class FBDatabaseMetaDataPrimaryKeysTest {
         }
     }
 
+    private static final Map<PrimaryKeysMetaData, Object> DEFAULT_COLUMN_VALUES;
+
+    static {
+        var defaults = new EnumMap<>(PrimaryKeysMetaData.class);
+        Arrays.stream(PrimaryKeysMetaData.values()).forEach(key -> defaults.put(key, null));
+        DEFAULT_COLUMN_VALUES = unmodifiableMap(defaults);
+    }
+
     private static Map<PrimaryKeysMetaData, Object> getDefaultValidationRules() {
-        return new EnumMap<>(PrimaryKeysMetaData.class);
+        return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
 
     private enum PrimaryKeysMetaData implements MetaDataInfo {
