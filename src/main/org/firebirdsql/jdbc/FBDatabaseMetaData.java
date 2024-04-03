@@ -1325,6 +1325,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GetTypeInfo.create(getDbMetadataMediator()).getTypeInfo();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * <b>Implementation note:</b> The value of {@code FILTER_CONDITION} is populated with the value of
+     * {@code RDB$INDICES.RDB$CONDITION_SOURCE}, which includes the {@code WHERE} keyword and comments before
+     * the {@code WHERE} keyword. This is an implementation detail which may change in the future. That is, Jaybird may
+     * change in the future to only include the condition itself, not the {@code WHERE} keyword, and/or may remove some
+     * or all comments.
+     * </p>
+     */
     @Override
     public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate)
             throws SQLException {

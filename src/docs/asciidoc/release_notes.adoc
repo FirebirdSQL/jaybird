@@ -49,6 +49,9 @@ This feature was backported from Jaybird 6.
 Disabling extended metadata may improve performance of these `ResultSetMetaData` methods in exchange for estimated precision information of `NUMERIC` and `DECIMAL` columns, and not being able to determine the auto-increment status of `INTEGER`, `BIGINT` or `SMALLINT` columns.
 +
 This feature was backported from Jaybird 6.
+* Improvement: The `FILTER_CONDITION` of `DatabaseMetaData.getIndexInfo` is populated for Firebird 5.0 partial indices (https://github.com/FirebirdSQL/jaybird/issues/797[#797])
++
+This improvement was backported from Jaybird 6.
 * ...
 
 [#jaybird-5-0-4-changelog]

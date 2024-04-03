@@ -22,6 +22,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
+import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -32,64 +33,51 @@ import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_TEXT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
+import static org.firebirdsql.util.StringUtils.isNullOrEmpty;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * Provides the implementation of {@link DatabaseMetaData#getIndexInfo(String, String, String, boolean, boolean)}.
+ *
+ * @author Mark Rotteveel
  */
-public final class GetIndexInfo extends AbstractMetadataMethod {
+@SuppressWarnings("java:S1192")
+public abstract class GetIndexInfo extends AbstractMetadataMethod {
+
+    private static final String INDEXINFO = "INDEXINFO";
 
     private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(13, DbMetadataMediator.datatypeCoder)
-            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "INDEXINFO").addField()
-            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "INDEXINFO").addField()
-            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "INDEXINFO").addField()
-            .at(3).simple(SQL_TEXT, 1, "NON_UNIQUE", "INDEXINFO").addField()
-            .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_QUALIFIER", "INDEXINFO").addField()
-            .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_NAME", "INDEXINFO").addField()
-            .at(6).simple(SQL_SHORT, 0, "TYPE", "INDEXINFO").addField()
-            .at(7).simple(SQL_SHORT, 0, "ORDINAL_POSITION", "INDEXINFO").addField()
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", INDEXINFO).addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", INDEXINFO).addField()
+            .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", INDEXINFO).addField()
+            .at(3).simple(SQL_TEXT, 1, "NON_UNIQUE", INDEXINFO).addField()
+            .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_QUALIFIER", INDEXINFO).addField()
+            .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_NAME", INDEXINFO).addField()
+            .at(6).simple(SQL_SHORT, 0, "TYPE", INDEXINFO).addField()
+            .at(7).simple(SQL_SHORT, 0, "ORDINAL_POSITION", INDEXINFO).addField()
             // Field with EXPRESSION_SOURCE (used for expression indexes) in Firebird is actually a blob, using Integer.MAX_VALUE for length
-            .at(8).simple(SQL_VARYING, Integer.MAX_VALUE, "COLUMN_NAME", "INDEXINFO").addField()
-            .at(9).simple(SQL_TEXT | 1, 1, "ASC_OR_DESC", "INDEXINFO").addField()
-            .at(10).simple(SQL_LONG, 0, "CARDINALITY", "INDEXINFO").addField()
-            .at(11).simple(SQL_LONG, 0, "PAGES", "INDEXINFO").addField()
-            .at(12).simple(SQL_VARYING | 1, 31, "FILTER_CONDITION", "INDEXINFO").addField()
+            .at(8).simple(SQL_VARYING, Integer.MAX_VALUE, "COLUMN_NAME", INDEXINFO).addField()
+            .at(9).simple(SQL_TEXT | 1, 1, "ASC_OR_DESC", INDEXINFO).addField()
+            .at(10).simple(SQL_LONG, 0, "CARDINALITY", INDEXINFO).addField()
+            .at(11).simple(SQL_LONG, 0, "PAGES", INDEXINFO).addField()
+            // Field with CONDITION_SOURCE (used for partial indexes) in Firebird is actually a blob, using Integer.MAX_VALUE for length
+            .at(12).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "FILTER_CONDITION", INDEXINFO).addField()
             .toRowDescriptor();
-
-    //@formatter:off
-    private static final String GET_INDEX_INFO_START =
-            "select\n"
-            + "  IND.RDB$RELATION_NAME as TABLE_NAME,\n"
-            + "  IND.RDB$UNIQUE_FLAG as UNIQUE_FLAG,\n"
-            + "  IND.RDB$INDEX_NAME as INDEX_NAME,\n"
-            + "  ISE.RDB$FIELD_POSITION + 1 as ORDINAL_POSITION,\n"
-            + "  ISE.RDB$FIELD_NAME as COLUMN_NAME,\n"
-            + "  IND.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE,\n"
-            + "  IND.RDB$INDEX_TYPE as ASC_OR_DESC\n"
-            + "from RDB$INDICES IND\n"
-            + "left join RDB$INDEX_SEGMENTS ISE on IND.RDB$INDEX_NAME = ISE.RDB$INDEX_NAME "
-            + "where ";
-
-    private static final String GET_INDEX_INFO_END =
-            "\norder by IND.RDB$UNIQUE_FLAG, IND.RDB$INDEX_NAME, ISE.RDB$FIELD_POSITION";
-    //@formatter:on
 
     private GetIndexInfo(DbMetadataMediator mediator) {
         super(ROW_DESCRIPTOR, mediator);
     }
 
+    @SuppressWarnings("unused")
     public ResultSet getIndexInfo(String table, boolean unique, boolean approximate) throws SQLException {
-        if (table == null || "".equals(table)) {
+        if (isNullOrEmpty(table)) {
             return createEmpty();
         }
 
-        Clause tableClause = Clause.equalsClause("IND.RDB$RELATION_NAME", table);
-        String sql = GET_INDEX_INFO_START
-                + tableClause.getCondition(unique)
-                + (unique ? "IND.RDB$UNIQUE_FLAG = 1" : "")
-                + GET_INDEX_INFO_END;
-        MetadataQuery metadataQuery = new MetadataQuery(sql, Clause.parameters(tableClause));
+        MetadataQuery metadataQuery = createIndexInfoQuery(table, unique);
         return createMetaDataResultSet(metadataQuery);
     }
+
+    abstract MetadataQuery createIndexInfoQuery(String table, boolean unique);
 
     @Override
     RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
@@ -128,13 +116,95 @@ public final class GetIndexInfo extends AbstractMetadataMethod {
                 .at(10).set(null)
                 // TODO index 11: query RDB$PAGES for PAGES information?
                 .at(11).set(null)
-                // Firebird has no filtered indexes
-                .at(12).set(null);
+                .at(12).setString(rs.getString("CONDITION_SOURCE"));
 
         return valueBuilder.toRowValue(false);
     }
 
     public static GetIndexInfo create(DbMetadataMediator mediator) {
-        return new GetIndexInfo(mediator);
+        FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
+        // NOTE: Indirection through static method prevents unnecessary classloading
+        if (firebirdSupportInfo.isVersionEqualOrAbove(5, 0)) {
+            return FB5.createInstance(mediator);
+        } else {
+            return FB2_5.createInstance(mediator);
+        }
     }
+
+    private static final class FB2_5 extends GetIndexInfo {
+
+        private static final String GET_INDEX_INFO_START_2_5 =
+                "select\n" +
+                "  IND.RDB$RELATION_NAME as TABLE_NAME,\n" +
+                "  IND.RDB$UNIQUE_FLAG as UNIQUE_FLAG,\n" +
+                "  IND.RDB$INDEX_NAME as INDEX_NAME,\n" +
+                "  ISE.RDB$FIELD_POSITION + 1 as ORDINAL_POSITION,\n" +
+                "  ISE.RDB$FIELD_NAME as COLUMN_NAME,\n" +
+                "  IND.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE,\n" +
+                "  IND.RDB$INDEX_TYPE as ASC_OR_DESC,\n" +
+                "  null as CONDITION_SOURCE\n" +
+                "from RDB$INDICES IND\n" +
+                "left join RDB$INDEX_SEGMENTS ISE on IND.RDB$INDEX_NAME = ISE.RDB$INDEX_NAME where ";
+
+        private static final String GET_INDEX_INFO_END_2_5 =
+                "\norder by IND.RDB$UNIQUE_FLAG, IND.RDB$INDEX_NAME, ISE.RDB$FIELD_POSITION";
+
+        private FB2_5(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetIndexInfo createInstance(DbMetadataMediator mediator) {
+            return new FB2_5(mediator);
+        }
+
+        @Override
+        MetadataQuery createIndexInfoQuery(String table, boolean unique) {
+            Clause tableClause = Clause.equalsClause("IND.RDB$RELATION_NAME", table);
+            String sql = GET_INDEX_INFO_START_2_5
+                         + tableClause.getCondition(unique)
+                         + (unique ? "IND.RDB$UNIQUE_FLAG = 1" : "")
+                         + GET_INDEX_INFO_END_2_5;
+            return new MetadataQuery(sql, Clause.parameters(tableClause));
+        }
+
+    }
+
+    private static final class FB5 extends GetIndexInfo {
+
+        private static final String GET_INDEX_INFO_START_5 =
+                "select\n" +
+                "  trim(trailing from IND.RDB$RELATION_NAME) as TABLE_NAME,\n" +
+                "  IND.RDB$UNIQUE_FLAG as UNIQUE_FLAG,\n" +
+                "  trim(trailing from IND.RDB$INDEX_NAME) as INDEX_NAME,\n" +
+                "  ISE.RDB$FIELD_POSITION + 1 as ORDINAL_POSITION,\n" +
+                "  trim(trailing from ISE.RDB$FIELD_NAME) as COLUMN_NAME,\n" +
+                "  IND.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE,\n" +
+                "  IND.RDB$INDEX_TYPE as ASC_OR_DESC,\n" +
+                "  IND.RDB$CONDITION_SOURCE as CONDITION_SOURCE\n" +
+                "from RDB$INDICES IND\n" +
+                "left join RDB$INDEX_SEGMENTS ISE on IND.RDB$INDEX_NAME = ISE.RDB$INDEX_NAME where ";
+
+        private static final String GET_INDEX_INFO_END_5 =
+                "\norder by IND.RDB$UNIQUE_FLAG, IND.RDB$INDEX_NAME, ISE.RDB$FIELD_POSITION";
+
+        private FB5(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetIndexInfo createInstance(DbMetadataMediator mediator) {
+            return new FB5(mediator);
+        }
+
+        @Override
+        MetadataQuery createIndexInfoQuery(String table, boolean unique) {
+            Clause tableClause = Clause.equalsClause("IND.RDB$RELATION_NAME", table);
+            String sql = GET_INDEX_INFO_START_5
+                         + tableClause.getCondition(unique)
+                         + (unique ? "IND.RDB$UNIQUE_FLAG = 1" : "")
+                         + GET_INDEX_INFO_END_5;
+            return new MetadataQuery(sql, Clause.parameters(tableClause));
+        }
+
+    }
+
 }
