@@ -40,7 +40,7 @@ abstract class AbstractKeysMethod extends AbstractMetadataMethod {
 
     private static final String COLUMNINFO = "COLUMNINFO";
 
-    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(14)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(16)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PKTABLE_CAT", COLUMNINFO).addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PKTABLE_SCHEM", COLUMNINFO).addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_NAME", COLUMNINFO).addField()
@@ -55,6 +55,8 @@ abstract class AbstractKeysMethod extends AbstractMetadataMethod {
             .at(11).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FK_NAME", COLUMNINFO).addField()
             .at(12).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", COLUMNINFO).addField()
             .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", COLUMNINFO).addField()
+            .at(14).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_FK_INDEX_NAME", COLUMNINFO).addField()
+            .at(15).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_PK_INDEX_NAME", COLUMNINFO).addField()
             .toRowDescriptor();
 
     AbstractKeysMethod(DbMetadataMediator mediator) {
@@ -74,6 +76,8 @@ abstract class AbstractKeysMethod extends AbstractMetadataMethod {
                 .at(11).setString(rs.getString("FK_NAME"))
                 .at(12).setString(rs.getString("PK_NAME"))
                 .at(13).setShort(DatabaseMetaData.importedKeyNotDeferrable)
+                .at(14).setString(rs.getString("JB_FK_INDEX_NAME"))
+                .at(15).setString(rs.getString("JB_PK_INDEX_NAME"))
                 .toRowValue(true);
     }
 
@@ -86,8 +90,8 @@ abstract class AbstractKeysMethod extends AbstractMetadataMethod {
      */
     private static Integer mapAction(String firebirdActionName) {
         return switch (firebirdActionName) {
-            // NOTE: Firebird has no "RESTRICT", however this mapping (to importedKeyNoAction) was also present in
-            // the previous implementation, so preserving it just in case.
+            // NOTE: Firebird has no ON UPDATE/DELETE option RESTRICT, but absence of a ON UPDATE/DELETE clause stores
+            // "RESTRICT", which behaves the same as NO ACTION.
             case "RESTRICT", "NO ACTION" -> DatabaseMetaData.importedKeyNoAction;
             case "CASCADE" -> DatabaseMetaData.importedKeyCascade;
             case "SET NULL" -> DatabaseMetaData.importedKeySetNull;

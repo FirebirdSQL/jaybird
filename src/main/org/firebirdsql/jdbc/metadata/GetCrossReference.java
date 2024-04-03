@@ -24,6 +24,8 @@ import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
+
 /**
  * Provides the implementation for {@link java.sql.DatabaseMetaData#getCrossReference(String, String, String, String, String, String)}.
  *
@@ -42,7 +44,9 @@ public final class GetCrossReference extends AbstractKeysMethod {
               RC.RDB$UPDATE_RULE as UPDATE_RULE,
               RC.RDB$DELETE_RULE as DELETE_RULE,
               PK.RDB$CONSTRAINT_NAME as PK_NAME,
-              FK.RDB$CONSTRAINT_NAME as FK_NAME
+              FK.RDB$CONSTRAINT_NAME as FK_NAME,
+              PK.RDB$INDEX_NAME as JB_PK_INDEX_NAME,
+              FK.RDB$INDEX_NAME as JB_FK_INDEX_NAME
             from RDB$RELATION_CONSTRAINTS PK
             inner join RDB$REF_CONSTRAINTS RC
               on PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ
@@ -61,7 +65,7 @@ public final class GetCrossReference extends AbstractKeysMethod {
     }
 
     public ResultSet getCrossReference(String primaryTable, String foreignTable) throws SQLException {
-        if (primaryTable == null || primaryTable.isEmpty() || foreignTable == null || foreignTable.isEmpty()) {
+        if (isNullOrEmpty(primaryTable) || isNullOrEmpty(foreignTable)) {
             return createEmpty();
         }
 

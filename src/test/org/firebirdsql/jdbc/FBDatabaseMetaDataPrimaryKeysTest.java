@@ -44,8 +44,8 @@ import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNext
  */
 class FBDatabaseMetaDataPrimaryKeysTest {
 
-    private static final String UNNAMED_PK_PREFIX = "INTEG_";
-    private static final String UNNAMED_INDEX_PREFIX = "RDB$PRIMARY";
+    private static final String UNNAMED_CONSTRAINT_PREFIX = "INTEG_";
+    private static final String UNNAMED_PK_INDEX_PREFIX = "RDB$PRIMARY";
 
     //@formatter:off
     @RegisterExtension
@@ -116,20 +116,24 @@ class FBDatabaseMetaDataPrimaryKeysTest {
     @Test
     void unnamedSingleColumnPk() throws Exception {
         validateExpectedPrimaryKeys("UNNAMED_SINGLE_COLUMN_PK", List.of(
-                createPrimaryKeysRow("UNNAMED_SINGLE_COLUMN_PK", "ID", 1, UNNAMED_PK_PREFIX, UNNAMED_INDEX_PREFIX)));
+                createPrimaryKeysRow("UNNAMED_SINGLE_COLUMN_PK", "ID", 1, UNNAMED_CONSTRAINT_PREFIX,
+                        UNNAMED_PK_INDEX_PREFIX)));
     }
 
     @Test
     void unnamedMultiColumnPk() throws Exception {
         validateExpectedPrimaryKeys("UNNAMED_MULTI_COLUMN_PK", List.of(
-                createPrimaryKeysRow("UNNAMED_MULTI_COLUMN_PK", "ID1", 1, UNNAMED_PK_PREFIX, UNNAMED_INDEX_PREFIX),
-                createPrimaryKeysRow("UNNAMED_MULTI_COLUMN_PK", "ID2", 2, UNNAMED_PK_PREFIX, UNNAMED_INDEX_PREFIX)));
+                createPrimaryKeysRow("UNNAMED_MULTI_COLUMN_PK", "ID1", 1, UNNAMED_CONSTRAINT_PREFIX,
+                        UNNAMED_PK_INDEX_PREFIX),
+                createPrimaryKeysRow("UNNAMED_MULTI_COLUMN_PK", "ID2", 2, UNNAMED_CONSTRAINT_PREFIX,
+                        UNNAMED_PK_INDEX_PREFIX)));
     }
 
     @Test
     void unnamedPkNamedIndex() throws Exception {
         validateExpectedPrimaryKeys("UNNAMED_PK_NAMED_INDEX", List.of(
-                createPrimaryKeysRow("UNNAMED_PK_NAMED_INDEX", "ID", 1, UNNAMED_PK_PREFIX, "ALT_NAMED_INDEX_3")));
+                createPrimaryKeysRow("UNNAMED_PK_NAMED_INDEX", "ID", 1, UNNAMED_CONSTRAINT_PREFIX,
+                        "ALT_NAMED_INDEX_3")));
     }
 
     @Test
@@ -157,10 +161,10 @@ class FBDatabaseMetaDataPrimaryKeysTest {
         rules.put(PrimaryKeysMetaData.TABLE_NAME, tableName);
         rules.put(PrimaryKeysMetaData.COLUMN_NAME, columnName);
         rules.put(PrimaryKeysMetaData.KEY_SEQ, (short) keySeq);
-        rules.put(PrimaryKeysMetaData.PK_NAME,
-                UNNAMED_PK_PREFIX.equals(pkName) ? Matchers.startsWith(UNNAMED_PK_PREFIX) : pkName);
-        rules.put(PrimaryKeysMetaData.JB_PK_INDEX_NAME,
-                UNNAMED_INDEX_PREFIX.equals(jbIndexName) ? Matchers.startsWith(UNNAMED_INDEX_PREFIX) : jbIndexName);
+        rules.put(PrimaryKeysMetaData.PK_NAME, UNNAMED_CONSTRAINT_PREFIX.equals(pkName)
+                ? Matchers.startsWith(UNNAMED_CONSTRAINT_PREFIX) : pkName);
+        rules.put(PrimaryKeysMetaData.JB_PK_INDEX_NAME, UNNAMED_PK_INDEX_PREFIX.equals(jbIndexName)
+                ? Matchers.startsWith(UNNAMED_PK_INDEX_PREFIX) : jbIndexName);
         return rules;
     }
 

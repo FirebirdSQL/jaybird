@@ -987,6 +987,9 @@ This feature was backported to Jaybird 5.0.5.
 Disabling extended metadata may improve performance of these `ResultSetMetaData` methods in exchange for estimated precision information of `NUMERIC` and `DECIMAL` columns, and not being able to determine the auto-increment status of `INTEGER`, `BIGINT` or `SMALLINT` columns.
 +
 This feature was backported to Jaybird 5.0.5.
+* Improvement: Added column `JB_PK_INDEX_NAME` and `JB_FK_INDEX_NAME` to the result set of to `getImportedKeys`, `getExportedKeys` and `getCrossReference` of `DatabaseMetaData` with the names of the index backing the primary key and foreign key (https://github.com/FirebirdSQL/jaybird/issues/798[#798])
++
+Given this is a non-standard extension, it is advisable to retrieve these columns by name, not by position.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

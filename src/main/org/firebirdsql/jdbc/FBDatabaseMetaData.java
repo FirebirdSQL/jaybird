@@ -1409,16 +1409,46 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GetPrimaryKeys.create(getDbMetadataMediator()).getPrimaryKeys(table);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird defines these additional columns:
+     * <ol start="15">
+     * <li><b>JB_FK_INDEX_NAME</b> String  =&gt; Index backing the foreign key</li>
+     * <li><b>JB_PK_INDEX_NAME</b> String  =&gt; Index backing the primary key</li>
+     * </ol>
+     * </p>
+     */
     @Override
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
         return GetImportedKeys.create(getDbMetadataMediator()).getImportedKeys(table);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird defines these additional columns:
+     * <ol start="15">
+     * <li><b>JB_FK_INDEX_NAME</b> String  =&gt; Index backing the foreign key</li>
+     * <li><b>JB_PK_INDEX_NAME</b> String  =&gt; Index backing the primary key</li>
+     * </ol>
+     * </p>
+     */
     @Override
     public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
         return GetExportedKeys.create(getDbMetadataMediator()).getExportedKeys(table);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird defines these additional columns:
+     * <ol start="15">
+     * <li><b>JB_FK_INDEX_NAME</b> String  =&gt; Index backing the foreign key</li>
+     * <li><b>JB_PK_INDEX_NAME</b> String  =&gt; Index backing the primary key</li>
+     * </ol>
+     * </p>
+     */
     @Override
     public ResultSet getCrossReference(
             String primaryCatalog, String primarySchema, String primaryTable,
