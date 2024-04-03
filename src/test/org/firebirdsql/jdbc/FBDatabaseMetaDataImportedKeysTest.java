@@ -52,7 +52,7 @@ class FBDatabaseMetaDataImportedKeysTest extends FBDatabaseMetaDataAbstractKeysT
 
     static Stream<Arguments> testImportedKeys() {
         return Stream.of(
-                importedKeysTestCase("TABLE_1", List.of()),
+                importedKeysTestCase("TABLE_1", table1Fks()),
                 importedKeysTestCase("doesnotexist", List.of()),
                 importedKeysTestCase("TABLE_2", table2Fks()),
                 importedKeysTestCase("TABLE_3", table3Fks()),
