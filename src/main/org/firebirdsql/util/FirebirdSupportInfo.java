@@ -690,6 +690,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} if partial indices are supported
+     */
+    public boolean supportsPartialIndices() {
+        return isVersionEqualOrAbove(5);
+    }
+
+    /**
      * @return {@code true} when this Firebird version is considered a supported version
      */
     public boolean isSupportedVersion() {

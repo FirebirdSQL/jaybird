@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -80,20 +81,15 @@ class FBDatabaseMetaDataIndexInfoTest {
     private static final String CREATE_UQ_DESC_IDX_TBL_2_COL3_AND_COL2 =
             "CREATE UNIQUE DESCENDING INDEX uq_desc_idx_tbl2_col3_col2 ON index_test_table_2 (column3, column2)";
 
+    private static final String CREATE_PARTIAL_IDX_TBL_2 =
+            "create index IDX_PARTIAL_IDX_TBL_2 on INDEX_TEST_TABLE_2 (COLUMN1) where COLUMN2 is not null";
+
     private static final MetadataResultSetDefinition getIndexInfoDefinition =
             new MetadataResultSetDefinition(IndexInfoMetaData.class);
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
-            CREATE_INDEX_TEST_TABLE_1,
-            CREATE_INDEX_TEST_TABLE_2,
-            CREATE_COMPUTED_IDX_TBL_1,
-            CREATE_UQ_COMPUTED_IDX_TBL_1,
-            CREATE_ASC_IDX_TBL_1_COLUMN2,
-            CREATE_DESC_IDX_TBL_2_ID,
-            CREATE_IDX_TBL_2_COL1_AND_2,
-            CREATE_DESC_COMPUTED_IDX_TBL_2,
-            CREATE_UQ_DESC_IDX_TBL_2_COL3_AND_COL2);
+            getCreateStatements());
 
     private static Connection con;
     private static DatabaseMetaData dbmd;
@@ -112,6 +108,23 @@ class FBDatabaseMetaDataIndexInfoTest {
             con = null;
             dbmd = null;
         }
+    }
+
+    private static List<String> getCreateStatements() {
+        var statements = new ArrayList<>(List.of(
+                CREATE_INDEX_TEST_TABLE_1,
+                CREATE_INDEX_TEST_TABLE_2,
+                CREATE_COMPUTED_IDX_TBL_1,
+                CREATE_UQ_COMPUTED_IDX_TBL_1,
+                CREATE_ASC_IDX_TBL_1_COLUMN2,
+                CREATE_DESC_IDX_TBL_2_ID,
+                CREATE_IDX_TBL_2_COL1_AND_2,
+                CREATE_DESC_COMPUTED_IDX_TBL_2,
+                CREATE_UQ_DESC_IDX_TBL_2_COL3_AND_COL2));
+        if (getDefaultSupportInfo().supportsPartialIndices()) {
+            statements.add(CREATE_PARTIAL_IDX_TBL_2);
+        }
+        return statements;
     }
 
     /**
@@ -178,6 +191,11 @@ class FBDatabaseMetaDataIndexInfoTest {
         expectedIndexInfo.add(createRule(tableName, true, "CMP_IDX_DESC_TEST_TABLE2", "(UPPER(column1))", 1, false));
         expectedIndexInfo.add(createRule(tableName, true, "FK_IDX_TEST_2_COLUMN2_TEST_1", "COLUMN2", 1, true));
         expectedIndexInfo.add(createRule(tableName, true, "IDX_DESC_IDX_TBL2_ID", "ID", 1, false));
+        if (getDefaultSupportInfo().supportsPartialIndices()) {
+            expectedIndexInfo.add(withFilterCondition(
+                    createRule(tableName, true, "IDX_PARTIAL_IDX_TBL_2", "COLUMN1", 1, true),
+                    "where COLUMN2 is not null"));
+        }
         expectedIndexInfo.add(createRule(tableName, true, "IDX_TBL_2_COL1_COL2", "COLUMN1", 1, true));
         expectedIndexInfo.add(createRule(tableName, true, "IDX_TBL_2_COL1_COL2", "COLUMN2", 2, true));
         expectedIndexInfo.add(createRule(tableName, false, "PK_IDX_TEST_2_ID", "ID", 1, true));
@@ -237,6 +255,21 @@ class FBDatabaseMetaDataIndexInfoTest {
         indexRules.put(IndexInfoMetaData.ORDINAL_POSITION, ordinalPosition);
         indexRules.put(IndexInfoMetaData.ASC_OR_DESC, ascending ? "A" : "D");
         return indexRules;
+    }
+
+    /**
+     * Updates {@code rule}, populating its {@code FILTER_CONDITION} rule.
+     *
+     * @param rule
+     *         rule to update
+     * @param filterCondition
+     *         filter condition value
+     * @return {@code rule}
+     */
+    private Map<IndexInfoMetaData, Object> withFilterCondition(Map<IndexInfoMetaData, Object> rule,
+            String filterCondition) {
+        rule.put(IndexInfoMetaData.FILTER_CONDITION, filterCondition);
+        return rule;
     }
     
     private static final Map<IndexInfoMetaData, Object> DEFAULT_COLUMN_VALUES;
