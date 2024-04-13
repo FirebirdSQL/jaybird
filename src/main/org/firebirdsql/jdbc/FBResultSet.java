@@ -32,6 +32,7 @@ import org.firebirdsql.jdbc.field.FBCloseableField;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.jdbc.field.TrimmableField;
+import org.firebirdsql.util.InternalApi;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -109,36 +110,25 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * Creates a new {@code FBResultSet} instance.
      */
     @SuppressWarnings("java:S1141")
-    public FBResultSet(FBConnection connection,
-            FBStatement fbStatement,
-            FbStatement stmt,
-            FBObjectListener.ResultSetListener listener,
-            boolean metaDataQuery,
-            int rsType,
-            int rsConcurrency,
-            int rsHoldability,
-            boolean cached)
-            throws SQLException {
+    @InternalApi
+    public FBResultSet(FBStatement fbStatement, FBObjectListener.ResultSetListener listener, boolean metaDataQuery,
+            int rsType, int rsConcurrency, int rsHoldability) throws SQLException {
+        assert rsType != ResultSet.TYPE_SCROLL_SENSITIVE : "Received unsupported rsType == TYPE_SCROLL_SENSITIVE";
+        this.fbStatement = fbStatement;
+        FbStatement stmt = fbStatement.getStatementHandle();
         try {
-            this.connection = connection;
+            this.connection = (FBConnection) fbStatement.getConnection();
             this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
             cursorName = fbStatement.getCursorName();
             this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
             rowDescriptor = stmt.getRowDescriptor();
             fields = new FBField[rowDescriptor.getCount()];
             colNames = new HashMap<>(rowDescriptor.getCount(), 1);
-            this.fbStatement = fbStatement;
 
-            if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
-                fbStatement.addWarning(FbExceptionBuilder
-                        .forWarning(JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive)
-                        .toSQLException(SQLWarning.class));
-                rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-            }
             boolean serverSideScrollable = rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT && !metaDataQuery
                         && connection != null && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
                         && stmt.supportsFetchScroll();
-            cached = cached || metaDataQuery || !(rsType == TYPE_FORWARD_ONLY || serverSideScrollable);
+            boolean cached = metaDataQuery || !(rsType == TYPE_FORWARD_ONLY || serverSideScrollable);
 
             prepareVars(cached, metaDataQuery);
             if (cached) {
@@ -157,7 +147,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
                 try {
                     rowUpdater = new FBRowUpdater(connection, rowDescriptor, cached, listener);
-                    if (serverSideScrollable && fbFetcher instanceof FBServerScrollFetcher) {
+                    if (fbFetcher instanceof FBServerScrollFetcher) {
                         fbFetcher = new FBUpdatableFetcher(fbFetcher, this, rowDescriptor.createDeletedRowMarker());
                     }
                 } catch (FBResultSetNotUpdatableException ex) {
@@ -170,7 +160,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             this.rsType = rsType;
             this.rsConcurrency = rsConcurrency;
             this.rsHoldability = rsHoldability;
-            this.fetchDirection = fbStatement.getFetchDirection();
+            fetchDirection = fbStatement.getFetchDirection();
         } catch (SQLException e) {
             try {
                 // Ensure cursor is closed to avoid problems with statement reuse
@@ -198,6 +188,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * @param listener
      *         result set listener
      */
+    @InternalApi
     public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows, FBObjectListener.ResultSetListener listener)
             throws SQLException {
         this(rowDescriptor, null, rows, listener, false, false);
@@ -217,6 +208,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * @param rows
      *         row data
      */
+    @InternalApi
     public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
         this(rowDescriptor, rows, null);
     }
@@ -239,6 +231,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * @param retrieveBlobs
      *         {@code true} retrieves the blob data
      */
+    @InternalApi
     public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
             boolean retrieveBlobs) throws SQLException {
         this(rowDescriptor, connection, rows, null, retrieveBlobs, true);
@@ -264,6 +257,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         {@code true} when strings need to be trimmed (generally only for metadata queries)
      * @since 5.0.1
      */
+    @InternalApi
     public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
             FBObjectListener.ResultSetListener listener, boolean retrieveBlobs, boolean trimStrings)
             throws SQLException {

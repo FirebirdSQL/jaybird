@@ -49,7 +49,7 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  * @author David Jencks
  * @author Mark Rotteveel
  */
-@SuppressWarnings("RedundantThrows")
+@SuppressWarnings({ "RedundantThrows", "SqlSourceToSinkFlow" })
 public class FBStatement implements FirebirdStatement {
 
     private static final System.Logger log = System.getLogger(FBStatement.class.getName());
@@ -168,6 +168,11 @@ public class FBStatement implements FirebirdStatement {
     }
 
     protected FBStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) throws SQLException {
+        if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
+            throw new FBDriverNotCapableException(
+                    "Received TYPE_SCROLL_SENSITIVE, but Jaybird does not support this type. This is likely "
+                    + "an implementation bug, so please report this.");
+        }
         this.gdsHelper = c;
 
         this.rsConcurrency = rsConcurrency;
@@ -604,8 +609,8 @@ public class FBStatement implements FirebirdStatement {
                 if (cursorName != null) {
                     fbStatement.setCursorName(cursorName);
                 }
-                return currentRs = new FBResultSet(connection, this, fbStatement, resultSetListener, metaDataQuery,
-                        rsType, rsConcurrency, rsHoldability, false);
+                return currentRs = new FBResultSet(this, resultSetListener, metaDataQuery,
+                        rsType, rsConcurrency, rsHoldability);
             } else if (!specialResult.isEmpty()) {
                 return currentRs = createSpecialResultSet(resultSetListener);
             }
@@ -846,6 +851,17 @@ public class FBStatement implements FirebirdStatement {
     public Connection getConnection() throws SQLException {
         checkValidity();
         return connection;
+    }
+
+    /**
+     * @return Instance of {@link FbStatement} associated with this statement. Can be {@code null} if no statement has
+     * been executed yet.
+     * @throws SQLException
+     *         if this statement is closed
+     */
+    final FbStatement getStatementHandle() throws SQLException {
+        checkValidity();
+        return fbStatement;
     }
 
     void closeResultSet(boolean notifyListener) throws SQLException {
