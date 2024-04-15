@@ -114,6 +114,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         this.standaloneStatement = false;
         this.metaDataQuery = false;
         this.generatedKeys = false;
+        setPoolable(true);
     }
 
     /**
@@ -143,6 +144,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         this.metaDataQuery = metaDataQuery;
         this.standaloneStatement = standaloneStatement;
         this.generatedKeys = generatedKeys;
+        setPoolable(true);
 
         try (LockCloseable ignored = c.withLock()) {
             try {

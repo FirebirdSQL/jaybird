@@ -693,16 +693,6 @@ class FBStatementTest {
     }
 
     /**
-     * Tests if default value of {@link FBStatement#isPoolable()} is {@code false}.
-     */
-    @Test
-    void testIsPoolable_default() throws SQLException {
-        try (Statement stmt = con.createStatement()) {
-            assertFalse(stmt.isPoolable(), "Unexpected value for isPoolable()");
-        }
-    }
-
-    /**
      * Tests {@link FBStatement#isPoolable()} on a closed statement
      * <p>
      * Expected: SQLException statement closed
@@ -717,15 +707,14 @@ class FBStatementTest {
         }
     }
 
-    /**
-     * Tests if calls to {@link org.firebirdsql.jdbc.FBStatement#setPoolable(boolean)} are ignored.
-     */
     @Test
-    void testSetPoolable_ignored() throws SQLException {
-        try (Statement stmt = con.createStatement()) {
+    void poolable_value() throws SQLException {
+        try (var stmt = con.createStatement()) {
+            assertFalse(stmt.isPoolable(), "expected poolable initially false");
             stmt.setPoolable(true);
-
-            assertFalse(stmt.isPoolable(), "Expected isPoolable() to remain false");
+            assertTrue(stmt.isPoolable(), "expected poolable true after set true");
+            stmt.setPoolable(false);
+            assertFalse(stmt.isPoolable(), "expected poolable false after set false");
         }
     }
 
@@ -1039,9 +1028,7 @@ class FBStatementTest {
     void statementTextLongerThan64KB() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsStatementTextLongerThan64K(), "requires long statement text support");
         // For some reason the native implementation can't handle exactly 32KB values, but it can handle 32KB - 1
-        char[] symbols = new char[32 * 1024 - 1];
-        Arrays.fill(symbols, 'X');
-        String text32kb = new String(symbols);
+        String text32kb = "X".repeat(32 * 2024 - 1);
 
         try (Statement stmt = con.createStatement()) {
             ResultSet rs = stmt.executeQuery(

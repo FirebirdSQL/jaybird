@@ -1447,6 +1447,18 @@ class FBPreparedStatementTest {
         }
     }
 
+    @Test
+    void poolable_value() throws SQLException {
+        executeCreateTable(con, CREATE_TABLE);
+        try (var stmt = con.prepareStatement(INSERT_DATA)) {
+            assertTrue(stmt.isPoolable(), "expected poolable initially true");
+            stmt.setPoolable(false);
+            assertFalse(stmt.isPoolable(), "expected poolable false after set false");
+            stmt.setPoolable(true);
+            assertTrue(stmt.isPoolable(), "expected poolable true after set true");
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);
         try (var pstmt = con.prepareStatement(INSERT_DATA)) {

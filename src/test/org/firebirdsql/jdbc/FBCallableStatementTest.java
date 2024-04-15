@@ -1148,6 +1148,18 @@ class FBCallableStatementTest {
         }
     }
 
+    @Test
+    void poolable_value() throws SQLException {
+        executeDDL(con, CREATE_PROCEDURE);
+        try (var stmt = con.prepareCall(EXECUTE_PROCEDURE)) {
+            assertTrue(stmt.isPoolable(), "expected poolable initially true");
+            stmt.setPoolable(false);
+            assertFalse(stmt.isPoolable(), "expected poolable false after set false");
+            stmt.setPoolable(true);
+            assertTrue(stmt.isPoolable(), "expected poolable true after set true");
+        }
+    }
+
     static Stream<String> scrollableCursorPropertyValues() {
         // We are unconditionally emitting SERVER, to check if the value behaves appropriately on versions that do
         // not support server-side scrollable cursors

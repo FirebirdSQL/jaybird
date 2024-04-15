@@ -993,6 +993,10 @@ This improvement was backported to Jaybird 5.0.5.
 * Improvement: Added column `JB_PK_INDEX_NAME` and `JB_FK_INDEX_NAME` to the result set of to `getImportedKeys`, `getExportedKeys` and `getCrossReference` of `DatabaseMetaData` with the names of the index backing the primary key and foreign key (https://github.com/FirebirdSQL/jaybird/issues/798[#798])
 +
 Given this is a non-standard extension, it is advisable to retrieve these columns by name, not by position.
+* Improvement: `isPoolable()` on `PreparedStatement` and `CallableStatement` now returns the default of `true` -- `Statement` returns `false` -- as required by JDBC, and `setPoolable` records the value set to be returned by `isPoolable` (https://github.com/FirebirdSQL/jaybird/issues/803[#803])
++
+To be clear, Jaybird does not provide statement pooling.
+This is change is only about returning and recording the poolable information for JDBC compliance, so it can be used by -- for example -- connection pool implementations that provide statement pooling.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

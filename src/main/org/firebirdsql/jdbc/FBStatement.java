@@ -72,6 +72,7 @@ public class FBStatement implements FirebirdStatement {
     private boolean escapedProcessing = true;
     private volatile boolean closeOnCompletion;
     private boolean currentStatementGeneratedKeys;
+    private boolean poolable;
 
 	protected SQLWarning firstWarning;
 
@@ -906,14 +907,18 @@ public class FBStatement implements FirebirdStatement {
 
     @Override
     public boolean isPoolable() throws SQLException {
-        checkValidity();
-        return false;
+        try (var ignored = withLock()) {
+            checkValidity();
+            return poolable;
+        }
     }
 
     @Override
     public void setPoolable(boolean poolable) throws SQLException {
-        checkValidity();
-        // ignore the hint
+        try (var ignored = withLock()) {
+            checkValidity();
+            this.poolable = poolable;
+        }
     }
 
     @Override
