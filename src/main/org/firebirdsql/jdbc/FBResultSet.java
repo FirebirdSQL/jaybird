@@ -77,8 +77,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     // closed is false until the close method is invoked
     private volatile boolean closed = false;
 
-    private SQLWarning firstWarning;
-
     private final FBField[] fields;
     private final List<FBCloseableField> closeableFields = new ArrayList<>();
     private final Map<String, Integer> colNames;
@@ -811,14 +809,22 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return getField(columnName).getBinaryStream();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * <b>NOTE:</b> The implementation currently always returns {@code null} as warnings are never recorded for result
+     * sets.
+     * </p>
+     */
     @Override
     public SQLWarning getWarnings() throws SQLException {
-        return firstWarning;
+        // Warnings are never recorded
+        return null;
     }
 
     @Override
     public void clearWarnings() throws SQLException {
-        firstWarning = null;
+        // nothing to do
     }
 
     @Override
@@ -1922,14 +1928,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         }
 
         return iface.cast(this);
-    }
-
-    protected void addWarning(SQLWarning warning) {
-        if (firstWarning == null) {
-            firstWarning = warning;
-        } else {
-            firstWarning.setNextWarning(warning);
-        }
     }
 
     private static SQLException typeNotSupported(String typeName) {
