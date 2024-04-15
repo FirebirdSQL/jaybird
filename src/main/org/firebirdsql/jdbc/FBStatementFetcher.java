@@ -331,7 +331,7 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
         return fetchSize;
     }
 
-    private SQLException notScrollable() {
+    private static SQLException notScrollable() {
         return FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
                 .toSQLException();
     }

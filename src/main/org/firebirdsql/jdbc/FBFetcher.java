@@ -23,10 +23,10 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import java.sql.SQLException;
 
 /**
- * Instances of this class are able to fetch records from the server.
+ * Instances of this interface fetch records from the server.
  */
-public sealed interface FBFetcher
-        permits FBCachedFetcher, FBServerScrollFetcher, FBStatementFetcher, FBUpdatableFetcher {
+public sealed interface FBFetcher permits FBCachedFetcher, FBServerScrollFetcher, FBStatementFetcher,
+        FBUpdatableFetcher, ForwardOnlyFetcherDecorator {
 
     int DEFAULT_FETCH_ROWS = 400;
 

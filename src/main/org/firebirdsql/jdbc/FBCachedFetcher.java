@@ -18,9 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -41,16 +39,14 @@ import static org.firebirdsql.jaybird.util.ConditionalHelpers.firstNonZero;
 
 final class FBCachedFetcher implements FBFetcher {
 
-    private final boolean forwardOnly;
     private List<RowValue> rows;
     private int rowNum;
     private int fetchSize;
     private FBObjectListener.FetcherListener fetcherListener;
 
     FBCachedFetcher(GDSHelper gdsHelper, int fetchSize, int maxRows, FbStatement stmtHandle,
-            FBObjectListener.FetcherListener fetcherListener, boolean forwardOnly) throws SQLException {
+            FBObjectListener.FetcherListener fetcherListener) throws SQLException {
         this.fetcherListener = fetcherListener;
-        this.forwardOnly = forwardOnly;
         final RowDescriptor rowDescriptor = stmtHandle.getRowDescriptor();
 
         // Check if there is blobs to catch
@@ -109,7 +105,6 @@ final class FBCachedFetcher implements FBFetcher {
                 : "Need non-null rowDescriptor and gdsHelper for retrieving blobs";
         this.rows = new ArrayList<>(rows);
         this.fetcherListener = fetcherListener;
-        forwardOnly = false;
         if (retrieveBlobs) {
             final boolean[] isBlob = new boolean[rowDescriptor.getCount()];
             final boolean hasBlobs = determineBlobs(rowDescriptor, isBlob);
@@ -192,8 +187,6 @@ final class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean previous() throws SQLException {
-        checkScrollable();
-
         if (isEmpty()) {
             return false;
         }
@@ -219,8 +212,6 @@ final class FBCachedFetcher implements FBFetcher {
     }
 
     private boolean setRowNum(int row) throws SQLException {
-        checkScrollable();
-
         if (row < 0) {
             row = rows.size() + row + 1;
         }
@@ -410,14 +401,4 @@ final class FBCachedFetcher implements FBFetcher {
         }
     }
 
-    /**
-     * Checks if the result set is scrollable, otherwise throws an {@code SQLException}.
-     * @throws SQLException If the result set is {@code TYPE_FORWARD_ONLY}.
-     */
-    private void checkScrollable() throws SQLException {
-        if (forwardOnly) {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
-                    .toSQLException();
-        }
-    }
 }

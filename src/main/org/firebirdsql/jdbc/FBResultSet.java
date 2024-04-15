@@ -129,15 +129,16 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
             prepareVars(cached, metaDataQuery);
             if (cached) {
-                fbFetcher = new FBCachedFetcher(gdsHelper, fbStatement.fetchSize, fbStatement.maxRows, stmt, this,
-                        behavior.isForwardOnly());
+                fbFetcher = new FBCachedFetcher(gdsHelper, fbStatement.fetchSize, fbStatement.maxRows, stmt, this);
+                if (behavior.isForwardOnly()) {
+                    fbFetcher = new ForwardOnlyFetcherDecorator(fbFetcher);
+                }
             } else if (serverSideScrollable) {
                 fbFetcher = new FBServerScrollFetcher(fbStatement.fetchSize, fbStatement.maxRows, stmt, this);
             } else if (fbStatement.isUpdatableCursor()) {
                 fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, stmt, this, fbStatement.maxRows,
                         fbStatement.fetchSize);
             } else {
-                assert behavior.isForwardOnly() : "Expected TYPE_FORWARD_ONLY";
                 fbFetcher = new FBStatementFetcher(gdsHelper, stmt, this, fbStatement.maxRows, fbStatement.fetchSize);
             }
 
