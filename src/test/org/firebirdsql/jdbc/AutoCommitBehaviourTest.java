@@ -21,12 +21,16 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertResultSetClosed;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertResultSetOpen;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.CoreMatchers.is;
@@ -82,54 +86,65 @@ class AutoCommitBehaviourTest {
     /**
      * Executing another statement in autocommit should close any previously opened result set if it isn't holdable.
      */
-    @Test
-    void testDifferentStatementExecution_ClosesResultSet() throws Exception {
-        // Check actual holdability, for example OOConnection forces HOLD_CURSORS_OVER_COMMIT always
+    @ParameterizedTest
+    @ValueSource(ints = { ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.TYPE_FORWARD_ONLY })
+    void testDifferentStatementExecution_ClosesResultSet(int resultSetType) throws Exception {
         assumeThat("Test requires ResultSet.CLOSE_CURSORS_AT_COMMIT", connection.getHoldability(),
                 is(ResultSet.CLOSE_CURSORS_AT_COMMIT));
 
-        Statement stmt1 = connection.createStatement();
-        Statement stmt2 = connection.createStatement();
+        var stmt1 = connection.createStatement(resultSetType, ResultSet.CONCUR_READ_ONLY);
+        assertEquals(resultSetType, stmt1.getResultSetType(), "stmt1.getResultSetType");
+        var stmt2 = connection.createStatement(resultSetType, ResultSet.CONCUR_READ_ONLY);
+        assertEquals(resultSetType, stmt2.getResultSetType(), "stmt2.getResultSetType");
 
-        ResultSet rs1 = stmt1.executeQuery(SELECT_ALL_ID_TABLE);
-        assertTrue(rs1.next(), "Expected a row");
-        assertFalse(rs1.isClosed(), "Expected rs1 open");
+        var rs1 = stmt1.executeQuery(SELECT_ALL_ID_TABLE);
+        assertEquals(resultSetType, rs1.getType(), "rs1.getType");
+        assertNextRow(rs1);
+        assertResultSetOpen(rs1, "Expected rs1 open");
 
-        ResultSet rs2 = stmt2.executeQuery(SELECT_ALL_ID_TABLE);
+        var rs2 = stmt2.executeQuery(SELECT_ALL_ID_TABLE);
+        assertEquals(resultSetType, rs2.getType(), "rs2.getType");
 
-        assertTrue(rs1.isClosed(), "Expected rs1 closed");
+        assertResultSetClosed(rs1, "Expected rs1 closed by execution of stmt2");
 
-        SQLException exception = assertThrows(SQLException.class, rs1::next, "Expected exception on rs1.next()");
+        var exception = assertThrows(SQLException.class, rs1::next, "Expected exception on rs1.next()");
         assertThat(exception, message(equalTo("The result set is closed")));
 
         for (int count = 1; count <= MAX_ID; count++) {
-            assertTrue(rs2.next(), "Expected true for rs2.next() nr " + count);
+            assertNextRow(rs2, "Expected true for rs2.next() nr " + count);
         }
     }
 
     /**
      * Executing another statement in autocommit and the result set is holdable should keep it open.
      */
-    @Test
-    void testHoldableDifferentStatementExecution_ResultSetRemainsOpen() throws Exception {
+    @ParameterizedTest
+    @ValueSource(ints = { ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.TYPE_FORWARD_ONLY })
+    void testHoldableDifferentStatementExecution_ResultSetRemainsOpen(int resultSetType) throws Exception {
         connection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
-        Statement stmt1 = connection.createStatement();
-        Statement stmt2 = connection.createStatement();
+        // TYPE_FORWARD_ONLY is upgraded to TYPE_SCROLL_INSENSITIVE
+        final int expectedType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+        var stmt1 = connection.createStatement(resultSetType, ResultSet.CONCUR_READ_ONLY);
+        assertEquals(expectedType, stmt1.getResultSetType(), "stmt1.getResultSetType");
+        var stmt2 = connection.createStatement(resultSetType, ResultSet.CONCUR_READ_ONLY);
+        assertEquals(expectedType, stmt2.getResultSetType(), "stmt2.getResultSetType");
 
-        ResultSet rs1 = stmt1.executeQuery(SELECT_ALL_ID_TABLE);
-        assertTrue(rs1.next(), "Expected a row");
-        assertFalse(rs1.isClosed(), "Expected rs1 open");
+        var rs1 = stmt1.executeQuery(SELECT_ALL_ID_TABLE);
+        assertEquals(expectedType, rs1.getType(), "rs1.getType");
+        assertNextRow(rs1);
+        assertResultSetOpen(rs1, "Expected rs1 open");
 
-        ResultSet rs2 = stmt2.executeQuery(SELECT_ALL_ID_TABLE);
+        var rs2 = stmt2.executeQuery(SELECT_ALL_ID_TABLE);
+        assertEquals(expectedType, rs2.getType(), "rs2.getType");
 
-        assertFalse(rs1.isClosed(), "Expected rs1 open");
+        assertResultSetOpen(rs1, "Expected rs1 open");
 
         for (int count = 2; count <= MAX_ID; count++) {
-            assertTrue(rs1.next(), "Expected true for rs1.next() nr " + count);
+            assertNextRow(rs1, "Expected true for rs1.next() nr " + count);
         }
 
         for (int count = 1; count <= MAX_ID; count++) {
-            assertTrue(rs2.next(), "Expected true for rs2.next() nr " + count);
+            assertNextRow(rs2, "Expected true for rs2.next() nr " + count);
         }
     }
 }

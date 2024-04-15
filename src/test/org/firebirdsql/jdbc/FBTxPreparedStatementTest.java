@@ -37,6 +37,13 @@ import java.io.Reader;
 import java.sql.*;
 import java.util.stream.Stream;
 
+import static java.sql.ResultSet.CLOSE_CURSORS_AT_COMMIT;
+import static java.sql.ResultSet.CONCUR_READ_ONLY;
+import static java.sql.ResultSet.CONCUR_UPDATABLE;
+import static java.sql.ResultSet.HOLD_CURSORS_OVER_COMMIT;
+import static java.sql.ResultSet.TYPE_FORWARD_ONLY;
+import static java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE;
+import static java.sql.ResultSet.TYPE_SCROLL_SENSITIVE;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
@@ -216,6 +223,13 @@ class FBTxPreparedStatementTest {
         }
     }
 
+    private static Stream<Arguments> resultSetTypeConcurrencyHoldability() {
+        return Stream.of(
+                Arguments.of(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY, CLOSE_CURSORS_AT_COMMIT),
+                Arguments.of(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE, HOLD_CURSORS_OVER_COMMIT),
+                Arguments.of(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE, HOLD_CURSORS_OVER_COMMIT));
+    }
+
     @Test
     void getConnection() throws Exception {
         assertEquals(connection, commitStmt.getConnection());
@@ -230,14 +244,6 @@ class FBTxPreparedStatementTest {
             assertDoesNotThrow(() -> pstmt.setPoolable(true));
             assertTrue(pstmt.isPoolable(), "Expected statement poolable");
         }
-    }
-
-    private static Stream<Arguments> resultSetTypeConcurrencyHoldability() {
-        return Stream.of(
-                Arguments.of(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY,
-                        ResultSet.CLOSE_CURSORS_AT_COMMIT),
-                Arguments.of(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE,
-                        ResultSet.HOLD_CURSORS_OVER_COMMIT));
     }
 
     @ParameterizedTest(name = "{0}")
