@@ -84,9 +84,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     private final String cursorName;
     private final FBObjectListener.ResultSetListener listener;
 
-    private final int rsType;
-    private final int rsConcurrency;
-    private final int rsHoldability;
+    private final ResultSetBehavior behavior;
     private int fetchDirection = ResultSet.FETCH_FORWARD;
 
     @Override
@@ -109,9 +107,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     @SuppressWarnings("java:S1141")
     @InternalApi
-    public FBResultSet(FBStatement fbStatement, FBObjectListener.ResultSetListener listener, boolean metaDataQuery,
-            int rsType, int rsConcurrency, int rsHoldability) throws SQLException {
-        assert rsType != ResultSet.TYPE_SCROLL_SENSITIVE : "Received unsupported rsType == TYPE_SCROLL_SENSITIVE";
+    public FBResultSet(FBStatement fbStatement, FBObjectListener.ResultSetListener listener, boolean metaDataQuery)
+            throws SQLException {
         this.fbStatement = fbStatement;
         FbStatement stmt = fbStatement.getStatementHandle();
         try {
@@ -123,26 +120,28 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             fields = new FBField[rowDescriptor.getCount()];
             colNames = new HashMap<>(rowDescriptor.getCount(), 1);
 
-            boolean serverSideScrollable = rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT && !metaDataQuery
-                        && connection != null && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
-                        && stmt.supportsFetchScroll();
-            boolean cached = metaDataQuery || !(rsType == TYPE_FORWARD_ONLY || serverSideScrollable);
+            ResultSetBehavior behavior = fbStatement.resultSetBehavior();
+            boolean serverSideScrollable =
+                    behavior.isScrollable() && behavior.isCloseCursorsAtCommit() && !metaDataQuery
+                    && connection != null && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
+                    && stmt.supportsFetchScroll();
+            boolean cached = metaDataQuery || behavior.isScrollable() && !serverSideScrollable;
 
             prepareVars(cached, metaDataQuery);
             if (cached) {
                 fbFetcher = new FBCachedFetcher(gdsHelper, fbStatement.fetchSize, fbStatement.maxRows, stmt, this,
-                        rsType == ResultSet.TYPE_FORWARD_ONLY);
-            } else if (serverSideScrollable && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) {
+                        behavior.isForwardOnly());
+            } else if (serverSideScrollable) {
                 fbFetcher = new FBServerScrollFetcher(fbStatement.fetchSize, fbStatement.maxRows, stmt, this);
             } else if (fbStatement.isUpdatableCursor()) {
                 fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, stmt, this, fbStatement.maxRows,
                         fbStatement.fetchSize);
             } else {
-                assert rsType == ResultSet.TYPE_FORWARD_ONLY : "Expected TYPE_FORWARD_ONLY";
+                assert behavior.isForwardOnly() : "Expected TYPE_FORWARD_ONLY";
                 fbFetcher = new FBStatementFetcher(gdsHelper, stmt, this, fbStatement.maxRows, fbStatement.fetchSize);
             }
 
-            if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
+            if (behavior.isUpdatable()) {
                 try {
                     rowUpdater = new FBRowUpdater(connection, rowDescriptor, cached, listener);
                     if (fbFetcher instanceof FBServerScrollFetcher) {
@@ -152,12 +151,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
                     fbStatement.addWarning(FbExceptionBuilder
                             .forWarning(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)
                             .toSQLException(SQLWarning.class));
-                    rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+                    behavior = behavior.withReadOnly();
                 }
             }
-            this.rsType = rsType;
-            this.rsConcurrency = rsConcurrency;
-            this.rsHoldability = rsHoldability;
+            this.behavior = behavior;
             fetchDirection = fbStatement.getFetchDirection();
         } catch (SQLException e) {
             try {
@@ -271,9 +268,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         colNames = new HashMap<>(rowDescriptor.getCount(), 1);
         prepareVars(true, trimStrings);
         // TODO Set specific types (see also previous todo)
-        rsType = ResultSet.TYPE_FORWARD_ONLY;
-        rsConcurrency = ResultSet.CONCUR_READ_ONLY;
-        rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+        behavior = ResultSetBehavior.of(
+                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT);
     }
 
     private void prepareVars(boolean cached, boolean trimStrings) throws SQLException {
@@ -346,7 +342,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         if ResultSet is not scrollable
      */
     protected void checkScrollable() throws SQLException {
-        if (rsType == ResultSet.TYPE_FORWARD_ONLY) {
+        if (behavior.isForwardOnly()) {
             throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
                     .toSQLException();
         }
@@ -1039,19 +1035,22 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return fbFetcher.getFetchSize();
     }
 
+    @SuppressWarnings("MagicConstant")
     @Override
     public int getType() throws SQLException {
-        return rsType;
+        return behavior.type();
     }
 
+    @SuppressWarnings("MagicConstant")
     @Override
     public int getConcurrency() throws SQLException {
-        return rsConcurrency;
+        return behavior.concurrency();
     }
 
+    @SuppressWarnings("MagicConstant")
     @Override
     public int getHoldability() throws SQLException {
-        return rsHoldability;
+        return behavior.holdability();
     }
 
     @Override

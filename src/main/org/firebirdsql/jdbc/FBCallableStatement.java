@@ -55,15 +55,11 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     protected FBProcedureCall procedureCall;
 
-    protected FBCallableStatement(GDSHelper c, String sql, int rsType,
-            int rsConcurrency, int rsHoldability, 
-            StoredProcedureMetaData storedProcMetaData,
-            FBObjectListener.StatementListener statementListener, 
-            FBObjectListener.BlobListener blobListener) 
-    throws SQLException {
-        super(c, rsType, rsConcurrency, rsHoldability, statementListener, blobListener);
-
-        FBEscapedCallParser parser = new FBEscapedCallParser();
+    protected FBCallableStatement(GDSHelper c, String sql, ResultSetBehavior rsBehavior,
+            StoredProcedureMetaData storedProcMetaData, FBObjectListener.StatementListener statementListener,
+            FBObjectListener.BlobListener blobListener) throws SQLException {
+        super(c, rsBehavior, statementListener, blobListener);
+        var parser = new FBEscapedCallParser();
 
         // here statement is parsed twice, once in c.nativeSQL(...)
         // and second time in parser.parseCall(...)... not nice, maybe

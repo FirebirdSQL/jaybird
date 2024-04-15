@@ -34,6 +34,7 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
+import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 
 import java.sql.*;
@@ -63,7 +64,7 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_TX_ACTIVE;
  * @author David Jencks
  * @author Mark Rotteveel
  */
-@SuppressWarnings("RedundantThrows")
+@SuppressWarnings({ "RedundantThrows", "SqlSourceToSinkFlow" })
 public class FBConnection implements FirebirdConnection {
 
     private static final System.Logger log = System.getLogger(FBConnection.class.getName());
@@ -674,8 +675,7 @@ public class FBConnection implements FirebirdConnection {
     }
 
     @Override
-    public Statement createStatement(int resultSetType,
-            int resultSetConcurrency) throws SQLException {
+    public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
         return createStatement(resultSetType, resultSetConcurrency, this.resultSetHoldability);
     }
 
@@ -684,52 +684,16 @@ public class FBConnection implements FirebirdConnection {
             throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT &&
-                    resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
-
-                addWarning(FbExceptionBuilder
-                        .forWarning(JaybirdErrorCodes.jb_resultSetTypeUpgradeReasonHoldability)
-                        .toSQLException(SQLWarning.class));
-                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-            }
-
-            if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) {
-                addWarning(FbExceptionBuilder
-                        .forWarning(JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive)
-                        .toSQLException(SQLWarning.class));
-                resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-            }
-
-            checkHoldability(resultSetType, resultSetHoldability);
-
-            Statement stmt = new FBStatement(getGDSHelper(), resultSetType, resultSetConcurrency, resultSetHoldability,
-                    txCoordinator);
-
+            var stmt = new FBStatement(getGDSHelper(),
+                    toResultSetBehavior(resultSetType, resultSetConcurrency, resultSetHoldability), txCoordinator);
             activeStatements.add(stmt);
             return stmt;
         }
     }
 
-    /**
-     * Check whether result set type and holdability are compatible.
-     *
-     * @param resultSetType
-     *         desired result set type.
-     * @param resultSetHoldability
-     *         desired result set holdability.
-     * @throws SQLException
-     *         if specified result set type and holdability are not compatible.
-     */
-    private void checkHoldability(int resultSetType, int resultSetHoldability) throws SQLException {
-        boolean holdable = resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT;
-
-        boolean notScrollable = resultSetType != ResultSet.TYPE_SCROLL_INSENSITIVE;
-
-        if (holdable && notScrollable) {
-            // TODO jaybird error code
-            throw new FBDriverNotCapableException(
-                    "Holdable cursors are supported only for scrollable insensitive result sets.");
-        }
+    private ResultSetBehavior toResultSetBehavior(int resultSetType, int resultSetConcurrency, int resultSetHoldability)
+            throws SQLException {
+        return ResultSetBehavior.of(resultSetType, resultSetConcurrency, resultSetHoldability, this::addWarning);
     }
 
     @Override
@@ -799,23 +763,20 @@ public class FBConnection implements FirebirdConnection {
             int resultSetHoldability, boolean metaData, boolean generatedKeys) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-
-            Optional<PreparedStatement> txStmt =
-                    prepareIfTransactionStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+            ResultSetBehavior rsBehavior =
+                    toResultSetBehavior(resultSetType, resultSetConcurrency, resultSetHoldability);
+            Optional<PreparedStatement> txStmt = prepareIfTransactionStatement(sql, rsBehavior);
             if (txStmt.isPresent()) return txStmt.get();
-
-            resultSetType = verifyResultSetType(resultSetType, resultSetHoldability);
-            checkHoldability(resultSetType, resultSetHoldability);
 
             FBObjectListener.StatementListener coordinator = txCoordinator;
             FBObjectListener.BlobListener blobCoordinator = txCoordinator;
             if (metaData) {
-                coordinator =  new InternalTransactionCoordinator.MetaDataTransactionCoordinator(txCoordinator);
+                coordinator =  new MetaDataTransactionCoordinator(txCoordinator);
                 blobCoordinator = null;
             }
 
-            var stmt = new FBPreparedStatement(getGDSHelper(), sql, resultSetType, resultSetConcurrency,
-                    resultSetHoldability, coordinator, blobCoordinator, metaData, false, generatedKeys);
+            var stmt = new FBPreparedStatement(getGDSHelper(), sql, rsBehavior, coordinator, blobCoordinator, metaData,
+                    false, generatedKeys);
 
             activeStatements.add(stmt);
             return stmt;
@@ -831,12 +792,8 @@ public class FBConnection implements FirebirdConnection {
      *
      * @param sql
      *         statement text
-     * @param resultSetType
-     *         result set type
-     * @param resultSetConcurrency
-     *         result set concurrency
-     * @param resultSetHoldability
-     *         result set holdability
+     * @param rsBehavior
+     *         result set behavior
      * @return non-empty with a prepared statement which can execute the equivalent of {@code sql} if {@code sql}
      * contains a transaction management statement, empty if the statement was not a transaction management statement
      * @throws SQLException
@@ -844,12 +801,11 @@ public class FBConnection implements FirebirdConnection {
      *         execution of transaction management statements
      * @since 6
      */
-    private Optional<PreparedStatement> prepareIfTransactionStatement(String sql, int resultSetType,
-            int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+    private Optional<PreparedStatement> prepareIfTransactionStatement(String sql, ResultSetBehavior rsBehavior)
+            throws SQLException {
         LocalStatementType localStatementType = StatementDetector.determineLocalStatementType(sql);
         if (localStatementType.statementClass() == LocalStatementClass.TRANSACTION_BOUNDARY) {
-            PreparedStatement stmt = prepareTxStatement(sql, localStatementType, resultSetType,
-                    resultSetConcurrency, resultSetHoldability);
+            PreparedStatement stmt = prepareTxStatement(sql, localStatementType, rsBehavior);
             activeStatements.add(stmt);
             return Optional.of(stmt);
         }
@@ -868,23 +824,18 @@ public class FBConnection implements FirebirdConnection {
      *         statement text
      * @param statementType
      *         statement type for {@code sql} as previous determined
-     * @param resultSetType
-     *         result set type
-     * @param resultSetConcurrency
-     *         result set concurrency
-     * @param resultSetHoldability
-     *         result set holdability
+     * @param rsBehavior
+     *         result set behavior
      * @return a prepared statement handle which can execute the equivalent of {@code sql} if {@code sql} contains
      * a transaction management statement
      * @throws SQLException
      *         if the connection configuration does not allow execution of transaction management statements
      * @since 6
      */
-    private PreparedStatement prepareTxStatement(String sql, LocalStatementType statementType, int resultSetType,
-            int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+    private PreparedStatement prepareTxStatement(String sql, LocalStatementType statementType,
+            ResultSetBehavior rsBehavior) throws SQLException {
         if (isAllowTxStmts()) {
-            return new FBTxPreparedStatement(this, statementType, sql, resultSetType, resultSetConcurrency,
-                    resultSetHoldability);
+            return new FBTxPreparedStatement(this, statementType, sql, rsBehavior);
         }
         int errorCode = switch (statementType) {
             case HARD_COMMIT -> JaybirdErrorCodes.jb_commitStatementNotAllowed;
@@ -893,23 +844,6 @@ public class FBConnection implements FirebirdConnection {
             default -> throw new IllegalArgumentException("Unexpected statementType: " + statementType);
         };
         throw FbExceptionBuilder.forNonTransientException(errorCode).toSQLException();
-    }
-
-    private int verifyResultSetType(int resultSetType, int resultSetHoldability) {
-        if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT
-            && resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
-            addWarning(FbExceptionBuilder
-                    .forWarning(JaybirdErrorCodes.jb_resultSetTypeUpgradeReasonHoldability)
-                    .toSQLException(SQLWarning.class));
-            return ResultSet.TYPE_SCROLL_INSENSITIVE;
-        } else if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) {
-            addWarning(FbExceptionBuilder
-                    .forWarning(JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive)
-                    .toSQLException(SQLWarning.class));
-            return ResultSet.TYPE_SCROLL_INSENSITIVE;
-        } else {
-            return resultSetType;
-        }
     }
 
     @Override
@@ -927,25 +861,22 @@ public class FBConnection implements FirebirdConnection {
             // explicitly don't allow them, even if FBCallableStatement were to change so execution could work.
             FBStatement.rejectIfTxStmt(sql, JaybirdErrorCodes.jb_prepareCallWithTxStmt);
 
-            resultSetType = verifyResultSetType(resultSetType, resultSetHoldability);
-
-            if (resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) {
+            ResultSetBehavior rsBehavior =
+                    toResultSetBehavior(resultSetType, resultSetConcurrency, resultSetHoldability);
+            if (rsBehavior.isUpdatable()) {
                 addWarning(FbExceptionBuilder
                         .forWarning(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonStoredProcedure)
                         .toSQLException(SQLWarning.class));
-                resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
+                rsBehavior = rsBehavior.withReadOnly();
             }
-
-            checkHoldability(resultSetType, resultSetHoldability);
 
             if (storedProcedureMetaData == null) {
                 storedProcedureMetaData = StoredProcedureMetaDataFactory.getInstance(this);
             }
 
-            FBCallableStatement stmt = new FBCallableStatement(getGDSHelper(), sql, resultSetType, resultSetConcurrency,
-                    resultSetHoldability, storedProcedureMetaData, txCoordinator, txCoordinator);
+            var stmt = new FBCallableStatement(getGDSHelper(), sql, rsBehavior, storedProcedureMetaData, txCoordinator,
+                    txCoordinator);
             activeStatements.add(stmt);
-
             return stmt;
         }
     }

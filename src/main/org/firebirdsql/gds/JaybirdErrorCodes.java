@@ -118,6 +118,9 @@ public interface JaybirdErrorCodes {
     int jb_statementNotAssociatedWithConnection          = 337248318;
     int jb_addBatchWithTxStmt       = 337248319;
     int jb_prepareCallWithTxStmt    = 337248320;
+    int jb_invalidResultSetType     = 337248321;
+    int jb_invalidResultSetConcurrency                   = 337248322;
+    int jb_invalidResultSetHoldability                   = 337248323;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

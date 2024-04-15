@@ -58,16 +58,14 @@ final class FBTxPreparedStatement implements FirebirdPreparedStatement {
     private final int localStatementId;
     private final LocalStatementType statementType;
     private final String sql;
-    private final int resultSetType;
-    private final int resultSetConcurrency;
-    private final int resultSetHoldability;
+    private final ResultSetBehavior rsBehavior;
 
     private volatile boolean closed;
     private boolean closeOnCompletion;
     private boolean poolable = true;
 
-    FBTxPreparedStatement(FBConnection connection, LocalStatementType statementType, String sql, int resultSetType,
-            int resultSetConcurrency, int resultSetHoldability) {
+    FBTxPreparedStatement(FBConnection connection, LocalStatementType statementType, String sql,
+            ResultSetBehavior rsBehavior) {
         if (statementType.statementClass() != LocalStatementClass.TRANSACTION_BOUNDARY) {
             throw new IllegalArgumentException("Unsupported value for statementType (implementation bug): "
                     + statementType);
@@ -76,9 +74,7 @@ final class FBTxPreparedStatement implements FirebirdPreparedStatement {
         localStatementId = FBStatement.nextLocalStatementId();
         this.statementType = statementType;
         this.sql = sql;
-        this.resultSetType = resultSetType;
-        this.resultSetConcurrency = resultSetConcurrency;
-        this.resultSetHoldability = resultSetHoldability;
+        this.rsBehavior = rsBehavior;
     }
 
     @Override
@@ -207,22 +203,24 @@ final class FBTxPreparedStatement implements FirebirdPreparedStatement {
         return new FBParameterMetaData(connection.getFbDatabase().emptyRowDescriptor(), connection);
     }
 
+    @SuppressWarnings("MagicConstant")
     @Override
     public int getResultSetType() throws SQLException {
         checkValidity();
-        return resultSetType;
+        return rsBehavior.type();
     }
 
+    @SuppressWarnings("MagicConstant")
     @Override
     public int getResultSetConcurrency() throws SQLException {
         checkValidity();
-        return resultSetConcurrency;
+        return rsBehavior.concurrency();
     }
 
     @Override
     public int getResultSetHoldability() throws SQLException {
         checkValidity();
-        return resultSetHoldability;
+        return rsBehavior.holdability();
     }
 
     @Override

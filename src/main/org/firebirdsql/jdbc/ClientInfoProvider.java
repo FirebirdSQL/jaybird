@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
 
 import java.sql.ClientInfoStatus;
 import java.sql.ResultSet;
@@ -85,12 +86,12 @@ final class ClientInfoProvider {
     private Statement getStatement() throws SQLException {
         Statement statement = this.statement;
         if (statement != null && !statement.isClosed()) return statement;
-        InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator =
-                new InternalTransactionCoordinator.MetaDataTransactionCoordinator(connection.txCoordinator);
+        var metaDataTransactionCoordinator = new MetaDataTransactionCoordinator(connection.txCoordinator);
         // Create statement which piggybacks on active transaction, starts one when needed, but does not commit (not
         // even in auto-commit)
-        return this.statement = new FBStatement(connection.getGDSHelper(), ResultSet.TYPE_SCROLL_INSENSITIVE,
-                ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT, metaDataTransactionCoordinator);
+        var rsBehavior = ResultSetBehavior.of(
+                ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT);
+        return this.statement = new FBStatement(connection.getGDSHelper(), rsBehavior, metaDataTransactionCoordinator);
     }
 
     /**
@@ -175,6 +176,7 @@ final class ClientInfoProvider {
     /**
      * Implementation of {@link FBConnection#getClientInfo(String)}.
      */
+    @SuppressWarnings("SqlSourceToSinkFlow")
     public String getClientInfo(String name) throws SQLException {
         ClientInfoProperty property;
         try {
@@ -219,6 +221,7 @@ final class ClientInfoProvider {
     /**
      * Implementation of {@link FBConnection#getClientInfo()}.
      */
+    @SuppressWarnings("SqlSourceToSinkFlow")
     public Properties getClientInfo() throws SQLException {
         boolean autoCommit = connection.getAutoCommit();
         QuoteStrategy quoteStrategy = connection.getQuoteStrategy();
@@ -327,8 +330,8 @@ final class ClientInfoProvider {
         executeSetClientInfo(propertyValues);
     }
 
-    private void executeSetClientInfo(Map<ClientInfoProperty, String> propertyValues)
-            throws SQLException {
+    @SuppressWarnings("SqlSourceToSinkFlow")
+    private void executeSetClientInfo(Map<ClientInfoProperty, String> propertyValues) throws SQLException {
         QuoteStrategy quoteStrategy = connection.getQuoteStrategy();
         var sb = new StringBuilder("""
                 execute block

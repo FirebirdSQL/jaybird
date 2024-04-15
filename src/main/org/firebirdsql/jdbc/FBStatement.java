@@ -92,9 +92,7 @@ public class FBStatement implements FirebirdStatement {
     private int maxFieldSize;
     private String cursorName;
 
-    private final int rsConcurrency;
-    private final int rsType;
-    private final int rsHoldability;
+    private final ResultSetBehavior rsBehavior;
     private int fetchDirection = ResultSet.FETCH_FORWARD;
 
     private final FBObjectListener.ResultSetListener resultSetListener = new RSListener();
@@ -168,18 +166,10 @@ public class FBStatement implements FirebirdStatement {
         }
     }
 
-    protected FBStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) throws SQLException {
-        if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
-            throw new FBDriverNotCapableException(
-                    "Received TYPE_SCROLL_SENSITIVE, but Jaybird does not support this type. This is likely "
-                    + "an implementation bug, so please report this.");
-        }
+    protected FBStatement(GDSHelper c, ResultSetBehavior rsBehavior,
+            FBObjectListener.StatementListener statementListener) throws SQLException {
         this.gdsHelper = c;
-
-        this.rsConcurrency = rsConcurrency;
-        this.rsType = rsType;
-        this.rsHoldability = rsHoldability;
-
+        this.rsBehavior = rsBehavior;
         this.statementListener = statementListener;
 
         // TODO Find out if connection is actually ever null, because some parts of the code expect it not to be null
@@ -610,8 +600,7 @@ public class FBStatement implements FirebirdStatement {
                 if (cursorName != null) {
                     fbStatement.setCursorName(cursorName);
                 }
-                return currentRs = new FBResultSet(this, resultSetListener, metaDataQuery,
-                        rsType, rsConcurrency, rsHoldability);
+                return currentRs = new FBResultSet(this, resultSetListener, metaDataQuery);
             } else if (!specialResult.isEmpty()) {
                 return currentRs = createSpecialResultSet(resultSetListener);
             }
@@ -759,19 +748,29 @@ public class FBStatement implements FirebirdStatement {
         return fetchSize;
     }
 
+    @SuppressWarnings("MagicConstant")
     @Override
     public int getResultSetConcurrency() throws  SQLException {
-        return rsConcurrency;
+        return rsBehavior.concurrency();
     }
 
+    @SuppressWarnings("MagicConstant")
     @Override
     public int getResultSetType()  throws  SQLException {
-        return rsType;
+        return rsBehavior.type();
     }
 
     @Override
     public int getResultSetHoldability() throws SQLException {
-        return rsHoldability;
+        return rsBehavior.holdability();
+    }
+
+    /**
+     * @return result set behavior for this statement
+     * @since 6
+     */
+    final ResultSetBehavior resultSetBehavior() {
+        return rsBehavior;
     }
 
     private List<String> batchList = new ArrayList<>();
@@ -1008,9 +1007,9 @@ public class FBStatement implements FirebirdStatement {
     }
 
     protected boolean needsScrollableCursorEnabled() {
-        return rsType != ResultSet.TYPE_FORWARD_ONLY && rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT
-                && connection != null && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
-                && fbStatement.supportsFetchScroll();
+        return rsBehavior.isScrollable() && rsBehavior.isCloseCursorsAtCommit()
+               && connection != null && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
+               && fbStatement.supportsFetchScroll();
     }
 
     protected void addWarning(SQLWarning warning) {

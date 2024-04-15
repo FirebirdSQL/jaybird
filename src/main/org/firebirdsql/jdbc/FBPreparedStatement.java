@@ -88,28 +88,24 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     private Batch batch;
 
     /**
-     * Create instance of this class for the specified result set type and 
-     * concurrency. This constructor is used only in {@link FBCallableStatement}
-     * since the statement is prepared right before the execution.
-     * 
-     * @param c instance of {@link GDSHelper} that will be used to perform all
-     * database activities.
-     * 
-     * @param rsType desired result set type.
-     * @param rsConcurrency desired result set concurrency.
-     * 
-     * @param statementListener statement listener that will be notified about
-     * the statement start, close and completion.
-     * 
-     * @throws SQLException if something went wrong.
+     * Create instance of this class for the specified result set type and concurrency. This constructor is used only in
+     * {@link FBCallableStatement} since the statement is prepared right before the execution.
+     *
+     * @param c
+     *         instance of {@link GDSHelper} that will be used to perform all database activities
+     * @param rsBehavior
+     *         result set behavior
+     * @param statementListener
+     *         statement listener that will be notified about the statement start, close and completion
+     * @param blobListener
+     *         blob listener that will be notified about the statement start and completion
+     * @throws SQLException
+     *         if something went wrong.
      */
-    protected FBPreparedStatement(GDSHelper c, int rsType,
-            int rsConcurrency, int rsHoldability,
-            FBObjectListener.StatementListener statementListener,
-            FBObjectListener.BlobListener blobListener)
+    protected FBPreparedStatement(GDSHelper c, ResultSetBehavior rsBehavior,
+            FBObjectListener.StatementListener statementListener, FBObjectListener.BlobListener blobListener)
             throws SQLException {
-        
-        super(c, rsType, rsConcurrency, rsHoldability, statementListener);
+        super(c, rsBehavior, statementListener);
         this.blobListener = blobListener;
         this.standaloneStatement = false;
         this.metaDataQuery = false;
@@ -119,27 +115,30 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     /**
      * Create instance of this class and prepare SQL statement.
-     * 
+     *
      * @param c
-     *            connection to be used.
+     *         connection to be used
      * @param sql
-     *            SQL statement to prepare.
-     * @param rsType
-     *            type of result set to create.
-     * @param rsConcurrency
-     *            result set concurrency.
-     * 
+     *         SQL statement to prepare
+     * @param rsBehavior
+     *         result set behavior
+     * @param statementListener
+     *         statement listener that will be notified about the statement start, close and completion
+     * @param blobListener
+     *         blob listener that will be notified about the statement start and completion
+     * @param metaDataQuery
+     *         {@code true} for a metadata query, {@code false} for a normal query
+     * @param standaloneStatement
+     *         {@code true} for a standalone statement (should only be used when {@code metaDataQuery == true})
+     * @param generatedKeys
+     *         {@code true} if this statement produces a generated keys result set
      * @throws SQLException
-     *             if something went wrong.
+     *         if something went wrong.
      */
-    protected FBPreparedStatement(GDSHelper c, String sql, int rsType,
-            int rsConcurrency, int rsHoldability,
-            FBObjectListener.StatementListener statementListener,
-            FBObjectListener.BlobListener blobListener,
-            boolean metaDataQuery, boolean standaloneStatement, boolean generatedKeys)
-            throws SQLException {
-        super(c, rsType, rsConcurrency, rsHoldability, statementListener);
-
+    protected FBPreparedStatement(GDSHelper c, String sql, ResultSetBehavior rsBehavior,
+            FBObjectListener.StatementListener statementListener, FBObjectListener.BlobListener blobListener,
+            boolean metaDataQuery, boolean standaloneStatement, boolean generatedKeys) throws SQLException {
+        super(c, rsBehavior, statementListener);
         this.blobListener = blobListener;
         this.metaDataQuery = metaDataQuery;
         this.standaloneStatement = standaloneStatement;

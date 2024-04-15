@@ -23,6 +23,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.Version;
+import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.util.FirebirdSupportInfo;
@@ -1876,11 +1877,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
             }
 
-            InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator =
-                    new InternalTransactionCoordinator.MetaDataTransactionCoordinator(connection.txCoordinator);
-
-            FBPreparedStatement newStatement = new FBPreparedStatement(gdsHelper, sql,
-                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT,
+            var metaDataTransactionCoordinator = new MetaDataTransactionCoordinator(connection.txCoordinator);
+            var newStatement = new FBPreparedStatement(gdsHelper, sql, ResultSetBehavior.of(
+                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT),
                     metaDataTransactionCoordinator, metaDataTransactionCoordinator, true, standalone, false);
 
             if (!standalone) {

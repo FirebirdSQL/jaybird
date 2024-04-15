@@ -1441,7 +1441,6 @@ When in doubt, use `false` to communicate that no such synchronization is requir
 * The no-arg constructor of `FBXAException` was removed
 * `FBResultSet`
 ** The constructors are now all marked as internal API, as they effectively already were due to arguments of internal API classes
-** The constructor `FBResultSet(FBConnection, FBStatement, FbStatement, FBObjectListener.ResultSetListener, boolean, int, int, int, boolean)` was replaced by `FBResultSet(FBStatement, FBObjectListener.ResultSetListener, boolean, int, int, int)`
 ** `close(boolean)` was removed;
 use `close(boolean, CompletionReason)`
 * `UnixCrypt` was replaced by `LegacyHash`, which only performs the password hash specific to Firebird legacy authentication

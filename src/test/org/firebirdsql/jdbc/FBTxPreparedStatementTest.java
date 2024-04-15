@@ -215,9 +215,10 @@ class FBTxPreparedStatementTest {
 
     @ParameterizedTest
     @MethodSource
-    void resultSetTypeConcurrencyHoldability(int type, int concurrency, int holdability) throws SQLException {
+    void resultSetTypeConcurrencyHoldability(int type, int concurrency, int holdability, int expectedType)
+            throws SQLException {
         try (var pstmt = connection.prepareStatement("commit", type, concurrency, holdability)) {
-            assertEquals(type, pstmt.getResultSetType(), "result set type");
+            assertEquals(expectedType, pstmt.getResultSetType(), "result set type");
             assertEquals(concurrency, pstmt.getResultSetConcurrency(), "result set concurrency");
             assertEquals(holdability, pstmt.getResultSetHoldability(), "result set holdability");
         }
@@ -225,9 +226,16 @@ class FBTxPreparedStatementTest {
 
     private static Stream<Arguments> resultSetTypeConcurrencyHoldability() {
         return Stream.of(
-                Arguments.of(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY, CLOSE_CURSORS_AT_COMMIT),
-                Arguments.of(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE, HOLD_CURSORS_OVER_COMMIT),
-                Arguments.of(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE, HOLD_CURSORS_OVER_COMMIT));
+                Arguments.of(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY, CLOSE_CURSORS_AT_COMMIT, TYPE_FORWARD_ONLY),
+                Arguments.of(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY, HOLD_CURSORS_OVER_COMMIT, TYPE_SCROLL_INSENSITIVE),
+                Arguments.of(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE, CLOSE_CURSORS_AT_COMMIT,
+                        TYPE_SCROLL_INSENSITIVE),
+                Arguments.of(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE, HOLD_CURSORS_OVER_COMMIT,
+                        TYPE_SCROLL_INSENSITIVE),
+                Arguments.of(TYPE_SCROLL_SENSITIVE, CONCUR_READ_ONLY, CLOSE_CURSORS_AT_COMMIT,
+                        TYPE_SCROLL_INSENSITIVE),
+                Arguments.of(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE, HOLD_CURSORS_OVER_COMMIT,
+                        TYPE_SCROLL_INSENSITIVE));
     }
 
     @Test
