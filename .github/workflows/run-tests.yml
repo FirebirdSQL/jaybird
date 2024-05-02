@@ -21,7 +21,7 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@85cde3f5a1033b2adc2442631c24b530f1183a1a
+        uses: gradle/actions/wrapper-validation@db19848a5fa7950289d3668fb053140cf3028d43
       - name: Build with Gradle
         run: ./gradlew test -Ptest.dbondocker=true -Ptest.db.dir=/firebird/data
       - name: Cleanup Gradle Cache
