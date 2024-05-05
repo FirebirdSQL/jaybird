@@ -1,0 +1,108 @@
+= JDP-2024-02: Create database through JDBC URL
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+In Jaybird 5 and earlier, it is possible to create a new database using the `FBManager` class.
+This requires access to this class, either directly or through reflection.
+
+It would be handy to have a way to create a database through use of the JDBC API only (so no extension APIs or Jaybird-specific classes or methods), for example to create database in third-party JDBC tools or libraries without Jaybird/Firebird specific support.
+
+Although Firebird has a https://firebirdsql.org/file/documentation/html/en/refdocs/fblangref50/firebird-50-language-reference.html[`CREATE DATABASE` statement^], in reality this is partially handled by `fbclient.dll`/`libfbclient.so`, which will parse out information to send an `op_create` request to the server (or the equivalent internal call to the engine in case of embedded), and then use "`execute immediate`" with a modified version of the `CREATE DATABASE` statement on that newly created database for the final initialization.
+This split of responsibilities between client and server is also the reason executing a `CREATE DATABASE` statement on an existing JDBC connection does not work.
+
+Some options of the `CREATE DATABASE` statement have equivalent DPB items, but other items can only be configured with the modified `CREATE DATABASE` statement (or a later `ALTER DATABASE` statement).
+These DPB items can usually also be specified on normal connections, and are applied if the connecting user has admin rights, or is the database owner.
+
+In Firebird, database are isolated from each other, so it is not possible to switch a connection between databases (catalogs).
+
+For comparison, other JDBC drivers offer options like:
+
+* Connection property to create database if it doesn't currently exist:
++
+--
+[horizontal]
+MySQL::
+Boolean property https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-connection.html#cj-conn-prop_createDatabaseIfNotExist[`createDatabaseIfNotExist`^]
+--
+* Automatically create database if it doesn't currently exist:
++
+--
+[horizontal]
+H2::
+For embedded mode only (see http://h2database.com/html/features.html#database_only_if_exists[Opening a Database Only if it Already Exists^]).
+HSQLDB::
+For embedded mode only (see http://hsqldb.org/doc/2.0/guide/running-chapt.html#rgc_new_db[Creating a New Database^]).
+--
+* Support executing `CREATE DATABASE` or equivalent:
++
+--
+[horizontal]
+PostgreSQL::
+After executing `CREATE DATABASE`, the connection still points to the initial database of the connection.
+Requires switching the catalog with `Connection.setCatalog(...)`.
+SQL Server::
+Same as PostgreSQL.
+--
+
+== Decision
+
+Jaybird adds a Boolean connection property `createDatabaseIfNotExist` which defaults to `false`.
+When set to `true`, if the connection cannot be created because the database does not exist, Jaybird will try to create a database.
+This property will be added as a JDBC connection property and as a getter/setter pair for data sources.
+
+In addition, to allow connection properties which are only applied when creating a database, connections properties ending in `@create` (case-sensitive) can override the "`normal`" connection properties with the name before `@create`.
+For data sources, these properties will need to be set as non-standard properties.
+
+The following properties cannot be overridden by `@create` properties:
+
+* `serverName` (alias: `host`)
+* `portNumber` (alias: `port`)
+* `attachObjectName` (alias: `databaseName`, `serviceName`, `database`)
+
+That is, a missing database cannot trigger the creation of a different database (other database name or server).
+Using a different user (with `user@create` and `password@create`) than the normal user, or a different role (with `roleName@create`) is explicitly and intentionally supported.
+
+The "`attach`" otherwise "`create`" decision is made in the XCA layer, specifically -- for the current implementation -- in the constructor of `FBManagedConnection`.
+This may be moved elsewhere in the XCA layer if needed during implementation or at a later time.
+
+=== Rejected design decisions
+
+The following alternatives or options were considered, but rejected:
+
+Support creating a new database with an existing connection::
+Intercept the `CREATE DATABASE` statement and handle it in a similar manner as `fbclient` does.
+With the following subdivision of solutions:
+Switch the connection to the new database:::
+This might cause confusion/problems, especially if the connection is held in a connection pool (e.g. it is returned to the pool, and the next user assumes it is connected to the original DB, while it is connected to the new DB).
+Keep the connection to the original database:::
+This will cause confusion because the user likely expects that subsequent statements are executed against the new DB.
+With the lack of catalog support, it is also impossible to switch to that new database with the existing connection.
+Terminate/kill connection after execution:::
+Avoids the confusion of the previous points, but is not very user-friendly.
+Allow "`database-less`" connections::
+In this solution, a (virtual) connection can be made to -- for example -- `jdbc:firebird://localhost/`, and that connection can only be used to create a new database.
+After executing a `CREATE DATABASE` statement, the connection will switch to that new database.
++
+This is complex to implement, and results in an inconsistent API between real connections and "`database-less`" connections.
+For example, it allows database creation on one connection, but not another, and the majority of JDBC methods on such connections will not work or not work correctly.
+Allow `CREATE DATABASE` statement in connection property::
+This would give more flexibility in configuring the newly created database, but would require client-side parsing, and potential confusion with ignoring things like the database name in the statement, and precedence of properties specified in the connection properties vs in the `CREATE DATABASE` statement.
++
+This might be an idea for a future improvement or extension.
+
+== Consequences
+
+Jaybird will support database creation through the connection property `createDatabaseIfNotExist`, and allow overriding the normal connection properties by adding those properties with names suffixed with `@create`.
+
+Jaybird may restrict under what conditions or errors it will create a new database.
+Unfortunately, the non-existence of a database is not a clear and specific error, or `isc_io_error`/`335544344` is not specific and possibly other errors maybe raised when the database does not exist, so we may need to refine this in later releases.
+As such, the conditions when creation of a database is attempted is an implementation decision that may change with point releases.
