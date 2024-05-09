@@ -896,7 +896,7 @@ For more information, see also https://github.com/FirebirdSQL/jaybird/blob/maste
 [#create-database-if-not-exist]
 === Connection property `createDatabaseIfNotExist`
 
-The connection property `createDatabaseIfNotExist` is a Boolean property to instruct Jaybird to attempt to create the database if it does not exist yet.
+The Boolean connection property `createDatabaseIfNotExist` instructs Jaybird to attempt to create the database if it does not exist yet.
 This property can be used in the JDBC URL, in the `Properties` object passed to `DriverManager`, and can be set on data sources.
 
 Although Jaybird already allowed you to create databases using `org.firebirdsql.management.FBManager`, this is not always accessible, for example in tools or libraries that only expose or use the JDBC API.
@@ -919,6 +919,14 @@ try (Connection connection = DriverManager.getConnection(
 ----
 
 If the database already exists, the connection will be made with user `normaluser`, but if the database does not exist, the database will be created with user `sysdba`.
+
+[IMPORTANT]
+====
+The errors Firebird returns do not make it possible to determine definitively if the database does not exist, or if there is another reason that the connection failed.
+Jaybird applies some simple rules to exclude some classes of errors, and not attempt to create a database in those cases.
+
+If you find cases where you think Jaybird should not (or on the contrary should) attempt to create a database, please report them on https://github.com/FirebirdSQL/jaybird/issues[^].
+====
 
 For more information, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-02-create-database-through-jdbc-url.adoc[jdp-2024-02: Create database through JDBC URL^].
 
