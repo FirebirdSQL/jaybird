@@ -611,7 +611,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @return {@code true} if execution of {@code COMMIT [WORK]}, {@code ROLLBACK [WORK]} or
      * {@code SET TRANSACTION [..]} is allowed, {@code false} (default) to throw an exception when attempting to execute
      * or prepare such statements
-     * @see #setAllowTxStmts(boolean) 
+     * @see #setAllowTxStmts(boolean)
      * @since 6
      */
     default boolean isAllowTxStmts() {
@@ -639,9 +639,9 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * </p>
      *
      * @param allowTxStmts
-     *      {@code true} to allow execution of {@code COMMIT [WORK]}, {@code ROLLBACK [WORK]} or
-     *      {@code SET TRANSACTION [..]}, {@code false} (default) to throw an exception when attempting to execute or
-     *      prepare such statements
+     *         {@code true} to allow execution of {@code COMMIT [WORK]}, {@code ROLLBACK [WORK]} or
+     *         {@code SET TRANSACTION [..]}, {@code false} (default) to throw an exception when attempting to execute or
+     *         prepare such statements
      * @since 6
      */
     default void setAllowTxStmts(boolean allowTxStmts) {
@@ -677,6 +677,40 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      */
     default void setExtendedMetadata(boolean extendedMetadata) {
         setBooleanProperty(PropertyNames.extendedMetadata, extendedMetadata);
+    }
+
+    /**
+     * @return {@code false} (default) if failure to connect does nothing, {@code true} if some classes of connection
+     * failures will result in an attempt to create the database
+     * @see #setCreateDatabaseIfNotExist(boolean)
+     * @since 6
+     */
+    default boolean isCreateDatabaseIfNotExist() {
+        return getBooleanProperty(PropertyNames.createDatabaseIfNotExist,
+                PropertyConstants.DEFAULT_CREATE_DATABASE_IF_NOT_EXIST);
+    }
+
+    /**
+     * Sets if an attempt should be made to create a database if it does not exist.
+     * <p>
+     * If the connection fails because the database cannot be opened, Jaybird will attempt to create the database.
+     * Additional or overridden properties can be set using {@link #setProperty(String, String)} by suffixing the
+     * property name with {@code @create}.
+     * </p>
+     * <p>
+     * As Firebird does not clearly report that a database does not exist (e.g. it may exist, but not be accessible to
+     * the server, etc.), and the errors may be OS-specific, the attempt to create may fail. Jaybird may try to use some
+     * heuristics to avoid creation for some errors, but this is an implementation details which may change in point
+     * releases.
+     * </p>
+     *
+     * @param createDatabaseIfNotExist
+     *         {@code false} (default) if failure to connect does nothing, {@code true} if some classes of connection
+     *         failures will result in an attempt to create the database
+     * @since 6
+     */
+    default void setCreateDatabaseIfNotExist(boolean createDatabaseIfNotExist) {
+        setBooleanProperty(PropertyNames.createDatabaseIfNotExist, createDatabaseIfNotExist);
     }
 
 }

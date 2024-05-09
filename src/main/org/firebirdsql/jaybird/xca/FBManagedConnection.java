@@ -52,6 +52,7 @@ import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A physical connection handle to a Firebird database, providing a {@code XAResource}.
@@ -97,8 +98,13 @@ public final class FBManagedConnection implements ExceptionListener {
     private volatile boolean inDistributedTransaction = false;
 
     FBManagedConnection(FBConnectionRequestInfo cri, FBManagedConnectionFactory mcf) throws SQLException {
-        this.mcf = mcf;
-        this.cri = getCombinedConnectionRequestInfo(cri);
+        this(cri, mcf, false);
+    }
+
+    FBManagedConnection(FBConnectionRequestInfo cri, FBManagedConnectionFactory mcf, boolean createDb)
+            throws SQLException {
+        this.mcf = requireNonNull(mcf, "mcf");
+        this.cri = requireNonNull(cri, "cri");
         tpb = mcf.getDefaultTpb();
         transactionIsolation = mcf.getDefaultTransactionIsolation();
 
@@ -123,7 +129,11 @@ public final class FBManagedConnection implements ExceptionListener {
         database = mcf.getDatabaseFactory().connect(connectionProperties);
         database.addDatabaseListener(new MCDatabaseListener());
         database.addExceptionListener(this);
-        database.attach();
+        if (createDb) {
+            database.createDatabase();
+        } else {
+            database.attach();
+        }
 
         gdsHelper = new GDSHelper(database);
     }
@@ -135,13 +145,6 @@ public final class FBManagedConnection implements ExceptionListener {
             notify(connectionErrorOccurredNotifier,
                     new XcaConnectionEvent(this, XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED, ex));
         }
-    }
-
-    private FBConnectionRequestInfo getCombinedConnectionRequestInfo(FBConnectionRequestInfo cri) throws SQLException {
-        if (cri == null) {
-            return mcf.getDefaultConnectionRequestInfo();
-        }
-        return cri;
     }
 
     /**
@@ -825,7 +828,7 @@ public final class FBManagedConnection implements ExceptionListener {
 
         boolean next() throws SQLException {
             if (hasNext()) {
-                currentRow = Objects.requireNonNull(rows.pollFirst(), "row");
+                currentRow = requireNonNull(rows.pollFirst(), "row");
                 return true;
             }
             currentRow = null;

@@ -27,9 +27,11 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 import org.firebirdsql.jdbc.*;
 
 import javax.sql.DataSource;
@@ -46,7 +48,10 @@ import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -80,6 +85,10 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
      * map.
      */
     private static final String DEFAULT_CONNECTION_MANAGER_TYPE = "CONNECTION_MANAGER_TYPE";
+    /**
+     * Suffix of properties that are applied when creating a database if createDatabaseIfNotExist = true.
+     */
+    private static final String DB_CREATE_PROPERTY_SUFFIX = "@create";
 
     private XcaConnectionManager defaultCm;
     private int hashCode;
@@ -348,8 +357,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
      * @see #createManagedConnection(FBConnectionRequestInfo)
      */
     public FBManagedConnection createManagedConnection() throws SQLException {
-        start();
-        return new FBManagedConnection(null, this);
+        return createManagedConnection(null);
     }
 
     /**
@@ -368,7 +376,100 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
     public FBManagedConnection createManagedConnection(FBConnectionRequestInfo connectionRequestInfo)
             throws SQLException {
         start();
-        return new FBManagedConnection(connectionRequestInfo, this);
+        if (connectionRequestInfo == null) {
+            connectionRequestInfo = getDefaultConnectionRequestInfo();
+        }
+        try {
+            return new FBManagedConnection(connectionRequestInfo, this);
+        } catch (SQLException e) {
+            return createNewDatabaseIfRequested(connectionRequestInfo, e);
+        }
+    }
+
+    private FBManagedConnection createNewDatabaseIfRequested(FBConnectionRequestInfo originalCri,
+            SQLException originalConnectionFailure) throws SQLException {
+        IConnectionProperties props = originalCri.asIConnectionProperties();
+        if (!(props.isCreateDatabaseIfNotExist() && signalsDatabaseDoesNotExist(originalConnectionFailure))) {
+            throw originalConnectionFailure;
+        }
+
+        try {
+            return new FBManagedConnection(createDatabaseConnectionRequestInfo(props), this, true);
+        } catch (SQLException e) {
+            e.addSuppressed(originalConnectionFailure);
+            throw e;
+        }
+    }
+
+    // Error codes that report connection failures not related to the existence of the database
+    private static final int[] ERROR_CODES_NOT_RELATED_TO_DB_EXISTENCE = {
+            ISCConstants.isc_login, ISCConstants.isc_network_error, ISCConstants.isc_connect_reject,
+            ISCConstants.isc_net_read_err, ISCConstants.isc_net_write_err, ISCConstants.isc_net_connect_err };
+    static {
+        Arrays.sort(ERROR_CODES_NOT_RELATED_TO_DB_EXISTENCE);
+    }
+
+    /**
+     * Checks if {@code exception} signals that the database possibly does not exist.
+     *
+     * @param exception
+     *         exception
+     * @return {@code true} if the exception signals that the database possibly does not exist
+     */
+    private static boolean signalsDatabaseDoesNotExist(SQLException exception) {
+        int errorCode = exception.getErrorCode();
+        // TODO In case of isc_io_error, check message for OS errors that indicate the DB does exist?
+        return errorCode == ISCConstants.isc_io_error
+               || Arrays.binarySearch(ERROR_CODES_NOT_RELATED_TO_DB_EXISTENCE, errorCode) < 0;
+    }
+
+    private static FBConnectionRequestInfo createDatabaseConnectionRequestInfo(
+            IConnectionProperties originalProperties) {
+        IConnectionProperties newProperties = originalProperties.asNewMutable();
+        for (Map.Entry<ConnectionProperty, Object> entry : originalProperties.connectionPropertyValues().entrySet()) {
+            asCreateOverrideProperty(entry.getKey()).map(ConnectionProperty::name).ifPresent(name -> {
+                Object value = entry.getValue();
+                if (value == null) {
+                    newProperties.setProperty(name, null);
+                } else if (value instanceof String s) {
+                    newProperties.setProperty(name, s);
+                } else if (value instanceof Boolean b) {
+                    newProperties.setBooleanProperty(name, b);
+                } else if (value instanceof Integer i) {
+                    newProperties.setIntProperty(name, i);
+                } else {
+                    // Not expected to occur, but just in case
+                    newProperties.setProperty(name, String.valueOf(value));
+                }
+            });
+        }
+        return new FBConnectionRequestInfo(newProperties);
+    }
+
+    // Property names which are not allowed to be overridden when creating a database
+    private static final Set<String> DISALLOW_CREATE_OVERRIDE =
+            Set.of(PropertyNames.attachObjectName, PropertyNames.serverName, PropertyNames.portNumber);
+
+    /**
+     * Returns the property to override if the name of {@code property} ends in {@code @create} and is allowed to be
+     * overridden.
+     *
+     * @param property
+     *         property
+     * @return the property to be overridden, or empty if this is not an {@code @create} property, or if the property is
+     * not allowed to be overridden
+     */
+    private static Optional<ConnectionProperty> asCreateOverrideProperty(ConnectionProperty property) {
+        String originalName = property.name();
+        if (originalName.endsWith(DB_CREATE_PROPERTY_SUFFIX)) {
+            String name = originalName.substring(0, originalName.length() - DB_CREATE_PROPERTY_SUFFIX.length());
+            ConnectionProperty override = ConnectionPropertyRegistry.getInstance().getOrUnknown(name);
+            if (DISALLOW_CREATE_OVERRIDE.contains(override.name())) {
+                return Optional.empty();
+            }
+            return Optional.of(override);
+        }
+        return Optional.empty();
     }
 
     @Serial

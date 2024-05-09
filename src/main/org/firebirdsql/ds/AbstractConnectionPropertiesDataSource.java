@@ -476,6 +476,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setExtendedMetadata(extendedMetadata);
     }
 
+    @Override
+    public boolean isCreateDatabaseIfNotExist() {
+        return FirebirdConnectionProperties.super.isCreateDatabaseIfNotExist();
+    }
+
+    @Override
+    public void setCreateDatabaseIfNotExist(boolean createDatabaseIfNotExist) {
+        FirebirdConnectionProperties.super.setCreateDatabaseIfNotExist(createDatabaseIfNotExist);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated(since = "5")
     @Override

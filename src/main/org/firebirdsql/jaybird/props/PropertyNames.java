@@ -85,6 +85,7 @@ public final class PropertyNames {
     public static final String useCatalogAsPackage = "useCatalogAsPackage";
     public static final String allowTxStmts = "allowTxStmts";
     public static final String extendedMetadata = "extendedMetadata";
+    public static final String createDatabaseIfNotExist = "createDatabaseIfNotExist";
 
     // service connection
     public static final String expectedDb = "expectedDb";

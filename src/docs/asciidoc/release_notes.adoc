@@ -893,6 +893,35 @@ In other words, you will need to call `Connection.commit()` or execute `COMMIT` 
 
 For more information, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-01-explicit-support-for-transaction-statements.adoc[jdp-2024-01: Explicit support for transaction statements^].
 
+[#create-database-if-not-exist]
+=== Connection property `createDatabaseIfNotExist`
+
+The connection property `createDatabaseIfNotExist` is a Boolean property to instruct Jaybird to attempt to create the database if it does not exist yet.
+This property can be used in the JDBC URL, in the `Properties` object passed to `DriverManager`, and can be set on data sources.
+
+Although Jaybird already allowed you to create databases using `org.firebirdsql.management.FBManager`, this is not always accessible, for example in tools or libraries that only expose or use the JDBC API.
+This new property provides an alternative to create databases in those cases.
+
+Jaybird now also allows you to set or override connection properties specifically for creating the database by suffixing the property name with `@create` (case-sensitive).
+This can be used to set configuration properties that are only relevant for creating the database, or -- for example -- to use a different user or role for creating the database than used for normal connections.
+
+As an example:
+
+[listing,java]
+----
+String jdbcUrl = "jdbc:firebird://localhost/exampledb" +
+    "?createDatabaseIfNotExist=true&" +
+    "user@create=sysdba&password@create=masterkey";
+try (Connection connection = DriverManager.getConnection(
+    jdbcUrl, "normaluser", "password")) {
+  // ...
+}
+----
+
+If the database already exists, the connection will be made with user `normaluser`, but if the database does not exist, the database will be created with user `sysdba`.
+
+For more information, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-02-create-database-through-jdbc-url.adoc[jdp-2024-02: Create database through JDBC URL^].
+
 // TODO add major changes
 
 [#other-fixes-and-changes]

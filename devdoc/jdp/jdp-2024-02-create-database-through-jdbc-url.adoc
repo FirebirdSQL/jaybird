@@ -1,9 +1,9 @@
-= JDP-2024-02: Create database through JDBC URL
+= jdp-2024-02: Create database through JDBC URL
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 6
+* Published: 2024-05-09
+* Implemented in: Jaybird 6
 
 == Type
 
@@ -71,7 +71,7 @@ The following properties cannot be overridden by `@create` properties:
 That is, a missing database cannot trigger the creation of a different database (other database name or server).
 Using a different user (with `user@create` and `password@create`) than the normal user, or a different role (with `roleName@create`) is explicitly and intentionally supported.
 
-The "`attach`" otherwise "`create`" decision is made in the XCA layer, specifically -- for the current implementation -- in the constructor of `FBManagedConnection`.
+The "`attach`" otherwise "`create`" decision is made in the XCA layer, specifically in `FBManagedConnectionFactory.createManagedConnection(FBConnectionRequestInfo)`.
 This may be moved elsewhere in the XCA layer if needed during implementation or at a later time.
 
 === Rejected design decisions

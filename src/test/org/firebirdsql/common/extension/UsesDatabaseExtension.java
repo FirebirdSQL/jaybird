@@ -118,6 +118,21 @@ public abstract class UsesDatabaseExtension {
         databasesToDrop.add(databasePath);
     }
 
+    /**
+     * Removes {@code databasePath} from the paths to be dropped when this rule completes.
+     * <p>
+     * Primary use case is to remove database path that are known to not exist, so no errors are logged when this rule
+     * completes and cannot drop the specified database.
+     * </p>
+     *
+     * @param databasePath
+     *         database path
+     * @since 6
+     */
+    public void removeDatabase(String databasePath) {
+        databasesToDrop.remove(databasePath);
+    }
+
     // TODO Consider implementing a way to have a non-standard initialization (e.g. as in TestResultSetDialect1)
 
     /**

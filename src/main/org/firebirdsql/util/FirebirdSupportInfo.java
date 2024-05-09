@@ -697,6 +697,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} if server supports metadata privileges like {@code CREATE DATABASE}
+     */
+    public boolean supportsMetadataPrivileges() {
+        return isVersionEqualOrAbove(3);
+    }
+
+    /**
      * @return {@code true} when this Firebird version is considered a supported version
      */
     public boolean isSupportedVersion() {

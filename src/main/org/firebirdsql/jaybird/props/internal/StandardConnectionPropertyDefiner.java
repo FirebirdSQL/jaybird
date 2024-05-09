@@ -113,6 +113,7 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder(useCatalogAsPackage).type(BOOLEAN),
                 builder(allowTxStmts).type(BOOLEAN),
                 builder(extendedMetadata).type(BOOLEAN),
+                builder(createDatabaseIfNotExist).type(BOOLEAN),
 
                 // TODO Consider removing this property, otherwise formally add it to PropertyNames
                 builder("filename_charset"),
