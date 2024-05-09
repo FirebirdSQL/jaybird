@@ -53,21 +53,6 @@ public class DatabaseUserExtension implements AfterEachCallback {
     }
 
     /**
-     * Create a database user.
-     * <p>
-     * On Firebird 3.0 or higher this uses the default user manager plugin.
-     * </p>
-     *
-     * @param username
-     *         username
-     * @throws SQLException
-     *         For errors creating the user.
-     */
-    public void createUser(String username, String password) throws SQLException {
-        createUser(username, password, null);
-    }
-
-    /**
      * Create a database user with the specified username and plugin.
      * <p>
      * For non-null plugins, this method will only work on Firebird 3 or higher.
