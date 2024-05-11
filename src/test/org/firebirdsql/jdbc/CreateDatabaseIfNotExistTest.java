@@ -100,6 +100,7 @@ class CreateDatabaseIfNotExistTest {
 
     @Test
     void createOverrideNonPrivilegedUserWithPrivilegedUser() throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsMetadataPrivileges, "Test requires CREATE DATABASE privileges");
         databaseUser.createUser(NO_CREATE_DB_PRIVILEGE_USER, NO_CREATE_DB_PRIVILEGE_PASSWORD, "Srp");
         try (var connection = getConnection(Map.of(
                 PropertyNames.user, NO_CREATE_DB_PRIVILEGE_USER,
