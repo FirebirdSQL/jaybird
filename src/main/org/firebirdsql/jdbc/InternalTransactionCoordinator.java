@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementType;
@@ -31,7 +30,6 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static java.util.Objects.requireNonNull;
-import static org.firebirdsql.jaybird.fb.constants.TpbItems.isc_tpb_autocommit;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
 
 /**
@@ -301,14 +299,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         private void configureFirebirdAutoCommit() throws SQLException {
             // Handle Firebird autocommit support
             if (connection.isUseFirebirdAutoCommit()) {
-                TransactionParameterBuffer tpb = connection.getManagedConnection().getTransactionParameters();
-                if (connection.getAutoCommit()) {
-                    if (!tpb.hasArgument(isc_tpb_autocommit)) {
-                        tpb.addArgument(isc_tpb_autocommit);
-                    }
-                } else {
-                    tpb.removeArgument(isc_tpb_autocommit);
-                }
+                connection.getManagedConnection().setTpbAutoCommit(connection.getAutoCommit());
             }
         }
 

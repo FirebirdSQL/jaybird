@@ -24,7 +24,6 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
-import org.firebirdsql.jaybird.xca.FBTpb;
 import org.firebirdsql.jdbc.FBTpbMapper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
@@ -44,14 +43,14 @@ class ReconnectTransactionTest {
             0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08
     };
 
-    private static final String RECOVERY_QUERY = ""
-            + "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
-            + "FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE = 1";
+    private static final String RECOVERY_QUERY = """
+            SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION
+            FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE = 1""";
 
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
-    private final FBTpb tpb = new FBTpb(FBTpbMapper.getDefaultMapper().getDefaultMapping());
+    private final TransactionParameterBuffer tpb = FBTpbMapper.getDefaultMapper().getDefaultMapping();
 
     private static class DataProvider implements FieldDataProvider {
 
@@ -84,7 +83,7 @@ class ReconnectTransactionTest {
         FbDatabaseFactory databaseFactory = FBTestProperties.getFbDatabaseFactory();
         try (FbDatabase dbHandle1 = databaseFactory.connect(connectionInfo)) {
             dbHandle1.attach();
-            FbTransaction trHandle1 = dbHandle1.startTransaction(tpb.getTransactionParameterBuffer());
+            FbTransaction trHandle1 = dbHandle1.startTransaction(tpb);
             trHandle1.prepare(message);
 
             // No commit! We leave trHandle1 in Limbo.
@@ -93,7 +92,7 @@ class ReconnectTransactionTest {
         try (FbDatabase dbHandle2 = databaseFactory.connect(connectionInfo)) {
             dbHandle2.attach();
             GDSHelper gdsHelper2 = new GDSHelper(dbHandle2);
-            FbTransaction trHandle2 = dbHandle2.startTransaction(tpb.getTransactionParameterBuffer());
+            FbTransaction trHandle2 = dbHandle2.startTransaction(tpb);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             FbStatement stmtHandle2 = dbHandle2.createStatement(trHandle2);

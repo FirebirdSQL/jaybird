@@ -24,6 +24,10 @@
  */
 package org.firebirdsql.gds;
 
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.isc_tpb_autocommit;
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.isc_tpb_read;
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.isc_tpb_write;
+
 /**
  * Instances of this interface represent Transaction Parameter Buffer from the Firebird API.
  */
@@ -47,4 +51,58 @@ public interface TransactionParameterBuffer extends ParameterBuffer {
             parameter.copyTo(destination, null);
         }
     }
+
+    /**
+     * Set the read-only flag ({@code isc_tpb_read}) or read/write flag ({@code isc_tpb_write}) on this TPB.
+     *
+     * @param readOnly
+     *         if {@code true}, this TPB will be set to read-only, otherwise it will be read/write
+     * @since 6
+     */
+    default void setReadOnly(boolean readOnly) {
+        removeArgument(isc_tpb_read);
+        removeArgument(isc_tpb_write);
+        addArgument(readOnly ? isc_tpb_read : isc_tpb_write);
+    }
+
+    /**
+     * Determine whether this TPB is set to read-only.
+     *
+     * @return {@code true} if this TPB is read-only, otherwise {@code false}
+     * @since 6
+     */
+    default boolean isReadOnly() {
+        return hasArgument(isc_tpb_read);
+    }
+
+    /**
+     * Sets the Firebird auto-commit flag on this TPB.
+     * <p>
+     * This shouldn't be confused with the normal JDBC auto-commit behavior. Effectively, setting this to {@code true}
+     * will result in Firebird using commit retain after each executed statement.
+     * </p>
+     *
+     * @param autoCommit
+     *         {@code true} add the auto-commit flag, otherwise remove it
+     * @see #isAutoCommit()
+     * @since 6
+     */
+    default void setAutoCommit(boolean autoCommit) {
+        removeArgument(isc_tpb_autocommit);
+        if (autoCommit) {
+            addArgument(isc_tpb_autocommit);
+        }
+    }
+
+    /**
+     * Returns if this TPB has the auto-commit flag set.
+     *
+     * @return {@code true} if this TPB has the auto-commit flag, {@code false} otherwise
+     * @see #setAutoCommit(boolean)
+     * @since 6
+     */
+    default boolean isAutoCommit() {
+        return hasArgument(isc_tpb_autocommit);
+    }
+
 }

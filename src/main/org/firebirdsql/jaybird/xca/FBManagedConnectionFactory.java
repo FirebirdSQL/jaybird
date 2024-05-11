@@ -97,6 +97,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
     // Maps supplied XID to internal transaction handle.
     private final Map<Xid, FBManagedConnection> xidMap = new ConcurrentHashMap<>();
 
+    @SuppressWarnings("java:S1948" /* we're using a serialization proxy */)
     private final Object startLock = new Object();
     private boolean started = false;
     // When a MCF is shared, its configuration has to be stable after first connection/datasource creation
@@ -297,21 +298,21 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
     @Override
     public boolean equals(Object other) {
         if (other == this) return true;
-        if (!(other instanceof FBManagedConnectionFactory that)) return false;
-        return this.connectionProperties.equals(that.connectionProperties);
+        return other instanceof FBManagedConnectionFactory that
+               && this.connectionProperties.equals(that.connectionProperties);
     }
 
     public FBConnectionRequestInfo getDefaultConnectionRequestInfo() throws SQLException {
         return new FBConnectionRequestInfo(connectionProperties.asIConnectionProperties().asNewMutable());
     }
 
-    public FBTpb getDefaultTpb() throws SQLException {
-        int defaultTransactionIsolation = connectionProperties.getDefaultTransactionIsolation();
-        return getTpb(defaultTransactionIsolation);
+    public TransactionParameterBuffer getDefaultTpb() throws SQLException {
+        return getTpb(connectionProperties.getDefaultTransactionIsolation());
     }
 
-    public FBTpb getTpb(int isolation) throws SQLException {
-        return new FBTpb(connectionProperties.getMapper().getMapping(isolation));
+    public TransactionParameterBuffer getTpb(int isolation) throws SQLException {
+        // getMapping makes a defensive copy
+        return connectionProperties.getMapper().getMapping(isolation);
     }
 
     /**
@@ -717,7 +718,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
             String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
 
             FbDatabase dbHandle = gdsHelper.getCurrentDatabase();
-            FbTransaction trHandle = dbHandle.startTransaction(getDefaultTpb().getTransactionParameterBuffer());
+            FbTransaction trHandle = dbHandle.startTransaction(getDefaultTpb());
             try (FbStatement stmtHandle = dbHandle.createStatement(trHandle)) {
                 stmtHandle.prepare(query);
                 stmtHandle.execute(RowValue.EMPTY_ROW_VALUE);

@@ -1575,6 +1575,8 @@ this package is internal API only, and not exported from the module (see also ea
 *** `getException()` now always returns `SQLException`
 ** Constructor `SQLExceptionChainBuilder(SQLException)` was removed, as in practice this was never used;
 replacement is `new SQLExceptionChainBuilder().append(exception)`
+* `FBTpb` was removed, and its usages were replaced with `TransactionParameterBuffer`
+* `ParameterBuffer` now extends `Serializable`, as all implementations are serializable, and some usages expect serializable behaviour even when the interfaces were used (though in practice, these objects are hardly ever serialized)
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

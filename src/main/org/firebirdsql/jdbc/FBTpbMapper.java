@@ -34,8 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 
 /**
- * This class is provides mapping capabilities between standard JDBC
- * transaction isolation level and Firebird Transaction Parameters Block (TPB).
+ * This class provides mapping capabilities between standard JDBC transaction isolation level and Firebird Transaction
+ * Parameters Blocks (TPBs).
  *
  * @author Roman Rokytskyy
  */
@@ -85,13 +85,12 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      * allows a row changed by one transaction to be read by another transaction
      * before any changes in that row have been committed (a "dirty read"). If
      * any of the changes are rolled back, the second transaction will have
-     * retrieved an invalid row. <b>This level is not actually supported </b>
+     * retrieved an invalid row. <b>This level is not actually supported</b>
      */
     public static final String TRANSACTION_READ_UNCOMMITTED = TransactionNameMapping.TRANSACTION_READ_UNCOMMITTED;
 
     /**
-     * Indicates that transactions are not supported. <b>This level is not
-     * supported </b>
+     * Indicates that transactions are not supported. <b>This level is not supported</b>
      */
     public static final String TRANSACTION_NONE = TransactionNameMapping.TRANSACTION_NONE;
 
@@ -118,7 +117,6 @@ public final class FBTpbMapper implements Serializable, Cloneable {
     }
 
     // ConcurrentHashMap because changes can - potentially - be made concurrently
-    @SuppressWarnings("java:S1948")
     private Map<Integer, TransactionParameterBuffer> mapping = new ConcurrentHashMap<>();
     private int defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED;
 
@@ -402,7 +400,7 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      * @return mapping for the default transaction isolation level.
      */
     public TransactionParameterBuffer getDefaultMapping() {
-        return mapping.get(defaultIsolationLevel);
+        return getMapping(defaultIsolationLevel);
     }
 
     int getDefaultTransactionIsolation() {
@@ -414,18 +412,10 @@ public final class FBTpbMapper implements Serializable, Cloneable {
     }
 
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof FBTpbMapper that)) {
-            return false;
-        }
-
-        boolean result = this.mapping.equals(that.mapping);
-        result &= (this.defaultIsolationLevel == that.defaultIsolationLevel);
-
-        return result;
+        if (this == obj) return true;
+        return obj instanceof FBTpbMapper that
+               && this.mapping.equals(that.mapping)
+               && this.defaultIsolationLevel == that.defaultIsolationLevel;
     }
 
     public int hashCode() {
@@ -437,7 +427,7 @@ public final class FBTpbMapper implements Serializable, Cloneable {
         try {
             FBTpbMapper clone = (FBTpbMapper) super.clone();
 
-            ConcurrentHashMap<Integer, TransactionParameterBuffer> newMapping = new ConcurrentHashMap<>();
+            var newMapping = new ConcurrentHashMap<Integer, TransactionParameterBuffer>();
             for (Map.Entry<Integer, TransactionParameterBuffer> entry : mapping.entrySet()) {
                 newMapping.put(entry.getKey(), entry.getValue().deepCopy());
             }

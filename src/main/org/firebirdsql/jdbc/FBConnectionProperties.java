@@ -39,7 +39,6 @@ public final class FBConnectionProperties implements FirebirdConnectionPropertie
 
     private FbConnectionProperties properties;
 
-    @SuppressWarnings("java:S1948")
     private Map<Integer, TransactionParameterBuffer> customMapping = new HashMap<>();
     private FBTpbMapper mapper;
 

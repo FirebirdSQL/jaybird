@@ -29,11 +29,11 @@ import org.firebirdsql.gds.impl.wire.Xdrable;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.Iterator;
 
 /**
- * Instance of this interface represents a Parameter Buffer it is extended
- * by various parameter buffer interfaces.
+ * Instance of this interface represents a Parameter Buffer it is extended by various parameter buffer interfaces.
  *
  * @author Mark Rotteveel
  * @see org.firebirdsql.gds.ParameterBuffer
@@ -42,7 +42,7 @@ import java.util.Iterator;
  * @see org.firebirdsql.gds.ServiceParameterBuffer
  * @since 3.0
  */
-public interface ParameterBuffer extends Iterable<Parameter> {
+public interface ParameterBuffer extends Iterable<Parameter>, Serializable {
 
     /**
      * @return The parameter buffer type identifier

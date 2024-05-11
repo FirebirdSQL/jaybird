@@ -106,7 +106,7 @@ public interface FirebirdConnection extends Connection {
      * until {@link Connection#setTransactionIsolation(int)} is called.
      * </p>
      * <p>
-     * Method cannot be called when transaction has already started.
+     * This method cannot be called when a transaction is currently active.
      * </p>
      *
      * @param tpb

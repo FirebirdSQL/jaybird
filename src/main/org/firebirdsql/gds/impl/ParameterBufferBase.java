@@ -49,7 +49,6 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     private final List<Argument> arguments = new ArrayList<>();
 
     private final String defaultEncodingName;
-    @SuppressWarnings("java:S1948")
     private final ParameterBufferMetaData parameterBufferMetaData;
     private transient Encoding defaultEncoding;
 
@@ -262,6 +261,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
         }
     }
 
+    @Serial
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
 

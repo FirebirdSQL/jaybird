@@ -90,7 +90,7 @@ public final class FBManagedConnection implements ExceptionListener {
     private XAResource xaResource;
     private final FBConnectionRequestInfo cri;
     private FBTpbMapper transactionMapping;
-    private FBTpb tpb;
+    private TransactionParameterBuffer tpb;
     private int transactionIsolation;
 
     private volatile boolean managedEnvironment = true;
@@ -552,7 +552,7 @@ public final class FBManagedConnection implements ExceptionListener {
         try {
             // find XID
             // TODO: Is there a reason why this piece of code can't use the JDBC Statement class?
-            FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
+            FbTransaction trHandle2 = database.startTransaction(tpb);
             try (FbStatement stmtHandle2 = database.createStatement(trHandle2)) {
                 var gdsHelper2 = new GDSHelper(database);
                 gdsHelper2.setCurrentTransaction(trHandle2);
@@ -589,7 +589,7 @@ public final class FBManagedConnection implements ExceptionListener {
 
         try {
             // delete XID
-            FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
+            FbTransaction trHandle2 = database.startTransaction(tpb);
             try (FbStatement stmtHandle2 = database.createStatement(trHandle2)) {
                 stmtHandle2.prepare(getXidQueries().forgetDelete() + inLimboId);
                 stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
@@ -695,7 +695,7 @@ public final class FBManagedConnection implements ExceptionListener {
 
             var xids = new ArrayList<FBXid>();
 
-            FbTransaction trHandle = database.startTransaction(tpb.getTransactionParameterBuffer());
+            FbTransaction trHandle = database.startTransaction(tpb);
             try (FbStatement stmtHandle = database.createStatement(trHandle)) {
                 var gdsHelper = new GDSHelper(database);
                 gdsHelper.setCurrentTransaction(trHandle);
@@ -756,7 +756,7 @@ public final class FBManagedConnection implements ExceptionListener {
      */
     Xid findSingleXid(Xid externalXid) throws javax.transaction.xa.XAException {
         try {
-            FbTransaction trHandle = database.startTransaction(tpb.getTransactionParameterBuffer());
+            FbTransaction trHandle = database.startTransaction(tpb);
             try (FbStatement stmtHandle = database.createStatement(trHandle)) {
                 var gdsHelper = new GDSHelper(database);
                 gdsHelper.setCurrentTransaction(trHandle);
@@ -1042,15 +1042,27 @@ public final class FBManagedConnection implements ExceptionListener {
         return cri;
     }
 
+    /**
+     * @return a copy of the current TPB
+     */
     public TransactionParameterBuffer getTransactionParameters() {
+        TransactionParameterBuffer currentTpb;
         try (LockCloseable ignored = withLock()) {
-            return tpb.getTransactionParameterBuffer();
+            currentTpb = tpb;
         }
+        return currentTpb.deepCopy();
     }
 
-    public void setTransactionParameters(TransactionParameterBuffer transactionParameters) {
+    /**
+     * Sets the current TPB to a copy of {@code transactionParams}.
+     *
+     * @param transactionParams
+     *         transaction parameters
+     */
+    public void setTransactionParameters(TransactionParameterBuffer transactionParams) {
+        TransactionParameterBuffer copy = transactionParams.deepCopy();
         try (LockCloseable ignored = withLock()) {
-            tpb.setTransactionParameterBuffer(transactionParameters);
+            tpb = copy;
         }
     }
 
@@ -1099,7 +1111,7 @@ public final class FBManagedConnection implements ExceptionListener {
 
         // new xid for us
         try {
-            registerNewTransaction(xid, database.startTransaction(tpb.getTransactionParameterBuffer()));
+            registerNewTransaction(xid, database.startTransaction(tpb));
         } catch (SQLException e) {
             throw new FBXAException(e.getMessage(), XAException.XAER_RMERR, e);
         }
@@ -1185,9 +1197,7 @@ public final class FBManagedConnection implements ExceptionListener {
         try (LockCloseable ignored = withLock()) {
             transactionIsolation = isolation;
             final FBTpbMapper mapping = transactionMapping;
-            tpb = mapping == null
-                    ? mcf.getTpb(isolation)
-                    : new FBTpb(mapping.getMapping(isolation));
+            tpb = mapping == null ? mcf.getTpb(isolation) : mapping.getMapping(isolation);
         }
     }
 
@@ -1217,6 +1227,34 @@ public final class FBManagedConnection implements ExceptionListener {
      */
     public boolean isReadOnly() {
         return tpb.isReadOnly();
+    }
+
+    /**
+     * Sets the Firebird auto-commit flag on the current TPB. This change is transient and will be reset when the
+     * transaction isolation level is set again or the TPB is otherwise replaced.
+     * <p>
+     * This shouldn't be confused with the normal JDBC auto-commit behavior. Effectively, setting this to {@code true}
+     * will result in Firebird using commit retain after each executed statement.
+     * </p>
+     *
+     * @param autoCommit
+     *         {@code true} add the auto-commit flag, otherwise remove it
+     * @see #isTpbAutoCommit()
+     * @since 6
+     */
+    public void setTpbAutoCommit(boolean autoCommit) {
+        tpb.setAutoCommit(autoCommit);
+    }
+
+    /**
+     * Returns if the current TPB has the auto-commit flag set.
+     *
+     * @return {@code true} if the current TPB has the auto-commit flag, {@code false} otherwise
+     * @see #setTpbAutoCommit(boolean)
+     * @since 6
+     */
+    public boolean isTpbAutoCommit() {
+        return tpb.isAutoCommit();
     }
 
     @SuppressWarnings("java:S135")

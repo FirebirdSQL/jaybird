@@ -21,13 +21,15 @@ package org.firebirdsql.gds.impl;
 import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
 
+import java.io.Serializable;
+
 /**
  * Additional metadata for parameter buffer behavior.
  *
  * @author Mark Rotteveel
  * @since 3.0
  */
-public interface ParameterBufferMetaData {
+public interface ParameterBufferMetaData extends Serializable {
 
     /**
      * Parameter buffer type (this usually is the version of the parameter buffer).
