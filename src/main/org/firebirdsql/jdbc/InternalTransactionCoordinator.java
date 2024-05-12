@@ -291,6 +291,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         public void ensureTransaction() throws SQLException {
             configureFirebirdAutoCommit();
+            configureReadOnly();
             if (!localTransaction.inTransaction()) {
                 localTransaction.begin();
             }
@@ -301,6 +302,10 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
             if (connection.isUseFirebirdAutoCommit()) {
                 connection.getManagedConnection().setTpbAutoCommit(connection.getAutoCommit());
             }
+        }
+
+        private void configureReadOnly() throws SQLException {
+            connection.getManagedConnection().setTpbReadOnly(connection.isReadOnly());
         }
 
         public abstract void commit() throws SQLException;

@@ -120,7 +120,7 @@ public interface ParameterBuffer extends Iterable<Parameter>, Serializable {
     void addArgument(int argumentType, byte[] content);
 
     /**
-     * Remove specified argument.
+     * Remove the first occurrence of the specified argument.
      *
      * @param argumentType
      *         type of argument to remove.

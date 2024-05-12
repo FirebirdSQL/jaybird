@@ -1034,6 +1034,7 @@ Given this is a non-standard extension, it is advisable to retrieve these column
 +
 To be clear, Jaybird does not provide statement pooling.
 This is change is only about returning and recording the poolable information for JDBC compliance, so it can be used by -- for example -- connection pool implementations that provide statement pooling.
+* The state of `Connection.setReadOnly(boolean)` was not retained after calling `Connection.setTransactionIsolation(int)` or other method calls that changed the current transaction parameter buffer (https://github.com/FirebirdSQL/jaybird/issues/805[#805])
 
 [#potentially-breaking-changes]
 === Potentially breaking changes
@@ -1193,6 +1194,21 @@ Additionally, using `Statement.addBatch(String)` and `PreparedStatement.addBatch
 Switch to using one of the normal execute methods.
 
 See also <<allow-tx-stmts>>.
+
+[#compat-read-only]
+=== Read-only behaviour of connections
+
+In previous versions of Jaybird the read-only state of a connection was not retained if the transaction parameter buffer was replaced, for example by calls to `setTransactionIsolation(int)`.
+
+Now this has been corrected, it is possible that your code unexpectedly throws an exception with message "`__attempted update during read-only transaction [SQLState:42000, ISC error code:335544361]__`" (error `isc_read_only_trans`).
+
+You need to make sure to call `setReadOnly(false)` if the connection was previously marked read-only.
+If you're using a connection pool, you need to ensure it properly resets the read-only state of the connection when checking in or checking out the connection.
+For example, both Apache DBCP and Apache Tomcat connection pools requires the `defaultReadOnly` property to be set (i.e. to `false`), otherwise it will not reset the read-only state.
+
+If overridden transaction mappings are used, and the default isolation level has `isc_tpb_read`, the connection will be marked as read-only.
+As a result, switching isolation levels will now also result in read-only transactions, even if the mapping of the other isolation level is defined with `isc_tpb_write`.
+You will need to explicitly call `setReadOnly(false)`, or -- better yet -- do not override transaction mappings with a `isc_tpb_read`, but always use `isc_tpb_write`, and control read-only state only through `setReadOnly`.
 
 // TODO Document compatibility issues
 
@@ -1576,7 +1592,11 @@ this package is internal API only, and not exported from the module (see also ea
 ** Constructor `SQLExceptionChainBuilder(SQLException)` was removed, as in practice this was never used;
 replacement is `new SQLExceptionChainBuilder().append(exception)`
 * `FBTpb` was removed, and its usages were replaced with `TransactionParameterBuffer`
+* `FBTpbMapper` no longer implements `Cloneable`, use `FBTpbMapper.copyOf(FBTpbMapper)` instead
 * `ParameterBuffer` now extends `Serializable`, as all implementations are serializable, and some usages expect serializable behaviour even when the interfaces were used (though in practice, these objects are hardly ever serialized)
+* `FBManagedConnection`
+** `setReadOnly(boolean)` was renamed to `setTpbReadOnly(boolean)` to reflect what it actually does
+** `isReadOnly()` was renamed to `isTpbReadOnly()` to reflect what it actually does
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

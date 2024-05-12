@@ -39,11 +39,16 @@ import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
  *
  * @author Roman Rokytskyy
  */
-public final class FBTpbMapper implements Serializable, Cloneable {
+public final class FBTpbMapper implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1690658870275668176L;
 
+    /**
+     * Creates a new instance with the default configuration.
+     *
+     * @return instance with the default mapper configuration
+     */
     public static FBTpbMapper getDefaultMapper() {
         return new FBTpbMapper();
     }
@@ -117,7 +122,7 @@ public final class FBTpbMapper implements Serializable, Cloneable {
     }
 
     // ConcurrentHashMap because changes can - potentially - be made concurrently
-    private Map<Integer, TransactionParameterBuffer> mapping = new ConcurrentHashMap<>();
+    private final Map<Integer, TransactionParameterBuffer> mapping;
     private int defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED;
 
     /**
@@ -126,25 +131,27 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      */
     public FBTpbMapper() {
         // TODO instance creation should be delegated to FbDatabase or another factory
-        TransactionParameterBuffer serializableTpb = new TransactionParameterBufferImpl();
+        var serializableTpb = new TransactionParameterBufferImpl();
         serializableTpb.addArgument(isc_tpb_write);
         serializableTpb.addArgument(isc_tpb_wait);
         serializableTpb.addArgument(isc_tpb_consistency);
 
-        TransactionParameterBuffer repeatableReadTpb = new TransactionParameterBufferImpl();
+        var repeatableReadTpb = new TransactionParameterBufferImpl();
         repeatableReadTpb.addArgument(isc_tpb_write);
         repeatableReadTpb.addArgument(isc_tpb_wait);
         repeatableReadTpb.addArgument(isc_tpb_concurrency);
 
-        TransactionParameterBuffer readCommittedTpb = new TransactionParameterBufferImpl();
+        var readCommittedTpb = new TransactionParameterBufferImpl();
         readCommittedTpb.addArgument(isc_tpb_write);
         readCommittedTpb.addArgument(isc_tpb_wait);
         readCommittedTpb.addArgument(isc_tpb_read_committed);
         readCommittedTpb.addArgument(isc_tpb_rec_version);
 
+        var mapping = new ConcurrentHashMap<Integer, TransactionParameterBuffer>(3);
         mapping.put(Connection.TRANSACTION_SERIALIZABLE, serializableTpb);
         mapping.put(Connection.TRANSACTION_REPEATABLE_READ, repeatableReadTpb);
         mapping.put(Connection.TRANSACTION_READ_COMMITTED, readCommittedTpb);
+        this.mapping = mapping;
     }
 
     /**
@@ -182,8 +189,18 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      * @throws SQLException if mapping contains incorrect values.
      */
     public FBTpbMapper(Map<String, String> stringMapping) throws SQLException {
+        // Ensure defaults are populated
         this();
         processMapping(stringMapping);
+    }
+
+    private FBTpbMapper(FBTpbMapper source) {
+        var newMapping = new ConcurrentHashMap<Integer, TransactionParameterBuffer>(source.mapping.size());
+        for (Map.Entry<Integer, TransactionParameterBuffer> entry : source.mapping.entrySet()) {
+            newMapping.put(entry.getKey(), entry.getValue().deepCopy());
+        }
+        mapping = newMapping;
+        defaultIsolationLevel = source.defaultIsolationLevel;
     }
 
     /**
@@ -229,25 +246,25 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      *         if resource cannot be loaded or contains incorrect values.
      */
     public FBTpbMapper(String mappingResource, ClassLoader cl) throws SQLException {
+        // Ensure defaults are populated
+        this();
         // Make sure the old documented 'res:' protocol works
         // TODO Remove in Jaybird 7 or later?
         if (mappingResource.startsWith("res:")) {
             mappingResource = mappingResource.substring(4);
         }
         try {
-            ResourceBundle res = ResourceBundle.getBundle(mappingResource, Locale.getDefault(), cl);
+            var res = ResourceBundle.getBundle(mappingResource, Locale.getDefault(), cl);
 
-            Map<String, String> mapping = new HashMap<>();
+            var mapping = new HashMap<String, String>();
 
             Enumeration<String> en = res.getKeys();
             while (en.hasMoreElements()) {
                 String key = en.nextElement();
-                String value = res.getString(key);
-                mapping.put(key, value);
+                mapping.put(key, res.getString(key));
             }
 
             processMapping(mapping);
-
         } catch (MissingResourceException mrex) {
             // TODO More specific exception, Jaybird error code
             throw new SQLException("Cannot load TPB mapping. " + mrex.getMessage(), mrex);
@@ -322,9 +339,9 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      */
     public static TransactionParameterBuffer processMapping(String mapping) throws SQLException {
         // TODO instance creation should be delegated to FbDatabase
-        TransactionParameterBuffer result = new TransactionParameterBufferImpl();
+        var result = new TransactionParameterBufferImpl();
 
-        StringTokenizer st = new StringTokenizer(mapping, ",");
+        var st = new StringTokenizer(mapping, ",");
         while (st.hasMoreTokens()) {
             String token = st.nextToken();
             Integer argValue = null;
@@ -423,21 +440,8 @@ public final class FBTpbMapper implements Serializable, Cloneable {
         return Objects.hash(mapping, defaultIsolationLevel);
     }
 
-    public Object clone() {
-        try {
-            FBTpbMapper clone = (FBTpbMapper) super.clone();
-
-            var newMapping = new ConcurrentHashMap<Integer, TransactionParameterBuffer>();
-            for (Map.Entry<Integer, TransactionParameterBuffer> entry : mapping.entrySet()) {
-                newMapping.put(entry.getKey(), entry.getValue().deepCopy());
-            }
-
-            clone.mapping = newMapping;
-
-            return clone;
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError("clone() unexpectedly not supported", e);
-        }
+    public static FBTpbMapper copyOf(FBTpbMapper tpbMapper) {
+        return new FBTpbMapper(tpbMapper);
     }
 
     private static final class TpbMapping {
@@ -448,8 +452,7 @@ public final class FBTpbMapper implements Serializable, Cloneable {
 
         // Initialize mappings between TPB constant names and their values; should be executed only once.
         static {
-            final Map<String, Integer> tempTpbTypes = new HashMap<>(64);
-
+            final var tempTpbTypes = new HashMap<String, Integer>(64);
             final Field[] fields = TpbItems.class.getFields();
 
             for (Field field : fields) {

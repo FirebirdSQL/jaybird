@@ -108,7 +108,7 @@ public final class FBConnectionProperties implements FirebirdConnectionPropertie
             clone.properties = (FbConnectionProperties) properties.asNewMutable();
             clone.properties.registerPropertyUpdateListener(clone.createPropertyUpdateListener());
             clone.customMapping = new HashMap<>(customMapping);
-            clone.mapper = mapper != null ? (FBTpbMapper) mapper.clone() : null;
+            clone.mapper = mapper != null ? FBTpbMapper.copyOf(mapper) : null;
 
             return clone;
         } catch (CloneNotSupportedException ex) {

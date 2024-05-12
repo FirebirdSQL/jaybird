@@ -91,6 +91,7 @@ public class FBConnection implements FirebirdConnection {
     private StoredProcedureMetaData storedProcedureMetaData;
     private GeneratedKeysSupport generatedKeysSupport;
     private ClientInfoProvider clientInfoProvider;
+    private boolean readOnly;
 
     /**
      * Create a new FBConnection instance based on a {@link FBManagedConnection}.
@@ -107,6 +108,9 @@ public class FBConnection implements FirebirdConnection {
         resultSetHoldability = props.isDefaultResultSetHoldable()
                 ? ResultSet.HOLD_CURSORS_OVER_COMMIT
                 : ResultSet.CLOSE_CURSORS_AT_COMMIT;
+
+        // Inherit read-only state from the initial TPB
+        readOnly = mc.isTpbReadOnly();
     }
 
     @Override
@@ -603,7 +607,8 @@ public class FBConnection implements FirebirdConnection {
                         "Calling setReadOnly(boolean) method is not allowed when transaction is already started.",
                         SQL_STATE_TX_ACTIVE);
             }
-            mc.setReadOnly(readOnly);
+            this.readOnly = readOnly;
+            mc.setTpbReadOnly(readOnly);
         }
     }
 
@@ -611,7 +616,7 @@ public class FBConnection implements FirebirdConnection {
     public boolean isReadOnly() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            return mc.isReadOnly();
+            return readOnly;
         }
     }
 

@@ -35,6 +35,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Base class for parameter buffers
@@ -45,7 +46,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     @Serial
     private static final long serialVersionUID = 8812835147477954476L;
-    
+
     private final List<Argument> arguments = new ArrayList<>();
 
     private final String defaultEncodingName;
@@ -98,72 +99,68 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     @Override
     public final void addArgument(int argumentType, String value, Encoding encoding) {
-        getArgumentsList().add(new StringArgument(argumentType, parameterBufferMetaData.getStringArgumentType(argumentType), value, encoding));
+        addArgument(new StringArgument(
+                argumentType, parameterBufferMetaData.getStringArgumentType(argumentType), value, encoding));
     }
 
     @Override
-    public void addArgument(int argumentType, byte value) {
-        getArgumentsList().add(new ByteArgument(argumentType, parameterBufferMetaData.getByteArgumentType(argumentType), value));
+    public final void addArgument(int argumentType, byte value) {
+        addArgument(new ByteArgument(argumentType, parameterBufferMetaData.getByteArgumentType(argumentType), value));
     }
 
     @Override
     public final void addArgument(int argumentType, int value) {
-        getArgumentsList().add(new NumericArgument(argumentType, parameterBufferMetaData.getIntegerArgumentType(argumentType), value));
+        addArgument(new NumericArgument(
+                argumentType, parameterBufferMetaData.getIntegerArgumentType(argumentType), value));
     }
 
     @Override
     public final void addArgument(int argumentType, long value) {
-        getArgumentsList().add(new BigIntArgument(argumentType, parameterBufferMetaData.getIntegerArgumentType(argumentType), value));
+        addArgument(new BigIntArgument(
+                argumentType, parameterBufferMetaData.getIntegerArgumentType(argumentType), value));
     }
 
     @Override
     public final void addArgument(int argumentType) {
-        getArgumentsList().add(new SingleItem(argumentType, parameterBufferMetaData.getSingleArgumentType(argumentType)));
+        addArgument(new SingleItem(argumentType, parameterBufferMetaData.getSingleArgumentType(argumentType)));
     }
 
     @Override
     public final void addArgument(int type, byte[] content) {
-        getArgumentsList().add(new ByteArrayArgument(type, parameterBufferMetaData.getByteArrayArgumentType(type), content));
+        addArgument(new ByteArrayArgument(type, parameterBufferMetaData.getByteArrayArgumentType(type), content));
+    }
+
+    protected final void addArgument(Argument argument) {
+        arguments.add(argument);
     }
 
     @Override
     public final String getArgumentAsString(int type) {
-        final List<Argument> argumentsList = getArgumentsList();
-        for (final Argument argument : argumentsList) {
-            if (argument.getType() == type) {
-                return argument.getValueAsString();
-            }
-        }
-        return null;
+        return findFirst(type).map(Argument::getValueAsString).orElse(null);
     }
 
+    @SuppressWarnings("OptionalIsPresent")
     @Override
     public final int getArgumentAsInt(int type) {
-        final List<Argument> argumentsList = getArgumentsList();
-        for (final Argument argument : argumentsList) {
-            if (argument.getType() == type) {
-                return argument.getValueAsInt();
-            }
-        }
-        return 0;
+        Optional<Argument> argumentOpt = findFirst(type);
+        return argumentOpt.isPresent() ? argumentOpt.get().getValueAsInt() : 0;
     }
 
     @Override
     public final boolean hasArgument(int type) {
-        final List<Argument> argumentsList = getArgumentsList();
-        for (final Argument argument : argumentsList) {
-            if (argument.getType() == type) return true;
-        }
-        return false;
+        return findFirst(type).isPresent();
+    }
+
+    protected Optional<Argument> findFirst(int type) {
+        return arguments.stream().filter(argument -> argument.getType() == type).findFirst();
     }
 
     @Override
     public final void removeArgument(int type) {
-        final List<Argument> argumentsList = getArgumentsList();
-        for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = argumentsList.get(i);
-            if (argument.getType() == type) {
-                argumentsList.remove(i);
+        Iterator<Argument> argumentIterator = arguments.iterator();
+        while (argumentIterator.hasNext()) {
+            if (argumentIterator.next().getType() == type) {
+                argumentIterator.remove();
                 return;
             }
         }
@@ -175,7 +172,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     public final void writeArgumentsTo(OutputStream outputStream) throws IOException {
-        for (final Argument currentArgument : arguments) {
+        for (Argument currentArgument : arguments) {
             currentArgument.writeTo(outputStream);
         }
     }
@@ -186,9 +183,8 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     protected final int getLength() {
-        final List<Argument> argumentsList = getArgumentsList();
         int length = 0;
-        for (final Argument currentArgument : argumentsList) {
+        for (Argument currentArgument : arguments) {
             length += currentArgument.getLength();
         }
         return length;
@@ -200,7 +196,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     @Override
     public final byte[] toBytes() {
-        final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        var bout = new ByteArrayOutputStream();
         try {
             writeArgumentsTo(bout);
         } catch (IOException e) {
@@ -211,7 +207,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     @Override
     public final byte[] toBytesWithType() {
-        final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        final var bout = new ByteArrayOutputStream();
         try {
             bout.write(getType());
             writeArgumentsTo(bout);
@@ -229,29 +225,30 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     @Override
     @SuppressWarnings("java:S2097")
     public final boolean equals(Object other) {
-        if (other == null || !(this.getClass().isAssignableFrom(other.getClass())))
+        if (other == null || !(this.getClass().isAssignableFrom(other.getClass()))) {
             return false;
+        }
 
         final ParameterBufferBase otherServiceBufferBase = (ParameterBufferBase) other;
-        return otherServiceBufferBase.getArgumentsList().equals(this.getArgumentsList());
+        return otherServiceBufferBase.arguments.equals(this.arguments);
     }
 
     @Override
     public final int hashCode() {
-        return getArgumentsList().hashCode();
+        return arguments.hashCode();
     }
 
     /**
      * Default implementation for serializing the parameter buffer to the XDR output stream
      */
-    private class ParameterBufferXdrable implements Xdrable {
+    private final class ParameterBufferXdrable implements Xdrable {
         @Override
         public int getLength() {
             return ParameterBufferBase.this.getLength();
         }
 
         @Override
-        public void read(XdrInputStream inputStream, int length) throws IOException {
+        public void read(XdrInputStream inputStream, int length) {
             throw new UnsupportedOperationException();
         }
 

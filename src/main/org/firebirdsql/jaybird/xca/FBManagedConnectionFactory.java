@@ -323,7 +323,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
      *         For errors on obtaining or creating the transaction mapping
      */
     FBTpbMapper getTransactionMappingCopy() throws SQLException {
-        return (FBTpbMapper) connectionProperties.getMapper().clone();
+        return FBTpbMapper.copyOf(connectionProperties.getMapper());
     }
 
     /**

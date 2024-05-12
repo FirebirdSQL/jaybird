@@ -1211,21 +1211,23 @@ public final class FBManagedConnection implements ExceptionListener {
     }
 
     /**
-     * Set whether this connection is to be readonly
+     * Set the current TPB to read-only.
      *
      * @param readOnly
-     *         If {@code true}, the connection will be set read-only, otherwise it will be writable
+     *         if {@code true}, the connection will be set read-only, otherwise it will be writable
+     * @since 6
      */
-    public void setReadOnly(boolean readOnly) {
+    public void setTpbReadOnly(boolean readOnly) {
         tpb.setReadOnly(readOnly);
     }
 
     /**
-     * Retrieve whether this connection is readonly.
+     * Retrieve whether the current TPB is read-only.
      *
      * @return {@code true} if this connection is readonly, {@code false} otherwise
+     * @since 6
      */
-    public boolean isReadOnly() {
+    public boolean isTpbReadOnly() {
         return tpb.isReadOnly();
     }
 

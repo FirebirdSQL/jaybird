@@ -355,22 +355,23 @@ class FBTpbMapperTest {
     }
 
     @Test
-    void testClone_equalToOriginal() {
-        FBTpbMapper original = new FBTpbMapper();
-        FBTpbMapper clone = (FBTpbMapper) original.clone();
+    void testCopy_equalToOriginal() {
+        var original = new FBTpbMapper();
+        var copy = FBTpbMapper.copyOf(original);
 
-        assertEquals(original, clone);
+        assertEquals(original, copy);
+        assertEquals(original.hashCode(), copy.hashCode());
     }
 
     @Test
-    void testModifyingClone_doesNotModifyOriginal() throws Exception {
-        FBTpbMapper original = new FBTpbMapper();
-        FBTpbMapper clone = (FBTpbMapper) original.clone();
+    void testModifyingCopy_doesNotModifyOriginal() throws Exception {
+        var original = new FBTpbMapper();
+        var copy = FBTpbMapper.copyOf(original);
 
         TransactionParameterBuffer newTpb =
                 FBTpbMapper.processMapping("isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_wait");
-        clone.setMapping(Connection.TRANSACTION_READ_COMMITTED, newTpb);
+        copy.setMapping(Connection.TRANSACTION_READ_COMMITTED, newTpb);
 
-        assertNotEquals(original, clone);
+        assertNotEquals(original, copy);
     }
 }

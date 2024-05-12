@@ -1015,6 +1015,54 @@ class FBConnectionTest {
         }
     }
 
+    @Test
+    void setReadOnlyIsPreservedAfterSetTransactionIsolation() throws Exception {
+        try (var connection = getConnectionViaDriverManager()) {
+            assertFalse(connection.isReadOnly(), "Connection initially not read-only");
+            connection.setReadOnly(true);
+            assertTrue(connection.isReadOnly(), "Connection read-only after setReadOnly(true)");
+            connection.setTransactionIsolation(connection.getTransactionIsolation());
+            assertTrue(connection.isReadOnly(), "Connection should still be read-only after setTransactionIsolation");
+        }
+    }
+
+    @Test
+    void setReadOnly_happyPath() throws Exception {
+        try (var connection = getConnectionViaDriverManager()) {
+            assertFalse(connection.isReadOnly(), "Connection initially not read-only");
+            connection.setReadOnly(true);
+            assertTrue(connection.isReadOnly(), "Connection read-only after setReadOnly(true)");
+
+            try (var stmt = connection.prepareStatement(INSERT_DATA)) {
+                stmt.setInt(1, 5);
+                var exception = assertThrows(SQLException.class, stmt::executeUpdate);
+                assertThat(exception, errorCodeEquals(ISCConstants.isc_read_only_trans));
+            }
+        }
+    }
+
+    @Test
+    void readOnlyShouldInheritFromTransactionConfigurationOfDefaultIsolation() throws Exception {
+        try (var connection = getConnectionViaDriverManager(
+                "TRANSACTION_READ_COMMITTED", "read_committed,rec_version,read,wait")) {
+            assertTrue(connection.isReadOnly(), "Connection initially read-only");
+
+            try (var stmt = connection.prepareStatement(INSERT_DATA)) {
+                stmt.setInt(1, 5);
+                var exception = assertThrows(SQLException.class, stmt::execute);
+                assertThat(exception, errorCodeEquals(ISCConstants.isc_read_only_trans));
+            }
+
+            connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+
+            try (var stmt = connection.prepareStatement(INSERT_DATA)) {
+                stmt.setInt(1, 5);
+                var exception = assertThrows(SQLException.class, stmt::execute);
+                assertThat(exception, errorCodeEquals(ISCConstants.isc_read_only_trans));
+            }
+        }
+    }
+
     /**
      * Single-use executor, delays the command to be executed until signalled.
      */

@@ -60,9 +60,18 @@ public interface TransactionParameterBuffer extends ParameterBuffer {
      * @since 6
      */
     default void setReadOnly(boolean readOnly) {
-        removeArgument(isc_tpb_read);
-        removeArgument(isc_tpb_write);
-        addArgument(readOnly ? isc_tpb_read : isc_tpb_write);
+        if (readOnly) {
+            ensurePresentAbsent(isc_tpb_read, isc_tpb_write);
+        } else {
+            ensurePresentAbsent(isc_tpb_write, isc_tpb_read);
+        }
+    }
+
+    private void ensurePresentAbsent(int present, int absent) {
+        if (!hasArgument(present)) {
+            addArgument(present);
+        }
+        removeArgument(absent);
     }
 
     /**
@@ -88,9 +97,12 @@ public interface TransactionParameterBuffer extends ParameterBuffer {
      * @since 6
      */
     default void setAutoCommit(boolean autoCommit) {
-        removeArgument(isc_tpb_autocommit);
         if (autoCommit) {
-            addArgument(isc_tpb_autocommit);
+            if (!hasArgument(isc_tpb_autocommit)) {
+                addArgument(isc_tpb_autocommit);
+            }
+        } else {
+            removeArgument(isc_tpb_autocommit);
         }
     }
 
