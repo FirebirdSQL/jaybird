@@ -37,10 +37,13 @@ import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
@@ -73,6 +76,7 @@ import static org.junit.jupiter.api.Assumptions.*;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
+@ExtendWith(MockitoExtension.class)
 class FBConnectionTest {
 
     private static final String CREATE_TABLE = """
@@ -784,27 +788,23 @@ class FBConnectionTest {
 
     @Test
     @Timeout(10)
-    void setNetworkTimeout_isUsed() throws Exception {
+    void setNetworkTimeout_isUsed(@Mock ExecutorService executor) throws Exception {
         assumeThat("Test assumes pure Java implementation (native doesn't support setNetworkTimeout)",
                 GDS_TYPE, isPureJavaType());
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-
-        // Workaround for bug with TPBMapper being shared (has conflict with testTpbMapping)
-        Properties props = getDefaultPropertiesForConnection();
-        props.put("TRANSACTION_READ_COMMITTED", "read_committed,rec_version,write,wait");
-        try (Connection connection1 = getConnectionViaDriverManager();
-             Statement statement1 = connection1.createStatement();
-             Connection connection2 = DriverManager.getConnection(getUrl(), props)) {
+        try (var connection1 = getConnectionViaDriverManager();
+             var statement1 = connection1.createStatement();
+             var connection2 = getConnectionViaDriverManager(
+                     "TRANSACTION_READ_COMMITTED", "read_committed,rec_version,write,wait")) {
             executeCreateTable(connection1, "create table locking (id integer, colval varchar(50))");
             statement1.execute("insert into locking(id, colval) values (1, 'abc')");
 
-            try (ResultSet rs1 = statement1.executeQuery("select id, colval from locking with lock")) {
+            try (var rs1 = statement1.executeQuery("select id, colval from locking with lock")) {
                 rs1.next();
 
                 connection2.setNetworkTimeout(executor, 50);
                 long start = 0;
-                try (Statement statement2 = connection2.createStatement();
-                     ResultSet rs2 = statement2.executeQuery("select id, colval from locking with lock")) {
+                try (var statement2 = connection2.createStatement();
+                     var rs2 = statement2.executeQuery("select id, colval from locking with lock")) {
                     start = System.currentTimeMillis();
                     // Fetch will block waiting for lock held by statement1/rs1 to be released
                     SQLException exception = assertThrows(SQLException.class, rs2::next);
@@ -818,20 +818,14 @@ class FBConnectionTest {
             }
 
             assertTrue(connection2.isClosed(), "Expected connection2 to be closed by timeout");
-        } finally {
-            executor.shutdown();
         }
     }
 
     @Test
-    void setNetworkTimeout_invalidTimeout() throws Exception {
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        try (Connection connection = getConnectionViaDriverManager()) {
-            SQLException exception = assertThrows(SQLException.class,
-                    () -> connection.setNetworkTimeout(executorService, -1));
+    void setNetworkTimeout_invalidTimeout(@Mock ExecutorService executor) throws Exception {
+        try (var connection = getConnectionViaDriverManager()) {
+            var exception = assertThrows(SQLException.class, () -> connection.setNetworkTimeout(executor, -1));
             assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_invalidTimeout));
-        } finally {
-            executorService.shutdown();
         }
     }
 
@@ -844,32 +838,16 @@ class FBConnectionTest {
     }
 
     @Test
-    void setNetworkTimeout_getAndSetSeries() throws Exception {
+    void setNetworkTimeout_getAndSetSeries(@Mock ExecutorService executor) throws Exception {
         assumeThat("Type is pure Java", GDS_TYPE, isPureJavaType());
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        try (Connection connection = getConnectionViaDriverManager()) {
+        try (var connection = getConnectionViaDriverManager()) {
             assertEquals(0, connection.getNetworkTimeout(), "Expected 0 as initial network timeout");
 
-            connection.setNetworkTimeout(executorService, 500);
-            final CyclicBarrier barrier = new CyclicBarrier(2);
-            Runnable waitForBarrier = () -> {
-                try {
-                    barrier.await(500, TimeUnit.MILLISECONDS);
-                } catch (TimeoutException | InterruptedException | BrokenBarrierException e) {
-                    e.printStackTrace();
-                }
-            };
-            executorService.execute(waitForBarrier);
-            barrier.await(500, TimeUnit.MILLISECONDS);
+            connection.setNetworkTimeout(executor, 500);
             assertEquals(500, connection.getNetworkTimeout(), "Unexpected getNetworkTimeout");
 
-            barrier.reset();
-            connection.setNetworkTimeout(executorService, 0);
-            executorService.execute(waitForBarrier);
-            barrier.await(500, TimeUnit.MILLISECONDS);
+            connection.setNetworkTimeout(executor, 0);
             assertEquals(0, connection.getNetworkTimeout(), "Unexpected getNetworkTimeout");
-        } finally {
-            executorService.shutdown();
         }
     }
 
@@ -877,9 +855,7 @@ class FBConnectionTest {
     void testWireCompression() throws Exception {
         assumeThat("Test only works with pure java connections", GDS_TYPE, isPureJavaType());
         assumeTrue(getDefaultSupportInfo().supportsWireCompression(), "Test requires wire compression");
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("wireCompression", "true");
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+        try (var connection = getConnectionViaDriverManager("wireCompression", "true")) {
             assertTrue(connection.isValid(0));
             GDSServerVersion serverVersion =
                     connection.unwrap(FirebirdConnection.class).getFbDatabase().getServerVersion();
