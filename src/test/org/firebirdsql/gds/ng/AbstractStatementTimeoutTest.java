@@ -49,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  *
  * @author Mark Rotteveel
  */
+@SuppressWarnings("java:S2925")
 public abstract class AbstractStatementTimeoutTest {
 
     @RegisterExtension
@@ -204,30 +205,9 @@ public abstract class AbstractStatementTimeoutTest {
     }
 
     @AfterEach
-    public final void tearDown() {
-        if (statement != null) {
-            try {
-                statement.close();
-            } catch (SQLException ex) {
-                System.out.println("Exception on statement close");
-                ex.printStackTrace();
-            }
-        }
-        if (transaction != null) {
-            try {
-                transaction.commit();
-            } catch (SQLException ex) {
-                System.out.println("Exception on transaction commit");
-                ex.printStackTrace();
-            }
-        }
-        if (db != null) {
-            try {
-                db.close();
-            } catch (SQLException ex) {
-                System.out.println("Exception on detach");
-                ex.printStackTrace();
-            }
+    public final void tearDown() throws SQLException {
+        try (var ignored1 = this.db; var ignored2 = this.statement) {
+            if (transaction != null) transaction.commit();
         }
     }
 }

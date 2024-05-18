@@ -210,7 +210,7 @@ class FBMaintenanceManagerTest {
     @Test
     void testTransactionalShutdown() throws Exception {
         String sql = "UPDATE TEST SET TESTVAL = 5";
-        try (Connection conn = getConnectionViaDriverManager()) {
+        try (var conn = getConnectionViaDriverManager()) {
             createTestTable();
             conn.setAutoCommit(false);
             Statement stmt = conn.createStatement();
@@ -220,17 +220,17 @@ class FBMaintenanceManagerTest {
 
         // Shutting down when no transactions are active should work
         maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0);
-        Thread.sleep(100);
+        Thread.yield();
         maintenanceManager.bringDatabaseOnline();
-        Thread.sleep(100);
-        
-        try (Connection conn = getConnectionViaDriverManager()) {
+        Thread.yield();
+
+        try (var conn = getConnectionViaDriverManager()) {
             conn.setAutoCommit(false);
 
-            Statement stmt = conn.createStatement();
+            var stmt = conn.createStatement();
             stmt.executeUpdate(sql);
 
-            SQLException exception = assertThrows(SQLException.class,
+            var exception = assertThrows(SQLException.class,
                     () -> maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0));
             assertThat(exception, errorCodeEquals(ISCConstants.isc_shutfail));
         }
