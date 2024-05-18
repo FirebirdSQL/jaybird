@@ -1027,8 +1027,8 @@ class FBStatementTest {
     @Test
     void statementTextLongerThan64KB() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsStatementTextLongerThan64K(), "requires long statement text support");
-        // For some reason the native implementation can't handle exactly 32KB values, but it can handle 32KB - 1
-        String text32kb = "X".repeat(32 * 2024 - 1);
+        // For some reason the native implementation can't handle exactly 32KB values, but it can handle 32KB - 1 (this may be version dependent)
+        String text32kb = "X".repeat(32 * 1024 - 1);
 
         try (Statement stmt = con.createStatement()) {
             ResultSet rs = stmt.executeQuery(
