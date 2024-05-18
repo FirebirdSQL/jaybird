@@ -20,7 +20,6 @@ package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.Platform;
 import com.sun.jna.ptr.IntByReference;
-import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
@@ -387,10 +386,6 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     public IntByReference getJnaHandle() {
         return handle;
-    }
-
-    public final EncodingDefinition getEncodingDefinition() {
-        return connection.getEncodingDefinition();
     }
 
     protected JnaEventHandle validateEventHandle(EventHandle eventHandle) throws SQLException {

@@ -1481,6 +1481,9 @@ Its value is reset to `null` on each prepare.
 ** `wrapDeferredResponse` received an extra parameter, `boolean requiresSync`.
 This parameter signals if the deferred response requires some form of synchronization action to instruct the server to send the response.
 When in doubt, use `false` to communicate that no such synchronization is required.
+* `JnaDatabase`
+** `getEncodingDefinition` was removed;
+there is no replacement
 * `DeferredAction`
 ** `wrapDeferredResponse` received an extra parameter, `boolean requiresSync`.
 This parameter signals if the deferred response requires some form of synchronization action to instruct the server to send the response.
