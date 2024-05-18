@@ -121,6 +121,9 @@ public interface JaybirdErrorCodes {
     int jb_invalidResultSetType     = 337248321;
     int jb_invalidResultSetConcurrency                   = 337248322;
     int jb_invalidResultSetHoldability                   = 337248323;
+    int jb_invalidTransactionHandleType                  = 337248324;
+    int jb_invalidEventHandleType                        = 337248325;
+    int jb_eventHandleNotInitialized                     = 337248326;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

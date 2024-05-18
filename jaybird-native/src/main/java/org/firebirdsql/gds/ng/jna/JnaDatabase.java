@@ -33,11 +33,8 @@ import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 import java.lang.ref.Cleaner;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
-import java.sql.SQLTransientException;
 import java.util.Set;
 
-import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
@@ -342,9 +339,9 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
                             .forException(JaybirdErrorCodes.jb_executeImmediateRequiresTransactionAttached)
                             .toSQLException();
                 } else if (!(transaction instanceof JnaTransaction)) {
-                    // TODO SQLState and/or Firebird specific error
-                    throw new SQLNonTransientException(format("Invalid transaction handle type: %s, expected: %s",
-                            transaction.getClass(), JnaTransaction.class));
+                    throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidTransactionHandleType)
+                            .messageParameter(transaction.getClass())
+                            .toSQLException();
                 }
                 checkTransactionActive(transaction);
             } else if (transaction != null) {
@@ -398,13 +395,13 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     protected JnaEventHandle validateEventHandle(EventHandle eventHandle) throws SQLException {
         if (!(eventHandle instanceof JnaEventHandle jnaEventHandle)) {
-            // TODO SQLState and/or Firebird specific error
-            throw new SQLNonTransientException(format("Invalid event handle type: %s, expected: %s",
-                    eventHandle.getClass(), JnaEventHandle.class));
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidEventHandleType)
+                    .messageParameter(eventHandle.getClass())
+                    .toSQLException();
         }
         if (jnaEventHandle.getSize() == -1) {
-            // TODO SQLState and/or Firebird specific error
-            throw new SQLTransientException("Event handle hasn't been initialized");
+            throw FbExceptionBuilder.forTransientException(JaybirdErrorCodes.jb_eventHandleNotInitialized)
+                    .toSQLException();
         }
         return jnaEventHandle;
     }

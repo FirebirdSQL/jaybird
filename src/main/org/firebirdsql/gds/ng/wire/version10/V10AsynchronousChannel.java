@@ -35,7 +35,6 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -206,8 +205,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
     @Override
     public void queueEvent(EventHandle eventHandle) throws SQLException {
-        if (!(eventHandle instanceof WireEventHandle wireEventHandle))
-            throw new SQLNonTransientException("Invalid event handle type: " + eventHandle.getClass().getName());
+        WireEventHandle wireEventHandle = requireWireEventHandle(eventHandle);
         final int localId = wireEventHandle.assignNewLocalId();
         addChannelListener(wireEventHandle);
 
@@ -233,10 +231,18 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         }
     }
 
+    private static WireEventHandle requireWireEventHandle(EventHandle eventHandle) throws SQLException {
+        if (eventHandle instanceof WireEventHandle wireEventHandle) {
+            return wireEventHandle;
+        }
+        throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidEventHandleType)
+                .messageParameter(eventHandle.getClass())
+                .toSQLException();
+    }
+
     @Override
     public void cancelEvent(EventHandle eventHandle) throws SQLException {
-        if (!(eventHandle instanceof WireEventHandle wireEventHandle))
-            throw new SQLNonTransientException("Invalid event handle type: " + eventHandle.getClass().getName());
+        WireEventHandle wireEventHandle = requireWireEventHandle(eventHandle);
         removeChannelListener(wireEventHandle);
 
         try (LockCloseable ignored = withLock()) {
