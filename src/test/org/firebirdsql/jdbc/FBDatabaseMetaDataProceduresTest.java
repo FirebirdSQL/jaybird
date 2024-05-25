@@ -321,7 +321,7 @@ class FBDatabaseMetaDataProceduresTest {
         class Ignored {
             // Skipping procedures from system packages (when testing with useCatalogAsPackage=true)
             private static final List<String> PREFIXES_TO_IGNORE =
-                    List.of("\"RDB$BLOB_UTIL\".", "\"RDB$PROFILER\".", "\"RDB$TIME_ZONE_UTIL\".");
+                    List.of("\"RDB$BLOB_UTIL\".", "\"RDB$PROFILER\".", "\"RDB$TIME_ZONE_UTIL\".", "\"RDB$SQL\".");
         }
         return Ignored.PREFIXES_TO_IGNORE.stream().anyMatch(specificName::startsWith);
     }

@@ -144,6 +144,9 @@ class FBDatabaseMetaDataCatalogsTest {
                 expectedCatalogNames.add("RDB$BLOB_UTIL");
                 expectedCatalogNames.add("RDB$PROFILER");
             }
+            if (supportInfo.isVersionEqualOrAbove(6)) {
+                expectedCatalogNames.add("RDB$SQL");
+            }
             Collections.sort(expectedCatalogNames);
         }
         try (var connection = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {

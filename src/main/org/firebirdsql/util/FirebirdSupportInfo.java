@@ -506,25 +506,21 @@ public final class FirebirdSupportInfo {
      * @return Number of system tables, or {@code -1} if the Firebird version is not known/supported.
      */
     public int getSystemTableCount() {
-        final int databaseMajorVersion = serverVersion.getMajorVersion();
-        final int databaseMinorVersion = serverVersion.getMinorVersion();
-        if (databaseMajorVersion < 2) {
-            return 32;
-        } else if (databaseMajorVersion == 2 && databaseMinorVersion == 0) {
-            return 33;
-        } else if (databaseMajorVersion == 2 && databaseMinorVersion == 1) {
-            return 40;
-        } else if (databaseMajorVersion == 2 && databaseMinorVersion == 5) {
-            return 42;
-        } else if (databaseMajorVersion == 3) {
-            return 50;
-        } else if (databaseMajorVersion == 4) {
-            return 54;
-        } else if (databaseMajorVersion == 5) {
-            return 56;
-        } else {
-            return -1;
-        }
+        return switch (serverVersion.getMajorVersion()) {
+        case 0, 1 -> 32;
+        case 2 -> switch (serverVersion.getMinorVersion()) {
+            case 0 -> 33;
+            case 1 -> 40;
+            case 5 -> 42;
+            default -> -1;
+        };
+        case 3 -> 50;
+        case 4 -> 54;
+        case 5 -> 56;
+        // Intentionally not merged with case 5 as it is likely to change during Firebird 6 development
+        case 6 -> 56;
+        default -> -1;
+        };
     }
 
     /**
