@@ -25,6 +25,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.IConnectionProperties;
@@ -53,6 +54,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cannotInstantiateConnection;
 
 /**
  * FBManagedConnectionFactory is a factory for {@link FBManagedConnection}, and implements many of the internal
@@ -758,10 +761,11 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
             Constructor<?> constructor = connectionClass.getConstructor(FBManagedConnection.class);
             return (FBConnection) constructor.newInstance(mc);
         } catch (NoSuchMethodException ex) {
-            // TODO More specific exception, Jaybird error code
-            throw new SQLException("Cannot instantiate connection class " + connectionClass.getName()
-                                   + ", no constructor accepting " + FBManagedConnection.class
-                                   + " class as single parameter was found.");
+            throw FbExceptionBuilder.forNonTransientConnectionException(jb_cannotInstantiateConnection)
+                    .messageParameter(connectionClass.getName(),
+                            "no constructor accepting org.firebirdsql.jaybird.xca.FBManagedConnection as single "
+                            + "parameter was found")
+                    .toSQLException();
         } catch (InvocationTargetException ex) {
             final Throwable cause = ex.getCause();
             if (cause instanceof RuntimeException re) {
@@ -772,14 +776,20 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
                 throw sqle;
             }
 
-            // TODO More specific exception, Jaybird error code
-            throw new SQLException(ex.getMessage(), ex);
+            throw FbExceptionBuilder.forNonTransientConnectionException(jb_cannotInstantiateConnection)
+                    .messageParameter(connectionClass.getName(), ex)
+                    .cause(ex)
+                    .toSQLException();
         } catch (IllegalAccessException ex) {
-            // TODO More specific exception, Jaybird error code
-            throw new SQLException("Constructor for class " + connectionClass.getName() + " is not accessible.", ex);
+            throw FbExceptionBuilder.forNonTransientConnectionException(jb_cannotInstantiateConnection)
+                    .messageParameter(connectionClass.getName(), "constructor is not accessible")
+                    .cause(ex)
+                    .toSQLException();
         } catch (InstantiationException ex) {
-            // TODO More specific exception, Jaybird error code
-            throw new SQLException("Cannot instantiate class" + connectionClass.getName(), ex);
+            throw FbExceptionBuilder.forNonTransientConnectionException(jb_cannotInstantiateConnection)
+                    .messageParameter(connectionClass.getName(), ex)
+                    .cause(ex)
+                    .toSQLException();
         }
     }
 

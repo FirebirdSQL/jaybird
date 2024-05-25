@@ -124,6 +124,8 @@ public interface JaybirdErrorCodes {
     int jb_invalidTransactionHandleType                  = 337248324;
     int jb_invalidEventHandleType                        = 337248325;
     int jb_eventHandleNotInitialized                     = 337248326;
+    int jb_attemptToDestroyManagedConnectionActiveTx     = 337248327;
+    int jb_cannotInstantiateConnection                   = 337248328;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

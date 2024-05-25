@@ -53,6 +53,7 @@ import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.requireNonNull;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_attemptToDestroyManagedConnectionActiveTx;
 
 /**
  * A physical connection handle to a Firebird database, providing a {@code XAResource}.
@@ -75,10 +76,12 @@ public final class FBManagedConnection implements ExceptionListener {
     private final List<XcaConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
     private static final AtomicReferenceFieldUpdater<FBManagedConnection, FBConnection> connectionHandleUpdater =
             AtomicReferenceFieldUpdater.newUpdater(FBManagedConnection.class, FBConnection.class, "connectionHandle");
+    @SuppressWarnings("java:S3077")
     private volatile FBConnection connectionHandle;
     // This is a bit of hack to be able to get attach warnings into the FBConnection that is created later.
     private static final AtomicReferenceFieldUpdater<FBManagedConnection, SQLWarning> unnotifiedWarningsUpdater =
             AtomicReferenceFieldUpdater.newUpdater(FBManagedConnection.class, SQLWarning.class, "unnotifiedWarnings");
+    @SuppressWarnings("java:S3077")
     private volatile SQLWarning unnotifiedWarnings;
 
     private int timeout = 0;
@@ -351,9 +354,9 @@ public final class FBManagedConnection implements ExceptionListener {
                 currentDatabase.forceClose();
             } else {
                 if (inTransaction()) {
-                    // TODO More specific exception, Jaybird error code
                     // TODO should we skip disassociation in this case?
-                    throw new SQLException("Can't destroy managed connection with active transaction");
+                    throw FbExceptionBuilder.forException(jb_attemptToDestroyManagedConnectionActiveTx)
+                            .toSQLException();
                 }
 
                 gdsHelper.detachDatabase();
