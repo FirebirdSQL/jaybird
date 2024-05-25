@@ -69,9 +69,8 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     private final WarningMessageCallback warningCallback =
             warning -> databaseListenerDispatcher.warningReceived(AbstractFbDatabase.this, warning);
     private final RowDescriptor emptyRowDescriptor;
+    private OdsVersion odsVersion = OdsVersion.none();
     private short databaseDialect;
-    private int odsMajor;
-    private int odsMinor;
 
     protected AbstractFbDatabase(T connection, DatatypeCoder datatypeCoder) {
         super(connection, datatypeCoder);
@@ -199,12 +198,11 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
 
     @Override
     public final int getOdsMajor() {
-        return odsMajor;
+        return odsVersion.major();
     }
 
     /**
-     * Sets the ODS (On Disk Structure) major version of the database associated
-     * with this connection.
+     * Sets the ODS (On Disk Structure) major version of the database associated with this connection.
      * <p>
      * This method should only be called by this instance.
      * </p>
@@ -213,26 +211,30 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
      *         ODS major version
      */
     protected final void setOdsMajor(int odsMajor) {
-        this.odsMajor = odsMajor;
+        this.odsVersion = odsVersion.withMajor(odsMajor);
     }
 
     @Override
     public final int getOdsMinor() {
-        return odsMinor;
+        return odsVersion.minor();
     }
 
     /**
-     * Sets the ODS (On Disk Structure) minor version of the database associated
-     * with this connection.
+     * Sets the ODS (On Disk Structure) minor version of the database associated with this connection.
      * <p>
      * This method should only be called by this instance.
      * </p>
      *
      * @param odsMinor
-     *         The ODS minor version
+     *         ODS minor version
      */
     protected final void setOdsMinor(int odsMinor) {
-        this.odsMinor = odsMinor;
+        this.odsVersion = odsVersion.withMinor(odsMinor);
+    }
+
+    @Override
+    public final OdsVersion getOdsVersion() {
+        return odsVersion;
     }
 
     /**

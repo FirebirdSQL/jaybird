@@ -105,7 +105,7 @@ class JnaServiceTest {
 
     @Test
     void testBasicStatusVectorProcessing_wrongService() throws Exception {
-        assumeTrue(getDefaultSupportInfo().isVersionBelow(4, 0), "Incorrect service name ignored in Firebird 4+");
+        assumeTrue(getDefaultSupportInfo().isVersionBelow(4), "Incorrect service name ignored in Firebird 4+");
         // set invalid database
         final String invalidServiceName = "doesnotexist";
         connectionInfo.setServiceName(invalidServiceName);

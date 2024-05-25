@@ -20,6 +20,7 @@ package org.firebirdsql.util;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbAttachment;
+import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.gds.ng.wire.auth.legacy.LegacyAuthenticationPluginSpi;
 import org.firebirdsql.gds.ng.wire.auth.srp.Srp224AuthenticationPluginSpi;
 import org.firebirdsql.gds.ng.wire.auth.srp.Srp256AuthenticationPluginSpi;
@@ -47,6 +48,7 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@SuppressWarnings("unused")
 public final class FirebirdSupportInfo {
 
     private final GDSServerVersion serverVersion;
@@ -117,6 +119,20 @@ public final class FirebirdSupportInfo {
      */
     public boolean isVersionBelow(int majorVersion, int minorVersion) {
         return !isVersionEqualOrAbove(majorVersion, minorVersion);
+    }
+
+    /**
+     * Check if the <em>major</em> of this version is below the specified version.
+     * <p>
+     * Equivalent to {@code !isVersionEqualOrAbove(majorVersion)}.
+     * </p>
+     *
+     * @param majorVersion
+     *         Major version
+     * @return {@code true} when current major is smaller than the specified major
+     */
+    public boolean isVersionBelow(int majorVersion) {
+        return !isVersionEqualOrAbove(majorVersion);
     }
 
     /**
@@ -303,7 +319,7 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when {@code isc_spb_sec_userid} and {@code isc_spb_sec_groupid} are supported.
      */
     public boolean supportsUserAndGroupIdInUser() {
-        return isVersionBelow(3, 0);
+        return isVersionBelow(3);
     }
 
     /**
@@ -459,7 +475,7 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when UDFs (User Defined Functions) - backed by a native library - are supported
      */
     public boolean supportsNativeUserDefinedFunctions() {
-        return isVersionBelow(4, 0);
+        return isVersionBelow(4);
     }
 
     /**
@@ -487,7 +503,7 @@ public final class FirebirdSupportInfo {
             case LegacyAuthenticationPluginSpi.LEGACY_AUTH_NAME -> true;
             case SrpAuthenticationPluginSpi.SRP_AUTH_NAME -> isVersionEqualOrAbove(3);
             case Srp224AuthenticationPluginSpi.SRP_224_AUTH_NAME, Srp256AuthenticationPluginSpi.SRP_256_AUTH_NAME,
-                    Srp384AuthenticationPluginSpi.SRP_384_AUTH_NAME, Srp512AuthenticationPluginSpi.SRP_512_AUTH_NAME ->
+                 Srp384AuthenticationPluginSpi.SRP_384_AUTH_NAME, Srp512AuthenticationPluginSpi.SRP_512_AUTH_NAME ->
                     isVersionEqualOrAbove(3, 0, 4);
             default -> false;
         };
@@ -507,19 +523,19 @@ public final class FirebirdSupportInfo {
      */
     public int getSystemTableCount() {
         return switch (serverVersion.getMajorVersion()) {
-        case 0, 1 -> 32;
-        case 2 -> switch (serverVersion.getMinorVersion()) {
-            case 0 -> 33;
-            case 1 -> 40;
-            case 5 -> 42;
+            case 0, 1 -> 32;
+            case 2 -> switch (serverVersion.getMinorVersion()) {
+                case 0 -> 33;
+                case 1 -> 40;
+                case 5 -> 42;
+                default -> -1;
+            };
+            case 3 -> 50;
+            case 4 -> 54;
+            case 5 -> 56;
+            // Intentionally not merged with case 5 as it is likely to change during Firebird 6 development
+            case 6 -> 56;
             default -> -1;
-        };
-        case 3 -> 50;
-        case 4 -> 54;
-        case 5 -> 56;
-        // Intentionally not merged with case 5 as it is likely to change during Firebird 6 development
-        case 6 -> 56;
-        default -> -1;
         };
     }
 
@@ -632,7 +648,7 @@ public final class FirebirdSupportInfo {
 
     public boolean supportsWnet() {
         // NOTE: There is probably a lower boundary as well (2.0?), but not checking that
-        return isVersionBelow(5, 0);
+        return isVersionBelow(5);
     }
 
     /**
@@ -697,6 +713,70 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsMetadataPrivileges() {
         return isVersionEqualOrAbove(3);
+    }
+
+    /**
+     * @return the ODS version used when creating a database or after using the gfix/service repair upgrade database
+     * option
+     */
+    public OdsVersion getDefaultOdsVersion() {
+        return switch (serverVersion.getMajorVersion()) {
+            case 0, 1 -> OdsVersion.of(10, 0);
+            case 2 -> switch (serverVersion.getMinorVersion()) {
+                case 0 -> OdsVersion.of(11, 0);
+                case 1 -> OdsVersion.of(11, 1);
+                case 5 -> OdsVersion.of(11, 2);
+                default -> throw new IllegalArgumentException("Unsupported version: " + serverVersion);
+            };
+            case 3 -> OdsVersion.of(12, 0);
+            case 4 -> OdsVersion.of(13, 0);
+            case 5 -> OdsVersion.of(13, 1);
+            // Might change before final release?
+            case 6 -> OdsVersion.of(13, 2);
+            default -> throw new IllegalArgumentException("Unsupported version: " + serverVersion);
+        };
+    }
+
+    /**
+     * Reports if the specified ODS version is supported.
+     *
+     * @param major
+     *         ODS major
+     * @param minor
+     *         ODS minor
+     * @return {@code true} if the ODS is supported, {@code false} otherwise
+     * @see #supportsOds(OdsVersion)
+     */
+    public boolean supportsOds(int major, int minor) {
+        return switch (major) {
+            case 10 -> isVersionBelow(3);
+            case 11 -> switch (minor) {
+                case 0 -> isVersionEqualOrAbove(2) && isVersionBelow(3);
+                case 1 -> isVersionEqualOrAbove(2, 1) && isVersionBelow(3);
+                case 2 -> isVersionEqualOrAbove(2, 5) && isVersionBelow(3);
+                default -> false;
+            };
+            case 12 -> isVersionEqualOrAbove(3) && isVersionBelow(4);
+            case 13 -> switch (minor) {
+                case 0 -> isVersionEqualOrAbove(4) && isVersionBelow(7);
+                case 1 -> isVersionEqualOrAbove(5) && isVersionBelow(7);
+                case 2 -> isVersionEqualOrAbove(6) && isVersionBelow(7);
+                default -> false;
+            };
+            default -> false;
+        };
+    }
+
+    /**
+     * Reports if the specified ODS version is supported.
+     *
+     * @param odsVersion
+     *         ODS version
+     * @return {@code true} if the ODS is supported, {@code false} otherwise
+     * @see #supportsOds(int, int)
+     */
+    public boolean supportsOds(OdsVersion odsVersion) {
+        return supportsOds(odsVersion.major(), odsVersion.minor());
     }
 
     /**

@@ -312,7 +312,7 @@ class FBBackupManagerTest {
         backupManager.setDatabase("test_with_custom_sec_db");
         backupManager.setUser("custom_sec");
         backupManager.setPassword("custom_sec");
-        if (supportInfo.isVersionEqualOrAbove(3, 0) && supportInfo.isVersionBelow(4, 0)) {
+        if (supportInfo.isVersionEqualOrAbove(3) && supportInfo.isVersionBelow(4)) {
             backupManager.setRoleName("RDB$ADMIN");
         }
         backupManager.backupDatabase();

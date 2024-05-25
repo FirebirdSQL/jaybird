@@ -20,14 +20,15 @@ package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.management.FBManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -60,14 +61,16 @@ class JnaDatabaseTest {
     @RegisterExtension
     static final GdsTypeExtension testType = GdsTypeExtension.supportsNativeOnly();
 
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.noDatabase();
+
     private final AbstractNativeDatabaseFactory factory =
             (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
     private final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     @Test
     void testBasicAttach() throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
         try (JnaDatabase db = factory.connect(connectionInfo)) {
             db.attach();
 
@@ -75,23 +78,18 @@ class JnaDatabaseTest {
             assertThat("Expected non-zero connection handle", db.getHandle(), not(equalTo(0)));
             assertNotNull(db.getServerVersion(), "Expected version string to be not null");
             assertNotEquals(GDSServerVersion.INVALID_VERSION, db.getServerVersion(), "Expected version should not be invalid");
-        } finally {
-            defaultDatabaseTearDown(fbManager);
         }
     }
 
     @Test
     void doubleAttach() throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
         try (JnaDatabase db = factory.connect(connectionInfo)) {
             db.attach();
 
             SQLException exception = assertThrows(SQLException.class, db::attach,
                     "Second attach should throw exception");
             assertThat(exception, message(equalTo("Already attached to a database")));
-        } finally {
-            defaultDatabaseTearDown(fbManager);
         }
     }
 
@@ -167,20 +165,15 @@ class JnaDatabaseTest {
 
     @Test
     void testDrop_NotAttached() throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
+        JnaDatabase db = factory.connect(connectionInfo);
         try {
-            JnaDatabase db = factory.connect(connectionInfo);
-            try {
-                SQLException exception = assertThrows(SQLException.class, db::dropDatabase);
-                assertThat(exception, allOf(
-                        message(startsWith("The connection is not attached to a database")),
-                        sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR)));
-            } finally {
-                closeQuietly(db);
-            }
+            var exception = assertThrows(SQLException.class, db::dropDatabase);
+            assertThat(exception, allOf(
+                    message(startsWith("The connection is not attached to a database")),
+                    sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR)));
         } finally {
-            defaultDatabaseTearDown(fbManager);
+            closeQuietly(db);
         }
     }
 
@@ -199,49 +192,38 @@ class JnaDatabaseTest {
 
     @Test
     void testBasicDetach() throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
+        JnaDatabase db = factory.connect(connectionInfo);
         try {
-            JnaDatabase db = factory.connect(connectionInfo);
-            try {
-                db.attach();
+            db.attach();
 
-                db.close();
+            db.close();
 
-                assertFalse(db.isAttached(), "Expected database not attached");
-            } finally {
-                closeQuietly(db);
-            }
+            assertFalse(db.isAttached(), "Expected database not attached");
         } finally {
-            defaultDatabaseTearDown(fbManager);
+            closeQuietly(db);
         }
     }
 
     @Test
     void testDetach_openTransactions() throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
-
+        usesDatabase.createDefaultDatabase();
+        JnaDatabase db = factory.connect(connectionInfo);
+        FbTransaction transaction = null;
         try {
-            JnaDatabase db = factory.connect(connectionInfo);
-            FbTransaction transaction = null;
-            try {
-                db.attach();
-                // Starting an active transaction
-                transaction = getTransaction(db);
+            db.attach();
+            // Starting an active transaction
+            transaction = getTransaction(db);
 
-                SQLException exception = assertThrows(SQLException.class, db::close);
-                assertThat(exception, allOf(
-                        errorCodeEquals(ISCConstants.isc_open_trans),
-                        message(startsWith(getFbMessage(ISCConstants.isc_open_trans, "1")))));
-            } finally {
-                if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
-                    transaction.commit();
-                }
-                closeQuietly(db);
-            }
+            var exception = assertThrows(SQLException.class, db::close);
+            assertThat(exception, allOf(
+                    errorCodeEquals(ISCConstants.isc_open_trans),
+                    message(startsWith(getFbMessage(ISCConstants.isc_open_trans, "1")))));
         } finally {
-            defaultDatabaseTearDown(fbManager);
+            if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
+                transaction.commit();
+            }
+            closeQuietly(db);
         }
     }
 
@@ -250,23 +232,18 @@ class JnaDatabaseTest {
         // TODO Investigate why this doesn't work.
         assumeThat("Test doesn't work with embedded protocol", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
 
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
+        JnaDatabase db = factory.connect(connectionInfo);
         try {
-            JnaDatabase db = factory.connect(connectionInfo);
-            try {
-                db.attach();
-                assumeTrue(db.isAttached(), "expected database attached");
-                assumeTrue(supportInfoFor(db).supportsCancelOperation(), "Test requires cancel support");
+            db.attach();
+            assumeTrue(db.isAttached(), "expected database attached");
+            assumeTrue(supportInfoFor(db).supportsCancelOperation(), "Test requires cancel support");
 
-                db.cancelOperation(ISCConstants.fb_cancel_abort);
+            db.cancelOperation(ISCConstants.fb_cancel_abort);
 
-                assertFalse(db.isAttached(), "Expected database not attached after abort");
-            } finally {
-                closeQuietly(db);
-            }
+            assertFalse(db.isAttached(), "Expected database not attached after abort");
         } finally {
-            defaultDatabaseTearDown(fbManager);
+            closeQuietly(db);
         }
     }
 
@@ -283,6 +260,19 @@ class JnaDatabaseTest {
             closeQuietly(db);
             //noinspection ResultOfMethodCallIgnored
             new File(getDatabasePath()).delete();
+        }
+    }
+
+    @Test
+    public void testOdsVersionInformation() throws Exception {
+        usesDatabase.createDefaultDatabase();
+        try (JnaDatabase db = factory.connect(connectionInfo);) {
+            db.attach();
+
+            OdsVersion expectedOds = getDefaultSupportInfo().getDefaultOdsVersion();
+            assertEquals(expectedOds, db.getOdsVersion(), "odsVersion");
+            assertEquals(expectedOds.major(), db.getOdsMajor(), "odsMajor");
+            assertEquals(expectedOds.minor(), db.getOdsMinor(), "odsMinor");
         }
     }
 

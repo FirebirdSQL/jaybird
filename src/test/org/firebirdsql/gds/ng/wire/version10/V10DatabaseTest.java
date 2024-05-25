@@ -363,6 +363,23 @@ public class V10DatabaseTest {
         }
     }
 
+    @Test
+    public void testOdsVersionInformation() throws Exception {
+        usesDatabase.createDefaultDatabase();
+        try (WireDatabaseConnection gdsConnection = createConnection()) {
+            gdsConnection.socketConnect();
+            try (FbWireDatabase db = gdsConnection.identify()) {
+                assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
+                db.attach();
+
+                OdsVersion expectedOds = getDefaultSupportInfo().getDefaultOdsVersion();
+                assertEquals(expectedOds, db.getOdsVersion(), "odsVersion");
+                assertEquals(expectedOds.major(), db.getOdsMajor(), "odsMajor");
+                assertEquals(expectedOds.minor(), db.getOdsMinor(), "odsMinor");
+            }
+        }
+    }
+
     private void checkCancelOperationNotSupported(int kind) throws Exception {
         usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
