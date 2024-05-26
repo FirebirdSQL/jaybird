@@ -73,7 +73,8 @@ The major changes and new features in Jaybird 6 are:
 
 // TODO List Jaybird 6 changes
 
-Upgrading from Jaybird 5 to 6 should be simple, but please make sure to read <<compatibility-changes>> before using Jaybird 6.
+Upgrading from Jaybird 6 should be simple, but please make sure to read <<compatibility-changes>> before using Jaybird 6.
+If you're using Jaybird with the native or embedded connections, you will need to make some changes.
 See also <<upgrading-from-jaybird-5-to-jaybird-6>>.
 
 Bug reports about undocumented changes in behavior are appreciated.
@@ -82,7 +83,7 @@ Feedback can be sent to the https://groups.google.com/g/firebird-java[Firebird-j
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 3.0.11, and 4.0.3 and a recent snapshot of Firebird 5.0, but should also support other Firebird versions from 3.0 and up.
+Jaybird {version_wo_target} was tested against Firebird 3.0.11, Firebird 4.0.4, Firebird 5.0.0 and a recent snapshot of Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
 
 Jaybird 6 will -- by default -- not connect to Firebird 2.5 or older.
 See also <<unsupported-protocol>>.
@@ -96,7 +97,7 @@ Jaybird 6 supports Java 17 and higher (JDBC 4.3).
 Support for earlier Java versions has been dropped.
 
 Given the limited support period for Java 9 and higher versions, we limit support to Java 17 and the most recent LTS version after Java 17 and the latest Java release.
-Currently, that means we support Java 17 and 21.
+Currently, that means we support Java 17, Java 21, and Java 22.
 
 [NOTE]
 ====
@@ -108,9 +109,14 @@ Jaybird 6 provides libraries for Java Java 17.
 Jaybird 6 is modularized.
 The available modules are:
 
-* `org.firebirdsql.jaybird` -- main Jaybird driver
-* `org.firebirdsql.jaybird.chacha64` -- ChaCha64 wire encryption implementation
-* `org.firebirdsql.jna` -- native and embedded protocol implementation using JNA
+`org.firebirdsql.jaybird`::
+main Jaybird driver
+
+`org.firebirdsql.jaybird.chacha64`::
+ChaCha64 wire encryption implementation
+
+`org.firebirdsql.jna`::
+native and embedded protocol implementation using JNA
 
 See also <<java-support>> in <<whats-new-in-jaybird-6>>.
 
@@ -190,7 +196,7 @@ See also <<type-2-native-and-embedded-driver>>.
 [#download]
 ==== Download
 
-You can download the latest versions from https://www.firebirdsql.org/en/jdbc-driver/
+You can download the latest version of Jaybird from https://www.firebirdsql.org/en/jdbc-driver/
 
 At minimum Jaybird 6 requires `jaybird-{version_wo_target}.jar`.
 
@@ -210,7 +216,7 @@ Please make sure to read <<compatibility-changes,Compatibility changes>> before 
 Change the version of the dependency to `{version_wo_target}`.
 If you're still using the artifact id `jaybird-jdkXX`, change it to `jaybird`.
 
-When your Jaybird dependency defines the exclusion for `javax.resource:connector-api` (see below), you can remove it.
+When your Jaybird dependency defines the exclusion for `javax.resource:connector-api` (see below), you can remove it as Jaybird no longer has a dependency on `connector-api`.
 
 [source,xml]
 ----
@@ -262,7 +268,7 @@ If you manage your dependencies manually, you need to do the following:
 ** `jaybird-5.0.x.<java>.jar` with `jaybird-{version_wo_target}.jar`
 . If you use the NATIVE or EMBEDDED protocols, add the following JARs to the classpath or modulepath
 ** `jaybird-native-{version_wo_target}.jar`
-** `jna-jpms-{jna-version}.jar` (if you have an older version of JNA or a `jna-{jna-version}` instead of `jna-jpms-{jna-version}`, replace it)
+** `jna-jpms-{jna-version}.jar` (if you have an older version of JNA or a `jna-{jna-version}` instead of `jna-jpms-{jna-version}`, make sure to remove and replace it with `jna-jpms`)
 . To enable "`ChaCha64`" wire encryption support add the following JARs to the classpath or modulepath
 ** `chacha64-plugin-{version_wo_target}.jar`
 ** `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip
@@ -270,7 +276,7 @@ If you manage your dependencies manually, you need to do the following:
 [#gotchas]
 === Gotcha's
 
-If you find a problem while upgrading, or other bugs: please report it on https://github.com/FirebirdSQL/jaybird/issues.
+If you find a problem while upgrading, or other bugs, please report it on https://github.com/FirebirdSQL/jaybird/issues.
 
 For known issues, consult <<known-issues>>.
 
@@ -332,9 +338,9 @@ native and embedded protocol implementation using JNA (`jaybird-native-{version_
 Support for Firebird 2.5 has been dropped.
 See also <<support-for-firebird-25-dropped>>.
 
-Jaybird 6 supports Firebird version 3.0, 4.0, and provides tentative support for Firebird 5.0.
+Jaybird 6 supports Firebird 3.0, Firebird 4.0, and Firebird 5.0, and provides tentative support for Firebird 6.0.
 
-Jaybird 6 will -- by default -- not connect to unsupported versions (Firebird 2.5 or older).
+Jaybird 6 will -- by default -- not connect to unsupported versions (that is, Firebird 2.5 or older).
 See also <<unsupported-protocol>>.
 
 [#native-plugin]
@@ -461,9 +467,9 @@ This detection depends on actual activity, like an event posting a new count, or
 
 The pure Java protocol will by default no longer try the wire protocol versions of unsupported Firebird versions.
 This means that -- by default -- only protocol version 13 -- 18 are tried (if there is an implementation of such version).
-Attempts to connect to Firebird 2.5 or earlier will result in error _"`connection rejected by remote interface`"_ (`335544421` or `isc_connect_reject`).
+As a result, attempts to connect to Firebird 2.5 or earlier will result in error _"`connection rejected by remote interface`"_ (`335544421` or `isc_connect_reject`).
 
-As a workaround, the connection property `enableProtocol` can enable unsupported protocols, assuming a suitable protocol implementation is available on the classpath.
+The connection property `enableProtocol` can enable unsupported protocols, assuming a suitable protocol implementation is available on the classpath.
 
 This connection property can have the following values:
 
@@ -478,7 +484,7 @@ However, we recommend using the unmasked version (e.g. `"12"` for protocol versi
 
 [WARNING]
 ====
-Given these protocol versions and their Firebird version are not supported, there is no guarantee that the driver will function correctly when an unsupported protocol is enabled this way.
+Given these protocol versions and their Firebird version are not supported, there is no guarantee that the driver will function correctly when an unsupported protocol is enabled.
 Especially things like database metadata could use features that are not supported by older Firebird versions.
 We recommend upgrading your Firebird version, or downgrading to a Jaybird version which still supports your Firebird version.
 
@@ -516,8 +522,7 @@ Unsupported protocol versions may be removed in future releases of Jaybird.
 [#logging]
 === Logging facade removed
 
-The package `org.firebirdsql.logging` has been removed.
-The logging facade from this package has been replaced with the Java Platform Logging API (https://openjdk.org/jeps/264[JEP 264^]).
+The logging facade from the package `org.firebirdsql.logging` has been removed, and is replaced by the Java Platform Logging API (https://openjdk.org/jeps/264[JEP 264^]).
 
 The Java Platform Logging API by default logs to `java.util.logging`, but it is possible to plug in different logging platforms.
 For example, Log4j provides the `log4j-jpl` dependency which will replace the default binding to `java.util.logging` with one to Log4j.
@@ -540,7 +545,7 @@ When deploying manually, please make sure to also include the `bcprov-jdk18on-{b
 [sidebar]
 ****
 The "`ChaCha`" wire encryption introduced in Firebird 4.0 and Jaybird 5 uses a 96-bit nonce and 32-bit counter.
-This 32-bit counter limits the amount of data you can transfer to a maximum of 256GiB.
+This 32-bit counter limits the amount of data you can transfer to a maximum of 256 GiB.
 As the Firebird wire protocol doesn't support "`re-keying`" the encryption plugin, this means the connection breaks if 256GiB has been sent or received.
 This breaking is done to prevent key re-use, which could make the data stream vulnerable to certain types of cryptological analysis.
 
@@ -726,7 +731,7 @@ In Jaybird 6.0.0, the conditions to perform an asynchronous fetch are:
 +
 This "`low-water mark`" is calculated as ~33% of the maximum number of rows returned by previous fetches, with a minimum of 10 rows.
 +
-As a consequence of this condition, reducing the fetch size equal to or less than the "`low-water mark`" may cause asynchronous fetches to stop being triggered, as the buffer size may remain smaller than the "`low-water mark`" (this effect may be reduced if there is other activity on the connection after the asynchronous fetch was performed).
+As a consequence of this condition, reducing the fetch size equal to or less than the "`low-water mark`" may cause asynchronous fetches to stop being triggered, as the buffer size may remain smaller than this "`low-water mark`" (this effect may be reduced if there is other activity on the connection after the asynchronous fetch was performed).
 In that case a synchronous fetch is triggered when the buffer is empty.
 * Fetch size at time of async fetch is larger than 1.
 This may be the configured fetch size, or the fetch size derived taking into account the configured maximum row count.
@@ -740,9 +745,14 @@ Jaybird now uses real Java modules.
 
 The available modules are:
 
-* `org.firebirdsql.jaybird` -- main Jaybird driver
-* `org.firebirdsql.jaybird.chacha64` -- ChaCha64 wire encryption implementation
-* `org.firebirdsql.jna` -- native and embedded protocol implementation using JNA
+`org.firebirdsql.jaybird`::
+main Jaybird driver
+
+`org.firebirdsql.jaybird.chacha64`::
+ChaCha64 wire encryption implementation
+
+`org.firebirdsql.jna`::
+native and embedded protocol implementation using JNA
 
 We've tried to be liberal with exporting the packages from Jaybird, but we have decided not to export some packages because we think they shouldn't normally be accessed by users of Jaybird.
 If you run into problems with packages not being exported, please report this on https://groups.google.com/g/firebird-java[firebird-java^] or on https://github.com/FirebirdSQL/jaybird/issues[GitHub^].
@@ -782,7 +792,7 @@ We have now addressed this inconsistency, by also introducing support for settin
 [#blob-performance-read]
 ==== Reading blobs
 
-Performance of reading blobs was improved, especially when using `ResultSet.getBytes`, `Blob.getBytes`, `ResultSet.getString` or reading from a blob input stream with `read(byte[], int, int)` and similar methods with a byte array and requested length greater than 50% of the configured `blobBufferSize`.
+Performance of reading blobs has been improved, especially when using `ResultSet.getBytes`, `Blob.getBytes`, `ResultSet.getString` or reading from a blob input stream with `read(byte[], int, int)` and similar methods with a byte array and requested length greater than 50% of the configured `blobBufferSize`.
 
 Testing on a local network (Wi-Fi) shows an increase in throughput of roughly 50-100% for reading large blobs with the default `blobBufferSize` of 16384.
 
@@ -838,13 +848,15 @@ In general, setting the `blobBufferSize` larger than 65535 bytes will likely not
 
 Two new methods were added to `FbBlob`:
 
-`int get(byte[] b, int off, int len)`:: populates the array `b`, starting at `off`, for the requested `len` bytes from the blob, and returns the actual number of bytes read.
+`int get(byte[] b, int off, int len)`::
+populates the array `b`, starting at `off`, for the requested `len` bytes from the blob, and returns the actual number of bytes read.
 This method will read until `len` bytes have been read, and only return less than `len` when end-of-blob was reached.
 
-`int get(byte[] b, int off, int len, float minFillFactor)`:: populates the array `b`, starting at `off`, for
- at least `minFillFactor` * `len` bytes (up to `len` bytes) from the blob, and returns the actual number of bytes read.
+`int get(byte[] b, int off, int len, float minFillFactor)`::
+populates the array `b`, starting at `off`, for at least `minFillFactor` * `len` bytes (up to `len` bytes) from the blob, and returns the actual number of bytes read.
 
-`void put(byte[] b, int off, int len)`:: sends data from array `b` to the blob, starting at `off`, for the requested `len` bytes.
+`void put(byte[] b, int off, int len)`::
+sends data from array `b` to the blob, starting at `off`, for the requested `len` bytes.
 
 The documentation of method `FbBlob.putSegment(byte[])` contradicted itself, by requiring implementations to batch larger arrays, but also requiring them to throw an exception for larger arrays, and the actual implementations provided by Jaybird threw an exception.
 This contradiction has been removed, and the implementations will now send arrays longer than the maximum segment size to the server in multiple _put_ requests.
@@ -871,7 +883,7 @@ For code solutions, you should use the normal methods in the JDBC API whenever p
 Only use this solution for scripts, or in case it is cumbersome or not possible to access the Jaybird extensions to the JDBC API to control the transaction configuration.
 ====
 
-In the implementation, the use of `COMMIT` and `ROLLBACK` will not be executed as such, but instead call `Connection.commit()` and `Connection.rollback()`.
+In the implementation, the use of `COMMIT` and `ROLLBACK` will not be executed as statements on the server, but instead call `Connection.commit()` and `Connection.rollback()`.
 The `SET TRANSACTION` statement -- if allowed -- is executed with execute immediate, and not through a statement handle.
 
 Enabling this feature can also make it easier to use the table reservation feature, compared to `FirebirdConnection.setTransactionParameters(TransactionParameterBuffer)` or `FirebirdConnection.setTransactionParameters(int TransactionParameterBuffer)`, which requires access to the Jaybird API interfaces.
@@ -946,7 +958,7 @@ The `setBytes` method on `CHAR` and `VARCHAR` parameters only check the byte len
 * Improvement: Implemented `java.sql.Connection.abort(Executor)` to forcibly abort a connection (https://github.com/FirebirdSQL/jaybird/issues/496[#496])
 +
 The `java.sql.Connection` is marked closed immediately, after which the executor is used to mark client-side statements and result sets as closed, and then closes the actual physical connection.
-The close of the physical connection is not a clean close and may result in "`connection reset by peer`" errors (e.g. error 10054 on Windows, error 104 on Linux) logged in `fiebird.log`.
+The close of the physical connection is not a clean close and may result in "`connection reset by peer`" errors (e.g. error 10054 on Windows, error 104 on Linux) logged in `firebird.log`.
 Active transactions may not be rolled back immediately;
 this will be delayed until the server detects that the connection was closed.
 It is possible that some listeners are not informed of the connection, statement or result set close.
