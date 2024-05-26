@@ -94,7 +94,7 @@ public final class OdsVersion {
      * @return instance with value of parameter {@code major} and {@link #minor()} of this instance
      */
     public OdsVersion withMajor(int major) {
-        return of(major, minor);
+        return this.major != major ? of(major, minor) : this;
     }
 
     /**
@@ -105,7 +105,7 @@ public final class OdsVersion {
      * @return instance with {@link #major()} of this instance and value of parameter {@code minor}
      */
     public OdsVersion withMinor(int minor) {
-        return of(major, minor);
+        return this.minor != minor ? of(major, minor) : this;
     }
 
     @Override
