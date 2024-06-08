@@ -22,11 +22,11 @@ import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayInputStream;
@@ -42,8 +42,13 @@ import static java.sql.ResultSet.*;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNotAfterLast;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNotBeforeFirst;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.firebirdsql.jaybird.props.PropertyConstants.SCROLLABLE_CURSOR_EMULATED;
+import static org.firebirdsql.jaybird.props.PropertyConstants.SCROLLABLE_CURSOR_SERVER;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -554,9 +559,9 @@ class FBResultSetTest {
                         if (counter == recordCount + 1) rs.deleteRow();
                     }
 
-                    if (PropertyConstants.SCROLLABLE_CURSOR_SERVER.equals(scrollableCursorPropertyValue)
-                            && isPureJavaType().matches(GDS_TYPE)
-                            && getDefaultSupportInfo().supportsScrollableCursors()) {
+                    if (SCROLLABLE_CURSOR_SERVER.equals(scrollableCursorPropertyValue)
+                        && isPureJavaType().matches(GDS_TYPE)
+                        && getDefaultSupportInfo().supportsScrollableCursors()) {
                         assertEquals(counter - 1, recordCount + 1);
                     } else {
                         assertEquals(counter - 1, recordCount);
@@ -1437,10 +1442,45 @@ class FBResultSetTest {
         }
     }
 
+    /**
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/807">jaybird#807</a>
+     */
+    @ParameterizedTest
+    @MethodSource
+    void testIsBeforeFirst_isAfterLast_emptyResultSet_bug807(int resultSetType, int resultSetConcurrency,
+            String scrollableCursorPropertyValue) throws SQLException {
+        try (var connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            try (var stmt = connection.createStatement(resultSetType, resultSetConcurrency);
+                 var rs = stmt.executeQuery(SELECT_TEST_TABLE)) {
+                assertNotBeforeFirst(rs, "isBeforeFirst for empty result set should be false before next");
+                assertNotAfterLast(rs, "isAfterLast for empty result set should be false before next");
+                assertNoNextRow(rs, "Expected no row in empty result set");
+                assertNotBeforeFirst(rs, "isBeforeFirst for empty result set should be false after next");
+                assertNotAfterLast(rs, "isAfterLast for empty result set should be false after next");
+            }
+        }
+    }
+
+    static Stream<Arguments> testIsBeforeFirst_isAfterLast_emptyResultSet_bug807() {
+        Stream<Arguments> defaultArguments = Stream.of(
+                Arguments.of(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY, SCROLLABLE_CURSOR_EMULATED),
+                Arguments.of(TYPE_FORWARD_ONLY, CONCUR_UPDATABLE, SCROLLABLE_CURSOR_EMULATED),
+                Arguments.of(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY, SCROLLABLE_CURSOR_EMULATED),
+                Arguments.of(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE, SCROLLABLE_CURSOR_EMULATED));
+        if (getDefaultSupportInfo().supportsScrollableCursors()) {
+            return Stream.concat(defaultArguments, Stream.of(
+                    Arguments.of(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY, SCROLLABLE_CURSOR_SERVER),
+                    Arguments.of(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE, SCROLLABLE_CURSOR_SERVER)));
+        }
+        return defaultArguments;
+    }
+
     static Stream<String> scrollableCursorPropertyValues() {
         // We are unconditionally emitting SERVER, to check if the value behaves appropriately on versions that do
         // not support server-side scrollable cursors
-        return Stream.of(PropertyConstants.SCROLLABLE_CURSOR_EMULATED, PropertyConstants.SCROLLABLE_CURSOR_SERVER);
+        return Stream.of(SCROLLABLE_CURSOR_EMULATED, SCROLLABLE_CURSOR_SERVER);
     }
 
     private static Connection createConnection(String scrollableCursorPropertyValue) throws SQLException {

@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.fields.RowValue;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
@@ -110,10 +111,33 @@ public sealed interface FBFetcher permits FBCachedFetcher, FBServerScrollFetcher
      */
     int getRowNum() throws SQLException;
 
+    /**
+     * @return {@code true} if the result set is empty; otherwise {@code false}
+     */
     boolean isEmpty() throws SQLException;
+
+    /**
+     * @return {@code true} if positioned before the first row, contrary to {@link ResultSet#isBeforeFirst()} it also
+     * reports {@code true} if empty and next was not invoked
+     * @see ResultSet#isBeforeFirst()
+     */
     boolean isBeforeFirst() throws SQLException;
+
+    /**
+     * @see ResultSet#isFirst()
+     */
     boolean isFirst() throws SQLException;
+
+    /**
+     * @see ResultSet#isLast()
+     */
     boolean isLast() throws SQLException;
+
+    /**
+     * @return {@code true} if positioned after the last row, contrary to {@link ResultSet#isBeforeFirst()} it also
+     * reports {@code true} if empty and next was invoked
+     * @see ResultSet#isAfterLast()
+     */
     boolean isAfterLast() throws SQLException;
 
     /**

@@ -914,13 +914,13 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public boolean isBeforeFirst() throws SQLException {
         checkOpen();
-        return fbFetcher.isBeforeFirst();
+        return !fbFetcher.isEmpty() && fbFetcher.isBeforeFirst();
     }
 
     @Override
     public boolean isAfterLast() throws SQLException {
         checkOpen();
-        return fbFetcher.isAfterLast();
+        return !fbFetcher.isEmpty() && fbFetcher.isAfterLast();
     }
 
     @Override

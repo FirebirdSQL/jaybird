@@ -135,6 +135,98 @@ public final class ResultSetAssertions {
     }
 
     /**
+     * Asserts that {@code rs} is before first ({@link ResultSet#isBeforeFirst()} returns {@code true}).
+     *
+     * @param rs
+     *         result set
+     * @see #assertBeforeFirst(ResultSet, String)
+     */
+    public static void assertBeforeFirst(ResultSet rs) {
+        assertBeforeFirst(rs, "Expected ResultSet.isBeforeFirst == true");
+    }
+
+    /**
+     * Asserts that {@code rs} is before first ({@link ResultSet#isBeforeFirst()} returns {@code true}).
+     *
+     * @param rs
+     *         result set
+     * @param message
+     *         message to use for the assertion if {@link ResultSet#isBeforeFirst()} returned {@code false}
+     */
+    public static void assertBeforeFirst(ResultSet rs, String message) {
+        assertTrue(assertNoException(rs::isBeforeFirst, "ResultSet.isBeforeFirst()"), message);
+    }
+
+    /**
+     * Asserts that {@code rs} is not before first ({@link ResultSet#isBeforeFirst()} returns {@code false}).
+     *
+     * @param rs
+     *         result set
+     * @see #assertNotBeforeFirst(ResultSet, String)
+     */
+    public static void assertNotBeforeFirst(ResultSet rs) {
+        assertNotBeforeFirst(rs, "Expected ResultSet.isBeforFirst == false");
+    }
+
+    /**
+     * Asserts that {@code rs} is not before first ({@link ResultSet#isBeforeFirst()} returns {@code false}).
+     *
+     * @param rs
+     *         result set
+     * @param message
+     *         message to use for the assertion if {@link ResultSet#isBeforeFirst()} returned {@code true}
+     */
+    public static void assertNotBeforeFirst(ResultSet rs, String message) {
+        assertFalse(assertNoException(rs::isBeforeFirst, "ResultSet.isBeforeFirst()"), message);
+    }
+
+    /**
+     * Asserts that {@code rs} is after last ({@link ResultSet#isAfterLast()} returns {@code true}).
+     *
+     * @param rs
+     *         result set
+     * @see #assertAfterLast(ResultSet, String)
+     */
+    public static void assertAfterLast(ResultSet rs) {
+        assertAfterLast(rs, "Expected ResultSet.isAfterLast == true");
+    }
+
+    /**
+     * Asserts that {@code rs} is after last ({@link ResultSet#isAfterLast()} returns {@code true}).
+     *
+     * @param rs
+     *         result set
+     * @param message
+     *         message to use for the assertion if {@link ResultSet#isAfterLast()} returned {@code false}
+     */
+    public static void assertAfterLast(ResultSet rs, String message) {
+        assertTrue(assertNoException(rs::isAfterLast, "ResultSet.isAfterLast()"), message);
+    }
+
+    /**
+     * Asserts that {@code rs} is not after last ({@link ResultSet#isAfterLast()} returns {@code false}).
+     *
+     * @param rs
+     *         result set
+     * @see #assertNotAfterLast(ResultSet, String)
+     */
+    public static void assertNotAfterLast(ResultSet rs) {
+        assertNotAfterLast(rs, "Expected ResultSet.isAfterLast == false");
+    }
+
+    /**
+     * Asserts that {@code rs} is not after last ({@link ResultSet#isAfterLast()} returns {@code false}).
+     *
+     * @param rs
+     *         result set
+     * @param message
+     *         message to use for the assertion if {@link ResultSet#isAfterLast()} returned {@code true}
+     */
+    public static void assertNotAfterLast(ResultSet rs, String message) {
+        assertFalse(assertNoException(rs::isAfterLast, "ResultSet.isAfterLast()"), message);
+    }
+
+    /**
      * Asserts that the current row of the result set matches in length and values.
      *
      * @param rs
