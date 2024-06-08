@@ -294,12 +294,12 @@ final class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean isEmpty() {
-        return rows == null || rows.size() == 0;
+        return rows == null || rows.isEmpty();
     }
 
     @Override
     public boolean isBeforeFirst() {
-        return !isEmpty() && rowNum < 1;
+        return rowNum < 1;
     }
 
     @Override
@@ -320,17 +320,14 @@ final class FBCachedFetcher implements FBFetcher {
     @Override
     public void deleteRow() throws SQLException {
         rows.remove(rowNum - 1);
-
-        if (isAfterLast() || isBeforeFirst())
-            fetcherListener.rowChanged(this, null);
-        else
-            fetcherListener.rowChanged(this, rows.get(rowNum - 1));
+        fetcherListener.rowChanged(this, isAfterLast() || isBeforeFirst() ? null : rows.get(rowNum - 1));
     }
 
     @Override
     public void insertRow(RowValue data) throws SQLException {
-        if (rowNum == 0)
-            rowNum++;
+        if (rowNum == 0) {
+            rowNum = 1;
+        }
 
         if (rowNum > rows.size()) {
             rows.add(data);
@@ -338,10 +335,7 @@ final class FBCachedFetcher implements FBFetcher {
             rows.add(rowNum - 1, data);
         }
 
-        if (isAfterLast() || isBeforeFirst())
-            fetcherListener.rowChanged(this, null);
-        else
-            fetcherListener.rowChanged(this, rows.get(rowNum - 1));
+        fetcherListener.rowChanged(this, isAfterLast() || isBeforeFirst() ? null : rows.get(rowNum - 1));
     }
 
     @Override
