@@ -53,6 +53,12 @@ This feature was backported from Jaybird 6.
 +
 This improvement was backported from Jaybird 6.
 * Fixed: `ResultSet.isBeforeFirst()` and `ResultSet.isAfterLast()` should always report `false` for an empty result set (https://github.com/FirebirdSQL/jaybird/issues/807[#807])
+* Improvement: `Statement.getResultSet` no longer throws a `SQLException` with message "`Only one result set at a time/statement`" if the current result set has already been returned by `executeQuery` or a previous call to `getResultSet` (https://github.com/FirebirdSQL/jaybird/issues/762[#762])
++
+Repeated calls to `getResultSet` will now return the current result set.
+As part of this change implementations of `FirebirdStatement.getCurrentResultSet` now simply returns `getResultSet`, and the `getCurrentResultSet` method has been deprecated for removal in Jaybird 7.
++
+This improvement was backported from Jaybird 6.
 * ...
 
 [#jaybird-5-0-4-changelog]

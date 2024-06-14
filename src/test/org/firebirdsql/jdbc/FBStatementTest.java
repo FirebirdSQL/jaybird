@@ -1096,6 +1096,28 @@ class FBStatementTest {
         }
     }
 
+    @Test
+    void getResultSetAfterExecuteQuery_sameResultSet() throws Exception {
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("select 1 from rdb$database")) {
+            ResultSet sameRs = assertDoesNotThrow(stmt::getResultSet);
+
+            assertSame(rs, sameRs, "Expected ResultSet from getResultSet to be the same as from executeQuery");
+        }
+    }
+
+    @Test
+    void multipleGetResultSetCalls_sameResultSet() throws SQLException {
+        try (Statement stmt = con.createStatement()) {
+            assertTrue(stmt.execute("select 1 from rdb$database"), "Expected a result set as first result");
+
+            ResultSet rs = stmt.getResultSet();
+            ResultSet sameRs = assertDoesNotThrow(stmt::getResultSet);
+
+            assertSame(rs, sameRs, "Expected ResultSet from getResultSet to be the same as from previous getResultSet");
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 

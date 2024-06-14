@@ -47,7 +47,6 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE ";
     static final String NATIVE_SELECT_COMMAND = "SELECT * FROM ";
 
-    private ResultSet currentRs;
     private ResultSet singletonRs;
 
     protected boolean selectableProcedure;
@@ -171,10 +170,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @throws SQLException if something went wrong.
      */
     protected void setRequiredTypes() throws SQLException {
-        if (singletonRs != null) {
-            setRequiredTypesInternal((FBResultSet) singletonRs);
-        }
-        setRequiredTypesInternal((FBResultSet) getCurrentResultSet());
+        setRequiredTypesInternal((FBResultSet) (singletonRs != null ? singletonRs : getResultSet()));
     }
 
     private void setRequiredTypesInternal(FBResultSet resultSet) throws SQLException {
@@ -246,16 +242,16 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     public ResultSet executeQuery() throws SQLException {
         procedureCall.checkParameters();
         try (LockCloseable ignored = withLock()) {
+            checkValidity();
             notifyStatementStarted();
             prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
 
             if (!internalExecute(!isSelectableProcedure()))
                 throw new FBSQLException("No resultset for sql", SQLStateConstants.SQL_STATE_NO_RESULT_SET);
 
-            getResultSet();
-            setRequiredTypes();
-
-            return getCurrentResultSet();
+            ResultSet rs = getResultSet();
+            setRequiredTypesInternal((FBResultSet) rs);
+            return rs;
         }
     }
 
@@ -293,7 +289,6 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     // Execute statement internally. This method sets cached parameters. Rest of the processing is done by superclass.
     @Override
     protected boolean internalExecute(boolean sendOutParams) throws SQLException {
-        currentRs = null;
         singletonRs = null;
         int counter = 0;
         for (FBProcedureParam param : procedureCall.getInputParams()) {
@@ -1107,14 +1102,6 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         }
     }
 
-    // this method doesn't give an exception if it is called twice.
-    @Override
-    public ResultSet getCurrentResultSet() throws SQLException {
-        if (currentRs == null)
-            currentRs = super.getResultSet();
-        return currentRs;
-    }
-
     /**
      * Returns the result set for the singleton row of the callable statement and asserts it has data. If this is a
      * selectable procedure, or there is no singleton row, it will return the normal result set.
@@ -1127,26 +1114,9 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @throws SQLException For database access errors
      */
     protected ResultSet getAndAssertSingletonResultSet() throws SQLException {
-        final ResultSet rs;
-        if (!isSelectableProcedure() && singletonRs != null) {
-            rs = singletonRs;
-        } else {
-            rs = getCurrentResultSet();
-        }
+        final ResultSet rs = !isSelectableProcedure() && singletonRs != null ? singletonRs : getResultSet();
         assertHasData(rs);
         return rs;
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Calling this method twice with autocommit on and used will probably
-     * throw an inappropriate or uninformative exception.
-     * </p>
-     */
-    @Override
-    public ResultSet getResultSet() throws SQLException {
-        return getCurrentResultSet();
     }
 
     @Override
