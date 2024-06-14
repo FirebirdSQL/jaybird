@@ -9,6 +9,7 @@
 :icons: font
 :sectnums:
 :jaybird-fbclient-version: 4.0.4.0
+:jna-version: 5.14.0
 
 ifeval::["{version_tag}" != ""]
 [WARNING]
@@ -59,6 +60,10 @@ Repeated calls to `getResultSet` will now return the current result set.
 As part of this change implementations of `FirebirdStatement.getCurrentResultSet` now simply returns `getResultSet`, and the `getCurrentResultSet` method has been deprecated for removal in Jaybird 7.
 +
 This improvement was backported from Jaybird 6.
+* Improvement: Updated JNA dependency to version 5.14.0 (https://github.com/FirebirdSQL/jaybird/issues/810[#810])
++
+If you use native or embedded connections, make sure the upgrade the JNA dependency to JNA 5.14.0 by replacing the JAR or updating the JNA (`net.java.dev.jna:jna`) version number in your build configuration.
+In practice, Jaybird should still be able to work with JNA 5.12.1 (the version used in Jaybird 5.0.0 -- 5.0.4).
 * ...
 
 [#jaybird-5-0-4-changelog]
@@ -279,14 +284,14 @@ For example:
 </dependency>
 ----
 
-If you want to use Type 2 support (native or embedded), you need to explicitly include JNA 5.12.1 as a dependency:
+If you want to use Type 2 support (native or embedded), you need to explicitly include JNA {jna-version} as a dependency:
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.12.1</version>
+    <version>{jna-version}</version>
 </dependency>
 ----
 
@@ -302,7 +307,7 @@ You can download the latest versions from https://firebirdsql.org/en/jdbc-driver
 
 At minimum, Jaybird 5 requires `jaybird-{version_simple}.<java>{version_tag}.jar`  (where `<java>` is `java11` or `java8`).
 
-For native or embedded support, you will need to include `jna-5.12.1.jar` on your classpath.
+For native or embedded support, you will need to include `jna-{jna-version}.jar` on your classpath.
 See also <<type-2-native-and-embedded-driver>>.
 
 [#upgrading-from-jaybird-4-to-jaybird-5]
@@ -330,14 +335,14 @@ When your Jaybird dependency defines the exclusion for `javax.resource:connector
 
 For more detailed instructions, see also the information on Maven in <<getting-jaybird-5>>.
 
-If you use native or embedded, make sure to update your JNA dependency to version 5.12.1 (Jaybird 5 requires at least JNA 5.0).
+If you use native or embedded, make sure to update your JNA dependency to version {jna-version} (Jaybird 5 requires at least JNA 5.0).
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.12.1</version>
+    <version>{jna-version}</version>
 </dependency>
 ----
 
@@ -349,7 +354,7 @@ If you manage your dependencies manually, you need to do the following:
 . Replace the Jaybird 4 library with the Jaybird 5 version
 ** `jaybird-4.0.x.<java>.jar` with `jaybird-{version_simple}.<java>{version_tag}.jar` (where `<java>` is `java11` or `java8`)
 ** `jaybird-full-4.0.x.<java>.jar` with `jaybird-{version_simple}.<java>{version_tag}.jar`, the `jaybird-full` library no longer exists
-. Replace the `jna-5.5.0.jar` library with `jna-5.12.1.jar`
+. Replace the `jna-5.5.0.jar` library (or any JNA version before {jna-version}) with `jna-{jna-version}.jar`
 +
 This library is only needed if you actually use native or embedded connections, otherwise remove JNA (assuming your application itself or other dependencies don't use it).
 . Remove the `connector-api-1.5.jar` library, it is no longer used by Jaybird
@@ -1267,16 +1272,16 @@ The replacement for most constants can be found in `org.firebirdsql.jaybird.prop
 === Type 2 (native) and embedded driver
 
 Jaybird uses JNA (Java Native Access) to access the client library.
-If you want to use the Type 2 driver, or Firebird embedded, then you need to include `jna-5.12.1.jar` on the classpath.
+If you want to use the Type 2 driver, or Firebird embedded, then you need to include `jna-{jna-version}.jar` on the classpath.
 
 When using Maven, you need to specify the dependency on JNA yourself, as we don't depend on it by default (it is specified as an optional dependency):
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.12.1</artifactId>
+    <version>{jna-version}</artifactId>
 </dependency>
 ----
 
