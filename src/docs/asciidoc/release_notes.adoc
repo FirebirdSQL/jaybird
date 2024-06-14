@@ -307,7 +307,7 @@ Furthermore, the client name reported to Firebird 2.5 and higher has been change
 === Java support
 
 [#java-before-17]
-==== Java version before 17 no longer supported
+==== Java versions before 17 no longer supported
 
 Support of Java versions before Java 17 was dropped.
 
@@ -319,7 +319,7 @@ See also https://github.com/FirebirdSQL/jaybird/blob/v5.0.0-beta-1/devdoc/jdp/jd
 Jaybird 6 supports Java 17 and higher (JDBC 4.3).
 Most of the JDBC 4.3 features have been implemented (in as far as they are supported by Firebird).
 
-Given the limited support period for Java 17 and higher versions, not all Java releases are supported, see <<supported-java-versions>> for details.
+Given the limited support period for Java 17 and higher versions, not all Java releases are formally supported, see <<supported-java-versions>> for details.
 
 Jaybird 6 is modularized, and provides the following modules:
 
@@ -995,7 +995,9 @@ This change was also backported to Jaybird 5.0.3.
 * Improvement: `Statement.getResultSet` no longer throws a `SQLException` with message "`Only one result set at a time/statement`" if the current result set has already been returned by `executeQuery` or a previous call to `getResultSet` (https://github.com/FirebirdSQL/jaybird/issues/762[#762])
 +
 Repeated calls to `getResultSet` will now return the current result set.
-As part of this change implementations of `FirebirdStatement.getCurrentResultSet` now simply call and returns `getResultSet`, and the `getCurrentResultSet` method has been deprecated for removal in Jaybird 7.
+As part of this change implementations of `FirebirdStatement.getCurrentResultSet` now simply returns `getResultSet`, and the `getCurrentResultSet` method has been deprecated for removal in Jaybird 7.
++
+This change was also backported to Jaybird 5.0.5.
 * Fixed: The implementation of `Blob.getBytes(long, int)` threw a `SQLException` if the remaining bytes of the blob where less than the requested number of bytes (https://github.com/FirebirdSQL/jaybird/issues/767[#767])
 +
 The JDBC API specifies _"This `byte` array contains up to `length` consecutive bytes starting at position pos."_, so the implementation was changed to return up to `length` bytes, or the remaining actual blob length, whichever is shorter.
