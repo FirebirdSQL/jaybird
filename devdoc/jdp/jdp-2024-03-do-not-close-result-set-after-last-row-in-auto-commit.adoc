@@ -1,0 +1,69 @@
+= jdp-2024-03: Do not close result set after last row in auto-commit
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+In JDBC 3.0 and earlier, section 10.1 "`Transaction Boundaries and Autocommit`" specified the following:
+
+[quote,JDBC 3.0 Specification]
+____
+The `Connection` attribute *auto-commit* specifies when to end transactions.
+Enabling auto-commit causes the JDBC driver to do a transaction commit after each individual SQL statement as soon as it is complete.
+The point at which a statement is considered to be “complete” depends on the type of SQL statement as well as what the application does after executing it:
+
+* For Insert, Update, Delete, and DDL statements, the statement is complete as soon as it has finished executing.
+* For Select statements, the statement is complete when the associated result set is closed. The result set is closed as soon as one of the following occurs:
+** all of the rows have been retrieved
+** the associated `Statement` object is re-executed
+** another `Statement` object is executed on the same connection
+* For `CallableStatement` objects, the statement is complete when *all* of the associated result sets have been closed.
+____
+
+To comply with this, Jaybird 5 and earlier close the result set in auto-commit mode when all rows have been fetched (see `FBStatement.RSListener#allRowsFetched(ResultSet))`.
+However, JDBC 4.0 changed the second list item to only:
+
+[quote,JDBC 4.0 Specification]
+____
+For Select statements, the statement is complete when the associated result set is closed.
+____
+
+The conditions of when a result set is closed was moved to section 15.2.5 "`Closing a `ResultSet` object`" (JDBC 4.3) to:
+
+[quote,JDBC 4.3 Specification]
+____
+A `ResultSet` object is explicitly closed when
+
+* The `close` method on the `ResultSet` is executed, thereby releasing any external resources
+* The `Statement` or `Connection` object that produced the `ResultSet` is explictly [sic] closed
+
+A `ResultSet` object is implicitly closed when
+
+* The associated `Statement` object is re-executed
+* The `ResultSet` is created with a Holdability of `CLOSE_CURSORS_AT_COMMIT` and an implicit or explicit commit occurs
+
+'''
+Note – Some JDBC driver implementations may also implicitly `close` the `ResultSet` when the `ResultSet` type is `TYPE_FORWARD_ONLY` and the `next` method of `ResultSet` returns `false`.
+
+'''
+____
+
+In other words, behaviour of Jaybird 5 and older still complies (see the note), but we are allowed to relax this, which would be in line with the behaviour of some of the other driver implementations.
+A potential downside is that implementations that rely on this implicit close might keep their result set open for longer, and thus delay the auto-commit.
+
+A potential benefit is that if the subsequent close is implicit -- i.e. by the commit boundary or statement close -- this can avoid a server roundtrip because a commit closes the cursor server-side, and a statement close can forego a separate cursor close.
+
+== Decision
+
+Jaybird will follow the more relaxed rules established in JDBC 4.0, and no longer automatically close the `ResultSet` in auto-commit mode if `next()` returns `false`.
+
+== Consequences
+
+As specified above.
