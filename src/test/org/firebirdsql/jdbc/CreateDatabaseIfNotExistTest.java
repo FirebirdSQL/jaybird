@@ -37,6 +37,7 @@ import java.util.Map;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.assertions.CustomAssertions.assertThrowsForAutoCloseable;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
@@ -45,7 +46,6 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -71,7 +71,7 @@ class CreateDatabaseIfNotExistTest {
 
     @Test
     void noDatabaseCreatedByDefault() {
-        var exception = assertThrows(SQLException.class, () -> getConnection());
+        var exception = assertThrowsForAutoCloseable(SQLException.class, this::getConnection);
         assertThat(exception, errorCodeEquals(ISCConstants.isc_io_error));
     }
 
@@ -89,8 +89,10 @@ class CreateDatabaseIfNotExistTest {
     @Test
     void createWithNonPrivilegedUser_shouldFail() throws Exception {
         assumeFeature(FirebirdSupportInfo::supportsMetadataPrivileges, "Test requires CREATE DATABASE privileges");
+        assumeThat("Embedded mode does not use CREATE DATABASE privileges",
+                FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
         databaseUser.createUser(NO_CREATE_DB_PRIVILEGE_USER, NO_CREATE_DB_PRIVILEGE_PASSWORD, "Srp");
-        var exception = assertThrows(SQLException.class, () ->
+        var exception = assertThrowsForAutoCloseable(SQLException.class, () ->
                 getConnection(Map.of(
                         PropertyNames.user, NO_CREATE_DB_PRIVILEGE_USER,
                         PropertyNames.password, NO_CREATE_DB_PRIVILEGE_PASSWORD,
