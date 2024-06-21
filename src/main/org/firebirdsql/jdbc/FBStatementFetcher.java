@@ -126,7 +126,6 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
         } else if (getNextRow() == null || (maxRows != 0 && getRowNum() == maxRows)) {
             setIsAfterLast(true);
             allRowsFetched = true;
-            fetcherListener.allRowsFetched(this);
             setRowNum(0);
             return false;
         } else {
@@ -222,7 +221,6 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
         } finally {
             stmt.removeStatementListener(rowListener);
             rows = new ArrayDeque<>(0);
-            fetcherListener.fetcherClosed(this);
         }
     }
 

@@ -26,20 +26,9 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class SimpleFetcherListener implements FBObjectListener.FetcherListener {
+final class SimpleFetcherListener implements FBObjectListener.FetcherListener {
 
-    boolean closed;
     final List<RowValue> receivedRows = new ArrayList<>();
-
-    @Override
-    public void fetcherClosed(FBFetcher fetcher) {
-        closed = true;
-    }
-
-    @Override
-    public void allRowsFetched(FBFetcher fetcher) {
-        // ignored
-    }
 
     @Override
     public void rowChanged(FBFetcher fetcher, RowValue newRow) {
@@ -54,4 +43,5 @@ class SimpleFetcherListener implements FBObjectListener.FetcherListener {
     void clearRows() {
         receivedRows.clear();
     }
+    
 }

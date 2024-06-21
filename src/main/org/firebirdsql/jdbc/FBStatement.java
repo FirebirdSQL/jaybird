@@ -106,11 +106,11 @@ public class FBStatement implements FirebirdStatement {
         private boolean rowUpdaterSeparateTransaction;
 
         /**
-         * Notify that result set was closed. This method cleans the result
-         * set reference, so that call to {@link #close()} method will not cause
-         * exception.
+         * Notify that result set was closed. This method cleans the result set reference, so that calls to
+         * {@link #close()} method will not cause an exception.
          *
-         * @param rs result set that was closed.
+         * @param rs
+         *         result set that was closed.
          */
         @Override
         public void resultSetClosed(ResultSet rs) throws SQLException {
@@ -121,26 +121,6 @@ public class FBStatement implements FirebirdStatement {
             if (closeOnCompletion) {
                 close();
             }
-        }
-
-        @Override
-        public void allRowsFetched(ResultSet rs) throws SQLException {
-
-            /*
-             * According to the JDBC 3.0 specification (p.62) the result set
-             * is closed in the autocommit mode if one of the following occurs:
-             *
-             * - all of the rows have been retrieved
-             * - the associated Statement object is re-executed
-             * - another Statement object is executed on the same connection
-             */
-
-            // according to the specification we close the result set and 
-            // generate the "resultSetClosed" event, that in turn generates
-            // the "statementCompleted" event
-
-            if (connection != null && connection.getAutoCommit())
-                rs.close();
         }
 
         @Override

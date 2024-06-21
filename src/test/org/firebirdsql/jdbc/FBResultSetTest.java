@@ -28,6 +28,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
@@ -42,9 +43,12 @@ import static java.sql.ResultSet.*;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertAfterLast;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNotAfterLast;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNotBeforeFirst;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertResultSetOpen;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.jaybird.props.PropertyConstants.SCROLLABLE_CURSOR_EMULATED;
@@ -1401,20 +1405,20 @@ class FBResultSetTest {
     }
 
     /**
-     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/689">jaybird#689</a>
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/689">jaybird#689</a> and
+     * <a href="https://github.com/FirebirdSQL/jaybird/issues/690">jaybird#690</a>.
      */
     @Test
     void testIsAfterLast_bug689() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement();
-             ResultSet resultSet = stmt.executeQuery("select * from RDB$DATABASE")) {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement();
+             var rs = stmt.executeQuery("select * from RDB$DATABASE")) {
 
-            while (resultSet.next()) {
-                assertFalse(resultSet.isAfterLast(), "Should not be after last");
+            while (rs.next()) {
+                assertNotAfterLast(rs);
             }
 
-            SQLException sqlException = assertThrows(SQLException.class, resultSet::isAfterLast);
-            assertThat(sqlException, message(is("The result set is closed")));
+            assertAfterLast(rs);
         }
     }
 
@@ -1460,6 +1464,22 @@ class FBResultSetTest {
                 assertNotBeforeFirst(rs, "isBeforeFirst for empty result set should be false after next");
                 assertNotAfterLast(rs, "isAfterLast for empty result set should be false after next");
             }
+        }
+    }
+
+    /**
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-03-do-not-close-result-set-after-last-row-in-auto-commit.adoc">jdp-2024-03: Do not close result set after last row in auto-commit</a>
+     */
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testNextAfterLastRowShouldNotCloseResultSet(boolean autoCommit) throws Exception {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            connection.setAutoCommit(autoCommit);
+            var rs = stmt.executeQuery("select 1 from rdb$database");
+            assertNextRow(rs);
+            assertNoNextRow(rs);
+            assertResultSetOpen(rs, "ResultSet should not be closed after next returned false");
         }
     }
 

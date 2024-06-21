@@ -40,30 +40,20 @@ public final class FBObjectListener {
     public interface FetcherListener {
 
         /**
-         * Notify listener that underlying fetcher is closed.
-         *
-         * @param fetcher
-         *         fetcher that was closed.
-         */
-        void fetcherClosed(FBFetcher fetcher) throws SQLException;
-
-        /**
-         * Notify listener that underlying fetcher fetched all rows.
-         *
-         * @param fetcher
-         *         fetcher that fetched all rows.
-         */
-        void allRowsFetched(FBFetcher fetcher) throws SQLException;
-
-        /**
          * Notify listener that underlying row was changed.
+         * <p>
+         * The default implementation does nothing.
+         * </p>
          *
          * @param fetcher
-         *         instance of {@link FBFetcher} that caused this event.
+         *         instance of {@link FBFetcher} that caused this event
          * @param newRow
-         *         new row.
+         *         new row
          */
-        void rowChanged(FBFetcher fetcher, RowValue newRow) throws SQLException;
+        default void rowChanged(FBFetcher fetcher, RowValue newRow) throws SQLException {
+            // do nothing
+        }
+
     }
 
     /**
@@ -73,47 +63,48 @@ public final class FBObjectListener {
 
         /**
          * Notify listener that result set was closed.
+         * <p>
+         * The default implementation does nothing.
+         * </p>
          *
          * @param rs
-         *         result set that was closed.
+         *         result set that was closed
          */
-        void resultSetClosed(ResultSet rs) throws SQLException;
-
-        /**
-         * Notify listener that all rows were fetched. This event is used in auto-commit case to tell the statement that
-         * it is completed.
-         *
-         * @param rs
-         *         result set that was completed.
-         */
-        void allRowsFetched(ResultSet rs) throws SQLException;
+        default void resultSetClosed(ResultSet rs) throws SQLException {
+            // do nothing
+        }
 
         /**
          * Notify listener that execution of some row updating operation started.
+         * <p>
+         * The default implementation does nothing.
+         * </p>
          *
          * @param updater
          *         instance of {@link FirebirdRowUpdater}
-         * @throws SQLException
-         *         if something went wrong.
          */
-        void executionStarted(FirebirdRowUpdater updater) throws SQLException;
+        default void executionStarted(FirebirdRowUpdater updater) throws SQLException {
+            // do nothing
+        }
 
         /**
          * Notify listener that execution of some row updating operation is completed.
+         * <p>
+         * The default implementation does nothing.
+         * </p>
          *
          * @param updater
-         *         instance of {@link FirebirdRowUpdater}.
-         * @throws SQLException
-         *         if something went wrong.
+         *         instance of {@link FirebirdRowUpdater}
          */
-        void executionCompleted(FirebirdRowUpdater updater, boolean success) throws SQLException;
+        default void executionCompleted(FirebirdRowUpdater updater, boolean success) throws SQLException {
+            // do nothing
+        }
+
     }
 
     /**
-     * Implementation of {@link org.firebirdsql.jdbc.FBObjectListener.ResultSetListener} that implements all methods as
-     * empty methods.
+     * Implementation of {@link org.firebirdsql.jdbc.FBObjectListener.ResultSetListener} that does nothing.
      */
-    @SuppressWarnings("java:S1186")
     public static final class NoActionResultSetListener implements ResultSetListener {
 
         private static final ResultSetListener INSTANCE = new NoActionResultSetListener();
@@ -124,18 +115,6 @@ public final class FBObjectListener {
 
         private NoActionResultSetListener() {
         }
-
-        @Override
-        public void resultSetClosed(ResultSet rs) { }
-
-        @Override
-        public void allRowsFetched(ResultSet rs) { }
-
-        @Override
-        public void executionStarted(FirebirdRowUpdater updater) { }
-
-        @Override
-        public void executionCompleted(FirebirdRowUpdater updater, boolean success) { }
 
     }
 
@@ -149,7 +128,7 @@ public final class FBObjectListener {
          *
          * @return instance of {@link FBConnection}
          * @throws SQLException
-         *         if something went wrong.
+         *         if something went wrong
          */
         FBConnection getConnection() throws SQLException;
 
@@ -157,9 +136,7 @@ public final class FBObjectListener {
          * Notify listener that statement execution is being started.
          *
          * @param stmt
-         *         statement that is being executed.
-         * @throws SQLException
-         *         if something went wrong.
+         *         statement that is being executed
          */
         void executionStarted(FBStatement stmt) throws SQLException;
 
@@ -167,7 +144,7 @@ public final class FBObjectListener {
          * Notify the listener that statement was closed.
          *
          * @param stmt
-         *         statement that was closed.
+         *         statement that was closed
          */
         void statementClosed(FBStatement stmt) throws SQLException;
 
@@ -184,14 +161,12 @@ public final class FBObjectListener {
          * Notify the listener that statement is completed and tell whether execution was successful or not.
          *
          * @param stmt
-         *         statement that was completed.
+         *         statement that was completed
          * @param success
-         *         {@code true} if completion was successful.
-         * @throws SQLException
-         *         if an error occurred.
+         *         {@code true} if completion was successful
          */
-        void statementCompleted(FBStatement stmt, boolean success)
-                throws SQLException;
+        void statementCompleted(FBStatement stmt, boolean success) throws SQLException;
+
     }
 
     /**
@@ -201,30 +176,39 @@ public final class FBObjectListener {
 
         /**
          * Notify listener that execution of some BLOB operation had been started.
+         * <p>
+         * The default implementation does nothing.
+         * </p>
          *
          * @param blob
-         *         instance of {@link FirebirdBlob} that caused this event.
+         *         instance of {@link FirebirdBlob} that caused this event
          * @throws SQLException
-         *         if something went wrong.
+         *         if something went wrong
          */
-        void executionStarted(FirebirdBlob blob) throws SQLException;
+        default void executionStarted(FirebirdBlob blob) throws SQLException {
+            // do nothing
+        }
 
         /**
          * Notify listener that execution of some BLOB operation had been completed.
+         * <p>
+         * The default implementation does nothing.
+         * </p>
          *
          * @param blob
          *         instance of {@link FirebirdBlob} that caused this event.
          * @throws SQLException
          *         if something went wrong.
          */
-        void executionCompleted(FirebirdBlob blob) throws SQLException;
+        default void executionCompleted(FirebirdBlob blob) throws SQLException {
+            // do nothing
+        }
+
     }
 
     /**
-     * Implementation of {@link org.firebirdsql.jdbc.FBObjectListener.BlobListener} that implements all methods as
-     * empty methods.
+     * Implementation of {@link org.firebirdsql.jdbc.FBObjectListener.BlobListener} that does nothing.
      */
-    @SuppressWarnings("java:S1186")
     public static final class NoActionBlobListener implements BlobListener {
 
         private static final BlobListener INSTANCE = new NoActionBlobListener();
@@ -236,11 +220,6 @@ public final class FBObjectListener {
         private NoActionBlobListener() {
         }
 
-        @Override
-        public void executionStarted(FirebirdBlob blob) { }
-
-        @Override
-        public void executionCompleted(FirebirdBlob blob) { }
     }
 
 }

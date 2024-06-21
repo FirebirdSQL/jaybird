@@ -88,16 +88,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     private int fetchDirection = ResultSet.FETCH_FORWARD;
 
     @Override
-    public void allRowsFetched(FBFetcher fetcher) throws SQLException {
-        listener.allRowsFetched(this);
-    }
-
-    @Override
-    public void fetcherClosed(FBFetcher fetcher) throws SQLException {
-        // ignore, there nothing to do here
-    }
-
-    @Override
     public void rowChanged(FBFetcher fetcher, RowValue newRow) throws SQLException {
         this.row = newRow;
     }

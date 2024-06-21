@@ -818,37 +818,6 @@ class FBPreparedStatementTest {
     }
 
     /**
-     * Test if an implicit close (by fully reading the result set) while closeOnCompletion is true, will close
-     * the statement.
-     * <p>
-     * JDBC 4.1 feature
-     * </p>
-     */
-    @Test
-    void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
-        executeCreateTable(con, CREATE_TABLE);
-        prepareTestData();
-
-        try (var stmt = con.prepareStatement(SELECT_DATA)) {
-            stmt.closeOnCompletion();
-            stmt.execute();
-            var rs = stmt.getResultSet();
-            int count = 0;
-            while (rs.next()) {
-                assertResultSetOpen(rs);
-                assertFalse(stmt.isClosed(), "Statement should be open");
-                assertEquals(count, rs.getInt(1));
-                count++;
-            }
-            assertEquals(DATA_ITEMS, count);
-            assertResultSetClosed(rs, "Result set should be closed (automatically closed after last result read)");
-            assertTrue(stmt.isClosed(), "Statement should be closed");
-        }
-    }
-
-    // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
-
-    /**
      * Tests insertion of a single character into a single character field on a UTF8 connection.
      * <p>
      * See JDBC-234 for rationale of this test.
@@ -1323,8 +1292,9 @@ class FBPreparedStatementTest {
                 count++;
             }
             assertEquals(DATA_ITEMS, count);
-            assertResultSetClosed(rs, "Result set should be closed (automatically closed after last result read)");
+            assertResultSetOpen(rs, "Result set should be still open after last result read in auto-commit");
             assertFalse(stmt.getMoreResults(), "expected no result set for getMoreResults");
+            assertResultSetClosed(rs, "Result set should be closed after getMoreResults");
             assertEquals(-1, stmt.getUpdateCount(), "no update count (-1) was expected");
         }
     }

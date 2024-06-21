@@ -406,11 +406,6 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void executionCompleted(FirebirdBlob blob) {
-            // nothing to do
-        }
-
-        @Override
         public void executionStarted(FirebirdBlob blob) throws SQLException {
             ensureTransaction();
         }
@@ -501,11 +496,6 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         @Override
         public void statementCompleted(FBStatement stmt, boolean success) throws SQLException {
             statements.remove(stmt);
-        }
-
-        @Override
-        public void executionCompleted(FirebirdBlob blob) {
-            // nothing to do
         }
 
         @Override
@@ -718,16 +708,6 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         public void statementCompleted(FBStatement stmt, boolean success) {
-            // nothing to do
-        }
-
-        @Override
-        public void executionCompleted(FirebirdBlob blob) {
-            // nothing to do
-        }
-
-        @Override
-        public void executionStarted(FirebirdBlob blob) {
             // nothing to do
         }
 

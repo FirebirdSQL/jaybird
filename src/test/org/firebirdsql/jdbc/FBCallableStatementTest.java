@@ -202,7 +202,7 @@ class FBCallableStatementTest {
     }
 
     @AfterEach
-    void tearDown() throws Exception {
+    void tearDown() {
         closeQuietly(con);
     }
 
@@ -719,36 +719,6 @@ class FBCallableStatementTest {
         stmt.close();
         assertDoesNotThrow(stmt::close);
     }
-
-    /**
-     * Test if an implicit close (by fully reading the resultset) while closeOnCompletion is true, will close
-     * the statement.
-     * <p>
-     * JDBC 4.1 feature
-     * </p>
-     */
-    @Test
-    void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
-        executeDDL(con, CREATE_PROCEDURE);
-
-        try (FBCallableStatement stmt = (FBCallableStatement) con.prepareCall("{call factorial(?, ?)}")) {
-            stmt.closeOnCompletion();
-            stmt.setInt(1, 5);
-            stmt.setInt(2, 1);
-            stmt.execute();
-            // Cast so it also works under JDBC 3.0
-            FBResultSet rs = (FBResultSet) stmt.getResultSet();
-            int count = 0;
-            while (rs.next()) {
-                assertEquals(count, rs.getInt(1));
-                count++;
-            }
-            assertTrue(rs.isClosed(), "Resultset should be closed (automatically closed after last result read)");
-            assertTrue(stmt.isClosed(), "Statement should be closed");
-        }
-    }
-
-    // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
 
     /**
      * The method {@link java.sql.Statement#executeQuery(String)} should not work on CallableStatement.

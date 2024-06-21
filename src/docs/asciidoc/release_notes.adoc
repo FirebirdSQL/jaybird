@@ -942,6 +942,20 @@ If you find cases where you think Jaybird should not (or on the contrary should)
 
 For more information, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-02-create-database-through-jdbc-url.adoc[jdp-2024-02: Create database through JDBC URL^].
 
+[#no-close-after-last]
+=== `ResultSet` in auto-commit no longer closed after last row
+
+In previous Jaybird versions, iterating over a forward-only result set in auto-commit mode would implicitly close the result set after the last row was fetched -- i.e. when `next()` returned `false`.
+This behaviour complied with the JDBC 3.0 requirements, but in JDBC 4.0 this requirement was removed, but the behaviour is still allowed.
+
+In Jaybird 6, this implicit close has been removed.
+In auto-commit mode, a result set will now remain open until explicitly closed using `ResultSet.close()`, when any statement is executed, when the auto-commit mode is disabled, or by the close of the `Statement` or `Connection`.
+
+As a result set close is an auto-commit boundary, this change may delay commit of the active transaction until another action on the connection.
+If you relied on this implicit close for correctness of your application, you may need to add an explicit call to `ResultSet.close()` -- e.g. using try-with-resources.
+
+For more information, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-03-do-not-close-result-set-after-last-row-in-auto-commit.adoc[jdp-2024-03: Do not close result set after last row in auto-commit^].
+
 // TODO add major changes
 
 [#other-fixes-and-changes]
@@ -1224,6 +1238,11 @@ For example, both Apache DBCP and Apache Tomcat connection pools requires the `d
 If overridden transaction mappings are used, and the default isolation level has `isc_tpb_read`, the connection will be marked as read-only.
 As a result, switching isolation levels will now also result in read-only transactions, even if the mapping of the other isolation level is defined with `isc_tpb_write`.
 You will need to explicitly call `setReadOnly(false)`, or -- better yet -- do not override transaction mappings with a `isc_tpb_read`, but always use `isc_tpb_write`, and control read-only state only through `setReadOnly`.
+
+[#compat-no-close-after-last]
+=== `ResultSet` in auto-commit no longer closed after last row
+
+For more information, see <<no-close-after-last>>.
 
 // TODO Document compatibility issues
 
@@ -1615,6 +1634,11 @@ replacement is `new SQLExceptionChainBuilder().append(exception)`
 * `FBManagedConnection`
 ** `setReadOnly(boolean)` was renamed to `setTpbReadOnly(boolean)` to reflect what it actually does
 ** `isReadOnly()` was renamed to `isTpbReadOnly()` to reflect what it actually does
+* `FBObjectListener.FetcherListener`
+** `fetcherClosed(FBFetcher)` was removed
+** `allRowsFetched(FBFetcher)` was removed
+* `FBObjectListener.ResultSetListener`
+** `allRowsFetched(ResultSet)` was removed
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

@@ -322,23 +322,14 @@ final class FBUpdatableFetcher implements FBFetcher {
         return rowValue != null && rowValue.isDeletedRowMarker();
     }
 
-    private static class InternalFetcherListener implements FBObjectListener.FetcherListener {
+    private static final class InternalFetcherListener implements FBObjectListener.FetcherListener {
 
         RowValue lastReceivedRow;
-
-        @Override
-        public void fetcherClosed(FBFetcher fetcher) {
-            // ignored
-        }
-
-        @Override
-        public void allRowsFetched(FBFetcher fetcher) {
-            // ignored
-        }
 
         @Override
         public void rowChanged(FBFetcher fetcher, RowValue newRow) {
             lastReceivedRow = newRow;
         }
+        
     }
 }

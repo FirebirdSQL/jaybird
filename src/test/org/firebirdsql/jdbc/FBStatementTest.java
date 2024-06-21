@@ -42,6 +42,8 @@ import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForCon
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertResultSetClosed;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertResultSetOpen;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementClosed;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
@@ -74,7 +76,7 @@ class FBStatementTest {
     }
 
     @AfterEach
-    void tearDown() throws Exception {
+    void tearDown() {
         closeQuietly(con);
     }
 
@@ -133,32 +135,6 @@ class FBStatementTest {
     }
 
     /**
-     * Test if an implicit close (by fully reading the result set) while closeOnCompletion is false, will not close
-     * the statement.
-     */
-    @Test
-    void testNoCloseOnCompletion_StatementOpen_afterImplicitResultSetClose() throws SQLException {
-        prepareTestData();
-        try (Statement stmt = con.createStatement()) {
-            assertTrue(stmt.execute(SELECT_DATA), "expected a result set");
-            ResultSet rs = stmt.getResultSet();
-            int count = 0;
-            while (rs.next()) {
-                assertFalse(rs.isClosed(), "Result set should be open");
-                assertFalse(stmt.isClosed(), "Statement should be open");
-                assertEquals(count, rs.getInt(1));
-                count++;
-            }
-            assertEquals(DATA_ITEMS, count);
-            assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
-            assertFalse(stmt.isClosed(), "Statement should be open");
-            assertFalse(stmt.getMoreResults(), "expected no result set for getMoreResults");
-            assertEquals(-1, stmt.getUpdateCount(), "no update count (-1) was expected");
-            assertFalse(stmt.isClosed(), "Statement should be open");
-        }
-    }
-
-    /**
      * Test if an explicit close (by calling close()) while closeOnCompletion is false, will not close
      * the statement.
      */
@@ -176,30 +152,6 @@ class FBStatementTest {
 
             assertTrue(rs.isClosed(), "Result set should be closed");
             assertFalse(stmt.isClosed(), "Statement should be open");
-        }
-    }
-
-    /**
-     * Test if an implicit close (by fully reading the result set) while closeOnCompletion is true, will close
-     * the statement.
-     */
-    @Test
-    void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
-        prepareTestData();
-        try (Statement stmt = con.createStatement()) {
-            stmt.execute(SELECT_DATA);
-            stmt.closeOnCompletion();
-            ResultSet rs = stmt.getResultSet();
-            int count = 0;
-            while (rs.next()) {
-                assertFalse(rs.isClosed(), "Result set should be open");
-                assertFalse(stmt.isClosed(), "Statement should be open");
-                assertEquals(count, rs.getInt(1));
-                count++;
-            }
-            assertEquals(DATA_ITEMS, count);
-            assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
-            assertTrue(stmt.isClosed(), "Statement should be closed");
         }
     }
 
@@ -992,8 +944,9 @@ class FBStatementTest {
                 count++;
             }
             assertEquals(DATA_ITEMS, count);
-            assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
+            assertResultSetOpen(rs, "Result set should be still open after last result read in auto-commit");
             assertFalse(stmt.getMoreResults(), "expected no result set for getMoreResults");
+            assertResultSetClosed(rs, "Result set should be closed after getMoreResults");
             assertEquals(-1, stmt.getUpdateCount(), "no update count (-1) was expected");
         }
     }
@@ -1119,7 +1072,7 @@ class FBStatementTest {
     }
 
     @Test
-    void multipleGetResultSetCalls_sameResultSet() throws SQLException {
+    void multipleGetResultSetCalls_sameResultSet() throws Exception {
         try (var stmt = con.createStatement()) {
             assertTrue(stmt.execute("select 1 from rdb$database"), "Expected a result set as first result");
 

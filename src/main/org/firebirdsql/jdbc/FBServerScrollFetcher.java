@@ -374,7 +374,6 @@ final class FBServerScrollFetcher implements FBFetcher {
             rows.clear();
             rowsOffset = 0;
             rows = Collections.emptyList();
-            fetcherListener.fetcherClosed(this);
         }
     }
 

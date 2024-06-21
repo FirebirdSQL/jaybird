@@ -113,7 +113,7 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * </p>
      *
      * @param transactionEnd
-     *         close is in response to a transaction end or another operation which will close the cursor
+     *         close is in response to a transaction end or another operation which will implicitly close the cursor
      */
     void closeCursor(boolean transactionEnd) throws SQLException;
 
