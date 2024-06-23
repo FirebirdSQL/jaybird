@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.assertions.CustomAssertions.assertThrowsForAutoCloseable;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
@@ -237,12 +238,8 @@ class FBDriverTest {
         Properties props = getDefaultPropertiesForConnection();
         Driver driver = DriverManager.getDriver("jdbc:firebirdsql://localhost:c:/data/db/test.fdb");
 
-        SQLException exception = assertThrows(SQLNonTransientConnectionException.class, () -> {
-            //noinspection EmptyTryBlock
-            try (Connection ignore = driver.connect("jdbc:firebirdsql://localhost:c:/data/db/test.fdb", props)) {
-                // just in case we do create a connection
-            }
-        });
+        var exception = assertThrowsForAutoCloseable(SQLNonTransientConnectionException.class,
+                () -> driver.connect("jdbc:firebirdsql://localhost:c:/data/db/test.fdb", props));
         assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_invalidConnectionString),
                 message(containsString("Bad port: 'c:' is not a number"))));
@@ -329,12 +326,8 @@ class FBDriverTest {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("authPlugins", "flup");
 
-        SQLException exception = assertThrows(SQLException.class, () -> {
-            //noinspection EmptyTryBlock
-            try (Connection ignore = DriverManager.getConnection(getUrl(), props)) {
-                // just in case we do create a connection
-            }
-        });
+        var exception = assertThrowsForAutoCloseable(SQLException.class,
+                () -> DriverManager.getConnection(getUrl(), props));
         assertThat(exception, errorCodeEquals(JaybirdErrorCodes.jb_noKnownAuthPlugins));
     }
 

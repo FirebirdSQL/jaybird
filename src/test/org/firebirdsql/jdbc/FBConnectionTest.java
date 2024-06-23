@@ -53,6 +53,7 @@ import java.util.concurrent.*;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.assertions.CustomAssertions.assertThrowsForAutoCloseable;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
@@ -394,12 +395,8 @@ class FBConnectionTest {
 
         try {
             System.setProperty("org.firebirdsql.jdbc.requireConnectionEncoding", "true");
-            SQLException exception = assertThrows(SQLNonTransientConnectionException.class, () -> {
-                //noinspection EmptyTryBlock
-                try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-                    // Using try-with-resources just in case connection is created
-                }
-            });
+            var exception = assertThrowsForAutoCloseable(SQLNonTransientConnectionException.class,
+                    () -> DriverManager.getConnection(getUrl(), props));
             assertThat(exception, message(equalTo(FBManagedConnection.ERROR_NO_CHARSET)));
         } finally {
             System.clearProperty("org.firebirdsql.jdbc.requireConnectionEncoding");
@@ -643,12 +640,8 @@ class FBConnectionTest {
         // Using only Legacy_Auth produces different error than trying Srp and then Legacy_Auth
         props.setProperty("authPlugins", "Legacy_Auth");
 
-        SQLException exception = assertThrows(FBSQLEncryptException.class, () -> {
-            //noinspection EmptyTryBlock
-            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-                // Using try-with-resources just in case connection is created
-            }
-        });
+        var exception = assertThrowsForAutoCloseable(FBSQLEncryptException.class,
+                () -> DriverManager.getConnection(getUrl(), props));
         assertThat(exception, errorCodeEquals(ISCConstants.isc_miss_wirecrypt));
     }
 
@@ -667,12 +660,8 @@ class FBConnectionTest {
         // Using only Legacy_Auth produces different error than trying Srp and then Legacy_Auth
         props.setProperty("authPlugins", "Srp,Legacy_Auth");
 
-        SQLException exception = assertThrows(FBSQLEncryptException.class, () -> {
-            //noinspection EmptyTryBlock
-            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-                // Using try-with-resources just in case connection is created
-            }
-        });
+        var exception = assertThrowsForAutoCloseable(FBSQLEncryptException.class,
+                () -> DriverManager.getConnection(getUrl(), props));
         // TODO Check if we can make behavior consistent between native and pure java
         assertThat(exception, anyOf(
                 errorCodeEquals(ISCConstants.isc_wirecrypt_incompatible),
@@ -684,12 +673,8 @@ class FBConnectionTest {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("wireCrypt", "NOT_A_VALID_VALUE");
 
-        SQLException exception = assertThrows(SQLException.class, () -> {
-            //noinspection EmptyTryBlock
-            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-                // Using try-with-resources just in case connection is created
-            }
-        });
+        var exception = assertThrowsForAutoCloseable(SQLException.class,
+                () -> DriverManager.getConnection(getUrl(), props));
         assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_invalidConnectionPropertyValue),
                 fbMessageStartsWith(JaybirdErrorCodes.jb_invalidConnectionPropertyValue, "NOT_A_VALID_VALUE", "wireCrypt")));
@@ -738,12 +723,8 @@ class FBConnectionTest {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("lc_ctype", "DOES_NOT_EXIST");
 
-        SQLException exception = assertThrows(SQLNonTransientConnectionException.class, () -> {
-            //noinspection EmptyTryBlock
-            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-                // Using try-with-resources just in case connection is created
-            }
-        });
+        var exception = assertThrowsForAutoCloseable(SQLNonTransientConnectionException.class,
+                () -> DriverManager.getConnection(getUrl(), props));
         assertThat(exception, message(equalTo(
                 "No valid encoding definition for Firebird encoding DOES_NOT_EXIST and/or Java charset null")));
     }
@@ -754,12 +735,8 @@ class FBConnectionTest {
         props.remove("lc_ctype");
         props.setProperty("charSet", "DOES_NOT_EXIST");
 
-        SQLException exception = assertThrows(SQLNonTransientConnectionException.class, () -> {
-            //noinspection EmptyTryBlock
-            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-                // Using try-with-resources just in case connection is created
-            }
-        });
+        var exception = assertThrowsForAutoCloseable(SQLNonTransientConnectionException.class,
+                () -> DriverManager.getConnection(getUrl(), props));
         assertThat(exception, message(equalTo(
                 "No valid encoding definition for Firebird encoding null and/or Java charset DOES_NOT_EXIST")));
     }
@@ -777,12 +754,8 @@ class FBConnectionTest {
         props.setProperty("password", password);
 
         // We don't try Legacy_Auth by default
-        SQLException exception = assertThrows(SQLInvalidAuthorizationSpecException.class, () -> {
-            //noinspection EmptyTryBlock
-            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-                // Using try-with-resources just in case connection is created
-            }
-        });
+        var exception = assertThrowsForAutoCloseable(SQLInvalidAuthorizationSpecException.class,
+                () -> DriverManager.getConnection(getUrl(), props));
         assertThat(exception, errorCodeEquals(ISCConstants.isc_login));
     }
 

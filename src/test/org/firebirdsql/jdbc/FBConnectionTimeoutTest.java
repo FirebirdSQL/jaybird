@@ -36,11 +36,11 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.assertions.CustomAssertions.assertThrowsForAutoCloseable;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -74,7 +74,7 @@ class FBConnectionTimeoutTest {
         // Ensure default timeout is used
         DriverManager.setLoginTimeout(0);
         long startTime = System.currentTimeMillis();
-        SQLException exception = assertThrows(SQLException.class,
+        var exception = assertThrowsForAutoCloseable(SQLException.class,
                 () -> DriverManager.getConnection(buildTestURL(), "sysdba", "masterkey"),
                 "Expected connection to fail");
         long endTime = System.currentTimeMillis();
@@ -94,7 +94,7 @@ class FBConnectionTimeoutTest {
         DriverManager.setLoginTimeout(2);
         try {
             long startTime = System.currentTimeMillis();
-            SQLException exception = assertThrows(SQLException.class,
+            var exception = assertThrowsForAutoCloseable(SQLException.class,
                     () -> DriverManager.getConnection(buildTestURL(), "sysdba", "masterkey"),
                     "Expected connection to fail");
             long endTime = System.currentTimeMillis();
@@ -117,7 +117,7 @@ class FBConnectionTimeoutTest {
         // Reset DriverManager timeout
         DriverManager.setLoginTimeout(0);
         long startTime = System.currentTimeMillis();
-        SQLException exception = assertThrows(SQLException.class,
+        var exception = assertThrowsForAutoCloseable(SQLException.class,
                 () -> DriverManager.getConnection(buildTestURL() + "?connectTimeout=1", "sysdba", "masterkey"),
                 "Expected connection to fail");
         long endTime = System.currentTimeMillis();
