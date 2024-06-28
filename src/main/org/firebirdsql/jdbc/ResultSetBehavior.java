@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,7 +34,8 @@ import java.util.function.Consumer;
  * @author Mark Rotteveel
  * @since 6
  */
-final class ResultSetBehavior {
+@InternalApi
+public final class ResultSetBehavior {
 
     //@formatter:off
     private static final int NO_BIT_SET     = 0;
