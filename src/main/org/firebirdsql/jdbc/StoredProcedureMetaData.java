@@ -24,12 +24,15 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.util.InternalApi;
+
 import java.sql.SQLException;
 
 /**
  * Meta-information on stored procedures in a Firebird database.
  */
-interface StoredProcedureMetaData {
+@InternalApi
+public interface StoredProcedureMetaData {
 
     /**
      * Determine if the "selectability" of procedures is available. 
