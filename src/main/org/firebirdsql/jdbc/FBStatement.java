@@ -68,7 +68,7 @@ public class FBStatement implements FirebirdStatement {
     private SqlCountHolder sqlCountHolder;
 
     private boolean closed;
-    protected boolean completed = true;
+    private boolean completed = true;
     private boolean escapedProcessing = true;
     private volatile boolean closeOnCompletion;
     private boolean currentStatementGeneratedKeys;
@@ -190,24 +190,27 @@ public class FBStatement implements FirebirdStatement {
             // NOTE This will not "cleanly" end the statement, it might still have objects registered on listeners,
             // and those will not get notified
             fbStatement = null;
-        }
-
-        if (!completed)
+        } else {
             notifyStatementCompleted();
+        }
     }
 
     @Override
     public ResultSet executeQuery(String sql) throws  SQLException {
-        checkValidity();
-        currentStatementGeneratedKeys = false;
-        rejectIfTxStmt(sql, JaybirdErrorCodes.jb_executeQueryWithTxStmt);
         try (LockCloseable ignored = withLock()) {
+            checkValidity();
+            currentStatementGeneratedKeys = false;
+            rejectIfTxStmt(sql, JaybirdErrorCodes.jb_executeQueryWithTxStmt);
             notifyStatementStarted();
-            if (!internalExecute(sql)) {
-                throw new SQLNonTransientException("Query did not return a result set", SQL_STATE_NO_RESULT_SET);
+            try {
+                if (!internalExecute(sql)) {
+                    throw queryProducedNoResultSet();
+                }
+                return getResultSet(false);
+            } catch (Exception e) {
+                notifyStatementCompleted(true, e);
+                throw e;
             }
-
-            return getResultSet();
         }
     }
 
@@ -239,8 +242,7 @@ public class FBStatement implements FirebirdStatement {
     }
 
     protected void notifyStatementStarted(boolean closeResultSet) throws SQLException {
-        if (closeResultSet)
-            closeResultSet(false);
+        if (closeResultSet) closeResultSet(false);
 
         // notify listener that statement execution is about to start
         statementListener.executionStarted(this);
@@ -251,29 +253,89 @@ public class FBStatement implements FirebirdStatement {
         completed = false;
     }
 
+    /**
+     * Notifies statement completion.
+     * <p>
+     * Equivalent to {@code notifyStatementCompleted(true)}
+     * </p>
+     *
+     * @throws SQLException
+     *         exception from handling statement completion (e.g. commit or rollback in auto-commit)
+     * @see #notifyStatementCompleted(boolean) 
+     */
     protected void notifyStatementCompleted() throws SQLException {
         notifyStatementCompleted(true);
     }
 
+    /**
+     * Notifies statement completion.
+     * <p>
+     * Use of {@code success = false} should not be generally used for failing execution. The only difference between
+     * {@code true} and {@code false} is whether completion triggers commit or rollback in auto-commit mode, and in
+     * general, even for failed execution, a commit should be triggered. The only exception is for batch execution in
+     * auto-commit, where we rollback if one statement failed (and this behaviour is specified by JDBC as
+     * implementation-specific), and ending a transaction if statement preparation failed in
+     * {@link FBPreparedStatement}.
+     * </p>
+     *
+     * @param success
+     *         {@code true} notify successful completion, {@code false} for unsuccessful completion
+     * @throws SQLException
+     *         exception from handling statement completion (e.g. commit or rollback in auto-commit)
+     */
     protected void notifyStatementCompleted(boolean success) throws SQLException {
-        completed = true;
-        statementListener.statementCompleted(this, success);
+        if (!completed) {
+            completed = true;
+            statementListener.statementCompleted(this, success);
+        }
+    }
+
+    /**
+     * Variant of {@link #notifyStatementCompleted(boolean)} which will not throw an exception.
+     * <p>
+     * If the exception received from {@link #notifyStatementCompleted(boolean)} is not a {@link SQLException}, or
+     * {@code originalException} is not a {@link SQLException}, the thrown exception will be added as a suppressed
+     * exception on {@code originalException}, otherwise it will be set using
+     * {@link SQLException#setNextException(SQLException)} on {@code originalException}.
+     * </p>
+     *
+     * @param success
+     *         {@code true} notify successful completion, {@code false} for unsuccessful completion
+     * @param originalException
+     *         original exception that triggered the completion
+     * @see #notifyStatementCompleted(boolean)
+     */
+    void notifyStatementCompleted(boolean success, Exception originalException) {
+        try {
+            notifyStatementCompleted(success);
+        } catch (SQLException e) {
+            if (originalException instanceof SQLException sqle) {
+                sqle.setNextException(e);
+            } else {
+                originalException.addSuppressed(e);
+            }
+        } catch (RuntimeException e) {
+            originalException.addSuppressed(e);
+        }
     }
 
     @Override
     public int executeUpdate(String sql) throws SQLException {
-        checkValidity();
-        currentStatementGeneratedKeys = false;
         try (LockCloseable ignored = withLock()) {
+            checkValidity();
+            currentStatementGeneratedKeys = false;
             if (executeIfTransactionStatement(sql)) return 0;
             notifyStatementStarted();
             try {
                 if (internalExecute(sql)) {
                     throw updateReturnedResultSet();
                 }
-                return getUpdateCountMinZero();
-            } finally {
+                int updateCount = getUpdateCountMinZero();
                 notifyStatementCompleted();
+                return updateCount;
+            } catch (Exception e) {
+                notifyStatementCompleted(true, e);
+                throw e;
             }
         }
     }
@@ -323,15 +385,26 @@ public class FBStatement implements FirebirdStatement {
         return connection;
     }
 
-    private static SQLException updateReturnedResultSet() {
+    static SQLException queryProducedNoResultSet() {
+        return new SQLNonTransientException("Query did not produce a result set", SQL_STATE_NO_RESULT_SET);
+    }
+
+    static SQLException updateReturnedResultSet() {
         return new SQLNonTransientException("Update statement returned result set", SQL_STATE_INVALID_STMT_TYPE);
+    }
+
+    static SQLException batchStatementReturnedResultSet() {
+        return new SQLNonTransientException("Statement executed as batch returned result set",
+                SQL_STATE_INVALID_STMT_TYPE);
     }
 
     @Override
     public int executeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (execute(sql, autoGeneratedKeys)) {
-                throw updateReturnedResultSet();
+                SQLException e = updateReturnedResultSet();
+                notifyStatementCompleted(true, e);
+                throw e;
             }
             return getUpdateCountMinZero();
         }
@@ -341,7 +414,9 @@ public class FBStatement implements FirebirdStatement {
     public int executeUpdate(String sql, int[] columnIndexes) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (execute(sql, columnIndexes)) {
-                throw updateReturnedResultSet();
+                SQLException e = updateReturnedResultSet();
+                notifyStatementCompleted(true, e);
+                throw e;
             }
             return getUpdateCountMinZero();
         }
@@ -351,7 +426,9 @@ public class FBStatement implements FirebirdStatement {
     public int executeUpdate(String sql, String[] columnNames) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (execute(sql, columnNames)) {
-                throw updateReturnedResultSet();
+                SQLException e = updateReturnedResultSet();
+                notifyStatementCompleted(true, e);
+                throw e;
             }
             return getUpdateCountMinZero();
         }
@@ -544,15 +621,16 @@ public class FBStatement implements FirebirdStatement {
         try (LockCloseable ignored = withLock()) {
             if (executeIfTransactionStatement(sql)) return false;
             notifyStatementStarted();
-            boolean hasResultSet = false;
             try {
-                hasResultSet = internalExecute(sql);
-            } finally {
+                boolean hasResultSet = internalExecute(sql);
                 if (!hasResultSet) {
                     notifyStatementCompleted();
                 }
+                return hasResultSet;
+            } catch (Exception e) {
+                notifyStatementCompleted(true, e);
+                throw e;
             }
-            return hasResultSet;
         }
     }
 
@@ -567,7 +645,7 @@ public class FBStatement implements FirebirdStatement {
         return getResultSet(false);
     }
 
-    public ResultSet getResultSet(boolean metaDataQuery) throws  SQLException {
+    protected FBResultSet getResultSet(boolean metaDataQuery) throws  SQLException {
         if (fbStatement == null) {
             throw new SQLException("No statement was executed", SQL_STATE_INVALID_STATEMENT_ID);
         } else if (currentRs != null) {
@@ -788,43 +866,43 @@ public class FBStatement implements FirebirdStatement {
             if (batchList.isEmpty()) {
                 return emptyList();
             }
-
+            List<Long> responses = new ArrayList<>(batchList.size());
             notifyStatementStarted();
-            boolean success = false;
             try {
-                List<Long> responses = new ArrayList<>(batchList.size());
-                try {
-                    for (String sql : batchList) {
-                        executeSingleForBatch(responses, sql);
-                    }
-
-                    success = true;
-                    return responses;
-                } catch (SQLException e) {
-                    throw createBatchUpdateException(e.getMessage(), e.getSQLState(),
-                            e.getErrorCode(), Primitives.toLongArray(responses), e);
-                } finally {
-                    clearBatch();
+                for (String sql : batchList) {
+                    responses.add(executeSingleForBatch(sql));
                 }
+                notifyStatementCompleted();
+                return responses;
+            } catch (SQLException e) {
+                BatchUpdateException batchUpdateException = createBatchUpdateException(e, responses);
+                notifyStatementCompleted(false, batchUpdateException);
+                throw batchUpdateException;
+            } catch (RuntimeException e) {
+                notifyStatementCompleted(false, e);
+                throw e;
             } finally {
-                notifyStatementCompleted(success);
+                clearBatch();
             }
         }
     }
 
-    private void executeSingleForBatch(List<Long> responses, String sql) throws SQLException {
+    private long executeSingleForBatch(String sql) throws SQLException {
         if (internalExecute(sql)) {
-            throw createBatchUpdateException(
-                    "Statements executed as batch should not produce a result set",
-                    SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE, 0, Primitives.toLongArray(responses), null);
-        } else {
-            responses.add(getLargeUpdateCountMinZero());
+            throw batchStatementReturnedResultSet();
         }
+        return getLargeUpdateCountMinZero();
+    }
+
+    protected final BatchUpdateException createBatchUpdateException(SQLException cause,
+            List<? extends Number> updateCounts) {
+        return createBatchUpdateException(cause.getMessage(), cause.getSQLState(), cause.getErrorCode(), updateCounts,
+                cause);
     }
 
     protected final BatchUpdateException createBatchUpdateException(String reason, String sqlState, int vendorCode,
-            long[] updateCounts, Throwable cause) {
-        return new BatchUpdateException(reason, sqlState, vendorCode, updateCounts, cause);
+            List<? extends Number> updateCounts, Throwable cause) {
+        return new BatchUpdateException(reason, sqlState, vendorCode, Primitives.toLongArray(updateCounts), cause);
     }
 
     @Override

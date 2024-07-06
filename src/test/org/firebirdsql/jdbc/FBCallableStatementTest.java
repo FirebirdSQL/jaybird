@@ -35,7 +35,6 @@ import java.util.stream.Stream;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementClosed;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementOnlyMethod;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
@@ -194,16 +193,16 @@ class FBCallableStatementTest {
 
     private static final String EXECUTE_PROCEDURE_BLOB_RESULT = "EXECUTE PROCEDURE blob_result";
 
-    private Connection con;
+    private FBConnection con;
 
     @BeforeEach
     void setUp() throws Exception {
-        con = getConnectionViaDriverManager();
+        con = getConnectionViaDriverManager().unwrap(FBConnection.class);
     }
 
     @AfterEach
-    void tearDown() {
-        closeQuietly(con);
+    void tearDown() throws Exception {
+        con.close();
     }
 
     @Test
@@ -492,11 +491,12 @@ class FBCallableStatementTest {
         }
     }
 
+    @SuppressWarnings("resource")
     @ParameterizedTest
     @MethodSource("scrollableCursorPropertyValues")
     void testBatch(String scrollableCursorPropertyValue) throws Exception {
         con.close();
-        con = createConnection(scrollableCursorPropertyValue);
+        con = createConnection(scrollableCursorPropertyValue).unwrap(FBConnection.class);
         con.setAutoCommit(false);
         executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
         executeDDL(con, CREATE_PROCEDURE_EMP_INSERT);
@@ -609,7 +609,7 @@ class FBCallableStatementTest {
 
             BatchUpdateException exception = assertThrows(BatchUpdateException.class, stmt::executeBatch);
             assertThat(exception,
-                    message(containsString("Statements executed as batch should not produce a result set")));
+                    message(containsString("Statement executed as batch returned result set")));
         }
     }
 
@@ -626,7 +626,7 @@ class FBCallableStatementTest {
 
             BatchUpdateException exception = assertThrows(BatchUpdateException.class, stmt::executeBatch);
             assertThat(exception,
-                    message(containsString("Statements executed as batch should not produce a result set")));
+                    message(containsString("Statement executed as batch returned result set")));
         }
     }
 
@@ -1127,6 +1127,68 @@ class FBCallableStatementTest {
             assertFalse(stmt.isPoolable(), "expected poolable false after set false");
             stmt.setPoolable(true);
             assertTrue(stmt.isPoolable(), "expected poolable true after set true");
+        }
+    }
+
+    @Test
+    void executeWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, "create exception EX_TEST_EXCEPTION 'exception to end execution with error'");
+        executeDDL(con, """
+                recreate procedure RAISE_EXCEPTION as
+                begin
+                  exception EX_TEST_EXCEPTION;
+                end""");
+        try (var stmt = con.prepareCall("execute procedure RAISE_EXCEPTION")) {
+            assertThrows(SQLException.class, stmt::execute);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeUpdateWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, "create exception EX_TEST_EXCEPTION 'exception to end execution with error'");
+        executeDDL(con, """
+                recreate procedure RAISE_EXCEPTION as
+                begin
+                  exception EX_TEST_EXCEPTION;
+                end""");
+        try (var stmt = con.prepareCall("execute procedure RAISE_EXCEPTION")) {
+            assertThrows(SQLException.class, stmt::executeUpdate);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeWithResultSetWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, """
+                recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as
+                begin
+                  suspend;
+                end""");
+
+        try (var stmt = con.prepareCall("{call RAISE_EXCEPTION_RS(?)}")) {
+            stmt.setString(1, null);
+            assertThrows(SQLException.class, stmt::execute);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeQueryWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, """
+                recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as
+                begin
+                  suspend;
+                end""");
+
+        try (var stmt = con.prepareCall("{call RAISE_EXCEPTION_RS(?)}")) {
+            stmt.setString(1, null);
+            assertThrows(SQLException.class, stmt::executeQuery);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
         }
     }
 

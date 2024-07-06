@@ -27,7 +27,6 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
-import org.firebirdsql.jaybird.util.Primitives;
 import org.firebirdsql.jdbc.field.BlobListenableField;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
@@ -44,8 +43,6 @@ import java.util.*;
 
 import static java.util.Collections.emptyList;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_NO_RESULT_SET;
 
 /**
  * Implementation of {@link java.sql.PreparedStatement}.
@@ -146,12 +143,12 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         setPoolable(true);
 
         try (LockCloseable ignored = c.withLock()) {
+            // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
+            notifyStatementStarted();
             try {
-                // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
-                notifyStatementStarted();
                 prepareFixedStatement(sql);
-            } catch (SQLException | RuntimeException e) {
-                notifyStatementCompleted(false);
+            } catch (Exception e) {
+                notifyStatementCompleted(false, e);
                 throw e;
             }
         }
@@ -161,7 +158,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     public void completeStatement(CompletionReason reason) throws SQLException {
         if (!metaDataQuery || reason == CompletionReason.CONNECTION_ABORT) {
             super.completeStatement(reason);
-        } else if (!completed) {
+        } else {
             notifyStatementCompleted();
         }
     }
@@ -183,15 +180,22 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     @Override
     public ResultSet executeQuery() throws SQLException {
+        return executeQuery(false);
+    }
+
+    private ResultSet executeQuery(boolean metaDataQuery) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             notifyStatementStarted();
-
-            if (!internalExecute(isExecuteProcedureStatement)) {
-                throw new SQLNonTransientException("No resultset for sql", SQL_STATE_NO_RESULT_SET);
+            try {
+                if (!internalExecute(isExecuteProcedureStatement)) {
+                    throw queryProducedNoResultSet();
+                }
+                return getResultSet(metaDataQuery);
+            } catch (Exception e) {
+                notifyStatementCompleted(true, e);
+                throw e;
             }
-
-            return getResultSet();
         }
     }
 
@@ -202,12 +206,14 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             notifyStatementStarted();
             try {
                 if (internalExecute(isExecuteProcedureStatement) && !isGeneratedKeyQuery()) {
-                    throw new SQLNonTransientException("Update statement returned result set",
-                            SQL_STATE_INVALID_STMT_TYPE);
+                    throw updateReturnedResultSet();
                 }
-                return getUpdateCountMinZero();
-            } finally {
+                int updateCount = getUpdateCountMinZero();
                 notifyStatementCompleted();
+                return updateCount;
+            } catch (Exception e) {
+                notifyStatementCompleted(true, e);
+                throw e;
             }
         }
     }
@@ -516,40 +522,30 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             notifyStatementStarted();
-            
-            boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
-
-            if (!hasResultSet) 
-                notifyStatementCompleted();
-
-            return hasResultSet;
+            try {
+                boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
+                if (!hasResultSet) {
+                    notifyStatementCompleted();
+                }
+                return hasResultSet;
+            } catch (Exception e) {
+                notifyStatementCompleted(true, e);
+                throw e;
+            }
         }
     }
 
     /**
-     * Execute meta-data query. This method is similar to
-     * {@link #executeQuery()}however, it always returns cached result set and
-     * strings in the result set are always trimmed (server defines system
-     * tables using CHAR data type, but it should be used as VARCHAR).
-     * 
+     * Execute metadata query. This method is similar to {@link #executeQuery()} however, it always returns
+     * a cached result set and strings in the result set are always trimmed (server defines system tables using CHAR
+     * data type, but it should be used as VARCHAR).
+     *
      * @return result set corresponding to the specified query.
-     * 
      * @throws SQLException
-     *             if something went wrong or no result set was available.
+     *         if something went wrong or no result set was available.
      */
     ResultSet executeMetaDataQuery() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            checkValidity();
-            notifyStatementStarted();
-
-            boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
-
-            if (!hasResultSet) {
-                throw new SQLException("No result set is available", SQL_STATE_NO_RESULT_SET);
-            }
-
-            return getResultSet(true);
-        }
+        return executeQuery(true);
     }
 
     /**
@@ -662,14 +658,14 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     protected List<Long> executeBatchInternal() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            boolean commit = false;
+            notifyStatementStarted();
             try {
-                notifyStatementStarted();
                 List<Long> results = requireBatch().execute();
-                commit = true;
+                notifyStatementCompleted();
                 return results;
-            } finally {
-                notifyStatementCompleted(commit);
+            } catch (Exception e) {
+                notifyStatementCompleted(false, e);
+                throw e;
             }
         }
     }
@@ -1035,19 +1031,11 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
                 Deque<Batch.BatchRowValue> batchRowValues = this.batchRowValues;
                 Batch.BatchRowValue batchRowValue;
                 while ((batchRowValue = batchRowValues.pollFirst()) != null) {
-                    RowValue rowValue = batchRowValue.toRowValue();
-                    if (internalExecute(rowValue)) {
-                        throw new SQLException("Statements executed as batch should not produce a result set",
-                                SQL_STATE_INVALID_STMT_TYPE);
-                    }
-                    results.add(getLargeUpdateCountMinZero());
+                    results.add(executeSingleForBatch(batchRowValue));
                 }
                 return results;
-            } catch (BatchUpdateException ex) {
-                throw ex;
-            } catch (SQLException ex) {
-                throw createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
-                        ex.getErrorCode(), Primitives.toLongArray(results), ex);
+            } catch (SQLException e) {
+                throw createBatchUpdateException(e.getMessage(), e.getSQLState(), e.getErrorCode(), results, e);
             } finally {
                 currentStatementResult = StatementResult.NO_MORE_RESULTS;
                 if (batchStatementListener != null) {
@@ -1057,6 +1045,13 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
                 }
                 clearBatch();
             }
+        }
+
+        private long executeSingleForBatch(Batch.BatchRowValue batchRowValue) throws SQLException {
+            if (internalExecute(batchRowValue.toRowValue())) {
+                throw batchStatementReturnedResultSet();
+            }
+            return getLargeUpdateCountMinZero();
         }
 
         @Override

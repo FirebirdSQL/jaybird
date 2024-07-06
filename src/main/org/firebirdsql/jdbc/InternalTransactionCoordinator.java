@@ -327,6 +327,11 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
          */
         abstract void startSqlTransaction(String setTransactionSql) throws SQLException;
 
+        @Override
+        public final void statementCompleted(FBStatement stmt) throws SQLException {
+            statementCompleted(stmt, true);
+        }
+
     }
 
     static final class AutoCommitCoordinator extends AbstractTransactionCoordinator {
@@ -374,11 +379,6 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         public void statementClosed(FBStatement stmt) throws SQLException {
             stmt.completeStatement();
             connection.notifyStatementClosed(stmt);
-        }
-
-        @Override
-        public void statementCompleted(FBStatement stmt) throws SQLException {
-            statementCompleted(stmt, true);
         }
 
         @Override
@@ -486,11 +486,6 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         public void statementClosed(FBStatement stmt) throws SQLException {
             stmt.completeStatement();
             connection.notifyStatementClosed(stmt);
-        }
-
-        @Override
-        public void statementCompleted(FBStatement stmt) throws SQLException {
-            statementCompleted(stmt, true);
         }
 
         @Override
@@ -699,11 +694,6 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         @Override
         public void statementClosed(FBStatement stmt) throws SQLException {
             stmt.completeStatement();
-        }
-
-        @Override
-        public void statementCompleted(FBStatement stmt) {
-            statementCompleted(stmt, true);
         }
 
         @Override

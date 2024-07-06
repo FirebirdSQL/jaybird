@@ -41,7 +41,6 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
-import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertResultSetClosed;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertResultSetOpen;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementClosed;
@@ -63,7 +62,7 @@ class FBStatementTest {
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
-    private Connection con;
+    private FBConnection con;
 
     private static final int DATA_ITEMS = 5;
     private static final String CREATE_TABLE = "CREATE TABLE test ( col1 INTEGER )";
@@ -72,12 +71,12 @@ class FBStatementTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        con = getConnectionViaDriverManager();
+        con = getConnectionViaDriverManager().unwrap(FBConnection.class);
     }
 
     @AfterEach
-    void tearDown() {
-        closeQuietly(con);
+    void tearDown() throws Exception {
+        con.close();
     }
 
     /**
@@ -194,7 +193,8 @@ class FBStatementTest {
     }
 
     /**
-     * Tests {@link org.firebirdsql.jdbc.FBStatement#executeQuery(String)} with a query that does not produce a ResultSet.
+     * Tests {@link org.firebirdsql.jdbc.FBStatement#executeQuery(String)} with a query that does not produce a
+     * ResultSet.
      * <p>
      * Expectation: SQLException
      * </p>
@@ -293,8 +293,10 @@ class FBStatementTest {
     /**
      * Checks if the maxRows property is correctly applied to result sets of the specified type and concurrency.
      *
-     * @param resultSetType Type of result set
-     * @param resultSetConcurrency Concurrency of result set
+     * @param resultSetType
+     *         Type of result set
+     * @param resultSetConcurrency
+     *         Concurrency of result set
      */
     private void checkMaxRows(int resultSetType, int resultSetConcurrency) throws SQLException {
         prepareTestData();
@@ -327,7 +329,8 @@ class FBStatementTest {
     }
 
     /**
-     * Tests if the maxRows property is correctly applied when retrieving rows for a scroll insensitive, readonly result set.
+     * Tests if the maxRows property is correctly applied when retrieving rows for a scroll insensitive, readonly result
+     * set.
      */
     @ParameterizedTest
     @MethodSource("scrollableCursorPropertyValues")
@@ -338,7 +341,8 @@ class FBStatementTest {
     }
 
     /**
-     * Tests if the maxRows property is correctly applied when retrieving rows for a scroll insensitive, updatable result set.
+     * Tests if the maxRows property is correctly applied when retrieving rows for a scroll insensitive, updatable
+     * result set.
      */
     @ParameterizedTest
     @MethodSource("scrollableCursorPropertyValues")
@@ -429,7 +433,8 @@ class FBStatementTest {
     }
 
     /**
-     * Test retrieval of execution plan ({@link FBStatement#getLastExecutionPlan()}) when no statement has been executed yet.
+     * Test retrieval of execution plan ({@link FBStatement#getLastExecutionPlan()}) when no statement has been executed
+     * yet.
      * <p>
      * Expected: exception
      * </p>
@@ -686,7 +691,8 @@ class FBStatementTest {
     }
 
     /**
-     * Tests if {@link org.firebirdsql.jdbc.FBStatement#isWrapperFor(Class)} with {@link org.firebirdsql.jdbc.FirebirdStatement}
+     * Tests if {@link org.firebirdsql.jdbc.FBStatement#isWrapperFor(Class)} with
+     * {@link org.firebirdsql.jdbc.FirebirdStatement}
      * returns {@code true}.
      */
     @Test
@@ -708,7 +714,8 @@ class FBStatementTest {
     }
 
     /**
-     * Tests if {@link org.firebirdsql.jdbc.FBStatement#unwrap(Class)} with {@link org.firebirdsql.jdbc.FirebirdStatement}
+     * Tests if {@link org.firebirdsql.jdbc.FBStatement#unwrap(Class)} with
+     * {@link org.firebirdsql.jdbc.FirebirdStatement}
      * successfully unwraps.
      */
     @Test
@@ -1049,11 +1056,11 @@ class FBStatementTest {
         try (var stmt = con.createStatement()) {
             stmt.execute("create exception ex_param 'something wrong in @1'");
             SQLException sqle = assertThrows(SQLException.class, () -> stmt.execute("""
-                     execute block as
-                     begin
-                        exception ex_param using('PARAMETER_1');
-                     end
-                     """));
+                    execute block as
+                    begin
+                       exception ex_param using('PARAMETER_1');
+                    end
+                    """));
             assertThat(sqle, message(allOf(
                     startsWith("exception 1; EX_PARAM; something wrong in PARAMETER_1"),
                     // The exception parameter value should not be repeated after the formatted message
@@ -1080,6 +1087,62 @@ class FBStatementTest {
             ResultSet sameRs = assertDoesNotThrow(stmt::getResultSet);
 
             assertSame(rs, sameRs, "Expected ResultSet from getResultSet to be the same as from previous getResultSet");
+        }
+    }
+
+    @Test
+    void executeWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, "recreate exception EX_TEST_EXCEPTION 'exception to end execution with error'");
+        try (var stmt = con.createStatement()) {
+            assertThrows(SQLException.class, () -> stmt.execute("""
+                    execute block as
+                    begin
+                      exception EX_TEST_EXCEPTION;
+                    end"""));
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeWithResultSetWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, """
+                recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as
+                begin
+                  suspend;
+                end""");
+        try (var stmt = con.createStatement()) {
+            assertThrows(SQLException.class, () -> stmt.execute("select * from RAISE_EXCEPTION_RS(null)"));
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeUpdateWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, "recreate exception EX_TEST_EXCEPTION 'exception to end execution with error'");
+        try (var stmt = con.createStatement()) {
+            assertThrows(SQLException.class, () -> stmt.executeUpdate("""
+                    execute block as
+                    begin
+                      exception EX_TEST_EXCEPTION;
+                    end"""));
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeQueryWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, """
+                recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as
+                begin
+                  suspend;
+                end""");
+        try (var stmt = con.createStatement()) {
+            assertThrows(SQLException.class, () -> stmt.executeQuery("select * from RAISE_EXCEPTION_RS(null)"));
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
         }
     }
 
@@ -1111,10 +1174,10 @@ class FBStatementTest {
         return Stream.of(PropertyConstants.SCROLLABLE_CURSOR_EMULATED, PropertyConstants.SCROLLABLE_CURSOR_SERVER);
     }
 
-    private static Connection createConnection(String scrollableCursorPropertyValue) throws SQLException {
+    private static FBConnection createConnection(String scrollableCursorPropertyValue) throws SQLException {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty(PropertyNames.scrollableCursor, scrollableCursorPropertyValue);
-        return DriverManager.getConnection(getUrl(), props);
+        return DriverManager.getConnection(getUrl(), props).unwrap(FBConnection.class);
     }
 
 }

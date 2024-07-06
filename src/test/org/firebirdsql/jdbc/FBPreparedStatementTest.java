@@ -117,11 +117,11 @@ class FBPreparedStatementTest {
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
 
-    private Connection con;
+    private FBConnection con;
 
     @BeforeEach
     void setUp() throws Exception {
-        con = getConnectionViaDriverManager();
+        con = getConnectionViaDriverManager().unwrap(FBConnection.class);
     }
 
     @AfterEach
@@ -1199,10 +1199,10 @@ class FBPreparedStatementTest {
         con.setAutoCommit(false);
 
         try (var pstmt = con.prepareStatement("execute procedure EXAMPLE_PROCEDURE(?)")) {
-//            for (int cnt = 0; cnt < 100; cnt++) {
-                pstmt.setInt(1, 1);
-                assertDoesNotThrow(() -> pstmt.executeUpdate());
-//            }
+            //            for (int cnt = 0; cnt < 100; cnt++) {
+            pstmt.setInt(1, 1);
+            assertDoesNotThrow(() -> pstmt.executeUpdate());
+            //            }
             con.commit();
         } catch (SQLException e) {
             con.rollback();
@@ -1246,9 +1246,9 @@ class FBPreparedStatementTest {
     @SuppressWarnings("java:S5783")
     void testReexecuteStatementAfterFailure() throws Exception {
         executeDDL(con, "recreate table encoding_error ("
-                + " id integer primary key, "
-                + " stringcolumn varchar(10) character set NONE"
-                + ")");
+                        + " id integer primary key, "
+                        + " stringcolumn varchar(10) character set NONE"
+                        + ")");
         try (var pstmt = con.prepareStatement("insert into encoding_error (id, stringcolumn) values (?, ?)")) {
             pstmt.setInt(1, 1);
             pstmt.setBytes(2, new byte[] { (byte) 0xFF, (byte) 0xFF });
@@ -1426,6 +1426,66 @@ class FBPreparedStatementTest {
             assertFalse(stmt.isPoolable(), "expected poolable false after set false");
             stmt.setPoolable(true);
             assertTrue(stmt.isPoolable(), "expected poolable true after set true");
+        }
+    }
+
+    @Test
+    void executeWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, "recreate exception EX_TEST_EXCEPTION 'exception to end execution with error'");
+        try (var stmt = con.prepareStatement("""
+                execute block as
+                begin
+                  exception EX_TEST_EXCEPTION;
+                end""")) {
+            assertThrows(SQLException.class, stmt::execute);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeWithResultSetWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, """
+                recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as
+                begin
+                  suspend;
+                end""");
+
+        try (var stmt = con.prepareStatement("select * from RAISE_EXCEPTION_RS(?)")) {
+            stmt.setString(1, null);
+            assertThrows(SQLException.class, stmt::execute);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeUpdateWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, "recreate exception EX_TEST_EXCEPTION 'exception to end execution with error'");
+        try (var stmt = con.prepareStatement("""
+                execute block as
+                begin
+                  exception EX_TEST_EXCEPTION;
+                end""")) {
+            assertThrows(SQLException.class, stmt::executeUpdate);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeQueryWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, """
+                recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as
+                begin
+                  suspend;
+                end""");
+
+        try (var stmt = con.prepareStatement("select * from RAISE_EXCEPTION_RS(?)")) {
+            stmt.setString(1, null);
+            assertThrows(SQLException.class, stmt::executeQuery);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
         }
     }
 

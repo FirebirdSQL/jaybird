@@ -1063,7 +1063,11 @@ Given this is a non-standard extension, it is advisable to retrieve these column
 To be clear, Jaybird does not provide statement pooling.
 This change is only about returning and recording the poolable information for JDBC compliance, so it can be used by -- for example -- connection pool implementations that provide statement pooling.
 * The state of `Connection.setReadOnly(boolean)` was not retained after calling `Connection.setTransactionIsolation(int)` or other method calls that changed the current transaction parameter buffer (https://github.com/FirebirdSQL/jaybird/issues/805[#805])
+* Fixed: Exceptions during statement execution did not always complete the statement, which could delay transaction commit in auto-commit mode (https://github.com/FirebirdSQL/jaybird/issues/806[#806])
++
+This fix was backported to Jaybird 5.0.6.
 * Fixed: `ResultSet.isBeforeFirst()` and `ResultSet.isAfterLast()` should always report `false` for an empty result set (https://github.com/FirebirdSQL/jaybird/issues/808[#808])
+
 
 [#potentially-breaking-changes]
 === Potentially breaking changes
