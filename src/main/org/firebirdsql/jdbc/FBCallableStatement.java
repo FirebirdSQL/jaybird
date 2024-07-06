@@ -23,7 +23,6 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConversionException;
-import org.firebirdsql.util.Primitives;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -84,6 +83,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     @Override
     public ParameterMetaData getParameterMetaData() throws SQLException {
         try (LockCloseable ignored = withLock()) {
+            checkValidity();
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted(false);
             prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
@@ -95,8 +95,8 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     @Override
     public void addBatch() throws SQLException {
-        checkValidity();
         try (LockCloseable ignored = withLock()) {
+            checkValidity();
             procedureCall.checkParameters();
             batchList.add((FBProcedureCall) procedureCall.clone());
         }
@@ -104,9 +104,8 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     @Override
     public void clearBatch() throws SQLException {
-        checkValidity();
-
         try (LockCloseable ignored = withLock()) {
+            checkValidity();
             // TODO Find open streams and close them?
             batchList.clear();
         }
@@ -114,44 +113,37 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     @Override
     protected List<Long> executeBatchInternal() throws SQLException {
-        checkValidity();
         try (LockCloseable ignored = withLock()) {
-            boolean success = false;
+            checkValidity();
+            List<Long> results = new ArrayList<>(batchList.size());
+            notifyStatementStarted();
             try {
-                notifyStatementStarted();
-
-                List<Long> results = new ArrayList<>(batchList.size());
-                Iterator<FBProcedureCall> iterator = batchList.iterator();
-
-                try {
-                    prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
-
-                    while (iterator.hasNext()) {
-                        procedureCall = iterator.next();
-                        executeSingleForBatch(results);
-                    }
-
-                    success = true;
-                    return results;
-                } catch (SQLException ex) {
-                    throw createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
-                            ex.getErrorCode(), Primitives.toLongArray(results), ex);
-                } finally {
-                    clearBatch();
+                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
+                for (FBProcedureCall fbProcedureCall : batchList) {
+                    procedureCall = fbProcedureCall;
+                    results.add(executeSingleForBatch());
                 }
+                notifyStatementCompleted();
+                return results;
+            } catch (SQLException e) {
+                BatchUpdateException batchUpdateException = createBatchUpdateException(e, results);
+                notifyStatementCompleted(false, batchUpdateException);
+                throw batchUpdateException;
+            } catch (RuntimeException e) {
+                notifyStatementCompleted(false, e);
+                throw e;
             } finally {
-                notifyStatementCompleted(success);
+                clearBatch();
             }
         }
     }
-    
-    private void executeSingleForBatch(List<Long> results) throws SQLException {
+
+    private long executeSingleForBatch() throws SQLException {
         if (internalExecute(!isSelectableProcedure())) {
-            throw new SQLException("Statements executed as batch should not produce a result set",
-                    SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE);
+            throw batchStatementReturnedResultSet();
         }
 
-        results.add(getLargeUpdateCountMinZero());
+        return getLargeUpdateCountMinZero();
     }
 
     @Override
@@ -170,7 +162,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @throws SQLException if something went wrong.
      */
     protected void setRequiredTypes() throws SQLException {
-        setRequiredTypesInternal((FBResultSet) (singletonRs != null ? singletonRs : getResultSet()));
+        setRequiredTypesInternal((FBResultSet) (singletonRs != null ? singletonRs : getResultSet(false)));
     }
 
     private void setRequiredTypesInternal(FBResultSet resultSet) throws SQLException {
@@ -216,72 +208,76 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     @Override
     public boolean execute() throws SQLException {
-        procedureCall.checkParameters();
-        boolean hasResultSet = false;
         try (LockCloseable ignored = withLock()) {
+            checkValidity();
+            procedureCall.checkParameters();
             notifyStatementStarted();
-
             try {
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
-                hasResultSet = internalExecute(!isSelectableProcedure());
-
+                boolean hasResultSet = internalExecute(!isSelectableProcedure());
                 if (hasResultSet) {
                     setRequiredTypes();
+                } else {
+                    notifyStatementCompleted();
                 }
-            } finally {
-            	if (!hasResultSet) notifyStatementCompleted();
+                return hasResultSet;
+            } catch (Exception e) {
+                notifyStatementCompleted(true, e);
+                throw e;
             }
-
-            return hasResultSet;
         }
-
     }
 
     //This method prepares statement before execution. Rest of the processing is done by superclass.
     @Override
     public ResultSet executeQuery() throws SQLException {
-        procedureCall.checkParameters();
         try (LockCloseable ignored = withLock()) {
             checkValidity();
+            procedureCall.checkParameters();
             notifyStatementStarted();
-            prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
-
-            if (!internalExecute(!isSelectableProcedure()))
-                throw new FBSQLException("No resultset for sql", SQLStateConstants.SQL_STATE_NO_RESULT_SET);
-
-            ResultSet rs = getResultSet();
-            setRequiredTypesInternal((FBResultSet) rs);
-            return rs;
+            try {
+                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
+                if (!internalExecute(!isSelectableProcedure())) {
+                    throw queryProducedNoResultSet();
+                }
+                ResultSet rs = getResultSet(false);
+                setRequiredTypesInternal((FBResultSet) rs);
+                return rs;
+            } catch (Exception e) {
+                notifyStatementCompleted(true, e);
+                throw e;
+            }
         }
     }
 
     // This method prepares statement before execution. Rest of the processing is done by superclass.
     @Override
     public int executeUpdate() throws SQLException {
-        procedureCall.checkParameters();
         try (LockCloseable ignored = withLock()) {
+            checkValidity();
+            procedureCall.checkParameters();
+            notifyStatementStarted();
             try {
-                notifyStatementStarted();
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
 
-                /*
-                 * // R.Rokytskyy: JDBC CTS suite uses executeUpdate() //
-                 * together with output parameters, therefore we cannot //
-                 * throw exception if we want to pass the test suite
-                 * 
-                 * if (internalExecute(true)) throw new FBSQLException(
-                 * "Update statement returned results.");
+                /* R.Rokytskyy: JDBC CTS suite uses executeUpdate() together with output parameters, therefore we
+                 * cannot throw exception if we want to pass the test suite.
+                 *
+                 * if (internalExecute(true)) throw updateReturnedResultSet();
                  */
 
                 boolean hasResults = internalExecute(!isSelectableProcedure());
-
                 if (hasResults) {
                     setRequiredTypes();
                 }
-
-                return getUpdateCountMinZero();
-            } finally {
-                notifyStatementCompleted();
+                int updateCount = getUpdateCountMinZero();
+                if (!isSelectableProcedure()) {
+                    notifyStatementCompleted();
+                }
+                return updateCount;
+            } catch (Exception e) {
+                notifyStatementCompleted(true, e);
+                throw e;
             }
         }
     }

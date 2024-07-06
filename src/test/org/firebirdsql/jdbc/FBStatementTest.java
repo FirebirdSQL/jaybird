@@ -41,7 +41,6 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
-import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementClosed;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
@@ -61,7 +60,7 @@ class FBStatementTest {
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
-    private Connection con;
+    private FBConnection con;
 
     private static final int DATA_ITEMS = 5;
     private static final String CREATE_TABLE = "CREATE TABLE test ( col1 INTEGER )";
@@ -70,12 +69,12 @@ class FBStatementTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        con = getConnectionViaDriverManager();
+        con = getConnectionViaDriverManager().unwrap(FBConnection.class);
     }
 
     @AfterEach
     void tearDown() throws Exception {
-        closeQuietly(con);
+        con.close();
     }
 
     /**
@@ -1118,6 +1117,66 @@ class FBStatementTest {
         }
     }
 
+    @Test
+    void executeWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, "recreate exception EX_TEST_EXCEPTION 'exception to end execution with error'");
+        try (Statement stmt = con.createStatement()) {
+            assertThrows(SQLException.class, () -> stmt.execute(
+                    "execute block as\n" +
+                    "begin\n" +
+                    "  exception EX_TEST_EXCEPTION;\n" +
+                    "end"));
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeWithResultSetWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        //@formatter:off
+        executeDDL(con,
+                "recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as\n" +
+                "begin\n" +
+                "  suspend;\n" +
+                "end");
+        //@formatter:on
+        try (Statement stmt = con.createStatement()) {
+            assertThrows(SQLException.class, () -> stmt.execute("select * from RAISE_EXCEPTION_RS(null)"));
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeUpdateWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, "recreate exception EX_TEST_EXCEPTION 'exception to end execution with error'");
+        try (Statement stmt = con.createStatement()) {
+            assertThrows(SQLException.class, () -> stmt.executeUpdate(
+                    "execute block as\n" +
+                    "begin\n" +
+                    "  exception EX_TEST_EXCEPTION;\n" +
+                    "end"));
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeQueryWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        //@formatter:off
+        executeDDL(con,
+                "recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as\n" +
+                "begin\n" +
+                "  suspend;\n" +
+                "end");
+        //@formatter:on
+        try (Statement stmt = con.createStatement()) {
+            assertThrows(SQLException.class, () -> stmt.executeQuery("select * from RAISE_EXCEPTION_RS(null)"));
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
@@ -1146,10 +1205,10 @@ class FBStatementTest {
         return Stream.of(PropertyConstants.SCROLLABLE_CURSOR_EMULATED, PropertyConstants.SCROLLABLE_CURSOR_SERVER);
     }
 
-    private static Connection createConnection(String scrollableCursorPropertyValue) throws SQLException {
+    private static FBConnection createConnection(String scrollableCursorPropertyValue) throws SQLException {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty(PropertyNames.scrollableCursor, scrollableCursorPropertyValue);
-        return DriverManager.getConnection(getUrl(), props);
+        return DriverManager.getConnection(getUrl(), props).unwrap(FBConnection.class);
     }
 
 }

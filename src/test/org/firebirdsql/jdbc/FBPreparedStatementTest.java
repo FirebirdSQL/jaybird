@@ -50,7 +50,6 @@ import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.FbAssumptions.assumeServerBatchSupport;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -112,16 +111,16 @@ class FBPreparedStatementTest {
     private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
     //@formatter:on
 
-    private Connection con;
+    private FBConnection con;
 
     @BeforeEach
     void setUp() throws Exception {
-        con = getConnectionViaDriverManager();
+        con = getConnectionViaDriverManager().unwrap(FBConnection.class);
     }
 
     @AfterEach
     void tearDown() throws Exception {
-        closeQuietly(con);
+        con.close();
     }
 
     @Test
@@ -1451,6 +1450,70 @@ class FBPreparedStatementTest {
              ResultSet rs = stmt.executeQuery("select count(*) from test")) {
             assertTrue(rs.next(), "expected a row");
             assertEquals(1, rs.getInt(1), "Expected one row in table test");
+        }
+    }
+
+    @Test
+    void executeWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, "recreate exception EX_TEST_EXCEPTION 'exception to end execution with error'");
+        try (PreparedStatement stmt = con.prepareStatement(
+                "execute block as\n" +
+                "begin\n" +
+                "  exception EX_TEST_EXCEPTION;\n" +
+                "end")) {
+            assertThrows(SQLException.class, stmt::execute);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeWithResultSetWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        //@formatter:off
+        executeDDL(con,
+                "recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as\n" +
+                "begin\n" +
+                "  suspend;\n" +
+                "end");
+        //@formatter:on
+
+        try (PreparedStatement stmt = con.prepareStatement("select * from RAISE_EXCEPTION_RS(?)")) {
+            stmt.setString(1, null);
+            assertThrows(SQLException.class, stmt::execute);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeUpdateWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        executeDDL(con, "recreate exception EX_TEST_EXCEPTION 'exception to end execution with error'");
+        try (PreparedStatement stmt = con.prepareStatement(
+                "execute block as\n" +
+                "begin\n" +
+                "  exception EX_TEST_EXCEPTION;\n" +
+                "end")) {
+            assertThrows(SQLException.class, stmt::executeUpdate);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void executeQueryWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        //@formatter:off
+        executeDDL(con,
+                "recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as\n" +
+                "begin\n" +
+                "  suspend;\n" +
+                "end");
+        //@formatter:on
+
+        try (PreparedStatement stmt = con.prepareStatement("select * from RAISE_EXCEPTION_RS(?)")) {
+            stmt.setString(1, null);
+            assertThrows(SQLException.class, stmt::executeQuery);
+            assertFalse(con.getLocalTransaction().inTransaction(),
+                    "expected no active transaction after exception in auto-commit");
         }
     }
 
