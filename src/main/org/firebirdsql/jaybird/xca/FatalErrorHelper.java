@@ -50,7 +50,7 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQLSTATE_CLASS_CONNECTION_E
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
-public final class FatalGDSErrorHelper {
+public final class FatalErrorHelper {
 
     /**
      * Check whether the specified exception is fatal from the XCA point of view.
@@ -264,7 +264,7 @@ public final class FatalGDSErrorHelper {
             "HYT01"  // Connection timeout expired
     )));
 
-    private FatalGDSErrorHelper() {
+    private FatalErrorHelper() {
         // no instances
     }
 

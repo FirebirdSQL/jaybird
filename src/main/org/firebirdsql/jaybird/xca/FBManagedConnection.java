@@ -130,7 +130,7 @@ public final class FBManagedConnection implements ExceptionListener {
     public void errorOccurred(Object source, SQLException ex) {
         log.trace(ex.getMessage());
 
-        if (!FatalGDSErrorHelper.isFatal(ex)) {
+        if (!FatalErrorHelper.isFatal(ex)) {
             return;
         }
         XcaConnectionEvent event = new XcaConnectionEvent(this, XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED,
@@ -369,7 +369,7 @@ public final class FBManagedConnection implements ExceptionListener {
             return false;
         }
 
-        return FatalGDSErrorHelper.isBrokenConnection(connectionEvent.getException());
+        return FatalErrorHelper.isBrokenConnection(connectionEvent.getException());
     }
 
     /**
