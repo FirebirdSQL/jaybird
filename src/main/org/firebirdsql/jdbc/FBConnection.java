@@ -45,6 +45,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_CONNECTION_CLOSED;
+
 /**
  * The class {@code FBConnection} is a handle to a {@link FBManagedConnection} and implements {@link Connection}.
  *
@@ -67,7 +69,7 @@ public class FBConnection implements FirebirdConnection {
 
     private static final String PERMISSION_SET_NETWORK_TIMEOUT = "setNetworkTimeout";
 
-    protected FBManagedConnection mc;
+    protected volatile FBManagedConnection mc;
 
     private FBLocalTransaction localTransaction;
     private FBDatabaseMetaData metaData;
@@ -428,6 +430,7 @@ public class FBConnection implements FirebirdConnection {
      */
     @Override
     public void close() throws SQLException {
+        if (isClosed()) return;
         if (log.isTraceEnabled()) {
             log.trace("Connection closed requested at", new RuntimeException("Connection close logging"));
         }
@@ -440,33 +443,35 @@ public class FBConnection implements FirebirdConnection {
                 chainBuilder.append(e);
             } finally {
                 metaData = null;
-                if (mc != null) {
-                    // leave managed transactions alone, they are normally
-                    // committed after the Connection handle is closed.
-                    if (!mc.inDistributedTransaction()) {
-                        try {
-                            txCoordinator.handleConnectionClose();
-                        } catch (SQLException e) {
-                            chainBuilder.append(e);
-                        } finally {
-                            try {
-                                setAutoCommit(true);
-                            } catch (SQLException e) {
-                                if (!SQLStateConstants.SQL_STATE_CONNECTION_CLOSED.equals(e.getSQLState())) {
-                                    chainBuilder.append(e);
-                                }
-                            }
-                        }
-                    }
-
-                    mc.close(this);
-                    mc = null;
-                }
+                closeMc(chainBuilder);
             }
         }
         if (chainBuilder.hasException()) {
             throw chainBuilder.getException();
         }
+    }
+
+    private void closeMc(SQLExceptionChainBuilder<SQLException> chainBuilder) {
+        FBManagedConnection mc = this.mc;
+        if (mc == null) return;
+        // leave managed transactions alone, they are normally committed after the Connection handle is closed.
+        if (!mc.inDistributedTransaction()) {
+            try {
+                txCoordinator.handleConnectionClose();
+            } catch (SQLException e) {
+                chainBuilder.append(e);
+            } finally {
+                try {
+                    setAutoCommit(true);
+                } catch (SQLException e) {
+                    if (!SQL_STATE_CONNECTION_CLOSED.equals(e.getSQLState())) {
+                        chainBuilder.append(e);
+                    }
+                }
+            }
+        }
+
+        mc.close(this);
     }
 
     @Override

@@ -36,6 +36,9 @@ The following has been changed or fixed since Jaybird 5.0.5:
 * Fixed: Exceptions during statement execution did not always complete the statement, which could delay transaction commit in auto-commit mode (https://github.com/FirebirdSQL/jaybird/issues/806[#806])
 +
 This fix was backported from Jaybird 6.
+* Fixed: Closing a connection when the database was shutdown, or the connection was otherwise broken, could result in a `NullPointerException` (https://github.com/FirebirdSQL/jaybird/issues/812[#812])
++
+This fix was backported from Jaybird 6.
 
 [#jaybird-5-0-5-changelog]
 === Jaybird 5.0.5

@@ -31,6 +31,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.opentest4j.TestAbortedException;
 
 import java.nio.file.Files;
@@ -190,14 +192,16 @@ class FBMaintenanceManagerTest {
     }
 
     /**
-     * Query must fail on an offline database
+     * Query must fail on an offline database.
      */
-    @Test
-    void testForcedShutdown() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testForcedShutdown(boolean autoCommit) throws Exception {
         assumeThat("Test doesn't work correctly under embedded", GDS_TYPE, not(isEmbeddedType()));
         try (Connection conn = getConnectionViaDriverManager()) {
             createTestTable();
 
+            conn.setAutoCommit(autoCommit);
             Statement stmt = conn.createStatement();
             try {
                 String sql = "SELECT * FROM TEST";

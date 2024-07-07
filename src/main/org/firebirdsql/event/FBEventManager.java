@@ -32,6 +32,7 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.firebirdsql.jaybird.xca.FatalGDSErrorHelper;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
@@ -181,10 +182,12 @@ public class FBEventManager implements EventManager {
                 for (String eventName : new HashSet<>(handlerMap.keySet())) {
                     try {
                         unregisterListener(eventName);
-                    } catch (SQLException e) {
-                        chain.append(e);
                     } catch (Exception e) {
-                        chain.append(new SQLException(e));
+                        chain.append(e instanceof SQLException ? (SQLException) e : new SQLException(e));
+                        if (FatalGDSErrorHelper.isBrokenConnection(e)) {
+                            // It makes no sense to continue
+                            break;
+                        }
                     }
                 }
             } finally {

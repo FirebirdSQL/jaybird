@@ -40,7 +40,6 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
@@ -71,10 +70,12 @@ public final class FBManagedConnection implements ExceptionListener {
     private final List<XcaConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
     private static final AtomicReferenceFieldUpdater<FBManagedConnection, FBConnection> connectionHandleUpdater =
             AtomicReferenceFieldUpdater.newUpdater(FBManagedConnection.class, FBConnection.class, "connectionHandle");
+    @SuppressWarnings("java:S3077")
     private volatile FBConnection connectionHandle;
     // This is a bit of hack to be able to get attach warnings into the FBConnection that is created later.
     private static final AtomicReferenceFieldUpdater<FBManagedConnection, SQLWarning> unnotifiedWarningsUpdater =
             AtomicReferenceFieldUpdater.newUpdater(FBManagedConnection.class, SQLWarning.class, "unnotifiedWarnings");
+    @SuppressWarnings("java:S3077")
     private volatile SQLWarning unnotifiedWarnings;
 
     private int timeout = 0;
@@ -364,49 +365,11 @@ public final class FBManagedConnection implements ExceptionListener {
 
     private boolean isBrokenConnection(XcaConnectionEvent connectionEvent) {
         if (connectionEvent == null
-                || connectionEvent.getEventType() != XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED) {
+            || connectionEvent.getEventType() != XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED) {
             return false;
         }
 
-        Exception connectionEventException = connectionEvent.getException();
-        if (connectionEventException == null) {
-            return false;
-        }
-
-        SQLException firstSqlException = findException(connectionEventException, SQLException.class);
-        if (firstSqlException != null && isBrokenConnectionErrorCode(firstSqlException.getErrorCode())) {
-            return true;
-        }
-
-        if (findException(connectionEventException, SocketTimeoutException.class) != null) {
-            return true;
-        }
-
-        // TODO Should this test for SocketException or something else, as SocketTimeoutException is also tested in the
-        //  previous check
-        //noinspection RedundantIfStatement
-        if (findException(connectionEventException, SocketTimeoutException.class) != null) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private boolean isBrokenConnectionErrorCode(int iscCode) {
-        return iscCode == ISCConstants.isc_network_error
-                || iscCode == ISCConstants.isc_net_read_err
-                || iscCode == ISCConstants.isc_net_write_err;
-    }
-
-    private <T extends Exception> T findException(Exception root, Class<T> exceptionType) {
-        Throwable current = root;
-        while (current != null) {
-            if (exceptionType.isInstance(current)) {
-                return exceptionType.cast(current);
-            }
-            current = current.getCause();
-        }
-        return null;
+        return FatalGDSErrorHelper.isBrokenConnection(connectionEvent.getException());
     }
 
     /**
