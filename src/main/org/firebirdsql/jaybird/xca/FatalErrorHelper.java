@@ -222,6 +222,7 @@ public final class FatalErrorHelper {
 //                                          //InterBase just like Dbase.
 //
             ISCConstants.isc_shutdown,
+            ISCConstants.isc_att_shutdown,
 //        ISCConstants.isc_io_create_err,
 //        ISCConstants.isc_io_open_err,
 //        ISCConstants.isc_io_close_err,
@@ -246,7 +247,8 @@ public final class FatalErrorHelper {
             ISCConstants.isc_net_read_err,
             ISCConstants.isc_net_write_err,
             ISCConstants.isc_unavailable,
-            ISCConstants.isc_shutdown
+            ISCConstants.isc_shutdown,
+            ISCConstants.isc_att_shutdown,
     };
 
     // TODO double check firebird and Jaybird implementation for other states or state classes
