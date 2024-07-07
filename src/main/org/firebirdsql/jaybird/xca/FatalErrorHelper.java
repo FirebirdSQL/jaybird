@@ -101,7 +101,7 @@ public final class FatalErrorHelper {
     }
 
     private static boolean isBrokenConnectionSqlState(String sqlState) {
-        return sqlState != null && sqlState.startsWith("08");
+        return sqlState != null && sqlState.startsWith(SQLSTATE_CLASS_CONNECTION_ERROR);
     }
 
     /**
