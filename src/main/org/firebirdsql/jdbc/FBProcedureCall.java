@@ -33,6 +33,9 @@ import static org.firebirdsql.jdbc.SQLStateConstants.*;
  */
 public class FBProcedureCall implements Cloneable {
 
+    private static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE ";
+    private static final String NATIVE_SELECT_COMMAND = "SELECT * FROM ";
+
     // TODO Replace with a copy constructor
     public Object clone() {
         try {
@@ -274,9 +277,7 @@ public class FBProcedureCall implements Cloneable {
      * @return native SQL that can be executed by the database server.
      */
     public String getSQL(boolean select) throws SQLException {
-        StringBuilder sb = new StringBuilder(select
-                ? FBCallableStatement.NATIVE_SELECT_COMMAND
-                : FBCallableStatement.NATIVE_CALL_COMMAND);
+        StringBuilder sb = new StringBuilder(select ? NATIVE_SELECT_COMMAND : NATIVE_CALL_COMMAND);
         sb.append(name);
 
         boolean firstParam = true;

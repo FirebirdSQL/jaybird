@@ -45,8 +45,6 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_NO_RESULT_SET;
 public class FBCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
 
     static final String SET_BY_STRING_NOT_SUPPORTED = "Setting parameters by name is not supported";
-    static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE ";
-    static final String NATIVE_SELECT_COMMAND = "SELECT * FROM ";
 
     private FBResultSet singletonRs;
 
