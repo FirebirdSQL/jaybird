@@ -171,56 +171,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         column definition
      * @param rows
      *         row data
-     * @param listener
-     *         result set listener
-     */
-    @InternalApi
-    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows, FBObjectListener.ResultSetListener listener)
-            throws SQLException {
-        this(rowDescriptor, null, rows, listener, false, false);
-    }
-
-    /**
-     * Creates a FBResultSet with the columns specified by {@code rowDescriptor} and the data in {@code rows}.
-     * <p>
-     * This constructor is intended for metadata result sets, but can be used for other purposes as well.
-     * </p>
-     * <p>
-     * Current implementation will ensure that strings will be trimmed on retrieval.
-     * </p>
-     *
-     * @param rowDescriptor
-     *         column definition
-     * @param rows
-     *         row data
      */
     @InternalApi
     public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
-        this(rowDescriptor, rows, null);
-    }
-
-    /**
-     * Creates a FBResultSet with the columns specified by {@code rowDescriptor} and the data in {@code rows}.
-     * <p>
-     * This constructor is intended for metadata result sets, but can be used for other purposes as well.
-     * </p>
-     * <p>
-     * Current implementation will ensure that strings will be trimmed on retrieval.
-     * </p>
-     *
-     * @param rowDescriptor
-     *         column definition
-     * @param connection
-     *         connection (cannot be null when {@code retrieveBlobs} is {@code true}
-     * @param rows
-     *         row data
-     * @param retrieveBlobs
-     *         {@code true} retrieves the blob data
-     */
-    @InternalApi
-    public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
-            boolean retrieveBlobs) throws SQLException {
-        this(rowDescriptor, connection, rows, null, retrieveBlobs, true);
+        this(rowDescriptor, null, rows, null, false);
     }
 
     /**
@@ -239,13 +193,11 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         result set listener
      * @param retrieveBlobs
      *         {@code true} retrieves the blob data
-     * @param trimStrings
-     *         {@code true} when strings need to be trimmed (generally only for metadata queries)
      * @since 5.0.1
      */
     @InternalApi
     public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
-            FBObjectListener.ResultSetListener listener, boolean retrieveBlobs, boolean trimStrings)
+            FBObjectListener.ResultSetListener listener, boolean retrieveBlobs)
             throws SQLException {
         // TODO Evaluate if we need to share more implementation with constructor above
         this.connection = connection;
@@ -257,7 +209,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];
         colNames = new HashMap<>(rowDescriptor.getCount(), 1);
-        prepareVars(true, trimStrings);
+        prepareVars(true, false);
         // TODO Set specific types (see also previous todo)
         behavior = ResultSetBehavior.of(
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT);

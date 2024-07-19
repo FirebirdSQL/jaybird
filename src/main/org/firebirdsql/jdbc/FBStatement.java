@@ -468,8 +468,7 @@ public class FBStatement implements FirebirdStatement {
     public ResultSet getGeneratedKeys() throws SQLException {
         checkValidity();
         if (isGeneratedKeyQuery()) {
-            return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, true,
-                    false);
+            return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, true);
         }
         return new FBResultSet(fbStatement.emptyRowDescriptor(), emptyList());
     }
@@ -680,8 +679,7 @@ public class FBStatement implements FirebirdStatement {
      */
     protected FBResultSet createSpecialResultSet(FBObjectListener.ResultSetListener resultSetListener)
             throws SQLException {
-        return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, true,
-                false);
+        return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, true);
     }
 
     @Override
