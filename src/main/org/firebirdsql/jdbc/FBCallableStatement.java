@@ -306,8 +306,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         final boolean hasResultSet = super.internalExecute(sendOutParams);
         if (hasResultSet && isSingletonResult) {
             // Safeguarding first row so it will work even if the result set from getResultSet is manipulated
-            singletonRs = new FBResultSet(fbStatement.getRowDescriptor(), connection, new ArrayList<>(specialResult),
-                    null, true, false);
+            singletonRs = new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, null, true, false);
         }
         return hasResultSet;
     }
@@ -316,8 +315,8 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     protected FBResultSet createSpecialResultSet(FBObjectListener.ResultSetListener resultSetListener)
             throws SQLException {
         // retrieveBlobs is false, as they were already retrieved when initializing singletonRs in internalExecute
-        return new FBResultSet(fbStatement.getRowDescriptor(), connection, new ArrayList<>(specialResult),
-                resultSetListener, false, false);
+        return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, false,
+                false);
     }
 
     private void setField(FBField field, WrapperWithLong value) throws SQLException {
