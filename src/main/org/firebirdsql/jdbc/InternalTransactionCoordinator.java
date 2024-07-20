@@ -25,6 +25,7 @@ import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -34,7 +35,11 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
 
 /**
  * Transaction coordinator for the {@link org.firebirdsql.jdbc.FBConnection} class.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * </p>
  */
+@InternalApi
 public final class InternalTransactionCoordinator implements FBObjectListener.StatementListener,
         FBObjectListener.BlobListener {
 
@@ -224,6 +229,12 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
     }
 
+    /**
+     * Transaction coordinator base implementation.
+     * <p>
+     * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+     * </p>
+     */
     public abstract static class AbstractTransactionCoordinator implements FBObjectListener.StatementListener,
             FBObjectListener.BlobListener {
         protected final FBLocalTransaction localTransaction;

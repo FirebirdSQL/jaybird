@@ -27,6 +27,7 @@ import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCo
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.firebirdsql.util.InternalApi;
 
 import java.io.Serial;
 import java.nio.charset.StandardCharsets;
@@ -40,11 +41,16 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
  * Comprehensive information about the database as a whole.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link DatabaseMetaData} and {@link FirebirdDatabaseMetaData} interfaces.
+ * </p>
  *
  * @author David Jencks
  * @author Mark Rotteveel
  */
 @SuppressWarnings("RedundantThrows")
+@InternalApi
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private static final System.Logger log = System.getLogger(FBDatabaseMetaData.class.getName());

@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.firebirdsql.util.InternalApi;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -31,7 +32,12 @@ import java.util.Objects;
 
 /**
  * An input stream for reading directly from a FBBlob instance.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link FirebirdBlob.BlobInputStream} interface.
+ * </p>
  */
+@InternalApi
 public final class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobInputStream {
 
     private byte[] buffer = ByteArrayHelper.emptyByteArray();

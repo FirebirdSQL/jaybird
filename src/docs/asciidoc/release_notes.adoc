@@ -11,6 +11,8 @@
 :bc-version: 1.78.1
 :jna-version: 5.14.0
 :jaybird-fbclient-version: 4.0.4.0
+:firebird-java: https://groups.google.com/g/firebird-java
+:issues: https://github.com/FirebirdSQL/jaybird/issues
 
 ifeval::["{version_tag}" != ""]
 [WARNING]
@@ -1067,7 +1069,15 @@ This change is only about returning and recording the poolable information for J
 +
 This fix was backported to Jaybird 5.0.6.
 * Fixed: `ResultSet.isBeforeFirst()` and `ResultSet.isAfterLast()` should always report `false` for an empty result set (https://github.com/FirebirdSQL/jaybird/issues/808[#808])
-
+* Most public classes in package `org.firebirdsql.jdbc` have been annotated with `@InternalApi` to reflect that they are not actually part of the public API of Jaybird.
++
+Informally, these classes were already considered internal API, but given they are `public`, we now explicitly and formally document their status for clarity.
++
+Where possible, use the standard JDBC interfaces.
+If you need access to Firebird-specifics, unwrap or cast to the `org.firebirdsql.jdbc.FirebirdXXX` interfaces.
+Only cast to or otherwise access the concrete classes of `org.firebirdsql.jdbc` if you really have to, and keep in mind that their API -- if not defined in `java.sql` or `FirebirdXXX` interfaces -- may change in point releases.
++
+If you have a clear use-case that currently requires access to the concrete implementation classes, and you think it should be possible through a public API, please let us know on {firebird-java}[firebird-java] or the {issues}[issue tracker].
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

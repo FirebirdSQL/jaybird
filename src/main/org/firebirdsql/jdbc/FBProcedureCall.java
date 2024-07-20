@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.jaybird.util.CollectionUtils;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -30,7 +31,11 @@ import static org.firebirdsql.jdbc.SQLStateConstants.*;
 
 /**
  * Represents procedure call.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * </p>
  */
+@InternalApi
 public class FBProcedureCall implements Cloneable {
 
     private static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE ";

@@ -32,6 +32,7 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
+import org.firebirdsql.util.InternalApi;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -46,12 +47,17 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
 
 /**
  * Implementation of {@link java.sql.PreparedStatement}.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link PreparedStatement} and {@link FirebirdPreparedStatement} interfaces.
+ * </p>
  *
  * @author David Jencks
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
 @SuppressWarnings("RedundantThrows")
+@InternalApi
 public class FBPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
 
     public static final String METHOD_NOT_SUPPORTED =

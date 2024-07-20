@@ -18,13 +18,19 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.util.InternalApi;
+
 /**
  * Reasons for statement (or other resources) completion. This is intended for the {@link InternalTransactionCoordinator}
  * to notify the statement and related objects on why it should complete, and for statement to notify its dependent
  * objects.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * </p>
  * 
  * @since 2.2.3
  */
+@InternalApi
 public enum CompletionReason {
     COMMIT(true, true),
     ROLLBACK(true, true),

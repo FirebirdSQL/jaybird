@@ -18,13 +18,19 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.util.InternalApi;
+
 import java.sql.SQLException;
 
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_PARAM_TYPE;
 
 /**
  * Represents procedure call parameter.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * </p>
  */
+@InternalApi
 public class FBProcedureParam implements Cloneable {
 
     private final boolean isParam;

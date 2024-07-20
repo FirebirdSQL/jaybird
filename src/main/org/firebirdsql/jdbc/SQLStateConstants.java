@@ -24,12 +24,15 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.util.Volatile;
+
 /**
  * Constants with common SQLState values.
  *
  * @author Mark Rotteveel
  * @since 3.0
  */
+@Volatile(reason = "Constants may be removed in new major releases if no longer needed by the implementation")
 public final class SQLStateConstants {
 
     /**

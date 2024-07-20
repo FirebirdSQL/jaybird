@@ -59,7 +59,12 @@ import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_type;
 
 /**
  * Firebird implementation of {@link java.sql.Blob}.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link java.sql.Blob} and {@link FirebirdBlob} interfaces.
+ * </p>
  */
+@InternalApi
 public final class FBBlob implements FirebirdBlob, TransactionListener {
 
     private static final System.Logger logger = System.getLogger(FBBlob.class.getName());
@@ -668,7 +673,6 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      * @return field based blob configuration
      * @since 5
      */
-    @InternalApi
     public static Config createConfig(FieldDescriptor fieldDescriptor,
             DatabaseConnectionProperties connectionProperties) {
         return createConfig(fieldDescriptor.getSubType(), connectionProperties.isUseStreamBlobs(),
@@ -687,7 +691,6 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      * @return field based blob configuration
      * @since 5
      */
-    @InternalApi
     public static Config createConfig(int subType, DatabaseConnectionProperties connectionProperties,
             DatatypeCoder datatypeCoder) {
         return createConfig(subType, connectionProperties.isUseStreamBlobs(), connectionProperties.getBlobBufferSize(),
@@ -708,7 +711,6 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      * @return generic blob configuration
      * @since 5
      */
-    @InternalApi
     public static Config createConfig(int subType, boolean useStreamBlob, int blobBufferSize,
             DatatypeCoder datatypeCoder) {
         return new Config(subType, useStreamBlob, blobBufferSize, datatypeCoder);
@@ -719,7 +721,6 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      *
      * @since 5
      */
-    @InternalApi
     public static final class Config implements BlobConfig {
 
         private final boolean streamBlob;

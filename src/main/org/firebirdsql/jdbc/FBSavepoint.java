@@ -18,10 +18,16 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.util.InternalApi;
+
 import java.sql.SQLException;
 
 /**
  * Savepoint implementation.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link java.sql.Savepoint} and {@link FirebirdSavepoint} interfaces.
+ * </p>
  *
  * @param savepointId
  *         numeric savepoint id (must be non-{@code null} if {@code name} is {@code null}).
@@ -30,6 +36,7 @@ import java.sql.SQLException;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
+@InternalApi
 public record FBSavepoint(Integer savepointId, String name) implements FirebirdSavepoint {
 
     private static final String SAVEPOINT_ID_PREFIX = "SVPT";

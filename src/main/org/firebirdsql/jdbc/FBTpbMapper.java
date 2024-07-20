@@ -22,6 +22,7 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jaybird.props.internal.TransactionNameMapping;
+import org.firebirdsql.util.InternalApi;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -36,9 +37,13 @@ import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 /**
  * This class provides mapping capabilities between standard JDBC transaction isolation level and Firebird Transaction
  * Parameters Blocks (TPBs).
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * </p>
  *
  * @author Roman Rokytskyy
  */
+@InternalApi
 public final class FBTpbMapper implements Serializable {
 
     @Serial

@@ -23,6 +23,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -33,12 +34,17 @@ import java.util.*;
 import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 
 /**
- * Information about the types and properties of the columns in a {@code ResultSet} object.
+ * Information about the types and properties of the columns in a {@link ResultSet} object.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link ResultSetMetaData} and {@link FirebirdResultSetMetaData} interfaces.
+ * </p>
  *
  * @author David Jencks
  * @author Mark Rotteveel
  */
 @SuppressWarnings("RedundantThrows")
+@InternalApi
 public class FBResultSetMetaData extends AbstractFieldMetaData implements FirebirdResultSetMetaData {
 
     private final ColumnStrategy columnStrategy;

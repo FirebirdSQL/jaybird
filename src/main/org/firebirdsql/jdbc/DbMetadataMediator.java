@@ -36,6 +36,9 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Provides access to the database connection for executing database metadata queries.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * </p>
  *
  * @author Mark Rotteveel
  * @since 4.0
@@ -96,8 +99,7 @@ public abstract class DbMetadataMediator {
     /**
      * Holder class for query text and parameters.
      */
-    @InternalApi
-    public static class MetadataQuery {
+    public static final class MetadataQuery {
 
         private final String queryText;
         private final List<String> parameters;

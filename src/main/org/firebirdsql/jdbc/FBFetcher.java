@@ -19,13 +19,19 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
  * Instances of this interface fetch records from the server.
+ * <p>
+ * This interface is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this
+ * type.
+ * </p>
  */
+@InternalApi
 public sealed interface FBFetcher permits FBCachedFetcher, FBServerScrollFetcher, FBStatementFetcher,
         FBUpdatableFetcher, ForwardOnlyFetcherDecorator {
 

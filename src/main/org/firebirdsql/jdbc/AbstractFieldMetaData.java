@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -36,12 +37,16 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 /**
  * Base class for {@link org.firebirdsql.jdbc.FBResultSetMetaData} and
  * {@link org.firebirdsql.jdbc.FBParameterMetaData} for methods common to both implementations.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * </p>
  *
  * @author David Jencks
  * @author Nickolay Samofatov
  * @author Mark Rotteveel
  * @since 3.0
  */
+@InternalApi
 public abstract class AbstractFieldMetaData implements Wrapper {
 
     private final RowDescriptor rowDescriptor;

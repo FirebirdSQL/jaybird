@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 import java.sql.Blob;
@@ -27,7 +28,12 @@ import java.io.*;
 
 /**
  * This class represents a cached blob field.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link java.sql.Blob} and {@link FirebirdBlob} interfaces.
+ * </p>
  */
+@InternalApi
 public final class FBCachedBlob implements FirebirdBlob {
 
     // NOTE: Do not assign ByteArrayHelper.empty(), as this must be a unique instance

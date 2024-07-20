@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.RowId;
 import java.util.Arrays;
@@ -29,11 +30,16 @@ import java.util.Objects;
  * <p>
  * This is a thin wrapper around the bytes of a {@code RDB$DB_KEY}.
  * </p>
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link java.sql.RowId} and {@link FirebirdRowId} interfaces.
+ * </p>
  *
  * @author Mark Rotteveel
  * @since 4.0
  */
-public final class FBRowId implements RowId {
+@InternalApi
+public final class FBRowId implements FirebirdRowId {
 
     private final byte[] rowIdBytes;
 

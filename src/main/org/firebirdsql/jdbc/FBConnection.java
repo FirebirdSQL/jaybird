@@ -36,6 +36,7 @@ import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.*;
 import java.util.*;
@@ -60,11 +61,16 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_TX_ACTIVE;
 
 /**
  * The class {@code FBConnection} is a handle to a {@link FBManagedConnection} and implements {@link Connection}.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link Connection} and {@link FirebirdConnection} interfaces.
+ * </p>
  *
  * @author David Jencks
  * @author Mark Rotteveel
  */
 @SuppressWarnings({ "RedundantThrows", "SqlSourceToSinkFlow" })
+@InternalApi
 public class FBConnection implements FirebirdConnection {
 
     private static final System.Logger log = System.getLogger(FBConnection.class.getName());

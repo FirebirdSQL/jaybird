@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,12 +19,17 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.util.InternalApi;
 
 /**
  * Strategy for quoting object names and literals (or no quoting of object names in the case of dialect 1).
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * </p>
  *
  * @since 2.2
  */
+@InternalApi
 public enum QuoteStrategy {
     /**
      * Dialect 1 doesn't support quoting of object names, and uses double quotes for literals.

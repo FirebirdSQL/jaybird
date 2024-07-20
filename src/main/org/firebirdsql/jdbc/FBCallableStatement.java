@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConversionException;
+import org.firebirdsql.util.InternalApi;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -36,12 +37,17 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_NO_RESULT_SET;
 
 /**
  * Implementation of {@link java.sql.CallableStatement}.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link java.sql.CallableStatement} and {@link FirebirdCallableStatement} interfaces.
+ * </p>
  * 
  * @author David Jencks
  * @author Roman Rokytskyy
  * @author Steven Jardine
  * @author Mark Rotteveel
  */
+@InternalApi
 public class FBCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
 
     static final String SET_BY_STRING_NOT_SUPPORTED = "Setting parameters by name is not supported";

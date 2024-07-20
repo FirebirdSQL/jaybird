@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.util.InternalApi;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,11 +37,16 @@ import java.sql.SQLNonTransientException;
  * This class also implements {@link NClob} so it can be used with the {@code set/get/updateNClob} methods
  * transparently. It technically does not conform to the JDBC requirements for {@code NClob}.
  * </p>
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link Clob}, {@link NClob}, and {@link FirebirdClob} interfaces.
+ * </p>
  * 
  * @author David Jencks
  * @version 1.0
  */
-public final class FBClob implements Clob, NClob {
+@InternalApi
+public final class FBClob implements FirebirdClob, NClob {
 
 	private final FBBlob wrappedBlob;
 

@@ -40,6 +40,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Jaybird JDBC Driver implementation for the Firebird database.
+ * <p>
+ * Although this class is formally public API of Jaybird, any method not defined by the {@link Driver} and
+ * {@link FirebirdDriver} interfaces is considered internal API and may change between point releases.
+ * </p>
  *
  * @author David Jencks
  * @author Mark Rotteveel

@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.ParameterMetaData;
 import java.sql.SQLException;
@@ -27,17 +28,22 @@ import java.util.Map;
 
 /**
  * An object that can be used to get information about the types and properties for each parameter marker in a
- * <code>PreparedStatement</code> object.
+ * {@link java.sql.PreparedStatement} object.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link ParameterMetaData} and {@link FirebirdParameterMetaData} interfaces.
+ * </p>
  *
  * @author Nickolay Samofatov
  * @author Mark Rotteveel
  * @version 1.0
  */
 @SuppressWarnings("RedundantThrows")
+@InternalApi
 public class FBParameterMetaData extends AbstractFieldMetaData implements FirebirdParameterMetaData {
 
     /**
-     * Creates a new <code>FBParameterMetaData</code> instance.
+     * Creates a new {@code FBParameterMetaData} instance.
      *
      * @param rowDescriptor
      *         a row descriptor

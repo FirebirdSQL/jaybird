@@ -45,11 +45,16 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
  * Implementation of {@link Statement}.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link Statement} and {@link FirebirdStatement} interfaces.
+ * </p>
  *
  * @author David Jencks
  * @author Mark Rotteveel
  */
 @SuppressWarnings({ "RedundantThrows", "SqlSourceToSinkFlow" })
+@InternalApi
 public class FBStatement implements FirebirdStatement {
 
     private static final System.Logger log = System.getLogger(FBStatement.class.getName());
@@ -1347,7 +1352,6 @@ public class FBStatement implements FirebirdStatement {
         return localStatementId;
     }
 
-    @InternalApi
     static int nextLocalStatementId() {
         return STATEMENT_ID_GENERATOR.incrementAndGet();
     }

@@ -50,12 +50,17 @@ import java.util.function.Predicate;
 
 /**
  * Implementation of {@link ResultSet}.
+ * <p>
+ * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
+ * For the public API, refer to the {@link ResultSet} and {@link FirebirdResultSet} interfaces.
+ * </p>
  *
  * @author David Jencks
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
 @SuppressWarnings("RedundantThrows")
+@InternalApi
 public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListener.FetcherListener {
 
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported";
@@ -96,7 +101,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * Creates a new {@code FBResultSet} instance.
      */
     @SuppressWarnings("java:S1141")
-    @InternalApi
     public FBResultSet(FBStatement fbStatement, FBObjectListener.ResultSetListener listener, boolean metaDataQuery)
             throws SQLException {
         this.fbStatement = fbStatement;
@@ -172,7 +176,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * @param rows
      *         row data
      */
-    @InternalApi
     public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
         this(rowDescriptor, null, rows, null, false);
     }
@@ -195,7 +198,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         {@code true} retrieves the blob data
      * @since 5.0.1
      */
-    @InternalApi
     public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
             FBObjectListener.ResultSetListener listener, boolean retrieveBlobs)
             throws SQLException {
