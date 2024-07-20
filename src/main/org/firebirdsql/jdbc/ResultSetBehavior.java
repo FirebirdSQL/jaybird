@@ -138,11 +138,7 @@ public final class ResultSetBehavior {
      * @see #isUpdatable()
      */
     public int concurrency() {
-        if (isReadOnly()) {
-            return ResultSet.CONCUR_READ_ONLY;
-        } else {
-            return ResultSet.CONCUR_UPDATABLE;
-        }
+        return isReadOnly() ? ResultSet.CONCUR_READ_ONLY : ResultSet.CONCUR_UPDATABLE;
     }
 
     /**
@@ -176,11 +172,7 @@ public final class ResultSetBehavior {
      * @see #isHoldCursorsOverCommit()
      */
     public int holdability() {
-        if (isCloseCursorsAtCommit()) {
-            return ResultSet.CLOSE_CURSORS_AT_COMMIT;
-        } else {
-            return ResultSet.HOLD_CURSORS_OVER_COMMIT;
-        }
+        return isCloseCursorsAtCommit() ? ResultSet.CLOSE_CURSORS_AT_COMMIT : ResultSet.HOLD_CURSORS_OVER_COMMIT;
     }
 
     /**
