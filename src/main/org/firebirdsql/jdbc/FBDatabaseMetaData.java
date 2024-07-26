@@ -1525,12 +1525,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     @Override
-    public int getOdsMajorVersion() throws SQLException {
+    public int getOdsMajorVersion() {
         return gdsHelper.getCurrentDatabase().getOdsMajor();
     }
 
     @Override
-    public int getOdsMinorVersion() throws SQLException {
+    public int getOdsMinorVersion() {
         return gdsHelper.getCurrentDatabase().getOdsMinor();
     }
 
@@ -1882,5 +1882,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         protected GDSType getGDSType() {
             return FBDatabaseMetaData.this.getGDSType();
         }
+
+        @Override
+        protected int getOdsMajorVersion() {
+            return FBDatabaseMetaData.this.getOdsMajorVersion();
+        }
+
+        @Override
+        protected int getOdsMinorVersion() {
+            return FBDatabaseMetaData.this.getOdsMinorVersion();
+        }
+
     }
 }

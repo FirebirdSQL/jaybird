@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -74,6 +74,21 @@ public abstract class DbMetadataMediator {
      * @return GDSType of the current connection
      */
     protected abstract GDSType getGDSType();
+
+    /**
+     * @return ODS major version
+     */
+    protected abstract int getOdsMajorVersion();
+
+    /**
+     * @return ODS minor version
+     */
+    protected abstract int getOdsMinorVersion();
+
+    protected final boolean isOdsEqualOrAbove(int major, int minor) {
+        int actualMajor = getOdsMajorVersion();
+        return actualMajor > major || actualMajor == major && getOdsMinorVersion() >= minor;
+    }
 
     /**
      * Holder class for query text and parameters.

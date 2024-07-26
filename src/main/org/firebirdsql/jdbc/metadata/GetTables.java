@@ -23,7 +23,6 @@ import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
-import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
 
 import java.sql.ResultSet;
@@ -142,9 +141,8 @@ public abstract class GetTables extends AbstractMetadataMethod {
     abstract Set<String> allTableTypes();
 
     public static GetTables create(DbMetadataMediator mediator) {
-        FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(2, 5)) {
+        if (mediator.isOdsEqualOrAbove(11, 2)) {
             return FB2_5.createInstance(mediator);
         } else {
             return FB2_1.createInstance(mediator);

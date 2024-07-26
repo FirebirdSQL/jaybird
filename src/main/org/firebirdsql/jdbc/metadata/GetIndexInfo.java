@@ -22,7 +22,6 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
-import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -122,9 +121,8 @@ public abstract class GetIndexInfo extends AbstractMetadataMethod {
     }
 
     public static GetIndexInfo create(DbMetadataMediator mediator) {
-        FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(5, 0)) {
+        if (mediator.isOdsEqualOrAbove(13, 1)) {
             return FB5.createInstance(mediator);
         } else {
             return FB2_5.createInstance(mediator);

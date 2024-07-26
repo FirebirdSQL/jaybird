@@ -689,6 +689,44 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @param odsMajor
+     *         ODS major version
+     * @param odsMinor
+     *         ODS minor version
+     * @return {@code true} if the specified ODS is supported
+     */
+    public boolean supportsOds(int odsMajor, int odsMinor) {
+        switch (odsMajor) {
+        case 10:
+            return isVersionBelow(3, 0);
+        case 11:
+            if (isVersionEqualOrAbove(3, 0)) return false;
+            switch (odsMinor) {
+            case 0:
+                return isVersionEqualOrAbove(2, 0);
+            case 1:
+                return isVersionEqualOrAbove(2, 1);
+            case 2:
+            default:
+                return isVersionEqualOrAbove(2, 5);
+            }
+        case 12:
+            return isVersionEqualOrAbove(3, 0) && isVersionBelow(4, 0);
+        case 13:
+            if (isVersionBelow(4, 0)) return false;
+            switch (odsMinor) {
+            case 0:
+                return true;
+            case 1:
+            default:
+                return isVersionEqualOrAbove(5, 0);
+            }
+        default:
+            return false;
+        }
+    }
+
+    /**
      * @return {@code true} if the default ODS of this Firebird version has column {@code RDB$PROCEDURE_TYPE}
      */
     public boolean hasProcedureTypeColumn() {
