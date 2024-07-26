@@ -18,12 +18,12 @@
  */
 package org.firebirdsql.jdbc.metadata;
 
+import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.jdbc.FBResultSet;
-import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
 
 import java.sql.ResultSet;
@@ -143,10 +143,14 @@ public abstract class GetTables extends AbstractMetadataMethod {
      */
     abstract Set<String> allTableTypes();
 
+    /**
+     * The ODS of a Firebird 2.5 database.
+     */
+    private static final OdsVersion ODS_11_2 = OdsVersion.of(11, 2);
+    
     public static GetTables create(DbMetadataMediator mediator) {
-        FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(2, 5)) {
+        if (mediator.getOdsVersion().compareTo(ODS_11_2) >= 0) {
             return FB2_5.createInstance(mediator);
         } else {
             return FB2_1.createInstance(mediator);

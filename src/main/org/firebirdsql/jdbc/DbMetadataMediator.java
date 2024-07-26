@@ -22,6 +22,7 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
@@ -95,6 +96,12 @@ public abstract class DbMetadataMediator {
      * @since 6
      */
     public abstract Collection<String> getClientInfoPropertyNames();
+
+    /**
+     * @return the ODS version of the database
+     * @since 6
+     */
+    public abstract OdsVersion getOdsVersion();
 
     /**
      * Holder class for query text and parameters.

@@ -22,6 +22,7 @@ import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
@@ -2037,5 +2038,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             }
             return emptyList();
         }
+
+        @Override
+        public OdsVersion getOdsVersion() {
+            return gdsHelper.getCurrentDatabase().getOdsVersion();
+        }
+
     }
 }

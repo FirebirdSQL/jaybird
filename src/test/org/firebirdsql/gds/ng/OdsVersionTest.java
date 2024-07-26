@@ -29,6 +29,8 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.stream.Stream;
 
+import static org.firebirdsql.common.matchers.ComparableMatcherFactory.compares;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -90,6 +92,21 @@ class OdsVersionTest {
                 Arguments.of(13,                    4,                     0b0000_0000_0000_0000_0000_0000_1000_1101),
                 Arguments.of(31,                    3,                     0b0000_0000_0000_0000_0000_0000_0111_1111));
         //@formatting:one
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            op1Major, op1Minor, expectedComparison, op2Major, op2Minor
+            10,       0,        ==,                 10,       0
+            10,       0,        <,                  11,       0
+            11,       0,        >,                  10,       0
+            11,       0,        <,                  11,       1
+            11,       1,        >,                  11,       0
+            11,       2,        <,                  13,       1
+            13,       1,        >,                  11,       2
+            """)
+    void compareTo(int op1Major, int op1Minor, String expectedComparison, int op2Major, int op2Minor) {
+        assertThat(OdsVersion.of(op1Major, op1Minor), compares(expectedComparison, OdsVersion.of(op2Major, op2Minor)));
     }
 
     private static String keyAsString(int key) {

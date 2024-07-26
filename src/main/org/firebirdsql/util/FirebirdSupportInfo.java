@@ -760,6 +760,7 @@ public final class FirebirdSupportInfo {
             case 13 -> switch (minor) {
                 case 0 -> isVersionEqualOrAbove(4) && isVersionBelow(7);
                 case 1 -> isVersionEqualOrAbove(5) && isVersionBelow(7);
+                // TODO Might change before release of Firebird 6
                 case 2 -> isVersionEqualOrAbove(6) && isVersionBelow(7);
                 default -> false;
             };

@@ -18,11 +18,11 @@
  */
 package org.firebirdsql.jdbc.metadata;
 
+import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
-import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -115,10 +115,14 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
         return valueBuilder.toRowValue(false);
     }
 
+    /**
+     * The ODS of a Firebird 5.0 database.
+     */
+    private static final OdsVersion ODS_13_1 = OdsVersion.of(13, 1);
+
     public static GetIndexInfo create(DbMetadataMediator mediator) {
-        FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(5)) {
+        if (mediator.getOdsVersion().compareTo(ODS_13_1) >= 0) {
             return FB5.createInstance(mediator);
         } else {
             return FB2_5.createInstance(mediator);

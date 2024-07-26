@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Mark Rotteveel
  * @since 6
  */
-public final class OdsVersion {
+public final class OdsVersion implements Comparable<OdsVersion> {
 
     private static final Map<Integer, OdsVersion> ODS_VERSION_CACHE = new ConcurrentHashMap<>();
 
@@ -126,4 +126,11 @@ public final class OdsVersion {
         return major + "." + minor;
     }
 
+    @Override
+    public int compareTo(OdsVersion o) {
+        int majorDiff = Integer.compare(this.major, o.major);
+        if (majorDiff != 0) return majorDiff;
+        return Integer.compare(this.minor, o.minor);
+    }
+    
 }

@@ -18,22 +18,36 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
+import org.opentest4j.TestAbortedException;
 
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for index info related metadata.
@@ -223,6 +237,46 @@ class FBDatabaseMetaDataIndexInfoTest {
         
         ResultSet indexInfo = dbmd.getIndexInfo(null, null, "INDEX_TEST_TABLE_2", true, false);
         validate(indexInfo, expectedIndexInfo);
+    }
+
+    /**
+     * Test index info retrieval on Firebird 5.0, with a Firebird 4.0 database file.
+     * <p>
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/813">jaybird#813</a>.
+     * </p>
+     * <p>
+     * This test is machine specific (or at least, environment-specific), as it requires a Firebird database with
+     * the path {@code E:\DB\FB4\FB4TESTDATABASE.FDB}.
+     * </p>
+     */
+    @Test
+    void indexInfoOfdOds13_0DbWithFirebirdSupportingPartialIndex(@TempDir Path tempDir) throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsPartialIndices(), "Test requires partial index support");
+        assumeTrue(getDefaultSupportInfo().supportsOds(13, 0), "Test requires ODS 13.0 support (no partial indexes)");
+        assumeTrue(RunEnvironmentExtension.EnvironmentRequirement.DB_LOCAL_FS.isMet(), "Requires DB on local file system");
+
+        Path fb4DbPath;
+        try {
+            fb4DbPath = Paths.get("E:/DB/FB4/FB4TESTDATABASE.FDB");
+        } catch (InvalidPathException e) {
+            throw new TestAbortedException("Database path is invalid on this system", e);
+        }
+        assumeTrue(Files.exists(fb4DbPath), "Expected database does not exist");
+
+        Path testDb = tempDir.resolve("tempdb.fdb").toAbsolutePath();
+        Files.copy(fb4DbPath, testDb);
+
+        try (var connection = DriverManager.getConnection(
+                getUrl(testDb.toString()), getDefaultPropertiesForConnection())) {
+            var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+            assumeThat("Unexpected ODS major", dbmd.getOdsMajorVersion(), equalTo(13));
+            assumeThat("Unexpected ODS minor", dbmd.getOdsMinorVersion(), equalTo(0));
+
+            try (ResultSet indexInfo = assertDoesNotThrow(
+                    () -> dbmd.getIndexInfo(null, null, "doesnotexist", false, true))) {
+                getIndexInfoDefinition.validateResultSetColumns(indexInfo);
+            }
+        }
     }
     
     // TODO Add tests with quoted identifiers
