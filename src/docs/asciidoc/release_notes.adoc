@@ -20,7 +20,7 @@ ifeval::["{version_tag}" != ""]
 Jaybird {version_wo_target} is still in development, and intended for testing and evaluation purposes.
 We do not recommend this version for use in production environments.
 
-If you come across any issues when using this version, please report them on https://github.com/FirebirdSQL/jaybird/issues.
+If you come across any issues when using this version, please report them on {issues}.
 ====
 endif::[]
 
@@ -49,13 +49,13 @@ This is caused by https://github.com/FirebirdSQL/firebird/issues/4971[firebird#4
 [#support]
 == Support
 
-If you need support with Jaybird, join the https://groups.google.com/g/firebird-java[Firebird-Java Google Group] and mailing list.
+If you need support with Jaybird, join the {firebird-java}[Firebird-Java Google Group] and mailing list.
 You can subscribe by sending an email to link:mailto:firebird-java+subscribe@googlegroups.com[firebird-java+subscribe@googlegroups.com].
 
 Looking for professional support of Jaybird?
 Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription].
 
-See also https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#where-to-get-help[Where to get help]
+See also https://firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#where-to-get-help[Where to get help]
 
 [#general-notes]
 == General Notes
@@ -80,17 +80,17 @@ If you're using Jaybird with the native or embedded connections, you will need t
 See also <<upgrading-from-jaybird-5-to-jaybird-6>>.
 
 Bug reports about undocumented changes in behavior are appreciated.
-Feedback can be sent to the https://groups.google.com/g/firebird-java[Firebird-java mailing list] or reported on the issue tracker https://github.com/FirebirdSQL/jaybird/issues.
+Feedback can be sent to the {firebird-java}[Firebird-java mailing list] or reported on the issue tracker {issues}.
 
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 3.0.11, Firebird 4.0.4, Firebird 5.0.0 and a recent snapshot of Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
+Jaybird {version_wo_target} was tested against Firebird 3.0.11, Firebird 4.0.4, Firebird 5.0.1 and a recent snapshot of Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
 
 Jaybird 6 will -- by default -- not connect to Firebird 2.5 or older.
 See also <<unsupported-protocol>>.
 
-This driver does not support InterBase servers due to Firebird-specific changes in the protocol and database attachment parameters that are sent to the server.
+This driver does not support InterBase.
 
 [#supported-java-versions]
 === Supported Java versions
@@ -106,7 +106,7 @@ Currently, that means we support Java 17, Java 21, and Java 22.
 Jaybird 5 will serve as a "`long-term support`" version for Java 8 and 11, with maintenance releases at least until the release of Jaybird 7.
 ====
 
-Jaybird 6 provides libraries for Java Java 17.
+Jaybird 6 provides libraries compiled for Java 17.
 
 Jaybird 6 is modularized.
 The available modules are:
@@ -131,8 +131,7 @@ Jaybird supports the following specifications:
 | Specification | Notes
 
 | JDBC 4.3
-| All JDBC 4.3 methods for features supported by Firebird;
-Java 17 and higher supported using the Java 17 driver.
+| All JDBC 4.3 methods for features supported by Firebird.
 
 | JTA 1.0.1
 | Implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
@@ -198,7 +197,7 @@ See also <<type-2-native-and-embedded-driver>>.
 [#download]
 ==== Download
 
-You can download the latest version of Jaybird from https://www.firebirdsql.org/en/jdbc-driver/
+You can download the latest version of Jaybird from https://firebirdsql.org/en/jdbc-driver/
 
 At minimum Jaybird 6 requires `jaybird-{version_wo_target}.jar`.
 
@@ -216,7 +215,7 @@ Please make sure to read <<compatibility-changes,Compatibility changes>> before 
 === Maven
 
 Change the version of the dependency to `{version_wo_target}`.
-If you're still using the artifact id `jaybird-jdkXX`, change it to `jaybird`.
+If you're using the artifact id `jaybird-jdkXX`, change it to `jaybird`.
 
 When your Jaybird dependency defines the exclusion for `javax.resource:connector-api` (see below), you can remove it as Jaybird no longer has a dependency on `connector-api`.
 
@@ -278,7 +277,7 @@ If you manage your dependencies manually, you need to do the following:
 [#gotchas]
 === Gotcha's
 
-If you find a problem while upgrading, or other bugs, please report it on https://github.com/FirebirdSQL/jaybird/issues.
+If you find a problem while upgrading, or other bugs, please report it on {issues}.
 
 For known issues, consult <<known-issues>>.
 
@@ -290,7 +289,7 @@ For a full list of changes, see https://github.com/FirebirdSQL/jaybird/issues?q=
 [#jaybird-version-numbering]
 === Changes in version numbering
 
-Jaybird 6 uses Java 17 as the minimum supported version.
+The minimum supported Java version of Jaybird 6 is Java 17.
 Our expectation is that Java version specific artifacts are no longer needed.
 As a consequence, the Java version has been dropped from the version number.
 The full version and naming convention is documented in https://github.com/FirebirdSQL/jaybird/blob/v5.0.0-beta-1/devdoc/jdp/jdp-2023-01-version-number-and-naming-scheme.md[jdp-2023-01: Version Number and Naming Scheme^]
@@ -468,7 +467,7 @@ This detection depends on actual activity, like an event posting a new count, or
 === Pure Java will not connect to unsupported Firebird version by default
 
 The pure Java protocol will by default no longer try the wire protocol versions of unsupported Firebird versions.
-This means that -- by default -- only protocol version 13 -- 18 are tried (if there is an implementation of such version).
+This means that -- by default -- only protocol version 13 (Firebird 3.0) -- 18 (Firebird 5.0) are tried.
 As a result, attempts to connect to Firebird 2.5 or earlier will result in error _"`connection rejected by remote interface`"_ (`335544421` or `isc_connect_reject`).
 
 The connection property `enableProtocol` can enable unsupported protocols, assuming a suitable protocol implementation is available on the classpath.
@@ -492,7 +491,7 @@ We recommend upgrading your Firebird version, or downgrading to a Jaybird versio
 
 For maximum compatibility, it is recommended to either use `"*"`, or to make sure to include the maximum protocol version of your Firebird version.
 
-Unsupported protocol versions may be removed in future releases of Jaybird.
+Unsupported protocol versions may be removed in future major releases of Jaybird.
 ====
 
 .Firebird versions and protocol versions
@@ -541,7 +540,7 @@ Equivalent behaviour is achieved by configuring the active logging library
 Support for the "`ChaCha64`" wire encryption -- introduced in Firebird 4.0.1 -- was added for the `PURE_JAVA` protocol.
 Given this requires a dependency on the Bouncy Castle provider (`bcprov-jdk18on`), the plugin is made available as a separate artifact: `org.firebirdsql.jdbc:chacha64-plugin` on Maven or `chacha64-plugin-{version_wo_target}.jar` in the distribution zip.
 
-When deploying manually, please make sure to also include the `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip on the class path.
+When deploying manually, please make sure to also include the `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip on the classpath.
 
 .Limitations of ChaCha lead to introduction of ChaCha64
 [sidebar]
@@ -556,7 +555,7 @@ To address this, Firebird 4.0.1 added the "`ChaCha64`" wire encryption, which us
 
 As part of this change, Jaybird is now capable of loading `EncryptionPluginSpi` instances using the service loader mechanism.
 The API of `EncryptionPluginSpi` and `EncryptionPlugin` and other classes and interfaces in package `org.firebirdsql.gds.ng.wire.crypt` should still be considered unstable and internal API, so use it at your own risk to implement your own plugins.
-If you want to use it for implementing your own encryption plugins, let us know on https://groups.google.com/g/firebird-java[firebird-java^].
+If you want to use it for implementing your own encryption plugins, let us know on {firebird-java}[firebird-java^].
 We can then look at stabilizing the API and considering it formally a public API.
 
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-06-chacha64-support.adoc[jdp-2023-06: ChaCha64 Support^]
@@ -571,7 +570,7 @@ In other words, it is not possible to use it load a differently named library.
 [CAUTION]
 ====
 This property comes with a very important caveat: it only works for the first native or embedded connection (to a database or service) made within a JVM.
-Once any library is loaded, that library is used for all subsequent native and embedded connections.
+Once any client library is loaded, that library is used for all subsequent native and embedded connections.
 ====
 
 This property is only exposed as a JDBC property.
@@ -757,7 +756,7 @@ ChaCha64 wire encryption implementation
 native and embedded protocol implementation using JNA
 
 We've tried to be liberal with exporting the packages from Jaybird, but we have decided not to export some packages because we think they shouldn't normally be accessed by users of Jaybird.
-If you run into problems with packages not being exported, please report this on https://groups.google.com/g/firebird-java[firebird-java^] or on https://github.com/FirebirdSQL/jaybird/issues[GitHub^].
+If you run into problems with packages not being exported, please report this on {firebird-java}[firebird-java^] or on {issues}[GitHub^].
 Please include an explanation why you need to access a specific package.
 As a workaround, you can also add exports yourself with the `--add-exports` commandline option of `java` and `javac` and the `Add-Exports` manifest entry of your application (similar options exist for _opens_).
 
@@ -769,7 +768,7 @@ If your code uses classes and other types from Jaybird, use `requires org.firebi
 
 The ChaCha64 plugin, `org.firebirdsql.jaybird.chacha64`, will just need to be present on the modulepath to be loaded.
 
-The same goes for the native protocol module, `org.firebirdsql.jna`, but only add it to the modulepath if you actually need native or embedded access.
+The same goes for the native protocol module, `org.firebirdsql.jna`, but you should only add it to the modulepath if you actually need native or embedded access.
 You also need to replace any `jna-<version>.jar` with `jna-jpms-{jna-version}.jar` (the modular variant of JNA).
 
 If you use `org.firebirdsql.jna` to implement a Firebird embedded provider, you'll need to add `requires org.firebirdsql.jna` and an appropriate `provides org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedProvider with <classname>` in your `module-info.java`.
@@ -866,7 +865,7 @@ This contradiction has been removed, and the implementations will now send array
 [#allow-tx-stmts]
 === Support for executing transaction management statements
 
-In Jaybird 5 and earlier, it was not possible to execute the transaction management statements `COMMIT`, `ROLLBACK` (without retain or savepoints) and `SET TRANSACTION`.
+In Jaybird 5 and earlier, it was not possible to execute the transaction management statements `COMMIT`, `ROLLBACK` (without `RETAIN` or a savepoint) and `SET TRANSACTION`.
 For `COMMIT` and `ROLLBACK` it would seem to work, but subsequent use of the connection would then break because the connection assumed it still had an active transaction.
 
 Formally, the JDBC specification says -- paraphrased -- that if something can be done through the JDBC API, that those API methods should be used, and not using equivalent statements.
@@ -939,7 +938,7 @@ If the database already exists, the connection will be made with user `normaluse
 The errors Firebird returns do not make it possible to determine definitively if the database does not exist, or if there is another reason that the connection failed.
 Jaybird applies some simple rules to exclude some classes of errors, and not attempt to create a database in those cases.
 
-If you find cases where you think Jaybird should not (or on the contrary should) attempt to create a database, please report them on https://github.com/FirebirdSQL/jaybird/issues[^].
+If you find cases where you think Jaybird should not -- or on the contrary, should -- attempt to create a database, please report them on {issues}[^].
 ====
 
 For more information, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-02-create-database-through-jdbc-url.adoc[jdp-2024-02: Create database through JDBC URL^].
@@ -948,7 +947,7 @@ For more information, see also https://github.com/FirebirdSQL/jaybird/blob/maste
 === `ResultSet` in auto-commit no longer closed after last row
 
 In previous Jaybird versions, iterating over a forward-only result set in auto-commit mode would implicitly close the result set after the last row was fetched -- i.e. when `next()` returned `false`.
-This behaviour complied with the JDBC 3.0 requirements, but in JDBC 4.0 this requirement was removed, but the behaviour is still allowed.
+This behaviour complied with the JDBC 3.0 requirements, but in JDBC 4.0 this requirement was removed, but still allowed.
 
 In Jaybird 6, this implicit close has been removed.
 In auto-commit mode, a result set will now remain open until explicitly closed using `ResultSet.close()`, when any statement is executed, when the auto-commit mode is disabled, or by the close of the `Statement` or `Connection`.
@@ -1014,7 +1013,7 @@ Repeated calls to `getResultSet` will now return the current result set.
 As part of this change implementations of `FirebirdStatement.getCurrentResultSet` now simply returns `getResultSet`, and the `getCurrentResultSet` method has been deprecated for removal in Jaybird 7.
 +
 This change was also backported to Jaybird 5.0.5.
-* Fixed: The implementation of `Blob.getBytes(long, int)` threw a `SQLException` if the remaining bytes of the blob where less than the requested number of bytes (https://github.com/FirebirdSQL/jaybird/issues/767[#767])
+* Fixed: The implementation of `Blob.getBytes(long, int)` threw a `SQLException` if the remaining bytes of the blob were less than the requested number of bytes (https://github.com/FirebirdSQL/jaybird/issues/767[#767])
 +
 The JDBC API specifies _"This `byte` array contains up to `length` consecutive bytes starting at position pos."_, so the implementation was changed to return up to `length` bytes, or the remaining actual blob length, whichever is shorter.
 +
@@ -1096,7 +1095,7 @@ See <<removal-of-deprecated-classes-packages-and-methods,Removal of deprecated c
 
 Jaybird 6 introduces some changes in compatibility and announces future breaking changes.
 
-*The list might not be complete, if you notice a difference in behavior that is not listed, please https://github.com/FirebirdSQL/jaybird/issues[report it as bug].*
+*The list might not be complete, if you notice a difference in behavior that is not listed, please {issues}[report it as bug].*
 It might have been a change we forgot to document, but it could just as well be an implementation bug.
 
 [#support-for-firebird-25-dropped]
@@ -1211,7 +1210,7 @@ Though it can parse it, the resulting value will not include fractional seconds.
 [#compat-allow-tx-stmts]
 === Execution of `COMMIT` and `ROLLBACK` rejected by default
 
-Attempts to prepare or execute `COMMIT` or `ROLLBACK` (without retain) will now fail by default.
+Attempts to prepare or execute `COMMIT` or `ROLLBACK` (without `RETAIN` or a savepoint) will now fail by default.
 In previous versions, executing these statements would work, but leave the connection in an unusable state.
 The exact error will -- generally -- be one of the following:
 
@@ -1508,7 +1507,7 @@ These changes are primarily interesting for implementers of custom GDS-ng implem
 ====
 Only changes we think are relevant to driver implementers or (internal) API users are documented.
 This means there may be undocumented changes to internal API.
-If you are confronted with such a change, let us know on https://groups.google.com/g/firebird-java[firebird-java], so we can take this into account when documenting future changes.
+If you are confronted with such a change, let us know on {firebird-java}[firebird-java], so we can take this into account when documenting future changes.
 ====
 
 * `AbstractFbAttachment`
