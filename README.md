@@ -30,8 +30,3 @@ under the BSD 3-clause. See source headers for the specific license.
 ## Support
 
 Looking for professional support of Jaybird? Jaybird is now part of the [Tidelift subscription](https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=readme).
-
-## Sponsors
-
-The Firebird JDBC team would like to thank YourKit for providing licenses to their [YourKit Java Profiler](https://www.yourkit.com/java/profiler/). 
-![YourKit](https://www.yourkit.com/images/yklogo.png)
