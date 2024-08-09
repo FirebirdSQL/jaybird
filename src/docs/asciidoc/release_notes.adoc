@@ -531,7 +531,7 @@ For example, `jdbc:firebird:////path/to/db.fdb` or `jdbc:firebird:///C:\path\to\
 For example, for NATIVE it will depend on the version of `fbclient` and the configured providers in its `firebird.conf`.
 * For PURE_JAVA, in the legacy syntax, server name and port number are now optional as well.
 For example, `jdbc:firebird:/path/to/db.fdb` is now allowed and connects to localhost port 3050, database `/path/to/db.fdb`.
-* JDBC URLs that only contain a Windows path will no longer interpret the driver letter as a server name.
+* JDBC URLs that only contain a Windows path will no longer interpret the drive letter as a server name.
 For example, `jdbc:firebird:C:\path\to\db.fdb` and `jdbc:firebird:C:/path/to/db.fdb` is now allowed and connects to localhost port 3050, database `C:\path\to\db.fdb` or `C:/path/to/db.fdb`.
 +
 In theory, this results in a minor backwards incompatibility for URLs with the legacy syntax using single character server names.
