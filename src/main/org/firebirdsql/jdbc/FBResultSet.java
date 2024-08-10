@@ -26,6 +26,7 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.util.SQLExceptionThrowingFunction;
 import org.firebirdsql.jaybird.util.UncheckedSQLException;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.field.FBCloseableField;
@@ -66,7 +67,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported";
     private static final String TYPE_SQLXML = "SQLXML";
 
-    private final FBStatement fbStatement;
+    private final FirebirdStatement statement;
     private FBFetcher fbFetcher;
     private FirebirdRowUpdater rowUpdater;
 
@@ -101,20 +102,20 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * Creates a new {@code FBResultSet} instance.
      */
     @SuppressWarnings("java:S1141")
-    public FBResultSet(FBStatement fbStatement, FBObjectListener.ResultSetListener listener, boolean metaDataQuery)
+    public FBResultSet(FBStatement statement, FBObjectListener.ResultSetListener listener, boolean metaDataQuery)
             throws SQLException {
-        this.fbStatement = fbStatement;
-        FbStatement stmt = fbStatement.getStatementHandle();
+        this.statement = statement;
+        FbStatement stmt = statement.getStatementHandle();
         try {
-            this.connection = (FBConnection) fbStatement.getConnection();
+            this.connection = (FBConnection) statement.getConnection();
             this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
-            cursorName = fbStatement.getCursorName();
+            cursorName = statement.getCursorName();
             this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
             rowDescriptor = stmt.getRowDescriptor();
             fields = new FBField[rowDescriptor.getCount()];
             colNames = new HashMap<>(rowDescriptor.getCount(), 1);
 
-            ResultSetBehavior behavior = fbStatement.resultSetBehavior();
+            ResultSetBehavior behavior = statement.resultSetBehavior();
             boolean serverSideScrollable =
                     behavior.isScrollable() && behavior.isCloseCursorsAtCommit() && !metaDataQuery
                     && connection != null && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
@@ -123,17 +124,17 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
             prepareVars(cached, metaDataQuery);
             if (cached) {
-                fbFetcher = new FBCachedFetcher(gdsHelper, fbStatement.fetchSize, fbStatement.maxRows, stmt, this);
+                fbFetcher = new FBCachedFetcher(gdsHelper, statement.fetchSize, statement.maxRows, stmt, this);
                 if (behavior.isForwardOnly()) {
                     fbFetcher = new ForwardOnlyFetcherDecorator(fbFetcher);
                 }
             } else if (serverSideScrollable) {
-                fbFetcher = new FBServerScrollFetcher(fbStatement.fetchSize, fbStatement.maxRows, stmt, this);
-            } else if (fbStatement.isUpdatableCursor()) {
-                fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, stmt, this, fbStatement.maxRows,
-                        fbStatement.fetchSize);
+                fbFetcher = new FBServerScrollFetcher(statement.fetchSize, statement.maxRows, stmt, this);
+            } else if (statement.isUpdatableCursor()) {
+                fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, stmt, this, statement.maxRows,
+                        statement.fetchSize);
             } else {
-                fbFetcher = new FBStatementFetcher(gdsHelper, stmt, this, fbStatement.maxRows, fbStatement.fetchSize);
+                fbFetcher = new FBStatementFetcher(gdsHelper, stmt, this, statement.maxRows, statement.fetchSize);
             }
 
             if (behavior.isUpdatable()) {
@@ -143,14 +144,14 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
                         fbFetcher = new FBUpdatableFetcher(fbFetcher, this, rowDescriptor.createDeletedRowMarker());
                     }
                 } catch (FBResultSetNotUpdatableException ex) {
-                    fbStatement.addWarning(FbExceptionBuilder
+                    statement.addWarning(FbExceptionBuilder
                             .forWarning(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)
                             .toSQLException(SQLWarning.class));
                     behavior = behavior.withReadOnly();
                 }
             }
             this.behavior = behavior;
-            fetchDirection = fbStatement.getFetchDirection();
+            fetchDirection = statement.getFetchDirection();
         } catch (SQLException e) {
             try {
                 // Ensure cursor is closed to avoid problems with statement reuse
@@ -204,7 +205,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         // TODO Evaluate if we need to share more implementation with constructor above
         this.connection = connection;
         gdsHelper = connection != null ? connection.getGDSHelper() : null;
-        fbStatement = null;
+        statement = null;
         this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
         cursorName = null;
         fbFetcher = new FBCachedFetcher(rows, this, rowDescriptor, gdsHelper, retrieveBlobs);
@@ -583,31 +584,14 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         requireNonEmpty(columnName);
 
         try {
-            int fieldNum = colNames.computeIfAbsent(columnName, this::findColumnUnchecked);
+            int fieldNum = colNames.computeIfAbsent(columnName,
+                    SQLExceptionThrowingFunction.toFunction(this::findColumn));
             final FBField field = rowUpdater != null ? rowUpdater.getField(fieldNum - 1) : fields[fieldNum - 1];
             wasNullValid = true;
             wasNull = row == null || row.getFieldData(fieldNum - 1) == null;
             return field;
         } catch (UncheckedSQLException e) {
             throw e.getCause();
-        }
-    }
-
-    /**
-     * Variant of {@link #findColumn(String)} throwing a {@link UncheckedSQLException} instead of {@link SQLException}.
-     *
-     * @param columnName
-     *         column label or column name
-     * @return column index of the given column name
-     * @throws UncheckedSQLException
-     *         with the {@link SQLException} thrown by {@link #findColumn(String)}
-     * @see #findColumn(String)
-     */
-    private int findColumnUnchecked(String columnName) {
-        try {
-            return findColumn(columnName);
-        } catch (SQLException e) {
-            throw new UncheckedSQLException(e);
         }
     }
 
@@ -1531,7 +1515,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public Statement getStatement() {
-        return fbStatement;
+        return statement;
     }
 
     @Override
@@ -1849,15 +1833,15 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public String getExecutionPlan() throws SQLException {
         checkCursorMove();
-        if (fbStatement == null) return "";
-        return fbStatement.getExecutionPlan();
+        if (statement == null) return "";
+        return statement.getExecutionPlan();
     }
 
     @Override
     public String getExplainedExecutionPlan() throws SQLException {
         checkCursorMove();
-        if (fbStatement == null) return "";
-        return fbStatement.getExplainedExecutionPlan();
+        if (statement == null) return "";
+        return statement.getExplainedExecutionPlan();
     }
 
     @Override

@@ -1077,6 +1077,13 @@ If you need access to Firebird-specifics, unwrap or cast to the `org.firebirdsql
 Only cast to or otherwise access the concrete classes of `org.firebirdsql.jdbc` if you really have to, and keep in mind that their API -- if not defined in `java.sql` or `FirebirdXXX` interfaces -- may change in point releases.
 +
 If you have a clear use-case that currently requires access to the concrete implementation classes, and you think it should be possible through a public API, please let us know on {firebird-java}[firebird-java] or the {issues}[issue tracker].
+* Improvement: moved methods `getExecutionPlan()` and `getExplainedExcutionPlan()` from `FirebirdPreparedStatement` to `FirebirdStatement`, and clarified behaviour.
++
+We also fixed a potential `NullPointerException` in the implementation of these methods in `PreparedStatement` and `CallableStatement`.
++
+The methods `getLastExceutionPlan()` and `getLastExplainedExecutionPlan()` which were already defined in `FirebirdStatement` now have a default implementation that call `getExecutionPlan()` and `getExplainedExecutionPlan()`.
+These methods have been deprecated with the advice to use the new getters.
+For now, we have no plans to remove these methods in a future release.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

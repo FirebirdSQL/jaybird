@@ -28,6 +28,7 @@ import org.firebirdsql.jaybird.parser.LocalStatementType;
 import org.firebirdsql.jaybird.parser.StatementDetector;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.util.Primitives;
+import org.firebirdsql.jaybird.util.SQLExceptionThrowingFunction;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.util.InternalApi;
 
@@ -1110,46 +1111,32 @@ public class FBStatement implements FirebirdStatement {
         return currentStatementGeneratedKeys;
     }
 
-    /**
-     * Get the execution plan of this PreparedStatement
-     *
-     * @return The execution plan of the statement
-     */
-    String getExecutionPlan() throws SQLException {
-        return fbStatement.getExecutionPlan();
-    }
+    // Other cases where there is no execution plan is handled by validity check or server-side
+    private static final Set<StatementState> NO_EXECUTION_PLAN_STATE =
+            Set.of(StatementState.NEW, StatementState.ALLOCATED);
 
-    /**
-     * Get the detailed execution plan of this PreparedStatement
-     *
-     * @return The detailed execution plan of the statement
-     */
-    String getExplainedExecutionPlan() throws SQLException {
-        return fbStatement.getExplainedExecutionPlan();
-    }
-
-    @Override
-    public String getLastExecutionPlan() throws SQLException {
-        checkValidity();
-
-        if (fbStatement == null) {
-            throw new SQLException("No statement was executed, plan cannot be obtained",
-                    SQL_STATE_INVALID_STATEMENT_ID);
+    private String getExecutionPlan(SQLExceptionThrowingFunction<FbStatement, String> getPlanFunction)
+            throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            checkValidity();
+            if (fbStatement == null || NO_EXECUTION_PLAN_STATE.contains(fbStatement.getState())) {
+                return noExecutionPlan();
+            }
+            return getPlanFunction.apply(fbStatement);
         }
-
-        return getExecutionPlan();
     }
 
-    @Override
-    public String getLastExplainedExecutionPlan() throws SQLException {
-        checkValidity();
+    private static String noExecutionPlan() throws SQLException {
+        throw new SQLException("No statement was executed or prepared, plan cannot be obtained",
+                SQL_STATE_INVALID_STATEMENT_ID);
+    }
 
-        if (fbStatement == null) {
-            throw new SQLException("No statement was executed, plan cannot be obtained",
-                    SQL_STATE_INVALID_STATEMENT_ID);
-        }
+    public final String getExecutionPlan() throws SQLException {
+        return getExecutionPlan(FbStatement::getExecutionPlan);
+    }
 
-        return getExplainedExecutionPlan();
+    public final String getExplainedExecutionPlan() throws SQLException {
+        return getExecutionPlan(FbStatement::getExplainedExecutionPlan);
     }
 
     /**

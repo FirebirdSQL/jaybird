@@ -77,20 +77,6 @@ public interface FirebirdPreparedStatement extends FirebirdStatement, PreparedSt
     int TYPE_SET_GENERATOR = ISCConstants.isc_info_sql_stmt_set_generator;
 
     /**
-     * Get the execution plan of this PreparedStatement
-     *
-     * @return The execution plan of the statement
-     */
-    String getExecutionPlan() throws SQLException;
-
-    /**
-     * Get the detailed execution plan of this PreparedStatement
-     *
-     * @return The detailed execution plan of the statement
-     */
-    String getExplainedExecutionPlan() throws SQLException;
-
-    /**
      * Get the statement type of this PreparedStatement.
      * The returned value will be one of the <code>TYPE_*</code> constant
      * values.

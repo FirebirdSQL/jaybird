@@ -418,41 +418,41 @@ class FBStatementTest {
     }
 
     /**
-     * Test retrieval of execution plan ({@link FBStatement#getLastExecutionPlan()}) of a simple select is non-empty
+     * Test retrieval of execution plan ({@link FBStatement#getExecutionPlan()}) of a simple select is non-empty.
      */
     @Test
-    void testGetLastExecutionPlan_select() throws SQLException {
+    void getExecutionPlan_select() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
             ResultSet rs = stmt.executeQuery(SELECT_DATA);
             rs.close();
 
-            String plan = stmt.getLastExecutionPlan();
-            assertThat("Expected non-empty plan", plan, not(emptyOrNullString()));
+            assertThat("Expected non-empty plan", stmt.getExecutionPlan(), not(emptyOrNullString()));
         }
     }
 
     /**
-     * Test retrieval of execution plan ({@link FBStatement#getLastExecutionPlan()}) when no statement has been executed
+     * Test retrieval of execution plan ({@link FBStatement#getExecutionPlan()}) when no statement has been executed
      * yet.
      * <p>
      * Expected: exception
      * </p>
      */
     @Test
-    void testGetLastExecutionPlan_noStatement() throws SQLException {
+    void getExecutionPlan_noStatement() throws SQLException {
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
-            SQLException exception = assertThrows(SQLException.class, stmt::getLastExecutionPlan);
-            assertThat(exception, message(equalTo("No statement was executed, plan cannot be obtained")));
+            SQLException exception = assertThrows(SQLException.class, stmt::getExecutionPlan);
+            assertThat(exception, message(equalTo("No statement was executed or prepared, plan cannot be obtained")));
         }
     }
 
     /**
-     * Test retrieval of execution plan ({@link FBStatement#getLastExecutionPlan()}) of a simple select is non-empty
+     * Test retrieval of explained execution plan ({@link FBStatement#getExplainedExecutionPlan()}) of a simple select
+     * is non-empty.
      */
     @Test
-    void testGetLastExplainedExecutionPlan_select() throws SQLException {
+    void getExplainedExecutionPlan_select() throws SQLException {
         assumeTrue(getDefaultSupportInfo().supportsExplainedExecutionPlan(),
                 "Test requires explained execution plan support");
 
@@ -462,23 +462,22 @@ class FBStatementTest {
             ResultSet rs = stmt.executeQuery(SELECT_DATA);
             rs.close();
 
-            String plan = stmt.getLastExplainedExecutionPlan();
-            assertThat("Expected non-empty detailed plan", plan, not(emptyOrNullString()));
+            assertThat("Expected non-empty detailed plan", stmt.getExplainedExecutionPlan(), not(emptyOrNullString()));
         }
     }
 
     /**
-     * Test retrieval of detailed execution plan ({@link FBStatement#getLastExplainedExecutionPlan()})
-     * when no statement has been executed yet.
+     * Test retrieval of explained execution plan ({@link FBStatement#getExplainedExecutionPlan()}) when no statement
+     * has been executed yet.
      * <p>
      * Expected: exception
      * </p>
      */
     @Test
-    void testGetLastExplainedExecutionPlan_noStatement() throws SQLException {
+    void getExplainedExecutionPlan_noStatement() throws SQLException {
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
-            SQLException exception = assertThrows(SQLException.class, stmt::getLastExplainedExecutionPlan);
-            assertThat(exception, message(equalTo("No statement was executed, plan cannot be obtained")));
+            SQLException exception = assertThrows(SQLException.class, stmt::getExplainedExecutionPlan);
+            assertThat(exception, message(equalTo("No statement was executed or prepared, plan cannot be obtained")));
         }
     }
 

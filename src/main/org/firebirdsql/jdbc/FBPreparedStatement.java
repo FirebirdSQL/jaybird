@@ -810,16 +810,6 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public String getExecutionPlan() throws SQLException {
-        return super.getExecutionPlan();
-    }
-
-    @Override
-    public String getExplainedExecutionPlan() throws SQLException {
-        return super.getExplainedExecutionPlan();
-    }
-
-    @Override
     public int getStatementType() throws SQLException {
         return super.getStatementType();
     }

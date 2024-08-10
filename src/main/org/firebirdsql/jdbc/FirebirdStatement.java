@@ -27,6 +27,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.util.InternalApi;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -102,29 +104,73 @@ public interface FirebirdStatement extends Statement {
     boolean isValid();
     
     /**
-     * Get execution plan for the last executed statement. Unlike the 
-     * {@link FirebirdPreparedStatement#getExecutionPlan()}, this method can be
-     * called only after executing a query or update statement. 
-     * 
-     * @return execution plan returned by the server.
-     * 
-     * @throws SQLException if no statement was executed before calling this 
-     * method, statement is not valid, or there was an error when obtaining
-     * the execution plan.
+     * Alias for {@link #getExecutionPlan()}.
+     *
+     * @deprecated use {@link #getExecutionPlan()}; there are currently no plans to remove this method
      */
-    String getLastExecutionPlan() throws SQLException;
+    @Deprecated(since = "6", forRemoval = false)
+    default String getLastExecutionPlan() throws SQLException {
+        return getExecutionPlan();
+    }
 
     /**
-     * Get detailed execution plan for the last executed statement. More structured and comprehensible form.
-     * Can be called only after executing a query or update statement.
+     * Gets the simple execution plan of the statement.
+     * <p>
+     * Behaviour depends on the specific type:
+     * </p>
+     * <ul>
+     * <li>{@link java.sql.Statement} but not {@link java.sql.PreparedStatement} &mdash; returns the plan of the last
+     * executed statement</li>
+     * <li>{@link java.sql.PreparedStatement} &mdash; returns the plan of the prepared statement</li>
+     * <li>{@link java.sql.CallableStatement} &mdash; is not guaranteed to return the plan until after the first
+     * execution</li>
+     * </ul>
      *
-     * @return detailed execution plan returned by the server.
-     *
-     * @throws SQLException if no statement was executed before calling this
-     * method, statement is not valid, or there was an error when obtaining
-     * the execution plan.
+     * @return execution plan returned by the server
+     * @throws SQLException
+     *         if no statement was executed or prepared before calling this method, if the statement is not valid or
+     *         open, or there was an error when obtaining the execution plan
+     * @since 6
+     * @see #getExplainedExecutionPlan()
      */
-    String getLastExplainedExecutionPlan() throws SQLException;
+    String getExecutionPlan() throws SQLException;
+
+    /**
+     * Alias for {@link #getExplainedExecutionPlan()}.
+     *
+     * @see #getExplainedExecutionPlan()
+     * @deprecated use {@link #getExplainedExecutionPlan()}; there are currently no plans to remove this method
+     */
+    @Deprecated(since = "6", forRemoval = false)
+    default String getLastExplainedExecutionPlan() throws SQLException {
+        return getExplainedExecutionPlan();
+    }
+
+    /**
+     * Gets the explained (or detailed) execution plan of the statement.
+     * <p>
+     * The explained execution plan is a more structured and comprehensible form compared to the (simple) execution
+     * plan returned by {@link #getExecutionPlan()}. This requires Firebird 3.0 or higher.
+     * </p>
+     * <p>
+     * Behaviour depends on the specific type:
+     * </p>
+     * <ul>
+     * <li>{@link java.sql.Statement} but not {@link java.sql.PreparedStatement} &mdash; returns the plan of the last
+     * executed statement</li>
+     * <li>{@link java.sql.PreparedStatement} &mdash; returns the plan of the prepared statement</li>
+     * <li>{@link java.sql.CallableStatement} &mdash; is not guaranteed to return the plan until after the first
+     * execution</li>
+     * </ul>
+     *
+     * @return execution plan returned by the server
+     * @throws SQLException
+     *         if no statement was executed or prepared before calling this method, if the statement is not valid or
+     *         open, or there was an error when obtaining the execution plan
+     * @since 6
+     * @see #getExecutionPlan()
+     */
+    String getExplainedExecutionPlan() throws SQLException;
     
     /**
      * The local statement id is intended to identify the statement for internal implementation purposes.
@@ -139,5 +185,6 @@ public interface FirebirdStatement extends Statement {
      *
      * @return The local statement id.
      */
+    @InternalApi
     int getLocalStatementId();
 }

@@ -620,16 +620,6 @@ final class FBTxPreparedStatement implements FirebirdPreparedStatement {
     }
 
     @Override
-    public String getLastExecutionPlan() throws SQLException {
-        return getExecutionPlan();
-    }
-
-    @Override
-    public String getLastExplainedExecutionPlan() throws SQLException {
-        return getExplainedExecutionPlan();
-    }
-
-    @Override
     public int getLocalStatementId() {
         return localStatementId;
     }
