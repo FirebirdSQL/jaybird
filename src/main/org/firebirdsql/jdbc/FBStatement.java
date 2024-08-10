@@ -983,15 +983,29 @@ public class FBStatement implements FirebirdStatement {
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return iface != null && iface.isAssignableFrom(getClass());
+        if (iface == null) return false;
+        if (FbStatement.class.isAssignableFrom(iface)) {
+            try (LockCloseable ignored = withLock()) {
+                return iface.isInstance(fbStatement);
+            }
+        }
+        return iface.isAssignableFrom(getClass());
     }
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (!isWrapperFor(iface))
-            throw new SQLException("Unable to unwrap to class " + iface.getName());
-
-        return iface.cast(this);
+        if (iface == null) {
+            throw new SQLException("Unable to unwrap to class (null)");
+        } else if (iface.isAssignableFrom(getClass())) {
+            return iface.cast(this);
+        } else if (FbStatement.class.isAssignableFrom(iface)) {
+            try (LockCloseable ignored = withLock()) {
+                if (iface.isInstance(fbStatement)) {
+                    return iface.cast(fbStatement);
+                }
+            }
+        }
+        throw new SQLException("Unable to unwrap to class " + iface.getName());
     }
 
     @Override

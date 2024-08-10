@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
@@ -692,8 +693,7 @@ class FBStatementTest {
 
     /**
      * Tests if {@link org.firebirdsql.jdbc.FBStatement#isWrapperFor(Class)} with
-     * {@link org.firebirdsql.jdbc.FirebirdStatement}
-     * returns {@code true}.
+     * {@link org.firebirdsql.jdbc.FirebirdStatement} returns {@code true}.
      */
     @Test
     void testIsWrapperFor_FirebirdStatement() throws SQLException {
@@ -714,9 +714,22 @@ class FBStatementTest {
     }
 
     /**
+     * Tests if {@link org.firebirdsql.jdbc.FBStatement#isWrapperFor(Class)} with {@link FbStatement} returns {@code true}.
+     */
+    @Test
+    void isWrapperFor_FbStatement() throws Exception {
+        try (var stmt = con.createStatement()) {
+            // NOTE: This is an implementation detail and may change
+            assertFalse(stmt.isWrapperFor(FbStatement.class),
+                    "Initially there is no FbStatement instance available to unwrap");
+            stmt.executeQuery("select 1 from RDB$DATABASE");
+            assertTrue(stmt.isWrapperFor(FbStatement.class), "Expected to be a wrapper for FbStatement");
+        }
+    }
+
+    /**
      * Tests if {@link org.firebirdsql.jdbc.FBStatement#unwrap(Class)} with
-     * {@link org.firebirdsql.jdbc.FirebirdStatement}
-     * successfully unwraps.
+     * {@link org.firebirdsql.jdbc.FirebirdStatement} successfully unwraps.
      */
     @Test
     void testUnwrap_FirebirdStatement() throws SQLException {
@@ -739,6 +752,20 @@ class FBStatementTest {
         try (Statement stmt = con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class, () -> stmt.unwrap(ResultSet.class));
             assertThat(exception, message(equalTo("Unable to unwrap to class java.sql.ResultSet")));
+        }
+    }
+
+    /**
+     * Tests if {@link org.firebirdsql.jdbc.FBStatement#unwrap(Class)} with {@link FbStatement} successfully unwraps.
+     */
+    @Test
+    void unwrap_FbStatement() throws Exception {
+        try (var stmt = con.createStatement()) {
+            // NOTE: This is an implementation detail and may change
+            assertThrows(SQLException.class, () -> stmt.unwrap(FbStatement.class),
+                    "Initially there is no FbStatement instance available to unwrap");
+            stmt.executeQuery("select 1 from RDB$DATABASE");
+            assertNotNull(stmt.unwrap(FbStatement.class), "Unexpected result for unwrap to FbStatement");
         }
     }
 
