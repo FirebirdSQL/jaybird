@@ -69,16 +69,16 @@ final class FBServerScrollFetcher implements FBFetcher {
     // Offset of first row in rows
     private int rowsOffset;
 
-    FBServerScrollFetcher(int initialFetchSize, int maxRows, FbStatement stmt,
-            FBObjectListener.FetcherListener fetcherListener) throws SQLException {
+    FBServerScrollFetcher(FetchConfig fetchConfig, FbStatement stmt, FBObjectListener.FetcherListener fetcherListener)
+            throws SQLException {
         if (!stmt.supportsFetchScroll()) {
             throw new FBDriverNotCapableException("Statement implementation does not support server-side scrollable result sets; this exception indicates a bug in Jaybird");
         }
         if (!stmt.isCursorFlagSet(CursorFlag.CURSOR_TYPE_SCROLLABLE)) {
             throw new FBDriverNotCapableException("Statement does not have CURSOR_TYPE_SCROLLABLE; this exception indicates a bug in Jaybird");
         }
-        fetchSize = initialFetchSize;
-        this.maxRows = maxRows;
+        fetchSize = fetchConfig.fetchSize();
+        maxRows = fetchConfig.maxRows();
         this.stmt = stmt;
         this.fetcherListener = fetcherListener;
     }

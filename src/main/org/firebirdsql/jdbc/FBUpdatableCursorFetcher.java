@@ -33,9 +33,9 @@ import org.firebirdsql.gds.ng.FbStatement;
  */
 final class FBUpdatableCursorFetcher extends FBStatementFetcher {
 
-    FBUpdatableCursorFetcher(GDSHelper gdsHelper, FbStatement stmth, FBObjectListener.FetcherListener fetcherListener,
-            int maxRows, int fetchSize) throws SQLException {
-        super(gdsHelper, stmth, fetcherListener, maxRows, fetchSize);
+    FBUpdatableCursorFetcher(GDSHelper gdsHelper, FetchConfig fetchConfig, FbStatement stmth,
+            FBObjectListener.FetcherListener fetcherListener) throws SQLException {
+        super(gdsHelper, fetchConfig, stmth, fetcherListener);
     }
 
     @Override

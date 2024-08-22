@@ -73,8 +73,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     private boolean escapedProcessing = true;
     private boolean currentStatementGeneratedKeys;
 
-	protected SQLWarning firstWarning;
-
     // Currently only determined for Firebird statement type SELECT and STORED_PROCEDURE
     private LocalStatementType jbStatementType = LocalStatementType.OTHER;
     protected StatementResult currentStatementResult = StatementResult.NO_MORE_RESULTS;
@@ -86,13 +84,8 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     // Used for singleton or batch results for getGeneratedKeys, and singleton results of stored procedures
     protected final List<RowValue> specialResult = new ArrayList<>();
 
-    protected int maxRows;
-    protected int fetchSize;
     private int maxFieldSize;
     private String cursorName;
-
-    private final ResultSetBehavior rsBehavior;
-    private int fetchDirection = ResultSet.FETCH_FORWARD;
 
     private final FBObjectListener.ResultSetListener resultSetListener = new RSListener();
     protected final FBConnection connection;
@@ -145,8 +138,8 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
 
     protected FBStatement(GDSHelper c, ResultSetBehavior rsBehavior,
             FBObjectListener.StatementListener statementListener) throws SQLException {
+        super(rsBehavior);
         this.gdsHelper = c;
-        this.rsBehavior = rsBehavior;
         this.statementListener = statementListener;
 
         // TODO Find out if connection is actually ever null, because some parts of the code expect it not to be null
@@ -500,19 +493,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public int getMaxRows() throws  SQLException {
-        return maxRows;
-    }
-
-    @Override
-    public void setMaxRows(int max) throws  SQLException {
-        if (max < 0) {
-            throw new SQLNonTransientException("Max rows can't be less than 0", SQL_STATE_INVALID_ATTR_VALUE);
-        }
-        maxRows = max;
-    }
-
-    @Override
     public void setEscapeProcessing(boolean enable) throws  SQLException {
         escapedProcessing = enable;
     }
@@ -573,16 +553,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
         // TODO This may be problematic, as it could also cancel something other than this statement
         gdsHelper.cancelOperation();
-    }
-
-    @Override
-    public SQLWarning getWarnings() throws  SQLException {
-        return firstWarning;
-    }
-
-    @Override
-    public void clearWarnings() throws  SQLException {
-        firstWarning = null;
     }
 
     @Override
@@ -761,63 +731,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
 
         // Technically the statement below is always false, as only the first result is ever a ResultSet
         return currentStatementResult.isResultSet();
-    }
-
-    @Override
-    public void setFetchDirection(int direction) throws SQLException {
-        checkValidity();
-        switch (direction) {
-        case ResultSet.FETCH_FORWARD, ResultSet.FETCH_REVERSE, ResultSet.FETCH_UNKNOWN -> fetchDirection = direction;
-        default -> throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidFetchDirection)
-                .messageParameter(direction)
-                .toSQLException();
-        }
-    }
-
-    @Override
-    public int getFetchDirection() throws SQLException {
-        checkValidity();
-        return fetchDirection;
-    }
-
-    @Override
-    public void setFetchSize(int rows) throws  SQLException {
-        checkValidity();
-        if (rows < 0) {
-            throw new SQLNonTransientException("Can't set negative fetch size", SQL_STATE_INVALID_ATTR_VALUE);
-        }
-        fetchSize = rows;
-    }
-
-    @Override
-    public int getFetchSize() throws  SQLException {
-        checkValidity();
-        return fetchSize;
-    }
-
-    @SuppressWarnings("MagicConstant")
-    @Override
-    public int getResultSetConcurrency() throws  SQLException {
-        return rsBehavior.concurrency();
-    }
-
-    @SuppressWarnings("MagicConstant")
-    @Override
-    public int getResultSetType()  throws  SQLException {
-        return rsBehavior.type();
-    }
-
-    @Override
-    public int getResultSetHoldability() throws SQLException {
-        return rsBehavior.holdability();
-    }
-
-    /**
-     * @return result set behavior for this statement
-     * @since 6
-     */
-    final ResultSetBehavior resultSetBehavior() {
-        return rsBehavior;
     }
 
     private List<String> batchList = new ArrayList<>();
@@ -1042,17 +955,10 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     protected boolean needsScrollableCursorEnabled() {
-        return rsBehavior.isScrollable() && rsBehavior.isCloseCursorsAtCommit()
+        ResultSetBehavior resultSetBehavior = resultSetBehavior();
+        return resultSetBehavior.isScrollable() && resultSetBehavior.isCloseCursorsAtCommit()
                && connection != null && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
                && fbStatement.supportsFetchScroll();
-    }
-
-    protected void addWarning(SQLWarning warning) {
-        if (firstWarning == null) {
-            firstWarning = warning;
-        } else {
-            firstWarning.setNextWarning(warning);
-        }
     }
 
     protected String nativeSQL(String sql) throws SQLException {
@@ -1137,36 +1043,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         final long updCount = sqlCountHolder.updateCount();
         final long delCount = sqlCountHolder.deleteCount();
         return Math.max(Math.max(insCount, updCount), delCount);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird does not support maxRows exceeding {@link Integer#MAX_VALUE}, if a larger value is set, Jaybird will
-     * add a warning to the statement and reset the maximum to 0.
-     * </p>
-     */
-    @Override
-    public void setLargeMaxRows(long max) throws SQLException {
-        if (max > Integer.MAX_VALUE) {
-            addWarning(new SQLWarning(
-                    "Implementation limit: maxRows cannot exceed Integer.MAX_VALUE, value was %d, reset to 0"
-                            .formatted(max), SQL_STATE_INVALID_ATTR_VALUE));
-            max = 0;
-        }
-        setMaxRows((int) max);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird does not support maxRows exceeding {@link Integer#MAX_VALUE}, the return value of this method is the
-     * same as {@link #getMaxRows()}.
-     * </p>
-     */
-    @Override
-    public long getLargeMaxRows() throws SQLException {
-        return getMaxRows();
     }
 
     @Override

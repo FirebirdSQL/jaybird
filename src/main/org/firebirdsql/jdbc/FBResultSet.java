@@ -115,7 +115,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             fields = new FBField[rowDescriptor.getCount()];
             colNames = new HashMap<>(rowDescriptor.getCount(), 1);
 
-            ResultSetBehavior behavior = statement.resultSetBehavior();
+            FetchConfig fetchConfig = statement.fetchConfig();
+            ResultSetBehavior behavior = fetchConfig.resultSetBehavior();
             boolean serverSideScrollable =
                     behavior.isScrollable() && behavior.isCloseCursorsAtCommit() && !metaDataQuery
                     && connection != null && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
@@ -124,17 +125,16 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
             prepareVars(cached, metaDataQuery);
             if (cached) {
-                fbFetcher = new FBCachedFetcher(gdsHelper, statement.fetchSize, statement.maxRows, stmt, this);
+                fbFetcher = new FBCachedFetcher(gdsHelper, fetchConfig, stmt, this);
                 if (behavior.isForwardOnly()) {
                     fbFetcher = new ForwardOnlyFetcherDecorator(fbFetcher);
                 }
             } else if (serverSideScrollable) {
-                fbFetcher = new FBServerScrollFetcher(statement.fetchSize, statement.maxRows, stmt, this);
+                fbFetcher = new FBServerScrollFetcher(fetchConfig, stmt, this);
             } else if (statement.isUpdatableCursor()) {
-                fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, stmt, this, statement.maxRows,
-                        statement.fetchSize);
+                fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, fetchConfig, stmt, this);
             } else {
-                fbFetcher = new FBStatementFetcher(gdsHelper, stmt, this, statement.maxRows, statement.fetchSize);
+                fbFetcher = new FBStatementFetcher(gdsHelper, fetchConfig, stmt, this);
             }
 
             if (behavior.isUpdatable()) {

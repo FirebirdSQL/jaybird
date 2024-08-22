@@ -24,9 +24,11 @@ import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
+import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_ATTR_VALUE;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID;
 
 /**
@@ -45,10 +47,16 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     private static final AtomicInteger STATEMENT_ID_GENERATOR = new AtomicInteger();
 
     private final int localStatementId = STATEMENT_ID_GENERATOR.incrementAndGet();
+    private volatile SQLWarning warning;
+    private FetchConfig fetchConfig;
 
     private volatile boolean closed;
     private boolean poolable;
     private boolean closeOnCompletion;
+
+    protected AbstractStatement(ResultSetBehavior resultSetBehavior) {
+        fetchConfig = new FetchConfig(resultSetBehavior);
+    }
 
     /**
      * {@inheritDoc}
@@ -59,6 +67,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      */
     @Override
     public void close() throws SQLException {
+        warning = null;
         closed = true;
     }
 
@@ -128,6 +137,138 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     protected final void performCloseOnCompletion() throws SQLException {
         if (closeOnCompletion) {
             close();
+        }
+    }
+
+    /**
+     * @return current fetch config for this statement
+     * @since 6
+     */
+    protected final FetchConfig fetchConfig() {
+        try (var ignored = withLock()) {
+            return fetchConfig;
+        }
+    }
+
+    /**
+     * @return result set behavior for this statement
+     * @since 6
+     */
+    protected final ResultSetBehavior resultSetBehavior() {
+        return fetchConfig().resultSetBehavior();
+    }
+
+    @SuppressWarnings("MagicConstant")
+    @Override
+    public final int getResultSetType() throws SQLException {
+        checkValidity();
+        return resultSetBehavior().type();
+    }
+
+    @SuppressWarnings("MagicConstant")
+    @Override
+    public final int getResultSetConcurrency() throws SQLException {
+        checkValidity();
+        return resultSetBehavior().concurrency();
+    }
+
+    @Override
+    public final int getResultSetHoldability() throws SQLException {
+        checkValidity();
+        return resultSetBehavior().holdability();
+    }
+
+    @Override
+    public final int getMaxRows() throws SQLException {
+        checkValidity();
+        return fetchConfig().maxRows();
+    }
+
+    @Override
+    public final void setMaxRows(int max) throws SQLException {
+        checkValidity();
+        try (var ignored = withLock()) {
+            fetchConfig = fetchConfig.withMaxRows(max);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird does not support maxRows exceeding {@link Integer#MAX_VALUE}, if a larger value is set, Jaybird will
+     * add a warning to the statement and reset the maximum to 0.
+     * </p>
+     */
+    @Override
+    public final void setLargeMaxRows(long max) throws SQLException {
+        if (max > Integer.MAX_VALUE) {
+            addWarning(new SQLWarning(
+                    "Implementation limit: maxRows cannot exceed Integer.MAX_VALUE, value was %d, reset to 0"
+                            .formatted(max), SQL_STATE_INVALID_ATTR_VALUE));
+            max = 0;
+        }
+        setMaxRows((int) max);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird does not support maxRows exceeding {@link Integer#MAX_VALUE}, the return value of this method is the
+     * same as {@link #getMaxRows()}.
+     * </p>
+     */
+    @Override
+    public final long getLargeMaxRows() throws SQLException {
+        return getMaxRows();
+    }
+
+    @Override
+    public final int getFetchSize() throws SQLException {
+        checkValidity();
+        return fetchConfig().fetchSize();
+    }
+
+    @Override
+    public final void setFetchSize(int rows) throws SQLException {
+        checkValidity();
+        try (var ignored = withLock()) {
+            fetchConfig = fetchConfig.withFetchSize(rows);
+        }
+    }
+
+    @SuppressWarnings("MagicConstant")
+    @Override
+    public final int getFetchDirection() throws SQLException {
+        checkValidity();
+        return fetchConfig().direction();
+    }
+
+    @Override
+    public final void setFetchDirection(int direction) throws SQLException {
+        checkValidity();
+        try (var ignored = withLock()) {
+            fetchConfig = fetchConfig.withDirection(direction);
+        }
+    }
+
+    @Override
+    public final SQLWarning getWarnings() throws SQLException {
+        checkValidity();
+        return warning;
+    }
+
+    @Override
+    public final void clearWarnings() throws SQLException {
+        checkValidity();
+        warning = null;
+    }
+
+    protected final void addWarning(SQLWarning warning) {
+        SQLWarning currentWarning = this.warning;
+        if (currentWarning == null) {
+            this.warning = warning;
+        } else {
+            currentWarning.setNextWarning(warning);
         }
     }
 

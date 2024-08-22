@@ -38,8 +38,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.stream.IntStream;
 
@@ -60,6 +59,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FBServerScrollFetcherTest {
 
     private static final int FETCH_SIZE_NOT_IMPORTANT = 10;
+    private static final FetchConfig DEFAULT_FETCH_CONFIG;
+    static {
+        try {
+            DEFAULT_FETCH_CONFIG = new FetchConfig(ResultSetBehavior.of(
+                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT));
+        } catch (SQLException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
 
     @RegisterExtension
     @Order(1)
@@ -493,7 +501,8 @@ class FBServerScrollFetcherTest {
             stmt.prepare("select id from scrolltest order by id");
             stmt.setCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
             stmt.execute(RowValue.EMPTY_ROW_VALUE);
-            FBServerScrollFetcher fetcher = new FBServerScrollFetcher(fetchSize, maxRows, stmt, listener);
+            FetchConfig fetchConfig = DEFAULT_FETCH_CONFIG.withFetchSize(fetchSize).withMaxRows(maxRows);
+            FBServerScrollFetcher fetcher = new FBServerScrollFetcher(fetchConfig, stmt, listener);
 
             exceptionalConsumer.accept(stmt, fetcher);
         } finally {
@@ -515,21 +524,19 @@ class FBServerScrollFetcherTest {
     }
 
     private void setupTableForScrollTest(int numberOfRecords) throws SQLException {
-        try (Connection connection = getConnectionViaDriverManager();
-             PreparedStatement pstmt = connection.prepareStatement(
-                     // @formatter:off
-                    "execute block (records INTEGER = ?)\n" +
-                    "as\n" +
-                    "  declare id integer = 1;\n" +
-                    "begin\n" +
-                    "  delete from scrolltest;\n" +
-                    "  while (id <= records) do\n" +
-                    "  begin\n" +
-                    "    insert into scrolltest (id) values (:id);\n" +
-                    "    id = id + 1;\n" +
-                    "  end\n" +
-                    "end"
-                    // @formatter:on
+        try (var connection = getConnectionViaDriverManager();
+             var pstmt = connection.prepareStatement("""
+                     execute block (records INTEGER = ?)
+                     as
+                       declare id integer = 1;
+                     begin
+                       delete from scrolltest;
+                       while (id <= records) do
+                       begin
+                         insert into scrolltest (id) values (:id);
+                         id = id + 1;
+                       end
+                     end"""
              )) {
             pstmt.setInt(1, numberOfRecords);
             pstmt.execute();

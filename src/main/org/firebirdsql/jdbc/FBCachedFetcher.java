@@ -35,8 +35,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.firebirdsql.jaybird.util.ConditionalHelpers.firstNonZero;
-
 final class FBCachedFetcher implements FBFetcher {
 
     private List<RowValue> rows;
@@ -44,7 +42,7 @@ final class FBCachedFetcher implements FBFetcher {
     private int fetchSize;
     private FBObjectListener.FetcherListener fetcherListener;
 
-    FBCachedFetcher(GDSHelper gdsHelper, int fetchSize, int maxRows, FbStatement stmtHandle,
+    FBCachedFetcher(GDSHelper gdsHelper, FetchConfig fetchConfig, FbStatement stmtHandle,
             FBObjectListener.FetcherListener fetcherListener) throws SQLException {
         this.fetcherListener = fetcherListener;
         final RowDescriptor rowDescriptor = stmtHandle.getRowDescriptor();
@@ -54,13 +52,14 @@ final class FBCachedFetcher implements FBFetcher {
         final boolean hasBlobs = determineBlobs(rowDescriptor, isBlob);
 
         // load all rows from statement
-        this.fetchSize = firstNonZero(fetchSize, DEFAULT_FETCH_ROWS);
+        fetchSize = fetchConfig.fetchSizeOr(DEFAULT_FETCH_ROWS);
 
         try {
             RowListener rowListener = new RowListener();
             stmtHandle.addStatementListener(rowListener);
             try {
-                int actualFetchSize = getFetchSize();
+                int actualFetchSize = fetchSize;
+                int maxRows = fetchConfig.maxRows();
                 while (!rowListener.isAllRowsFetched() && (maxRows == 0 || rowListener.size() < maxRows)) {
                     if (maxRows > 0) {
                         actualFetchSize = Math.min(actualFetchSize, maxRows - rowListener.size());

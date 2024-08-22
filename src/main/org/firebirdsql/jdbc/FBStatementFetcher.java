@@ -72,14 +72,14 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
     private boolean isAfterLast;
 
     @SuppressWarnings("java:S1872")
-    FBStatementFetcher(GDSHelper gdsHelper, FbStatement stmth, FBObjectListener.FetcherListener fetcherListener,
-            int maxRows, int fetchSize) {
+    FBStatementFetcher(GDSHelper gdsHelper, FetchConfig fetchConfig, FbStatement stmth,
+            FBObjectListener.FetcherListener fetcherListener) {
         this.gdsHelper = gdsHelper;
         this.stmt = stmth;
         stmt.addStatementListener(rowListener);
         this.fetcherListener = fetcherListener;
-        this.maxRows = maxRows;
-        this.fetchSize = fetchSize;
+        maxRows = fetchConfig.maxRows();
+        fetchSize = fetchConfig.fetchSize();
         // Compare by class name because the class might not be loaded
         if (stmth.getClass().getName().equals("org.firebirdsql.gds.ng.jna.JnaStatement")) {
             // Performs only singular fetches, so only need space for one row
