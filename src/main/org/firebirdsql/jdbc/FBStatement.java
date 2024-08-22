@@ -35,7 +35,6 @@ import org.firebirdsql.util.InternalApi;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import static java.lang.String.format;
@@ -56,13 +55,10 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  */
 @SuppressWarnings({ "RedundantThrows", "SqlSourceToSinkFlow" })
 @InternalApi
-public class FBStatement implements FirebirdStatement {
+public class FBStatement extends AbstractStatement implements FirebirdStatement {
 
     private static final System.Logger log = System.getLogger(FBStatement.class.getName());
 
-    private static final AtomicInteger STATEMENT_ID_GENERATOR = new AtomicInteger();
-
-    private final int localStatementId = nextLocalStatementId();
     protected final GDSHelper gdsHelper;
     protected final FBObjectListener.StatementListener statementListener;
 
@@ -73,12 +69,9 @@ public class FBStatement implements FirebirdStatement {
 
     private SqlCountHolder sqlCountHolder;
 
-    private boolean closed;
     private boolean completed = true;
     private boolean escapedProcessing = true;
-    private volatile boolean closeOnCompletion;
     private boolean currentStatementGeneratedKeys;
-    private boolean poolable;
 
 	protected SQLWarning firstWarning;
 
@@ -124,9 +117,7 @@ public class FBStatement implements FirebirdStatement {
 
             // notify listener that statement is completed.
             notifyStatementCompleted();
-            if (closeOnCompletion) {
-                close();
-            }
+            performCloseOnCompletion();
         }
 
         @Override
@@ -171,12 +162,10 @@ public class FBStatement implements FirebirdStatement {
 
     @Override
     public boolean isValid() {
-        return !closed && !INVALID_STATEMENT_STATES.contains(fbStatement.getState());
+        return super.isValid() && !INVALID_STATEMENT_STATES.contains(fbStatement.getState());
     }
 
-    /**
-     * @see FbAttachment#withLock()
-     */
+    @Override
     protected final LockCloseable withLock() {
         return gdsHelper.withLock();
     }
@@ -191,11 +180,11 @@ public class FBStatement implements FirebirdStatement {
         }
 
         if (reason == CompletionReason.CONNECTION_ABORT) {
-            closed = true;
             completed = true;
             // NOTE This will not "cleanly" end the statement, it might still have objects registered on listeners,
             // and those will not get notified
             fbStatement = null;
+            super.close();
         } else {
             notifyStatementCompleted();
         }
@@ -483,22 +472,18 @@ public class FBStatement implements FirebirdStatement {
     public void close() throws  SQLException {
         if (isClosed()) return;
 
-        try (LockCloseable ignored = withLock();
-             FbStatement handle = fbStatement) {
-            if (handle != null) {
-                closeResultSet(false, CompletionReason.STATEMENT_CLOSE);
+        try (var ignored = withLock()) {
+            try (FbStatement handle = fbStatement) {
+                if (handle != null) {
+                    closeResultSet(false, CompletionReason.STATEMENT_CLOSE);
+                }
+            } finally {
+                fbStatement = null;
+                batchList = null;
+                super.close();
+                statementListener.statementClosed(this);
             }
-        } finally {
-            closed = true;
-            fbStatement = null;
-            batchList = null;
-            statementListener.statementClosed(this);
         }
-    }
-
-    @Override
-    public boolean isClosed() {
-        return closed;
     }
 
     @Override
@@ -967,22 +952,6 @@ public class FBStatement implements FirebirdStatement {
     }
 
     @Override
-    public boolean isPoolable() throws SQLException {
-        try (var ignored = withLock()) {
-            checkValidity();
-            return poolable;
-        }
-    }
-
-    @Override
-    public void setPoolable(boolean poolable) throws SQLException {
-        try (var ignored = withLock()) {
-            checkValidity();
-            this.poolable = poolable;
-        }
-    }
-
-    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         if (iface == null) return false;
         if (FbStatement.class.isAssignableFrom(iface)) {
@@ -1007,16 +976,6 @@ public class FBStatement implements FirebirdStatement {
             }
         }
         throw new SQLException("Unable to unwrap to class " + iface.getName());
-    }
-
-    @Override
-    public void closeOnCompletion() {
-        closeOnCompletion = true;
-    }
-
-    @Override
-    public boolean isCloseOnCompletion() {
-        return closeOnCompletion;
     }
 
     protected boolean internalExecute(String sql) throws SQLException {
@@ -1152,19 +1111,6 @@ public class FBStatement implements FirebirdStatement {
             return StatementType.NONE.getStatementTypeCode();
         }
         return fbStatement.getType().getStatementTypeCode();
-    }
-
-    /**
-     * Check if this statement is valid. This method should be invoked before executing any action which requires a
-     * valid/open statement.
-     *
-     * @throws SQLException
-     *         if this Statement has been closed and cannot be used anymore.
-     */
-    protected void checkValidity() throws SQLException {
-        if (isClosed()) {
-            throw new SQLException("Statement is already closed", SQL_STATE_INVALID_STATEMENT_ID);
-        }
     }
 
     /**
@@ -1346,27 +1292,6 @@ public class FBStatement implements FirebirdStatement {
         int len = identifier.length();
         return len >= 1 && len <= connection.getMetaData().getMaxColumnNameLength()
                 && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches();
-    }
-
-    @Override
-    public final int getLocalStatementId() {
-        return localStatementId;
-    }
-
-    static int nextLocalStatementId() {
-        return STATEMENT_ID_GENERATOR.incrementAndGet();
-    }
-
-    @Override
-    public final int hashCode() {
-        return localStatementId;
-    }
-
-    @Override
-    public final boolean equals(Object other) {
-        return other instanceof FirebirdStatement otherStmt
-                && this.localStatementId == otherStmt.getLocalStatementId();
-
     }
 
     /**

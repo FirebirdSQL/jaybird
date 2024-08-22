@@ -35,7 +35,6 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.FBPreparedStatement.METHOD_NOT_SUPPORTED;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID;
 
 /**
  * Specialized implementation of {@link FirebirdPreparedStatement}/{@link java.sql.PreparedStatement} for executing
@@ -52,29 +51,24 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_STATEMENT
  * @since 6
  */
 @SuppressWarnings("java:S1192")
-final class FBTxPreparedStatement implements FirebirdPreparedStatement {
+final class FBTxPreparedStatement extends AbstractStatement implements FirebirdPreparedStatement {
 
     private final FBConnection connection;
-    private final int localStatementId;
     private final LocalStatementType statementType;
     private final String sql;
     private final ResultSetBehavior rsBehavior;
 
-    private volatile boolean closed;
-    private boolean closeOnCompletion;
-    private boolean poolable = true;
-
     FBTxPreparedStatement(FBConnection connection, LocalStatementType statementType, String sql,
-            ResultSetBehavior rsBehavior) {
+            ResultSetBehavior rsBehavior) throws SQLException {
         if (statementType.statementClass() != LocalStatementClass.TRANSACTION_BOUNDARY) {
             throw new IllegalArgumentException("Unsupported value for statementType (implementation bug): "
                     + statementType);
         }
         this.connection = requireNonNull(connection, "connection");
-        localStatementId = FBStatement.nextLocalStatementId();
         this.statementType = statementType;
         this.sql = sql;
         this.rsBehavior = rsBehavior;
+        setPoolable(true);
     }
 
     @Override
@@ -105,16 +99,11 @@ final class FBTxPreparedStatement implements FirebirdPreparedStatement {
 
     @Override
     public void close() throws SQLException {
+        if (isClosed()) return;
         try (var ignored = withLock()) {
-            if (closed) return;
-            closed = true;
+            super.close();
             connection.notifyStatementClosed(this);
         }
-    }
-
-    @Override
-    public boolean isClosed() {
-        return closed;
     }
 
     @Override
@@ -152,9 +141,7 @@ final class FBTxPreparedStatement implements FirebirdPreparedStatement {
             default -> throw new AssertionError(
                     "Unsupported value for statementType (implementation bug): " + statementType);
             }
-            if (closeOnCompletion) {
-                close();
-            }
+            performCloseOnCompletion();
         }
     }
 
@@ -227,38 +214,6 @@ final class FBTxPreparedStatement implements FirebirdPreparedStatement {
     public Connection getConnection() throws SQLException {
         checkValidity();
         return connection;
-    }
-
-    @Override
-    public void setPoolable(boolean poolable) throws SQLException {
-        try (var ignored = withLock()) {
-            checkValidity();
-            this.poolable = poolable;
-        }
-    }
-
-    @Override
-    public boolean isPoolable() throws SQLException {
-        try (var ignored = withLock()) {
-            checkValidity();
-            return poolable;
-        }
-    }
-
-    @Override
-    public void closeOnCompletion() throws SQLException {
-        try (var ignored = withLock()) {
-            checkValidity();
-            closeOnCompletion = true;
-        }
-    }
-
-    @Override
-    public boolean isCloseOnCompletion() throws SQLException {
-        try (var ignored = withLock()) {
-            checkValidity();
-            return closeOnCompletion;
-        }
     }
 
     @Override
@@ -614,27 +569,6 @@ final class FBTxPreparedStatement implements FirebirdPreparedStatement {
         return getResultSet();
     }
 
-    @Override
-    public boolean isValid() {
-        return isClosed();
-    }
-
-    @Override
-    public int getLocalStatementId() {
-        return localStatementId;
-    }
-
-    @Override
-    public int hashCode() {
-        return localStatementId;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        return other instanceof FirebirdStatement otherStmt
-                && this.localStatementId == otherStmt.getLocalStatementId();
-    }
-
     @SuppressWarnings("java:S4144")
     @Override
     public int getMaxFieldSize() throws SQLException {
@@ -795,23 +729,8 @@ final class FBTxPreparedStatement implements FirebirdPreparedStatement {
         return iface != null && iface.isAssignableFrom(getClass());
     }
 
-    /**
-     * Check if this statement is valid. This method should be invoked before executing any action which requires a
-     * valid/open statement.
-     *
-     * @throws SQLException
-     *         if this Statement has been closed and cannot be used anymore.
-     */
-    private void checkValidity() throws SQLException {
-        if (isClosed()) {
-            throw new SQLException("Statement is already closed", SQL_STATE_INVALID_STATEMENT_ID);
-        }
-    }
-
-    /**
-     * @see org.firebirdsql.gds.ng.FbAttachment#withLock()
-     */
-    private LockCloseable withLock() {
+    @Override
+    protected LockCloseable withLock() {
         return connection.withLock();
     }
 

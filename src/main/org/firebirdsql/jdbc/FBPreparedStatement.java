@@ -226,14 +226,16 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     @Override
     public void close() throws SQLException {
-        try {
-            Batch batch = this.batch;
-            if (batch != null) {
-                this.batch = null;
-                batch.close();
+        try (var ignored = withLock()) {
+            try {
+                Batch batch = this.batch;
+                if (batch != null) {
+                    this.batch = null;
+                    batch.close();
+                }
+            } finally {
+                super.close();
             }
-        } finally {
-            super.close();
         }
     }
 

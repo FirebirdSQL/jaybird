@@ -78,8 +78,10 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     @Override
     public void close() throws SQLException {
-        batchList = null;
-        super.close();
+        try (var ignored = withLock()) {
+            batchList = null;
+            super.close();
+        }
     }
 
     @Override
