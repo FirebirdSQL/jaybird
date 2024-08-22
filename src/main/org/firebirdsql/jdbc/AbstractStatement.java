@@ -80,7 +80,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      *         if this Statement has been closed and cannot be used anymore.
      */
     protected final void checkValidity() throws SQLException {
-        if (isClosed()) {
+        if (closed) {
             throw new SQLNonTransientException("Statement is already closed", SQL_STATE_INVALID_STATEMENT_ID);
         }
     }
