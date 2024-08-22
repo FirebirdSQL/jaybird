@@ -53,7 +53,8 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     /**
      * {@inheritDoc}
      * <p>
-     * Subclasses overriding this method are expected to call this method at an appropriate point to mark it closed.
+     * Subclasses overriding this method are expected to call this method with {@code super.close()} at an appropriate
+     * point to mark it closed.
      * </p>
      */
     @Override
