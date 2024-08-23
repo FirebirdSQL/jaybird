@@ -158,10 +158,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return gdsHelper.withLock();
     }
 
-    public void completeStatement() throws SQLException {
-        completeStatement(CompletionReason.OTHER);
-    }
-
     public void completeStatement(CompletionReason reason) throws SQLException {
         if (currentRs != null && (reason != CompletionReason.COMMIT || currentRs.getHoldability() == ResultSet.CLOSE_CURSORS_AT_COMMIT)) {
             closeResultSet(false, reason);
@@ -978,23 +974,18 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
                 SQL_STATE_INVALID_STATEMENT_ID);
     }
 
+    @Override
     public final String getExecutionPlan() throws SQLException {
         return getExecutionPlan(FbStatement::getExecutionPlan);
     }
 
+    @Override
     public final String getExplainedExecutionPlan() throws SQLException {
         return getExecutionPlan(FbStatement::getExplainedExecutionPlan);
     }
 
-    /**
-     * Get the statement type of this PreparedStatement.
-     * The returned value will be one of the {@code TYPE_*} constant
-     * values.
-     *
-     * @return The identifier for the given statement's type
-     */
-    @SuppressWarnings("java:S1130")
-    int getStatementType() throws SQLException {
+    @Override
+    public final int getStatementType() {
         if (fbStatement == null) {
             return StatementType.NONE.getStatementTypeCode();
         }

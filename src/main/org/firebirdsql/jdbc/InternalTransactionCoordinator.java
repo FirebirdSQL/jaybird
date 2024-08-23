@@ -113,7 +113,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
     }
 
     @Override
-    public void executionStarted(FBStatement stmt) throws SQLException {
+    public void executionStarted(AbstractStatement stmt) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             coordinator.executionStarted(stmt);
         }
@@ -125,17 +125,17 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
     }
 
     @Override
-    public void statementClosed(FBStatement stmt) throws SQLException {
+    public void statementClosed(AbstractStatement stmt) throws SQLException {
         coordinator.statementClosed(stmt);
     }
 
     @Override
-    public void statementCompleted(FBStatement stmt) throws SQLException {
+    public void statementCompleted(AbstractStatement stmt) throws SQLException {
         statementCompleted(stmt, true);
     }
 
     @Override
-    public void statementCompleted(FBStatement stmt, boolean success) throws SQLException {
+    public void statementCompleted(AbstractStatement stmt, boolean success) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             coordinator.statementCompleted(stmt, success);
         }
@@ -240,7 +240,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         protected final FBLocalTransaction localTransaction;
         protected final FBConnection connection;
 
-        protected final Collection<FBStatement> statements = new HashSet<>();
+        protected final Collection<AbstractStatement> statements = new HashSet<>();
 
         protected AbstractTransactionCoordinator(FBConnection connection, FBLocalTransaction localTransaction) {
             this.localTransaction = localTransaction;
@@ -257,11 +257,11 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
             return connection;
         }
 
-        protected final Collection<FBStatement> getStatements() {
+        protected final Collection<AbstractStatement> getStatements() {
             return statements;
         }
 
-        protected final void setStatements(Collection<FBStatement> statements) {
+        protected final void setStatements(Collection<AbstractStatement> statements) {
             this.statements.addAll(statements);
         }
 
@@ -270,8 +270,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
             // we have to loop through the array, since the statement.completeStatement() call causes
             // ConcurrentModificationException
-            FBStatement[] statementsToComplete = statements.toArray(new FBStatement[0]);
-            for (FBStatement statement : statementsToComplete) {
+            for (AbstractStatement statement : statements.toArray(new AbstractStatement[0])) {
                 try {
                     statement.completeStatement(reason);
                 } catch (SQLException ex) {
@@ -339,7 +338,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         abstract void startSqlTransaction(String setTransactionSql) throws SQLException;
 
         @Override
-        public final void statementCompleted(FBStatement stmt) throws SQLException {
+        public final void statementCompleted(AbstractStatement stmt) throws SQLException {
             statementCompleted(stmt, true);
         }
 
@@ -353,13 +352,13 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         @SuppressWarnings("resource")
-        public void executionStarted(FBStatement stmt) throws SQLException {
-            List<FBStatement> tempList = new ArrayList<>(statements);
+        public void executionStarted(AbstractStatement stmt) throws SQLException {
+            List<AbstractStatement> tempList = new ArrayList<>(statements);
             var chain = new SQLExceptionChainBuilder();
 
             // complete all open statements for the connection (there should be only one anyway)
-            for (Iterator<FBStatement> iter = tempList.iterator(); iter.hasNext(); ) {
-                FBStatement tempStatement = iter.next();
+            for (Iterator<AbstractStatement> iter = tempList.iterator(); iter.hasNext(); ) {
+                AbstractStatement tempStatement = iter.next();
 
                 // enable re-entrancy for the same statement
                 if (tempStatement == stmt) {
@@ -387,13 +386,13 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void statementClosed(FBStatement stmt) throws SQLException {
+        public void statementClosed(AbstractStatement stmt) throws SQLException {
             stmt.completeStatement();
             connection.notifyStatementClosed(stmt);
         }
 
         @Override
-        public void statementCompleted(FBStatement stmt, boolean success) throws SQLException {
+        public void statementCompleted(AbstractStatement stmt, boolean success) throws SQLException {
             statements.remove(stmt);
             try {
                 if (!localTransaction.inTransaction()) {
@@ -486,7 +485,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void executionStarted(FBStatement stmt) throws SQLException {
+        public void executionStarted(AbstractStatement stmt) throws SQLException {
             if (!statements.contains(stmt)) {
                 statements.add(stmt);
             }
@@ -494,13 +493,13 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void statementClosed(FBStatement stmt) throws SQLException {
+        public void statementClosed(AbstractStatement stmt) throws SQLException {
             stmt.completeStatement();
             connection.notifyStatementClosed(stmt);
         }
 
         @Override
-        public void statementCompleted(FBStatement stmt, boolean success) throws SQLException {
+        public void statementCompleted(AbstractStatement stmt, boolean success) throws SQLException {
             statements.remove(stmt);
         }
 
@@ -523,13 +522,13 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         @SuppressWarnings("resource")
-        public void executionStarted(FBStatement stmt) throws SQLException {
-            List<FBStatement> tempList = new ArrayList<>(statements);
+        public void executionStarted(AbstractStatement stmt) throws SQLException {
+            List<AbstractStatement> tempList = new ArrayList<>(statements);
             var chain = new SQLExceptionChainBuilder();
 
             // complete all open statements for the connection (there should be only one anyway)
-            for (Iterator<FBStatement> iter = tempList.iterator(); iter.hasNext(); ) {
-                FBStatement tempStatement = iter.next();
+            for (Iterator<AbstractStatement> iter = tempList.iterator(); iter.hasNext(); ) {
+                AbstractStatement tempStatement = iter.next();
 
                 // enable re-entrancy for the same statement
                 if (tempStatement == stmt) {
@@ -559,7 +558,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void statementCompleted(FBStatement stmt, boolean success) throws SQLException {
+        public void statementCompleted(AbstractStatement stmt, boolean success) throws SQLException {
             statements.remove(stmt);
 
             if (stmt.getStatementType() == StatementType.DDL.getStatementTypeCode()) {
@@ -636,7 +635,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void executionStarted(FBStatement stmt) {
+        public void executionStarted(AbstractStatement stmt) {
             // NO TRANSACTION MANAGEMENT HERE - empty method
         }
 
@@ -698,17 +697,17 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         @Override
-        public void executionStarted(FBStatement stmt) throws SQLException {
+        public void executionStarted(AbstractStatement stmt) throws SQLException {
             tc.ensureTransaction();
         }
 
         @Override
-        public void statementClosed(FBStatement stmt) throws SQLException {
+        public void statementClosed(AbstractStatement stmt) throws SQLException {
             stmt.completeStatement();
         }
 
         @Override
-        public void statementCompleted(FBStatement stmt, boolean success) {
+        public void statementCompleted(AbstractStatement stmt, boolean success) {
             // nothing to do
         }
 

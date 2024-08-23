@@ -112,6 +112,13 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     }
 
     @Override
+    public void completeStatement(CompletionReason reason) throws SQLException {
+        if (reason == CompletionReason.CONNECTION_ABORT) {
+            super.close();
+        }
+    }
+
+    @Override
     public ResultSet executeQuery() throws SQLException {
         checkValidity();
         throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_executeQueryWithTxStmt).toSQLException();

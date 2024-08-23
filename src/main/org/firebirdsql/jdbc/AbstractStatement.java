@@ -72,6 +72,17 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     protected abstract FbStatement getStatementHandle() throws SQLException;
 
     /**
+     * Get the current statement type of this statement.
+     * <p>
+     * The returned value is one of the {@code TYPE_*} constant values defined in {@link FirebirdPreparedStatement}, or
+     * {@code 0} if the statement currently does not have a statement type.
+     * </p>
+     *
+     * @return The identifier for the given statement's type
+     */
+    public abstract int getStatementType();
+
+    /**
      * {@inheritDoc}
      * <p>
      * Subclasses overriding this method are expected to call this method with {@code super.close()} at an appropriate
@@ -106,6 +117,30 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
             throw new SQLNonTransientException("Statement is already closed", SQL_STATE_INVALID_STATEMENT_ID);
         }
     }
+
+    /**
+     * Completes this statement with {@link CompletionReason#OTHER}.
+     *
+     * @throws SQLException
+     *         for failures completing this statement
+     * @see #completeStatement(CompletionReason)
+     */
+    public final void completeStatement() throws SQLException {
+        completeStatement(CompletionReason.OTHER);
+    }
+
+    /**
+     * Completes this statement with {@code reason}.
+     * <p>
+     * On completion, any open result set will be closed, and possibly the statement itself may be closed.
+     * </p>
+     *
+     * @param reason
+     *         completion reason
+     * @throws SQLException
+     *         for failures completing this statement
+     */
+    public abstract void completeStatement(CompletionReason reason) throws SQLException;
 
     @Override
     public final boolean isPoolable() throws SQLException {

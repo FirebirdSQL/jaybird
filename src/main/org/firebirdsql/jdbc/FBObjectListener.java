@@ -138,7 +138,7 @@ public final class FBObjectListener {
          * @param stmt
          *         statement that is being executed
          */
-        void executionStarted(FBStatement stmt) throws SQLException;
+        void executionStarted(AbstractStatement stmt) throws SQLException;
 
         /**
          * Notify the listener that statement was closed.
@@ -146,7 +146,7 @@ public final class FBObjectListener {
          * @param stmt
          *         statement that was closed
          */
-        void statementClosed(FBStatement stmt) throws SQLException;
+        void statementClosed(AbstractStatement stmt) throws SQLException;
 
         /**
          * Notify the listener that statement is completed. This is shortcut method for
@@ -155,7 +155,7 @@ public final class FBObjectListener {
          * @param stmt
          *         statement that was completed.
          */
-        void statementCompleted(FBStatement stmt) throws SQLException;
+        void statementCompleted(AbstractStatement stmt) throws SQLException;
 
         /**
          * Notify the listener that statement is completed and tell whether execution was successful or not.
@@ -165,7 +165,7 @@ public final class FBObjectListener {
          * @param success
          *         {@code true} if completion was successful
          */
-        void statementCompleted(FBStatement stmt, boolean success) throws SQLException;
+        void statementCompleted(AbstractStatement stmt, boolean success) throws SQLException;
 
     }
 
