@@ -844,7 +844,7 @@ class FBStatementTest {
     @Test
     void testEnquoteLiteral() throws Exception {
         // Only testing dialect 3
-        try (FBStatement stmt = (FBStatement) con.createStatement()) {
+        try (var stmt = con.createStatement()) {
             assertEquals("'no quotes'", stmt.enquoteLiteral("no quotes"), "No quotes");
             assertEquals("'with''quotes'", stmt.enquoteLiteral("with'quotes"), "With quotes");
         }
@@ -853,7 +853,7 @@ class FBStatementTest {
     @Test
     void testIsSimpleIdentifier() throws Exception {
         // Only testing dialect 3
-        try (FBStatement stmt = (FBStatement) con.createStatement()) {
+        try (var stmt = con.createStatement()) {
             assertTrue(stmt.isSimpleIdentifier("Simple$Identifier_"), "Simple$Identifier_");
             assertFalse(stmt.isSimpleIdentifier("1Simple$Identifier_"), "1Simple$Identifier_");
             assertFalse(stmt.isSimpleIdentifier(""), "(empty string)");
@@ -871,7 +871,7 @@ class FBStatementTest {
     @Test
     void testEnquoteIdentifier() throws Exception {
         // Only testing dialect 3
-        try (FBStatement stmt = (FBStatement) con.createStatement()) {
+        try (var stmt = con.createStatement()) {
             assertEquals("simple$identifier_", stmt.enquoteIdentifier("simple$identifier_", false),
                     "simple, alwaysQuote:false");
             assertEquals("\"simple$identifier_\"", stmt.enquoteIdentifier("simple$identifier_", true),
