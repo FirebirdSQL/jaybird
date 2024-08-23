@@ -181,8 +181,8 @@ public class SQLExceptionMatchers {
     }
 
     /**
-     * Convenience factory for matcher of the statement closed exception thrown by {@link org.firebirdsql.jdbc.FBStatement}
-     * and descendants when the statement is closed.
+     * Convenience factory for matcher of the statement closed exception thrown by
+     * {@link org.firebirdsql.jdbc.AbstractStatement} and descendants when the statement is closed.
      *
      * @return The Matcher
      */
