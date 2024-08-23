@@ -49,6 +49,8 @@ import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Implementation of {@link ResultSet}.
  * <p>
@@ -67,7 +69,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported";
     private static final String TYPE_SQLXML = "SQLXML";
 
-    private final FirebirdStatement statement;
+    private final AbstractStatement statement;
     private FBFetcher fbFetcher;
     private FirebirdRowUpdater rowUpdater;
 
@@ -78,10 +80,9 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     protected RowValue row;
 
-    private boolean wasNull = false;
-    private boolean wasNullValid = false;
-    // closed is false until the close method is invoked
-    private volatile boolean closed = false;
+    private boolean wasNull;
+    private boolean wasNullValid;
+    private volatile boolean closed;
 
     private final FBField[] fields;
     private final List<FBCloseableField> closeableFields = new ArrayList<>();
@@ -102,13 +103,14 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * Creates a new {@code FBResultSet} instance.
      */
     @SuppressWarnings("java:S1141")
-    public FBResultSet(FBStatement statement, FBObjectListener.ResultSetListener listener, boolean metaDataQuery)
+    public FBResultSet(AbstractStatement statement, FBObjectListener.ResultSetListener listener, boolean metaDataQuery)
             throws SQLException {
         this.statement = statement;
-        FbStatement stmt = statement.getStatementHandle();
+        FbStatement stmt = requireNonNull(statement.getStatementHandle(), "statementHandle");
         try {
-            this.connection = (FBConnection) statement.getConnection();
-            this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
+            connection = (FBConnection) statement.getConnection();
+            assert connection != null : "Found case were connection is null";
+            gdsHelper = connection != null ? connection.getGDSHelper() : null;
             cursorName = statement.getCursorName();
             this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
             rowDescriptor = stmt.getRowDescriptor();
@@ -200,8 +202,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * @since 5.0.1
      */
     public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
-            FBObjectListener.ResultSetListener listener, boolean retrieveBlobs)
-            throws SQLException {
+            FBObjectListener.ResultSetListener listener, boolean retrieveBlobs) throws SQLException {
         // TODO Evaluate if we need to share more implementation with constructor above
         this.connection = connection;
         gdsHelper = connection != null ? connection.getGDSHelper() : null;
