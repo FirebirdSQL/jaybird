@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.parser.LocalStatementClass;
 import org.firebirdsql.jaybird.parser.LocalStatementType;
@@ -68,6 +69,11 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
         this.statementType = statementType;
         this.sql = sql;
         setPoolable(true);
+    }
+
+    @Override
+    protected FbStatement getStatementHandle() throws SQLException {
+        throw new SQLFeatureNotSupportedException("This statement implementation does not use a statement handle");
     }
 
     @Override
@@ -175,6 +181,7 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
         return new long[0];
     }
 
+    @SuppressWarnings("java:S4144")
     @Override
     public ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
@@ -584,12 +591,6 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     public void cancel() throws SQLException {
         checkValidity();
         throw new FBDriverNotCapableException("Cannot cancel transaction management statement execution");
-    }
-
-    @Override
-    public void setCursorName(String name) throws SQLException {
-        checkValidity();
-        // silently ignored
     }
 
     @SuppressWarnings("java:S4144")

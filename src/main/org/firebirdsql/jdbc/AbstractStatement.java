@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.FbAttachment;
+import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.util.InternalApi;
 
@@ -47,6 +48,8 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     private static final AtomicInteger STATEMENT_ID_GENERATOR = new AtomicInteger();
 
     private final int localStatementId = STATEMENT_ID_GENERATOR.incrementAndGet();
+    private String cursorName;
+    @SuppressWarnings("java:S3077")
     private volatile SQLWarning warning;
     private FetchConfig fetchConfig;
 
@@ -57,6 +60,16 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     protected AbstractStatement(ResultSetBehavior resultSetBehavior) {
         fetchConfig = new FetchConfig(resultSetBehavior);
     }
+
+    /**
+     * @return instance of {@link FbStatement} associated with this statement; can be {@code null} if no statement has
+     * been prepared or executed yet.
+     * @throws SQLException
+     *         if this statement is closed
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         if this statement implementation does not use statement handles
+     */
+    protected abstract FbStatement getStatementHandle() throws SQLException;
 
     /**
      * {@inheritDoc}
@@ -252,6 +265,22 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     }
 
     @Override
+    public final void setCursorName(String cursorName) throws SQLException {
+        checkValidity();
+        try (var ignored = withLock()) {
+            this.cursorName = cursorName;
+        }
+    }
+
+    /**
+     * @return current value of {@code cursorName}
+     * @see #setCursorName(String)
+     */
+    protected final String getCursorName() {
+        return cursorName;
+    }
+
+    @Override
     public final SQLWarning getWarnings() throws SQLException {
         checkValidity();
         return warning;
@@ -264,11 +293,13 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     }
 
     protected final void addWarning(SQLWarning warning) {
-        SQLWarning currentWarning = this.warning;
-        if (currentWarning == null) {
-            this.warning = warning;
-        } else {
-            currentWarning.setNextWarning(warning);
+        try (var ignored = withLock()) {
+            SQLWarning currentWarning = this.warning;
+            if (currentWarning == null) {
+                this.warning = warning;
+            } else {
+                currentWarning.setNextWarning(warning);
+            }
         }
     }
 

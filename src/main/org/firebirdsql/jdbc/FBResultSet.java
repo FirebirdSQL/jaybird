@@ -131,7 +131,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
                 }
             } else if (serverSideScrollable) {
                 fbFetcher = new FBServerScrollFetcher(fetchConfig, stmt, this);
-            } else if (statement.isUpdatableCursor()) {
+            } else if (statement.getCursorName() != null) {
                 fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, fetchConfig, stmt, this);
             } else {
                 fbFetcher = new FBStatementFetcher(gdsHelper, fetchConfig, stmt, this);

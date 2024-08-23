@@ -85,7 +85,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     protected final List<RowValue> specialResult = new ArrayList<>();
 
     private int maxFieldSize;
-    private String cursorName;
 
     private final FBObjectListener.ResultSetListener resultSetListener = new RSListener();
     protected final FBConnection connection;
@@ -144,10 +143,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
 
         // TODO Find out if connection is actually ever null, because some parts of the code expect it not to be null
         this.connection = statementListener != null ? statementListener.getConnection() : null;
-    }
-
-    String getCursorName() {
-        return cursorName;
     }
 
     private static final Set<StatementState> INVALID_STATEMENT_STATES = EnumSet.of(
@@ -556,15 +551,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public void setCursorName(String name) throws  SQLException {
-        this.cursorName = name;
-    }
-
-    boolean isUpdatableCursor() {
-        return cursorName != null;
-    }
-
-    @Override
     public boolean execute(String sql) throws SQLException {
         checkValidity();
         currentStatementGeneratedKeys = false;
@@ -615,6 +601,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         // A generated keys query does not produce a normal result set (but EXECUTE PROCEDURE or INSERT ... RETURNING without Statement.RETURN_GENERATED_KEYS do)
         if (!isGeneratedKeyQuery() && currentStatementResult.isResultSet()) {
             if (!isSingletonResult) {
+                String cursorName = getCursorName();
                 if (cursorName != null) {
                     fbStatement.setCursorName(cursorName);
                 }
@@ -813,13 +800,8 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return connection;
     }
 
-    /**
-     * @return Instance of {@link FbStatement} associated with this statement. Can be {@code null} if no statement has
-     * been executed yet.
-     * @throws SQLException
-     *         if this statement is closed
-     */
-    final FbStatement getStatementHandle() throws SQLException {
+    @Override
+    protected final FbStatement getStatementHandle() throws SQLException {
         checkValidity();
         return fbStatement;
     }
