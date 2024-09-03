@@ -85,7 +85,7 @@ Feedback can be sent to the {firebird-java}[Firebird-java mailing list] or repor
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 3.0.11, Firebird 4.0.4, Firebird 5.0.1 and a recent snapshot of Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
+Jaybird {version_wo_target} was tested against Firebird 3.0.12, Firebird 4.0.5, Firebird 5.0.1 and a recent snapshot of Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
 
 Jaybird 6 will -- by default -- not connect to Firebird 2.5 or older.
 See also <<unsupported-protocol>>.
@@ -98,7 +98,7 @@ This driver does not support InterBase.
 Jaybird 6 supports Java 17 and higher (JDBC 4.3).
 Support for earlier Java versions has been dropped.
 
-Given the limited support period for Java 9 and higher versions, we limit support to Java 17 and the most recent LTS version after Java 17 and the latest Java release.
+Given the limited support period for Java 9 and higher versions, we limit support to Java 17, the most recent LTS version after Java 17, and the latest Java release.
 Currently, that means we support Java 17, Java 21, and Java 22.
 
 [NOTE]
@@ -146,15 +146,18 @@ Jaybird supports the following specifications:
 [#maven]
 ==== Maven
 
-Jaybird {version_wo_target} is available on Maven Central:
+ifeval::["{version_tag}" != "-SNAPSHOT"]
+Jaybird {version_wo_target} is available on Maven Central.
+endif::[]
+ifeval::["{version_tag}" == "-SNAPSHOT"]
+Jaybird {version_wo_target} is available on the Sonatype snapshot repository.
+
+NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://oss.sonatype.org/content/repositories/snapshots
+endif::[]
 
 groupId: `org.firebirdsql.jdbc`, +
 artifactId: `jaybird`, +
 version: `{version_wo_target}`
-
-ifeval::["{version_tag}" == "-SNAPSHOT"]
-NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://oss.sonatype.org/content/repositories/snapshots
-endif::[]
 
 For example:
 
@@ -163,17 +166,6 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>{version_example}</version>
-</dependency>
-----
-
-To enable the "`ChaCha64`" wire encryption support, also add:
-
-[source,xml,subs="verbatim,attributes"]
-----
-<dependency>
-    <groupId>org.firebirdsql.jdbc</groupId>
-    <artifactId>chacha64-plugin</artifactId>
     <version>{version_example}</version>
 </dependency>
 ----
@@ -194,6 +186,17 @@ Be aware that this dependency does not support `embedded`.
 
 See also <<type-2-native-and-embedded-driver>>.
 
+To enable the "`ChaCha64`" wire encryption support for pure Java connections, also add:
+
+[source,xml,subs="verbatim,attributes"]
+----
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>chacha64-plugin</artifactId>
+    <version>{version_example}</version>
+</dependency>
+----
+
 [#download]
 ==== Download
 
@@ -201,10 +204,10 @@ You can download the latest version of Jaybird from https://firebirdsql.org/en/j
 
 At minimum Jaybird 6 requires `jaybird-{version_wo_target}.jar`.
 
-For "`ChaCha64`" wire-encryption support, also add `chacha64-plugin-{version_wo_target}.jar` and `bcprov-jdk18on-{bc-version}.jar`.
-
 For native or embedded support, also add `jaybird-native-{version_wo_target}.jar` and `jna-jpms-{jna-version}.jar` on your classpath or modulepath.
 See also <<type-2-native-and-embedded-driver>>.
+
+For "`ChaCha64`" wire-encryption support with pure Java connections, also add `chacha64-plugin-{version_wo_target}.jar` and `bcprov-jdk18on-{bc-version}.jar`.
 
 [#upgrading-from-jaybird-5-to-jaybird-6]
 == Upgrading from Jaybird 5 to Jaybird 6
@@ -217,7 +220,7 @@ Please make sure to read <<compatibility-changes,Compatibility changes>> before 
 Change the version of the dependency to `{version_wo_target}`.
 If you're using the artifact id `jaybird-jdkXX`, change it to `jaybird`.
 
-When your Jaybird dependency defines the exclusion for `javax.resource:connector-api` (see below), you can remove it as Jaybird no longer has a dependency on `connector-api`.
+When your Jaybird dependency defines the exclusion for `javax.resource:connector-api` (see example below), you can remove it as Jaybird no longer has a dependency on `connector-api`.
 
 [source,xml]
 ----
@@ -242,7 +245,7 @@ If you use native or embedded, you now need to explicitly add `jaybird-native` a
 </dependency>
 ----
 
-If you use native or embedded, make sure to update your JNA dependency to version {jna-version}, or remove it altogether as the dependencies will now be pulled in through the `jaybird-native` artifact.
+If you use native or embedded, make sure to update your JNA dependency to version `{jna-version}` and artifact id `jna-jpms`, or remove it altogether as the dependencies will now be pulled in through the `jaybird-native` artifact.
 
 [source,xml,subs="verbatim,attributes"]
 ----
@@ -426,7 +429,7 @@ This property should not be confused with the socket buffer size (configurable w
 Contrary to the input buffer size, setting it higher than `socketBufferSize` might have performance benefits.
 ====
 
-These properties need to be set before Jaybird is loaded and used (e.g. on the commandline with `-D<propertyName>=<propertyValue`).
+These properties need to be set before Jaybird is loaded and used (e.g. on the commandline with `-&zwj;D<propertyName>=<propertyValue`).
 
 [NOTE]
 ====
@@ -468,7 +471,7 @@ This detection depends on actual activity, like an event posting a new count, or
 
 The pure Java protocol will by default no longer try the wire protocol versions of unsupported Firebird versions.
 This means that -- by default -- only protocol version 13 (Firebird 3.0) -- 18 (Firebird 5.0) are tried.
-As a result, attempts to connect to Firebird 2.5 or earlier will result in error _"`connection rejected by remote interface`"_ (`335544421` or `isc_connect_reject`).
+As a result, attempts to connect to Firebird 2.5 or earlier will result in error "`__connection rejected by remote interface__`" (`335544421` or `isc_connect_reject`).
 
 The connection property `enableProtocol` can enable unsupported protocols, assuming a suitable protocol implementation is available on the classpath.
 
@@ -662,7 +665,7 @@ ____
 The name of the application currently utilizing the connection
 `ClientUser`::
 The name of the user that the application using the connection is performing work for.
-This may not be the same as the user name that was used in establishing the connection.
+This may not be the same as the username that was used in establishing the connection.
 `ClientHostname`::
 The hostname of the computer the application using the connection is running on.
 ____
@@ -887,7 +890,7 @@ Only use this solution for scripts, or in case it is cumbersome or not possible 
 In the implementation, the use of `COMMIT` and `ROLLBACK` will not be executed as statements on the server, but instead call `Connection.commit()` and `Connection.rollback()`.
 The `SET TRANSACTION` statement -- if allowed -- is executed with execute immediate, and not through a statement handle.
 
-Enabling this feature can also make it easier to use the table reservation feature, compared to `FirebirdConnection.setTransactionParameters(TransactionParameterBuffer)` or `FirebirdConnection.setTransactionParameters(int TransactionParameterBuffer)`, which requires access to the Jaybird API interfaces.
+Enabling this feature can also make it easier to use the table reservation feature, compared to `FirebirdConnection.setTransactionParameters(TransactionParameterBuffer)` or `FirebirdConnection.setTransactionParameters(int, TransactionParameterBuffer)`, which requires access to the Jaybird API interfaces.
 
 [NOTE]
 ====
@@ -931,7 +934,7 @@ try (Connection connection = DriverManager.getConnection(
 }
 ----
 
-If the database already exists, the connection will be made with user `normaluser`, but if the database does not exist, the database will be created with user `sysdba`.
+If the database already exists, the connection will be made with user `normaluser`, but if the database does not exist, the database _and_ the connection will be created with user `sysdba`.
 
 [IMPORTANT]
 ====
@@ -1015,7 +1018,7 @@ As part of this change implementations of `FirebirdStatement.getCurrentResultSet
 This change was also backported to Jaybird 5.0.5.
 * Fixed: The implementation of `Blob.getBytes(long, int)` threw a `SQLException` if the remaining bytes of the blob were less than the requested number of bytes (https://github.com/FirebirdSQL/jaybird/issues/767[#767])
 +
-The JDBC API specifies _"This `byte` array contains up to `length` consecutive bytes starting at position pos."_, so the implementation was changed to return up to `length` bytes, or the remaining actual blob length, whichever is shorter.
+The JDBC API specifies "`__This `byte` array contains up to `length` consecutive bytes starting at position pos.__`", so the implementation was changed to return up to `length` bytes, or the remaining actual blob length, whichever is shorter.
 +
 The JDBC API does not specify what should happen if the requested position is beyond the end-of-blob.
 The modified implementation returns an empty array, but given this is unspecified behaviour, we reserve the option to change this in the future to throw an exception instead.
@@ -1109,16 +1112,17 @@ It might have been a change we forgot to document, but it could just as well be 
 === Support for Firebird 2.5 dropped
 
 Jaybird 6 has dropped support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support^]).
-In general, we expect the driver to remain functional, if the protocol version is explicitly enabled, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
 
 By default, Jaybird 6 will only connect to Firebird 3.0 and higher.
 See also <<unsupported-protocols-disabled>>.
+
+If the version 12 protocol (for Firebird 2.5) is explicitly enabled, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer Firebird versions.
 
 [#unsupported-protocols-disabled]
 === Unsupported protocol version disabled by default
 
 The wire protocol versions for Firebird 2.5 and earlier are disabled by default to disallow connection for the pure Java protocol.
-Attempts to connect to Firebird 2.5 or earlier will result in error _"`connection rejected by remote interface`"_ (`335544421` or `isc_connect_reject`).
+Attempts to connect to Firebird 2.5 or earlier will result in error "`__connection rejected by remote interface__`" (`335544421` or `isc_connect_reject`).
 You can use connection property `enableProtocol=*` or -- for example -- `enableProtocol=10,11,12` to re-enable these protocols, or use the native protocol to connect instead.
 
 See also <<unsupported-protocol>>.
@@ -1211,7 +1215,7 @@ This results in some minor differences:
 * `getTime(...)` on a `CHAR`/`VARCHAR`/`BLOB SUB_TYPE TEXT` field will now parse values without seconds and values with fractional seconds.
 Though it can parse it, the resulting value will not include fractional seconds.
 * `setDate(..., Calendar)` on a `CHAR`/`VARCHAR`/`BLOB SUB_TYPE TEXT` field will now use the `Calendar` to rebase the date, this can result in an off-by-one difference in the date compared to previous versions (depending on the time zone set on the `Calendar`)
-* `getDate(..., Calendar)`  on a `CHAR`/`VARCHAR`/`BLOB SUB_TYPE TEXT` field will now use the `Calendar` to rebase the date, this can result in an off-by-one difference in the date compared to previous versions (depending on the time zone set on the `Calendar`)
+* `getDate(..., Calendar)` on a `CHAR`/`VARCHAR`/`BLOB SUB_TYPE TEXT` field will now use the `Calendar` to rebase the date, this can result in an off-by-one difference in the date compared to previous versions (depending on the time zone set on the `Calendar`)
 * The `TypeConversionException` thrown by `getDate(...)`, `getTime(...)` and `getTimestamp(...)` on unsupported types may now report `java.time.LocalDate`, `java.time.LocalTime` or `java.time.LocalDateTime` as the type in its error message instead of `java.sql.Date`, `java.sql.Time`, or `java.sql.Timestamp`
 
 [#compat-allow-tx-stmts]
@@ -1362,7 +1366,6 @@ Though this class was publicly accessible through `ResultSet.getObject/updateObj
 The following classes are no longer accessible in Jaybird 6:
 
 * `RowValueBuilder` is now package private
-* `StoredProcedureMetaData` is now package private
 
 The following classes are no longer extensible in Jaybird 6 as they are now `sealed` or `final`:
 
@@ -1429,22 +1432,36 @@ The following methods have been removed in Jaybird 6:
 
 * `FirebirdConnectionProperties` +
 Changes to the `FirebirdConnectionProperties` interface affect the data source implementations in `org.firebirdsql.ds`, and `FBManagedConnectionFactory`.
-** `getDatabase()` and all its implementations, use `DatabaseConnectionProperties.getDatabaseName()`
-** `setDatabase(String)` and all its implementations, use `DatabaseConnectionProperties.setDatabaseName(String)`
-** `getNonStandardProperty(String)` and all its implementations, use `BaseProperties.getProperty(String)`
-** `setNonStandardProperty(String,String)` and all its implementations, use `BaseProperties.setProperty(String,String)`
-** `getBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.getPageCacheSize`
-** `setBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.setPageCacheSize`
+** `getDatabase()` and all its implementations;
+use `DatabaseConnectionProperties.getDatabaseName()`
+** `setDatabase(String)` and all its implementations;
+use `DatabaseConnectionProperties.setDatabaseName(String)`
+** `getNonStandardProperty(String)` and all its implementations;
+use `BaseProperties.getProperty(String)`
+** `setNonStandardProperty(String,String)` and all its implementations;
+use `BaseProperties.setProperty(String,String)`
+** `getBuffersNumber` and all its implementations;
+use `DatabaseConnectionProperties.getPageCacheSize`
+** `setBuffersNumber` and all its implementations;
+use `DatabaseConnectionProperties.setPageCacheSize`
 * `IConnectionProperties`
-** `short getConnectionDialect()` and all its implementations, use `int DatabaseConnectionProperties.getSqlDialect()`
-** `setConnectionDialect(short)`, and all its implementations, use `DatabaseConnectionProperties.setSqlDialect(int)`
-* `FBSimpleDataSource.get/setBlobBufferLength`, use `get/setBlobBufferSize`
+** `short getConnectionDialect()` and all its implementations;
+use `int DatabaseConnectionProperties.getSqlDialect()`
+** `setConnectionDialect(short)`, and all its implementations;
+use `DatabaseConnectionProperties.setSqlDialect(int)`
+* `FBSimpleDataSource.get/setBlobBufferLength`;
+use `get/setBlobBufferSize`
 * `EventManager`
-** `get/setHost`, use `get/setServerName`
-** `get/setPort`, use `get/setPortNumber`
-** `get/setDatabase`, use `get/setDatabaseName`
-* `GDSFactory.getJdbcUrl(GDSType, String)`, use `GDSFactory.getJdbcUrl(GDSType, DatabaseConnectionProperties)`
-* `FBManagedConnection.getDatabase()`, there is no direct replacement, but the information can be obtained from the connection properties
+** `get/setHost`;
+use `get/setServerName`
+** `get/setPort`;
+use `get/setPortNumber`
+** `get/setDatabase`;
+use `get/setDatabaseName`
+* `GDSFactory.getJdbcUrl(GDSType, String)`;
+use `GDSFactory.getJdbcUrl(GDSType, DatabaseConnectionProperties)`
+* `FBManagedConnection.getDatabase()`;
+there is no direct replacement, but the information can be obtained from the connection properties
 * `GDSHelper.getIscEncoding()`;
 there is no replacement
 * `FirebirdConnection.getIscEncoding`;
@@ -1475,32 +1492,48 @@ use `FBSimpleDataSource` for programmatic access to connection properties and co
 
 The following classes have been removed in Jaybird 6:
 
-* `org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener` -- implementing `DatabaseListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
-* `org.firebirdsql.gds.ng.listeners.DefaultStatementListener` -- implementing `StatementListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
-* `org.firebirdsql.jdbc.FBConnectionDefaults`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants`, is considered internal API
+* `org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener`;
+implementing `DatabaseListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
+* `org.firebirdsql.gds.ng.listeners.DefaultStatementListener`;
+implementing `StatementListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
+* `org.firebirdsql.jdbc.FBConnectionDefaults`;
+its replacement, `org.firebirdsql.jaybird.props.PropertyConstants`, is considered internal API
 
 [#removal-of-deprecated-constants]
 ==== Removal of deprecated constants
 
 The following constants have been removed in Jaybird 6:
 
-* All public String constants in `FBDriver`.
-The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement.
-* `ISCConstants.isc_dpb_{asterisk}` that are DPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.DpbItems`.
-* `ISCConstants.isc_tpb_{asterisk}` that are TPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.TpbItems`.
-* `ISCConstants.isc_spb_{asterisk}` that are SPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.SpbItems`.
-* `ISCConstants.isc_bpb_{asterisk}` that are BPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.BpbItems`.
-* `ISCConstants.isc_bpb_type_segmented` and `ISCConstants.isc_bpb_type_stream`, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues`
-* All constants in `DatabaseParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.DpbItems`.
-* All constants in `TransactionParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.TpbItems`.
-* All constants in `ServiceParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.SpbItems`.
-* All constants in `BlobParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.BpbItems` and `org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues`.
-* All `TPB_{asterisk}` constants in `FirebirdConnection`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.TpbItems`.
-* All public String constants in `org.firebirdsql.jdbc.FBConnectionProperties`.
-The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement.
-* `GDSHelper.DEFAULT_BLOB_BUFFER_SIZE`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE`, is considered internal API.
-* All constants in `IConnectionProperties`, use the equivalent constant from `org.firebirdsql.jaybird.props.PropertyConstants`, though this class is considered internal API.
-* All constants in `IServiceProperties`, use the equivalent constant from `org.firebirdsql.jaybird.props.PropertyConstants`, though this class is considered internal API.
+* All public String constants in `FBDriver`;
+the replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement
+* `ISCConstants.isc_dpb_{asterisk}` that are DPB items;
+the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.DpbItems`
+* `ISCConstants.isc_tpb_{asterisk}` that are TPB items;
+the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.TpbItems`
+* `ISCConstants.isc_spb_{asterisk}` that are SPB items;
+the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.SpbItems`
+* `ISCConstants.isc_bpb_{asterisk}` that are BPB items;
+the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.BpbItems`
+* `ISCConstants.isc_bpb_type_segmented` and `ISCConstants.isc_bpb_type_stream`;
+the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues`
+* All constants in `DatabaseParameterBuffer`;
+use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.DpbItems`
+* All constants in `TransactionParameterBuffer`;
+use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.TpbItems`
+* All constants in `ServiceParameterBuffer`;
+use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.SpbItems`
+* All constants in `BlobParameterBuffer`;
+use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.BpbItems` and `org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues`
+* All `TPB_{asterisk}` constants in `FirebirdConnection`;
+use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.TpbItems`
+* All public String constants in `org.firebirdsql.jdbc.FBConnectionProperties`;
+the replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement
+* `GDSHelper.DEFAULT_BLOB_BUFFER_SIZE`;
+its replacement, `org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE`, is considered internal API
+* All constants in `IConnectionProperties`;
+use the equivalent constant from `org.firebirdsql.jaybird.props.PropertyConstants`, though this class is considered internal API
+* All constants in `IServiceProperties`;
+use the equivalent constant from `org.firebirdsql.jaybird.props.PropertyConstants`, though this class is considered internal API
 * `PropertyNames.timestampUsesLocalTimezone`;
 there is no replacement
 
@@ -1517,9 +1550,6 @@ This means there may be undocumented changes to internal API.
 If you are confronted with such a change, let us know on {firebird-java}[firebird-java], so we can take this into account when documenting future changes.
 ====
 
-* `AbstractFbAttachment`
-** `getServerVersionInformation()` was changed from `protected` to package-private.
-Given the returned type was already package-private, it wasn't really useful for subclasses outside the package anyway.
 * `FbWireDatabase`
 ** `enqueueDeferredAction(DeferredAction)` now throws `SQLException` to be able to handle exceptions for sync actions if there are a lot of deferred packets
 * `FbWireOperations`
@@ -1545,12 +1575,12 @@ When in doubt, use `false` to communicate that no such synchronization is requir
 * `AsynchronousChannelListener.Event` was converted to a record, so it is now final, and its getters (`getEventId()` and `getEventCount()`) have been replaced by accessor methods (`eventId()` and `eventCount()`)
 * `DbAttachInfo` was converted to a record, so its getters (`getServerName()`, `getPortNumber()` and `getAttachObjectName()`) have been replaced by accessor methods (`serverName()`, `portNumber()`, `attachObjectName()`)
 * `XdrInputStream`
-** `skipPadding` return type was changed to `void` as the return values was never used in Jaybird code
-** `skipFully` was removed, use standard Java `InputStream.skipNBytes` instead
+** `skipPadding` return type was changed to `void` as the return value is never used in Jaybird code
+** `skipFully` was removed;
+use standard Java `InputStream.skipNBytes` instead
 ** `readShort` was removed as it was unused
 * The no-arg constructor of `FBXAException` was removed
 * `FBResultSet`
-** The constructors are now all marked as internal API, as they effectively already were due to arguments of internal API classes
 ** `close(boolean)` was removed;
 use `close(boolean, CompletionReason)`
 * `UnixCrypt` was replaced by `LegacyHash`, which only performs the password hash specific to Firebird legacy authentication
@@ -1591,7 +1621,7 @@ there is no replacement
 ** `<T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T>)` was removed;
 its replacements is `<T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T>, Function<IEncodingFactory, T>)` where the function is a factory for the desired `DatatypeCoder` instance if it doesn't already exist.
 * The following classes in `org.firebirdsql.util` were moved to `org.firebirdsql.jaybird.util`.
-The new package is not exported from the module.
+This package is internal API only, and not exported from the module.
 ** `ByteArrayHelper`
 ** `ExceptionHelper`
 ** `IOUtils`
@@ -1675,7 +1705,7 @@ Possible effects include:
 * If a close/cleanup is performed by the `Cleaner`, listeners will not get notified.
 Given it is unlikely there will not be strong reference to an object if something is still interested in its listener events, we think this is acceptable.
 * The closing of a pure Java connection is now simply a socket close handled by the cleanup action of the socket itself.
-Server-side this may result in delayed cleanup of a connection and its resources, and occurrences of "`connection reset by peer`" (e.g. error 10054 on Windows).
+Server-side this may result in delayed cleanup of a connection and its resources, and occurrences of "`connection reset by peer`" (e.g. error 10054 on Windows, error 104 on Linux).
 If you see an increase of these errors, we recommend you hunt for connection leaks in your application.
 
 [#breaking-double-bigdecimal]
@@ -1726,11 +1756,13 @@ Will be removed in Jaybird 7.
 
 The following classes have been deprecated and will be removed in Jaybird 7:
 
-* `GDSException` -- use `SQLException` or one of its (normal) subclasses.
+* `GDSException`;
+use `SQLException` or one of its (normal) subclasses.
 Previous versions of `GDSFactoryPlugin` declared `throws GDSException` for some methods, but now `throws SQLException`.
 To retain some semblance of backwards-compatibility, this class was retrofitted to extend `SQLException`.
 It may get removed in Jaybird 7 or later.
-* `FBSQLException` -- use `SQLException`
+* `FBSQLException`;
+use `SQLException`
 
 [#removal-of-deprecated-constants-7]
 ==== Removal of deprecated constants
