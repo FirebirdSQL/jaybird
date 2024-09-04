@@ -38,7 +38,6 @@ import static org.firebirdsql.gds.ISCConstants.INF_RECORD_COUNT;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE;
 
 /**
  * Fetcher implementation for server-side scrollable cursors.
@@ -46,16 +45,11 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_CURSOR_ST
  * @author Mark Rotteveel
  * @since 5
  */
-final class FBServerScrollFetcher implements FBFetcher {
+final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
 
     private static final int CURSOR_SIZE_UNKNOWN = -1;
 
     private final FbStatement stmt;
-    private final int maxRows;
-
-    private FBObjectListener.FetcherListener fetcherListener;
-    private int fetchSize;
-    private boolean closed;
 
     // The cursor size taking account maxRows
     private int cursorSize = CURSOR_SIZE_UNKNOWN;
@@ -71,22 +65,20 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     FBServerScrollFetcher(FetchConfig fetchConfig, FbStatement stmt, FBObjectListener.FetcherListener fetcherListener)
             throws SQLException {
+        super(fetchConfig, fetcherListener);
         if (!stmt.supportsFetchScroll()) {
             throw new FBDriverNotCapableException("Statement implementation does not support server-side scrollable result sets; this exception indicates a bug in Jaybird");
         }
         if (!stmt.isCursorFlagSet(CursorFlag.CURSOR_TYPE_SCROLLABLE)) {
             throw new FBDriverNotCapableException("Statement does not have CURSOR_TYPE_SCROLLABLE; this exception indicates a bug in Jaybird");
         }
-        fetchSize = fetchConfig.fetchSize();
-        maxRows = fetchConfig.maxRows();
         this.stmt = stmt;
-        this.fetcherListener = fetcherListener;
     }
 
     private boolean inWindow(int position) throws SQLException {
         int windowSize = rows.size();
         int rowsOffset = this.rowsOffset;
-        if (windowSize == 0 || rowsOffset == 0 || (maxRows != 0 && position > requireCursorSize())) {
+        if (windowSize == 0 || rowsOffset == 0 || (getMaxRows() != 0 && position > requireCursorSize())) {
             return false;
         }
         return rowsOffset <= position && position < rowsOffset + windowSize;
@@ -102,7 +94,7 @@ final class FBServerScrollFetcher implements FBFetcher {
     }
 
     private boolean notifyRow(RowValue rowValue) throws SQLException {
-        fetcherListener.rowChanged(this, rowValue);
+        notifyRowChanged(rowValue);
         return rowValue != null;
     }
 
@@ -162,7 +154,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean first() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             checkOpen();
             int newLocalPosition = 1;
             if (!inWindow(newLocalPosition) && cursorSize != 0) {
@@ -178,7 +170,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean last() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             checkOpen();
             int cursorSize = this.cursorSize;
             int newLocalPosition;
@@ -188,7 +180,7 @@ final class FBServerScrollFetcher implements FBFetcher {
                 newLocalPosition = cursorSize;
             } else {
                 RowListener listener;
-                if (maxRows != 0 && ((cursorSize = requireCursorSize()) < requireServerCursorSize())) {
+                if (getMaxRows() != 0 && ((cursorSize = requireCursorSize()) < requireServerCursorSize())) {
                     listener = fetchWithListener(FetchType.ABSOLUTE, -1, cursorSize);
                 } else {
                     listener = fetchWithListener(FetchType.LAST, -1, -1);
@@ -206,7 +198,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean previous() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             checkOpen();
             int oldLocalPosition = localPosition;
             int newLocalPosition = Math.max(1, oldLocalPosition) - 1;
@@ -228,16 +220,16 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean next() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             checkOpen();
             int oldLocalPosition = localPosition;
-            boolean hasMaxRows = maxRows > 0;
-            int cursorSize = hasMaxRows && oldLocalPosition != 0 ? requireCursorSize() : this.cursorSize;
+            int maxRows = getMaxRows();
+            int cursorSize = maxRows != 0 && oldLocalPosition != 0 ? requireCursorSize() : this.cursorSize;
             int newLocalPosition =
                     (cursorSize != CURSOR_SIZE_UNKNOWN ? Math.min(cursorSize, oldLocalPosition) : oldLocalPosition) + 1;
             if (!inWindow(newLocalPosition)) {
                 int fetchSize = actualFetchSize();
-                if (hasMaxRows) {
+                if (maxRows != 0) {
                     if (cursorSize == CURSOR_SIZE_UNKNOWN) {
                         // special case if not fetched yet while maxRows is set
                         fetchSize = Math.min(fetchSize, maxRows);
@@ -263,12 +255,12 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean absolute(int row) throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             checkOpen();
             // Overflow beyond cursor size is handled by inWindow returning false
             int newLocalPosition = row >= 0 ? row : Math.max(0, requireCursorSize() + 1 + row);
             if (!inWindow(row)) {
-                if (maxRows != 0 && newLocalPosition > requireCursorSize()) {
+                if (getMaxRows() != 0 && newLocalPosition > requireCursorSize()) {
                     afterLast();
                     return false;
                 }
@@ -300,13 +292,13 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean relative(int row) throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             checkOpen();
             int oldLocalPosition = localPosition;
             // Overflow beyond cursor size is handled by inWindow returning false
             int newLocalPosition = Math.max(0, oldLocalPosition + row);
-            if (row != 0  && !inWindow(newLocalPosition)) {
-                if (maxRows != 0 && newLocalPosition > requireCursorSize()) {
+            if (row != 0 && !inWindow(newLocalPosition)) {
+                if (getMaxRows() != 0 && newLocalPosition > requireCursorSize()) {
                     afterLast();
                     return false;
                 }
@@ -337,7 +329,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public void beforeFirst() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             checkOpen();
             if (localPosition != 0) {
                 stmt.fetchScroll(FetchType.ABSOLUTE, -1, 0);
@@ -349,7 +341,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public void afterLast() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             checkOpen();
             int afterLastPosition = requireCursorSize() + 1;
             if (localPosition != afterLastPosition) {
@@ -361,31 +353,15 @@ final class FBServerScrollFetcher implements FBFetcher {
     }
 
     @Override
-    public void close() throws SQLException {
-        close(CompletionReason.OTHER);
-    }
-
-    @Override
-    public void close(CompletionReason completionReason) throws SQLException {
-        closed = true;
-        try {
-            stmt.closeCursor(completionReason.isTransactionEnd() || completionReason.isCompletesStatement());
-        } finally {
-            rows.clear();
-            rowsOffset = 0;
-            rows = Collections.emptyList();
-        }
-    }
-
-    private void checkOpen() throws SQLException {
-        if (closed) {
-            throw new SQLException("Result set is already closed.", SQL_STATE_INVALID_CURSOR_STATE);
-        }
+    protected void handleClose(CompletionReason completionReason) throws SQLException {
+        rowsOffset = 0;
+        rows = Collections.emptyList();
+        stmt.closeCursor(completionReason.isTransactionEnd() || completionReason.isCompletesStatement());
     }
 
     @Override
     public int getRowNum() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             // NOTE Relying on isAfterLast to (indirectly) call checkOpen()
             return isAfterLast() ? 0 : localPosition;
         }
@@ -393,16 +369,15 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isEmpty() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             // NOTE Relying on requireCursorSize to call checkOpen()
-            int cursorSize = requireCursorSize();
-            return cursorSize == 0;
+            return requireCursorSize() == 0;
         }
     }
 
     @Override
     public boolean isBeforeFirst() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             checkOpen();
             return localPosition == 0;
         }
@@ -410,7 +385,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isFirst() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             checkOpen();
             return localPosition == 1 && requireCursorSize() > 0;
         }
@@ -418,7 +393,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isLast() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             // NOTE Relying on requireCursorSize to call checkOpen()
             int cursorSize = requireCursorSize();
             return localPosition == cursorSize && cursorSize > 0;
@@ -427,7 +402,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isAfterLast() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (var ignored = withLock()) {
             if (localPosition == 0) return false;
             // NOTE Relying on requireCursorSize to call checkOpen()
             int cursorSize = requireCursorSize();
@@ -455,25 +430,6 @@ final class FBServerScrollFetcher implements FBFetcher {
                 "Implementation error: FBServerScrollFetcher should be decorated with FBUpdatableFetcher");
     }
 
-    private int actualFetchSize() {
-        return fetchSize > 0 ? fetchSize : DEFAULT_FETCH_ROWS;
-    }
-
-    @Override
-    public int getFetchSize() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
-            checkOpen();
-            return fetchSize;
-        }
-    }
-
-    @Override
-    public void setFetchSize(int fetchSize) {
-        try (LockCloseable ignored = stmt.withLock()) {
-            this.fetchSize = fetchSize;
-        }
-    }
-
     @Override
     public int currentPosition() {
         return localPosition;
@@ -482,11 +438,6 @@ final class FBServerScrollFetcher implements FBFetcher {
     @Override
     public int size() throws SQLException {
         return requireCursorSize();
-    }
-
-    @Override
-    public void setFetcherListener(FBObjectListener.FetcherListener fetcherListener) {
-        this.fetcherListener  = fetcherListener;
     }
 
     private int retrieveServerCursorSize() throws SQLException {
@@ -506,12 +457,13 @@ final class FBServerScrollFetcher implements FBFetcher {
         int cursorSize = this.cursorSize;
         if (cursorSize == CURSOR_SIZE_UNKNOWN) {
             int serverCursorSize = requireServerCursorSize();
+            int maxRows = getMaxRows();
             cursorSize = this.cursorSize = maxRows == 0 ? serverCursorSize : Math.min(maxRows, serverCursorSize);
         }
         return cursorSize;
     }
 
-    private int requireServerCursorSize() throws SQLException{
+    private int requireServerCursorSize() throws SQLException {
         int serverCursorSize = this.serverCursorSize;
         if (serverCursorSize == CURSOR_SIZE_UNKNOWN) {
             if (!stmt.hasFetched()) {
@@ -521,6 +473,11 @@ final class FBServerScrollFetcher implements FBFetcher {
             serverCursorSize = this.serverCursorSize = retrieveServerCursorSize();
         }
         return serverCursorSize;
+    }
+
+    @Override
+    protected LockCloseable withLock() {
+        return stmt.withLock();
     }
 
     private static final class RowListener implements StatementListener {

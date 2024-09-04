@@ -32,7 +32,7 @@ import java.sql.SQLException;
  * </p>
  */
 @InternalApi
-public sealed interface FBFetcher permits FBCachedFetcher, FBServerScrollFetcher, FBStatementFetcher,
+public sealed interface FBFetcher permits AbstractFetcher, FBCachedFetcher, FBServerScrollFetcher, FBStatementFetcher,
         FBUpdatableFetcher, ForwardOnlyFetcherDecorator {
 
     int DEFAULT_FETCH_ROWS = 400;
@@ -110,6 +110,12 @@ public sealed interface FBFetcher permits FBCachedFetcher, FBServerScrollFetcher
     void close(CompletionReason completionReason) throws SQLException;
 
     /**
+     * @return {@code true} if this fetcher is closed, otherwise {@code false}
+     * @since 6
+     */
+    boolean isClosed();
+
+    /**
      * Get row number.
      *
      * @return row number
@@ -174,19 +180,58 @@ public sealed interface FBFetcher permits FBCachedFetcher, FBServerScrollFetcher
     void updateRow(RowValue data) throws SQLException;
 
     /**
-     * Set the suggested number of rows to fetch with each batch fetch.
-     *
-     * @return The number of rows to be fetched
+     * @return current fetch config of this fetcher
+     * @since 6
      */
-    int getFetchSize() throws SQLException;
+    FetchConfig getFetchConfig();
+
+    /**
+     * Updates the result set behavior of this fetcher to readonly.
+     *
+     * @throws SQLException
+     *         if called on a closed fetcher, or if this fetcher is explicitly used for updatable use cases
+     * @since 6
+     */
+    void setReadOnly() throws SQLException;
 
     /**
      * Get the suggested number of rows to fetch with each batch fetch.
      *
-     * @param fetchSize
-     *         The suggested number of rows to fetch
+     * @return The number of rows to be fetched, or {@code 0} for the default fetch size
      */
-    void setFetchSize(int fetchSize);
+    int getFetchSize() throws SQLException;
+
+    /**
+     * Set the suggested number of rows to fetch with each batch fetch.
+     *
+     * @param fetchSize
+     *         The suggested number of rows to fetch, or {@code 0} to use the default fetch size
+     * @throws SQLException
+     *         if {@code fetchSize < 0}
+     */
+    void setFetchSize(int fetchSize) throws SQLException;
+
+    /**
+     * Retrieves the fetch direction for this fetcher object.
+     *
+     * @return current fetch direction
+     * @since 6
+     */
+    int getFetchDirection() throws SQLException;
+
+    /**
+     * Gives a hint as to the direction in which the rows in this fetcher object will be processed.
+     * <p>
+     * NOTE: In practice, existing fetcher implementations only validate and store the value, and the value is
+     * effectively ignored.
+     * </p>
+     *
+     * @param direction
+     *         fetch direction; one of {@link ResultSet#FETCH_FORWARD}, {@link ResultSet#FETCH_REVERSE}, or
+     *         {@link ResultSet#FETCH_UNKNOWN}
+     * @since 6
+     */
+    void setFetchDirection(int direction) throws SQLException;
 
     /**
      * The current position of the fetcher.
@@ -217,7 +262,8 @@ public sealed interface FBFetcher permits FBCachedFetcher, FBServerScrollFetcher
      * Any current fetcher is replaced with the provided fetcher listener.
      * </p>
      *
-     * @param fetcherListener Fetcher listener
+     * @param fetcherListener
+     *         Fetcher listener
      */
     void setFetcherListener(FBObjectListener.FetcherListener fetcherListener);
 

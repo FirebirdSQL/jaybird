@@ -27,7 +27,7 @@ import org.firebirdsql.gds.ng.FbStatement;
  * Statement fetcher for updatable cursor case. This fetcher keeps cursor
  * position consistent, however we cannot tell now if we are on the last record.
  * Method {@link #isLast()} throws exception now.
- * 
+ *
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
@@ -40,14 +40,13 @@ final class FBUpdatableCursorFetcher extends FBStatementFetcher {
 
     @Override
     public boolean next() throws SQLException {
-
         if (isBeforeFirst()) {
             setIsBeforeFirst(false);
             setIsEmpty(false);
             setIsFirst(true);
 
             setRowNum(getRowNum() + 1);
-            fetcherListener.rowChanged(this, getNextRow());
+            notifyRowChanged(getNextRow());
 
             return true;
         }
@@ -57,25 +56,24 @@ final class FBUpdatableCursorFetcher extends FBStatementFetcher {
         setIsLast(false);
         setIsAfterLast(false);
 
-        if (isEmpty())
-            return false;
-        else if (getNextRow() == null
-                || (this.maxRows != 0 && getRowNum() == this.maxRows)) {
+        if (isEmpty()) return false;
+        
+        int maxRows = getMaxRows();
+        if (getNextRow() == null || (maxRows != 0 && getRowNum() == maxRows)) {
             setIsAfterLast(true);
             setRowNum(0);
             return false;
         } else {
             fetch();
 
-            boolean maxRowReached = this.maxRows != 0
-                    && getRowNum() == this.maxRows;
+            boolean maxRowReached = maxRows != 0 && getRowNum() == maxRows;
 
             if ((getNextRow() == null) || maxRowReached) {
                 setIsAfterLast(true);
                 return false;
             }
 
-            fetcherListener.rowChanged(this, getNextRow());
+            notifyRowChanged(getNextRow());
             setRowNum(getRowNum() + 1);
 
             return true;
@@ -86,8 +84,8 @@ final class FBUpdatableCursorFetcher extends FBStatementFetcher {
     public boolean isLast() throws SQLException {
         throw new FBDriverNotCapableException(
                 "isLast() operation is not defined in case of "
-                        + "updatable cursors, because server cannot determine cursor position "
-                        + "without additional fetch.");
+                + "updatable cursors, because server cannot determine cursor position "
+                + "without additional fetch.");
     }
 
 }

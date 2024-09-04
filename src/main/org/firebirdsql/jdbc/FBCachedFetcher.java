@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -34,37 +35,30 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
-final class FBCachedFetcher implements FBFetcher {
+final class FBCachedFetcher extends AbstractFetcher implements FBFetcher {
 
     private List<RowValue> rows;
     private int rowNum;
-    private int fetchSize;
-    private FBObjectListener.FetcherListener fetcherListener;
+    private final Supplier<LockCloseable> lockAction;
 
     FBCachedFetcher(GDSHelper gdsHelper, FetchConfig fetchConfig, FbStatement stmtHandle,
             FBObjectListener.FetcherListener fetcherListener) throws SQLException {
-        this.fetcherListener = fetcherListener;
-        final RowDescriptor rowDescriptor = stmtHandle.getRowDescriptor();
-
-        // Check if there is blobs to catch
-        final boolean[] isBlob = new boolean[rowDescriptor.getCount()];
-        final boolean hasBlobs = determineBlobs(rowDescriptor, isBlob);
+        super(fetchConfig, fetcherListener);
+        lockAction = stmtHandle::withLock;
 
         // load all rows from statement
-        fetchSize = fetchConfig.fetchSizeOr(DEFAULT_FETCH_ROWS);
-
         try {
-            RowListener rowListener = new RowListener();
+            var rowListener = new RowListener();
             stmtHandle.addStatementListener(rowListener);
             try {
-                int actualFetchSize = fetchSize;
-                int maxRows = fetchConfig.maxRows();
+                int actualFetchSize = actualFetchSize();
+                int maxRows = getMaxRows();
                 while (!rowListener.isAllRowsFetched() && (maxRows == 0 || rowListener.size() < maxRows)) {
                     if (maxRows > 0) {
                         actualFetchSize = Math.min(actualFetchSize, maxRows - rowListener.size());
                     }
-                    assert actualFetchSize > 0 : "actualFetchSize should be > 0";
                     stmtHandle.fetchRows(actualFetchSize);
                 }
                 rows = rowListener.getRows();
@@ -72,7 +66,10 @@ final class FBCachedFetcher implements FBFetcher {
                 stmtHandle.removeStatementListener(rowListener);
             }
 
-            if (hasBlobs) {
+            // check if there are blobs to cache
+            RowDescriptor rowDescriptor = stmtHandle.getRowDescriptor();
+            boolean[] isBlob = determineBlobs(rowDescriptor);
+            if (isBlob != null) {
                 for (RowValue row : rows) {
                     cacheBlobsInRow(gdsHelper, rowDescriptor, isBlob, row);
                 }
@@ -86,11 +83,13 @@ final class FBCachedFetcher implements FBFetcher {
      * Populates the cached fetcher with the supplied data.
      *
      * @param rows
-     *         Data for the rows
+     *         data for the rows
+     * @param fetchConfig
+     *         fetch configuration
      * @param fetcherListener
-     *         Fetcher listener
+     *         fetcher listener
      * @param rowDescriptor
-     *         Row descriptor (cannot be null when {@code retrieveBlobs} is {@code true})
+     *         row descriptor (cannot be null when {@code retrieveBlobs} is {@code true})
      * @param gdsHelper
      *         GDS Helper (cannot be null when {@code retrieveBlobs} is {@code true})
      * @param retrieveBlobs
@@ -98,42 +97,45 @@ final class FBCachedFetcher implements FBFetcher {
      *         {@code rows} of a blob is the blobid, otherwise the column values in {@code rows} for a blob should be
      *         the blob data.
      */
-    FBCachedFetcher(List<RowValue> rows, FBObjectListener.FetcherListener fetcherListener, RowDescriptor rowDescriptor,
-            GDSHelper gdsHelper, boolean retrieveBlobs) throws SQLException {
+    FBCachedFetcher(List<RowValue> rows, FetchConfig fetchConfig, FBObjectListener.FetcherListener fetcherListener,
+            RowDescriptor rowDescriptor, GDSHelper gdsHelper, boolean retrieveBlobs) throws SQLException {
+        super(fetchConfig, fetcherListener);
         assert !retrieveBlobs || rowDescriptor != null && gdsHelper != null
                 : "Need non-null rowDescriptor and gdsHelper for retrieving blobs";
         this.rows = new ArrayList<>(rows);
-        this.fetcherListener = fetcherListener;
         if (retrieveBlobs) {
-            final boolean[] isBlob = new boolean[rowDescriptor.getCount()];
-            final boolean hasBlobs = determineBlobs(rowDescriptor, isBlob);
-            if (hasBlobs){
+            boolean[] isBlob = determineBlobs(rowDescriptor);
+            if (isBlob != null) {
                 for (RowValue row : rows) {
                     cacheBlobsInRow(gdsHelper, rowDescriptor, isBlob, row);
                 }
             }
         }
+        // Formally, using NO_OP could result in a thread-safety issue, but we accept that as it is uncommon, and usage
+        // is likely restricted to one thread at a time
+        lockAction = gdsHelper != null ? gdsHelper::withLock : () -> LockCloseable.NO_OP;
     }
 
     /**
      * Determines the columns that are blobs.
      *
-     * @param rowDescriptor The row descriptor
-     * @param isBlob Boolean array with length equal to {@code rowDescriptor}, modified by this method
-     * @return {@code true} if there are one or more blob columns.
+     * @param rowDescriptor
+     *         row descriptor
+     * @return {@code null} if there are no blob columns, otherwise a {@code boolean[]} marking the blob columns.
      */
-    private static boolean determineBlobs(final RowDescriptor rowDescriptor, final boolean[] isBlob) {
-        assert rowDescriptor.getCount() == isBlob.length : "length of isBlob should be equal to length of rowDescriptor";
+    private static boolean[] determineBlobs(final RowDescriptor rowDescriptor) {
         boolean hasBlobs = false;
+        boolean[] isBlob = new boolean[rowDescriptor.getCount()];
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
-            final FieldDescriptor field = rowDescriptor.getFieldDescriptor(i);
-            isBlob[i] = JdbcTypeConverter.isJdbcType(field, Types.BLOB) ||
-                    JdbcTypeConverter.isJdbcType(field, Types.LONGVARBINARY) ||
-                    JdbcTypeConverter.isJdbcType(field, Types.LONGVARCHAR);
-            if (isBlob[i])
+            FieldDescriptor field = rowDescriptor.getFieldDescriptor(i);
+            isBlob[i] = JdbcTypeConverter.isJdbcType(field, Types.BLOB)
+                        || JdbcTypeConverter.isJdbcType(field, Types.LONGVARBINARY)
+                        || JdbcTypeConverter.isJdbcType(field, Types.LONGVARCHAR);
+            if (isBlob[i]) {
                 hasBlobs = true;
+            }
         }
-        return hasBlobs;
+        return hasBlobs ? isBlob : null;
     }
 
     private static void cacheBlobsInRow(final GDSHelper gdsHelper, final RowDescriptor rowDescriptor,
@@ -166,43 +168,44 @@ final class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean next() throws SQLException {
-        if (isEmpty())
-            return false;
+        if (isEmpty()) return false;
 
         rowNum++;
 
-        if (isAfterLast()) {
-            fetcherListener.rowChanged(this, null);
-            // keep cursor right after last row 
-            rowNum = rows.size() + 1;
-
-            return false;
-        }
-
-        fetcherListener.rowChanged(this, rows.get(rowNum - 1));
-
+        if (adjustIfPositionAfterLast()) return false;
+        notifyRowChanged(rows.get(rowNum - 1));
         return true;
+    }
+
+    private boolean adjustIfPositionAfterLast() throws SQLException {
+        if (isAfterLast()) {
+            notifyRowChanged(null);
+            // keep cursor right after last row
+            rowNum = rows.size() + 1;
+            return true;
+        }
+        return false;
     }
 
     @Override
     public boolean previous() throws SQLException {
-        if (isEmpty()) {
-            return false;
-        }
+        if (isEmpty()) return false;
 
         rowNum--;
 
-        if (isBeforeFirst()) {
-            fetcherListener.rowChanged(this, null);
+        if (adjustPositionIfBeforeFirst()) return false;
+        notifyRowChanged(rows.get(rowNum - 1));
+        return true;
+    }
 
+    private boolean adjustPositionIfBeforeFirst() throws SQLException {
+        if (isBeforeFirst()) {
+            notifyRowChanged(null);
             // keep cursor right before the first row
             rowNum = 0;
-            return false;
+            return true;
         }
-
-        fetcherListener.rowChanged(this, rows.get(rowNum - 1));
-
-        return true;
+        return false;
     }
 
     @Override
@@ -211,32 +214,17 @@ final class FBCachedFetcher implements FBFetcher {
     }
 
     private boolean setRowNum(int row) throws SQLException {
+        if (isEmpty()) return false;
+
         if (row < 0) {
             row = rows.size() + row + 1;
         }
 
-        if (isEmpty()) {
-            return false;
-        }
-
         rowNum = row;
 
-        if (isBeforeFirst()) {
-            fetcherListener.rowChanged(this, null);
+        if (adjustPositionIfBeforeFirst() || adjustIfPositionAfterLast()) return false;
 
-            // keep cursor right before the first row
-            rowNum = 0;
-            return false;
-        }
-
-        if (isAfterLast()) {
-            fetcherListener.rowChanged(this, null);
-            rowNum = rows.size() + 1;
-            return false;
-        }
-
-        fetcherListener.rowChanged(this, rows.get(rowNum - 1));
-
+        notifyRowChanged(rows.get(rowNum - 1));
         return true;
     }
 
@@ -268,14 +256,8 @@ final class FBCachedFetcher implements FBFetcher {
     }
 
     @Override
-    public void close() throws SQLException {
-        close(CompletionReason.OTHER);
-    }
-
-    @Override
-    public void close(CompletionReason completionReason) throws SQLException {
+    protected void handleClose(CompletionReason completionReason) {
         rows = Collections.emptyList();
-        fetcherListener = null;
     }
 
     @Override
@@ -286,7 +268,7 @@ final class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean isEmpty() {
-        return rows == null || rows.isEmpty();
+        return rows.isEmpty();
     }
 
     @Override
@@ -301,7 +283,7 @@ final class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean isLast() {
-        return rows != null && rowNum == rows.size();
+        return rowNum == rows.size();
     }
 
     @Override
@@ -311,8 +293,10 @@ final class FBCachedFetcher implements FBFetcher {
 
     @Override
     public void deleteRow() throws SQLException {
-        rows.remove(rowNum - 1);
-        fetcherListener.rowChanged(this, isAfterLast() || isBeforeFirst() ? null : rows.get(rowNum - 1));
+        if (!isAfterLast() && !isBeforeFirst()) {
+            rows.remove(rowNum - 1);
+            notifyRowChanged(adjustIfPositionAfterLast() ? null : rows.get(rowNum - 1));
+        }
     }
 
     @Override
@@ -327,25 +311,15 @@ final class FBCachedFetcher implements FBFetcher {
             rows.add(rowNum - 1, data);
         }
 
-        fetcherListener.rowChanged(this, isAfterLast() || isBeforeFirst() ? null : rows.get(rowNum - 1));
+        notifyRowChanged(isAfterLast() || isBeforeFirst() ? null : rows.get(rowNum - 1));
     }
 
     @Override
     public void updateRow(RowValue data) throws SQLException {
         if (!isAfterLast() && !isBeforeFirst()) {
             rows.set(rowNum - 1, data);
-            fetcherListener.rowChanged(this, data);
+            notifyRowChanged(data);
         }
-    }
-
-    @Override
-    public int getFetchSize() {
-        return fetchSize;
-    }
-
-    @Override
-    public void setFetchSize(int fetchSize) {
-        this.fetchSize = fetchSize;
     }
 
     @Override
@@ -360,8 +334,8 @@ final class FBCachedFetcher implements FBFetcher {
     }
 
     @Override
-    public void setFetcherListener(FBObjectListener.FetcherListener fetcherListener) {
-        this.fetcherListener = fetcherListener;
+    protected LockCloseable withLock() {
+        return lockAction.get();
     }
 
     private static final class RowListener implements StatementListener {

@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -180,6 +181,14 @@ class ResultSetBehaviorTest {
                         TYPE_SCROLL_INSENSITIVE, JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive),
                 testCaseTypeChange(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE, HOLD_CURSORS_OVER_COMMIT,
                         TYPE_SCROLL_INSENSITIVE, JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive));
+    }
+
+    @Test
+    void defaultResultSetBehavior() {
+        var defaultBehavior = ResultSetBehavior.of();
+        assertEquals(TYPE_FORWARD_ONLY, defaultBehavior.type(), "type");
+        assertEquals(CONCUR_READ_ONLY, defaultBehavior.concurrency(), "concurrency");
+        assertEquals(CLOSE_CURSORS_AT_COMMIT, defaultBehavior.holdability(), "holdability");
     }
 
     private static Arguments testCaseBasic(int type, int concurrency, int holdability) {

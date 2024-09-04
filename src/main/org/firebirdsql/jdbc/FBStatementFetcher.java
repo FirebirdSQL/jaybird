@@ -31,28 +31,21 @@ import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import static org.firebirdsql.jaybird.util.ConditionalHelpers.firstNonZero;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE;
-
 /**
  * Statement fetcher for read-only case. It differs from updatable cursor case
  * by the cursor position after {@link #next()} call. This class changes cursor
  * position to point to the next row.
  */
-sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFetcher {
+sealed class FBStatementFetcher extends AbstractFetcher implements FBFetcher permits FBUpdatableCursorFetcher {
 
     private static final int NO_ASYNC_FETCH = -1;
     private static final int MINIMUM_ASYNC_FETCH_ROW_COUNT = 10;
     private static final int ASYNC_FETCH_FACTOR = 3;
 
-    private boolean closed;
     private boolean wasFetched;
 
     protected final GDSHelper gdsHelper;
-    protected FBObjectListener.FetcherListener fetcherListener;
 
-    protected final int maxRows;
-    protected int fetchSize;
     private int maxActualFetchSize;
     private int asyncFetchOnRemaining = NO_ASYNC_FETCH;
 
@@ -74,12 +67,10 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
     @SuppressWarnings("java:S1872")
     FBStatementFetcher(GDSHelper gdsHelper, FetchConfig fetchConfig, FbStatement stmth,
             FBObjectListener.FetcherListener fetcherListener) {
+        super(fetchConfig, fetcherListener);
         this.gdsHelper = gdsHelper;
-        this.stmt = stmth;
+        stmt = stmth;
         stmt.addStatementListener(rowListener);
-        this.fetcherListener = fetcherListener;
-        maxRows = fetchConfig.maxRows();
-        fetchSize = fetchConfig.fetchSize();
         // Compare by class name because the class might not be loaded
         if (stmth.getClass().getName().equals("org.firebirdsql.gds.ng.jna.JnaStatement")) {
             // Performs only singular fetches, so only need space for one row
@@ -121,15 +112,16 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
         setIsLast(false);
         setIsAfterLast(false);
 
-        if (isEmpty()) {
-            return false;
-        } else if (getNextRow() == null || (maxRows != 0 && getRowNum() == maxRows)) {
+        if (isEmpty()) return false;
+
+        int maxRows = getMaxRows();
+        if (getNextRow() == null || (maxRows != 0 && getRowNum() == maxRows)) {
             setIsAfterLast(true);
             allRowsFetched = true;
             setRowNum(0);
             return false;
         } else {
-            fetcherListener.rowChanged(this, getNextRow());
+            notifyRowChanged(getNextRow());
             fetch();
             setRowNum(getRowNum() + 1);
 
@@ -180,16 +172,16 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
         throw notScrollable();
     }
 
-    public void fetch() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
-            checkClosed();
+    protected final void fetch() throws SQLException {
+        try (var ignored = withLock()) {
+            checkOpen();
             if (!allRowsFetched && rows.isEmpty()) {
-                int actualFetchSize = calculateActualFetchSize();
+                int actualFetchSize = actualFetchSize();
                 if (actualFetchSize > 0) {
                     stmt.fetchRows(actualFetchSize);
                 }
             } else if (!allRowsFetched && rows.size() == asyncFetchOnRemaining) {
-                int actualFetchSize = calculateActualFetchSize();
+                int actualFetchSize = actualFetchSize();
                 if (actualFetchSize > 1) {
                     // NOTE: Using > 1 instead of > 0 as attempting to async fetch 1 row is ignored anyway
                     stmt.asyncFetchRows(actualFetchSize);
@@ -200,8 +192,10 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
         }
     }
 
-    private int calculateActualFetchSize() {
-        int fetchSize = firstNonZero(this.fetchSize, DEFAULT_FETCH_ROWS);
+    @Override
+    protected int actualFetchSize() {
+        int fetchSize = super.actualFetchSize();
+        int maxRows = getMaxRows();
         if (maxRows == 0) {
             return fetchSize;
         }
@@ -209,24 +203,12 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
     }
 
     @Override
-    public void close() throws SQLException {
-        close(CompletionReason.OTHER);
-    }
-
-    @Override
-    public void close(CompletionReason completionReason) throws SQLException {
-        closed = true;
+    protected void handleClose(CompletionReason completionReason) throws SQLException {
         try {
             stmt.closeCursor(completionReason.isTransactionEnd() || completionReason.isCompletesStatement());
         } finally {
             stmt.removeStatementListener(rowListener);
             rows = new ArrayDeque<>(0);
-        }
-    }
-
-    private void checkClosed() throws SQLException {
-        if (closed) {
-            throw new SQLException("Result set is already closed.", SQL_STATE_INVALID_CURSOR_STATE);
         }
     }
 
@@ -305,11 +287,6 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
     }
 
     @Override
-    public void setFetchSize(int fetchSize) {
-        this.fetchSize = fetchSize;
-    }
-
-    @Override
     public int currentPosition() throws SQLException {
         throw new FBDriverNotCapableException("Cannot report current position. This is a bug in the calling code, because this method is not expected to be called on this implementation");
     }
@@ -319,19 +296,14 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
         throw new FBDriverNotCapableException("Cannot report total size. This is a bug in the calling code, because this method is not expected to be called on this implementation");
     }
 
-    @Override
-    public void setFetcherListener(FBObjectListener.FetcherListener fetcherListener) {
-        this.fetcherListener = fetcherListener;
-    }
-
-    @Override
-    public int getFetchSize() {
-        return fetchSize;
-    }
-
     private static SQLException notScrollable() {
         return FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
                 .toSQLException();
+    }
+
+    @Override
+    protected LockCloseable withLock() {
+        return stmt.withLock();
     }
 
     private final class RowListener implements StatementListener {
@@ -349,9 +321,8 @@ sealed class FBStatementFetcher implements FBFetcher permits FBUpdatableCursorFe
         public void fetchComplete(FbStatement sender, FetchDirection fetchDirection, int rows) {
             if (rows > maxActualFetchSize) {
                 maxActualFetchSize = rows;
-                if (rows >= MINIMUM_ASYNC_FETCH_ROW_COUNT * 3 / 2 ) {
-                    asyncFetchOnRemaining =
-                            Math.max(rows / ASYNC_FETCH_FACTOR, MINIMUM_ASYNC_FETCH_ROW_COUNT);
+                if (rows >= MINIMUM_ASYNC_FETCH_ROW_COUNT * 3 / 2) {
+                    asyncFetchOnRemaining = Math.max(rows / ASYNC_FETCH_FACTOR, MINIMUM_ASYNC_FETCH_ROW_COUNT);
                 }
             }
         }

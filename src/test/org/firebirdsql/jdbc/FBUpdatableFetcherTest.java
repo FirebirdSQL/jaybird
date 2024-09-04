@@ -364,8 +364,8 @@ class FBUpdatableFetcherTest {
             stmt.setCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
             stmt.execute(RowValue.EMPTY_ROW_VALUE);
             FetchConfig fetchConfig = DEFAULT_FETCH_CONFIG.withFetchSize(1);
-            FBServerScrollFetcher fetcher = new FBServerScrollFetcher(fetchConfig, stmt, null);
-            FBUpdatableFetcher updatableFetcher = new FBUpdatableFetcher(fetcher, listener, deletedRowMarker);
+            var fetcher = new FBServerScrollFetcher(fetchConfig, stmt, listener);
+            var updatableFetcher = new FBUpdatableFetcher(fetcher, listener, deletedRowMarker);
             assertBeforeFirst(updatableFetcher);
 
             exceptionalConsumer.accept(stmt, fetcher, updatableFetcher);

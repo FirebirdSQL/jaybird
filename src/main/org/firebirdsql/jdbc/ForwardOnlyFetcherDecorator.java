@@ -41,6 +41,16 @@ final class ForwardOnlyFetcherDecorator implements FBFetcher {
     }
 
     @Override
+    public FetchConfig getFetchConfig() {
+        return fetcher.getFetchConfig();
+    }
+
+    @Override
+    public void setReadOnly() throws SQLException {
+        fetcher.setReadOnly();
+    }
+
+    @Override
     public boolean first() throws SQLException {
         throw notScrollable();
     }
@@ -88,6 +98,11 @@ final class ForwardOnlyFetcherDecorator implements FBFetcher {
     @Override
     public void close(CompletionReason completionReason) throws SQLException {
         fetcher.close(completionReason);
+    }
+
+    @Override
+    public boolean isClosed() {
+        return fetcher.isClosed();
     }
 
     @Override
@@ -141,8 +156,18 @@ final class ForwardOnlyFetcherDecorator implements FBFetcher {
     }
 
     @Override
-    public void setFetchSize(int fetchSize) {
+    public void setFetchSize(int fetchSize) throws SQLException {
         fetcher.setFetchSize(fetchSize);
+    }
+
+    @Override
+    public int getFetchDirection() throws SQLException {
+        return fetcher.getFetchDirection();
+    }
+
+    @Override
+    public void setFetchDirection(int direction) throws SQLException {
+        fetcher.setFetchDirection(direction);
     }
 
     @Override

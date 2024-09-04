@@ -1190,7 +1190,7 @@ class FBResultSetTest {
             assertTrue(rs.isClosed(), "Expected result set to be closed");
 
             SQLException exception = assertThrows(SQLException.class, rs::getMetaData);
-            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_NO_RESULT_SET));
+            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE));
         }
     }
 
@@ -1206,7 +1206,7 @@ class FBResultSetTest {
             assertTrue(rs.isClosed(), "Expected result set to be closed");
 
             SQLException exception = assertThrows(SQLException.class, rs::getMetaData);
-            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_NO_RESULT_SET));
+            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE));
         }
     }
 

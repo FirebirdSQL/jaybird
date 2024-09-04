@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.ng.fields.RowValue;
 
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -76,6 +77,17 @@ final class FBUpdatableFetcher implements FBFetcher {
         fetcher.setFetcherListener(rowListener);
         this.fetcherListener = fetcherListener;
         this.deletedRowMarker = deletedRowMarker;
+    }
+
+    @Override
+    public FetchConfig getFetchConfig() {
+        return fetcher.getFetchConfig();
+    }
+
+    @Override
+    public void setReadOnly() throws SQLException {
+        throw new SQLNonTransientException("This fetcher implementation cannot be marked read-only",
+                SQLStateConstants.SQL_STATE_INVALID_ATTR_VALUE);
     }
 
     private boolean notifyFetcherRow(int position) throws SQLException {
@@ -223,6 +235,11 @@ final class FBUpdatableFetcher implements FBFetcher {
     }
 
     @Override
+    public boolean isClosed() {
+        return fetcher.isClosed();
+    }
+
+    @Override
     public int getRowNum() throws SQLException {
         int position = this.position;
         return position <= size() ? position : 0;
@@ -278,8 +295,18 @@ final class FBUpdatableFetcher implements FBFetcher {
     }
 
     @Override
-    public void setFetchSize(int fetchSize) {
+    public void setFetchSize(int fetchSize) throws SQLException {
         fetcher.setFetchSize(fetchSize);
+    }
+
+    @Override
+    public int getFetchDirection() throws SQLException {
+        return fetcher.getFetchDirection();
+    }
+
+    @Override
+    public void setFetchDirection(int direction) throws SQLException {
+        fetcher.setFetchDirection(direction);
     }
 
     @Override
@@ -330,6 +357,6 @@ final class FBUpdatableFetcher implements FBFetcher {
         public void rowChanged(FBFetcher fetcher, RowValue newRow) {
             lastReceivedRow = newRow;
         }
-        
+
     }
 }

@@ -280,6 +280,7 @@ public final class ResultSetBehavior {
                 yield SCROLLABLE_BIT;
             }
             default -> throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidResultSetType)
+                    .messageParameter(type)
                     .toSQLException();
         };
         bitset |= switch (concurrency) {
@@ -287,6 +288,7 @@ public final class ResultSetBehavior {
             case ResultSet.CONCUR_UPDATABLE -> UPDATABLE_BIT;
             default ->
                     throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidResultSetConcurrency)
+                            .messageParameter(concurrency)
                             .toSQLException();
         };
         bitset |= switch (holdability) {
@@ -294,9 +296,20 @@ public final class ResultSetBehavior {
             case ResultSet.HOLD_CURSORS_OVER_COMMIT -> HOLDABLE_BIT;
             default ->
                     throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidResultSetHoldability)
+                            .messageParameter(holdability)
                             .toSQLException();
         };
         return getOrCreateInstance(bitset);
+    }
+
+    /**
+     * Obtain the default result set behavior ({@link ResultSet#TYPE_FORWARD_ONLY}, {@link ResultSet#CONCUR_READ_ONLY},
+     * and {@link ResultSet#CLOSE_CURSORS_AT_COMMIT}).
+     *
+     * @return default result set behaviour
+     */
+    public static ResultSetBehavior of() {
+        return getOrCreateInstance(NO_BIT_SET);
     }
 
     private static ResultSetBehavior getOrCreateInstance(int bitset) {

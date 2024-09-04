@@ -70,7 +70,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     private static final String TYPE_SQLXML = "SQLXML";
 
     private final AbstractStatement statement;
-    private FBFetcher fbFetcher;
+    private final FBFetcher fbFetcher;
     private FirebirdRowUpdater rowUpdater;
 
     protected final FBConnection connection;
@@ -82,7 +82,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     private boolean wasNull;
     private boolean wasNullValid;
-    private volatile boolean closed;
 
     private final FBField[] fields;
     private final List<FBCloseableField> closeableFields = new ArrayList<>();
@@ -90,9 +89,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     private final String cursorName;
     private final FBObjectListener.ResultSetListener listener;
-
-    private final ResultSetBehavior behavior;
-    private int fetchDirection = ResultSet.FETCH_FORWARD;
 
     @Override
     public void rowChanged(FBFetcher fetcher, RowValue newRow) throws SQLException {
@@ -126,6 +122,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             boolean cached = metaDataQuery || behavior.isScrollable() && !serverSideScrollable;
 
             prepareVars(cached, metaDataQuery);
+            FBFetcher fbFetcher;
             if (cached) {
                 fbFetcher = new FBCachedFetcher(gdsHelper, fetchConfig, stmt, this);
                 if (behavior.isForwardOnly()) {
@@ -149,11 +146,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
                     statement.addWarning(FbExceptionBuilder
                             .forWarning(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)
                             .toSQLException(SQLWarning.class));
-                    behavior = behavior.withReadOnly();
+                    fbFetcher.setReadOnly();
                 }
             }
-            this.behavior = behavior;
-            fetchDirection = statement.getFetchDirection();
+            this.fbFetcher = fbFetcher;
         } catch (SQLException e) {
             try {
                 // Ensure cursor is closed to avoid problems with statement reuse
@@ -209,14 +205,13 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         statement = null;
         this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
         cursorName = null;
-        fbFetcher = new FBCachedFetcher(rows, this, rowDescriptor, gdsHelper, retrieveBlobs);
+        // TODO Set specific result set types (see also previous todo)
+        var fetchConfig = new FetchConfig(ResultSetBehavior.of());
+        fbFetcher = new FBCachedFetcher(rows, fetchConfig, this, rowDescriptor, gdsHelper, retrieveBlobs);
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];
         colNames = new HashMap<>(rowDescriptor.getCount(), 1);
         prepareVars(true, false);
-        // TODO Set specific types (see also previous todo)
-        behavior = ResultSetBehavior.of(
-                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT);
     }
 
     private void prepareVars(boolean cached, boolean trimStrings) throws SQLException {
@@ -278,7 +273,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     protected void checkOpen() throws SQLException {
         if (isClosed()) {
-            throw new SQLException("The result set is closed", SQLStateConstants.SQL_STATE_NO_RESULT_SET);
+            throw new SQLException("The result set is closed", SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE);
         }
     }
 
@@ -289,7 +284,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         if ResultSet is not scrollable
      */
     protected void checkScrollable() throws SQLException {
-        if (behavior.isForwardOnly()) {
+        if (behavior().isForwardOnly()) {
             throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
                     .toSQLException();
         }
@@ -342,12 +337,11 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public boolean isClosed() throws SQLException {
-        return closed;
+        return fbFetcher.isClosed();
     }
 
     void close(boolean notifyListener, CompletionReason completionReason) throws SQLException {
         if (isClosed()) return;
-        closed = true;
         var chain = new SQLExceptionChainBuilder();
 
         try {
@@ -356,12 +350,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             chain.append(ex);
         } finally {
             try {
-                if (fbFetcher != null) {
-                    try {
-                        fbFetcher.close(completionReason);
-                    } catch (SQLException ex) {
-                        chain.append(ex);
-                    }
+                try {
+                    fbFetcher.close(completionReason);
+                } catch (SQLException ex) {
+                    chain.append(ex);
                 }
 
                 if (rowUpdater != null) {
@@ -380,7 +372,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
                     }
                 }
             } finally {
-                fbFetcher = null;
                 rowUpdater = null;
             }
         }
@@ -929,58 +920,53 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return result;
     }
 
-    @Override
-    public void setFetchDirection(int direction) throws SQLException {
-        checkOpen();
-        switch (direction) {
-        case ResultSet.FETCH_FORWARD -> fetchDirection = direction;
-        case ResultSet.FETCH_REVERSE, ResultSet.FETCH_UNKNOWN -> {
-            checkScrollable();
-            fetchDirection = direction;
-        }
-        default -> throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidFetchDirection)
-                .messageParameter(direction)
-                .toSQLException();
-        }
+    private ResultSetBehavior behavior() {
+        return fbFetcher.getFetchConfig().resultSetBehavior();
     }
 
     @Override
+    public void setFetchDirection(int direction) throws SQLException {
+        if (direction == ResultSet.FETCH_REVERSE || direction == ResultSet.FETCH_UNKNOWN) {
+            checkScrollable();
+        }
+        fbFetcher.setFetchDirection(direction);
+    }
+
+    @SuppressWarnings("MagicConstant")
+    @Override
     public int getFetchDirection() throws SQLException {
-        checkOpen();
-        return fetchDirection;
+        return fbFetcher.getFetchDirection();
     }
 
     @Override
     public void setFetchSize(int rows) throws SQLException {
-        checkOpen();
-        if (rows < 0) {
-            throw new SQLException("Can't set negative fetch size", SQLStateConstants.SQL_STATE_INVALID_ATTR_VALUE);
-        }
         fbFetcher.setFetchSize(rows);
     }
 
     @Override
     public int getFetchSize() throws SQLException {
-        checkOpen();
         return fbFetcher.getFetchSize();
     }
 
     @SuppressWarnings("MagicConstant")
     @Override
     public int getType() throws SQLException {
-        return behavior.type();
+        checkOpen();
+        return behavior().type();
     }
 
     @SuppressWarnings("MagicConstant")
     @Override
     public int getConcurrency() throws SQLException {
-        return behavior.concurrency();
+        checkOpen();
+        return behavior().concurrency();
     }
 
     @SuppressWarnings("MagicConstant")
     @Override
     public int getHoldability() throws SQLException {
-        return behavior.holdability();
+        checkOpen();
+        return behavior().holdability();
     }
 
     @Override

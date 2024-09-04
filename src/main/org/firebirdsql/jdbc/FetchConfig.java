@@ -54,9 +54,6 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_ATTR_VALU
 @InternalApi
 public record FetchConfig(int fetchSize, int maxRows, int direction, ResultSetBehavior resultSetBehavior) {
 
-    // TODO Also use FetchConfig in FBResultSet and/or FBFetcher implementations (not strictly necessary, but can avoid
-    //  some duplication)
-
     /**
      * Value of {@link #fetchSize()} which means &quot;use default value&quot;.
      * <p>
@@ -71,7 +68,6 @@ public record FetchConfig(int fetchSize, int maxRows, int direction, ResultSetBe
     public static final int NO_MAX_ROWS = 0;
 
     public FetchConfig {
-        requireNonNull(resultSetBehavior, "resultSetBehavior");
         if (fetchSize < 0) {
             throw new IllegalArgumentException("fetchSize must be >= 0, was: " + fetchSize);
         }
@@ -81,8 +77,9 @@ public record FetchConfig(int fetchSize, int maxRows, int direction, ResultSetBe
         if (!(direction == ResultSet.FETCH_FORWARD
               || direction == ResultSet.FETCH_REVERSE
               || direction == ResultSet.FETCH_UNKNOWN)) {
-            throw new IllegalArgumentException("Unsupported value for fetchDirection, was: " + direction);
+            throw new IllegalArgumentException("Unsupported value for fetch direction, was: " + direction);
         }
+        requireNonNull(resultSetBehavior, "resultSetBehavior");
     }
 
     /**
@@ -163,10 +160,21 @@ public record FetchConfig(int fetchSize, int maxRows, int direction, ResultSetBe
         try {
             return new FetchConfig(fetchSize, maxRows, direction, resultSetBehavior);
         } catch (IllegalArgumentException e) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidFetchDirection)
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidFetchDirection)
                     .messageParameter(direction)
                     .toSQLException();
         }
+    }
+
+    /**
+     * Returns a {@code FetchConfig} with the {@code resultSetBehavior} set to read-only, and the current values of
+     * this object for {@code fetchSize}, {@code maxRows}, and {@code direction}.
+     *
+     * @return fetch config object
+     */
+    public FetchConfig withReadOnly() {
+        if (resultSetBehavior.isReadOnly()) return this;
+        return new FetchConfig(fetchSize, maxRows, direction, resultSetBehavior.withReadOnly());
     }
 
 }
