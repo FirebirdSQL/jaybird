@@ -81,7 +81,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     protected RowValue row;
 
     private boolean wasNull;
-    private boolean wasNullValid;
 
     private final FBField[] fields;
     private final List<FBCloseableField> closeableFields = new ArrayList<>();
@@ -297,12 +296,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         if something wrong happened.
      */
     protected void closeFields() throws SQLException {
-        // TODO See if we can apply completion reason logic (eg no need to close blob on commit)
-        wasNullValid = false;
-
-        // if there are no fields to close, then nothing to do
-        if (closeableFields.isEmpty())
-            return;
+        // TODO See if we can apply completion reason logic (e.g. no need to close blob on commit)
+        wasNull = false;
+        // if there are no fields to close, then nothing else to do
+        if (closeableFields.isEmpty()) return;
 
         var chain = new SQLExceptionChainBuilder();
         // close current fields, so that resources are freed.
@@ -383,12 +380,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public boolean wasNull() throws SQLException {
-        if (!wasNullValid) {
-            throw new SQLException("Get a column before testing null");
-        }
-        if (row == null) {
-            throw new SQLException("No row available for wasNull");
-        }
+        checkOpen();
         return wasNull;
     }
 
@@ -530,11 +522,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         If there is an error accessing the field
      */
     public FBField getField(int columnIndex) throws SQLException {
-        final FBField field = getField(columnIndex, true);
-
-        wasNullValid = true;
-        wasNull = row == null || row.getFieldData(columnIndex - 1) == null;
-
+        FBField field = getField(columnIndex, true);
+        wasNull = field.isNull();
         return field;
     }
 
@@ -553,11 +542,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
                     SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
         }
 
-        if (rowUpdater != null) {
-            return rowUpdater.getField(columnIndex - 1);
-        } else {
-            return fields[columnIndex - 1];
-        }
+        return rowUpdater != null ? rowUpdater.getField(columnIndex - 1) : fields[columnIndex - 1];
     }
 
     /**
@@ -569,19 +554,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         if the field cannot be retrieved
      */
     public FBField getField(String columnName) throws SQLException {
-        checkOpen();
-        if (row == null && rowUpdater == null) {
-            throw new SQLException("The result set is not in a row, use next", SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
-        }
-        requireNonEmpty(columnName);
-
         try {
             int fieldNum = colNames.computeIfAbsent(columnName,
                     SQLExceptionThrowingFunction.toFunction(this::findColumn));
-            final FBField field = rowUpdater != null ? rowUpdater.getField(fieldNum - 1) : fields[fieldNum - 1];
-            wasNullValid = true;
-            wasNull = row == null || row.getFieldData(fieldNum - 1) == null;
-            return field;
+            return getField(fieldNum);
         } catch (UncheckedSQLException e) {
             throw e.getCause();
         }
