@@ -40,7 +40,7 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -83,7 +83,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     private boolean wasNull;
 
     private final FBField[] fields;
-    private final List<FBCloseableField> closeableFields = new ArrayList<>();
+    private final List<FBCloseableField> closeableFields;
     private final Map<String, Integer> colNames;
 
     private final String cursorName;
@@ -109,8 +109,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             cursorName = statement.getCursorName();
             this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
             rowDescriptor = stmt.getRowDescriptor();
-            fields = new FBField[rowDescriptor.getCount()];
-            colNames = new HashMap<>(rowDescriptor.getCount(), 1);
 
             FetchConfig fetchConfig = statement.fetchConfig();
             ResultSetBehavior behavior = fetchConfig.resultSetBehavior();
@@ -120,7 +118,9 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
                     && stmt.supportsFetchScroll();
             boolean cached = metaDataQuery || behavior.isScrollable() && !serverSideScrollable;
 
-            prepareVars(cached, metaDataQuery);
+            fields = createFields(cached, metaDataQuery);
+            closeableFields = toCloseableFields(fields);
+            colNames = new HashMap<>(rowDescriptor.getCount(), 1);
             FBFetcher fbFetcher;
             if (cached) {
                 fbFetcher = new FBCachedFetcher(gdsHelper, fetchConfig, stmt, this);
@@ -208,39 +208,28 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         var fetchConfig = new FetchConfig(ResultSetBehavior.of());
         fbFetcher = new FBCachedFetcher(rows, fetchConfig, this, rowDescriptor, gdsHelper, retrieveBlobs);
         this.rowDescriptor = rowDescriptor;
-        fields = new FBField[rowDescriptor.getCount()];
+        fields = createFields(true, false);
+        closeableFields = toCloseableFields(fields);
         colNames = new HashMap<>(rowDescriptor.getCount(), 1);
-        prepareVars(true, false);
     }
 
-    private void prepareVars(boolean cached, boolean trimStrings) throws SQLException {
-        for (int i = 0; i < rowDescriptor.getCount(); i++) {
-            final int fieldPosition = i;
-
-            FieldDataProvider dataProvider = new FieldDataProvider() {
-                @Override
-                public byte[] getFieldData() {
-                    return row.getFieldData(fieldPosition);
-                }
-
-                @Override
-                public void setFieldData(byte[] data) {
-                    row.setFieldData(fieldPosition, data);
-                }
-            };
-
-            final FBField field = FBField.createField(rowDescriptor.getFieldDescriptor(i), dataProvider, gdsHelper, cached);
-
-            if (field instanceof FBCloseableField closeableField) {
-                closeableFields.add(closeableField);
-            }
-
-            if (trimStrings && field instanceof TrimmableField trimmableField) {
+    private FBField[] createFields(boolean cached, boolean trimStrings) throws SQLException {
+        int fieldCount = rowDescriptor.getCount();
+        var fields = new FBField[fieldCount];
+        for (int i = 0; i < fieldCount; i++) {
+            fields[i] = FBField.createField(rowDescriptor.getFieldDescriptor(i), new DataProvider(i), gdsHelper, cached);
+            if (trimStrings && fields[i] instanceof TrimmableField trimmableField) {
                 trimmableField.setTrimTrailing(true);
             }
-
-            fields[i] = field;
         }
+        return fields;
+    }
+
+    private static List<FBCloseableField> toCloseableFields(FBField[] fields) {
+        return Arrays.stream(fields)
+                .filter(FBCloseableField.class::isInstance)
+                .map(FBCloseableField.class::cast)
+                .toList();
     }
 
     /**
@@ -1823,6 +1812,25 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     private static SQLException typeNotSupported(String typeName) {
         return new FBDriverNotCapableException("Type " + typeName + " not supported");
+    }
+
+    private final class DataProvider implements FieldDataProvider {
+
+        private final int fieldPosition;
+
+        private DataProvider(int fieldPosition) {
+            this.fieldPosition = fieldPosition;
+        }
+
+        @Override
+        public byte[] getFieldData() {
+            return row.getFieldData(fieldPosition);
+        }
+
+        @Override
+        public void setFieldData(byte[] data) {
+            row.setFieldData(fieldPosition, data);
+        }
     }
 
 }
