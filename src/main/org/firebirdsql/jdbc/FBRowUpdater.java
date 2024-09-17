@@ -120,10 +120,10 @@ final class FBRowUpdater implements FirebirdRowUpdater {
             final FieldDataProvider dataProvider = new FieldDataProvider() {
                 @Override
                 public byte[] getFieldData() {
-                    if (!updatedFlags[fieldPos]) {
-                        return oldRow.getFieldData(fieldPos);
-                    } else if (inInsertRow) {
+                    if (inInsertRow) {
                         return insertRow.getFieldData(fieldPos);
+                    } else if (!updatedFlags[fieldPos]) {
+                        return oldRow.getFieldData(fieldPos);
                     } else {
                         return newRow.getFieldData(fieldPos);
                     }

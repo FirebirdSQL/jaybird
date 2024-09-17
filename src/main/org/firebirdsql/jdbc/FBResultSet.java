@@ -65,10 +65,9 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     protected RowValue row;
 
-    private boolean wasNull = false;
-    private boolean wasNullValid = false;
+    private boolean wasNull;
     // closed is false until the close method is invoked;
-    private volatile boolean closed = false;
+    private volatile boolean closed;
 
     private SQLWarning firstWarning;
 
@@ -360,12 +359,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         if something wrong happened.
      */
     protected void closeFields() throws SQLException {
-        // TODO See if we can apply completion reason logic (eg no need to close blob on commit)
-        wasNullValid = false;
-
-        // if there are no fields to close, then nothing to do
-        if (closeableFields.isEmpty())
-            return;
+        // TODO See if we can apply completion reason logic (e.g. no need to close blob on commit)
+        wasNull = false;
+        // if there are no fields to close, then nothing else to do
+        if (closeableFields.isEmpty()) return;
 
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         // close current fields, so that resources are freed.
@@ -458,12 +455,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public boolean wasNull() throws SQLException {
-        if (!wasNullValid) {
-            throw new SQLException("Look at a column before testing null.");
-        }
-        if (row == null) {
-            throw new SQLException("No row available for wasNull.");
-        }
+        checkOpen();
         return wasNull;
     }
 
@@ -605,11 +597,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         If there is an error accessing the field
      */
     public FBField getField(int columnIndex) throws SQLException {
-        final FBField field = getField(columnIndex, true);
-
-        wasNullValid = true;
-        wasNull = row == null || row.getFieldData(columnIndex - 1) == null;
-
+        FBField field = getField(columnIndex, true);
+        wasNull = field.isNull();
         return field;
     }
 
@@ -627,11 +616,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             throw new SQLException("Invalid column index: " + columnIndex, SQLStateConstants.SQL_STATE_INVALID_COLUMN);
         }
 
-        if (rowUpdater != null) {
-            return rowUpdater.getField(columnIndex - 1);
-        } else {
-            return fields[columnIndex - 1];
-        }
+        return rowUpdater != null ? rowUpdater.getField(columnIndex - 1) : fields[columnIndex - 1];
     }
 
     /**
@@ -643,27 +628,13 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         if the field cannot be retrieved
      */
     public FBField getField(String columnName) throws SQLException {
-        checkOpen();
-        if (row == null && rowUpdater == null) {
-            throw new SQLException("The result set is not in a row, use next", SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
-        }
-
-        if (columnName == null) {
-            throw new SQLException("Column identifier must be not null.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
-        }
-
         Integer fieldNum = colNames.get(columnName);
         // If it is the first time the columnName is used
         if (fieldNum == null) {
             fieldNum = findColumn(columnName);
             colNames.put(columnName, fieldNum);
         }
-        final FBField field = rowUpdater != null
-                ? rowUpdater.getField(fieldNum - 1)
-                : fields[fieldNum - 1];
-        wasNullValid = true;
-        wasNull = row == null || row.getFieldData(fieldNum - 1) == null;
-        return field;
+        return getField(fieldNum);
     }
 
     /**
@@ -837,8 +808,9 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     // the first instance of the column will be returned
     @Override
     public int findColumn(String columnName) throws SQLException {
-        if (columnName == null || columnName.equals("")) {
-            throw new SQLException("Empty string does not identify column.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+        if (columnName == null || columnName.isEmpty()) {
+            throw new SQLException("Empty string or null does not identify a column",
+                    SQLStateConstants.SQL_STATE_INVALID_COLUMN);
         }
         if (columnName.startsWith("\"") && columnName.endsWith("\"")) {
             columnName = columnName.substring(1, columnName.length() - 1);

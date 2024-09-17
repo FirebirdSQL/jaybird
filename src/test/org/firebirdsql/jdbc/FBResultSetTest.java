@@ -1471,6 +1471,46 @@ class FBResultSetTest {
         return defaultArguments;
     }
 
+    @ParameterizedTest
+    @MethodSource
+    void wasNull_onInsertRow(int resultSetType, String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, "create table t1 (i int primary key, v varchar(10))");
+
+            try (PreparedStatement pstmt = connection.prepareStatement("insert into t1 values(?, ?)")) {
+                for (int i = 1; i <= 10; i++) {
+                    pstmt.setInt(1, i);
+                    pstmt.setString(2, i + " s");
+                    pstmt.addBatch();
+                }
+                pstmt.executeBatch();
+            }
+
+            try (Statement stmt = connection.createStatement(resultSetType, CONCUR_UPDATABLE);
+                 ResultSet rs = stmt.executeQuery("select i, v from t1")) {
+                rs.moveToInsertRow();
+                rs.updateNull(1);
+                rs.updateString(2, "11 s");
+
+                assertNull(rs.getObject(1), "column 1");
+                assertTrue(rs.wasNull(), "column 1");
+                assertEquals("11 s", rs.getObject(2), "column 2");
+                assertFalse(rs.wasNull(), "column 2");
+            }
+        }
+    }
+
+    static Stream<Arguments> wasNull_onInsertRow() {
+        Stream<Arguments> defaultArguments = Stream.of(
+                Arguments.of(TYPE_FORWARD_ONLY, SCROLLABLE_CURSOR_EMULATED),
+                Arguments.of(TYPE_SCROLL_INSENSITIVE, SCROLLABLE_CURSOR_EMULATED));
+        if (getDefaultSupportInfo().supportsScrollableCursors()) {
+            return Stream.concat(defaultArguments, Stream.of(
+                    Arguments.of(TYPE_SCROLL_INSENSITIVE, SCROLLABLE_CURSOR_SERVER)));
+        }
+        return defaultArguments;
+    }
+
     static Stream<String> scrollableCursorPropertyValues() {
         // We are unconditionally emitting SERVER, to check if the value behaves appropriately on versions that do
         // not support server-side scrollable cursors

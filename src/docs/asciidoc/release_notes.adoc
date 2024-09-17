@@ -42,6 +42,11 @@ This fix was backported from Jaybird 6.
 * Fixed: Error "`Column unknown; IND.RDB$CONDITION_SOURCE`" when calling `DatabaseMetaData.getIndexInfo` on Firebird 5.0 with a Firebird 4.0 (ODS 13.0) database (https://github.com/FirebirdSQL/jaybird/issues/813[#813])
 +
 The partial index metadata support introduced in Jaybird 5.0.5 did not take into account that Firebird 5.0 could also open a Firebird 4.0 database.
+* Fixed: Calling `ResultSet.wasNull()` when on the insert-row throws a `SQLException` instead of reporting the null-state of the last retrieved column (https://github.com/FirebirdSQL/jaybird/issues/816[#816])
++
+As part of this fix, we no longer check if `wasNull()` is called on a row, or after getting a column value, as the JDBC API does not require such check.
+Instead, `false` is reported if not currently on a row, or if no column value was retrieved, and an exception is thrown if the result set is closed.
+The value reported by `wasNull()` is reset to `false` on each cursor move (e.g. `next()`), and modified by each `get__XXX__` call.
 
 [#jaybird-5-0-5-changelog]
 === Jaybird 5.0.5
