@@ -104,7 +104,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         FbStatement stmt = requireNonNull(statement.getStatementHandle(), "statementHandle");
         try {
             connection = (FBConnection) statement.getConnection();
-            assert connection != null : "Found case were connection is null";
+            // TODO eliminate null checks
+            // assert connection != null : "Found case were connection is null";
             gdsHelper = connection != null ? connection.getGDSHelper() : null;
             cursorName = statement.getCursorName();
             this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
