@@ -1502,6 +1502,36 @@ class FBResultSetTest {
         return defaultArguments;
     }
 
+    @Test
+    void testWasNull() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            // Disable auto-commit to prevent automatic close of result set after last row
+            connection.setAutoCommit(false);
+            try (Statement stmt = connection.createStatement()) {
+                try (ResultSet rs = stmt.executeQuery(
+                        "select cast(null as integer), 1, 'abc', cast(null as char(3)) from rdb$database")) {
+                    assertFalse(rs.wasNull(), "wasNull == false before row");
+                    assertTrue(rs.next());
+                    assertFalse(rs.wasNull(), "wasNull == false on row, before requesting value");
+                    assertEquals(0, rs.getInt(1), "Expected default value 0 for getInt on NULL (first column)");
+                    assertTrue(rs.wasNull(), "wasNull == true after requesting null value");
+                    assertEquals(1, rs.getInt(2), "Expected actual value of second column");
+                    assertFalse(rs.wasNull(), "wasNull == false after requesting non-null value");
+                    assertEquals("abc", rs.getObject(3), "Expected actual value of third column");
+                    assertFalse(rs.wasNull(), "wasNull == false after requesting non-null value");
+                    assertNull(rs.getObject(4), "Expected null value of fourth column");
+                    assertTrue(rs.wasNull(), "wasNull == true after requesting null value");
+                    assertFalse(rs.next());
+                    assertFalse(rs.wasNull(), "wasNull == false after end of result set");
+                    rs.close();
+                    SQLException e = assertThrows(SQLException.class, rs::wasNull,
+                            "wasNull not allowed after result set close");
+                    assertThat(e, message(equalTo("The result set is closed")));
+                }
+            }
+        }
+    }
+
     static Stream<String> scrollableCursorPropertyValues() {
         // We are unconditionally emitting SERVER, to check if the value behaves appropriately on versions that do
         // not support server-side scrollable cursors
