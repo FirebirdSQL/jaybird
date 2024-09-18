@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.ng.CursorFlag;
 import org.firebirdsql.gds.ng.FbBatchConfig;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -152,6 +153,9 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         setPoolable(true);
 
         try (LockCloseable ignored = connection.withLock()) {
+            if (metaDataQuery) {
+                fbStatement.clearCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
+            }
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted();
             try {
@@ -180,11 +184,6 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             if (metaDataQuery && standaloneStatement)
                 close();
         }
-    }
-
-    @Override
-    protected boolean needsScrollableCursorEnabled() {
-        return !metaDataQuery && super.needsScrollableCursorEnabled();
     }
 
     @Override

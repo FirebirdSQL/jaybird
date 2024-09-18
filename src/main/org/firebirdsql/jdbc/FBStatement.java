@@ -142,12 +142,12 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         this.statementListener = statementListener;
 
         try (var ignored = connection.withLock()) {
-            FbStatement fbStatement = gdsHelper.allocateStatement();
+            fbStatement = gdsHelper.allocateStatement();
             fbStatement.addStatementListener(createStatementListener());
             if (needsScrollableCursorEnabled()) {
+                // NOTE Might be cleared again by FBPreparedStatement constructor
                 fbStatement.setCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
             }
-            this.fbStatement = fbStatement;
         }
     }
 
@@ -892,7 +892,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
                 ? StatementDetector.determineLocalStatementType(statementText) : LocalStatementType.OTHER;
     }
 
-    protected boolean needsScrollableCursorEnabled() {
+    private boolean needsScrollableCursorEnabled() {
         ResultSetBehavior resultSetBehavior = resultSetBehavior();
         return resultSetBehavior.isScrollable() && resultSetBehavior.isCloseCursorsAtCommit()
                && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
