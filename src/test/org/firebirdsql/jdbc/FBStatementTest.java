@@ -719,8 +719,7 @@ class FBStatementTest {
     void isWrapperFor_FbStatement() throws Exception {
         try (var stmt = con.createStatement()) {
             // NOTE: This is an implementation detail and may change
-            assertFalse(stmt.isWrapperFor(FbStatement.class),
-                    "Initially there is no FbStatement instance available to unwrap");
+            assertTrue(stmt.isWrapperFor(FbStatement.class), "Expected to be a wrapper for FbStatement from the start");
             stmt.executeQuery("select 1 from RDB$DATABASE");
             assertTrue(stmt.isWrapperFor(FbStatement.class), "Expected to be a wrapper for FbStatement");
         }
@@ -761,8 +760,7 @@ class FBStatementTest {
     void unwrap_FbStatement() throws Exception {
         try (var stmt = con.createStatement()) {
             // NOTE: This is an implementation detail and may change
-            assertThrows(SQLException.class, () -> stmt.unwrap(FbStatement.class),
-                    "Initially there is no FbStatement instance available to unwrap");
+            assertNotNull(stmt.unwrap(FbStatement.class), "Unexpected result for unwrap to FbStatement from the start");
             stmt.executeQuery("select 1 from RDB$DATABASE");
             assertNotNull(stmt.unwrap(FbStatement.class), "Unexpected result for unwrap to FbStatement");
         }

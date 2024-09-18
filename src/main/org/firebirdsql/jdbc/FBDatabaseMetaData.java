@@ -95,7 +95,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public boolean allProceduresAreCallable() throws SQLException {
-        //returns all procedures whether or not you have execute permission
+        //returns all procedures regardless of whether you have execute permission
         return false;
     }
 
@@ -1885,7 +1885,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             }
 
             var metaDataTransactionCoordinator = new MetaDataTransactionCoordinator(connection.txCoordinator);
-            var newStatement = new FBPreparedStatement(gdsHelper, sql, ResultSetBehavior.of(
+            var newStatement = new FBPreparedStatement(connection, sql, ResultSetBehavior.of(
                     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT),
                     metaDataTransactionCoordinator, metaDataTransactionCoordinator, true, standalone, false);
 

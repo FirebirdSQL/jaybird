@@ -18,12 +18,14 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConversionException;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -33,6 +35,7 @@ import java.sql.Date;
 import java.sql.*;
 import java.util.*;
 
+import static java.util.Collections.emptyList;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_NO_RESULT_SET;
 
 /**
@@ -52,16 +55,17 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     static final String SET_BY_STRING_NOT_SUPPORTED = "Setting parameters by name is not supported";
 
-    private FBResultSet singletonRs;
+    private @Nullable FBResultSet singletonRs;
 
     protected boolean selectableProcedure;
 
-    protected FBProcedureCall procedureCall;
+    protected @NonNull FBProcedureCall procedureCall;
 
-    protected FBCallableStatement(GDSHelper c, String sql, ResultSetBehavior rsBehavior,
-            StoredProcedureMetaData storedProcMetaData, FBObjectListener.StatementListener statementListener,
-            FBObjectListener.BlobListener blobListener) throws SQLException {
-        super(c, rsBehavior, statementListener, blobListener);
+    protected FBCallableStatement(@NonNull FBConnection connection, String sql, @NonNull ResultSetBehavior rsBehavior,
+            @NonNull StoredProcedureMetaData storedProcMetaData,
+            FBObjectListener.@NonNull StatementListener statementListener,
+            FBObjectListener.@NonNull BlobListener blobListener) throws SQLException {
+        super(connection, rsBehavior, statementListener, blobListener);
         var parser = new FBEscapedCallParser();
 
         // here statement is parsed twice, once in c.nativeSQL(...)
@@ -79,13 +83,13 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     @Override
     public void close() throws SQLException {
         try (var ignored = withLock()) {
-            batchList = null;
+            batchList = emptyList();
             super.close();
         }
     }
 
     @Override
-    public ParameterMetaData getParameterMetaData() throws SQLException {
+    public @NonNull FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
@@ -95,7 +99,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         }
     }
 
-    private List<FBProcedureCall> batchList = new ArrayList<>();
+    private @NonNull List<@NonNull FBProcedureCall> batchList = new ArrayList<>();
 
     @Override
     public void addBatch() throws SQLException {
@@ -116,7 +120,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    protected List<Long> executeBatchInternal() throws SQLException {
+    protected @NonNull List<@NonNull Long> executeBatchInternal() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             List<Long> results = new ArrayList<>(batchList.size());
@@ -166,10 +170,12 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @throws SQLException if something went wrong.
      */
     protected void setRequiredTypes() throws SQLException {
-        setRequiredTypesInternal(singletonRs != null ? singletonRs : getResultSet(false));
+        FBResultSet rs = singletonRs != null ? singletonRs : getResultSet(false);
+        assert rs != null : "a non-null ResultSet is required at this point";
+        setRequiredTypesInternal(rs);
     }
 
-    private void setRequiredTypesInternal(FBResultSet resultSet) throws SQLException {
+    private void setRequiredTypesInternal(@NonNull FBResultSet resultSet) throws SQLException {
         for (FBProcedureParam param : procedureCall.getOutputParams()) {
             if (param == null) continue;
 
@@ -185,7 +191,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      */
     @Override
     protected void prepareFixedStatement(String sql) throws SQLException {
-        if (fbStatement != null) return;
+        if (fbStatement.getType() != StatementType.NONE) return;
 
         super.prepareFixedStatement(sql);
     }
@@ -199,7 +205,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public ResultSetMetaData getMetaData() throws SQLException {
+    public @Nullable ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
         try (LockCloseable ignored = withLock()) {
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
@@ -234,7 +240,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     //This method prepares statement before execution. Rest of the processing is done by superclass.
     @Override
-    public ResultSet executeQuery() throws SQLException {
+    public @NonNull ResultSet executeQuery() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             procedureCall.checkParameters();
@@ -245,6 +251,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                     throw queryProducedNoResultSet();
                 }
                 FBResultSet rs = getResultSet(false);
+                assert rs != null : "a non-null ResultSet is required at this point";
                 setRequiredTypesInternal(rs);
                 return rs;
             } catch (Exception e) {
@@ -320,13 +327,13 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    protected FBResultSet createSpecialResultSet(FBObjectListener.ResultSetListener resultSetListener)
-            throws SQLException {
+    protected @NonNull FBResultSet createSpecialResultSet(
+            FBObjectListener.@Nullable ResultSetListener resultSetListener) throws SQLException {
         // retrieveBlobs is false, as they were already retrieved when initializing singletonRs in internalExecute
         return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, false);
     }
 
-    private void setField(FBField field, WrapperWithLong value) throws SQLException {
+    private void setField(@NonNull FBField field, @NonNull WrapperWithLong value) throws SQLException {
         Object obj = value.value();
 
         if (obj == null) {
@@ -344,7 +351,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         }
     }
 
-    private void setField(FBField field, WrapperWithCalendar value) throws SQLException {
+    private void setField(@NonNull FBField field, @NonNull WrapperWithCalendar value) throws SQLException {
         Object obj = value.value();
 
         if (obj == null) {
@@ -1041,18 +1048,20 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    public ResultSet getGeneratedKeys() throws SQLException {
+    public @NonNull ResultSet getGeneratedKeys() throws SQLException {
         throw new FBDriverNotCapableException("getGeneratedKeys is not supported on CallableStatement");
     }
 
     /**
-     * Asserts if the current statement has data to return. It checks if the
-     * result set has a row with data.
+     * Asserts if the current statement has data to return. It checks if the result set has a row with data.
      *
-     * @param rs result set to test
-     * @throws java.sql.SQLException when the result set has no data.
+     * @param rs
+     *         result set to test
+     * @return non-{@code null} result set (same object as {@code rs})
+     * @throws java.sql.SQLException
+     *         when the result set has no data.
      */
-    protected void assertHasData(ResultSet rs) throws SQLException {
+    protected @NonNull ResultSet assertHasData(@Nullable ResultSet rs) throws SQLException {
         if (rs == null) {
             throw new SQLException("Current statement has no data to return", SQL_STATE_NO_RESULT_SET);
         }
@@ -1060,13 +1069,14 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         if (rs.getRow() == 0) {
             rs.next();
         } else {
-            return;
+            return rs;
         }
 
         // check if we still have no row and throw an exception in this case.
         if (rs.getRow() == 0) {
             throw new SQLException("Current statement has no data to return", SQL_STATE_NO_RESULT_SET);
         }
+        return rs;
     }
 
     /**
@@ -1080,10 +1090,8 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @return Either the singleton result set, or the current result set as described above
      * @throws SQLException For database access errors
      */
-    protected ResultSet getAndAssertSingletonResultSet() throws SQLException {
-        final ResultSet rs = !isSelectableProcedure() && singletonRs != null ? singletonRs : getResultSet();
-        assertHasData(rs);
-        return rs;
+    protected @NonNull ResultSet getAndAssertSingletonResultSet() throws SQLException {
+        return assertHasData(!isSelectableProcedure() && singletonRs != null ? singletonRs : getResultSet());
     }
 
     private void setInputParam(int parameterIndex, Object value) throws SQLException {
@@ -1260,7 +1268,8 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      *
      * @throws SQLException If no selectability information is available
      */
-    private void setSelectabilityAutomatically(StoredProcedureMetaData storedProcMetaData) throws SQLException {
+    private void setSelectabilityAutomatically(@NonNull StoredProcedureMetaData storedProcMetaData)
+            throws SQLException {
         selectableProcedure = storedProcMetaData.isSelectable(procedureCall.getName());
     }
     
@@ -1327,10 +1336,10 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 
-    private record WrapperWithCalendar(Object value, Calendar calendar) {
+    private record WrapperWithCalendar(@Nullable Object value, @Nullable Calendar calendar) {
     }
 
-    private record WrapperWithLong(Object value, long longValue) {
+    private record WrapperWithLong(@Nullable Object value, long longValue) {
     }
 
 }

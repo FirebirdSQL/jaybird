@@ -21,6 +21,9 @@ module org.firebirdsql.jaybird {
     requires transitive java.transaction.xa;
     requires transitive java.naming;
 
+    // Declare as optional for deployment simplicity
+    requires static org.jspecify;
+
     exports org.firebirdsql.ds;
     exports org.firebirdsql.encodings;
     exports org.firebirdsql.event;

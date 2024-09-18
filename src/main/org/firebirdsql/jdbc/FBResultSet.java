@@ -34,6 +34,8 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.jdbc.field.TrimmableField;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -69,28 +71,28 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported";
     private static final String TYPE_SQLXML = "SQLXML";
 
-    private final AbstractStatement statement;
-    private final FBFetcher fbFetcher;
-    private FirebirdRowUpdater rowUpdater;
+    private final @Nullable AbstractStatement statement;
+    private final @NonNull FBFetcher fbFetcher;
+    private @Nullable FirebirdRowUpdater rowUpdater;
 
-    protected final FBConnection connection;
-    protected final GDSHelper gdsHelper;
+    protected final @Nullable FBConnection connection;
+    protected final @Nullable GDSHelper gdsHelper;
 
-    protected final RowDescriptor rowDescriptor;
+    protected final @NonNull RowDescriptor rowDescriptor;
 
-    protected RowValue row;
+    protected @Nullable RowValue row;
 
     private boolean wasNull;
 
-    private final FBField[] fields;
-    private final List<FBCloseableField> closeableFields;
-    private final Map<String, Integer> colNames;
+    private final @NonNull FBField @NonNull [] fields;
+    private final @NonNull List<@NonNull FBCloseableField> closeableFields;
+    private final @NonNull Map<String, Integer> colNames;
 
-    private final String cursorName;
-    private final FBObjectListener.ResultSetListener listener;
+    private final @Nullable String cursorName;
+    private final FBObjectListener.@NonNull ResultSetListener listener;
 
     @Override
-    public void rowChanged(FBFetcher fetcher, RowValue newRow) throws SQLException {
+    public void rowChanged(@NonNull FBFetcher fetcher, @Nullable RowValue newRow) throws SQLException {
         this.row = newRow;
     }
 
@@ -98,15 +100,13 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * Creates a new {@code FBResultSet} instance.
      */
     @SuppressWarnings("java:S1141")
-    public FBResultSet(AbstractStatement statement, FBObjectListener.ResultSetListener listener, boolean metaDataQuery)
-            throws SQLException {
-        this.statement = statement;
-        FbStatement stmt = requireNonNull(statement.getStatementHandle(), "statementHandle");
+    public FBResultSet(@NonNull AbstractStatement statement, FBObjectListener.@Nullable ResultSetListener listener,
+            boolean metaDataQuery) throws SQLException {
+        this.statement = requireNonNull(statement, "statement");
+        FbStatement stmt = requireNonNull(statement.getStatementHandle(), "statement.statementHandle");
         try {
-            connection = (FBConnection) statement.getConnection();
-            // TODO eliminate null checks
-            // assert connection != null : "Found case were connection is null";
-            gdsHelper = connection != null ? connection.getGDSHelper() : null;
+            connection = requireNonNull(statement.getConnection(), "statement.connection");
+            gdsHelper = connection.getGDSHelper();
             cursorName = statement.getCursorName();
             this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
             rowDescriptor = stmt.getRowDescriptor();
@@ -115,7 +115,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             ResultSetBehavior behavior = fetchConfig.resultSetBehavior();
             boolean serverSideScrollable =
                     behavior.isScrollable() && behavior.isCloseCursorsAtCommit() && !metaDataQuery
-                    && connection != null && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
+                    && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
                     && stmt.supportsFetchScroll();
             boolean cached = metaDataQuery || behavior.isScrollable() && !serverSideScrollable;
 
@@ -175,7 +175,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * @param rows
      *         row data
      */
-    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
+    public FBResultSet(@NonNull RowDescriptor rowDescriptor, @NonNull List<@NonNull RowValue> rows)
+            throws SQLException {
         this(rowDescriptor, null, rows, null, false);
     }
 
@@ -197,8 +198,9 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         {@code true} retrieves the blob data
      * @since 5.0.1
      */
-    public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
-            FBObjectListener.ResultSetListener listener, boolean retrieveBlobs) throws SQLException {
+    public FBResultSet(@NonNull RowDescriptor rowDescriptor, @Nullable FBConnection connection,
+            @NonNull List<@NonNull RowValue> rows, FBObjectListener.@Nullable ResultSetListener listener,
+            boolean retrieveBlobs) throws SQLException {
         // TODO Evaluate if we need to share more implementation with constructor above
         this.connection = connection;
         gdsHelper = connection != null ? connection.getGDSHelper() : null;
@@ -214,7 +216,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         colNames = new HashMap<>(rowDescriptor.getCount(), 1);
     }
 
-    private FBField[] createFields(boolean cached, boolean trimStrings) throws SQLException {
+    private @NonNull FBField @NonNull [] createFields(boolean cached, boolean trimStrings) throws SQLException {
         int fieldCount = rowDescriptor.getCount();
         var fields = new FBField[fieldCount];
         for (int i = 0; i < fieldCount; i++) {
@@ -226,7 +228,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return fields;
     }
 
-    private static List<FBCloseableField> toCloseableFields(FBField[] fields) {
+    private static @NonNull List<@NonNull FBCloseableField> toCloseableFields(@NonNull FBField @NonNull [] fields) {
         return Arrays.stream(fields)
                 .filter(FBCloseableField.class::isInstance)
                 .map(FBCloseableField.class::cast)
@@ -327,7 +329,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return fbFetcher.isClosed();
     }
 
-    void close(boolean notifyListener, CompletionReason completionReason) throws SQLException {
+    void close(boolean notifyListener, @NonNull CompletionReason completionReason) throws SQLException {
         if (isClosed()) return;
         var chain = new SQLExceptionChainBuilder();
 
@@ -511,7 +513,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * @throws SQLException
      *         If there is an error accessing the field
      */
-    public FBField getField(int columnIndex) throws SQLException {
+    public @NonNull FBField getField(int columnIndex) throws SQLException {
         FBField field = getField(columnIndex, true);
         wasNull = field.isNull();
         return field;
@@ -520,7 +522,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     /**
      * Factory method for the field access objects
      */
-    public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
+    public @NonNull FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
         checkOpen();
 
         if (checkRowPosition && row == null && rowUpdater == null) {
@@ -700,7 +702,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public SQLWarning getWarnings() throws SQLException {
+    public @Nullable SQLWarning getWarnings() throws SQLException {
         // Warnings are never recorded
         return null;
     }
@@ -711,12 +713,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     @Override
-    public String getCursorName() throws SQLException {
+    public @Nullable String getCursorName() throws SQLException {
         return cursorName;
     }
 
     @Override
-    public ResultSetMetaData getMetaData() throws SQLException {
+    public @NonNull ResultSetMetaData getMetaData() throws SQLException {
         checkOpen();
         return new FBResultSetMetaData(rowDescriptor, connection);
     }
@@ -729,7 +731,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     // See section 14.2.3 of jdbc-3.0 specification
     // "Column names supplied to getter methods are case-insensitive
     // If a select list contains the same column more than once, 
-    // the first instance of the column will be returned
+    // the first instance of the column will be returned"
     @Override
     public int findColumn(String columnName) throws SQLException {
         requireNonEmpty(columnName);
@@ -764,7 +766,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         }
     }
 
-    private OptionalInt findColumn(Predicate<String> columnNamePredicate) {
+    private @NonNull OptionalInt findColumn(@NonNull Predicate<String> columnNamePredicate) {
         // Check labels (aliases) first
         OptionalInt position = findColumn(columnNamePredicate, FieldDescriptor::getFieldName);
         if (position.isPresent()) return position;
@@ -772,7 +774,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return findColumn(columnNamePredicate, FieldDescriptor::getOriginalName);
     }
 
-    private OptionalInt findColumn(Predicate<String> columnNamePredicate,
+    private @NonNull OptionalInt findColumn(@NonNull Predicate<String> columnNamePredicate,
             Function<FieldDescriptor, String> columnNameAccessor) {
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
             if (columnNamePredicate.test(columnNameAccessor.apply(rowDescriptor.getFieldDescriptor(i)))) {
@@ -957,13 +959,32 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * Checks if the result set is updatable, throwing {@link FBResultSetNotUpdatableException} otherwise.
      *
      * @throws FBResultSetNotUpdatableException
-     *         When this result set is not updatable
+     *         when this result set is not updatable
+     * @see #requireRowUpdater()
      */
     private void checkUpdatable() throws SQLException {
         checkOpen();
         if (rowUpdater == null) {
             throw new FBResultSetNotUpdatableException();
         }
+    }
+
+    /**
+     * Checks if the result set is updatable, returning the row updater, throwing
+     * {@link FBResultSetNotUpdatableException} otherwise.
+     *
+     * @return row updater
+     * @throws FBResultSetNotUpdatableException
+     *         when this result set is not updatable
+     * @see #checkUpdatable()
+     */
+    private @NonNull FirebirdRowUpdater requireRowUpdater() throws SQLException {
+        checkOpen();
+        FirebirdRowUpdater rowUpdater = this.rowUpdater;
+        if (rowUpdater == null) {
+            throw new FBResultSetNotUpdatableException();
+        }
+        return rowUpdater;
     }
 
     @Override
@@ -1412,8 +1433,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public void insertRow() throws SQLException {
-        checkUpdatable();
-
+        FirebirdRowUpdater rowUpdater = requireRowUpdater();
         rowUpdater.insertRow();
         fbFetcher.insertRow(rowUpdater.getInsertRow());
         notifyRowUpdater();
@@ -1421,8 +1441,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public void updateRow() throws SQLException {
-        checkUpdatable();
-
+        FirebirdRowUpdater rowUpdater = requireRowUpdater();
         rowUpdater.updateRow();
         fbFetcher.updateRow(rowUpdater.getNewRow());
         notifyRowUpdater();
@@ -1430,44 +1449,37 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public void deleteRow() throws SQLException {
-        checkUpdatable();
-
-        rowUpdater.deleteRow();
+        requireRowUpdater().deleteRow();
         fbFetcher.deleteRow();
         notifyRowUpdater();
     }
 
     @Override
     public void refreshRow() throws SQLException {
-        checkUpdatable();
-
+        FirebirdRowUpdater rowUpdater = requireRowUpdater();
         rowUpdater.refreshRow();
         fbFetcher.updateRow(rowUpdater.getOldRow());
-
         // this is excessive, but we do this to keep the code uniform
         notifyRowUpdater();
     }
 
     @Override
     public void cancelRowUpdates() throws SQLException {
-        checkUpdatable();
-        rowUpdater.cancelRowUpdates();
+        requireRowUpdater().cancelRowUpdates();
     }
 
     @Override
     public void moveToInsertRow() throws SQLException {
-        checkUpdatable();
-        rowUpdater.moveToInsertRow();
+        requireRowUpdater().moveToInsertRow();
     }
 
     @Override
     public void moveToCurrentRow() throws SQLException {
-        checkUpdatable();
-        rowUpdater.moveToCurrentRow();
+        requireRowUpdater().moveToCurrentRow();
     }
 
     @Override
-    public Statement getStatement() {
+    public @Nullable Statement getStatement() {
         return statement;
     }
 
@@ -1803,7 +1815,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
+    public <T> @NonNull T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
             throw new SQLException("Unable to unwrap to class " + (iface != null ? iface.getName() : "(null)"));
         }
@@ -1811,10 +1823,11 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return iface.cast(this);
     }
 
-    private static SQLException typeNotSupported(String typeName) {
+    private static @NonNull SQLException typeNotSupported(@NonNull String typeName) {
         return new FBDriverNotCapableException("Type " + typeName + " not supported");
     }
 
+    @SuppressWarnings("DataFlowIssue")
     private final class DataProvider implements FieldDataProvider {
 
         private final int fieldPosition;

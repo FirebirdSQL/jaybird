@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbBatchConfig;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -33,6 +32,8 @@ import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -63,6 +64,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     public static final String METHOD_NOT_SUPPORTED =
             "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported";
+    private static final FBField[] FIELDS_NOT_INITIALIZED = new FBField[0];
 
     private final boolean metaDataQuery;
     
@@ -80,22 +82,22 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      */
     private final boolean generatedKeys;
 
-    private FBField[] fields = null;
+    private @NonNull FBField @NonNull [] fields = FIELDS_NOT_INITIALIZED;
 
     // we need to handle procedure execution separately,
     // because in this case we must send out_xsqlda to the server.
     private boolean isExecuteProcedureStatement;
 
-    private final FBObjectListener.BlobListener blobListener;
-    private RowValue fieldValues;
-    private Batch batch;
+    private final FBObjectListener.@NonNull BlobListener blobListener;
+    private @NonNull RowValue fieldValues = RowValue.EMPTY_ROW_VALUE;
+    private @Nullable Batch batch;
 
     /**
      * Create instance of this class for the specified result set type and concurrency. This constructor is used only in
      * {@link FBCallableStatement} since the statement is prepared right before the execution.
      *
-     * @param c
-     *         instance of {@link GDSHelper} that will be used to perform all database activities
+     * @param connection
+     *         connection to be used
      * @param rsBehavior
      *         result set behavior
      * @param statementListener
@@ -105,10 +107,10 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * @throws SQLException
      *         if something went wrong.
      */
-    protected FBPreparedStatement(GDSHelper c, ResultSetBehavior rsBehavior,
-            FBObjectListener.StatementListener statementListener, FBObjectListener.BlobListener blobListener)
-            throws SQLException {
-        super(c, rsBehavior, statementListener);
+    protected FBPreparedStatement(@NonNull FBConnection connection, @NonNull ResultSetBehavior rsBehavior,
+            FBObjectListener.@NonNull StatementListener statementListener,
+            FBObjectListener.@NonNull BlobListener blobListener) throws SQLException {
+        super(connection, rsBehavior, statementListener);
         this.blobListener = blobListener;
         this.standaloneStatement = false;
         this.metaDataQuery = false;
@@ -119,7 +121,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     /**
      * Create instance of this class and prepare SQL statement.
      *
-     * @param c
+     * @param connection
      *         connection to be used
      * @param sql
      *         SQL statement to prepare
@@ -138,17 +140,18 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * @throws SQLException
      *         if something went wrong.
      */
-    protected FBPreparedStatement(GDSHelper c, String sql, ResultSetBehavior rsBehavior,
-            FBObjectListener.StatementListener statementListener, FBObjectListener.BlobListener blobListener,
-            boolean metaDataQuery, boolean standaloneStatement, boolean generatedKeys) throws SQLException {
-        super(c, rsBehavior, statementListener);
-        this.blobListener = blobListener;
+    protected FBPreparedStatement(@NonNull FBConnection connection, String sql, @NonNull ResultSetBehavior rsBehavior,
+            FBObjectListener.@NonNull StatementListener statementListener,
+            FBObjectListener.@Nullable BlobListener blobListener, boolean metaDataQuery, boolean standaloneStatement,
+            boolean generatedKeys) throws SQLException {
+        super(connection, rsBehavior, statementListener);
+        this.blobListener = blobListener != null ? blobListener : FBObjectListener.NoActionBlobListener.instance();
         this.metaDataQuery = metaDataQuery;
         this.standaloneStatement = standaloneStatement;
         this.generatedKeys = generatedKeys;
         setPoolable(true);
 
-        try (LockCloseable ignored = c.withLock()) {
+        try (LockCloseable ignored = connection.withLock()) {
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted();
             try {
@@ -161,7 +164,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
     
     @Override
-    public void completeStatement(CompletionReason reason) throws SQLException {
+    public void completeStatement(@NonNull CompletionReason reason) throws SQLException {
         if (!metaDataQuery || reason == CompletionReason.CONNECTION_ABORT) {
             super.completeStatement(reason);
         } else {
@@ -185,11 +188,11 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public ResultSet executeQuery() throws SQLException {
+    public @NonNull ResultSet executeQuery() throws SQLException {
         return executeQuery(false);
     }
 
-    private ResultSet executeQuery(boolean metaDataQuery) throws SQLException {
+    private @NonNull ResultSet executeQuery(boolean metaDataQuery) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             notifyStatementStarted();
@@ -197,7 +200,9 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
                 if (!internalExecute(isExecuteProcedureStatement)) {
                     throw queryProducedNoResultSet();
                 }
-                return getResultSet(metaDataQuery);
+                FBResultSet rs = getResultSet(metaDataQuery);
+                assert rs != null : "a non-null ResultSet is required at this point";
+                return rs;
             } catch (Exception e) {
                 notifyStatementCompleted(true, e);
                 throw e;
@@ -239,7 +244,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         }
     }
 
-    public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
+    public @NonNull FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
         return new FBParameterMetaData(fbStatement.getParameterDescriptor(), connection);
     }
 
@@ -363,14 +368,14 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * @param columnIndex 1-based index of the parameter
      * @return Field descriptor
      */
-    protected FieldDescriptor getParameterDescriptor(int columnIndex) {
+    protected @NonNull FieldDescriptor getParameterDescriptor(int columnIndex) {
         return fbStatement.getParameterDescriptor().getFieldDescriptor(columnIndex - 1);
     }
 
     /**
      * Factory method for the field access objects
      */
-    protected FBField getField(int columnIndex) throws SQLException {
+    protected @NonNull FBField getField(int columnIndex) throws SQLException {
         checkValidity();
         if (columnIndex > fields.length) {
             throw new SQLException("Invalid column index: " + columnIndex,
@@ -497,9 +502,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     @Override
     public void clearParameters() throws SQLException {
         checkValidity();
-        if (fieldValues != null) {
-            fieldValues.reset();
-        }
+        fieldValues.reset();
     }
 
     /**
@@ -552,7 +555,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * @throws SQLException
      *         if something went wrong or no result set was available.
      */
-    ResultSet executeMetaDataQuery() throws SQLException {
+    @NonNull ResultSet executeMetaDataQuery() throws SQLException {
         return executeQuery(true);
     }
 
@@ -601,7 +604,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         }
     }
 
-    private Batch requireBatch() throws SQLException {
+    private @NonNull Batch requireBatch() throws SQLException {
         Batch batch = this.batch;
         if (batch != null) {
             return batch;
@@ -610,7 +613,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     // NOTE: This is not used for FBCallableStatement!
-    private Batch createBatch() throws SQLException {
+    private @NonNull Batch createBatch() throws SQLException {
         if (canExecuteUsingServerBatch()) {
             return new ServerBatch(
                     FbBatchConfig.of(FbBatchConfig.HALT_AT_FIRST_ERROR, FbBatchConfig.UPDATE_COUNTS,
@@ -623,9 +626,9 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     private boolean canExecuteUsingServerBatch() {
         // enabled for connection
-        return connection != null && connection.isUseServerBatch()
+        return connection.isUseServerBatch()
                 // supported by statement implementation
-                && fbStatement != null && fbStatement.supportBatchUpdates()
+                && fbStatement.supportBatchUpdates()
                 // server batch execution throws isc_batch_param when executing a statement without parameters
                 && fbStatement.getParameterDescriptor().getCount() != 0
                 // server batch execution cannot produce rows from RETURNING
@@ -663,7 +666,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    protected List<Long> executeBatchInternal() throws SQLException {
+    protected @NonNull List<@NonNull Long> executeBatchInternal() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             notifyStatementStarted();
@@ -746,7 +749,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public ResultSetMetaData getMetaData() throws SQLException {
+    public @Nullable ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
         // TODO Return null for statements without result set?
         return new FBResultSetMetaData(fbStatement.getRowDescriptor(), connection);
@@ -812,7 +815,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public ParameterMetaData getParameterMetaData() throws SQLException {
+    public @NonNull ParameterMetaData getParameterMetaData() throws SQLException {
         return getFirebirdParameterMetaData();
     }
 
@@ -846,7 +849,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     // Methods not allowed to be used on PreparedStatement and CallableStatement
     
     @Override
-    public ResultSet executeQuery(String sql) throws SQLException {
+    public @NonNull ResultSet executeQuery(String sql) throws SQLException {
         throw new SQLNonTransientException(METHOD_NOT_SUPPORTED, SQL_STATE_GENERAL_ERROR);
     }
     
@@ -904,26 +907,26 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     /**
      * This method is for internal implementation use only.
      *
-     * @return {@code true} if this prepared statement was initialized (ie: prepared).
+     * @return {@code true} if this prepared statement was initialized (i.e.: prepared).
      */
     boolean isInitialized() {
-        return fields != null;
+        return fields != FIELDS_NOT_INITIALIZED;
     }
 
     private static final class BatchStatementListener implements StatementListener {
 
-        private final List<RowValue> rows;
+        private final @NonNull List<@NonNull RowValue> rows;
 
         private BatchStatementListener(int expectedSize) {
             rows = new ArrayList<>(expectedSize);
         }
 
         @Override
-        public void receivedRow(FbStatement sender, RowValue rowValue) {
+        public void receivedRow(@NonNull FbStatement sender, @NonNull RowValue rowValue) {
             rows.add(rowValue);
         }
 
-        public List<RowValue> getRows() {
+        public @NonNull List<@NonNull RowValue> getRows() {
             return new ArrayList<>(rows);
         }
     }
@@ -931,10 +934,10 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     private final class BatchedRowValue implements Batch.BatchRowValue {
 
-        private final RowValue rowValue;
-        private Object[] cachedObjects;
+        private final @NonNull RowValue rowValue;
+        private @Nullable Object @Nullable [] cachedObjects;
 
-        private BatchedRowValue(RowValue rowValue) {
+        private BatchedRowValue(@NonNull RowValue rowValue) {
             this.rowValue = rowValue;
         }
 
@@ -942,7 +945,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             return rowValue.getCount();
         }
 
-        private void setCachedObject(int index, Object object) {
+        private void setCachedObject(int index, @Nullable Object object) {
             checkBounds(index);
             if (cachedObjects == null) {
                 cachedObjects = new Object[getCount()];
@@ -950,7 +953,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             cachedObjects[index] = object;
         }
 
-        private Object getCachedObject(int index) {
+        private @Nullable Object getCachedObject(int index) {
             checkBounds(index);
             if (cachedObjects == null) {
                 return null;
@@ -965,7 +968,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         }
 
         @Override
-        public RowValue toRowValue() throws SQLException {
+        public @NonNull RowValue toRowValue() throws SQLException {
             // NOTE This is basically the old implementation of flushing fields. The use of the fieldValues field is
             // a bit of a kludge, but we use fields for the operation, which are hardwired to it.
             // We may want to see if we can move the flushing down into CachedObject or something like that
@@ -995,10 +998,10 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      */
     private final class EmulatedPreparedStatementBatch implements Batch {
 
-        private final Deque<BatchRowValue> batchRowValues = new ArrayDeque<>();
+        private final @NonNull Deque<@NonNull BatchRowValue> batchRowValues = new ArrayDeque<>();
 
         @Override
-        public void addBatch(BatchRowValue rowValue) throws SQLException {
+        public void addBatch(@NonNull BatchRowValue rowValue) throws SQLException {
             batchRowValues.addLast(rowValue);
         }
 
@@ -1007,7 +1010,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         }
 
         @Override
-        public List<Long> execute() throws SQLException {
+        public @NonNull List<@NonNull Long> execute() throws SQLException {
             if (isEmpty()) {
                 return emptyList();
             }
@@ -1021,8 +1024,8 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             }
             final List<Long> results = new ArrayList<>(size);
             try {
-                Deque<Batch.BatchRowValue> batchRowValues = this.batchRowValues;
-                Batch.BatchRowValue batchRowValue;
+                Deque<BatchRowValue> batchRowValues = this.batchRowValues;
+                BatchRowValue batchRowValue;
                 while ((batchRowValue = batchRowValues.pollFirst()) != null) {
                     results.add(executeSingleForBatch(batchRowValue));
                 }
@@ -1040,7 +1043,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             }
         }
 
-        private long executeSingleForBatch(Batch.BatchRowValue batchRowValue) throws SQLException {
+        private long executeSingleForBatch(@NonNull BatchRowValue batchRowValue) throws SQLException {
             if (internalExecute(batchRowValue.toRowValue())) {
                 throw batchStatementReturnedResultSet();
             }

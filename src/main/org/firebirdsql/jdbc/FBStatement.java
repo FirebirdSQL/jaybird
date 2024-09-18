@@ -29,8 +29,9 @@ import org.firebirdsql.jaybird.parser.StatementDetector;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.util.Primitives;
 import org.firebirdsql.jaybird.util.SQLExceptionThrowingFunction;
-import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.*;
 import java.util.*;
@@ -59,35 +60,34 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
 
     private static final System.Logger log = System.getLogger(FBStatement.class.getName());
 
-    protected final GDSHelper gdsHelper;
-    protected final FBObjectListener.StatementListener statementListener;
+    protected final @NonNull GDSHelper gdsHelper;
+    protected final FBObjectListener.@NonNull StatementListener statementListener;
 
-    protected FbStatement fbStatement;
+    protected final @NonNull FbStatement fbStatement;
 
     //The normally retrieved result set. (no autocommit, not a cached rs).
-    private FBResultSet currentRs;
+    private @Nullable FBResultSet currentRs;
 
-    private SqlCountHolder sqlCountHolder;
+    private @Nullable SqlCountHolder sqlCountHolder;
 
     private boolean completed = true;
     private boolean escapedProcessing = true;
     private boolean currentStatementGeneratedKeys;
 
     // Currently only determined for Firebird statement type SELECT and STORED_PROCEDURE
-    private LocalStatementType jbStatementType = LocalStatementType.OTHER;
-    protected StatementResult currentStatementResult = StatementResult.NO_MORE_RESULTS;
+    private @NonNull LocalStatementType jbStatementType = LocalStatementType.OTHER;
+    protected @NonNull StatementResult currentStatementResult = StatementResult.NO_MORE_RESULTS;
 
     // Singleton result indicates it is a stored procedure or singleton [INSERT | UPDATE | DELETE] ... RETURNING ...
     // In Firebird 5+ some RETURNING statements are multi-row, and some are singleton, in Firebird 4 and earlier, they
     // are all singleton.
     protected boolean isSingletonResult;
     // Used for singleton or batch results for getGeneratedKeys, and singleton results of stored procedures
-    protected final List<RowValue> specialResult = new ArrayList<>();
+    protected final @NonNull List<@NonNull RowValue> specialResult = new ArrayList<>();
 
     private int maxFieldSize;
 
-    private final FBObjectListener.ResultSetListener resultSetListener = new RSListener();
-    protected final FBConnection connection;
+    private final FBObjectListener.@NonNull ResultSetListener resultSetListener = new RSListener();
 
     /**
      * Listener for the result sets.
@@ -104,7 +104,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
          *         result set that was closed.
          */
         @Override
-        public void resultSetClosed(ResultSet rs) throws SQLException {
+        public void resultSetClosed(@NonNull ResultSet rs) throws SQLException {
             currentRs = null;
 
             // notify listener that statement is completed.
@@ -113,7 +113,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
 
         @Override
-        public void executionCompleted(FirebirdRowUpdater updater, boolean success) throws SQLException {
+        public void executionCompleted(@NonNull FirebirdRowUpdater updater, boolean success) throws SQLException {
             if (rowUpdaterSeparateTransaction) {
                 // Only notify when executionStarted started a transaction specifically for the row-updater
                 notifyStatementCompleted(success);
@@ -121,8 +121,8 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
 
         @Override
-        public void executionStarted(FirebirdRowUpdater updater) throws SQLException {
-            FbTransaction stmtTransaction = fbStatement != null ? fbStatement.getTransaction() : null;
+        public void executionStarted(@NonNull FirebirdRowUpdater updater) throws SQLException {
+            FbTransaction stmtTransaction = fbStatement.getTransaction();
             if (stmtTransaction != null && stmtTransaction.getState() == TransactionState.ACTIVE) {
                 // RowUpdater execution will piggyback on the current active transaction
                 rowUpdaterSeparateTransaction = false;
@@ -135,14 +135,20 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
     }
 
-    protected FBStatement(GDSHelper c, ResultSetBehavior rsBehavior,
-            FBObjectListener.StatementListener statementListener) throws SQLException {
-        super(rsBehavior);
-        this.gdsHelper = c;
+    protected FBStatement(@NonNull FBConnection connection, @NonNull ResultSetBehavior rsBehavior,
+            FBObjectListener.@NonNull StatementListener statementListener) throws SQLException {
+        super(connection, rsBehavior);
+        this.gdsHelper = connection.getGDSHelper();
         this.statementListener = statementListener;
 
-        // TODO Find out if connection is actually ever null, because some parts of the code expect it not to be null
-        this.connection = statementListener != null ? statementListener.getConnection() : null;
+        try (var ignored = connection.withLock()) {
+            FbStatement fbStatement = gdsHelper.allocateStatement();
+            fbStatement.addStatementListener(createStatementListener());
+            if (needsScrollableCursorEnabled()) {
+                fbStatement.setCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
+            }
+            this.fbStatement = fbStatement;
+        }
     }
 
     private static final Set<StatementState> INVALID_STATEMENT_STATES = EnumSet.of(
@@ -153,12 +159,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return super.isValid() && !INVALID_STATEMENT_STATES.contains(fbStatement.getState());
     }
 
-    @Override
-    protected final LockCloseable withLock() {
-        return gdsHelper.withLock();
-    }
-
-    public void completeStatement(CompletionReason reason) throws SQLException {
+    public void completeStatement(@NonNull CompletionReason reason) throws SQLException {
         if (currentRs != null && (reason != CompletionReason.COMMIT || currentRs.getHoldability() == ResultSet.CLOSE_CURSORS_AT_COMMIT)) {
             closeResultSet(false, reason);
         }
@@ -167,7 +168,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
             completed = true;
             // NOTE This will not "cleanly" end the statement, it might still have objects registered on listeners,
             // and those will not get notified
-            fbStatement = null;
             super.close();
         } else {
             notifyStatementCompleted();
@@ -175,7 +175,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public ResultSet executeQuery(String sql) throws  SQLException {
+    public @NonNull ResultSet executeQuery(String sql) throws  SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             currentStatementGeneratedKeys = false;
@@ -185,7 +185,9 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
                 if (!internalExecute(sql)) {
                     throw queryProducedNoResultSet();
                 }
-                return getResultSet(false);
+                FBResultSet rs = getResultSet(false);
+                assert rs != null : "a non-null ResultSet is required at this point";
+                return rs;
             } catch (Exception e) {
                 notifyStatementCompleted(true, e);
                 throw e;
@@ -226,9 +228,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         // notify listener that statement execution is about to start
         statementListener.executionStarted(this);
 
-        if (fbStatement != null) {
-            fbStatement.setTransaction(gdsHelper.getCurrentTransaction());
-        }
+        fbStatement.setTransaction(gdsHelper.getCurrentTransaction());
         completed = false;
     }
 
@@ -284,7 +284,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      *         original exception that triggered the completion
      * @see #notifyStatementCompleted(boolean)
      */
-    void notifyStatementCompleted(boolean success, Exception originalException) {
+    void notifyStatementCompleted(boolean success, @NonNull Exception originalException) {
         try {
             notifyStatementCompleted(success);
         } catch (SQLException e) {
@@ -336,17 +336,17 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         LocalStatementType statementType = StatementDetector.determineLocalStatementType(sql);
         return switch (statementType) {
             case HARD_COMMIT -> {
-                requireConnection().handleHardCommitStatement();
+                connection.handleHardCommitStatement();
                 sqlCountHolder = SqlCountHolder.empty();
                 yield true;
             }
             case HARD_ROLLBACK -> {
-                requireConnection().handleHardRollbackStatement();
+                connection.handleHardRollbackStatement();
                 sqlCountHolder = SqlCountHolder.empty();
                 yield true;
             }
             case SET_TRANSACTION -> {
-                requireConnection().handleSetTransactionStatement(sql);
+                connection.handleSetTransactionStatement(sql);
                 sqlCountHolder = SqlCountHolder.empty();
                 yield true;
             }
@@ -354,25 +354,15 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         };
     }
 
-    private FBConnection requireConnection() throws SQLException {
-        FBConnection connection = this.connection;
-        if (connection == null) {
-            // This may occur for some types of internal statements
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_statementNotAssociatedWithConnection)
-                    .toSQLException();
-        }
-        return connection;
-    }
-
-    static SQLException queryProducedNoResultSet() {
+    static @NonNull SQLException queryProducedNoResultSet() {
         return new SQLNonTransientException("Query did not produce a result set", SQL_STATE_NO_RESULT_SET);
     }
 
-    static SQLException updateReturnedResultSet() {
+    static @NonNull SQLException updateReturnedResultSet() {
         return new SQLNonTransientException("Update statement returned result set", SQL_STATE_INVALID_STMT_TYPE);
     }
 
-    static SQLException batchStatementReturnedResultSet() {
+    static @NonNull SQLException batchStatementReturnedResultSet() {
         return new SQLNonTransientException("Statement executed as batch returned result set",
                 SQL_STATE_INVALID_STMT_TYPE);
     }
@@ -444,7 +434,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public ResultSet getGeneratedKeys() throws SQLException {
+    public @NonNull ResultSet getGeneratedKeys() throws SQLException {
         checkValidity();
         if (isGeneratedKeyQuery()) {
             return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, true);
@@ -457,13 +447,10 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         if (isClosed()) return;
 
         try (var ignored = withLock()) {
-            try (FbStatement handle = fbStatement) {
-                if (handle != null) {
-                    closeResultSet(false, CompletionReason.STATEMENT_CLOSE);
-                }
+            try (FbStatement ignored2 = fbStatement) {
+                closeResultSet(false, CompletionReason.STATEMENT_CLOSE);
             } finally {
-                fbStatement = null;
-                batchList = null;
+                batchList = emptyList();
                 super.close();
                 statementListener.statementClosed(this);
             }
@@ -502,9 +489,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     public int getQueryTimeout() throws  SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            if (fbStatement == null) {
-                return 0;
-            }
             return (int) TimeUnit.MILLISECONDS.toSeconds(fbStatement.getTimeout());
         }
     }
@@ -532,7 +516,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     public void setQueryTimeout(int seconds) throws  SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            requireStatement().setTimeout(TimeUnit.SECONDS.toMillis(seconds));
+            fbStatement.setTimeout(TimeUnit.SECONDS.toMillis(seconds));
         }
     }
 
@@ -582,13 +566,13 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public ResultSet getResultSet() throws SQLException {
+    public @Nullable ResultSet getResultSet() throws SQLException {
         checkValidity();
         return getResultSet(false);
     }
 
-    protected FBResultSet getResultSet(boolean metaDataQuery) throws  SQLException {
-        if (fbStatement == null) {
+    protected @Nullable FBResultSet getResultSet(boolean metaDataQuery) throws  SQLException {
+        if (fbStatement.getState() == StatementState.NEW || fbStatement.getType() == StatementType.NONE) {
             throw new SQLException("No statement was executed", SQL_STATE_INVALID_STATEMENT_ID);
         } else if (currentRs != null) {
             return currentRs;
@@ -621,8 +605,8 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      *         result set listener (can be {@code null})
      * @return result set wrapping {@code specialResult}
      */
-    protected FBResultSet createSpecialResultSet(FBObjectListener.ResultSetListener resultSetListener)
-            throws SQLException {
+    protected @NonNull FBResultSet createSpecialResultSet(
+            FBObjectListener.@Nullable ResultSetListener resultSetListener) throws SQLException {
         return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, true);
     }
 
@@ -650,17 +634,19 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         if (currentStatementResult != StatementResult.UPDATE_COUNT) {
             return -1;
         }
-        populateSqlCounts();
+        SqlCountHolder sqlCountHolder = populateSqlCounts();
         int insCount = sqlCountHolder.getIntegerInsertCount();
         int updCount = sqlCountHolder.getIntegerUpdateCount();
         int delCount = sqlCountHolder.getIntegerDeleteCount();
         return Math.max(Math.max(updCount, delCount), insCount);
     }
 
-    private void populateSqlCounts() throws SQLException {
-        if (sqlCountHolder == null) {
-            sqlCountHolder = fbStatement.getSqlCounts();
+    private @NonNull SqlCountHolder populateSqlCounts() throws SQLException {
+        SqlCountHolder sqlCountHolder = this.sqlCountHolder;
+        if (sqlCountHolder != null) {
+            return sqlCountHolder;
         }
+        return this.sqlCountHolder = fbStatement.getSqlCounts();
     }
 
     private static final int INSERTED_ROWS_COUNT = 1;
@@ -671,7 +657,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         if (currentStatementResult != StatementResult.UPDATE_COUNT) {
             return -1;
         }
-        populateSqlCounts();
+        SqlCountHolder sqlCountHolder = populateSqlCounts();
         return switch (type) {
             case INSERTED_ROWS_COUNT -> sqlCountHolder.getIntegerInsertCount();
             case UPDATED_ROWS_COUNT -> sqlCountHolder.getIntegerUpdateCount();
@@ -716,7 +702,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return currentStatementResult.isResultSet();
     }
 
-    private List<String> batchList = new ArrayList<>();
+    private @NonNull List<String> batchList = new ArrayList<>();
 
     @Override
     public void addBatch(String sql) throws  SQLException {
@@ -736,7 +722,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public final int[] executeBatch() throws SQLException {
+    public final int @NonNull [] executeBatch() throws SQLException {
         if (connection.getAutoCommit()) {
             addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled", SQL_STATE_WARNING));
         }
@@ -744,7 +730,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return Primitives.toIntArray(executeBatchInternal());
     }
 
-    protected List<Long> executeBatchInternal() throws SQLException {
+    protected @NonNull List<@NonNull Long> executeBatchInternal() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             currentStatementGeneratedKeys = false;
@@ -779,25 +765,19 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return getLargeUpdateCountMinZero();
     }
 
-    protected final BatchUpdateException createBatchUpdateException(SQLException cause,
-            List<? extends Number> updateCounts) {
+    protected final @NonNull BatchUpdateException createBatchUpdateException(@NonNull SQLException cause,
+            @NonNull List<? extends @NonNull Number> updateCounts) {
         return createBatchUpdateException(cause.getMessage(), cause.getSQLState(), cause.getErrorCode(), updateCounts,
                 cause);
     }
 
-    protected final BatchUpdateException createBatchUpdateException(String reason, String sqlState, int vendorCode,
-            List<? extends Number> updateCounts, Throwable cause) {
+    protected final BatchUpdateException createBatchUpdateException(@NonNull String reason, @Nullable String sqlState,
+            int vendorCode, @NonNull List<? extends @NonNull Number> updateCounts, @NonNull Throwable cause) {
         return new BatchUpdateException(reason, sqlState, vendorCode, Primitives.toLongArray(updateCounts), cause);
     }
 
     @Override
-    public Connection getConnection() throws SQLException {
-        checkValidity();
-        return connection;
-    }
-
-    @Override
-    protected final FbStatement getStatementHandle() throws SQLException {
+    protected final @NonNull FbStatement getStatementHandle() throws SQLException {
         checkValidity();
         return fbStatement;
     }
@@ -806,7 +786,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         closeResultSet(notifyListener, CompletionReason.OTHER);
     }
 
-    void closeResultSet(boolean notifyListener, CompletionReason completionReason) throws SQLException {
+    void closeResultSet(boolean notifyListener, @NonNull CompletionReason completionReason) throws SQLException {
         boolean wasCompleted = completed;
 
         try {
@@ -817,11 +797,9 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
             }
         } finally {
             try {
-                if (fbStatement != null) {
-                    // Primarily for execute() cases where getResultSet() was never called, ensures cursor is closed for
-                    // all code paths (a no-op if there is no open cursor)
-                    fbStatement.ensureClosedCursor(completionReason.isTransactionEnd());
-                }
+                // Primarily for execute() cases where getResultSet() was never called, ensures cursor is closed for
+                // all code paths (a no-op if there is no open cursor)
+                fbStatement.ensureClosedCursor(completionReason.isTransactionEnd());
             } finally {
                 if (notifyListener && !wasCompleted) {
                     statementListener.statementCompleted(this);
@@ -838,7 +816,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     @SuppressWarnings("removal")
     @Deprecated(since = "6", forRemoval = true)
     @Override
-    public ResultSet getCurrentResultSet() throws SQLException {
+    public @Nullable ResultSet getCurrentResultSet() throws SQLException {
         return getResultSet();
     }
 
@@ -854,7 +832,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
+    public <T> @NonNull T unwrap(Class<T> iface) throws SQLException {
         if (iface == null) {
             throw new SQLException("Unable to unwrap to class (null)");
         } else if (iface.isAssignableFrom(getClass())) {
@@ -906,12 +884,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     protected void prepareFixedStatement(String sql) throws SQLException {
-        // TODO: Statement should be created and allocated at FBStatement creation only.
-        if (fbStatement == null) {
-            requireStatement();
-        } else {
-            fbStatement.setTransaction(gdsHelper.getCurrentTransaction());
-        }
+        fbStatement.setTransaction(gdsHelper.getCurrentTransaction());
         String statementText = escapedProcessing ? nativeSQL(sql) : sql;
         fbStatement.prepare(statementText);
         StatementType fbStatementType = fbStatement.getType();
@@ -919,32 +892,15 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
                 ? StatementDetector.determineLocalStatementType(statementText) : LocalStatementType.OTHER;
     }
 
-    protected FbStatement requireStatement() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            if (fbStatement == null) {
-                fbStatement = gdsHelper.allocateStatement();
-                fbStatement.addStatementListener(createStatementListener());
-                if (needsScrollableCursorEnabled()) {
-                    fbStatement.setCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
-                }
-            }
-            return fbStatement;
-        }
-    }
-
     protected boolean needsScrollableCursorEnabled() {
         ResultSetBehavior resultSetBehavior = resultSetBehavior();
         return resultSetBehavior.isScrollable() && resultSetBehavior.isCloseCursorsAtCommit()
-               && connection != null && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
+               && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
                && fbStatement.supportsFetchScroll();
     }
 
     protected String nativeSQL(String sql) throws SQLException {
-        if (connection != null) {
-            return connection.nativeSQL(sql);
-        } else {
-            return FBEscapedParser.toNativeSql(sql);
-        }
+        return connection.nativeSQL(sql);
     }
 
     /**
@@ -958,11 +914,11 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     private static final Set<StatementState> NO_EXECUTION_PLAN_STATE =
             Set.of(StatementState.NEW, StatementState.ALLOCATED);
 
-    private String getExecutionPlan(SQLExceptionThrowingFunction<FbStatement, String> getPlanFunction)
+    private String getExecutionPlan(@NonNull SQLExceptionThrowingFunction<@NonNull FbStatement, String> getPlanFunction)
             throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            if (fbStatement == null || NO_EXECUTION_PLAN_STATE.contains(fbStatement.getState())) {
+            if (NO_EXECUTION_PLAN_STATE.contains(fbStatement.getState())) {
                 return noExecutionPlan();
             }
             return getPlanFunction.apply(fbStatement);
@@ -986,9 +942,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
 
     @Override
     public final int getStatementType() {
-        if (fbStatement == null) {
-            return StatementType.NONE.getStatementTypeCode();
-        }
         return fbStatement.getType().getStatementTypeCode();
     }
 
@@ -1011,7 +964,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         if (currentStatementResult != StatementResult.UPDATE_COUNT) {
             return -1;
         }
-        populateSqlCounts();
+        SqlCountHolder sqlCountHolder = populateSqlCounts();
         final long insCount = sqlCountHolder.insertCount();
         final long updCount = sqlCountHolder.updateCount();
         final long delCount = sqlCountHolder.deleteCount();
@@ -1019,7 +972,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public final long[] executeLargeBatch() throws SQLException {
+    public final long @NonNull [] executeLargeBatch() throws SQLException {
         if (connection.getAutoCommit()) {
             addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled", SQL_STATE_WARNING));
         }
@@ -1080,7 +1033,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      * @throws SQLException if a database access error occurs
      */
     @Override
-    public String enquoteLiteral(String val)  throws SQLException {
+    public @NonNull String enquoteLiteral(@NonNull String val)  throws SQLException {
         if (gdsHelper.getCurrentDatabase().getDatabaseDialect() == 1) {
             return '"' + val.replace("\"", "\"\"") + '"';
         }
@@ -1091,7 +1044,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      * @see #enquoteLiteral(String)
      */
     @Override
-    public String enquoteNCharLiteral(String val)  throws SQLException {
+    public @NonNull String enquoteNCharLiteral(@NonNull String val)  throws SQLException {
         return enquoteLiteral(val);
     }
 
@@ -1117,7 +1070,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      * @throws NullPointerException if identifier is {@code null}
      */
     @Override
-    public String enquoteIdentifier(String identifier, boolean alwaysQuote) throws SQLException {
+    public @NonNull String enquoteIdentifier(@NonNull String identifier, boolean alwaysQuote) throws SQLException {
         int len = identifier.length();
         if (len < 1 || len > connection.getMetaData().getMaxColumnNameLength()) {
             throw new SQLException("Invalid name");
@@ -1137,7 +1090,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public boolean isSimpleIdentifier(String identifier) throws SQLException {
+    public boolean isSimpleIdentifier(@NonNull String identifier) throws SQLException {
         int len = identifier.length();
         return len >= 1 && len <= connection.getMetaData().getMaxColumnNameLength()
                 && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches();
@@ -1150,26 +1103,26 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         // Normal SELECT (including selectable stored procedures) don't have an update count
         RESULT_SET(true) {
             @Override
-            public StatementResult nextResult() {
+            public @NonNull StatementResult nextResult() {
                 return NO_MORE_RESULTS;
             }
         },
         // Statements like EXECUTE BLOCK with SUSPEND and (Firebird 5) DML with RETURNING have an update count
         RESULT_SET_WITH_UPDATE_COUNT(true) {
             @Override
-            public StatementResult nextResult() {
+            public @NonNull StatementResult nextResult() {
                 return UPDATE_COUNT;
             }
         },
         UPDATE_COUNT(false) {
             @Override
-            public StatementResult nextResult() {
+            public @NonNull StatementResult nextResult() {
                 return NO_MORE_RESULTS;
             }
         },
         NO_MORE_RESULTS(false) {
             @Override
-            public StatementResult nextResult() {
+            public @NonNull StatementResult nextResult() {
                 return NO_MORE_RESULTS;
             }
         };
@@ -1183,7 +1136,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         /**
          * @return Next result
          */
-        public abstract StatementResult nextResult();
+        public abstract @NonNull StatementResult nextResult();
 
         public final boolean isResultSet() {
             return resultSet;
@@ -1196,13 +1149,13 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      *
      * @return instance of {@link org.firebirdsql.gds.ng.listeners.StatementListener}
      */
-    protected StatementListener createStatementListener() {
+    protected @NonNull StatementListener createStatementListener() {
         return new FBStatementListener();
     }
 
     private final class FBStatementListener implements StatementListener {
         @Override
-        public void receivedRow(FbStatement sender, RowValue rowValue) {
+        public void receivedRow(@NonNull FbStatement sender, @NonNull RowValue rowValue) {
             if (isUnexpectedSender(sender)) return;
             // TODO May need extra condition to distinguish between singleton result of EXECUTE PROCEDURE and INSERT ... RETURNING ...
             if (isSingletonResult) {
@@ -1214,14 +1167,15 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
 
         @Override
-        public void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) {
+        public void statementExecuted(@NonNull FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) {
             if (isUnexpectedSender(sender)) return;
             // TODO If currentStatementResult has result set, create ResultSet and attach listener to sender?
             currentStatementResult = determineInitialStatementResult(hasResultSet, hasSingletonResult);
             isSingletonResult = hasSingletonResult;
         }
 
-        private StatementResult determineInitialStatementResult(boolean hasResultSet, boolean hasSingletonResult) {
+        private @NonNull StatementResult determineInitialStatementResult(boolean hasResultSet,
+                boolean hasSingletonResult) {
             if (hasResultSet || hasSingletonResult && !isGeneratedKeyQuery()) {
                 if (jbStatementType == LocalStatementType.SELECT) {
                     return StatementResult.RESULT_SET;
@@ -1236,7 +1190,8 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
 
         @Override
-        public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
+        public void statementStateChanged(@NonNull FbStatement sender, @NonNull StatementState newState,
+                @NonNull StatementState previousState) {
             if (isUnexpectedSender(sender)) return;
             if (newState == StatementState.EXECUTING) {
                 specialResult.clear();
@@ -1252,18 +1207,18 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
 
         @Override
-        public void warningReceived(FbStatement sender, SQLWarning warning) {
+        public void warningReceived(@NonNull FbStatement sender, @NonNull SQLWarning warning) {
             if (isUnexpectedSender(sender)) return;
             addWarning(warning);
         }
 
         @Override
-        public void sqlCounts(FbStatement sender, SqlCountHolder sqlCounts) {
+        public void sqlCounts(@NonNull FbStatement sender, @NonNull SqlCountHolder sqlCounts) {
             if (isUnexpectedSender(sender)) return;
             sqlCountHolder = sqlCounts;
         }
 
-        private boolean isUnexpectedSender(FbStatement sender) {
+        private boolean isUnexpectedSender(@NonNull FbStatement sender) {
             if (sender != fbStatement) {
                 log.log(TRACE, "Received statement listener update from unrelated statement [{0}]", sender);
                 sender.removeStatementListener(this);
@@ -1278,7 +1233,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         private boolean allRowsFetched;
 
         @Override
-        public void afterLast(FbStatement sender) {
+        public void afterLast(@NonNull FbStatement sender) {
             allRowsFetched = true;
         }
 

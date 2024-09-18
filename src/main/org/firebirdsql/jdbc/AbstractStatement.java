@@ -22,6 +22,8 @@ import org.firebirdsql.gds.ng.FbAttachment;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -29,6 +31,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_ATTR_VALUE;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID;
 
@@ -48,28 +51,35 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     private static final AtomicInteger STATEMENT_ID_GENERATOR = new AtomicInteger();
 
     private final int localStatementId = STATEMENT_ID_GENERATOR.incrementAndGet();
-    private String cursorName;
+    protected final @NonNull FBConnection connection;
+    private @Nullable String cursorName;
     @SuppressWarnings("java:S3077")
-    private volatile SQLWarning warning;
-    private FetchConfig fetchConfig;
+    private volatile @Nullable SQLWarning warning;
+    private @NonNull FetchConfig fetchConfig;
 
     private volatile boolean closed;
     private boolean poolable;
     private boolean closeOnCompletion;
 
-    protected AbstractStatement(ResultSetBehavior resultSetBehavior) {
+    protected AbstractStatement(@NonNull FBConnection connection, @NonNull ResultSetBehavior resultSetBehavior) {
+        this.connection = requireNonNull(connection, "connection");
         fetchConfig = new FetchConfig(resultSetBehavior);
     }
 
+    @Override
+    public final @NonNull FBConnection getConnection() throws SQLException {
+        checkValidity();
+        return connection;
+    }
+
     /**
-     * @return instance of {@link FbStatement} associated with this statement; can be {@code null} if no statement has
-     * been prepared or executed yet.
+     * @return instance of {@link FbStatement} associated with this statement; cannot be {@code null}
      * @throws SQLException
      *         if this statement is closed
      * @throws java.sql.SQLFeatureNotSupportedException
      *         if this statement implementation does not use statement handles
      */
-    protected abstract FbStatement getStatementHandle() throws SQLException;
+    protected abstract @NonNull FbStatement getStatementHandle() throws SQLException;
 
     /**
      * Get the current statement type of this statement.
@@ -140,7 +150,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      * @throws SQLException
      *         for failures completing this statement
      */
-    public abstract void completeStatement(CompletionReason reason) throws SQLException;
+    public abstract void completeStatement(@NonNull CompletionReason reason) throws SQLException;
 
     @Override
     public final boolean isPoolable() throws SQLException {
@@ -192,7 +202,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      * @return current fetch config for this statement
      * @since 6
      */
-    protected final FetchConfig fetchConfig() {
+    protected final @NonNull FetchConfig fetchConfig() {
         try (var ignored = withLock()) {
             return fetchConfig;
         }
@@ -202,7 +212,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      * @return result set behavior for this statement
      * @since 6
      */
-    protected final ResultSetBehavior resultSetBehavior() {
+    protected final @NonNull ResultSetBehavior resultSetBehavior() {
         return fetchConfig().resultSetBehavior();
     }
 
@@ -300,7 +310,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     }
 
     @Override
-    public final void setCursorName(String cursorName) throws SQLException {
+    public final void setCursorName(@Nullable String cursorName) throws SQLException {
         checkValidity();
         try (var ignored = withLock()) {
             this.cursorName = cursorName;
@@ -311,12 +321,12 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      * @return current value of {@code cursorName}
      * @see #setCursorName(String)
      */
-    protected final String getCursorName() {
+    protected final @Nullable String getCursorName() {
         return cursorName;
     }
 
     @Override
-    public final SQLWarning getWarnings() throws SQLException {
+    public final @Nullable SQLWarning getWarnings() throws SQLException {
         checkValidity();
         return warning;
     }
@@ -327,7 +337,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
         warning = null;
     }
 
-    protected final void addWarning(SQLWarning warning) {
+    protected final void addWarning(@NonNull SQLWarning warning) {
         try (var ignored = withLock()) {
             SQLWarning currentWarning = this.warning;
             if (currentWarning == null) {
@@ -357,6 +367,8 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     /**
      * @see FbAttachment#withLock()
      */
-    protected abstract LockCloseable withLock();
+    protected final @NonNull LockCloseable withLock() {
+        return connection.withLock();
+    }
 
 }

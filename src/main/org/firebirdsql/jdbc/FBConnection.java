@@ -695,7 +695,7 @@ public class FBConnection implements FirebirdConnection {
             throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            var stmt = new FBStatement(getGDSHelper(),
+            var stmt = new FBStatement(this,
                     toResultSetBehavior(resultSetType, resultSetConcurrency, resultSetHoldability), txCoordinator);
             activeStatements.add(stmt);
             return stmt;
@@ -786,8 +786,8 @@ public class FBConnection implements FirebirdConnection {
                 blobCoordinator = null;
             }
 
-            var stmt = new FBPreparedStatement(getGDSHelper(), sql, rsBehavior, coordinator, blobCoordinator, metaData,
-                    false, generatedKeys);
+            var stmt = new FBPreparedStatement(this, sql, rsBehavior, coordinator, blobCoordinator, metaData, false,
+                    generatedKeys);
 
             activeStatements.add(stmt);
             return stmt;
@@ -885,7 +885,7 @@ public class FBConnection implements FirebirdConnection {
                 storedProcedureMetaData = StoredProcedureMetaDataFactory.getInstance(this);
             }
 
-            var stmt = new FBCallableStatement(getGDSHelper(), sql, rsBehavior, storedProcedureMetaData, txCoordinator,
+            var stmt = new FBCallableStatement(this, sql, rsBehavior, storedProcedureMetaData, txCoordinator,
                     txCoordinator);
             activeStatements.add(stmt);
             return stmt;

@@ -28,6 +28,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -93,7 +94,7 @@ public interface FirebirdStatement extends Statement {
      * @deprecated Use {@link #getResultSet()} instead, will be removed in Jaybird 7
      */
     @Deprecated(since = "6", forRemoval = true)
-    ResultSet getCurrentResultSet() throws SQLException;
+    @Nullable ResultSet getCurrentResultSet() throws SQLException;
     
     /**
      * Check if this statement is valid.

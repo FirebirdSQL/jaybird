@@ -21,9 +21,10 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.parser.LocalStatementClass;
 import org.firebirdsql.jaybird.parser.LocalStatementType;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -33,7 +34,6 @@ import java.sql.*;
 import java.util.Calendar;
 import java.util.List;
 
-import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.FBPreparedStatement.METHOD_NOT_SUPPORTED;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
 
@@ -54,25 +54,23 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
 @SuppressWarnings("java:S1192")
 final class FBTxPreparedStatement extends AbstractStatement implements FirebirdPreparedStatement {
 
-    private final FBConnection connection;
-    private final LocalStatementType statementType;
+    private final @NonNull LocalStatementType statementType;
     private final String sql;
 
-    FBTxPreparedStatement(FBConnection connection, LocalStatementType statementType, String sql,
-            ResultSetBehavior rsBehavior) throws SQLException {
-        super(rsBehavior);
+    FBTxPreparedStatement(@NonNull FBConnection connection, @NonNull LocalStatementType statementType, String sql,
+            @NonNull ResultSetBehavior rsBehavior) throws SQLException {
+        super(connection, rsBehavior);
         if (statementType.statementClass() != LocalStatementClass.TRANSACTION_BOUNDARY) {
             throw new IllegalArgumentException("Unsupported value for statementType (implementation bug): "
                     + statementType);
         }
-        this.connection = requireNonNull(connection, "connection");
         this.statementType = statementType;
         this.sql = sql;
         setPoolable(true);
     }
 
     @Override
-    protected FbStatement getStatementHandle() throws SQLException {
+    protected @NonNull FbStatement getStatementHandle() throws SQLException {
         throw new SQLFeatureNotSupportedException("This statement implementation does not use a statement handle");
     }
 
@@ -112,7 +110,7 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     }
 
     @Override
-    public void completeStatement(CompletionReason reason) throws SQLException {
+    public void completeStatement(@NonNull CompletionReason reason) throws SQLException {
         if (reason == CompletionReason.CONNECTION_ABORT) {
             super.close();
         }
@@ -190,23 +188,17 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
 
     @SuppressWarnings("java:S4144")
     @Override
-    public ResultSetMetaData getMetaData() throws SQLException {
+    public @Nullable ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
         // There is never a result set, so no metadata
         return null;
     }
 
     @Override
-    public ParameterMetaData getParameterMetaData() throws SQLException {
+    public @NonNull ParameterMetaData getParameterMetaData() throws SQLException {
         checkValidity();
         // Zero parameters, so empty parameter metadata
         return new FBParameterMetaData(connection.getFbDatabase().emptyRowDescriptor(), connection);
-    }
-
-    @Override
-    public Connection getConnection() throws SQLException {
-        checkValidity();
-        return connection;
     }
 
     @Override
@@ -640,7 +632,7 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     }
 
     @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
+    public <T> @NonNull T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
             throw new SQLException("Unable to unwrap to class " + (iface != null ? iface.getName() : "(null)"));
         }
@@ -650,11 +642,6 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     @Override
     public boolean isWrapperFor(Class<?> iface) {
         return iface != null && iface.isAssignableFrom(getClass());
-    }
-
-    @Override
-    protected LockCloseable withLock() {
-        return connection.withLock();
     }
 
 }

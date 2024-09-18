@@ -1087,6 +1087,16 @@ We also fixed a potential `NullPointerException` in the implementation of these 
 The methods `getLastExceutionPlan()` and `getLastExplainedExecutionPlan()` which were already defined in `FirebirdStatement` now have a default implementation that call `getExecutionPlan()` and `getExplainedExecutionPlan()`.
 These methods have been deprecated with the advice to use the new getters.
 For now, we have no plans to remove these methods in a future release.
+* Added dependency on `org.jspecify:jspecify` for nullability annotations.
++
+We are working on adding nullability information where applicable, but right now annotation of Jaybird is far from complete, and this will generally only be added when we touch a class for other reasons.
+The addition of these annotations is intended for making it easier for us to reason about the implementation, and get static analysis warnings about possible programming errors.
+Hopefully it will -- in time -- provide some benefits for users of Jaybird's extension interfaces and "`internal`" APIs.
++
+If a type is not annotated, consider it nullable unless stated otherwise in the API documentation.
++
+In practice, this is an optional dependency, but Maven will pull it in by default.
+If the JSpecify JAR is not included on the classpath or modulepath, Jaybird will still work.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

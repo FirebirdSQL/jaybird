@@ -91,7 +91,7 @@ final class ClientInfoProvider {
         // even in auto-commit)
         var rsBehavior = ResultSetBehavior.of(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT);
-        return this.statement = new FBStatement(connection.getGDSHelper(), rsBehavior, metaDataTransactionCoordinator);
+        return this.statement = new FBStatement(connection, rsBehavior, metaDataTransactionCoordinator);
     }
 
     /**
