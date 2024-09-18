@@ -165,7 +165,7 @@ public final class ResultSetAssertions {
      * @see #assertNotBeforeFirst(ResultSet, String)
      */
     public static void assertNotBeforeFirst(ResultSet rs) {
-        assertNotBeforeFirst(rs, "Expected ResultSet.isBeforFirst == false");
+        assertNotBeforeFirst(rs, "Expected ResultSet.isBeforeFirst == false");
     }
 
     /**
@@ -306,6 +306,22 @@ public final class ResultSetAssertions {
                         message + " at column " + colIdx + " (1-based)");
             }
         }
+    }
+
+    public static void assertWasNull(ResultSet rs) {
+        assertWasNull(rs, "expected ResultSet.wasNull == true");
+    }
+
+    public static void assertWasNull(ResultSet rs, String message) {
+        assertTrue(assertNoException(rs::wasNull, "ResultSet.wasNull()"), message);
+    }
+
+    public static void assertWasNotNull(ResultSet rs) {
+        assertWasNotNull(rs, "expected ResultSet.wasNull == false");
+    }
+
+    public static void assertWasNotNull(ResultSet rs, String message) {
+        assertFalse(assertNoException(rs::wasNull, "ResultSet.wasNull()"), message);
     }
 
     private static <T> T assertNoException(ThrowingSupplier<T> supplier, String methodName) {

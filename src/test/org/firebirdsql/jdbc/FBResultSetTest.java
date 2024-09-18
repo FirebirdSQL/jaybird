@@ -49,6 +49,8 @@ import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNext
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNotAfterLast;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNotBeforeFirst;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertResultSetOpen;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertWasNotNull;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertWasNull;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.jaybird.props.PropertyConstants.SCROLLABLE_CURSOR_EMULATED;
@@ -1526,6 +1528,31 @@ class FBResultSetTest {
                     Arguments.of(TYPE_SCROLL_INSENSITIVE, SCROLLABLE_CURSOR_SERVER)));
         }
         return defaultArguments;
+    }
+
+    @Test
+    void testWasNull() throws Exception {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement();
+             var rs = stmt.executeQuery(
+                     "select cast(null as integer), 1, 'abc', cast(null as char(3)) from rdb$database")) {
+            assertWasNotNull(rs, "wasNull == false before row");
+            assertNextRow(rs);
+            assertWasNotNull(rs, "wasNull == false on row, before requesting value");
+            assertEquals(0, rs.getInt(1), "Expected default value 0 for getInt on NULL (first column)");
+            assertWasNull(rs, "wasNull == true after requesting null value");
+            assertEquals(1, rs.getInt(2), "Expected actual value of second column");
+            assertWasNotNull(rs, "wasNull == false after requesting non-null value");
+            assertEquals("abc", rs.getObject(3), "Expected actual value of third column");
+            assertWasNotNull(rs, "wasNull == false after requesting non-null value");
+            assertNull(rs.getObject(4), "Expected null value of fourth column");
+            assertWasNull(rs, "wasNull == true after requesting null value");
+            assertNoNextRow(rs);
+            assertWasNotNull(rs, "wasNull == false after end of result set");
+            rs.close();
+            var e = assertThrows(SQLException.class, rs::wasNull, "wasNull not allowed after result set close");
+            assertThat(e, message(equalTo("The result set is closed")));
+        }
     }
 
     static Stream<String> scrollableCursorPropertyValues() {
