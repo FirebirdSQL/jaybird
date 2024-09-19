@@ -35,4 +35,4 @@ ext.isReleaseVersion = provider {
 }
 
 ext.sourceDocumentation = file('src/documentation')
-ext.buildDocs = file("$buildDir/docs")
+ext.buildDocs = layout.buildDirectory.dir("docs")

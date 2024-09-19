@@ -213,7 +213,7 @@ test {
 
     doFirst {
         // ensure the 'standard' database directory exists before the test runs
-        def standardDbDir = file("$buildDir/tmp/db")
+        def standardDbDir = layout.buildDirectory.dir("tmp/db")
         mkdir standardDbDir
         // ensures a Firebird server can create, use and drop databases from this directory
         ant.chmod(dir: standardDbDir, perm: '777')
