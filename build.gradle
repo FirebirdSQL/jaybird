@@ -20,7 +20,7 @@ plugins {
     id 'nu.studer.credentials' version '3.0'
     id 'maven-publish'
     id 'signing'
-    id 'org.asciidoctor.jvm.convert' version '4.0.2'
+    id 'org.asciidoctor.jvm.convert' version '4.0.3'
 }
 
 defaultTasks 'clean', 'build'
@@ -136,7 +136,8 @@ processResources {
 //apply from: 'documentation.gradle'
 
 asciidoctorj {
-    version = '2.5.11'
+    // NOTE: Don't upgrade to v 3.0.0, as it requires Java 11
+    version = '2.5.13'
 }
 
 tasks.named('asciidoctor', AsciidoctorTask).configure {
