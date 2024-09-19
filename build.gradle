@@ -14,7 +14,7 @@ plugins {
     id 'nu.studer.credentials' version '3.0'
     id 'maven-publish'
     id 'signing'
-    id 'org.asciidoctor.jvm.convert' version '4.0.2'
+    id 'org.asciidoctor.jvm.convert' version '4.0.3'
 }
 
 defaultTasks 'clean', 'build'
@@ -97,7 +97,8 @@ processResources {
 }
 
 asciidoctorj {
-    version = '2.5.11'
+    // asciidoctorj 3.0.0 doesn't seem to work with asciidoctor-gradle-plugin 4.0.3
+    version = '2.5.13'
 }
 
 tasks.named('asciidoctor', AsciidoctorTask).configure {
