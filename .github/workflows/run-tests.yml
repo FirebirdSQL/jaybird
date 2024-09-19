@@ -21,6 +21,8 @@ jobs:
           distribution: 'temurin'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808
+        with:
+          cache-read-only: false
       - name: Build with Gradle
         run: ./gradlew test -PbuildProfile=java11 -Ptest.dbondocker=true -Ptest.db.dir=/firebird/data
       - name: Store Report Artifact
