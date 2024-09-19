@@ -19,19 +19,12 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
-      - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@d9336dac04dea2507a617466bc058a3def92b18b
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/master' }}
       - name: Build with Gradle
         run: ./gradlew test -Ptest.dbondocker=true -Ptest.db.dir=/firebird/data
-      - name: Cleanup Gradle Cache
-        # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
-        # Restoring these files from a GitHub Actions cache might cause problems for future builds.
-        run: |
-          rm -f ~/.gradle/caches/modules-2/modules-2.lock
-          rm -f ~/.gradle/caches/modules-2/gc.properties
-          rm -fr ~/.gradle/caches/*/plugin-resolution/
-          find ~/.gradle/caches/ -name "*.lock" -type f -delete
       - name: Store Report Artifact
         uses: actions/upload-artifact@v4
         if: always()
