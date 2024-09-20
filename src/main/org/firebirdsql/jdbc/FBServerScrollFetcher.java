@@ -51,6 +51,10 @@ final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
 
     private final FbStatement stmt;
 
+    // We delay knowing the local and server-side sizes. Requesting the server-side cursor size triggers a full
+    // materialization of the cursor on the server, so delaying this avoids overhead at the cost of some more complexity
+    // in this fetcher.
+
     // The cursor size taking account maxRows
     private int cursorSize = CURSOR_SIZE_UNKNOWN;
     // The cursor size on the server (ignoring maxRows)
@@ -411,6 +415,11 @@ final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
     }
 
     @Override
+    public void beforeExecuteInsert() throws SQLException {
+        requireCursorSize();
+    }
+
+    @Override
     public void insertRow(RowValue data) throws SQLException {
         throw calledUndecorated();
     }
@@ -465,14 +474,12 @@ final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
 
     private int requireServerCursorSize() throws SQLException {
         int serverCursorSize = this.serverCursorSize;
-        if (serverCursorSize == CURSOR_SIZE_UNKNOWN) {
-            if (!stmt.hasFetched()) {
-                // A fetch is required before we can retrieve the cursor size, fetch without moving current position
-                stmt.fetchScroll(FetchType.RELATIVE, -1, 0);
-            }
-            serverCursorSize = this.serverCursorSize = retrieveServerCursorSize();
+        if (serverCursorSize != CURSOR_SIZE_UNKNOWN) return serverCursorSize;
+        if (!stmt.hasFetched()) {
+            // A fetch is required before we can retrieve the cursor size, fetch without moving current position
+            stmt.fetchScroll(FetchType.RELATIVE, -1, 0);
         }
-        return serverCursorSize;
+        return this.serverCursorSize = retrieveServerCursorSize();
     }
 
     @Override

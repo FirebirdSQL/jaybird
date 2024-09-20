@@ -153,6 +153,26 @@ public sealed interface FBFetcher permits AbstractFetcher, FBCachedFetcher, FBSe
     boolean isAfterLast() throws SQLException;
 
     /**
+     * Signals to the fetcher that an insert is about to be executed.
+     * <p>
+     * This method is primarily intended for a workaround with {@link FBServerScrollFetcher} if the insert is performed
+     * when the server-side cursor is not fully materialized by the server, as that could result in the server also
+     * including the inserted row, leading to duplicate reporting of the inserted row. In response to this method,
+     * the fetcher can trigger full materialization of the server-side cursor.
+     * </p>
+     * <p>
+     * The default implementation of this method does nothing.
+     * </p>
+     *
+     * @throws SQLException
+     *         for database access exceptions
+     * @since 5.0.6
+     */
+    default void beforeExecuteInsert() throws SQLException {
+        // default do nothing
+    }
+
+    /**
      * Insert row at current position. This method adds a row at the current
      * position in case of updatable result sets after successful execution of
      * the {@link java.sql.ResultSet#insertRow()} method.

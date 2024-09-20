@@ -1434,6 +1434,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public void insertRow() throws SQLException {
         FirebirdRowUpdater rowUpdater = requireRowUpdater();
+        fbFetcher.beforeExecuteInsert();
         rowUpdater.insertRow();
         fbFetcher.insertRow(rowUpdater.getInsertRow());
         notifyRowUpdater();

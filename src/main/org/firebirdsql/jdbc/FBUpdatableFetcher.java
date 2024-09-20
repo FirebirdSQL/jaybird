@@ -272,6 +272,11 @@ final class FBUpdatableFetcher implements FBFetcher {
     }
 
     @Override
+    public void beforeExecuteInsert() throws SQLException {
+        fetcher.beforeExecuteInsert();
+    }
+
+    @Override
     public void insertRow(RowValue data) throws SQLException {
         insertedRows.add(data);
         fetcherListener.rowChanged(this, data);
