@@ -33,7 +33,7 @@ import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
@@ -60,6 +60,7 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
  */
 @SuppressWarnings("RedundantThrows")
 @InternalApi
+@NullMarked
 public class FBPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
 
     public static final String METHOD_NOT_SUPPORTED =
@@ -83,14 +84,14 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      */
     private final boolean generatedKeys;
 
-    private @NonNull FBField @NonNull [] fields = FIELDS_NOT_INITIALIZED;
+    private FBField[] fields = FIELDS_NOT_INITIALIZED;
 
     // we need to handle procedure execution separately,
     // because in this case we must send out_xsqlda to the server.
     private boolean isExecuteProcedureStatement;
 
-    private final FBObjectListener.@NonNull BlobListener blobListener;
-    private @NonNull RowValue fieldValues = RowValue.EMPTY_ROW_VALUE;
+    private final FBObjectListener.BlobListener blobListener;
+    private RowValue fieldValues = RowValue.EMPTY_ROW_VALUE;
     private @Nullable Batch batch;
 
     /**
@@ -108,9 +109,9 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * @throws SQLException
      *         if something went wrong.
      */
-    protected FBPreparedStatement(@NonNull FBConnection connection, @NonNull ResultSetBehavior rsBehavior,
-            FBObjectListener.@NonNull StatementListener statementListener,
-            FBObjectListener.@NonNull BlobListener blobListener) throws SQLException {
+    protected FBPreparedStatement(FBConnection connection, ResultSetBehavior rsBehavior,
+            FBObjectListener.StatementListener statementListener, FBObjectListener.BlobListener blobListener)
+            throws SQLException {
         super(connection, rsBehavior, statementListener);
         this.blobListener = blobListener;
         this.standaloneStatement = false;
@@ -141,10 +142,9 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * @throws SQLException
      *         if something went wrong.
      */
-    protected FBPreparedStatement(@NonNull FBConnection connection, String sql, @NonNull ResultSetBehavior rsBehavior,
-            FBObjectListener.@NonNull StatementListener statementListener,
-            FBObjectListener.@Nullable BlobListener blobListener, boolean metaDataQuery, boolean standaloneStatement,
-            boolean generatedKeys) throws SQLException {
+    protected FBPreparedStatement(FBConnection connection, String sql, ResultSetBehavior rsBehavior,
+            FBObjectListener.StatementListener statementListener, FBObjectListener.@Nullable BlobListener blobListener,
+            boolean metaDataQuery, boolean standaloneStatement, boolean generatedKeys) throws SQLException {
         super(connection, rsBehavior, statementListener);
         this.blobListener = blobListener != null ? blobListener : FBObjectListener.NoActionBlobListener.instance();
         this.metaDataQuery = metaDataQuery;
@@ -168,7 +168,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
     
     @Override
-    public void completeStatement(@NonNull CompletionReason reason) throws SQLException {
+    public void completeStatement(CompletionReason reason) throws SQLException {
         if (!metaDataQuery || reason == CompletionReason.CONNECTION_ABORT) {
             super.completeStatement(reason);
         } else {
@@ -187,11 +187,11 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public @NonNull ResultSet executeQuery() throws SQLException {
+    public ResultSet executeQuery() throws SQLException {
         return executeQuery(false);
     }
 
-    private @NonNull ResultSet executeQuery(boolean metaDataQuery) throws SQLException {
+    private ResultSet executeQuery(boolean metaDataQuery) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             notifyStatementStarted();
@@ -243,7 +243,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         }
     }
 
-    public @NonNull FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
+    public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
         return new FBParameterMetaData(fbStatement.getParameterDescriptor(), connection);
     }
 
@@ -253,22 +253,23 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, @Nullable InputStream inputStream, int length) throws SQLException {
         getField(parameterIndex).setBinaryStream(inputStream, length);
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, @Nullable InputStream inputStream, long length)
+            throws SQLException {
         getField(parameterIndex).setBinaryStream(inputStream, length);
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream inputStream) throws SQLException {
+    public void setBinaryStream(int parameterIndex, @Nullable InputStream inputStream) throws SQLException {
         getField(parameterIndex).setBinaryStream(inputStream);
     }
 
     @Override
-    public void setBytes(int parameterIndex, byte[] x) throws SQLException {
+    public void setBytes(int parameterIndex, byte @Nullable [] x) throws SQLException {
         getField(parameterIndex).setBytes(x);
     }
 
@@ -283,7 +284,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public void setDate(int parameterIndex, Date x) throws SQLException {
+    public void setDate(int parameterIndex, @Nullable Date x) throws SQLException {
         getField(parameterIndex).setDate(x);
     }
 
@@ -308,7 +309,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public void setObject(int parameterIndex, Object x) throws SQLException {
+    public void setObject(int parameterIndex, @Nullable Object x) throws SQLException {
         getField(parameterIndex).setObject(x);
     }
 
@@ -320,7 +321,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setObject(int parameterIndex, Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
+    public void setObject(int parameterIndex, @Nullable Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
         setObject(parameterIndex, x, targetSqlType.getVendorTypeNumber(), scaleOrLength);
     }
 
@@ -332,7 +333,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setObject(int parameterIndex, Object x, SQLType targetSqlType) throws SQLException {
+    public void setObject(int parameterIndex, @Nullable Object x, SQLType targetSqlType) throws SQLException {
         setObject(parameterIndex, x, targetSqlType.getVendorTypeNumber());
     }
 
@@ -342,22 +343,22 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public void setString(int parameterIndex, String x) throws SQLException {
+    public void setString(int parameterIndex, @Nullable String x) throws SQLException {
         getField(parameterIndex).setString(x);
     }
 
     @Override
-    public void setTime(int parameterIndex, Time x) throws SQLException {
+    public void setTime(int parameterIndex, @Nullable Time x) throws SQLException {
         getField(parameterIndex).setTime(x);
     }
 
     @Override
-    public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
+    public void setTimestamp(int parameterIndex, @Nullable Timestamp x) throws SQLException {
         getField(parameterIndex).setTimestamp(x);
     }
 
     @Override
-    public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
+    public void setBigDecimal(int parameterIndex, @Nullable BigDecimal x) throws SQLException {
         getField(parameterIndex).setBigDecimal(x);
     }
 
@@ -367,14 +368,14 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * @param columnIndex 1-based index of the parameter
      * @return Field descriptor
      */
-    protected @NonNull FieldDescriptor getParameterDescriptor(int columnIndex) {
+    protected FieldDescriptor getParameterDescriptor(int columnIndex) {
         return fbStatement.getParameterDescriptor().getFieldDescriptor(columnIndex - 1);
     }
 
     /**
      * Factory method for the field access objects
      */
-    protected @NonNull FBField getField(int columnIndex) throws SQLException {
+    protected FBField getField(int columnIndex) throws SQLException {
         checkValidity();
         if (columnIndex > fields.length) {
             throw new SQLException("Invalid column index: " + columnIndex,
@@ -391,7 +392,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public final void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
+    public final void setAsciiStream(int parameterIndex, @Nullable InputStream x, int length) throws SQLException {
         setBinaryStream(parameterIndex, x, length);
     }
 
@@ -402,7 +403,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public final void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
+    public final void setAsciiStream(int parameterIndex, @Nullable InputStream x, long length) throws SQLException {
         setBinaryStream(parameterIndex, x, length);
     }
 
@@ -413,7 +414,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public final void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
+    public final void setAsciiStream(int parameterIndex, @Nullable InputStream x) throws SQLException {
         setBinaryStream(parameterIndex, x);
     }
 
@@ -428,7 +429,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * @deprecated
      */
     @Deprecated(since = "1")
-    public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
+    public void setUnicodeStream(int parameterIndex, @Nullable InputStream x, int length) throws SQLException {
         throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
 
@@ -439,7 +440,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setURL(int parameterIndex, URL url) throws SQLException {
+    public void setURL(int parameterIndex, @Nullable URL url) throws SQLException {
         throw new FBDriverNotCapableException("Type URL not supported");
     }
 
@@ -450,7 +451,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
+    public void setNCharacterStream(int parameterIndex, @Nullable Reader value, long length) throws SQLException {
         setCharacterStream(parameterIndex, value, length);
     }
 
@@ -461,7 +462,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
+    public void setNCharacterStream(int parameterIndex, @Nullable Reader value) throws SQLException {
         setCharacterStream(parameterIndex, value);
     }
 
@@ -472,7 +473,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setNClob(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setNClob(int parameterIndex, @Nullable Reader reader, long length) throws SQLException {
         setClob(parameterIndex, reader, length);
     }
 
@@ -483,7 +484,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setNClob(int parameterIndex, Reader reader) throws SQLException {
+    public void setNClob(int parameterIndex, @Nullable Reader reader) throws SQLException {
         setClob(parameterIndex, reader);
     }
 
@@ -494,7 +495,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setNString(int parameterIndex, String value) throws SQLException {
+    public void setNString(int parameterIndex, @Nullable String value) throws SQLException {
         setString(parameterIndex, value);
     }
 
@@ -512,7 +513,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws SQLException {
+    public void setObject(int parameterIndex, @Nullable Object x, int targetSqlType, int scale) throws SQLException {
         setObject(parameterIndex, x);
     }
 
@@ -523,7 +524,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
+    public void setObject(int parameterIndex, @Nullable Object x, int targetSqlType) throws SQLException {
         setObject(parameterIndex, x);
     }
 
@@ -554,7 +555,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * @throws SQLException
      *         if something went wrong or no result set was available.
      */
-    @NonNull ResultSet executeMetaDataQuery() throws SQLException {
+    ResultSet executeMetaDataQuery() throws SQLException {
         return executeQuery(true);
     }
 
@@ -603,7 +604,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         }
     }
 
-    private @NonNull Batch requireBatch() throws SQLException {
+    private Batch requireBatch() throws SQLException {
         Batch batch = this.batch;
         if (batch != null) {
             return batch;
@@ -612,7 +613,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     // NOTE: This is not used for FBCallableStatement!
-    private @NonNull Batch createBatch() throws SQLException {
+    private Batch createBatch() throws SQLException {
         if (canExecuteUsingServerBatch()) {
             return new ServerBatch(
                     FbBatchConfig.of(FbBatchConfig.HALT_AT_FIRST_ERROR, FbBatchConfig.UPDATE_COUNTS,
@@ -665,7 +666,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    protected @NonNull List<@NonNull Long> executeBatchInternal() throws SQLException {
+    protected List<Long> executeBatchInternal() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             notifyStatementStarted();
@@ -681,17 +682,17 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
+    public void setCharacterStream(int parameterIndex, @Nullable Reader reader, int length) throws SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
     }
 
     @Override
-    public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setCharacterStream(int parameterIndex, @Nullable Reader reader, long length) throws SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
     }
 
     @Override
-    public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
+    public void setCharacterStream(int parameterIndex, @Nullable Reader reader) throws SQLException {
         getField(parameterIndex).setCharacterStream(reader);
     }
 
@@ -702,37 +703,37 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setRef(int i, Ref x) throws SQLException {
+    public void setRef(int i, @Nullable Ref x) throws SQLException {
         throw new FBDriverNotCapableException("Type REF not supported");
     }
 
     @Override
-    public void setBlob(int parameterIndex, Blob blob) throws SQLException {
+    public void setBlob(int parameterIndex, @Nullable Blob blob) throws SQLException {
         getField(parameterIndex).setBlob(blob);
     }
 
     @Override
-    public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+    public void setBlob(int parameterIndex, @Nullable InputStream inputStream, long length) throws SQLException {
         setBinaryStream(parameterIndex, inputStream, length);
     }
 
     @Override
-    public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
+    public void setBlob(int parameterIndex, @Nullable InputStream inputStream) throws SQLException {
         setBinaryStream(parameterIndex, inputStream);
     }
 
     @Override
-    public void setClob(int parameterIndex, Clob clob) throws SQLException {
+    public void setClob(int parameterIndex, @Nullable Clob clob) throws SQLException {
         getField(parameterIndex).setClob(clob);
     }
 
     @Override
-    public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setClob(int parameterIndex, @Nullable Reader reader, long length) throws SQLException {
         setCharacterStream(parameterIndex, reader, length);
     }
 
     @Override
-    public void setClob(int parameterIndex, Reader reader) throws SQLException {
+    public void setClob(int parameterIndex, @Nullable Reader reader) throws SQLException {
         setCharacterStream(parameterIndex, reader);
     }
 
@@ -743,7 +744,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setArray(int i, Array x) throws SQLException {
+    public void setArray(int i, @Nullable Array x) throws SQLException {
         throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
@@ -755,17 +756,17 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
+    public void setDate(int parameterIndex, @Nullable Date x, @Nullable Calendar cal) throws SQLException {
         getField(parameterIndex).setDate(x, cal);
     }
 
     @Override
-    public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
+    public void setTime(int parameterIndex, @Nullable Time x, @Nullable Calendar cal) throws SQLException {
         getField(parameterIndex).setTime(x, cal);
     }
 
     @Override
-    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
+    public void setTimestamp(int parameterIndex, @Nullable Timestamp x, @Nullable Calendar cal) throws SQLException {
         getField(parameterIndex).setTimestamp(x, cal);
     }
 
@@ -814,7 +815,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @Override
-    public @NonNull ParameterMetaData getParameterMetaData() throws SQLException {
+    public ParameterMetaData getParameterMetaData() throws SQLException {
         return getFirebirdParameterMetaData();
     }
 
@@ -825,12 +826,12 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setNClob(int parameterIndex, NClob value) throws SQLException {
+    public void setNClob(int parameterIndex, @Nullable NClob value) throws SQLException {
         setClob(parameterIndex, value);
     }
 
     @Override
-    public void setRowId(int parameterIndex, RowId x) throws SQLException {
+    public void setRowId(int parameterIndex, @Nullable RowId x) throws SQLException {
         getField(parameterIndex).setRowId(x);
     }
 
@@ -841,14 +842,14 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * </p>
      */
     @Override
-    public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
+    public void setSQLXML(int parameterIndex, @Nullable SQLXML xmlObject) throws SQLException {
         throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
     
     // Methods not allowed to be used on PreparedStatement and CallableStatement
     
     @Override
-    public @NonNull ResultSet executeQuery(String sql) throws SQLException {
+    public ResultSet executeQuery(String sql) throws SQLException {
         throw new SQLNonTransientException(METHOD_NOT_SUPPORTED, SQL_STATE_GENERAL_ERROR);
     }
     
@@ -914,18 +915,18 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     private static final class BatchStatementListener implements StatementListener {
 
-        private final @NonNull List<@NonNull RowValue> rows;
+        private final List<RowValue> rows;
 
         private BatchStatementListener(int expectedSize) {
             rows = new ArrayList<>(expectedSize);
         }
 
         @Override
-        public void receivedRow(@NonNull FbStatement sender, @NonNull RowValue rowValue) {
+        public void receivedRow(FbStatement sender, RowValue rowValue) {
             rows.add(rowValue);
         }
 
-        public @NonNull List<@NonNull RowValue> getRows() {
+        public List<RowValue> getRows() {
             return new ArrayList<>(rows);
         }
     }
@@ -933,10 +934,10 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     private final class BatchedRowValue implements Batch.BatchRowValue {
 
-        private final @NonNull RowValue rowValue;
+        private final RowValue rowValue;
         private @Nullable Object @Nullable [] cachedObjects;
 
-        private BatchedRowValue(@NonNull RowValue rowValue) {
+        private BatchedRowValue(RowValue rowValue) {
             this.rowValue = rowValue;
         }
 
@@ -967,7 +968,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         }
 
         @Override
-        public @NonNull RowValue toRowValue() throws SQLException {
+        public RowValue toRowValue() throws SQLException {
             // NOTE This is basically the old implementation of flushing fields. The use of the fieldValues field is
             // a bit of a kludge, but we use fields for the operation, which are hardwired to it.
             // We may want to see if we can move the flushing down into CachedObject or something like that
@@ -997,10 +998,10 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      */
     private final class EmulatedPreparedStatementBatch implements Batch {
 
-        private final @NonNull Deque<@NonNull BatchRowValue> batchRowValues = new ArrayDeque<>();
+        private final Deque<BatchRowValue> batchRowValues = new ArrayDeque<>();
 
         @Override
-        public void addBatch(@NonNull BatchRowValue rowValue) throws SQLException {
+        public void addBatch(BatchRowValue rowValue) throws SQLException {
             batchRowValues.addLast(rowValue);
         }
 
@@ -1009,7 +1010,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         }
 
         @Override
-        public @NonNull List<@NonNull Long> execute() throws SQLException {
+        public List<Long> execute() throws SQLException {
             if (isEmpty()) {
                 return emptyList();
             }
@@ -1042,7 +1043,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             }
         }
 
-        private long executeSingleForBatch(@NonNull BatchRowValue batchRowValue) throws SQLException {
+        private long executeSingleForBatch(BatchRowValue batchRowValue) throws SQLException {
             if (internalExecute(batchRowValue.toRowValue())) {
                 throw batchStatementReturnedResultSet();
             }

@@ -27,12 +27,16 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
  * Firebird-specific extensions to the {@link java.sql.ResultSet} interface.
  */
+@NullMarked
 public interface FirebirdResultSet extends ResultSet {
 
     /**
@@ -45,7 +49,7 @@ public interface FirebirdResultSet extends ResultSet {
      * 
      * @see FirebirdPreparedStatement#getExecutionPlan()
      */
-    String getExecutionPlan() throws SQLException;
+    @Nullable String getExecutionPlan() throws SQLException;
 
     /**
      * Get detailed execution plan for the specified result set.
@@ -57,5 +61,5 @@ public interface FirebirdResultSet extends ResultSet {
      *
      * @see FirebirdPreparedStatement#getExplainedExecutionPlan()
      */
-    String getExplainedExecutionPlan() throws SQLException;
+    @Nullable String getExplainedExecutionPlan() throws SQLException;
 }

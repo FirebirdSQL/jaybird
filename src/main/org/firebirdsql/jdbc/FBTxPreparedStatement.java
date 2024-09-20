@@ -23,7 +23,7 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.jaybird.parser.LocalStatementClass;
 import org.firebirdsql.jaybird.parser.LocalStatementType;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
@@ -52,13 +52,14 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
  * @since 6
  */
 @SuppressWarnings("java:S1192")
+@NullMarked
 final class FBTxPreparedStatement extends AbstractStatement implements FirebirdPreparedStatement {
 
-    private final @NonNull LocalStatementType statementType;
+    private final LocalStatementType statementType;
     private final String sql;
 
-    FBTxPreparedStatement(@NonNull FBConnection connection, @NonNull LocalStatementType statementType, String sql,
-            @NonNull ResultSetBehavior rsBehavior) throws SQLException {
+    FBTxPreparedStatement(FBConnection connection, LocalStatementType statementType, String sql,
+            ResultSetBehavior rsBehavior) throws SQLException {
         super(connection, rsBehavior);
         if (statementType.statementClass() != LocalStatementClass.TRANSACTION_BOUNDARY) {
             throw new IllegalArgumentException("Unsupported value for statementType (implementation bug): "
@@ -70,19 +71,19 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     }
 
     @Override
-    protected @NonNull FbStatement getStatementHandle() throws SQLException {
+    protected FbStatement getStatementHandle() throws SQLException {
         throw new SQLFeatureNotSupportedException("This statement implementation does not use a statement handle");
     }
 
     @Override
-    public String getExecutionPlan() throws SQLException {
+    public @Nullable String getExecutionPlan() throws SQLException {
         checkValidity();
         throw new FBDriverNotCapableException(
                 "Cannot provide an execution plan for a transaction management statement");
     }
 
     @Override
-    public String getExplainedExecutionPlan() throws SQLException {
+    public @Nullable String getExplainedExecutionPlan() throws SQLException {
         checkValidity();
         throw new FBDriverNotCapableException(
                 "Cannot provide an explained execution plan for a transaction management statement");
@@ -110,7 +111,7 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     }
 
     @Override
-    public void completeStatement(@NonNull CompletionReason reason) throws SQLException {
+    public void completeStatement(CompletionReason reason) throws SQLException {
         if (reason == CompletionReason.CONNECTION_ABORT) {
             super.close();
         }
@@ -195,7 +196,7 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     }
 
     @Override
-    public @NonNull ParameterMetaData getParameterMetaData() throws SQLException {
+    public ParameterMetaData getParameterMetaData() throws SQLException {
         checkValidity();
         // Zero parameters, so empty parameter metadata
         return new FBParameterMetaData(connection.getFbDatabase().emptyRowDescriptor(), connection);
@@ -317,47 +318,47 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     }
 
     @Override
-    public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
+    public void setBigDecimal(int parameterIndex, @Nullable BigDecimal x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setString(int parameterIndex, String x) throws SQLException {
+    public void setString(int parameterIndex, @Nullable String x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setBytes(int parameterIndex, byte[] x) throws SQLException {
+    public void setBytes(int parameterIndex, byte @Nullable [] x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setDate(int parameterIndex, Date x) throws SQLException {
+    public void setDate(int parameterIndex, @Nullable Date x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setTime(int parameterIndex, Time x) throws SQLException {
+    public void setTime(int parameterIndex, @Nullable Time x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
+    public void setTimestamp(int parameterIndex, @Nullable Timestamp x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
+    public void setAsciiStream(int parameterIndex, @Nullable InputStream x, int length) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
+    public void setUnicodeStream(int parameterIndex, @Nullable InputStream x, int length) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream x, int length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, @Nullable InputStream x, int length) throws SQLException {
         noParameters(parameterIndex);
     }
 
@@ -368,52 +369,52 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     }
 
     @Override
-    public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
+    public void setObject(int parameterIndex, @Nullable Object x, int targetSqlType) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setObject(int parameterIndex, Object x) throws SQLException {
+    public void setObject(int parameterIndex, @Nullable Object x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
+    public void setCharacterStream(int parameterIndex, @Nullable Reader reader, int length) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setRef(int parameterIndex, Ref x) throws SQLException {
+    public void setRef(int parameterIndex, @Nullable Ref x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setBlob(int parameterIndex, Blob x) throws SQLException {
+    public void setBlob(int parameterIndex, @Nullable Blob x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setClob(int parameterIndex, Clob x) throws SQLException {
+    public void setClob(int parameterIndex, @Nullable Clob x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setArray(int parameterIndex, Array x) throws SQLException {
+    public void setArray(int parameterIndex, @Nullable Array x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
+    public void setDate(int parameterIndex, @Nullable Date x, @Nullable Calendar cal) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
+    public void setTime(int parameterIndex, @Nullable Time x, @Nullable Calendar cal) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
+    public void setTimestamp(int parameterIndex, @Nullable Timestamp x, @Nullable Calendar cal) throws SQLException {
         noParameters(parameterIndex);
     }
 
@@ -423,102 +424,103 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     }
 
     @Override
-    public void setURL(int parameterIndex, URL x) throws SQLException {
+    public void setURL(int parameterIndex, @Nullable URL x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setRowId(int parameterIndex, RowId x) throws SQLException {
+    public void setRowId(int parameterIndex, @Nullable RowId x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setNString(int parameterIndex, String value) throws SQLException {
+    public void setNString(int parameterIndex, @Nullable String value) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
+    public void setNCharacterStream(int parameterIndex, @Nullable Reader value, long length) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setNClob(int parameterIndex, NClob value) throws SQLException {
+    public void setNClob(int parameterIndex, @Nullable NClob value) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setClob(int parameterIndex, @Nullable Reader reader, long length) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+    public void setBlob(int parameterIndex, @Nullable InputStream inputStream, long length) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setNClob(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setNClob(int parameterIndex, @Nullable Reader reader, long length) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
+    public void setSQLXML(int parameterIndex, @Nullable SQLXML xmlObject) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setObject(int parameterIndex, Object x, int targetSqlType, int scaleOrLength) throws SQLException {
+    public void setObject(int parameterIndex, @Nullable Object x, int targetSqlType, int scaleOrLength)
+            throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
+    public void setAsciiStream(int parameterIndex, @Nullable InputStream x, long length) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, @Nullable InputStream x, long length) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setCharacterStream(int parameterIndex, @Nullable Reader reader, long length) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
+    public void setAsciiStream(int parameterIndex, @Nullable InputStream x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
+    public void setBinaryStream(int parameterIndex, @Nullable InputStream x) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
+    public void setCharacterStream(int parameterIndex, @Nullable Reader reader) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
+    public void setNCharacterStream(int parameterIndex, @Nullable Reader value) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setClob(int parameterIndex, Reader reader) throws SQLException {
+    public void setClob(int parameterIndex, @Nullable Reader reader) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
+    public void setBlob(int parameterIndex, @Nullable InputStream inputStream) throws SQLException {
         noParameters(parameterIndex);
     }
 
     @Override
-    public void setNClob(int parameterIndex, Reader reader) throws SQLException {
+    public void setNClob(int parameterIndex, @Nullable Reader reader) throws SQLException {
         noParameters(parameterIndex);
     }
 
@@ -550,7 +552,7 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     @SuppressWarnings("removal")
     @Deprecated(since = "6", forRemoval = true)
     @Override
-    public ResultSet getCurrentResultSet() throws SQLException {
+    public @Nullable ResultSet getCurrentResultSet() throws SQLException {
         return getResultSet();
     }
 
@@ -594,7 +596,7 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
 
     @SuppressWarnings("java:S4144")
     @Override
-    public ResultSet getResultSet() throws SQLException {
+    public @Nullable ResultSet getResultSet() throws SQLException {
         checkValidity();
         return null;
     }
@@ -631,14 +633,16 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
         return new FBResultSet(connection.getFbDatabase().emptyRowDescriptor(), List.of());
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
-    public <T> @NonNull T unwrap(Class<T> iface) throws SQLException {
+    public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
             throw new SQLException("Unable to unwrap to class " + (iface != null ? iface.getName() : "(null)"));
         }
         return iface.cast(this);
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
     public boolean isWrapperFor(Class<?> iface) {
         return iface != null && iface.isAssignableFrom(getClass());

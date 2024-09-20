@@ -34,7 +34,7 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.jdbc.field.TrimmableField;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
@@ -66,33 +66,34 @@ import static java.util.Objects.requireNonNull;
  */
 @SuppressWarnings("RedundantThrows")
 @InternalApi
+@NullMarked
 public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListener.FetcherListener {
 
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported";
     private static final String TYPE_SQLXML = "SQLXML";
 
     private final @Nullable AbstractStatement statement;
-    private final @NonNull FBFetcher fbFetcher;
+    private final FBFetcher fbFetcher;
     private @Nullable FirebirdRowUpdater rowUpdater;
 
     protected final @Nullable FBConnection connection;
     protected final @Nullable GDSHelper gdsHelper;
 
-    protected final @NonNull RowDescriptor rowDescriptor;
+    protected final RowDescriptor rowDescriptor;
 
     protected @Nullable RowValue row;
 
     private boolean wasNull;
 
-    private final @NonNull FBField @NonNull [] fields;
-    private final @NonNull List<@NonNull FBCloseableField> closeableFields;
-    private final @NonNull Map<String, Integer> colNames;
+    private final FBField[] fields;
+    private final List<FBCloseableField> closeableFields;
+    private final Map<String, Integer> colNames;
 
     private final @Nullable String cursorName;
-    private final FBObjectListener.@NonNull ResultSetListener listener;
+    private final FBObjectListener.ResultSetListener listener;
 
     @Override
-    public void rowChanged(@NonNull FBFetcher fetcher, @Nullable RowValue newRow) throws SQLException {
+    public void rowChanged(FBFetcher fetcher, @Nullable RowValue newRow) throws SQLException {
         this.row = newRow;
     }
 
@@ -100,7 +101,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * Creates a new {@code FBResultSet} instance.
      */
     @SuppressWarnings("java:S1141")
-    public FBResultSet(@NonNull AbstractStatement statement, FBObjectListener.@Nullable ResultSetListener listener,
+    public FBResultSet(AbstractStatement statement, FBObjectListener.@Nullable ResultSetListener listener,
             boolean metaDataQuery) throws SQLException {
         this.statement = requireNonNull(statement, "statement");
         FbStatement stmt = requireNonNull(statement.getStatementHandle(), "statement.statementHandle");
@@ -175,8 +176,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * @param rows
      *         row data
      */
-    public FBResultSet(@NonNull RowDescriptor rowDescriptor, @NonNull List<@NonNull RowValue> rows)
-            throws SQLException {
+    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
         this(rowDescriptor, null, rows, null, false);
     }
 
@@ -198,9 +198,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         {@code true} retrieves the blob data
      * @since 5.0.1
      */
-    public FBResultSet(@NonNull RowDescriptor rowDescriptor, @Nullable FBConnection connection,
-            @NonNull List<@NonNull RowValue> rows, FBObjectListener.@Nullable ResultSetListener listener,
-            boolean retrieveBlobs) throws SQLException {
+    public FBResultSet(RowDescriptor rowDescriptor, @Nullable FBConnection connection, List<RowValue> rows,
+            FBObjectListener.@Nullable ResultSetListener listener, boolean retrieveBlobs) throws SQLException {
         // TODO Evaluate if we need to share more implementation with constructor above
         this.connection = connection;
         gdsHelper = connection != null ? connection.getGDSHelper() : null;
@@ -216,7 +215,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         colNames = new HashMap<>(rowDescriptor.getCount(), 1);
     }
 
-    private @NonNull FBField @NonNull [] createFields(boolean cached, boolean trimStrings) throws SQLException {
+    private FBField[] createFields(boolean cached, boolean trimStrings) throws SQLException {
         int fieldCount = rowDescriptor.getCount();
         var fields = new FBField[fieldCount];
         for (int i = 0; i < fieldCount; i++) {
@@ -228,7 +227,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return fields;
     }
 
-    private static @NonNull List<@NonNull FBCloseableField> toCloseableFields(@NonNull FBField @NonNull [] fields) {
+    private static List<FBCloseableField> toCloseableFields(FBField[] fields) {
         return Arrays.stream(fields)
                 .filter(FBCloseableField.class::isInstance)
                 .map(FBCloseableField.class::cast)
@@ -329,7 +328,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return fbFetcher.isClosed();
     }
 
-    void close(boolean notifyListener, @NonNull CompletionReason completionReason) throws SQLException {
+    void close(boolean notifyListener, CompletionReason completionReason) throws SQLException {
         if (isClosed()) return;
         var chain = new SQLExceptionChainBuilder();
 
@@ -383,22 +382,22 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public final InputStream getAsciiStream(int columnIndex) throws SQLException {
+    public final @Nullable InputStream getAsciiStream(int columnIndex) throws SQLException {
         return getBinaryStream(columnIndex);
     }
 
     @Override
-    public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
+    public @Nullable BigDecimal getBigDecimal(int columnIndex) throws SQLException {
         return getField(columnIndex).getBigDecimal();
     }
 
     @Override
-    public InputStream getBinaryStream(int columnIndex) throws SQLException {
+    public @Nullable InputStream getBinaryStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getBinaryStream();
     }
 
     @Override
-    public Blob getBlob(int columnIndex) throws SQLException {
+    public @Nullable Blob getBlob(int columnIndex) throws SQLException {
         return getField(columnIndex).getBlob();
     }
 
@@ -413,12 +412,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     @Override
-    public byte[] getBytes(int columnIndex) throws SQLException {
+    public byte @Nullable [] getBytes(int columnIndex) throws SQLException {
         return getField(columnIndex).getBytes();
     }
 
     @Override
-    public Date getDate(int columnIndex) throws SQLException {
+    public @Nullable Date getDate(int columnIndex) throws SQLException {
         return getField(columnIndex).getDate();
     }
 
@@ -443,7 +442,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     @Override
-    public Object getObject(int columnIndex) throws SQLException {
+    public @Nullable Object getObject(int columnIndex) throws SQLException {
         return getField(columnIndex).getObject();
     }
 
@@ -453,7 +452,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     @Override
-    public String getString(int columnIndex) throws SQLException {
+    public @Nullable String getString(int columnIndex) throws SQLException {
         return getField(columnIndex).getString();
     }
 
@@ -464,17 +463,17 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public String getNString(int columnIndex) throws SQLException {
+    public @Nullable String getNString(int columnIndex) throws SQLException {
         return getString(columnIndex);
     }
 
     @Override
-    public Time getTime(int columnIndex) throws SQLException {
+    public @Nullable Time getTime(int columnIndex) throws SQLException {
         return getField(columnIndex).getTime();
     }
 
     @Override
-    public Timestamp getTimestamp(int columnIndex) throws SQLException {
+    public @Nullable Timestamp getTimestamp(int columnIndex) throws SQLException {
         return getField(columnIndex).getTimestamp();
     }
 
@@ -490,7 +489,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * @deprecated
      */
     @Deprecated(since = "1")
-    public InputStream getUnicodeStream(int columnIndex) throws SQLException {
+    public @Nullable InputStream getUnicodeStream(int columnIndex) throws SQLException {
         throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
 
@@ -501,7 +500,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public Reader getNCharacterStream(int columnIndex) throws SQLException {
+    public @Nullable Reader getNCharacterStream(int columnIndex) throws SQLException {
         return getCharacterStream(columnIndex);
     }
 
@@ -513,7 +512,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * @throws SQLException
      *         If there is an error accessing the field
      */
-    public @NonNull FBField getField(int columnIndex) throws SQLException {
+    public FBField getField(int columnIndex) throws SQLException {
         FBField field = getField(columnIndex, true);
         wasNull = field.isNull();
         return field;
@@ -522,7 +521,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     /**
      * Factory method for the field access objects
      */
-    public @NonNull FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
+    public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
         checkOpen();
 
         if (checkRowPosition && row == null && rowUpdater == null) {
@@ -563,12 +562,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     @Deprecated(since = "1")
     @Override
-    public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
+    public @Nullable BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
         return getField(columnIndex).getBigDecimal(scale);
     }
 
     @Override
-    public String getString(String columnName) throws SQLException {
+    public @Nullable String getString(String columnName) throws SQLException {
         return getField(columnName).getString();
     }
 
@@ -579,7 +578,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public String getNString(String columnLabel) throws SQLException {
+    public @Nullable String getNString(String columnLabel) throws SQLException {
         return getString(columnLabel);
     }
 
@@ -626,27 +625,27 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     @Deprecated(since = "1")
     @Override
-    public BigDecimal getBigDecimal(String columnName, int scale) throws SQLException {
+    public @Nullable BigDecimal getBigDecimal(String columnName, int scale) throws SQLException {
         return getField(columnName).getBigDecimal(scale);
     }
 
     @Override
-    public byte[] getBytes(String columnName) throws SQLException {
+    public byte @Nullable [] getBytes(String columnName) throws SQLException {
         return getField(columnName).getBytes();
     }
 
     @Override
-    public Date getDate(String columnName) throws SQLException {
+    public @Nullable Date getDate(String columnName) throws SQLException {
         return getField(columnName).getDate();
     }
 
     @Override
-    public Time getTime(String columnName) throws SQLException {
+    public @Nullable Time getTime(String columnName) throws SQLException {
         return getField(columnName).getTime();
     }
 
     @Override
-    public Timestamp getTimestamp(String columnName) throws SQLException {
+    public @Nullable Timestamp getTimestamp(String columnName) throws SQLException {
         return getField(columnName).getTimestamp();
     }
 
@@ -657,7 +656,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public final InputStream getAsciiStream(String columnName) throws SQLException {
+    public final @Nullable InputStream getAsciiStream(String columnName) throws SQLException {
         return getBinaryStream(columnName);
     }
 
@@ -674,7 +673,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     @Deprecated(since = "1")
     @Override
-    public InputStream getUnicodeStream(String columnName) throws SQLException {
+    public @Nullable InputStream getUnicodeStream(String columnName) throws SQLException {
         throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
 
@@ -685,12 +684,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public Reader getNCharacterStream(String columnLabel) throws SQLException {
+    public @Nullable Reader getNCharacterStream(String columnLabel) throws SQLException {
         return getCharacterStream(columnLabel);
     }
 
     @Override
-    public InputStream getBinaryStream(String columnName) throws SQLException {
+    public @Nullable InputStream getBinaryStream(String columnName) throws SQLException {
         return getField(columnName).getBinaryStream();
     }
 
@@ -718,13 +717,13 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     @Override
-    public @NonNull ResultSetMetaData getMetaData() throws SQLException {
+    public ResultSetMetaData getMetaData() throws SQLException {
         checkOpen();
         return new FBResultSetMetaData(rowDescriptor, connection);
     }
 
     @Override
-    public Object getObject(String columnName) throws SQLException {
+    public @Nullable Object getObject(String columnName) throws SQLException {
         return getField(columnName).getObject();
     }
 
@@ -766,7 +765,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         }
     }
 
-    private @NonNull OptionalInt findColumn(@NonNull Predicate<String> columnNamePredicate) {
+    private OptionalInt findColumn(Predicate<@Nullable String> columnNamePredicate) {
         // Check labels (aliases) first
         OptionalInt position = findColumn(columnNamePredicate, FieldDescriptor::getFieldName);
         if (position.isPresent()) return position;
@@ -774,8 +773,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return findColumn(columnNamePredicate, FieldDescriptor::getOriginalName);
     }
 
-    private @NonNull OptionalInt findColumn(@NonNull Predicate<String> columnNamePredicate,
-            Function<FieldDescriptor, String> columnNameAccessor) {
+    private OptionalInt findColumn(Predicate<@Nullable String> columnNamePredicate,
+            Function<FieldDescriptor, @Nullable String> columnNameAccessor) {
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
             if (columnNamePredicate.test(columnNameAccessor.apply(rowDescriptor.getFieldDescriptor(i)))) {
                 return OptionalInt.of(i + 1);
@@ -785,17 +784,17 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     @Override
-    public Reader getCharacterStream(int columnIndex) throws SQLException {
+    public @Nullable Reader getCharacterStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getCharacterStream();
     }
 
     @Override
-    public Reader getCharacterStream(String columnName) throws SQLException {
+    public @Nullable Reader getCharacterStream(String columnName) throws SQLException {
         return getField(columnName).getCharacterStream();
     }
 
     @Override
-    public BigDecimal getBigDecimal(String columnName) throws SQLException {
+    public @Nullable BigDecimal getBigDecimal(String columnName) throws SQLException {
         return getField(columnName).getBigDecimal();
     }
 
@@ -978,7 +977,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         when this result set is not updatable
      * @see #checkUpdatable()
      */
-    private @NonNull FirebirdRowUpdater requireRowUpdater() throws SQLException {
+    private FirebirdRowUpdater requireRowUpdater() throws SQLException {
         checkOpen();
         FirebirdRowUpdater rowUpdater = this.rowUpdater;
         if (rowUpdater == null) {
@@ -1036,95 +1035,103 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     @Override
-    public void updateBigDecimal(int columnIndex, BigDecimal x) throws SQLException {
+    public void updateBigDecimal(int columnIndex, @Nullable BigDecimal x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setBigDecimal(x);
     }
 
     @Override
-    public void updateString(int columnIndex, String x) throws SQLException {
+    public void updateString(int columnIndex, @Nullable String x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setString(x);
     }
 
     @Override
-    public void updateBytes(int columnIndex, byte[] x) throws SQLException {
+    public void updateBytes(int columnIndex, byte @Nullable [] x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setBytes(x);
     }
 
     @Override
-    public void updateDate(int columnIndex, Date x) throws SQLException {
+    public void updateDate(int columnIndex, @Nullable Date x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setDate(x);
     }
 
     @Override
-    public void updateTime(int columnIndex, Time x) throws SQLException {
+    public void updateTime(int columnIndex, @Nullable Time x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setTime(x);
     }
 
     @Override
-    public void updateTimestamp(int columnIndex, Timestamp x) throws SQLException {
+    public void updateTimestamp(int columnIndex, @Nullable Timestamp x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setTimestamp(x);
     }
 
     @Override
-    public void updateBinaryStream(int columnIndex, InputStream x, int length) throws SQLException {
+    public void updateBinaryStream(int columnIndex, @Nullable InputStream x, int length) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setBinaryStream(x, length);
     }
 
     @Override
-    public void updateBinaryStream(int columnIndex, InputStream x, long length) throws SQLException {
+    public void updateBinaryStream(int columnIndex, @Nullable InputStream x, long length) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setBinaryStream(x, length);
     }
 
     @Override
-    public void updateBinaryStream(int columnIndex, InputStream x) throws SQLException {
+    public void updateBinaryStream(int columnIndex, @Nullable InputStream x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setBinaryStream(x);
     }
 
     @Override
-    public void updateBinaryStream(String columnName, InputStream x, int length) throws SQLException {
+    public void updateBinaryStream(String columnName, @Nullable InputStream x, int length) throws SQLException {
         checkUpdatable();
         getField(columnName).setBinaryStream(x, length);
     }
 
     @Override
-    public void updateBinaryStream(String columnLabel, InputStream x, long length) throws SQLException {
+    public void updateBinaryStream(String columnLabel, @Nullable InputStream x, long length) throws SQLException {
         checkUpdatable();
         getField(columnLabel).setBinaryStream(x, length);
     }
 
     @Override
-    public void updateBinaryStream(String columnLabel, InputStream x) throws SQLException {
+    public void updateBinaryStream(String columnLabel, @Nullable InputStream x) throws SQLException {
         checkUpdatable();
         getField(columnLabel).setBinaryStream(x);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird delegates to {@link #updateObject(int, Object)} and ignores the value of {@code scaleOrLength}.
+     * </p>
+     */
     @Override
-    public void updateObject(int columnIndex, Object x, int scale) throws SQLException {
+    public void updateObject(int columnIndex, @Nullable Object x, int scaleOrLength) throws SQLException {
         updateObject(columnIndex, x);
     }
 
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird delegates to {@link #updateObject(int, Object, int)} and ignores the value of {@code targetSqlType}
+     * Jaybird delegates to {@link #updateObject(int, Object)} and ignores the values of {@code targetSqlType} and
+     * {@code scaleOrLength}.
      * </p>
      */
     @Override
-    public void updateObject(int columnIndex, Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
-        updateObject(columnIndex, x, scaleOrLength);
+    public void updateObject(int columnIndex, @Nullable Object x, SQLType targetSqlType, int scaleOrLength)
+            throws SQLException {
+        updateObject(columnIndex, x);
     }
 
     @Override
-    public void updateObject(int columnIndex, Object x) throws SQLException {
+    public void updateObject(int columnIndex, @Nullable Object x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setObject(x);
     }
@@ -1136,7 +1143,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateObject(int columnIndex, Object x, SQLType targetSqlType) throws SQLException {
+    public void updateObject(int columnIndex, @Nullable Object x, SQLType targetSqlType) throws SQLException {
         updateObject(columnIndex, x);
     }
 
@@ -1189,13 +1196,13 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     @Override
-    public void updateBigDecimal(String columnName, BigDecimal x) throws SQLException {
+    public void updateBigDecimal(String columnName, @Nullable BigDecimal x) throws SQLException {
         checkUpdatable();
         getField(columnName).setBigDecimal(x);
     }
 
     @Override
-    public void updateString(String columnName, String x) throws SQLException {
+    public void updateString(String columnName, @Nullable String x) throws SQLException {
         checkUpdatable();
         getField(columnName).setString(x);
     }
@@ -1207,7 +1214,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNString(int columnIndex, String string) throws SQLException {
+    public void updateNString(int columnIndex, @Nullable String string) throws SQLException {
         updateString(columnIndex, string);
     }
 
@@ -1218,30 +1225,30 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNString(String columnLabel, String string) throws SQLException {
+    public void updateNString(String columnLabel, @Nullable String string) throws SQLException {
         updateString(columnLabel, string);
     }
 
     @Override
-    public void updateBytes(String columnName, byte[] x) throws SQLException {
+    public void updateBytes(String columnName, byte @Nullable [] x) throws SQLException {
         checkUpdatable();
         getField(columnName).setBytes(x);
     }
 
     @Override
-    public void updateDate(String columnName, Date x) throws SQLException {
+    public void updateDate(String columnName, @Nullable Date x) throws SQLException {
         checkUpdatable();
         getField(columnName).setDate(x);
     }
 
     @Override
-    public void updateTime(String columnName, Time x) throws SQLException {
+    public void updateTime(String columnName, @Nullable Time x) throws SQLException {
         checkUpdatable();
         getField(columnName).setTime(x);
     }
 
     @Override
-    public void updateTimestamp(String columnName, Timestamp x) throws SQLException {
+    public void updateTimestamp(String columnName, @Nullable Timestamp x) throws SQLException {
         checkUpdatable();
         getField(columnName).setTimestamp(x);
     }
@@ -1253,7 +1260,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public final void updateAsciiStream(int columnIndex, InputStream x, int length) throws SQLException {
+    public final void updateAsciiStream(int columnIndex, @Nullable InputStream x, int length) throws SQLException {
         updateBinaryStream(columnIndex, x, length);
     }
 
@@ -1264,7 +1271,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public final void updateAsciiStream(String columnName, InputStream x, int length) throws SQLException {
+    public final void updateAsciiStream(String columnName, @Nullable InputStream x, int length) throws SQLException {
         updateBinaryStream(columnName, x, length);
     }
 
@@ -1275,7 +1282,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public final void updateAsciiStream(int columnIndex, InputStream x, long length) throws SQLException {
+    public final void updateAsciiStream(int columnIndex, @Nullable InputStream x, long length) throws SQLException {
         updateBinaryStream(columnIndex, x, length);
     }
 
@@ -1286,7 +1293,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public final void updateAsciiStream(int columnIndex, InputStream x) throws SQLException {
+    public final void updateAsciiStream(int columnIndex, @Nullable InputStream x) throws SQLException {
         updateBinaryStream(columnIndex, x);
     }
 
@@ -1297,7 +1304,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public final void updateAsciiStream(String columnLabel, InputStream x, long length) throws SQLException {
+    public final void updateAsciiStream(String columnLabel, @Nullable InputStream x, long length) throws SQLException {
         updateBinaryStream(columnLabel, x, length);
     }
 
@@ -1308,42 +1315,42 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public final void updateAsciiStream(String columnLabel, InputStream x) throws SQLException {
+    public final void updateAsciiStream(String columnLabel, @Nullable InputStream x) throws SQLException {
         updateBinaryStream(columnLabel, x);
     }
 
     @Override
-    public void updateCharacterStream(int columnIndex, Reader x, int length) throws SQLException {
+    public void updateCharacterStream(int columnIndex, @Nullable Reader x, int length) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setCharacterStream(x, length);
     }
 
     @Override
-    public void updateCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
+    public void updateCharacterStream(int columnIndex, @Nullable Reader x, long length) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setCharacterStream(x, length);
     }
 
     @Override
-    public void updateCharacterStream(int columnIndex, Reader x) throws SQLException {
+    public void updateCharacterStream(int columnIndex, @Nullable Reader x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setCharacterStream(x);
     }
 
     @Override
-    public void updateCharacterStream(String columnName, Reader reader, int length) throws SQLException {
+    public void updateCharacterStream(String columnName, @Nullable Reader reader, int length) throws SQLException {
         checkUpdatable();
         getField(columnName).setCharacterStream(reader, length);
     }
 
     @Override
-    public void updateCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
+    public void updateCharacterStream(String columnLabel, @Nullable Reader reader, long length) throws SQLException {
         checkUpdatable();
         getField(columnLabel).setCharacterStream(reader, length);
     }
 
     @Override
-    public void updateCharacterStream(String columnLabel, Reader reader) throws SQLException {
+    public void updateCharacterStream(String columnLabel, @Nullable Reader reader) throws SQLException {
         checkUpdatable();
         getField(columnLabel).setCharacterStream(reader);
     }
@@ -1355,7 +1362,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
+    public void updateNCharacterStream(int columnIndex, @Nullable Reader x, long length) throws SQLException {
         updateCharacterStream(columnIndex, x, length);
     }
 
@@ -1366,7 +1373,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNCharacterStream(int columnIndex, Reader x) throws SQLException {
+    public void updateNCharacterStream(int columnIndex, @Nullable Reader x) throws SQLException {
         updateCharacterStream(columnIndex, x);
     }
 
@@ -1377,7 +1384,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
+    public void updateNCharacterStream(String columnLabel, @Nullable Reader reader, long length) throws SQLException {
         updateCharacterStream(columnLabel, reader, length);
     }
 
@@ -1388,34 +1395,36 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNCharacterStream(String columnLabel, Reader reader) throws SQLException {
+    public void updateNCharacterStream(String columnLabel, @Nullable Reader reader) throws SQLException {
         updateCharacterStream(columnLabel, reader);
     }
 
     /**
      * {@inheritDoc}
      * <p>
-     * Implementation note: This method behaves exactly the same as {@link #updateObject(String, Object)}.
+     * Jaybird delegates to {@link #updateObject(String, Object)} and ignores the value of {@code scaleOrLength}.
      * </p>
      */
     @Override
-    public void updateObject(String columnName, Object x, int scale) throws SQLException {
+    public void updateObject(String columnName, @Nullable Object x, int scaleOrLength) throws SQLException {
         updateObject(columnName, x);
     }
 
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird delegates to {@link #updateObject(String, Object, int)} and ignores the value of {@code targetSqlType}
+     * Jaybird delegates to {@link #updateObject(String, Object)} and ignores the value of {@code targetSqlType} and
+     * {@code scaleOrLength}.
      * </p>
      */
     @Override
-    public void updateObject(String columnLabel, Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
-        updateObject(columnLabel, x, scaleOrLength);
+    public void updateObject(String columnLabel, @Nullable Object x, SQLType targetSqlType, int scaleOrLength)
+            throws SQLException {
+        updateObject(columnLabel, x);
     }
 
     @Override
-    public void updateObject(String columnName, Object x) throws SQLException {
+    public void updateObject(String columnName, @Nullable Object x) throws SQLException {
         checkUpdatable();
         getField(columnName).setObject(x);
     }
@@ -1423,11 +1432,11 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird delegates to {@link #updateObject(String, Object)} and ignores the value of {@code targetSqlType}
+     * Jaybird delegates to {@link #updateObject(String, Object)} and ignores the value of {@code targetSqlType}.
      * </p>
      */
     @Override
-    public void updateObject(String columnLabel, Object x, SQLType targetSqlType) throws SQLException {
+    public void updateObject(String columnLabel, @Nullable Object x, SQLType targetSqlType) throws SQLException {
         updateObject(columnLabel, x);
     }
 
@@ -1485,181 +1494,181 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     @Override
-    public Object getObject(int i, Map<String, Class<?>> map) throws SQLException {
+    public @Nullable Object getObject(int i, Map<String, Class<?>> map) throws SQLException {
         return getField(i).getObject(map);
     }
 
     @Override
-    public Ref getRef(int i) throws SQLException {
+    public @Nullable Ref getRef(int i) throws SQLException {
         return getField(i).getRef();
     }
 
     @Override
-    public Clob getClob(int i) throws SQLException {
+    public @Nullable Clob getClob(int i) throws SQLException {
         return getField(i).getClob();
     }
 
     @Override
-    public Array getArray(int i) throws SQLException {
+    public @Nullable Array getArray(int i) throws SQLException {
         return getField(i).getArray();
     }
 
     @Override
-    public Object getObject(String columnName, Map<String, Class<?>> map) throws SQLException {
+    public @Nullable Object getObject(String columnName, Map<String, Class<?>> map) throws SQLException {
         return getField(columnName).getObject(map);
     }
 
     @Override
-    public Ref getRef(String columnName) throws SQLException {
+    public @Nullable Ref getRef(String columnName) throws SQLException {
         return getField(columnName).getRef();
     }
 
     @Override
-    public Blob getBlob(String columnName) throws SQLException {
+    public @Nullable Blob getBlob(String columnName) throws SQLException {
         return getField(columnName).getBlob();
     }
 
     @Override
-    public Clob getClob(String columnName) throws SQLException {
+    public @Nullable Clob getClob(String columnName) throws SQLException {
         return getField(columnName).getClob();
     }
 
     @Override
-    public Array getArray(String columnName) throws SQLException {
+    public @Nullable Array getArray(String columnName) throws SQLException {
         return getField(columnName).getArray();
     }
 
     @Override
-    public Date getDate(int columnIndex, Calendar cal) throws SQLException {
+    public @Nullable Date getDate(int columnIndex, @Nullable Calendar cal) throws SQLException {
         return getField(columnIndex).getDate(cal);
     }
 
     @Override
-    public Date getDate(String columnName, Calendar cal) throws SQLException {
+    public @Nullable Date getDate(String columnName, @Nullable Calendar cal) throws SQLException {
         return getField(columnName).getDate(cal);
     }
 
     @Override
-    public Time getTime(int columnIndex, Calendar cal) throws SQLException {
+    public @Nullable Time getTime(int columnIndex, @Nullable Calendar cal) throws SQLException {
         return getField(columnIndex).getTime(cal);
     }
 
     @Override
-    public Time getTime(String columnName, Calendar cal) throws SQLException {
+    public @Nullable Time getTime(String columnName, @Nullable Calendar cal) throws SQLException {
         return getField(columnName).getTime(cal);
     }
 
     @Override
-    public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
+    public @Nullable Timestamp getTimestamp(int columnIndex, @Nullable Calendar cal) throws SQLException {
         return getField(columnIndex).getTimestamp(cal);
     }
 
     @Override
-    public Timestamp getTimestamp(String columnName, Calendar cal) throws SQLException {
+    public @Nullable Timestamp getTimestamp(String columnName, @Nullable Calendar cal) throws SQLException {
         return getField(columnName).getTimestamp(cal);
     }
 
     @Override
-    public URL getURL(int param1) throws SQLException {
+    public @Nullable URL getURL(int param1) throws SQLException {
         throw typeNotSupported("URL");
     }
 
     @Override
-    public URL getURL(String param1) throws SQLException {
+    public @Nullable URL getURL(String param1) throws SQLException {
         throw typeNotSupported("URL");
     }
 
     @Override
-    public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+    public <T extends @Nullable Object> @Nullable T getObject(int columnIndex, Class<T> type) throws SQLException {
         return getField(columnIndex).getObject(type);
     }
 
     @Override
-    public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
+    public <T extends @Nullable Object> @Nullable T getObject(String columnLabel, Class<T> type) throws SQLException {
         return getField(columnLabel).getObject(type);
     }
 
     @Override
-    public void updateRef(int param1, Ref param2) throws SQLException {
+    public void updateRef(int param1, @Nullable Ref param2) throws SQLException {
         throw typeNotSupported("REF");
     }
 
     @Override
-    public void updateRef(String param1, Ref param2) throws SQLException {
+    public void updateRef(String param1, @Nullable Ref param2) throws SQLException {
         throw typeNotSupported("REF");
     }
 
     @Override
-    public void updateBlob(int columnIndex, Blob blob) throws SQLException {
+    public void updateBlob(int columnIndex, @Nullable Blob blob) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setBlob(blob);
     }
 
     @Override
-    public void updateBlob(String columnLabel, Blob blob) throws SQLException {
+    public void updateBlob(String columnLabel, @Nullable Blob blob) throws SQLException {
         checkUpdatable();
         getField(columnLabel).setBlob(blob);
     }
 
     @Override
-    public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
+    public void updateBlob(int columnIndex, @Nullable InputStream inputStream, long length) throws SQLException {
         updateBinaryStream(columnIndex, inputStream, length);
     }
 
     @Override
-    public void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
+    public void updateBlob(int columnIndex, @Nullable InputStream inputStream) throws SQLException {
         updateBinaryStream(columnIndex, inputStream);
     }
 
     @Override
-    public void updateBlob(String columnLabel, InputStream inputStream, long length) throws SQLException {
+    public void updateBlob(String columnLabel, @Nullable InputStream inputStream, long length) throws SQLException {
         updateBinaryStream(columnLabel, inputStream, length);
     }
 
     @Override
-    public void updateBlob(String columnLabel, InputStream inputStream) throws SQLException {
+    public void updateBlob(String columnLabel, @Nullable InputStream inputStream) throws SQLException {
         updateBinaryStream(columnLabel, inputStream);
     }
 
     @Override
-    public void updateClob(int columnIndex, Clob clob) throws SQLException {
+    public void updateClob(int columnIndex, @Nullable Clob clob) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setClob(clob);
     }
 
     @Override
-    public void updateClob(String columnLabel, Clob clob) throws SQLException {
+    public void updateClob(String columnLabel, @Nullable Clob clob) throws SQLException {
         checkUpdatable();
         getField(columnLabel).setClob(clob);
     }
 
     @Override
-    public void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
+    public void updateClob(int columnIndex, @Nullable Reader reader, long length) throws SQLException {
         updateCharacterStream(columnIndex, reader, length);
     }
 
     @Override
-    public void updateClob(int columnIndex, Reader reader) throws SQLException {
+    public void updateClob(int columnIndex, @Nullable Reader reader) throws SQLException {
         updateCharacterStream(columnIndex, reader);
     }
 
     @Override
-    public void updateClob(String columnLabel, Reader reader, long length) throws SQLException {
+    public void updateClob(String columnLabel, @Nullable Reader reader, long length) throws SQLException {
         updateCharacterStream(columnLabel, reader, length);
     }
 
     @Override
-    public void updateClob(String columnLabel, Reader reader) throws SQLException {
+    public void updateClob(String columnLabel, @Nullable Reader reader) throws SQLException {
         updateCharacterStream(columnLabel, reader);
     }
 
     @Override
-    public void updateArray(int param1, Array param2) throws SQLException {
+    public void updateArray(int param1, @Nullable Array param2) throws SQLException {
         throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
     @Override
-    public void updateArray(String param1, Array param2) throws SQLException {
+    public void updateArray(String param1, @Nullable Array param2) throws SQLException {
         throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
@@ -1670,7 +1679,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public NClob getNClob(int columnIndex) throws SQLException {
+    public @Nullable NClob getNClob(int columnIndex) throws SQLException {
         return (NClob) getClob(columnIndex);
     }
 
@@ -1681,27 +1690,27 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public NClob getNClob(String columnLabel) throws SQLException {
+    public @Nullable NClob getNClob(String columnLabel) throws SQLException {
         return (NClob) getClob(columnLabel);
     }
 
     @Override
-    public RowId getRowId(int columnIndex) throws SQLException {
+    public @Nullable RowId getRowId(int columnIndex) throws SQLException {
         return getField(columnIndex).getRowId();
     }
 
     @Override
-    public RowId getRowId(String columnLabel) throws SQLException {
+    public @Nullable RowId getRowId(String columnLabel) throws SQLException {
         return getField(columnLabel).getRowId();
     }
 
     @Override
-    public SQLXML getSQLXML(int columnIndex) throws SQLException {
+    public @Nullable SQLXML getSQLXML(int columnIndex) throws SQLException {
         throw typeNotSupported(TYPE_SQLXML);
     }
 
     @Override
-    public SQLXML getSQLXML(String columnLabel) throws SQLException {
+    public @Nullable SQLXML getSQLXML(String columnLabel) throws SQLException {
         throw typeNotSupported(TYPE_SQLXML);
     }
 
@@ -1712,7 +1721,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNClob(int columnIndex, NClob clob) throws SQLException {
+    public void updateNClob(int columnIndex, @Nullable NClob clob) throws SQLException {
         updateClob(columnIndex, clob);
     }
 
@@ -1723,7 +1732,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNClob(int columnIndex, Reader reader, long length) throws SQLException {
+    public void updateNClob(int columnIndex, @Nullable Reader reader, long length) throws SQLException {
         updateCharacterStream(columnIndex, reader, length);
     }
 
@@ -1734,7 +1743,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNClob(int columnIndex, Reader reader) throws SQLException {
+    public void updateNClob(int columnIndex, @Nullable Reader reader) throws SQLException {
         updateCharacterStream(columnIndex, reader);
     }
 
@@ -1745,7 +1754,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNClob(String columnLabel, NClob clob) throws SQLException {
+    public void updateNClob(String columnLabel, @Nullable NClob clob) throws SQLException {
         updateClob(columnLabel, clob);
     }
 
@@ -1756,7 +1765,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNClob(String columnLabel, Reader reader, long length) throws SQLException {
+    public void updateNClob(String columnLabel, @Nullable Reader reader, long length) throws SQLException {
         updateCharacterStream(columnLabel, reader, length);
     }
 
@@ -1767,17 +1776,17 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      * </p>
      */
     @Override
-    public void updateNClob(String columnLabel, Reader reader) throws SQLException {
+    public void updateNClob(String columnLabel, @Nullable Reader reader) throws SQLException {
         updateCharacterStream(columnLabel, reader);
     }
 
     @Override
-    public void updateRowId(int columnIndex, RowId x) throws SQLException {
+    public void updateRowId(int columnIndex, @Nullable RowId x) throws SQLException {
         rowIdNotUpdatable();
     }
 
     @Override
-    public void updateRowId(String columnLabel, RowId x) throws SQLException {
+    public void updateRowId(String columnLabel, @Nullable RowId x) throws SQLException {
         rowIdNotUpdatable();
     }
 
@@ -1787,36 +1796,38 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     @Override
-    public void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {
+    public void updateSQLXML(int columnIndex, @Nullable SQLXML xmlObject) throws SQLException {
         throw typeNotSupported(TYPE_SQLXML);
     }
 
     @Override
-    public void updateSQLXML(String columnLabel, SQLXML xmlObject) throws SQLException {
+    public void updateSQLXML(String columnLabel, @Nullable SQLXML xmlObject) throws SQLException {
         throw typeNotSupported(TYPE_SQLXML);
     }
 
     @Override
-    public String getExecutionPlan() throws SQLException {
+    public @Nullable String getExecutionPlan() throws SQLException {
         checkCursorMove();
         if (statement == null) return "";
         return statement.getExecutionPlan();
     }
 
     @Override
-    public String getExplainedExecutionPlan() throws SQLException {
+    public @Nullable String getExplainedExecutionPlan() throws SQLException {
         checkCursorMove();
         if (statement == null) return "";
         return statement.getExplainedExecutionPlan();
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return iface != null && iface.isAssignableFrom(this.getClass());
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
-    public <T> @NonNull T unwrap(Class<T> iface) throws SQLException {
+    public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
             throw new SQLException("Unable to unwrap to class " + (iface != null ? iface.getName() : "(null)"));
         }
@@ -1824,7 +1835,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return iface.cast(this);
     }
 
-    private static @NonNull SQLException typeNotSupported(@NonNull String typeName) {
+    private static SQLException typeNotSupported(String typeName) {
         return new FBDriverNotCapableException("Type " + typeName + " not supported");
     }
 

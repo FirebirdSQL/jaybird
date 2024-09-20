@@ -28,6 +28,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
@@ -39,6 +40,7 @@ import java.sql.Statement;
  * 
  * @author Roman Rokytskyy
  */
+@NullMarked
 public interface FirebirdStatement extends Statement {
 
     /**
@@ -110,7 +112,7 @@ public interface FirebirdStatement extends Statement {
      * @deprecated use {@link #getExecutionPlan()}; there are currently no plans to remove this method
      */
     @Deprecated(since = "6", forRemoval = false)
-    default String getLastExecutionPlan() throws SQLException {
+    default @Nullable String getLastExecutionPlan() throws SQLException {
         return getExecutionPlan();
     }
 
@@ -134,7 +136,7 @@ public interface FirebirdStatement extends Statement {
      * @since 6
      * @see #getExplainedExecutionPlan()
      */
-    String getExecutionPlan() throws SQLException;
+    @Nullable String getExecutionPlan() throws SQLException;
 
     /**
      * Alias for {@link #getExplainedExecutionPlan()}.
@@ -143,7 +145,7 @@ public interface FirebirdStatement extends Statement {
      * @deprecated use {@link #getExplainedExecutionPlan()}; there are currently no plans to remove this method
      */
     @Deprecated(since = "6", forRemoval = false)
-    default String getLastExplainedExecutionPlan() throws SQLException {
+    default @Nullable String getLastExplainedExecutionPlan() throws SQLException {
         return getExplainedExecutionPlan();
     }
 
@@ -171,7 +173,7 @@ public interface FirebirdStatement extends Statement {
      * @since 6
      * @see #getExecutionPlan()
      */
-    String getExplainedExecutionPlan() throws SQLException;
+    @Nullable String getExplainedExecutionPlan() throws SQLException;
     
     /**
      * The local statement id is intended to identify the statement for internal implementation purposes.

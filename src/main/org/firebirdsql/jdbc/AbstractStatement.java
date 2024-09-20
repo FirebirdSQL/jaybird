@@ -22,7 +22,7 @@ import org.firebirdsql.gds.ng.FbAttachment;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -46,28 +46,29 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_STATEMENT
  * @since 6
  */
 @InternalApi
+@NullMarked
 public abstract class AbstractStatement implements Statement, FirebirdStatement {
 
     private static final AtomicInteger STATEMENT_ID_GENERATOR = new AtomicInteger();
 
     private final int localStatementId = STATEMENT_ID_GENERATOR.incrementAndGet();
-    protected final @NonNull FBConnection connection;
+    protected final FBConnection connection;
     private @Nullable String cursorName;
     @SuppressWarnings("java:S3077")
     private volatile @Nullable SQLWarning warning;
-    private @NonNull FetchConfig fetchConfig;
+    private FetchConfig fetchConfig;
 
     private volatile boolean closed;
     private boolean poolable;
     private boolean closeOnCompletion;
 
-    protected AbstractStatement(@NonNull FBConnection connection, @NonNull ResultSetBehavior resultSetBehavior) {
+    protected AbstractStatement(FBConnection connection, ResultSetBehavior resultSetBehavior) {
         this.connection = requireNonNull(connection, "connection");
         fetchConfig = new FetchConfig(resultSetBehavior);
     }
 
     @Override
-    public final @NonNull FBConnection getConnection() throws SQLException {
+    public final FBConnection getConnection() throws SQLException {
         checkValidity();
         return connection;
     }
@@ -79,7 +80,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      * @throws java.sql.SQLFeatureNotSupportedException
      *         if this statement implementation does not use statement handles
      */
-    protected abstract @NonNull FbStatement getStatementHandle() throws SQLException;
+    protected abstract FbStatement getStatementHandle() throws SQLException;
 
     /**
      * Get the current statement type of this statement.
@@ -150,7 +151,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      * @throws SQLException
      *         for failures completing this statement
      */
-    public abstract void completeStatement(@NonNull CompletionReason reason) throws SQLException;
+    public abstract void completeStatement(CompletionReason reason) throws SQLException;
 
     @Override
     public final boolean isPoolable() throws SQLException {
@@ -202,7 +203,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      * @return current fetch config for this statement
      * @since 6
      */
-    protected final @NonNull FetchConfig fetchConfig() {
+    protected final FetchConfig fetchConfig() {
         try (var ignored = withLock()) {
             return fetchConfig;
         }
@@ -212,7 +213,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      * @return result set behavior for this statement
      * @since 6
      */
-    protected final @NonNull ResultSetBehavior resultSetBehavior() {
+    protected final ResultSetBehavior resultSetBehavior() {
         return fetchConfig().resultSetBehavior();
     }
 
@@ -337,7 +338,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
         warning = null;
     }
 
-    protected final void addWarning(@NonNull SQLWarning warning) {
+    protected final void addWarning(SQLWarning warning) {
         try (var ignored = withLock()) {
             SQLWarning currentWarning = this.warning;
             if (currentWarning == null) {
@@ -367,7 +368,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     /**
      * @see FbAttachment#withLock()
      */
-    protected final @NonNull LockCloseable withLock() {
+    protected final LockCloseable withLock() {
         return connection.withLock();
     }
 

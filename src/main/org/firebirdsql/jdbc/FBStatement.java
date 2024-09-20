@@ -30,7 +30,7 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.util.Primitives;
 import org.firebirdsql.jaybird.util.SQLExceptionThrowingFunction;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.*;
@@ -56,14 +56,15 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  */
 @SuppressWarnings({ "RedundantThrows", "SqlSourceToSinkFlow" })
 @InternalApi
+@NullMarked
 public class FBStatement extends AbstractStatement implements FirebirdStatement {
 
     private static final System.Logger log = System.getLogger(FBStatement.class.getName());
 
-    protected final @NonNull GDSHelper gdsHelper;
-    protected final FBObjectListener.@NonNull StatementListener statementListener;
+    protected final GDSHelper gdsHelper;
+    protected final FBObjectListener.StatementListener statementListener;
 
-    protected final @NonNull FbStatement fbStatement;
+    protected final FbStatement fbStatement;
 
     //The normally retrieved result set. (no autocommit, not a cached rs).
     private @Nullable FBResultSet currentRs;
@@ -75,19 +76,19 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     private boolean currentStatementGeneratedKeys;
 
     // Currently only determined for Firebird statement type SELECT and STORED_PROCEDURE
-    private @NonNull LocalStatementType jbStatementType = LocalStatementType.OTHER;
-    protected @NonNull StatementResult currentStatementResult = StatementResult.NO_MORE_RESULTS;
+    private LocalStatementType jbStatementType = LocalStatementType.OTHER;
+    protected StatementResult currentStatementResult = StatementResult.NO_MORE_RESULTS;
 
     // Singleton result indicates it is a stored procedure or singleton [INSERT | UPDATE | DELETE] ... RETURNING ...
     // In Firebird 5+ some RETURNING statements are multi-row, and some are singleton, in Firebird 4 and earlier, they
     // are all singleton.
     protected boolean isSingletonResult;
     // Used for singleton or batch results for getGeneratedKeys, and singleton results of stored procedures
-    protected final @NonNull List<@NonNull RowValue> specialResult = new ArrayList<>();
+    protected final List<RowValue> specialResult = new ArrayList<>();
 
     private int maxFieldSize;
 
-    private final FBObjectListener.@NonNull ResultSetListener resultSetListener = new RSListener();
+    private final FBObjectListener.ResultSetListener resultSetListener = new RSListener();
 
     /**
      * Listener for the result sets.
@@ -104,7 +105,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
          *         result set that was closed.
          */
         @Override
-        public void resultSetClosed(@NonNull ResultSet rs) throws SQLException {
+        public void resultSetClosed(ResultSet rs) throws SQLException {
             currentRs = null;
 
             // notify listener that statement is completed.
@@ -113,7 +114,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
 
         @Override
-        public void executionCompleted(@NonNull FirebirdRowUpdater updater, boolean success) throws SQLException {
+        public void executionCompleted(FirebirdRowUpdater updater, boolean success) throws SQLException {
             if (rowUpdaterSeparateTransaction) {
                 // Only notify when executionStarted started a transaction specifically for the row-updater
                 notifyStatementCompleted(success);
@@ -121,7 +122,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
 
         @Override
-        public void executionStarted(@NonNull FirebirdRowUpdater updater) throws SQLException {
+        public void executionStarted(FirebirdRowUpdater updater) throws SQLException {
             FbTransaction stmtTransaction = fbStatement.getTransaction();
             if (stmtTransaction != null && stmtTransaction.getState() == TransactionState.ACTIVE) {
                 // RowUpdater execution will piggyback on the current active transaction
@@ -135,8 +136,8 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
     }
 
-    protected FBStatement(@NonNull FBConnection connection, @NonNull ResultSetBehavior rsBehavior,
-            FBObjectListener.@NonNull StatementListener statementListener) throws SQLException {
+    protected FBStatement(FBConnection connection, ResultSetBehavior rsBehavior,
+            FBObjectListener.StatementListener statementListener) throws SQLException {
         super(connection, rsBehavior);
         this.gdsHelper = connection.getGDSHelper();
         this.statementListener = statementListener;
@@ -159,7 +160,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return super.isValid() && !INVALID_STATEMENT_STATES.contains(fbStatement.getState());
     }
 
-    public void completeStatement(@NonNull CompletionReason reason) throws SQLException {
+    public void completeStatement(CompletionReason reason) throws SQLException {
         if (currentRs != null && (reason != CompletionReason.COMMIT || currentRs.getHoldability() == ResultSet.CLOSE_CURSORS_AT_COMMIT)) {
             closeResultSet(false, reason);
         }
@@ -175,7 +176,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public @NonNull ResultSet executeQuery(String sql) throws  SQLException {
+    public ResultSet executeQuery(String sql) throws  SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             currentStatementGeneratedKeys = false;
@@ -284,7 +285,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      *         original exception that triggered the completion
      * @see #notifyStatementCompleted(boolean)
      */
-    void notifyStatementCompleted(boolean success, @NonNull Exception originalException) {
+    void notifyStatementCompleted(boolean success, Exception originalException) {
         try {
             notifyStatementCompleted(success);
         } catch (SQLException e) {
@@ -354,15 +355,15 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         };
     }
 
-    static @NonNull SQLException queryProducedNoResultSet() {
+    static SQLException queryProducedNoResultSet() {
         return new SQLNonTransientException("Query did not produce a result set", SQL_STATE_NO_RESULT_SET);
     }
 
-    static @NonNull SQLException updateReturnedResultSet() {
+    static SQLException updateReturnedResultSet() {
         return new SQLNonTransientException("Update statement returned result set", SQL_STATE_INVALID_STMT_TYPE);
     }
 
-    static @NonNull SQLException batchStatementReturnedResultSet() {
+    static SQLException batchStatementReturnedResultSet() {
         return new SQLNonTransientException("Statement executed as batch returned result set",
                 SQL_STATE_INVALID_STMT_TYPE);
     }
@@ -434,7 +435,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public @NonNull ResultSet getGeneratedKeys() throws SQLException {
+    public ResultSet getGeneratedKeys() throws SQLException {
         checkValidity();
         if (isGeneratedKeyQuery()) {
             return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, true);
@@ -605,8 +606,8 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      *         result set listener (can be {@code null})
      * @return result set wrapping {@code specialResult}
      */
-    protected @NonNull FBResultSet createSpecialResultSet(
-            FBObjectListener.@Nullable ResultSetListener resultSetListener) throws SQLException {
+    protected FBResultSet createSpecialResultSet(FBObjectListener.@Nullable ResultSetListener resultSetListener)
+            throws SQLException {
         return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, true);
     }
 
@@ -641,7 +642,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return Math.max(Math.max(updCount, delCount), insCount);
     }
 
-    private @NonNull SqlCountHolder populateSqlCounts() throws SQLException {
+    private SqlCountHolder populateSqlCounts() throws SQLException {
         SqlCountHolder sqlCountHolder = this.sqlCountHolder;
         if (sqlCountHolder != null) {
             return sqlCountHolder;
@@ -702,7 +703,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return currentStatementResult.isResultSet();
     }
 
-    private @NonNull List<String> batchList = new ArrayList<>();
+    private List<String> batchList = new ArrayList<>();
 
     @Override
     public void addBatch(String sql) throws  SQLException {
@@ -722,7 +723,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public final int @NonNull [] executeBatch() throws SQLException {
+    public final int[] executeBatch() throws SQLException {
         if (connection.getAutoCommit()) {
             addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled", SQL_STATE_WARNING));
         }
@@ -730,7 +731,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return Primitives.toIntArray(executeBatchInternal());
     }
 
-    protected @NonNull List<@NonNull Long> executeBatchInternal() throws SQLException {
+    protected List<Long> executeBatchInternal() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             currentStatementGeneratedKeys = false;
@@ -765,19 +766,19 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return getLargeUpdateCountMinZero();
     }
 
-    protected final @NonNull BatchUpdateException createBatchUpdateException(@NonNull SQLException cause,
-            @NonNull List<? extends @NonNull Number> updateCounts) {
+    protected final BatchUpdateException createBatchUpdateException(SQLException cause,
+            List<? extends Number> updateCounts) {
         return createBatchUpdateException(cause.getMessage(), cause.getSQLState(), cause.getErrorCode(), updateCounts,
                 cause);
     }
 
-    protected final BatchUpdateException createBatchUpdateException(@NonNull String reason, @Nullable String sqlState,
-            int vendorCode, @NonNull List<? extends @NonNull Number> updateCounts, @NonNull Throwable cause) {
+    protected final BatchUpdateException createBatchUpdateException(String reason, @Nullable String sqlState,
+            int vendorCode, List<? extends Number> updateCounts, Throwable cause) {
         return new BatchUpdateException(reason, sqlState, vendorCode, Primitives.toLongArray(updateCounts), cause);
     }
 
     @Override
-    protected final @NonNull FbStatement getStatementHandle() throws SQLException {
+    protected final FbStatement getStatementHandle() throws SQLException {
         checkValidity();
         return fbStatement;
     }
@@ -786,7 +787,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         closeResultSet(notifyListener, CompletionReason.OTHER);
     }
 
-    void closeResultSet(boolean notifyListener, @NonNull CompletionReason completionReason) throws SQLException {
+    void closeResultSet(boolean notifyListener, CompletionReason completionReason) throws SQLException {
         boolean wasCompleted = completed;
 
         try {
@@ -820,6 +821,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return getResultSet();
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         if (iface == null) return false;
@@ -832,7 +834,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public <T> @NonNull T unwrap(Class<T> iface) throws SQLException {
+    public <T> T unwrap(Class<T> iface) throws SQLException {
         if (iface == null) {
             throw new SQLException("Unable to unwrap to class (null)");
         } else if (iface.isAssignableFrom(getClass())) {
@@ -914,8 +916,8 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     private static final Set<StatementState> NO_EXECUTION_PLAN_STATE =
             Set.of(StatementState.NEW, StatementState.ALLOCATED);
 
-    private String getExecutionPlan(@NonNull SQLExceptionThrowingFunction<@NonNull FbStatement, String> getPlanFunction)
-            throws SQLException {
+    private @Nullable String getExecutionPlan(
+            SQLExceptionThrowingFunction<FbStatement, @Nullable String> getPlanFunction) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (NO_EXECUTION_PLAN_STATE.contains(fbStatement.getState())) {
@@ -931,12 +933,12 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public final String getExecutionPlan() throws SQLException {
+    public final @Nullable String getExecutionPlan() throws SQLException {
         return getExecutionPlan(FbStatement::getExecutionPlan);
     }
 
     @Override
-    public final String getExplainedExecutionPlan() throws SQLException {
+    public final @Nullable String getExplainedExecutionPlan() throws SQLException {
         return getExecutionPlan(FbStatement::getExplainedExecutionPlan);
     }
 
@@ -972,7 +974,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public final long @NonNull [] executeLargeBatch() throws SQLException {
+    public final long[] executeLargeBatch() throws SQLException {
         if (connection.getAutoCommit()) {
             addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled", SQL_STATE_WARNING));
         }
@@ -1033,7 +1035,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      * @throws SQLException if a database access error occurs
      */
     @Override
-    public @NonNull String enquoteLiteral(@NonNull String val)  throws SQLException {
+    public String enquoteLiteral(String val)  throws SQLException {
         if (gdsHelper.getCurrentDatabase().getDatabaseDialect() == 1) {
             return '"' + val.replace("\"", "\"\"") + '"';
         }
@@ -1044,7 +1046,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      * @see #enquoteLiteral(String)
      */
     @Override
-    public @NonNull String enquoteNCharLiteral(@NonNull String val)  throws SQLException {
+    public String enquoteNCharLiteral(String val)  throws SQLException {
         return enquoteLiteral(val);
     }
 
@@ -1070,7 +1072,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      * @throws NullPointerException if identifier is {@code null}
      */
     @Override
-    public @NonNull String enquoteIdentifier(@NonNull String identifier, boolean alwaysQuote) throws SQLException {
+    public String enquoteIdentifier(String identifier, boolean alwaysQuote) throws SQLException {
         int len = identifier.length();
         if (len < 1 || len > connection.getMetaData().getMaxColumnNameLength()) {
             throw new SQLException("Invalid name");
@@ -1090,7 +1092,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public boolean isSimpleIdentifier(@NonNull String identifier) throws SQLException {
+    public boolean isSimpleIdentifier(String identifier) throws SQLException {
         int len = identifier.length();
         return len >= 1 && len <= connection.getMetaData().getMaxColumnNameLength()
                 && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches();
@@ -1103,26 +1105,26 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         // Normal SELECT (including selectable stored procedures) don't have an update count
         RESULT_SET(true) {
             @Override
-            public @NonNull StatementResult nextResult() {
+            public StatementResult nextResult() {
                 return NO_MORE_RESULTS;
             }
         },
         // Statements like EXECUTE BLOCK with SUSPEND and (Firebird 5) DML with RETURNING have an update count
         RESULT_SET_WITH_UPDATE_COUNT(true) {
             @Override
-            public @NonNull StatementResult nextResult() {
+            public StatementResult nextResult() {
                 return UPDATE_COUNT;
             }
         },
         UPDATE_COUNT(false) {
             @Override
-            public @NonNull StatementResult nextResult() {
+            public StatementResult nextResult() {
                 return NO_MORE_RESULTS;
             }
         },
         NO_MORE_RESULTS(false) {
             @Override
-            public @NonNull StatementResult nextResult() {
+            public StatementResult nextResult() {
                 return NO_MORE_RESULTS;
             }
         };
@@ -1136,7 +1138,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         /**
          * @return Next result
          */
-        public abstract @NonNull StatementResult nextResult();
+        public abstract StatementResult nextResult();
 
         public final boolean isResultSet() {
             return resultSet;
@@ -1149,13 +1151,13 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
      *
      * @return instance of {@link org.firebirdsql.gds.ng.listeners.StatementListener}
      */
-    protected @NonNull StatementListener createStatementListener() {
+    protected StatementListener createStatementListener() {
         return new FBStatementListener();
     }
 
     private final class FBStatementListener implements StatementListener {
         @Override
-        public void receivedRow(@NonNull FbStatement sender, @NonNull RowValue rowValue) {
+        public void receivedRow(FbStatement sender, RowValue rowValue) {
             if (isUnexpectedSender(sender)) return;
             // TODO May need extra condition to distinguish between singleton result of EXECUTE PROCEDURE and INSERT ... RETURNING ...
             if (isSingletonResult) {
@@ -1167,15 +1169,14 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
 
         @Override
-        public void statementExecuted(@NonNull FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) {
+        public void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) {
             if (isUnexpectedSender(sender)) return;
             // TODO If currentStatementResult has result set, create ResultSet and attach listener to sender?
             currentStatementResult = determineInitialStatementResult(hasResultSet, hasSingletonResult);
             isSingletonResult = hasSingletonResult;
         }
 
-        private @NonNull StatementResult determineInitialStatementResult(boolean hasResultSet,
-                boolean hasSingletonResult) {
+        private StatementResult determineInitialStatementResult(boolean hasResultSet, boolean hasSingletonResult) {
             if (hasResultSet || hasSingletonResult && !isGeneratedKeyQuery()) {
                 if (jbStatementType == LocalStatementType.SELECT) {
                     return StatementResult.RESULT_SET;
@@ -1190,8 +1191,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
 
         @Override
-        public void statementStateChanged(@NonNull FbStatement sender, @NonNull StatementState newState,
-                @NonNull StatementState previousState) {
+        public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
             if (isUnexpectedSender(sender)) return;
             if (newState == StatementState.EXECUTING) {
                 specialResult.clear();
@@ -1207,18 +1207,18 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
 
         @Override
-        public void warningReceived(@NonNull FbStatement sender, @NonNull SQLWarning warning) {
+        public void warningReceived(FbStatement sender, SQLWarning warning) {
             if (isUnexpectedSender(sender)) return;
             addWarning(warning);
         }
 
         @Override
-        public void sqlCounts(@NonNull FbStatement sender, @NonNull SqlCountHolder sqlCounts) {
+        public void sqlCounts(FbStatement sender, SqlCountHolder sqlCounts) {
             if (isUnexpectedSender(sender)) return;
             sqlCountHolder = sqlCounts;
         }
 
-        private boolean isUnexpectedSender(@NonNull FbStatement sender) {
+        private boolean isUnexpectedSender(FbStatement sender) {
             if (sender != fbStatement) {
                 log.log(TRACE, "Received statement listener update from unrelated statement [{0}]", sender);
                 sender.removeStatementListener(this);
@@ -1233,7 +1233,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         private boolean allRowsFetched;
 
         @Override
-        public void afterLast(@NonNull FbStatement sender) {
+        public void afterLast(FbStatement sender) {
             allRowsFetched = true;
         }
 

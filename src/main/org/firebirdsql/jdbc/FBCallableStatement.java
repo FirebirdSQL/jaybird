@@ -24,7 +24,7 @@ import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConversionException;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
@@ -51,6 +51,7 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_NO_RESULT_SET;
  * @author Mark Rotteveel
  */
 @InternalApi
+@NullMarked
 public class FBCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
 
     static final String SET_BY_STRING_NOT_SUPPORTED = "Setting parameters by name is not supported";
@@ -59,12 +60,11 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     protected boolean selectableProcedure;
 
-    protected @NonNull FBProcedureCall procedureCall;
+    protected FBProcedureCall procedureCall;
 
-    protected FBCallableStatement(@NonNull FBConnection connection, String sql, @NonNull ResultSetBehavior rsBehavior,
-            @NonNull StoredProcedureMetaData storedProcMetaData,
-            FBObjectListener.@NonNull StatementListener statementListener,
-            FBObjectListener.@NonNull BlobListener blobListener) throws SQLException {
+    protected FBCallableStatement(FBConnection connection, String sql, ResultSetBehavior rsBehavior,
+            StoredProcedureMetaData storedProcMetaData, FBObjectListener.StatementListener statementListener,
+            FBObjectListener.BlobListener blobListener) throws SQLException {
         super(connection, rsBehavior, statementListener, blobListener);
         var parser = new FBEscapedCallParser();
 
@@ -89,7 +89,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    public @NonNull FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
+    public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
@@ -99,7 +99,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         }
     }
 
-    private @NonNull List<@NonNull FBProcedureCall> batchList = new ArrayList<>();
+    private List<FBProcedureCall> batchList = new ArrayList<>();
 
     @Override
     public void addBatch() throws SQLException {
@@ -120,7 +120,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    protected @NonNull List<@NonNull Long> executeBatchInternal() throws SQLException {
+    protected List<Long> executeBatchInternal() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             List<Long> results = new ArrayList<>(batchList.size());
@@ -175,7 +175,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         setRequiredTypesInternal(rs);
     }
 
-    private void setRequiredTypesInternal(@NonNull FBResultSet resultSet) throws SQLException {
+    private void setRequiredTypesInternal(FBResultSet resultSet) throws SQLException {
         for (FBProcedureParam param : procedureCall.getOutputParams()) {
             if (param == null) continue;
 
@@ -240,7 +240,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     //This method prepares statement before execution. Rest of the processing is done by superclass.
     @Override
-    public @NonNull ResultSet executeQuery() throws SQLException {
+    public ResultSet executeQuery() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             procedureCall.checkParameters();
@@ -327,13 +327,13 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    protected @NonNull FBResultSet createSpecialResultSet(
-            FBObjectListener.@Nullable ResultSetListener resultSetListener) throws SQLException {
+    protected FBResultSet createSpecialResultSet(FBObjectListener.@Nullable ResultSetListener resultSetListener)
+            throws SQLException {
         // retrieveBlobs is false, as they were already retrieved when initializing singletonRs in internalExecute
         return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, false);
     }
 
-    private void setField(@NonNull FBField field, @NonNull WrapperWithLong value) throws SQLException {
+    private void setField(FBField field, WrapperWithLong value) throws SQLException {
         Object obj = value.value();
 
         if (obj == null) {
@@ -351,7 +351,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         }
     }
 
-    private void setField(@NonNull FBField field, @NonNull WrapperWithCalendar value) throws SQLException {
+    private void setField(FBField field, WrapperWithCalendar value) throws SQLException {
         Object obj = value.value();
 
         if (obj == null) {
@@ -361,7 +361,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
             if (obj instanceof Timestamp timestamp) {
                 field.setTimestamp(timestamp, cal);
-            } else if (obj instanceof java.sql.Date date) {
+            } else if (obj instanceof Date date) {
                 field.setDate(date, cal);
             } else if (obj instanceof Time time) {
                 field.setTime(time, cal);
@@ -433,7 +433,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    public String getString(int parameterIndex) throws SQLException {
+    public @Nullable String getString(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getString(mapOutParamIndexToPosition(parameterIndex));
     }
 
@@ -474,27 +474,27 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     @Deprecated(since = "1")
     @Override
-    public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
+    public @Nullable BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
         return getAndAssertSingletonResultSet().getBigDecimal(mapOutParamIndexToPosition(parameterIndex), scale);
     }
 
     @Override
-    public byte[] getBytes(int parameterIndex) throws SQLException {
+    public byte @Nullable [] getBytes(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getBytes(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public java.sql.Date getDate(int parameterIndex) throws SQLException {
+    public Date getDate(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getDate(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public Time getTime(int parameterIndex) throws SQLException {
+    public @Nullable Time getTime(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getTime(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public Timestamp getTimestamp(int parameterIndex) throws SQLException {
+    public @Nullable Timestamp getTimestamp(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getTimestamp(mapOutParamIndexToPosition(parameterIndex));
     }
 
@@ -505,12 +505,12 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public Object getObject(int parameterIndex) throws SQLException {
+    public @Nullable Object getObject(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getObject(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public Object getObject(String colName) throws SQLException {
+    public @Nullable Object getObject(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getObject(colName);
     }
 
@@ -521,7 +521,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public Object getObject(int parameterIndex, Map<String, Class<?>> map) throws SQLException {
+    public @Nullable Object getObject(int parameterIndex, Map<String, Class<?>> map) throws SQLException {
         return getAndAssertSingletonResultSet().getObject(mapOutParamIndexToPosition(parameterIndex), map);
     }
 
@@ -532,67 +532,67 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public Object getObject(String colName, Map<String, Class<?>> map) throws SQLException {
+    public @Nullable Object getObject(String colName, Map<String, Class<?>> map) throws SQLException {
         return getAndAssertSingletonResultSet().getObject(colName, map);
     }
 
     @Override
-    public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
+    public <T extends @Nullable Object> @Nullable T getObject(int parameterIndex, Class<T> type) throws SQLException {
         return getAndAssertSingletonResultSet().getObject(mapOutParamIndexToPosition(parameterIndex), type);
     }
 
     @Override
-    public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
+    public <T extends @Nullable Object> @Nullable T getObject(String parameterName, Class<T> type) throws SQLException {
         return getAndAssertSingletonResultSet().getObject(parameterName, type);
     }
 
     @Override
-    public BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
+    public @Nullable BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getBigDecimal(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public Ref getRef(int parameterIndex) throws SQLException {
+    public @Nullable Ref getRef(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getRef(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public Blob getBlob(int parameterIndex) throws SQLException {
+    public @Nullable Blob getBlob(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getBlob(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public Clob getClob(int parameterIndex) throws SQLException {
+    public @Nullable Clob getClob(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getClob(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public Array getArray(int parameterIndex) throws SQLException {
+    public @Nullable Array getArray(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getArray(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public java.sql.Date getDate(int parameterIndex, Calendar cal) throws SQLException {
+    public @Nullable Date getDate(int parameterIndex, @Nullable Calendar cal) throws SQLException {
         return getAndAssertSingletonResultSet().getDate(mapOutParamIndexToPosition(parameterIndex), cal);
     }
 
     @Override
-    public Time getTime(int parameterIndex, Calendar cal) throws SQLException {
+    public @Nullable Time getTime(int parameterIndex, @Nullable Calendar cal) throws SQLException {
         return getAndAssertSingletonResultSet().getTime(mapOutParamIndexToPosition(parameterIndex), cal);
     }
 
     @Override
-    public Timestamp getTimestamp(int parameterIndex, Calendar cal) throws SQLException {
+    public @Nullable Timestamp getTimestamp(int parameterIndex, @Nullable Calendar cal) throws SQLException {
         return getAndAssertSingletonResultSet().getTimestamp(mapOutParamIndexToPosition(parameterIndex), cal);
     }
 
     @Override
-    public URL getURL(int parameterIndex) throws SQLException {
+    public @Nullable URL getURL(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getURL(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public String getString(String colName) throws SQLException {
+    public @Nullable String getString(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getString(colName);
     }
 
@@ -632,77 +632,77 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    public byte[] getBytes(String colName) throws SQLException {
+    public byte @Nullable [] getBytes(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getBytes(colName);
     }
 
     @Override
-    public Date getDate(String colName) throws SQLException {
+    public @Nullable Date getDate(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getDate(colName);
     }
 
     @Override
-    public Time getTime(String colName) throws SQLException {
+    public @Nullable Time getTime(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getTime(colName);
     }
 
     @Override
-    public Timestamp getTimestamp(String colName) throws SQLException {
+    public @Nullable Timestamp getTimestamp(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getTimestamp(colName);
     }
 
     @Override
-    public BigDecimal getBigDecimal(String colName) throws SQLException {
+    public @Nullable BigDecimal getBigDecimal(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getBigDecimal(colName);
     }
 
     @Override
-    public Ref getRef(String colName) throws SQLException {
+    public @Nullable Ref getRef(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getRef(colName);
     }
 
     @Override
-    public Blob getBlob(String colName) throws SQLException {
+    public @Nullable Blob getBlob(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getBlob(colName);
     }
 
     @Override
-    public Clob getClob(String colName) throws SQLException {
+    public @Nullable Clob getClob(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getClob(colName);
     }
 
     @Override
-    public Array getArray(String colName) throws SQLException {
+    public @Nullable Array getArray(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getArray(colName);
     }
 
     @Override
-    public Date getDate(String colName, Calendar cal) throws SQLException {
+    public @Nullable Date getDate(String colName, @Nullable Calendar cal) throws SQLException {
         return getAndAssertSingletonResultSet().getDate(colName, cal);
     }
 
     @Override
-    public Time getTime(String colName, Calendar cal) throws SQLException {
+    public @Nullable Time getTime(String colName, @Nullable Calendar cal) throws SQLException {
         return getAndAssertSingletonResultSet().getTime(colName, cal);
     }
 
     @Override
-    public Timestamp getTimestamp(String colName, Calendar cal) throws SQLException {
+    public @Nullable Timestamp getTimestamp(String colName, @Nullable Calendar cal) throws SQLException {
         return getAndAssertSingletonResultSet().getTimestamp(colName, cal);
     }
 
     @Override
-    public URL getURL(String colName) throws SQLException {
+    public @Nullable URL getURL(String colName) throws SQLException {
         return getAndAssertSingletonResultSet().getURL(colName);
     }
 
     @Override
-    public Reader getCharacterStream(int parameterIndex) throws SQLException {
+    public @Nullable Reader getCharacterStream(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getCharacterStream(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public Reader getCharacterStream(String parameterName) throws SQLException {
+    public @Nullable Reader getCharacterStream(String parameterName) throws SQLException {
         return getAndAssertSingletonResultSet().getCharacterStream(parameterName);
     }
 
@@ -713,7 +713,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public Reader getNCharacterStream(int parameterIndex) throws SQLException {
+    public @Nullable Reader getNCharacterStream(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getNCharacterStream(mapOutParamIndexToPosition(parameterIndex));
     }
 
@@ -724,7 +724,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public Reader getNCharacterStream(String parameterName) throws SQLException {
+    public @Nullable Reader getNCharacterStream(String parameterName) throws SQLException {
         return getAndAssertSingletonResultSet().getNCharacterStream(parameterName);
     }
 
@@ -735,7 +735,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public String getNString(int parameterIndex) throws SQLException {
+    public @Nullable String getNString(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getNString(mapOutParamIndexToPosition(parameterIndex));
     }
 
@@ -746,67 +746,67 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public String getNString(String parameterName) throws SQLException {
+    public @Nullable String getNString(String parameterName) throws SQLException {
         return getAndAssertSingletonResultSet().getNString(parameterName);
     }
 
     @Override
-    public void setAsciiStream(String parameterName, InputStream x, long length) throws SQLException {
+    public void setAsciiStream(String parameterName, @Nullable InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setAsciiStream(String parameterName, InputStream x) throws SQLException {
+    public void setAsciiStream(String parameterName, @Nullable InputStream x) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setBinaryStream(String parameterName, InputStream x, long length) throws SQLException {
+    public void setBinaryStream(String parameterName, @Nullable InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setBinaryStream(String parameterName, InputStream x) throws SQLException {
+    public void setBinaryStream(String parameterName, @Nullable InputStream x) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setBlob(String parameterName, Blob x) throws SQLException {
+    public void setBlob(String parameterName, @Nullable Blob x) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setBlob(String parameterName, InputStream inputStream, long length) throws SQLException {
+    public void setBlob(String parameterName, @Nullable InputStream inputStream, long length) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setBlob(String parameterName, InputStream inputStream) throws SQLException {
+    public void setBlob(String parameterName, @Nullable InputStream inputStream) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setCharacterStream(String parameterName, Reader reader, long length) throws SQLException {
+    public void setCharacterStream(String parameterName, @Nullable Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setCharacterStream(String parameterName, Reader reader) throws SQLException {
+    public void setCharacterStream(String parameterName, @Nullable Reader reader) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setClob(String parameterName, Clob x) throws SQLException {
+    public void setClob(String parameterName, @Nullable Clob x) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setClob(String parameterName, Reader reader, long length) throws SQLException {
+    public void setClob(String parameterName, @Nullable Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setClob(String parameterName, Reader reader) throws SQLException {
+    public void setClob(String parameterName, @Nullable Reader reader) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
@@ -817,7 +817,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public void setNCharacterStream(String parameterName, Reader value, long length) throws SQLException {
+    public void setNCharacterStream(String parameterName, @Nullable Reader value, long length) throws SQLException {
         setCharacterStream(parameterName, value, length);
     }
 
@@ -828,7 +828,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public void setNCharacterStream(String parameterName, Reader value) throws SQLException {
+    public void setNCharacterStream(String parameterName, @Nullable Reader value) throws SQLException {
         setCharacterStream(parameterName, value);
     }
 
@@ -839,7 +839,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public void setNClob(String parameterName, Reader reader, long length) throws SQLException {
+    public void setNClob(String parameterName, @Nullable Reader reader, long length) throws SQLException {
         setClob(parameterName, reader, length);
     }
 
@@ -850,7 +850,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public void setNClob(String parameterName, Reader reader) throws SQLException {
+    public void setNClob(String parameterName, @Nullable Reader reader) throws SQLException {
         setClob(parameterName, reader);
     }
 
@@ -861,7 +861,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public void setNString(String parameterName, String value) throws SQLException {
+    public void setNString(String parameterName, @Nullable String value) throws SQLException {
         setString(parameterName, value);
     }
 
@@ -917,7 +917,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    public void setURL(String param1, URL param2) throws SQLException {
+    public void setURL(String param1, @Nullable URL param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
@@ -962,77 +962,77 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    public void setBigDecimal(String param1, BigDecimal param2) throws SQLException {
+    public void setBigDecimal(String param1, @Nullable BigDecimal param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setString(String param1, String param2) throws SQLException {
+    public void setString(String param1, @Nullable String param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setBytes(String param1, byte[] param2) throws SQLException {
+    public void setBytes(String param1, byte @Nullable [] param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setDate(String param1, Date param2) throws SQLException {
+    public void setDate(String param1, @Nullable Date param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setTime(String param1, Time param2) throws SQLException {
+    public void setTime(String param1, @Nullable Time param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setTimestamp(String param1, Timestamp param2) throws SQLException {
+    public void setTimestamp(String param1, @Nullable Timestamp param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setAsciiStream(String param1, InputStream param2, int param3) throws SQLException {
+    public void setAsciiStream(String param1, @Nullable InputStream param2, int param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setBinaryStream(String param1, InputStream param2, int param3) throws SQLException {
+    public void setBinaryStream(String param1, @Nullable InputStream param2, int param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setObject(String param1, Object param2, int param3, int param4) throws SQLException {
+    public void setObject(String param1, @Nullable Object param2, int param3, int param4) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setObject(String param1, Object param2, int param3) throws SQLException {
+    public void setObject(String param1, @Nullable Object param2, int param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setObject(String param1, Object param2) throws SQLException {
+    public void setObject(String param1, @Nullable Object param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setCharacterStream(String param1, Reader param2, int param3) throws SQLException {
+    public void setCharacterStream(String param1, @Nullable Reader param2, int param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setDate(String param1, Date param2, Calendar param3) throws SQLException {
+    public void setDate(String param1, @Nullable Date param2, @Nullable Calendar param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setTime(String param1, Time param2, Calendar param3) throws SQLException {
+    public void setTime(String param1, @Nullable Time param2, @Nullable Calendar param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setTimestamp(String param1, Timestamp param2, Calendar param3) throws SQLException {
+    public void setTimestamp(String param1, @Nullable Timestamp param2, @Nullable Calendar param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
@@ -1048,7 +1048,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    public @NonNull ResultSet getGeneratedKeys() throws SQLException {
+    public ResultSet getGeneratedKeys() throws SQLException {
         throw new FBDriverNotCapableException("getGeneratedKeys is not supported on CallableStatement");
     }
 
@@ -1061,7 +1061,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @throws java.sql.SQLException
      *         when the result set has no data.
      */
-    protected @NonNull ResultSet assertHasData(@Nullable ResultSet rs) throws SQLException {
+    protected ResultSet assertHasData(@Nullable ResultSet rs) throws SQLException {
         if (rs == null) {
             throw new SQLException("Current statement has no data to return", SQL_STATE_NO_RESULT_SET);
         }
@@ -1090,46 +1090,47 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @return Either the singleton result set, or the current result set as described above
      * @throws SQLException For database access errors
      */
-    protected @NonNull ResultSet getAndAssertSingletonResultSet() throws SQLException {
+    protected ResultSet getAndAssertSingletonResultSet() throws SQLException {
         return assertHasData(!isSelectableProcedure() && singletonRs != null ? singletonRs : getResultSet());
     }
 
-    private void setInputParam(int parameterIndex, Object value) throws SQLException {
+    private void setInputParam(int parameterIndex, @Nullable Object value) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(value);
     }
 
     @Override
-    public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
+    public void setBigDecimal(int parameterIndex, @Nullable BigDecimal x) throws SQLException {
         setInputParam(parameterIndex, x);
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, @Nullable InputStream inputStream, int length) throws SQLException {
         setInputParam(parameterIndex, new WrapperWithLong(inputStream, length));
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, @Nullable InputStream inputStream, long length)
+            throws SQLException {
         setInputParam(parameterIndex, new WrapperWithLong(inputStream, length));
     }
 
     @Override
-    public void setBinaryStream(int parameterIndex, InputStream inputStream) throws SQLException {
+    public void setBinaryStream(int parameterIndex, @Nullable InputStream inputStream) throws SQLException {
         setInputParam(parameterIndex, inputStream);
     }
 
     @Override
-    public void setBlob(int parameterIndex, Blob blob) throws SQLException {
+    public void setBlob(int parameterIndex, @Nullable Blob blob) throws SQLException {
         setInputParam(parameterIndex, blob);
     }
 
     @Override
-    public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+    public void setBlob(int parameterIndex, @Nullable InputStream inputStream, long length) throws SQLException {
         setInputParam(parameterIndex, new WrapperWithLong(inputStream, length));
     }
 
     @Override
-    public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
+    public void setBlob(int parameterIndex, @Nullable InputStream inputStream) throws SQLException {
         setInputParam(parameterIndex, inputStream);
     }
 
@@ -1144,47 +1145,47 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    public void setBytes(int parameterIndex, byte[] x) throws SQLException {
+    public void setBytes(int parameterIndex, byte @Nullable [] x) throws SQLException {
         setInputParam(parameterIndex, x);
     }
 
     @Override
-    public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
+    public void setCharacterStream(int parameterIndex, @Nullable Reader reader, int length) throws SQLException {
         setInputParam(parameterIndex, new WrapperWithLong(reader, length));
     }
 
     @Override
-    public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setCharacterStream(int parameterIndex, @Nullable Reader reader, long length) throws SQLException {
         setInputParam(parameterIndex, new WrapperWithLong(reader, length));
     }
 
     @Override
-    public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
+    public void setCharacterStream(int parameterIndex, @Nullable Reader reader) throws SQLException {
         setInputParam(parameterIndex, reader);
     }
 
     @Override
-    public void setClob(int parameterIndex, Clob x) throws SQLException {
+    public void setClob(int parameterIndex, @Nullable Clob x) throws SQLException {
         setInputParam(parameterIndex, x);
     }
 
     @Override
-    public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setClob(int parameterIndex, @Nullable Reader reader, long length) throws SQLException {
         setInputParam(parameterIndex, new WrapperWithLong(reader, length));
     }
 
     @Override
-    public void setClob(int parameterIndex, Reader reader) throws SQLException {
+    public void setClob(int parameterIndex, @Nullable Reader reader) throws SQLException {
         setInputParam(parameterIndex, reader);
     }
 
     @Override
-    public void setDate(int parameterIndex, java.sql.Date x, Calendar cal) throws SQLException {
+    public void setDate(int parameterIndex, @Nullable Date x, @Nullable Calendar cal) throws SQLException {
         setInputParam(parameterIndex, new WrapperWithCalendar(x, cal));
     }
 
     @Override
-    public void setDate(int parameterIndex, java.sql.Date x) throws SQLException {
+    public void setDate(int parameterIndex, @Nullable Date x) throws SQLException {
         setInputParam(parameterIndex, x);
     }
 
@@ -1219,17 +1220,17 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws SQLException {
+    public void setObject(int parameterIndex, @Nullable Object x, int targetSqlType, int scale) throws SQLException {
         setInputParam(parameterIndex, x);
     }
 
     @Override
-    public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
+    public void setObject(int parameterIndex, @Nullable Object x, int targetSqlType) throws SQLException {
         setInputParam(parameterIndex, x);
     }
 
     @Override
-    public void setObject(int parameterIndex, Object x) throws SQLException {
+    public void setObject(int parameterIndex, @Nullable Object x) throws SQLException {
         setInputParam(parameterIndex, x);
     }
 
@@ -1239,27 +1240,27 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     @Override
-    public void setString(int parameterIndex, String x) throws SQLException {
+    public void setString(int parameterIndex, @Nullable String x) throws SQLException {
         setInputParam(parameterIndex, x);
     }
 
     @Override
-    public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
+    public void setTime(int parameterIndex, @Nullable Time x, @Nullable Calendar cal) throws SQLException {
         setInputParam(parameterIndex, new WrapperWithCalendar(x, cal));
     }
 
     @Override
-    public void setTime(int parameterIndex, Time x) throws SQLException {
+    public void setTime(int parameterIndex, @Nullable Time x) throws SQLException {
         setInputParam(parameterIndex, x);
     }
 
     @Override
-    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
+    public void setTimestamp(int parameterIndex, @Nullable Timestamp x, @Nullable Calendar cal) throws SQLException {
         setInputParam(parameterIndex, new WrapperWithCalendar(x, cal));
     }
 
     @Override
-    public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
+    public void setTimestamp(int parameterIndex, @Nullable Timestamp x) throws SQLException {
         setInputParam(parameterIndex, x);
     }
 
@@ -1268,7 +1269,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      *
      * @throws SQLException If no selectability information is available
      */
-    private void setSelectabilityAutomatically(@NonNull StoredProcedureMetaData storedProcMetaData)
+    private void setSelectabilityAutomatically(StoredProcedureMetaData storedProcMetaData)
             throws SQLException {
         selectableProcedure = storedProcMetaData.isSelectable(procedureCall.getName());
     }
@@ -1280,7 +1281,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public NClob getNClob(int parameterIndex) throws SQLException {
+    public @Nullable NClob getNClob(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getNClob(mapOutParamIndexToPosition(parameterIndex));
     }
 
@@ -1291,27 +1292,27 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public NClob getNClob(String parameterName) throws SQLException {
+    public @Nullable NClob getNClob(String parameterName) throws SQLException {
         return getAndAssertSingletonResultSet().getNClob(parameterName);
     }
 
     @Override
-    public RowId getRowId(int parameterIndex) throws SQLException {
+    public @Nullable RowId getRowId(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getRowId(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public RowId getRowId(String parameterName) throws SQLException {
+    public @Nullable RowId getRowId(String parameterName) throws SQLException {
         return getAndAssertSingletonResultSet().getRowId(parameterName);
     }
 
     @Override
-    public SQLXML getSQLXML(int parameterIndex) throws SQLException {
+    public @Nullable SQLXML getSQLXML(int parameterIndex) throws SQLException {
         return getAndAssertSingletonResultSet().getSQLXML(mapOutParamIndexToPosition(parameterIndex));
     }
 
     @Override
-    public SQLXML getSQLXML(String parameterName) throws SQLException {
+    public @Nullable SQLXML getSQLXML(String parameterName) throws SQLException {
         return getAndAssertSingletonResultSet().getSQLXML(parameterName);
     }
 
@@ -1322,17 +1323,17 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * </p>
      */
     @Override
-    public void setNClob(String parameterName, NClob value) throws SQLException {
+    public void setNClob(String parameterName, @Nullable NClob value) throws SQLException {
         setClob(parameterName, value);
     }
 
     @Override
-    public void setRowId(String parameterName, RowId x) throws SQLException {
+    public void setRowId(String parameterName, @Nullable RowId x) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     @Override
-    public void setSQLXML(String parameterName, SQLXML xmlObject) throws SQLException {
+    public void setSQLXML(String parameterName, @Nullable SQLXML xmlObject) throws SQLException {
         throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 

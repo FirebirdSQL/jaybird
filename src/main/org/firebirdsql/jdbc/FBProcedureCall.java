@@ -20,6 +20,8 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.jaybird.util.CollectionUtils;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ import static org.firebirdsql.jdbc.SQLStateConstants.*;
  * </p>
  */
 @InternalApi
+@NullMarked
 public class FBProcedureCall implements Cloneable {
 
     private static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE ";
@@ -56,24 +59,24 @@ public class FBProcedureCall implements Cloneable {
         }
     }
 
-    private static List<FBProcedureParam> cloneParameters(final List<FBProcedureParam> parameters) {
-        final List<FBProcedureParam> clonedParameters = new ArrayList<>(parameters.size());
+    private static List<@Nullable FBProcedureParam> cloneParameters(final List<@Nullable FBProcedureParam> parameters) {
+        final List<@Nullable FBProcedureParam> clonedParameters = new ArrayList<>(parameters.size());
         for (FBProcedureParam param : parameters) {
             clonedParameters.add(param != null ? (FBProcedureParam) param.clone() : null);
         }
         return clonedParameters;
     }
 
-    private String name;
-    private List<FBProcedureParam> inputParams = new ArrayList<>();
-    private List<FBProcedureParam> outputParams = new ArrayList<>();
+    private @Nullable String name;
+    private List<@Nullable FBProcedureParam> inputParams = new ArrayList<>();
+    private List<@Nullable FBProcedureParam> outputParams = new ArrayList<>();
 
     /**
      * Get the name of the procedure to be called.
      *
      * @return The procedure name
      */
-    public String getName() {
+    public @Nullable String getName() {
         return name;
     }
 
@@ -126,7 +129,7 @@ public class FBProcedureCall implements Cloneable {
      *
      * @return instance of {@link FBProcedureParam}.
      */
-    private static FBProcedureParam getParam(Collection<FBProcedureParam> params, int index) {
+    private static FBProcedureParam getParam(Collection<@Nullable FBProcedureParam> params, int index) {
         for (FBProcedureParam param : params) {
             if (param != null && param.getIndex() == index) {
                 return param;
@@ -167,7 +170,7 @@ public class FBProcedureCall implements Cloneable {
      *
      * @return A list of all input parameters
      */
-    public List<FBProcedureParam> getInputParams() {
+    public List<@Nullable FBProcedureParam> getInputParams() {
         return inputParams;
     }
 
@@ -176,7 +179,7 @@ public class FBProcedureCall implements Cloneable {
      *
      * @return A list of all output parameters
      */
-    public List<FBProcedureParam> getOutputParams() {
+    public List<@Nullable FBProcedureParam> getOutputParams() {
         return outputParams;
     }
 
@@ -199,7 +202,7 @@ public class FBProcedureCall implements Cloneable {
         addParam(outputParams, param);
     }
 
-    private static void addParam(List<FBProcedureParam> params, FBProcedureParam param) {
+    private static void addParam(List<@Nullable FBProcedureParam> params, FBProcedureParam param) {
         CollectionUtils.growToSize(params, param.getPosition() + 1);
         params.set(param.getPosition(), param);
     }
@@ -258,7 +261,7 @@ public class FBProcedureCall implements Cloneable {
     public void registerOutParam(int index, int type) throws SQLException {
         FBProcedureParam param = getInputParam(index);
 
-        if (param == null || param == NullParam.NULL_PARAM) {
+        if (param == NullParam.NULL_PARAM) {
             param = getOutputParam(index);
         } else {
             addOutputParam(param);
@@ -268,7 +271,7 @@ public class FBProcedureCall implements Cloneable {
             }
         }
 
-        if (param == null || param == NullParam.NULL_PARAM) {
+        if (param == NullParam.NULL_PARAM) {
             throw new SQLException("Cannot find parameter with the specified position",
                     SQL_STATE_INVALID_DESC_FIELD_ID);
         }
@@ -358,7 +361,7 @@ public class FBProcedureCall implements Cloneable {
         }
 
         @Override
-        public void setValue(Object value) throws SQLException {
+        public void setValue(@Nullable Object value) throws SQLException {
             throw new SQLException("You cannot set value of a non-existing parameter", SQL_STATE_ATT_CANNOT_SET_NOW);
         }
 
