@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jaybird.util;
 
+import org.jspecify.annotations.NullUnmarked;
+
 import java.sql.SQLException;
 
 /**
@@ -30,6 +32,7 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 2.2
  */
+@NullUnmarked
 public final class SQLExceptionChainBuilder {
 
     private SQLException root;

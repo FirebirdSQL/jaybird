@@ -32,6 +32,8 @@ import org.firebirdsql.management.PageSizeConstants;
 
 import java.sql.SQLException;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Helper class that reports if a Firebird version supports a specific feature.
  * <p>
@@ -54,10 +56,7 @@ public final class FirebirdSupportInfo {
     private final GDSServerVersion serverVersion;
 
     private FirebirdSupportInfo(GDSServerVersion serverVersion) {
-        if (serverVersion == null) {
-            throw new NullPointerException("serverVersion");
-        }
-        if (serverVersion.equals(GDSServerVersion.INVALID_VERSION)) {
+        if (requireNonNull(serverVersion, "serverVersion").equals(GDSServerVersion.INVALID_VERSION)) {
             throw new IllegalArgumentException("serverVersion is an invalid version (GDSServerVersion.INVALID_VERSION)");
         }
         this.serverVersion = serverVersion;

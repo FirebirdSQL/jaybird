@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jaybird.util;
 
+import org.jspecify.annotations.NullUnmarked;
+
 import java.sql.SQLException;
 import java.util.function.Function;
 
@@ -33,6 +35,7 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 6
  */
+@NullUnmarked
 final class SQLExceptionThrowingFunctionWrappingFunction<T, R> implements SQLExceptionThrowingFunction<T, R> {
 
     private final Function<T, R> wrapped;

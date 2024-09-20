@@ -19,6 +19,7 @@
 package org.firebirdsql.jaybird.util;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -65,7 +66,7 @@ public final class ReflectionHelper {
      * @return instance of {@link Method} corresponding to specified name and
      * param types.
      */
-    public static Method findMethod(Class<?> clazz, String name, Class<?>[] args) {
+    public static @Nullable Method findMethod(Class<?> clazz, String name, Class<?>[] args) {
         try {
             return clazz.getMethod(name, args);
         } catch (NoSuchMethodException nmex) {

@@ -6,4 +6,7 @@
  * </p>
  */
 @InternalApi
+@NullMarked
 package org.firebirdsql.util;
+
+import org.jspecify.annotations.NullMarked;

@@ -24,6 +24,8 @@
  * @since 6
  */
 @InternalApi
+@NullMarked
 package org.firebirdsql.jaybird.util;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;

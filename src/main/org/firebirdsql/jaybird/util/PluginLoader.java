@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jaybird.util;
 
+import org.jspecify.annotations.Nullable;
+
 import java.lang.System.Logger.Level;
 import java.util.*;
 
@@ -208,14 +210,14 @@ public final class PluginLoader {
     public enum ClassSource {
         PLUGIN_CLASS_LOADER {
             @Override
-            ClassLoader getClassLoader(Class<?> spiClass) {
+            @Nullable ClassLoader getClassLoader(Class<?> spiClass) {
                 ClassLoader cl = spiClass.getClassLoader();
                 return cl != null ? cl : ClassLoader.getSystemClassLoader();
             }
         },
         CONTEXT_CLASS_LOADER {
             @Override
-            ClassLoader getClassLoader(Class<?> spiClass) {
+            @Nullable ClassLoader getClassLoader(Class<?> spiClass) {
                 return Thread.currentThread().getContextClassLoader();
             }
         };
@@ -227,6 +229,6 @@ public final class PluginLoader {
          *         service provider interface (SPI) of the plugin
          * @return class loader to use (can be {@code null})
          */
-        abstract ClassLoader getClassLoader(Class<?> spiClass);
+        abstract @Nullable ClassLoader getClassLoader(Class<?> spiClass);
     }
 }

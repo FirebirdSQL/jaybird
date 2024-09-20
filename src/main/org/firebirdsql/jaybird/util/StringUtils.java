@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jaybird.util;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Helper class for string operations
  *
@@ -39,7 +41,7 @@ public final class StringUtils {
      * @return Trimmed string {@code value}, or {@code null} when null, or empty after trim.
      * @see String#trim()
      */
-    public static String trimToNull(String value) {
+    public static @Nullable String trimToNull(@Nullable String value) {
         if (value != null) {
             String newValue = value.trim();
             if (!newValue.isEmpty()) {
@@ -57,7 +59,7 @@ public final class StringUtils {
      * @return {@code true} if {@code value} is {@code null} or emoty, {@code false} for non-empty strings
      * @since 6
      */
-    public static boolean isNullOrEmpty(String value) {
+    public static boolean isNullOrEmpty(@Nullable String value) {
         return value == null || value.isEmpty();
     }
 
@@ -69,7 +71,7 @@ public final class StringUtils {
      * @return result of {@code stringToTrim.trim()} (or {@code null} if {@code stringToTrim} was null
      * @since 6
      */
-    public static String trim(String stringToTrim) {
+    public static @Nullable String trim(@Nullable String stringToTrim) {
         return stringToTrim == null ? null : stringToTrim.trim();
     }
     

@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jaybird.util;
 
+import org.jspecify.annotations.Nullable;
+
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -55,7 +57,7 @@ public final class LegacyDatetimeConversions {
      *         calendar
      * @return local date time
      */
-    public static LocalDateTime toLocalDateTime(Timestamp val, Calendar c) {
+    public static LocalDateTime toLocalDateTime(Timestamp val, @Nullable Calendar c) {
         if (c == null || Objects.equals(c.getTimeZone(), TimeZone.getDefault())) return val.toLocalDateTime();
         c.setTime(val);
         return toLocalDateTime(c, val.getNanos());
@@ -74,7 +76,7 @@ public final class LegacyDatetimeConversions {
      *         calendar
      * @return timestamp
      */
-    public static Timestamp toTimestamp(LocalDateTime val, Calendar c) {
+    public static Timestamp toTimestamp(LocalDateTime val, @Nullable Calendar c) {
         if (c == null || Objects.equals(c.getTimeZone(), TimeZone.getDefault())) return Timestamp.valueOf(val);
         LegacyDatetimeConversions.updateCalendar(c, val);
         var timestamp = new Timestamp(c.getTimeInMillis());
@@ -95,7 +97,7 @@ public final class LegacyDatetimeConversions {
      *         calendar
      * @return local time
      */
-    public static LocalTime toLocalTime(Time val, Calendar c) {
+    public static LocalTime toLocalTime(Time val, @Nullable Calendar c) {
         if (c == null || Objects.equals(c.getTimeZone(), TimeZone.getDefault())) return val.toLocalTime();
         c.setTime(val);
         return toLocalTime(c, 0);
@@ -114,7 +116,7 @@ public final class LegacyDatetimeConversions {
      *         calendar
      * @return time
      */
-    public static Time toTime(LocalTime val, Calendar c) {
+    public static Time toTime(LocalTime val, @Nullable Calendar c) {
         if (c == null || Objects.equals(c.getTimeZone(), TimeZone.getDefault())) return Time.valueOf(val);
         LegacyDatetimeConversions.updateCalendar(c, LocalDate.EPOCH, val);
         return new Time(c.getTimeInMillis());
@@ -133,7 +135,7 @@ public final class LegacyDatetimeConversions {
      *         calendar
      * @return local time
      */
-    public static LocalDate toLocalDate(Date val, Calendar c) {
+    public static LocalDate toLocalDate(Date val, @Nullable Calendar c) {
         if (c == null || Objects.equals(c.getTimeZone(), TimeZone.getDefault())) return val.toLocalDate();
         c.setTime(val);
         return toLocalDate(c);
@@ -152,7 +154,7 @@ public final class LegacyDatetimeConversions {
      *         calendar
      * @return time
      */
-    public static Date toDate(LocalDate val, Calendar c) {
+    public static Date toDate(LocalDate val, @Nullable Calendar c) {
         if (c == null || Objects.equals(c.getTimeZone(), TimeZone.getDefault())) return Date.valueOf(val);
         updateCalendar(c, val, LocalTime.MIDNIGHT);
         return new Date(c.getTimeInMillis());

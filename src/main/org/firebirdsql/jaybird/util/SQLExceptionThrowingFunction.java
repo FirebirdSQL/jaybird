@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jaybird.util;
 
+import org.jspecify.annotations.NullUnmarked;
+
 import java.sql.SQLException;
 import java.util.function.Function;
 
@@ -31,8 +33,8 @@ import java.util.function.Function;
  * @author Mark Rotteveel
  * @since 6
  */
-
 @FunctionalInterface
+@NullUnmarked
 public interface SQLExceptionThrowingFunction<T, R> {
 
     R apply(T t) throws SQLException;

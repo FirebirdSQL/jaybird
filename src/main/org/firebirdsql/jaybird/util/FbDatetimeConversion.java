@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jaybird.util;
 
+import org.jspecify.annotations.Nullable;
+
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -238,7 +240,7 @@ public final class FbDatetimeConversion {
      *         if {@code datetimeString} cannot be parsed
      * @see #parseSqlTimestamp(String)
      */
-    public static LocalDateTime parseIsoOrSqlTimestamp(String datetimeString) {
+    public static @Nullable LocalDateTime parseIsoOrSqlTimestamp(@Nullable String datetimeString) {
         if (datetimeString == null) return null;
         if (datetimeString.length() >= 16 && (datetimeString.charAt(10) == 'T' || datetimeString.charAt(10) == 't')) {
             return LocalDateTime.parse(datetimeString);
@@ -257,7 +259,7 @@ public final class FbDatetimeConversion {
      * @see #parseIsoOrSqlTimestamp(String)
      * @see java.sql.Timestamp#valueOf(String)
      */
-    public static LocalDateTime parseSqlTimestamp(String datetimeString) {
+    public static @Nullable LocalDateTime parseSqlTimestamp(@Nullable String datetimeString) {
         return datetimeString != null ? LocalDateTime.parse(datetimeString, SQL_TIMESTAMP_PARSE) : null;
     }
 
@@ -268,7 +270,7 @@ public final class FbDatetimeConversion {
      *         local date time
      * @return formatted string, or {@code null} if {@code localDateTime} is {@code null}
      */
-    public static String formatSqlTimestamp(LocalDateTime localDateTime) {
+    public static @Nullable String formatSqlTimestamp(@Nullable LocalDateTime localDateTime) {
         return localDateTime != null ? localDateTime.format(SQL_TIMESTAMP_FORMAT) : null;
     }
 
@@ -285,7 +287,7 @@ public final class FbDatetimeConversion {
      *         if {@code timeString} cannot be parsed
      * @see java.sql.Time#valueOf(String)
      */
-    public static LocalTime parseSqlTime(String timeString) {
+    public static @Nullable LocalTime parseSqlTime(@Nullable String timeString) {
         return timeString != null ? LocalTime.parse(timeString) : null;
     }
 
@@ -296,7 +298,7 @@ public final class FbDatetimeConversion {
      *         local time
      * @return formatted string, or {@code null} if {@code localTime} is {@code null}
      */
-    public static String formatSqlTime(LocalTime localTime) {
+    public static @Nullable String formatSqlTime(@Nullable LocalTime localTime) {
         return localTime != null ? localTime.format(ISO_LOCAL_TIME) : null;
     }
 
@@ -310,7 +312,7 @@ public final class FbDatetimeConversion {
      *         if {@code dateString} cannot be parsed
      * @see java.sql.Date#valueOf(String)
      */
-    public static LocalDate parseSqlDate(String dateString) {
+    public static @Nullable LocalDate parseSqlDate(@Nullable String dateString) {
         return dateString != null ? LocalDate.parse(dateString, SQL_DATE_PARSE) : null;
     }
 
@@ -321,7 +323,7 @@ public final class FbDatetimeConversion {
      *         local date
      * @return formatted string, or {@code null} if {@code localDate} is {@code null}
      */
-    public static String formatSqlDate(LocalDate localDate) {
+    public static @Nullable String formatSqlDate(@Nullable LocalDate localDate) {
         return localDate != null ? localDate.toString() : null;
     }
 
