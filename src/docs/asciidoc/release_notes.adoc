@@ -709,7 +709,7 @@ Compared to emulated scrollable cursor, server-side scrollable cursors exhibit s
 This is not yet reflected in `updatesAreDetected()`, `deletesAreDetected()` and `insertsAreDetected()` of `DatabaseMetaData`.
 This will be corrected if and when we retrofit the new behaviour for _emulated_ as well.
 
-See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md.md[jdp-2021-04].
+See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md[jdp-2021-04].
 
 [#embedded-locator-service-provider]
 === Firebird Embedded locator service provider (experimental)
