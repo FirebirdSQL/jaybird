@@ -1,0 +1,47 @@
+= jdp-2024-04: Nullability Annotations
+
+== Status
+
+* Published: 2024-09-20
+
+== Type
+
+* Project-Specification
+
+== Context
+
+In Java, object references can point to an instance of an object, or to `null`.
+Dereferencing `null` will result in a `NullPointerException`.
+
+There are various libraries and tools in the Java ecosystem to perform static analysis of code and detect potential bugs due to potential null-dereferences.
+These tools require use of annotations to indicate the expected null-behaviour.
+
+Adding these annotations also helps developers to reason about code and its expected behaviour.
+
+Unfortunately, there are multiple competing annotations for this:
+
+* JSR 305 a.k.a. `javax.annotation`;
+never finalized, but used in the wild a lot in various incarnations
+* Checker Framework
+* FindBugs/SpotBugs (`edu.umd.cs.findbugs.annotations`)
+* Java/Jakarta EE Validations (intended for runtime validation, not static analysis)
+* JetBrains annotations
+* Eclipse EDT annotations
+* JSpecify
+* ...
+
+The https://jspecify.dev/[JSpecify^] project is the latest, and is trying to come to a tool-agnostic standard, where JSR 305 failed, and is backed by a lot of authors of the other libraries to come to a unified approach.
+
+== Decision
+
+We will start using the JSpecify annotations, but apply them incrementally.
+That is, we will avoid a big-bang addition of the annotations, but instead add them over time.
+For example, before refactoring, we add the appropriate annotations.
+
+== Consequences
+
+JSpecify recommends adding the annotations as a normal, runtime dependency (so not just compile-only/optional).
+In the case of a Maven build, that is no problem.
+However, for manual deployments, having to take additional libraries into consideration is in our experience error-prone (users are quick to forget to include such additional libraries).
+
+As absence of an annotation class at runtime elides/ignores the annotation, we'll mark the library as `requires static` in our module-info so deployments without the JSpecify library will still work.
