@@ -1580,9 +1580,11 @@ class FBResultSetTest {
 
                 List<Object> row1 = Arrays.asList(1, "1");
                 List<Object> insertRow = Arrays.asList(2, "2");
-                List<List<Object>> expectedRows = "SERVER".equals(scrollableCursorPropertyValue)
-                        ? Arrays.asList(row1, insertRow)
-                        : Arrays.asList(insertRow, row1);
+                List<List<Object>> expectedRows =
+                        "SERVER".equals(scrollableCursorPropertyValue)
+                        && getDefaultSupportInfo().supportsScrollableCursors()
+                                ? Arrays.asList(row1, insertRow)
+                                : Arrays.asList(insertRow, row1);
 
                 for (int i = 0; i < expectedRows.size(); i++) {
                     List<Object> expectedRow = expectedRows.get(i);
