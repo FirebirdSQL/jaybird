@@ -56,6 +56,10 @@ final class FBServerScrollFetcher implements FBFetcher {
     private int fetchSize;
     private boolean closed;
 
+    // We delay knowing the local and server-side sizes. Requesting the server-side cursor size triggers a full
+    // materialization of the cursor on the server, so delaying this avoids overhead at the cost of some more complexity
+    // in this fetcher.
+
     // The cursor size taking account maxRows
     private int cursorSize = CURSOR_SIZE_UNKNOWN;
     // The cursor size on the server (ignoring maxRows)
@@ -156,7 +160,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean first() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             checkOpen();
             int newLocalPosition = 1;
             if (!inWindow(newLocalPosition) && cursorSize != 0) {
@@ -172,7 +176,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean last() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             checkOpen();
             int cursorSize = this.cursorSize;
             int newLocalPosition;
@@ -200,7 +204,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean previous() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             checkOpen();
             int oldLocalPosition = localPosition;
             int newLocalPosition = Math.max(1, oldLocalPosition) - 1;
@@ -222,7 +226,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean next() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             checkOpen();
             int oldLocalPosition = localPosition;
             boolean hasMaxRows = maxRows > 0;
@@ -257,7 +261,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean absolute(int row) throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             checkOpen();
             // Overflow beyond cursor size is handled by inWindow returning false
             int newLocalPosition = row >= 0 ? row : Math.max(0, requireCursorSize() + 1 + row);
@@ -294,7 +298,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean relative(int row) throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             checkOpen();
             int oldLocalPosition = localPosition;
             // Overflow beyond cursor size is handled by inWindow returning false
@@ -331,7 +335,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public void beforeFirst() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             checkOpen();
             if (localPosition != 0) {
                 stmt.fetchScroll(FetchType.ABSOLUTE, -1, 0);
@@ -343,7 +347,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public void afterLast() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             checkOpen();
             int afterLastPosition = requireCursorSize() + 1;
             if (localPosition != afterLastPosition) {
@@ -378,7 +382,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public int getRowNum() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             // NOTE Relying on isAfterLast to (indirectly) call checkOpen()
             return isAfterLast() ? 0 : localPosition;
         }
@@ -386,7 +390,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isEmpty() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             // NOTE Relying on requireCursorSize to call checkOpen()
             int cursorSize = requireCursorSize();
             return cursorSize == 0;
@@ -395,7 +399,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isBeforeFirst() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             checkOpen();
             return localPosition == 0;
         }
@@ -403,7 +407,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isFirst() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             checkOpen();
             return localPosition == 1 && requireCursorSize() > 0;
         }
@@ -411,7 +415,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isLast() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             // NOTE Relying on requireCursorSize to call checkOpen()
             int cursorSize = requireCursorSize();
             return localPosition == cursorSize && cursorSize > 0;
@@ -420,12 +424,17 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isAfterLast() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             if (localPosition == 0) return false;
             // NOTE Relying on requireCursorSize to call checkOpen()
             int cursorSize = requireCursorSize();
             return localPosition > cursorSize;
         }
+    }
+
+    @Override
+    public void beforeExecuteInsert() throws SQLException {
+        requireCursorSize();
     }
 
     @Override
@@ -449,7 +458,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public int getFetchSize() throws SQLException {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             checkOpen();
             return fetchSize;
         }
@@ -457,7 +466,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public void setFetchSize(int fetchSize) {
-        try (LockCloseable ignored = stmt.withLock()) {
+        try (LockCloseable ignored = withLock()) {
             this.fetchSize = fetchSize;
         }
     }
@@ -501,14 +510,16 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     private int requireServerCursorSize() throws SQLException{
         int serverCursorSize = this.serverCursorSize;
-        if (serverCursorSize == CURSOR_SIZE_UNKNOWN) {
-            if (!stmt.hasFetched()) {
-                // A fetch is required before we can retrieve the cursor size, fetch without moving current position
-                stmt.fetchScroll(FetchType.RELATIVE, -1, 0);
-            }
-            serverCursorSize = this.serverCursorSize = retrieveServerCursorSize();
+        if (serverCursorSize != CURSOR_SIZE_UNKNOWN) return serverCursorSize;
+        if (!stmt.hasFetched()) {
+            // A fetch is required before we can retrieve the cursor size, fetch without moving current position
+            stmt.fetchScroll(FetchType.RELATIVE, -1, 0);
         }
-        return serverCursorSize;
+        return this.serverCursorSize = retrieveServerCursorSize();
+    }
+
+    private LockCloseable withLock() {
+        return stmt.withLock();
     }
 
     private static final class RowListener implements StatementListener {

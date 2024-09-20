@@ -1485,7 +1485,9 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public void insertRow() throws SQLException {
         checkUpdatable();
-
+        // prevent issue with server-side scrollable cursor including the inserted row, by forcing materialization of
+        // the entire cursor on the server
+        fbFetcher.beforeExecuteInsert();
         rowUpdater.insertRow();
         fbFetcher.insertRow(rowUpdater.getInsertRow());
         notifyRowUpdater();

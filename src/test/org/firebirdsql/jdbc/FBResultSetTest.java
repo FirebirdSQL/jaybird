@@ -34,6 +34,8 @@ import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.function.IntFunction;
@@ -43,6 +45,9 @@ import static java.sql.ResultSet.*;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertRowEquals;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.jaybird.props.PropertyConstants.SCROLLABLE_CURSOR_EMULATED;
@@ -1528,6 +1533,42 @@ class FBResultSetTest {
                             "wasNull not allowed after result set close");
                     assertThat(e, message(equalTo("The result set is closed")));
                 }
+            }
+        }
+    }
+
+    /**
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/819">#819</a>.
+     */
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void insertRowImmediatelyAfterExecuteQuery_doesNotReportRowTwice(String scrollableCursorPropertyValue)
+            throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            createTestData(1, connection);
+
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 ResultSet rs = stmt.executeQuery(SELECT_TEST_TABLE)) {
+                rs.moveToInsertRow();
+                rs.updateInt(1, 2);
+                rs.updateString(2, "2");
+                rs.insertRow();
+                rs.moveToCurrentRow();
+                rs.beforeFirst();
+
+                List<Object> row1 = Arrays.asList(1, "1");
+                List<Object> insertRow = Arrays.asList(2, "2");
+                List<List<Object>> expectedRows = "SERVER".equals(scrollableCursorPropertyValue)
+                        ? Arrays.asList(row1, insertRow)
+                        : Arrays.asList(insertRow, row1);
+
+                for (int i = 0; i < expectedRows.size(); i++) {
+                    List<Object> expectedRow = expectedRows.get(i);
+                    assertNextRow(rs);
+                    assertRowEquals("row " + i, rs, expectedRow);
+                }
+                assertNoNextRow(rs, "expected only " + expectedRows.size() + " rows");
             }
         }
     }

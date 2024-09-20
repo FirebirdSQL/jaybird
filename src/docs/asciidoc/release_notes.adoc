@@ -47,6 +47,10 @@ The partial index metadata support introduced in Jaybird 5.0.5 did not take into
 As part of this fix, we no longer check if `wasNull()` is called on a row, or after getting a column value, as the JDBC API does not require such check.
 Instead, `false` is reported if not currently on a row, or if no column value was retrieved, and an exception is thrown if the result set is closed.
 The value reported by `wasNull()` is reset to `false` on each cursor move (e.g. `next()`), and modified by each `get__XXX__` call.
+* Fixed: Inserting a row into a result set backed by a server-side scrollable cursor could include the inserted row twice (https://github.com/FirebirdSQL/jaybird/issues/819[#819])
++
+This could happen if the insert was performed when the server-side cursor was not fully materialized (e.g. by inserting the row immediately after execute).
+As the server-side cursor is only fully materialized on certain operations like requesting the cursor size, the inserted row could be included in the server-side cursor, as well as the local inserted rows collection.
 
 [#jaybird-5-0-5-changelog]
 === Jaybird 5.0.5
