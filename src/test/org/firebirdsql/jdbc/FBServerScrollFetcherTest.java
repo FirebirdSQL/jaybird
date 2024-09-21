@@ -544,7 +544,7 @@ class FBServerScrollFetcherTest {
     }
 
     private int extractId(RowValue rowValue) {
-        return db.getDatatypeCoder().decodeInt(rowValue.getFieldData(0));
+        return rowValue != null ? db.getDatatypeCoder().decodeInt(rowValue.getFieldData(0)) : Integer.MIN_VALUE;
     }
 
 }

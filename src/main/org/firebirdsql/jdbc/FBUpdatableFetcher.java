@@ -19,6 +19,8 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -44,13 +46,14 @@ import static java.util.Collections.emptyMap;
  *
  * @since 5
  */
+@NullMarked
 final class FBUpdatableFetcher implements FBFetcher {
 
     private final FBFetcher fetcher;
     private final RowValue deletedRowMarker;
 
     private FBObjectListener.FetcherListener fetcherListener;
-    private Map<Integer, RowValue> modifiedRows = new HashMap<>();
+    private Map<Integer, @Nullable RowValue> modifiedRows = new HashMap<>();
 
     private int position;
     private List<RowValue> insertedRows = new ArrayList<>();
@@ -100,7 +103,7 @@ final class FBUpdatableFetcher implements FBFetcher {
         return notifyRow(position, rowValue);
     }
 
-    private boolean notifyRow(int position, RowValue originalRowValue) throws SQLException {
+    private boolean notifyRow(int position, @Nullable RowValue originalRowValue) throws SQLException {
         RowValue rowValue = modifiedRows.getOrDefault(position, originalRowValue);
         fetcherListener.rowChanged(fetcher, rowValue);
         return rowValue != null;
@@ -356,10 +359,10 @@ final class FBUpdatableFetcher implements FBFetcher {
 
     private static final class InternalFetcherListener implements FBObjectListener.FetcherListener {
 
-        RowValue lastReceivedRow;
+        @Nullable RowValue lastReceivedRow;
 
         @Override
-        public void rowChanged(FBFetcher fetcher, RowValue newRow) {
+        public void rowChanged(FBFetcher fetcher, @Nullable RowValue newRow) {
             lastReceivedRow = newRow;
         }
 
