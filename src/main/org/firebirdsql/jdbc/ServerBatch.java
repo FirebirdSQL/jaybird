@@ -134,14 +134,15 @@ final class ServerBatch implements Batch, StatementListener {
             BatchCompletion batchCompletion = executeBatch(chain);
 
             if (batchCompletion.hasErrors()) {
-                throw chain.addFirst(toBatchUpdateException(batchCompletion)).getException();
-            } else if (chain.hasException()) {
-                // We had an earlier exception on sending the batch, causing us to execute an empty batch
-                throw chain.getException();
-            } else {
-                int[] updateCounts = toJdbcUpdateCounts(batchCompletion);
-                return Primitives.toLongList(updateCounts);
+                chain.addFirst(toBatchUpdateException(batchCompletion));
             }
+
+            // Either exception on batch completion (see above), or an earlier exception on sending the batch, causing
+            // us to execute an empty batch
+            chain.throwIfPresent();
+
+            int[] updateCounts = toJdbcUpdateCounts(batchCompletion);
+            return Primitives.toLongList(updateCounts);
         } finally {
             clearBatch();
         }
@@ -170,6 +171,7 @@ final class ServerBatch implements Batch, StatementListener {
             state = state.onServerOpen();
         } catch (SQLException e) {
             chain.append(e);
+            //noinspection DataFlowIssue : We know it be non-null
             throw chain.getException();
         }
     }
@@ -198,6 +200,7 @@ final class ServerBatch implements Batch, StatementListener {
             state = state.onSend();
         } catch (SQLException e) {
             chain.append(e);
+            //noinspection DataFlowIssue : We know it be non-null
             throw chain.getException();
         }
     }
@@ -220,6 +223,7 @@ final class ServerBatch implements Batch, StatementListener {
             return batchCompletion;
         } catch (SQLException e) {
             chain.append(e);
+            //noinspection DataFlowIssue : We know it be non-null
             throw chain.getException();
         }
     }

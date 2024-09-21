@@ -18,9 +18,12 @@
  */
 package org.firebirdsql.jaybird.util;
 
-import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
+import java.util.Optional;
 
 /**
  * Helper class for building {@link java.sql.SQLException} chains.
@@ -32,10 +35,10 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 2.2
  */
-@NullUnmarked
+@NullMarked
 public final class SQLExceptionChainBuilder {
 
-    private SQLException root;
+    private @Nullable SQLException root;
 
     /**
      * Appends the passed SQLException to the exception chain.
@@ -87,7 +90,27 @@ public final class SQLExceptionChainBuilder {
     /**
      * @return the root SQLException or {@code null} if no SQLException was added to this SQLExceptionChainBuilder
      */
-    public SQLException getException() {
+    public @Nullable SQLException getException() {
         return root;
     }
+
+    /**
+     * @return the root SQLException or empty if no SQLException was added to this SQLExceptionChainBuilder
+     */
+    public @NonNull Optional<SQLException> optException() {
+        return Optional.ofNullable(root);
+    }
+
+    /**
+     * Throws the root SQLException stored in the chain, if present; otherwise does nothing.
+     *
+     * @throws SQLException
+     *         the root SQLException in this chain builder
+     * @since 6
+     */
+    public void throwIfPresent() throws SQLException {
+        SQLException root = this.root;
+        if (root != null) throw root;
+    }
+
 }

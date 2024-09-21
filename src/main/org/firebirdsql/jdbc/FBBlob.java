@@ -194,8 +194,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
                     }
                 }
 
-                if (chain.hasException())
-                    throw chain.getException();
+                chain.throwIfPresent();
             } finally {
                 gdsHelper = null;
                 blobListener = FBObjectListener.NoActionBlobListener.instance();

@@ -188,8 +188,7 @@ public class FBConnection implements FirebirdConnection {
             }
         }
 
-        // throw exception if there is any
-        if (chain.hasException()) throw chain.getException();
+        chain.throwIfPresent();
     }
 
     /**
@@ -490,9 +489,7 @@ public class FBConnection implements FirebirdConnection {
                 closeMc(chainBuilder);
             }
         }
-        if (chainBuilder.hasException()) {
-            throw chainBuilder.getException();
-        }
+        chainBuilder.throwIfPresent();
     }
 
     private void closeMc(SQLExceptionChainBuilder chainBuilder) {

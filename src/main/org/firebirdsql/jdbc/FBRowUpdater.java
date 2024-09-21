@@ -196,9 +196,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         } catch (SQLException e) {
             chain.append(e);
         }
-        if (chain.hasException()) {
-            throw chain.getException();
-        }
+        chain.throwIfPresent();
     }
 
     @Override

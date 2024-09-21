@@ -138,15 +138,11 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
             while (requestCount-- > 0) {
                 consumePutSegmentResponse(chain);
             }
-            if (chain.hasException()) {
-                throw chain.getException();
-            }
+            chain.throwIfPresent();
         } catch (IOException e) {
             getDatabase().consumePackets(requestCount, w -> {});
             SQLException exception = FbExceptionBuilder.ioReadError(e);
-            if (chain.hasException()) {
-                exception.addSuppressed(chain.getException());
-            }
+            chain.optException().ifPresent(exception::addSuppressed);
             throw exception;
         }
     }

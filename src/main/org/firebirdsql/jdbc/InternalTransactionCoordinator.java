@@ -218,9 +218,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
                     }
                 }
 
-                if (chain.hasException()) {
-                    throw chain.getException();
-                }
+                chain.throwIfPresent();
 
                 coordinator.setStatements(this.coordinator.getStatements());
             }
@@ -282,9 +280,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
             // were not removed in the statement.completeStatement() call
             statements.clear();
 
-            if (chain.hasException()) {
-                throw chain.getException();
-            }
+            chain.throwIfPresent();
         }
 
         final void internalCommit() throws SQLException {
@@ -374,9 +370,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
             }
 
             statements.removeAll(tempList);
-            if (chain.hasException()) {
-                throw chain.getException();
-            }
+            chain.throwIfPresent();
 
             if (!statements.contains(stmt)) {
                 statements.add(stmt);
@@ -546,9 +540,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
             }
 
             statements.removeAll(tempList);
-            if (chain.hasException()) {
-                throw chain.getException();
-            }
+            chain.throwIfPresent();
 
             if (!statements.contains(stmt)) {
                 statements.add(stmt);

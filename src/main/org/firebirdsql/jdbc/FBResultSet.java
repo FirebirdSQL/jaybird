@@ -302,9 +302,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             }
         }
 
-        if (chain.hasException()) {
-            throw chain.getException();
-        }
+        chain.throwIfPresent();
     }
 
     @Override
@@ -364,9 +362,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             }
         }
 
-        if (chain.hasException()) {
-            throw chain.getException();
-        }
+        chain.throwIfPresent();
     }
 
     @Override

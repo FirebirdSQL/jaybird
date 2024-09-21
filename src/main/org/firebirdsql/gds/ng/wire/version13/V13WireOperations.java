@@ -225,6 +225,7 @@ public class V13WireOperations extends V11WireOperations {
                 clearServerKeys();
 
                 if (chainBuilder.hasException() && log.isLoggable(WARNING)) {
+                    //noinspection DataFlowIssue - we know chainBuilder has an exception
                     log.log(WARNING, "Wire encryption established with {0}, but some plugins failed; see debug level for stacktraces\n{1}",
                             encryptionIdentifier, ExceptionHelper.collectAllMessages(chainBuilder.getException()));
                 } else {
@@ -248,6 +249,7 @@ public class V13WireOperations extends V11WireOperations {
         }
     }
 
+    @SuppressWarnings("DataFlowIssue")
     private static void logWireCryptPluginFailures(SQLExceptionChainBuilder chainBuilder,
             EncryptionIdentifier selectedEncryption) {
         if (chainBuilder.hasException() && log.isLoggable(WARNING)) {

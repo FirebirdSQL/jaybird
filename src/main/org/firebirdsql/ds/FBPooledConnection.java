@@ -127,9 +127,7 @@ sealed class FBPooledConnection implements PooledConnection permits FBXAConnecti
                     connection = null;
                 }
             }
-            if (chain.hasException()) {
-                throw chain.getException();
-            }
+            chain.throwIfPresent();
         }
     }
 

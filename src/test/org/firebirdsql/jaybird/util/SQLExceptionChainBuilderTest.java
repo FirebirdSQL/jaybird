@@ -18,12 +18,17 @@
  */
 package org.firebirdsql.jaybird.util;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
+import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -42,6 +47,8 @@ class SQLExceptionChainBuilderTest {
         
         assertFalse(builder.hasException(), "Empty SQLExceptionChainBuilder should have no Exception");
         assertNull(builder.getException(), "Empty SQLExceptionChainBuilder should have null Exception");
+        assertThat(builder.optException(), is(emptyOptional()));
+        assertDoesNotThrow(builder::throwIfPresent);
     }
     
     /**
@@ -56,7 +63,10 @@ class SQLExceptionChainBuilderTest {
         
         assertTrue(builder.hasException(), "SQLExceptionChainBuilder should have an exception");
         assertSame(root, builder.getException(), "Expected root exception to be identical to returned exception");
+        assertThat(builder.optException(), is(optionalWithValue(root)));
         checkExceptionChain(root, List.of());
+        SQLException e = assertThrows(SQLException.class, builder::throwIfPresent);
+        assertSame(root, e, "expected root");
     }
     
     /**
@@ -81,6 +91,8 @@ class SQLExceptionChainBuilderTest {
         SQLException resultException = builder.getException();
         assertSame(root, resultException, "Expected root exception to be identical to returned exception");
         checkExceptionChain(resultException, additionalExceptions);
+        SQLException e = assertThrows(SQLException.class, builder::throwIfPresent);
+        assertSame(root, e, "expected root");
     }
 
     /**
@@ -98,15 +110,18 @@ class SQLExceptionChainBuilderTest {
         SQLException resultException = builder.getException();
         assertSame(finalRoot, resultException, "Expected final root exception to be the returned exception");
         checkExceptionChain(resultException, List.of(initialRoot));
+        SQLException e = assertThrows(SQLException.class, builder::throwIfPresent);
+        assertSame(finalRoot, e, "expected finalRoot");
     }
-    
+
     /**
-     * Checks the exception chain returned from getNextException (root itself is not checked).
+     * Checks the exception chain returned from getNextException (root itself is not checked, other than it's not null).
      * 
      * @param root The root SQLException
      * @param expectedExceptions SQLExceptions expected in the chain (excluding the root)
      */
-    private static void checkExceptionChain(SQLException root, List<SQLException> expectedExceptions) {
+    private static void checkExceptionChain(@Nullable SQLException root, List<SQLException> expectedExceptions) {
+        assertNotNull(root, "root");
         int count = 0;
         SQLException nextException = root;
         while((nextException = nextException.getNextException()) != null) {

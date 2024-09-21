@@ -188,9 +188,7 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
             owner.fireConnectionClosed();
         }
 
-        if (chain.hasException()) {
-            throw chain.getException();
-        }
+        chain.throwIfPresent();
     }
 
     /**
@@ -243,9 +241,7 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
             }
             openStatements.clear();
         }
-        if (chain.hasException()) {
-            throw chain.getException();
-        }
+        chain.throwIfPresent();
     }
 
     // FirebirdConnection methods
