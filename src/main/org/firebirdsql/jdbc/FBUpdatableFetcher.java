@@ -53,7 +53,7 @@ final class FBUpdatableFetcher implements FBFetcher {
     private final RowValue deletedRowMarker;
 
     private FBObjectListener.FetcherListener fetcherListener;
-    private Map<Integer, @Nullable RowValue> modifiedRows = new HashMap<>();
+    private Map<Integer, RowValue> modifiedRows = new HashMap<>();
 
     private int position;
     private List<RowValue> insertedRows = new ArrayList<>();
@@ -104,8 +104,10 @@ final class FBUpdatableFetcher implements FBFetcher {
     }
 
     private boolean notifyRow(int position, @Nullable RowValue originalRowValue) throws SQLException {
+        //noinspection DataFlowIssue : Disagree with IntelliJs nullability inference for this method
         RowValue rowValue = modifiedRows.getOrDefault(position, originalRowValue);
         fetcherListener.rowChanged(fetcher, rowValue);
+        //noinspection ConstantValue : Disagree with IntelliJs nullability inference
         return rowValue != null;
     }
 
