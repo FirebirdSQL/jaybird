@@ -23,6 +23,8 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.FBObjectListener.FetcherListener;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -35,6 +37,7 @@ import static java.util.Objects.requireNonNull;
  * @since 6
  */
 @InternalApi
+@NullMarked
 abstract sealed class AbstractFetcher implements FBFetcher
         permits FBCachedFetcher, FBServerScrollFetcher, FBStatementFetcher {
 
@@ -49,7 +52,7 @@ abstract sealed class AbstractFetcher implements FBFetcher
 
     @Override
     public final void setFetcherListener(FetcherListener fetcherListener) {
-        this.fetcherListener = fetcherListener;
+        this.fetcherListener = requireNonNull(fetcherListener, "fetcherListener");
     }
 
     /**
@@ -60,7 +63,7 @@ abstract sealed class AbstractFetcher implements FBFetcher
      * @throws SQLException
      *         for exceptions thrown by {@link FetcherListener#rowChanged(FBFetcher, RowValue)}
      */
-    protected final void notifyRowChanged(RowValue newRow) throws SQLException {
+    protected final void notifyRowChanged(@Nullable RowValue newRow) throws SQLException {
         fetcherListener.rowChanged(this, newRow);
     }
 

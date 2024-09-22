@@ -21,8 +21,11 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Decorator for {@link FBFetcher} that will block methods not defined for {@link java.sql.ResultSet#TYPE_FORWARD_ONLY}.
@@ -30,12 +33,13 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 6
  */
+@NullMarked
 final class ForwardOnlyFetcherDecorator implements FBFetcher {
 
     private final FBFetcher fetcher;
 
     ForwardOnlyFetcherDecorator(FBFetcher fetcher) {
-        this.fetcher = fetcher;
+        this.fetcher = requireNonNull(fetcher, "fetcher");
         assert !(fetcher instanceof FBStatementFetcher) :
                 "Decorating an instance of FBStatementFetcher is not appropriate as it is already forward-only";
     }

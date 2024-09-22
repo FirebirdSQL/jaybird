@@ -26,6 +26,8 @@ import org.firebirdsql.gds.ng.FetchDirection;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.ArrayDeque;
@@ -36,6 +38,7 @@ import java.util.Deque;
  * by the cursor position after {@link #next()} call. This class changes cursor
  * position to point to the next row.
  */
+@NullMarked
 sealed class FBStatementFetcher extends AbstractFetcher implements FBFetcher permits FBUpdatableCursorFetcher {
 
     private static final int NO_ASYNC_FETCH = -1;
@@ -54,7 +57,7 @@ sealed class FBStatementFetcher extends AbstractFetcher implements FBFetcher per
     private Deque<RowValue> rows;
     private final RowListener rowListener = new RowListener();
     private boolean allRowsFetched;
-    protected RowValue nextRow;
+    protected @Nullable RowValue nextRow;
 
     private int rowNum;
 
@@ -84,12 +87,12 @@ sealed class FBStatementFetcher extends AbstractFetcher implements FBFetcher per
         }
     }
 
-    protected RowValue getNextRow() throws SQLException {
+    protected @Nullable RowValue getNextRow() throws SQLException {
         if (!wasFetched) fetch();
         return nextRow;
     }
 
-    protected void setNextRow(RowValue nextRow) {
+    protected void setNextRow(@Nullable RowValue nextRow) {
         this.nextRow = nextRow;
 
         if (!wasFetched) {

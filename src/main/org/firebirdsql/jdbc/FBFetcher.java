@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,6 +33,7 @@ import java.sql.SQLException;
  * </p>
  */
 @InternalApi
+@NullMarked
 public sealed interface FBFetcher permits AbstractFetcher, FBCachedFetcher, FBServerScrollFetcher, FBStatementFetcher,
         FBUpdatableFetcher, ForwardOnlyFetcherDecorator {
 

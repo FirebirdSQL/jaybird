@@ -22,6 +22,7 @@ import java.sql.SQLException;
 
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * Statement fetcher for updatable cursor case. This fetcher keeps cursor
@@ -31,6 +32,7 @@ import org.firebirdsql.gds.ng.FbStatement;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
+@NullMarked
 final class FBUpdatableCursorFetcher extends FBStatementFetcher {
 
     FBUpdatableCursorFetcher(GDSHelper gdsHelper, FetchConfig fetchConfig, FbStatement stmth,

@@ -27,6 +27,8 @@ import org.firebirdsql.gds.ng.FetchType;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -45,6 +47,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  * @author Mark Rotteveel
  * @since 5
  */
+@NullMarked
 final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
 
     private static final int CURSOR_SIZE_UNKNOWN = -1;
@@ -88,7 +91,7 @@ final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
         return rowsOffset <= position && position < rowsOffset + windowSize;
     }
 
-    private RowValue rowChange(int newLocalPosition) throws SQLException {
+    private @Nullable RowValue rowChange(int newLocalPosition) throws SQLException {
         localPosition = newLocalPosition;
         return inWindow(newLocalPosition) ? rows.get(newLocalPosition - rowsOffset) : null;
     }
@@ -97,13 +100,12 @@ final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
         return notifyRow(rowChange(newLocalPosition));
     }
 
-    private boolean notifyRow(RowValue rowValue) throws SQLException {
+    private boolean notifyRow(@Nullable RowValue rowValue) throws SQLException {
         notifyRowChanged(rowValue);
         return rowValue != null;
     }
 
-    private RowListener fetchWithListener(FetchType fetchType, int fetchSize, int position)
-            throws SQLException {
+    private RowListener fetchWithListener(FetchType fetchType, int fetchSize, int position) throws SQLException {
         RowListener rowListener = new RowListener();
         stmt.addStatementListener(rowListener);
         try {

@@ -29,6 +29,8 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -37,6 +39,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+@NullMarked
 final class FBCachedFetcher extends AbstractFetcher implements FBFetcher {
 
     private List<RowValue> rows;
@@ -98,7 +101,7 @@ final class FBCachedFetcher extends AbstractFetcher implements FBFetcher {
      *         the blob data.
      */
     FBCachedFetcher(List<RowValue> rows, FetchConfig fetchConfig, FBObjectListener.FetcherListener fetcherListener,
-            RowDescriptor rowDescriptor, GDSHelper gdsHelper, boolean retrieveBlobs) throws SQLException {
+            RowDescriptor rowDescriptor, @Nullable GDSHelper gdsHelper, boolean retrieveBlobs) throws SQLException {
         super(fetchConfig, fetcherListener);
         assert !retrieveBlobs || rowDescriptor != null && gdsHelper != null
                 : "Need non-null rowDescriptor and gdsHelper for retrieving blobs";
@@ -123,7 +126,7 @@ final class FBCachedFetcher extends AbstractFetcher implements FBFetcher {
      *         row descriptor
      * @return {@code null} if there are no blob columns, otherwise a {@code boolean[]} marking the blob columns.
      */
-    private static boolean[] determineBlobs(final RowDescriptor rowDescriptor) {
+    private static boolean @Nullable [] determineBlobs(final RowDescriptor rowDescriptor) {
         boolean hasBlobs = false;
         boolean[] isBlob = new boolean[rowDescriptor.getCount()];
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
