@@ -1,0 +1,63 @@
+= jdp-2024-05: Behaviour of Updatable Result Sets
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+In https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md[jdp-2021-04], real server-side scrollable cursors where defined.
+In that JDP, for `CONCUR_UPDATABLE`, the behaviour of inserted, deleted, and -- in some respects -- updated rows was changed compared to the original "`emulated`" scrollable cursors:
+
+* new rows are inserted at the end of the cursor;
+in emulated they are inserted immediately before the current row.
+* deleted rows have an all-``null`` marker row;
+in emulated the row is removed from the cursor.
+* the result set reports `true` for `rowDeleted()`, `rowInserted()` or `rowUpdated()` for -- respectively -- deleted, inserted or updated rows;
+in emulated these always report `false`.
+
+The first two differences were necessary to keep the accounting of row positions both server-side and locally simple and correct.
+Otherwise, a complex solution would be needed to know that after inserting a row at position 2, the server-side position 2 now corresponded with position 3 locally, and so on.
+This would grow in complexity to account for rows inserted and deleted while scrolling back and forth in the result set.
+Inserting at the end, and replacing a deleted row with an all-``null`` marker row simplified the solution a lot.
+
+As the server-side scrollable cursor support was new, and opt-in, we made the decision to not modify the behaviour of the emulated scrollable cursor support as part of jdp-2021-04.
+
+The JDBC specification nor its API documentation says anything about the position of an inserted row, considering that an implementation specific behaviour.
+In fact, it even allows a result set to not include the inserted row at all.
+Similarly, it does not require removal or replacing of the deleted row, or modifying the updated row;
+it is valid to report the original row content.
+
+Having two different behaviours for scrollable cursors is not desirable, as switching between emulated and server-side scrollable cursors should be transparent in result set and application behaviour.
+
+== Decision
+
+The "`emulated`" scrollable cursor behaviour will change to match the server-side scrollable cursor behaviour with regard to location of inserted rows (at the end), replacing a deleted row with an all-``null`` marker row, and being able to report if a row was deleted, inserted, or updated.
+
+This JDP does not cover behaviour of forward-only cursors.
+
+This JDP explicitly makes no change in the default, currently that is using emulated scrollable cursors;
+that decision is deferred to a future JDP.
+
+=== Rejected decisions
+
+Changing the behaviour of server-side scrollable cursor to match the original emulated behaviour was considered, but given the complexity of the implementation required, this is not considered viable.
+
+We also consider the new behaviour of having all inserted rows at the end more logical, but we admit that in itself is not a good reason to change behaviour.
+However, going for consistency is.
+
+== Consequences
+
+The following will change in Jaybird, and may lead to incompatible behaviour compared to previous versions:
+
+* rows are inserted at the end of the result set
+* deleted rows are replaced with an all-``null`` marker row
+* the result set reports `true` for `rowDeleted()`, `rowInserted()` or `rowUpdated()` for -- respectively -- deleted, inserted or updated rows
+* `DatabaseMetaData` will report `true` for `deletesAreDetected(int)`, `insertsAreDetected(int)` and `updatesAreDetected(int)` for `TYPE_SCROLL_INSENSITIVE`
+
+Like in the previous behaviour, inserted rows are not covered by the `maxRows` setting (if any) of the result set.
