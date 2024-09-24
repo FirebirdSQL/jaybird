@@ -36,8 +36,9 @@ import static java.util.Collections.emptyMap;
 /**
  * Decorator that handles tracking updates, deletes and inserts of an updatable result set.
  * <p>
- * This fetcher handles the updatable result set behaviour defined in jdp-2021-04 for server-side scrollable cursors
- * it is not yet "supported" for emulated scrollable result sets.
+ * This fetcher handles the updatable result set behaviour defined in <a href="https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md">jdp-2021-04</a>
+ * for server-side scrollable cursors and <a href="https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-05-behavior-of-updatable-result-sets.adoc">jdp-2024-05</a>
+ * for emulated scrollable cursors.
  * </p>
  * <p>
  * This behaviour can be summarized as: updates are visible, deletes are visible (with a deletion marker row),
@@ -297,6 +298,17 @@ final class FBUpdatableFetcher implements FBFetcher {
     public void updateRow(RowValue data) throws SQLException {
         modifiedRows.put(position, data);
         fetcherListener.rowChanged(this, data);
+    }
+
+    @Override
+    public void renotifyCurrentRow() throws SQLException {
+        int position = this.position;
+        // We can reuse the lastReceivedRow of the fetcher listener if the current row is not stored in this fetcher
+        if (position <= fetcherSize()) {
+            notifyFetcherRow(position);
+        } else {
+            notifyInsertedRow(position);
+        }
     }
 
     @Override

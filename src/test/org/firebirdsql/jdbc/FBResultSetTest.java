@@ -45,16 +45,7 @@ import static java.sql.ResultSet.*;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.assertions.ResultSetAssertions.assertAfterLast;
-import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
-import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
-import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNotAfterLast;
-import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNotBeforeFirst;
-import static org.firebirdsql.common.assertions.ResultSetAssertions.assertResultSetOpen;
-import static org.firebirdsql.common.assertions.ResultSetAssertions.assertRowEquals;
-import static org.firebirdsql.common.assertions.ResultSetAssertions.assertWasNotNull;
-import static org.firebirdsql.common.assertions.ResultSetAssertions.assertWasNull;
-import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.jaybird.props.PropertyConstants.SCROLLABLE_CURSOR_EMULATED;
 import static org.firebirdsql.jaybird.props.PropertyConstants.SCROLLABLE_CURSOR_SERVER;
@@ -568,13 +559,7 @@ class FBResultSetTest {
                         if (counter == recordCount + 1) rs.deleteRow();
                     }
 
-                    if (SCROLLABLE_CURSOR_SERVER.equals(scrollableCursorPropertyValue)
-                        && isPureJavaType().matches(GDS_TYPE)
-                        && getDefaultSupportInfo().supportsScrollableCursors()) {
-                        assertEquals(counter - 1, recordCount + 1);
-                    } else {
-                        assertEquals(counter - 1, recordCount);
-                    }
+                    assertEquals(recordCount + 1, counter - 1);
                 }
 
                 try (ResultSet rs = stmt.executeQuery("SELECT count(*) FROM test_table")) {
@@ -759,6 +744,7 @@ class FBResultSetTest {
                  FBResultSet rs = (FBResultSet) stmt.executeQuery("SELECT id, str FROM test_table")) {
 
                 String execPlan = rs.getExecutionPlan();
+                assertNotNull(execPlan);
                 assertThat("Execution plan should reference test_table",
                         execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
             }
@@ -766,6 +752,7 @@ class FBResultSetTest {
             try (PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
                  FBResultSet rs = (FBResultSet) pStmt.executeQuery()) {
                 String execPlan = rs.getExecutionPlan();
+                assertNotNull(execPlan);
                 assertThat("Execution plan should reference test_table",
                         execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
             }
@@ -791,6 +778,7 @@ class FBResultSetTest {
                  FBResultSet rs = (FBResultSet) stmt.executeQuery("SELECT id, str FROM test_table")) {
 
                 String execPlan = rs.getExplainedExecutionPlan();
+                assertNotNull(execPlan);
                 assertThat("Detailed execution plan should reference test_table",
                         execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
             }
@@ -798,6 +786,7 @@ class FBResultSetTest {
             try (PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
                  FBResultSet rs = (FBResultSet) pStmt.executeQuery()) {
                 String execPlan = rs.getExplainedExecutionPlan();
+                assertNotNull(execPlan);
                 assertThat("Detailed execution plan should reference test_table",
                         execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
             }
@@ -1578,13 +1567,7 @@ class FBResultSetTest {
                 rs.moveToCurrentRow();
                 rs.beforeFirst();
 
-                List<Object> row1 = Arrays.asList(1, "1");
-                List<Object> insertRow = Arrays.asList(2, "2");
-                List<List<Object>> expectedRows =
-                        "SERVER".equals(scrollableCursorPropertyValue)
-                        && getDefaultSupportInfo().supportsScrollableCursors()
-                                ? Arrays.asList(row1, insertRow)
-                                : Arrays.asList(insertRow, row1);
+                List<List<Object>> expectedRows = List.of(List.of(1, "1"), List.of(2, "2"));
 
                 for (int i = 0; i < expectedRows.size(); i++) {
                     List<Object> expectedRow = expectedRows.get(i);
@@ -1592,6 +1575,136 @@ class FBResultSetTest {
                     assertRowEquals("row " + i, rs, expectedRow);
                 }
                 assertNoNextRow(rs, "expected only " + expectedRows.size() + " rows");
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void scrollableCursor_detectsOwnUpdates(String scrollableCursorPropertyValue) throws Exception {
+        try (var connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            createTestData(2, connection);
+
+            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 var rs = stmt.executeQuery(SELECT_TEST_TABLE)) {
+                assertAbsoluteRow(rs, 1);
+                rs.updateString(2, "updated");
+                rs.updateRow();
+
+                assertRowUpdated(rs);
+                assertRowNotInserted(rs);
+                assertRowNotDeleted(rs);
+
+                // second row untouched
+                assertNextRow(rs);
+                assertRowNotUpdated(rs);
+                assertRowNotInserted(rs);
+                assertRowNotDeleted(rs);
+
+                // check first row again
+                assertPreviousRow(rs);
+                assertRowUpdated(rs);
+                assertRowNotInserted(rs);
+                assertRowNotDeleted(rs);
+
+                assertRowEquals("expected updated values", rs, List.of(1, "updated"));
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void scrollableCursor_detectsOwnDeletes(String scrollableCursorPropertyValue) throws Exception {
+        try (var connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            createTestData(2, connection);
+
+            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 var rs = stmt.executeQuery(SELECT_TEST_TABLE)) {
+                assertAbsoluteRow(rs, 1);
+                rs.deleteRow();
+
+                assertRowNotUpdated(rs);
+                assertRowNotInserted(rs);
+                assertRowDeleted(rs);
+
+                // second row untouched
+                assertNextRow(rs);
+                assertRowNotUpdated(rs);
+                assertRowNotInserted(rs);
+                assertRowNotDeleted(rs);
+
+                // check first row again
+                assertPreviousRow(rs);
+                assertRowNotUpdated(rs);
+                assertRowNotInserted(rs);
+                assertRowDeleted(rs);
+
+                assertRowEquals("expected all-null row", rs, Arrays.asList(null, null));
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void scrollableCursor_detectsOwnInserts(String scrollableCursorPropertyValue) throws Exception {
+        try (var connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            createTestData(2, connection);
+
+            List<Object> firstRow = List.of(1, "1");
+            List<Object> secondRow = List.of(2, "2");
+
+            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 var rs = stmt.executeQuery(SELECT_TEST_TABLE)) {
+                // first row untouched
+                assertNextRow(rs);
+                assertRowNotUpdated(rs);
+                assertRowNotInserted(rs);
+                assertRowNotDeleted(rs);
+                assertRowEquals("expected first row", rs, firstRow);
+
+                rs.moveToInsertRow();
+                rs.updateInt(1, 3);
+                rs.updateString(2, "inserted");
+                rs.insertRow();
+
+                // back to first row
+                rs.moveToCurrentRow();
+                assertRowNotUpdated(rs);
+                assertRowNotInserted(rs);
+                assertRowNotDeleted(rs);
+                assertRowEquals("expected first row", rs, firstRow);
+
+                // second row untouched
+                assertNextRow(rs);
+                assertRowNotUpdated(rs);
+                assertRowNotInserted(rs);
+                assertRowNotDeleted(rs);
+                assertRowEquals("expected second row", rs, secondRow);
+
+                // check third row inserted
+                assertNextRow(rs);
+                assertRowNotUpdated(rs);
+                assertRowInserted(rs);
+                assertRowNotDeleted(rs);
+                List<Object> thirdRow = List.of(3, "inserted");
+                assertRowEquals("expected inserted row", rs, thirdRow);
+
+                // check first row again
+                assertAbsoluteRow(rs, 1);
+                assertRowNotUpdated(rs);
+                assertRowNotInserted(rs);
+                assertRowNotDeleted(rs);
+                assertRowEquals("expected first row", rs, firstRow);
+
+                // check third row again
+                assertAbsoluteRow(rs, -1);
+                assertRowNotUpdated(rs);
+                assertRowInserted(rs);
+                assertRowNotDeleted(rs);
+                assertRowEquals("expected inserted row", rs, thirdRow);
             }
         }
     }

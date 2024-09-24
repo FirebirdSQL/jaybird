@@ -155,6 +155,11 @@ final class ForwardOnlyFetcherDecorator implements FBFetcher {
     }
 
     @Override
+    public void renotifyCurrentRow() throws SQLException {
+        fetcher.renotifyCurrentRow();
+    }
+
+    @Override
     public int getFetchSize() throws SQLException {
         return fetcher.getFetchSize();
     }

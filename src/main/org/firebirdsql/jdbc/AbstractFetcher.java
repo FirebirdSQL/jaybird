@@ -43,6 +43,7 @@ abstract sealed class AbstractFetcher implements FBFetcher
 
     private FetchConfig fetchConfig;
     private FetcherListener fetcherListener;
+    private @Nullable RowValue currentRow;
     private volatile boolean closed;
 
     AbstractFetcher(FetchConfig fetchConfig, FetcherListener fetcherListener) {
@@ -64,7 +65,13 @@ abstract sealed class AbstractFetcher implements FBFetcher
      *         for exceptions thrown by {@link FetcherListener#rowChanged(FBFetcher, RowValue)}
      */
     protected final void notifyRowChanged(@Nullable RowValue newRow) throws SQLException {
+        currentRow = newRow;
         fetcherListener.rowChanged(this, newRow);
+    }
+
+    @Override
+    public final void renotifyCurrentRow() throws SQLException {
+        fetcherListener.rowChanged(this, currentRow);
     }
 
     @Override

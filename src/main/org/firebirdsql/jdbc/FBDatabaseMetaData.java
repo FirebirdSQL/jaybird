@@ -1487,19 +1487,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public boolean supportsResultSetType(int type) throws SQLException {
-        // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
+        // TYPE_SCROLL_SENSITIVE is always downgraded to TYPE_SCROLL_INSENSITIVE, so we report false for it
         return switch (type) {
-            case ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.TYPE_SCROLL_SENSITIVE ->
-                    true;
+            case ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE -> true;
             default -> false;
         };
     }
 
     @Override
     public boolean supportsResultSetConcurrency(int type, int concurrency) throws SQLException {
-        // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
         return switch (type) {
-            case ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.TYPE_SCROLL_SENSITIVE ->
+            case ResultSet.TYPE_FORWARD_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE ->
                     concurrency == ResultSet.CONCUR_READ_ONLY || concurrency == ResultSet.CONCUR_UPDATABLE;
             default -> false;
         };
@@ -1507,23 +1505,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public boolean ownUpdatesAreVisible(int type) throws SQLException {
-        // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
-        return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
-                ResultSet.TYPE_SCROLL_SENSITIVE == type;
+        return ResultSet.TYPE_SCROLL_INSENSITIVE == type;
     }
 
     @Override
     public boolean ownDeletesAreVisible(int type) throws SQLException {
-        // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
-        return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
-                ResultSet.TYPE_SCROLL_SENSITIVE == type;
+        return ResultSet.TYPE_SCROLL_INSENSITIVE == type;
     }
 
     @Override
     public boolean ownInsertsAreVisible(int type) throws SQLException {
-        // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
-        return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
-                ResultSet.TYPE_SCROLL_SENSITIVE == type;
+        return ResultSet.TYPE_SCROLL_INSENSITIVE == type;
     }
 
     @Override
@@ -1543,23 +1535,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public boolean updatesAreDetected(int type) throws SQLException {
-        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor),
-        //  change to return true when behaviour of EMULATED is the same
-        return false;
+        // Only updates through the result set
+        return ResultSet.TYPE_SCROLL_INSENSITIVE == type;
     }
 
     @Override
     public boolean deletesAreDetected(int type) throws SQLException {
-        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor),
-        //  change to return true when behaviour of EMULATED is the same
-        return false;
+        // Only deletes through the result set
+        return ResultSet.TYPE_SCROLL_INSENSITIVE == type;
     }
 
     @Override
     public boolean insertsAreDetected(int type) throws SQLException {
-        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor),
-        //  change to return true when behaviour of EMULATED is the same
-        return false;
+        // Only inserts through the result set
+        return ResultSet.TYPE_SCROLL_INSENSITIVE == type;
     }
 
     @Override

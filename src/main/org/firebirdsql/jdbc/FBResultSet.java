@@ -140,7 +140,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             if (behavior.isUpdatable()) {
                 try {
                     rowUpdater = new FBRowUpdater(connection, rowDescriptor, cached, listener);
-                    if (fbFetcher instanceof FBServerScrollFetcher) {
+                    if (behavior.isScrollable()) {
                         fbFetcher = new FBUpdatableFetcher(fbFetcher, this, rowDescriptor.createDeletedRowMarker());
                     }
                 } catch (FBResultSetNotUpdatableException ex) {
@@ -1482,6 +1482,9 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public void moveToCurrentRow() throws SQLException {
         requireRowUpdater().moveToCurrentRow();
+        // Make sure we have the correct data of the row
+        fbFetcher.renotifyCurrentRow();
+        notifyRowUpdater();
     }
 
     @Override

@@ -202,6 +202,11 @@ public sealed interface FBFetcher permits AbstractFetcher, FBCachedFetcher, FBSe
     void updateRow(RowValue data) throws SQLException;
 
     /**
+     * Notifies the fetcher listener with the row data of the current row (or {{@code null} if not currently in a row).
+     */
+    void renotifyCurrentRow() throws SQLException;
+
+    /**
      * @return current fetch config of this fetcher
      * @since 6
      */

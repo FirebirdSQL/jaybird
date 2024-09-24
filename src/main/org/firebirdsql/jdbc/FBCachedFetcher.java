@@ -296,33 +296,22 @@ final class FBCachedFetcher extends AbstractFetcher implements FBFetcher {
 
     @Override
     public void deleteRow() throws SQLException {
-        if (!isAfterLast() && !isBeforeFirst()) {
-            rows.remove(rowNum - 1);
-            notifyRowChanged(adjustIfPositionAfterLast() ? null : rows.get(rowNum - 1));
-        }
+        throw calledUndecorated();
     }
 
     @Override
     public void insertRow(RowValue data) throws SQLException {
-        if (rowNum == 0) {
-            rowNum = 1;
-        }
-
-        if (rowNum > rows.size()) {
-            rows.add(data);
-        } else {
-            rows.add(rowNum - 1, data);
-        }
-
-        notifyRowChanged(isAfterLast() || isBeforeFirst() ? null : rows.get(rowNum - 1));
+        throw calledUndecorated();
     }
 
     @Override
     public void updateRow(RowValue data) throws SQLException {
-        if (!isAfterLast() && !isBeforeFirst()) {
-            rows.set(rowNum - 1, data);
-            notifyRowChanged(data);
-        }
+        throw calledUndecorated();
+    }
+
+    private static UnsupportedOperationException calledUndecorated() {
+        return new UnsupportedOperationException(
+                "Implementation error: FBServerScrollFetcher should be decorated with FBUpdatableFetcher");
     }
 
     @Override

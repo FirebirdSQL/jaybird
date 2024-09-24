@@ -265,7 +265,7 @@ final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
             checkOpen();
             // Overflow beyond cursor size is handled by inWindow returning false
             int newLocalPosition = row >= 0 ? row : Math.max(0, requireCursorSize() + 1 + row);
-            if (!inWindow(row)) {
+            if (!inWindow(newLocalPosition)) {
                 if (getMaxRows() != 0 && newLocalPosition > requireCursorSize()) {
                     afterLast();
                     return false;

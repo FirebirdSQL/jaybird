@@ -960,6 +960,29 @@ If you relied on this implicit close for correctness of your application, you ma
 
 For more information, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-03-do-not-close-result-set-after-last-row-in-auto-commit.adoc[jdp-2024-03: Do not close result set after last row in auto-commit^].
 
+[#scroll-rs-update-behavior]
+=== Changes to behaviour of updatable scrollable result sets
+
+Jaybird 5 introduced support for server-side scrollable cursors on Firebird 5.0 and higher in the pure Java protocol.
+This can be enabled using the connection property `scrollableCursor=SERVER`.
+
+For implementation reasons, updatable server-side scrollable cursors had a different behaviour than the emulated client-side scrollable cursors.
+These differences are:
+
+* New rows are inserted at the end of the cursor;
+in emulated they were inserted immediately before the current row.
+* Deleted rows have an all-``null`` marker row;
+in emulated the row was removed from the cursor.
+* The result set reports `true` for `rowDeleted()`, `rowInserted()` or `rowUpdated()` for -- respectively -- deleted, inserted or updated rows;
+in emulated these always reported `false`.
+
+In Jaybird 6, this new behaviour is now also used for the updatable emulated scrollable cursors.
+The reason is that having two different sets of behaviours can be confusing, as it makes it impossible to switch between the two without having to account for the behavioural differences (either intentionally, or because you're connecting with the native or embedded protocol, or to an older version of Firebird).
+
+We're considering to make server-side scrollable cursors the default in a future Jaybird version (Jaybird 7 or later).
+
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-05-behavior-of-updatable-result-sets.adoc[jdp-2024-05: Behaviour of Updatable Result Sets^].
+
 // TODO add major changes
 
 [#other-fixes-and-changes]
@@ -1097,6 +1120,9 @@ If a type is not annotated, consider it nullable unless stated otherwise in the 
 +
 In practice, this is an optional dependency, but Maven will pull it in by default.
 If the JSpecify JAR is not included on the classpath or modulepath, Jaybird will still work.
+* `DatabaseMetaData` now reports `ResultSet.TYPE_SCROLL_SENSITIVE` as not supported, as it is always downgraded to `TYPE_SCROLL_INSENSITIVE`, and thus effectively not supported.
++
+This affects the return value of the methods `supportsResultSetType(int)`, `supportsResultSetConcurrency(int, int)`, `ownUpdatesAreVisible(int)`, `ownDeletesAreVisible(int)`, `ownInsertsAreVisible(int)`.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes
@@ -1277,6 +1303,12 @@ You will need to explicitly call `setReadOnly(false)`, or -- better yet -- do no
 === `ResultSet` in auto-commit no longer closed after last row
 
 For more information, see <<no-close-after-last>>.
+
+[#compat-scroll-rs-update-behavior]
+
+=== Behavioural changes for updatable scrollable `ResultSet`
+
+For more information, see <<scroll-rs-update-behavior>>.
 
 // TODO Document compatibility issues
 

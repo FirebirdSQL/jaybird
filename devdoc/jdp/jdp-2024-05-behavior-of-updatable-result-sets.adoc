@@ -2,8 +2,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 6
+* Published: 2024-09-24
+* Implemented in: Jaybird 6
 
 == Type
 
@@ -14,11 +14,11 @@
 In https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md[jdp-2021-04], real server-side scrollable cursors where defined.
 In that JDP, for `CONCUR_UPDATABLE`, the behaviour of inserted, deleted, and -- in some respects -- updated rows was changed compared to the original "`emulated`" scrollable cursors:
 
-* new rows are inserted at the end of the cursor;
+* New rows are inserted at the end of the cursor;
 in emulated they are inserted immediately before the current row.
-* deleted rows have an all-``null`` marker row;
+* Deleted rows have an all-``null`` marker row;
 in emulated the row is removed from the cursor.
-* the result set reports `true` for `rowDeleted()`, `rowInserted()` or `rowUpdated()` for -- respectively -- deleted, inserted or updated rows;
+* The result set reports `true` for `rowDeleted()`, `rowInserted()` or `rowUpdated()` for -- respectively -- deleted, inserted or updated rows;
 in emulated these always report `false`.
 
 The first two differences were necessary to keep the accounting of row positions both server-side and locally simple and correct.

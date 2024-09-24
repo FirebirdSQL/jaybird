@@ -88,6 +88,115 @@ public final class ResultSetAssertions {
         assertFalse(assertNoException(rs::next, "ResultSet.next()"), message);
     }
 
+    //
+
+    /**
+     * Asserts that {@code rs} has a previous row by checking if {@link ResultSet#previous()} returned {@code true}.
+     * <p>
+     * Equivalent to using {@link #assertPreviousRow(ResultSet, String)} with message {@code "Expected a previous row"}.
+     * </p>
+     *
+     * @param rs
+     *         result set
+     * @see #assertPreviousRow(ResultSet, String)
+     */
+    public static void assertPreviousRow(ResultSet rs) {
+        assertPreviousRow(rs, "Expected a previous row");
+    }
+
+    /**
+     * Asserts that {@code rs} has a next row by checking if {@link ResultSet#next()} returned {@code true}.
+     *
+     * @param rs
+     *         result set
+     * @param message
+     *         message to use for the assertion if {@link ResultSet#previous()} returned {@code false}
+     */
+    public static void assertPreviousRow(ResultSet rs, String message) {
+        assertTrue(assertDoesNotThrow(rs::previous, "No exception expected for ResultSet.previous()"), message);
+    }
+
+    /**
+     * Asserts that {@code rs} has no previous row ({@link ResultSet#previous()} returned {@code false}).
+     *
+     * @param rs
+     *         result set
+     * @see #assertNoPreviousRow(ResultSet, String)
+     */
+    public static void assertNoPreviousRow(ResultSet rs) {
+        assertNoPreviousRow(rs, "Expected no previous row");
+    }
+
+    /**
+     * Asserts that {@code rs} has no previous row ({@link ResultSet#previous()} returned {@code false}).
+     *
+     * @param rs
+     *         result set
+     * @param message
+     *         message to use for the assertion if {@link ResultSet#previous()} returned {@code true}
+     */
+    public static void assertNoPreviousRow(ResultSet rs, String message) {
+        assertFalse(assertNoException(rs::previous, "ResultSet.previous()"), message);
+    }
+
+    //
+
+    /**
+     * Asserts that {@code rs} has a row at absolute position {@code absoluteRow} ({@link ResultSet#absolute(int)}
+     * returned {@code true}).
+     *
+     * @param rs
+     *         result set
+     * @param absoluteRow
+     *         absolute row position
+     */
+    public static void assertAbsoluteRow(ResultSet rs, int absoluteRow) {
+        assertAbsoluteRow(rs, absoluteRow, "Expected row at absolute " + absoluteRow);
+    }
+
+    /**
+     * Asserts that {@code rs} has a row at absolute position {@code absoluteRow} ({@link ResultSet#absolute(int)}
+     * returned {@code true}).
+     *
+     * @param rs
+     *         result set
+     * @param absoluteRow
+     *         absolute row position
+     * @param message
+     *         message to use for the assertion if {@link ResultSet#absolute(int)} returned {@code false}
+     */
+    public static void assertAbsoluteRow(ResultSet rs, int absoluteRow, String message) {
+        assertTrue(assertNoException(() -> rs.absolute(absoluteRow), "ResultSet.absolute(int)"), message);
+    }
+
+    /**
+     * Asserts that {@code rs} has no row at absolute position {@code absoluteRow} ({@link ResultSet#absolute(int)}
+     * returned {@code false}).
+     *
+     * @param rs
+     *         result set
+     * @param absoluteRow
+     *         absolute row position
+     */
+    public static void assertNpAbsoluteRow(ResultSet rs, int absoluteRow) {
+        assertNoAbsoluteRow(rs, absoluteRow, "Expected no row at absolute " + absoluteRow);
+    }
+
+    /**
+     * Asserts that {@code rs} has no row at absolute position {@code absoluteRow} ({@link ResultSet#absolute(int)}
+     * returned {@code false}).
+     *
+     * @param rs
+     *         result set
+     * @param absoluteRow
+     *         absolute row position
+     * @param message
+     *         message to use for the assertion if {@link ResultSet#absolute(int)} returned {@code true}
+     */
+    public static void assertNoAbsoluteRow(ResultSet rs, int absoluteRow, String message) {
+        assertFalse(assertNoException(() -> rs.absolute(absoluteRow), "ResultSet.absolute(int)"), message);
+    }
+
     /**
      * Asserts that {@code rs} is open ({@link ResultSet#isClosed()} returned {@code false})
      *
@@ -322,6 +431,54 @@ public final class ResultSetAssertions {
 
     public static void assertWasNotNull(ResultSet rs, String message) {
         assertFalse(assertNoException(rs::wasNull, "ResultSet.wasNull()"), message);
+    }
+
+    public static void assertRowUpdated(ResultSet rs) {
+        assertRowUpdated(rs, "expected ResultSet.rowUpdated == true");
+    }
+
+    public static void assertRowUpdated(ResultSet rs, String message) {
+        assertTrue(assertNoException(rs::rowUpdated, "ResultSet.rowUpdated()"), message);
+    }
+
+    public static void assertRowNotUpdated(ResultSet rs) {
+        assertRowNotUpdated(rs, "expected ResultSet.rowUpdated == false");
+    }
+
+    public static void assertRowNotUpdated(ResultSet rs, String message) {
+        assertFalse(assertNoException(rs::rowUpdated, "ResultSet.rowUpdated()"), message);
+    }
+
+    public static void assertRowInserted(ResultSet rs) {
+        assertRowInserted(rs, "expected ResultSet.rowInserted == true");
+    }
+
+    public static void assertRowInserted(ResultSet rs, String message) {
+        assertTrue(assertNoException(rs::rowInserted, "ResultSet.rowInserted()"), message);
+    }
+
+    public static void assertRowNotInserted(ResultSet rs) {
+        assertRowNotInserted(rs, "expected ResultSet.rowInserted == false");
+    }
+
+    public static void assertRowNotInserted(ResultSet rs, String message) {
+        assertFalse(assertNoException(rs::rowInserted, "ResultSet.rowInserted()"), message);
+    }
+
+    public static void assertRowDeleted(ResultSet rs) {
+        assertRowDeleted(rs, "expected ResultSet.rowDeleted == true");
+    }
+
+    public static void assertRowDeleted(ResultSet rs, String message) {
+        assertTrue(assertNoException(rs::rowDeleted, "ResultSet.rowDeleted()"), message);
+    }
+
+    public static void assertRowNotDeleted(ResultSet rs) {
+        assertRowNotDeleted(rs, "expected ResultSet.rowDeleted == false");
+    }
+
+    public static void assertRowNotDeleted(ResultSet rs, String message) {
+        assertFalse(assertNoException(rs::rowDeleted, "ResultSet.rowDeleted()"), message);
     }
 
     private static <T> T assertNoException(ThrowingSupplier<T> supplier, String methodName) {
