@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jaybird.util.FbDatetimeConversion;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -35,6 +36,7 @@ import java.time.LocalTime;
 @SuppressWarnings("RedundantThrows")
 class FBTimestampField extends AbstractWithoutTimeZoneField {
 
+    @NullMarked
     FBTimestampField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);

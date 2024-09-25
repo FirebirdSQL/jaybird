@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jaybird.util.IOUtils;
 import org.firebirdsql.jdbc.FBRowId;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.*;
 import java.sql.DataTruncation;
@@ -39,7 +40,9 @@ import java.sql.SQLException;
  */
 class FBBinaryField extends FBField {
 
-    FBBinaryField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
+    @NullMarked
+    FBBinaryField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
+            throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
     }
 
@@ -59,7 +62,7 @@ class FBBinaryField extends FBField {
     }
 
     @Override
-    @SuppressWarnings("java:S1168")
+    @SuppressWarnings({ "java:S1168", "DataFlowIssue" })
     public byte[] getBytes() throws SQLException {
         if (isNull()) return null;
         // protect against unintentional modification of cached or shared byte-arrays (e.g. in DatabaseMetaData)
@@ -76,6 +79,7 @@ class FBBinaryField extends FBField {
         setFieldData(value);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public InputStream getBinaryStream() throws SQLException {
         if (isNull()) return null;

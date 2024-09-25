@@ -27,6 +27,9 @@ import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBObjectListener;
 import org.firebirdsql.jdbc.FirebirdBlob;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -49,13 +52,14 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
     private InputStream binaryStream;
     private Reader characterStream;
     private byte[] bytes;
-    private FBObjectListener.BlobListener blobListener = FBObjectListener.NoActionBlobListener.instance();
-    final FBBlob.Config blobConfig;
+    private FBObjectListener.@NonNull BlobListener blobListener = FBObjectListener.NoActionBlobListener.instance();
+    final FBBlob.@NonNull Config blobConfig;
 
-    FBBlobField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType, GDSHelper gdsHelper)
-            throws SQLException {
+    @NullMarked
+    FBBlobField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType,
+            @Nullable GDSHelper gdsHelper) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
-        this.gdsHelper = gdsHelper;
+        setConnection(gdsHelper);
         // NOTE: If gdsHelper is really null, it will fail at a later point when attempting to open the blob
         // It should only be null for certain types of tests
         blobConfig = gdsHelper != null
@@ -65,6 +69,7 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
     }
 
     @Override
+    @NullMarked
     public void setBlobListener(FBObjectListener.BlobListener blobListener) {
         this.blobListener = blobListener;
     }
@@ -80,7 +85,7 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
             binaryStream = null;
             characterStream = null;
             length = 0;
-            blobListener = null;
+            blobListener = FBObjectListener.NoActionBlobListener.instance();
         }
     }
 
@@ -135,7 +140,7 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
     }
 
     @Override
-    public FBFlushableField.CachedObject getCachedObject() throws SQLException {
+    public FBFlushableField.@NonNull CachedObject getCachedObject() throws SQLException {
         if (isNull()) {
             return new CachedObject(bytes, binaryStream, characterStream, length);
         }
@@ -144,7 +149,7 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
     }
 
     @Override
-    public void setCachedObject(FBFlushableField.CachedObject cachedObject) {
+    public void setCachedObject(FBFlushableField.@NonNull CachedObject cachedObject) {
         // setNull() to reset field to empty state
         setNull();
         bytes = cachedObject.bytes;
@@ -206,21 +211,21 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
         this.length = 0;
     }
 
-    private void copyBinaryStream(InputStream in, long length) throws SQLException {
+    private void copyBinaryStream(@NonNull InputStream in, long length) throws SQLException {
         FBBlob blob = createBlob();
         blob.copyStream(in, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         blobExplicitNull = false;
     }
 
-    private void copyCharacterStream(Reader in, long length) throws SQLException {
+    private void copyCharacterStream(@NonNull Reader in, long length) throws SQLException {
         FBBlob blob = createBlob();
         blob.copyCharacterStream(in, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         blobExplicitNull = false;
     }
 
-    private void copyBytes(byte[] bytes, int length) throws SQLException {
+    private void copyBytes(byte @NonNull [] bytes, int length) throws SQLException {
         FBBlob blob = createBlob();
         blob.copyBytes(bytes, 0, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
@@ -266,7 +271,7 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
     }
 
     @Override
-    FBBlob createBlob() {
+    @NonNull FBBlob createBlob() {
         return new FBBlob(gdsHelper, blobListener, blobConfig);
     }
 
@@ -303,6 +308,7 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
         }
     }
 
+    @NullMarked
     private <T extends FirebirdBlob> T registerWithTransaction(T blob) {
         if (blob instanceof TransactionListener transactionListener) {
             FbTransaction currentTransaction = gdsHelper.getCurrentTransaction();

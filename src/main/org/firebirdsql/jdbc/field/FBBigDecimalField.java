@@ -22,6 +22,9 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -54,8 +57,9 @@ final class FBBigDecimalField extends FBField {
     @SuppressWarnings("java:S2111")
     private static final BigDecimal BD_MIN_DOUBLE = new BigDecimal(MIN_DOUBLE_VALUE);
 
-    private final FieldDataSize fieldDataSize;
+    private final @NonNull FieldDataSize fieldDataSize;
 
+    @NullMarked
     FBBigDecimalField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -84,6 +88,7 @@ final class FBBigDecimalField extends FBField {
         return (byte) longValue;
     }
 
+    @NullMarked
     private SQLException outOfRangeGetConversion(String type, long value) {
         return invalidGetConversion(type, "value %d out of range".formatted(value));
     }
@@ -209,17 +214,19 @@ final class FBBigDecimalField extends FBField {
      * @author Mark Rotteveel
      */
     @SuppressWarnings("java:S1168")
+    @NullMarked
     private enum FieldDataSize {
         SHORT {
             @Override
-            protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
+            protected @Nullable BigDecimal decode(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData) {
                 if (fieldData == null) return null;
                 long value = fieldDescriptor.getDatatypeCoder().decodeShort(fieldData);
                 return BigDecimal.valueOf(value, -1 * fieldDescriptor.getScale());
             }
 
             @Override
-            protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
+            protected byte @Nullable [] encode(FieldDescriptor fieldDescriptor, @Nullable BigDecimal value)
+                    throws SQLException {
                 if (value == null) return null;
                 BigInteger unscaledValue = normalize(value, -1 * fieldDescriptor.getScale());
                 if (unscaledValue.compareTo(MAX_SHORT) > 0 || unscaledValue.compareTo(MIN_SHORT) < 0) {
@@ -230,14 +237,15 @@ final class FBBigDecimalField extends FBField {
         },
         INTEGER {
             @Override
-            protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
+            protected @Nullable BigDecimal decode(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData) {
                 if (fieldData == null) return null;
                 long value = fieldDescriptor.getDatatypeCoder().decodeInt(fieldData);
                 return BigDecimal.valueOf(value, -1 * fieldDescriptor.getScale());
             }
 
             @Override
-            protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
+            protected byte @Nullable [] encode(FieldDescriptor fieldDescriptor, @Nullable BigDecimal value)
+                    throws SQLException {
                 if (value == null) return null;
                 BigInteger unscaledValue = normalize(value, -1 * fieldDescriptor.getScale());
                 if (unscaledValue.compareTo(MAX_INT) > 0 || unscaledValue.compareTo(MIN_INT) < 0) {
@@ -248,14 +256,15 @@ final class FBBigDecimalField extends FBField {
         },
         LONG {
             @Override
-            protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
+            protected @Nullable BigDecimal decode(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData) {
                 if (fieldData == null) return null;
                 long value = fieldDescriptor.getDatatypeCoder().decodeLong(fieldData);
                 return BigDecimal.valueOf(value, -1 * fieldDescriptor.getScale());
             }
 
             @Override
-            protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
+            protected byte @Nullable [] encode(FieldDescriptor fieldDescriptor, @Nullable BigDecimal value)
+                    throws SQLException {
                 if (value == null) return null;
                 BigInteger unscaledValue = normalize(value, -1 * fieldDescriptor.getScale());
                 if (unscaledValue.compareTo(MAX_LONG) > 0 || unscaledValue.compareTo(MIN_LONG) < 0) {
@@ -266,14 +275,15 @@ final class FBBigDecimalField extends FBField {
         },
         DOUBLE {
             @Override
-            protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
+            protected @Nullable BigDecimal decode(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData) {
                 if (fieldData == null) return null;
                 BigDecimal value = BigDecimal.valueOf(fieldDescriptor.getDatatypeCoder().decodeDouble(fieldData));
                 return value.setScale(Math.abs(fieldDescriptor.getScale()), RoundingMode.HALF_EVEN);
             }
 
             @Override
-            protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
+            protected byte @Nullable [] encode(FieldDescriptor fieldDescriptor, @Nullable BigDecimal value)
+                    throws SQLException {
                 if (value == null) return null;
                 // check if value is within bounds
                 if (value.compareTo(BD_MAX_DOUBLE) > 0 || value.compareTo(BD_MIN_DOUBLE) < 0) {
@@ -285,14 +295,15 @@ final class FBBigDecimalField extends FBField {
         },
         INT128 {
             @Override
-            protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
+            protected @Nullable BigDecimal decode(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData) {
                 if (fieldData == null) return null;
                 BigInteger int128Value = fieldDescriptor.getDatatypeCoder().decodeInt128(fieldData);
                 return new BigDecimal(int128Value, -1 * fieldDescriptor.getScale());
             }
 
             @Override
-            protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
+            protected byte @Nullable [] encode(FieldDescriptor fieldDescriptor, @Nullable BigDecimal value)
+                    throws SQLException {
                 if (value == null) return null;
                 BigInteger unscaledValue = normalize(value, -1 * fieldDescriptor.getScale());
                 if (unscaledValue.bitLength() > 127) {
@@ -313,7 +324,8 @@ final class FBBigDecimalField extends FBField {
          *         encoded data
          * @return BigDecimal instance
          */
-        protected abstract BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) throws SQLException;
+        protected abstract @Nullable BigDecimal decode(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData)
+                throws SQLException;
 
         /**
          * Encodes the provided BigDecimal to fieldData
@@ -324,7 +336,8 @@ final class FBBigDecimalField extends FBField {
          *         BigDecimal instance
          * @return encoded data
          */
-        protected abstract byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException;
+        protected abstract byte @Nullable [] encode(FieldDescriptor fieldDescriptor, @Nullable BigDecimal value)
+                throws SQLException;
 
         /**
          * Helper method to rescale the BigDecimal to the provided scale and return the unscaled value of
@@ -363,7 +376,7 @@ final class FBBigDecimalField extends FBField {
             };
         }
 
-        static SQLException bigDecimalConversionError(FieldDescriptor fieldDescriptor, BigDecimal value) {
+        static SQLException bigDecimalConversionError(FieldDescriptor fieldDescriptor, @Nullable BigDecimal value) {
             String message = String.format(
                     "Unsupported set conversion requested for field %s at index %d (JDBC type %s), "
                             + "source type: " + BIG_DECIMAL_CLASS_NAME + ", reason: value %f out of range",

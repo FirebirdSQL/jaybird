@@ -27,6 +27,8 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -45,9 +47,10 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
     private static final BigDecimal BD_MAX_LONG = BigDecimal.valueOf(Long.MAX_VALUE);
     private static final BigDecimal BD_MIN_LONG = BigDecimal.valueOf(Long.MIN_VALUE);
 
-    private final Class<T> decimalType;
-    private final DecimalHandling<T> decimalHandling;
+    private final @NonNull Class<T> decimalType;
+    private final @NonNull DecimalHandling<T> decimalHandling;
 
+    @NullMarked
     FBDecfloatField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType,
             Class<T> decimalType) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -222,6 +225,7 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
     }
 
     @SuppressWarnings("unchecked")
+    @NullMarked
     private DecimalHandling<T> getDecimalHandling(FieldDescriptor fieldDescriptor, Class<T> decimalType)
             throws FBDriverNotCapableException {
         if (decimalType == Decimal64.class && fieldDescriptor.isFbType(ISCConstants.SQL_DEC16)) {

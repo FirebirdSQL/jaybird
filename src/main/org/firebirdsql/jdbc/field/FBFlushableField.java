@@ -18,6 +18,9 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.sql.SQLException;
@@ -29,15 +32,17 @@ import java.sql.SQLException;
  * @author Roman Rokytskyy
  * @version 1.0
  */
+@NullMarked
 public interface FBFlushableField {
 
     class CachedObject {
-        public final byte[] bytes;
-        public final InputStream binaryStream;
-        public final Reader characterStream;
+        public final byte @Nullable[] bytes;
+        public final @Nullable InputStream binaryStream;
+        public final @Nullable Reader characterStream;
         public final long length;
 
-        public CachedObject(byte[] bytes, InputStream binaryStream, Reader characterStream, long length) {
+        public CachedObject(byte @Nullable [] bytes, @Nullable InputStream binaryStream,
+                @Nullable Reader characterStream, long length) {
             this.bytes = bytes;
             this.binaryStream = binaryStream;
             this.characterStream = characterStream;
@@ -60,7 +65,7 @@ public interface FBFlushableField {
      * @throws SQLException
      *         if something went wrong.
      */
-    byte[] getCachedData() throws SQLException;
+    byte @Nullable[] getCachedData() throws SQLException;
 
     CachedObject getCachedObject() throws SQLException;
 

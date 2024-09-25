@@ -20,6 +20,8 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.tz.TimeZoneDatatypeCoder;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.sql.Time;
@@ -34,11 +36,13 @@ import java.util.Calendar;
  * @author Mark Rotteveel
  * @since 4.0
  */
+@SuppressWarnings("RedundantThrows")
 abstract class AbstractWithTimeZoneField extends FBField {
 
     private ZoneId defaultZoneId;
-    private final TimeZoneDatatypeCoder.TimeZoneCodec timeZoneCodec;
+    private final TimeZoneDatatypeCoder.@NonNull TimeZoneCodec timeZoneCodec;
 
+    @NullMarked
     AbstractWithTimeZoneField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -129,18 +133,18 @@ abstract class AbstractWithTimeZoneField extends FBField {
         setTimestamp(value);
     }
 
-    final TimeZoneDatatypeCoder.TimeZoneCodec getTimeZoneCodec() {
+    final TimeZoneDatatypeCoder.@NonNull TimeZoneCodec getTimeZoneCodec() {
         return timeZoneCodec;
     }
 
-    final ZoneId getDefaultZoneId() {
+    final @NonNull ZoneId getDefaultZoneId() {
         if (defaultZoneId != null) {
             return defaultZoneId;
         }
         return defaultZoneId = ZoneId.systemDefault();
     }
 
-    private void setStringParse(String value) throws SQLException {
+    private void setStringParse(@NonNull String value) throws SQLException {
         // TODO Better way to do this?
         // TODO More lenient parsing?
         if (value.indexOf('T') != -1) {

@@ -25,6 +25,10 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jaybird.util.LegacyDatetimeConversions;
 import org.firebirdsql.jdbc.*;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -36,6 +40,7 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.function.Function;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_USE_NULL;
 
@@ -45,6 +50,7 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_USE_NULL;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
+@NullUnmarked
 public abstract class FBField {
 
     static final String SQL_TYPE_NOT_SUPPORTED = "SQL type for this field is not yet supported";
@@ -76,31 +82,32 @@ public abstract class FBField {
     static final double MAX_DOUBLE_VALUE = Double.MAX_VALUE;
     static final double MIN_DOUBLE_VALUE = -1 * FBField.MAX_DOUBLE_VALUE;
 
-    protected final FieldDescriptor fieldDescriptor;
-    private final FieldDataProvider dataProvider;
+    protected final @NonNull FieldDescriptor fieldDescriptor;
+    private final @NonNull FieldDataProvider dataProvider;
     protected GDSHelper gdsHelper;
     protected int requiredType;
 
-    FBField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
+    FBField(@NonNull FieldDescriptor fieldDescriptor, @NonNull FieldDataProvider dataProvider, int requiredType)
+            throws SQLException {
         if (fieldDescriptor == null) {
             throw new SQLNonTransientException("Cannot create FBField instance with fieldDescriptor null",
                     SQL_STATE_INVALID_USE_NULL);
         }
 
         this.fieldDescriptor = fieldDescriptor;
-        this.dataProvider = dataProvider;
+        this.dataProvider = requireNonNull(dataProvider, "dataProvider");
         this.requiredType = requiredType;
     }
 
-    protected final byte[] getFieldData() {
+    protected final byte @Nullable [] getFieldData() {
         return dataProvider.getFieldData();
     }
 
-    protected final void setFieldData(byte[] data) {
+    protected final void setFieldData(byte @Nullable [] data) {
         dataProvider.setFieldData(data);
     }
 
-    protected final DatatypeCoder getDatatypeCoder() {
+    protected final @NonNull DatatypeCoder getDatatypeCoder() {
         return fieldDescriptor.getDatatypeCoder();
     }
 
@@ -116,7 +123,7 @@ public abstract class FBField {
         setFieldData(null);
     }
 
-    public void setConnection(GDSHelper gdsHelper) {
+    public final void setConnection(GDSHelper gdsHelper) {
         this.gdsHelper = gdsHelper;
     }
 
@@ -135,8 +142,9 @@ public abstract class FBField {
      * {@code FBField} class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.
      */
+    @NullMarked
     public static FBField createField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider,
-            GDSHelper gdsHelper, boolean cached) throws SQLException {
+            @Nullable GDSHelper gdsHelper, boolean cached) throws SQLException {
         final int jdbcType = JdbcTypeConverter.toJdbcType(fieldDescriptor);
         switch (jdbcType) {
         case Types.LONGVARCHAR -> {
@@ -161,6 +169,7 @@ public abstract class FBField {
         }
     }
 
+    @NullMarked
     private static FBField createField(int jdbcType, FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider)
             throws SQLException {
         return switch (jdbcType) {
@@ -273,7 +282,7 @@ public abstract class FBField {
     }
 
     @SuppressWarnings("java:S1479")
-    public <T> T getObject(Class<T> type) throws SQLException {
+    public <T> T getObject(@NonNull Class<T> type) throws SQLException {
         if (type == null) {
             throw new SQLNonTransientException("getObject called with type null");
         }
@@ -322,11 +331,11 @@ public abstract class FBField {
         return type.cast(result);
     }
 
-    private String getJdbcTypeName() {
+    private @NonNull String getJdbcTypeName() {
         return getJdbcTypeName(requiredType);
     }
 
-    static String getJdbcTypeName(int jdbcType) {
+    static @NonNull String getJdbcTypeName(int jdbcType) {
         if (jdbcType == JaybirdTypeCodes.DECFLOAT) {
             return "DECFLOAT";
         }
@@ -640,7 +649,7 @@ public abstract class FBField {
         throw invalidSetConversion(Blob.class);
     }
 
-    FBBlob createBlob() throws SQLException {
+    @NonNull FBBlob createBlob() throws SQLException {
         throw invalidSetConversion(Blob.class);
     }
 
@@ -652,7 +661,7 @@ public abstract class FBField {
         throw invalidSetConversion(Clob.class);
     }
 
-    final FBClob createClob() throws SQLException {
+    final @NonNull FBClob createClob() throws SQLException {
         return new FBClob(createBlob());
     }
 
@@ -691,7 +700,7 @@ public abstract class FBField {
                 Decimal128.class, "value %s out of range"::formatted);
     }
 
-    public final <D extends Decimal<D>> D getDecimal(Class<D> targetType) throws SQLException {
+    public final <D extends Decimal<D>> D getDecimal(@NonNull Class<D> targetType) throws SQLException {
         return convertForGet(getDecimal(), v -> v.toDecimal(targetType, OverflowHandling.THROW_EXCEPTION), targetType,
                 "value %s out of range"::formatted);
     }
@@ -710,27 +719,35 @@ public abstract class FBField {
                 "value %s out of range"::formatted));
     }
 
+    @NullMarked
     final SQLException invalidGetConversion(Class<?> requestedType) {
         return invalidGetConversion(requestedType, null, null);
     }
 
-    final SQLException invalidGetConversion(Class<?> requestedType, String reason) {
+    @NullMarked
+    final SQLException invalidGetConversion(Class<?> requestedType, @Nullable String reason) {
         return invalidGetConversion(requestedType, reason, null);
     }
 
-    final SQLException invalidGetConversion(Class<?> requestedType, String reason, Throwable cause) {
+    @NullMarked
+    final SQLException invalidGetConversion(Class<?> requestedType, @Nullable String reason,
+            @Nullable Throwable cause) {
         return invalidGetConversion(requestedType.getName(), reason, cause);
     }
 
+    @NullMarked
     final SQLException invalidGetConversion(String requestedTypeName) {
         return invalidGetConversion(requestedTypeName, null, null);
     }
 
-    final SQLException invalidGetConversion(String requestedTypeName, String reason) {
+    @NullMarked
+    final SQLException invalidGetConversion(String requestedTypeName, @Nullable String reason) {
         return invalidGetConversion(requestedTypeName, reason, null);
     }
 
-    final SQLException invalidGetConversion(String requestedTypeName, String reason, Throwable cause) {
+    @NullMarked
+    final SQLException invalidGetConversion(String requestedTypeName, @Nullable String reason,
+            @Nullable Throwable cause) {
         String message = String.format(
                 "Unsupported get conversion requested for field %s at index %d (JDBC type %s), target type: %s",
                 getAlias(), fieldDescriptor.getPosition() + 1, getJdbcTypeName(), requestedTypeName);
@@ -740,31 +757,38 @@ public abstract class FBField {
         return cause != null ? new TypeConversionException(message, cause) : new TypeConversionException(message);
     }
 
+    @NullMarked
     final SQLException invalidSetConversion(Class<?> sourceType) {
         return invalidSetConversion(sourceType, null, null);
     }
 
-    final SQLException invalidSetConversion(Class<?> sourceType, Throwable cause) {
+    @NullMarked
+    final SQLException invalidSetConversion(Class<?> sourceType, @Nullable Throwable cause) {
         return invalidSetConversion(sourceType, null, cause);
     }
 
-    final SQLException invalidSetConversion(Class<?> sourceType, String reason) {
+    @NullMarked
+    final SQLException invalidSetConversion(Class<?> sourceType, @Nullable String reason) {
         return invalidSetConversion(sourceType, reason, null);
     }
 
-    final SQLException invalidSetConversion(Class<?> sourceType, String reason, Throwable cause) {
+    @NullMarked
+    final SQLException invalidSetConversion(Class<?> sourceType, @Nullable String reason, @Nullable Throwable cause) {
         return invalidSetConversion(sourceType.getName(), reason, cause);
     }
 
+    @NullMarked
     final SQLException invalidSetConversion(String sourceTypeName) {
         return invalidSetConversion(sourceTypeName, null, null);
     }
 
-    final SQLException invalidSetConversion(String sourceTypeName, String reason) {
+    @NullMarked
+    final SQLException invalidSetConversion(String sourceTypeName, @Nullable String reason) {
         return invalidSetConversion(sourceTypeName, reason, null);
     }
 
-    final SQLException invalidSetConversion(String sourceTypeName, String reason, Throwable cause) {
+    @NullMarked
+    final SQLException invalidSetConversion(String sourceTypeName, @Nullable String reason, @Nullable Throwable cause) {
         String message = "Unsupported set conversion requested for field %s at index %d (JDBC type %s), source type: %s"
                 .formatted(getAlias(), fieldDescriptor.getPosition() + 1, getJdbcTypeName(), sourceTypeName);
         if (reason != null) {
@@ -773,16 +797,17 @@ public abstract class FBField {
         return cause != null ? new TypeConversionException(message, cause) : new TypeConversionException(message);
     }
 
-    final <T> T fromString(String value, Function<String, T> converter) throws SQLException {
+    final <T> T fromString(String value, @NonNull Function<String, T> converter) throws SQLException {
         return convertForSet(value, converter.compose(String::trim), String.class);
     }
 
-    final <S, T> T convertForSet(S value, Function<S, T> converter, Class<? extends S> sourceType) throws SQLException {
+    final <S, T> T convertForSet(S value, @NonNull Function<S, T> converter, @NonNull Class<? extends S> sourceType)
+            throws SQLException {
         return convertForSet(value, converter, sourceType, String::valueOf);
     }
 
-    final <S, T> T convertForSet(S value, Function<S, T> converter, Class<? extends S> sourceType,
-            Function<S, String> reasonFactory) throws SQLException {
+    final <S, T> T convertForSet(S value, @NonNull Function<S, T> converter, @NonNull Class<? extends S> sourceType,
+            @NonNull Function<S, String> reasonFactory) throws SQLException {
         if (value == null) return null;
         try {
             return converter.apply(value);
@@ -791,13 +816,13 @@ public abstract class FBField {
         }
     }
 
-    final <S, T> T convertForGet(S value, Function<S, T> converter, Class<? extends T> requestedType)
+    final <S, T> T convertForGet(S value, @NonNull Function<S, T> converter, @NonNull Class<? extends T> requestedType)
             throws SQLException {
         return convertForGet(value, converter, requestedType, String::valueOf);
     }
 
-    final <S, T> T convertForGet(S value, Function<S, T> converter, Class<? extends T> requestedType,
-            Function<S, String> reasonFactory) throws SQLException {
+    final <S, T> T convertForGet(S value, @NonNull Function<S, T> converter, @NonNull Class<? extends T> requestedType,
+            @NonNull Function<S, String> reasonFactory) throws SQLException {
         if (value == null) return null;
         try {
             return converter.apply(value);

@@ -22,6 +22,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.JaybirdTypeCodes;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.Types;
 
@@ -35,6 +36,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
  * @since 3.0
  */
 @InternalApi
+@NullMarked
 public final class JdbcTypeConverter {
 
     private JdbcTypeConverter() {

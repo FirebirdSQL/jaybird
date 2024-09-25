@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.jdbc.SQLStateConstants;
 
+import java.io.Serial;
 import java.sql.SQLNonTransientException;
 
 /**
@@ -30,6 +31,7 @@ import java.sql.SQLNonTransientException;
  */
 public class TypeConversionException extends SQLNonTransientException {
 
+    @Serial
     private static final long serialVersionUID = 9145386635318036933L;
 
     public TypeConversionException(String msg) { 

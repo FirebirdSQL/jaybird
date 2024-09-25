@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.jspecify.annotations.NullMarked;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -36,6 +37,7 @@ final class FBFloatField extends FBField {
     @SuppressWarnings("java:S2111")
     private static final BigDecimal BD_MIN_FLOAT = new BigDecimal(MIN_FLOAT_VALUE);
 
+    @NullMarked
     FBFloatField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -59,6 +61,7 @@ final class FBFloatField extends FBField {
         return (byte) value;
     }
 
+    @NullMarked
     private SQLException outOfRangeGetConversion(String type, float value) {
         return invalidGetConversion(type, "value %f out of range".formatted(value));
     }

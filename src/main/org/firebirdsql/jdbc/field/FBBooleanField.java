@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.jspecify.annotations.NullMarked;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -35,6 +36,7 @@ import java.sql.SQLException;
 final class FBBooleanField extends FBField {
     // TODO Evaluate current choices for truth values for non-boolean types (especially if number types != 0 are all true)
 
+    @NullMarked
     FBBooleanField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);

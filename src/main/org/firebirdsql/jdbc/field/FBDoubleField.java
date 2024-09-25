@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.jspecify.annotations.NullMarked;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -35,6 +36,7 @@ class FBDoubleField extends FBField {
     @SuppressWarnings("java:S2111")
     private static final BigDecimal BD_MIN_DOUBLE = new BigDecimal(MIN_DOUBLE_VALUE);
 
+    @NullMarked
     FBDoubleField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -57,6 +59,7 @@ class FBDoubleField extends FBField {
         return (byte) value;
     }
 
+    @NullMarked
     private SQLException outOfRangeGetConversion(String type, double value) {
         return invalidGetConversion(type, "value %f out of range".formatted(value));
     }

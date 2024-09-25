@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.jdbc.FBObjectListener;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * Field which expects a blob listener.
@@ -28,6 +29,7 @@ import org.firebirdsql.util.InternalApi;
  * @since 5
  */
 @InternalApi
+@NullMarked
 public interface BlobListenableField {
 
     /**

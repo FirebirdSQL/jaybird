@@ -21,6 +21,8 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBCachedBlob;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.Blob;
 import java.sql.Clob;
@@ -36,8 +38,9 @@ import java.sql.SQLException;
  */
 final class FBCachedLongVarCharField extends FBLongVarCharField {
 
+    @NullMarked
     FBCachedLongVarCharField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType,
-            GDSHelper gdsHelper) throws SQLException {
+            @Nullable GDSHelper gdsHelper) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType, gdsHelper);
     }
 
@@ -47,9 +50,10 @@ final class FBCachedLongVarCharField extends FBLongVarCharField {
         return new FBCachedBlob(getFieldData());
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public Clob getClob() throws SQLException {
     	if (isNull()) return null;
-    	return new FBCachedClob((FBCachedBlob)getBlob(), blobConfig);
+    	return new FBCachedClob((FBCachedBlob) getBlob(), blobConfig);
     }
 }

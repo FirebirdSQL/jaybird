@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jaybird.util.FbDatetimeConversion;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -37,6 +38,7 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
 
     private static final LocalDate LOCAL_DATE_EPOCH = LocalDate.of(1970, 1, 1);
 
+    @NullMarked
     FBTimeField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
     }

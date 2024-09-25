@@ -22,6 +22,8 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBCachedBlob;
 import org.firebirdsql.jdbc.FirebirdBlob;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.Clob;
 import java.sql.SQLException;
@@ -34,8 +36,9 @@ import java.sql.SQLException;
  */
 final class FBCachedBlobField extends FBBlobField {
 
+    @NullMarked
     FBCachedBlobField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType,
-            GDSHelper gdsHelper) throws SQLException {
+            @Nullable GDSHelper gdsHelper) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType, gdsHelper);
     }
 

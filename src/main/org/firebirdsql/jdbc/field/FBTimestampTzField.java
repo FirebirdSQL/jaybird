@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.Date;
 import java.sql.SQLException;
@@ -33,6 +34,7 @@ import java.util.Calendar;
  */
 class FBTimestampTzField extends AbstractWithTimeZoneField {
 
+    @NullMarked
     FBTimestampTzField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);

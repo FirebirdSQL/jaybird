@@ -25,6 +25,8 @@ import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 import org.firebirdsql.jaybird.util.IOUtils;
 import org.firebirdsql.jaybird.util.LegacyDatetimeConversions;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -58,6 +60,7 @@ class FBStringField extends FBField implements TrimmableField {
     protected final int possibleCharLength;
     private boolean trimTrailing;
 
+    @NullMarked
     FBStringField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -201,6 +204,7 @@ class FBStringField extends FBField implements TrimmableField {
 
     //----- getXXXStream code
 
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public InputStream getBinaryStream() throws SQLException {
         if (isNull()) return null;
@@ -208,7 +212,7 @@ class FBStringField extends FBField implements TrimmableField {
     }
 
     @Override
-    @SuppressWarnings("java:S1168")
+    @SuppressWarnings({ "java:S1168", "DataFlowIssue" })
     public byte[] getBytes() throws SQLException {
         if (isNull()) return null;
         // protect against unintentional modification of cached or shared byte-arrays (eg in DatabaseMetaData)
@@ -424,7 +428,7 @@ class FBStringField extends FBField implements TrimmableField {
         setString(value != null ? value.toString() : null);
     }
 
-    private <T> T getValueAs(Class<T> type, Function<String, T> converter) throws SQLException {
+    private <T> T getValueAs(@NonNull Class<T> type, @NonNull Function<String, T> converter) throws SQLException {
         return convertForGet(getString(), converter.compose(String::trim), type);
     }
 

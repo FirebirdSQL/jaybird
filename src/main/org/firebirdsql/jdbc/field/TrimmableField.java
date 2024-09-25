@@ -19,6 +19,8 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Trim behaviour of {@code getString} in string fields.
@@ -27,6 +29,7 @@ import org.firebirdsql.util.InternalApi;
  * @since 5
  */
 @InternalApi
+@NullMarked
 public interface TrimmableField {
 
     /**
@@ -53,7 +56,7 @@ public interface TrimmableField {
      *         value to trim
      * @return value without trailing spaces, {@code null} if {@code value} was null
      */
-    static String trimTrailing(String value) {
+    static @Nullable String trimTrailing(@Nullable String value) {
         if (value == null || value.isEmpty()) {
             return value;
         }

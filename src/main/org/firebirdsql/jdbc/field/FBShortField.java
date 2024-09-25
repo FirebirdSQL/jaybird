@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.jspecify.annotations.NullMarked;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -38,6 +39,7 @@ class FBShortField extends FBField {
     private static final BigInteger BI_MAX_SHORT = BigInteger.valueOf(MAX_SHORT_VALUE);
     private static final BigInteger BI_MIN_SHORT = BigInteger.valueOf(MIN_SHORT_VALUE);
 
+    @NullMarked
     FBShortField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);

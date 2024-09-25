@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -40,6 +41,7 @@ final class FBNullField extends FBField {
 
     private static final String NULL_CONVERSION_ERROR = "Received non-NULL value of a NULL field.";
 
+    @NullMarked
     FBNullField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
     }

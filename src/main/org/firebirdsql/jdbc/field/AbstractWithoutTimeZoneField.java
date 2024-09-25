@@ -19,6 +19,8 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.Date;
 import java.sql.SQLException;
@@ -36,6 +38,7 @@ abstract class AbstractWithoutTimeZoneField extends FBField {
 
     private Calendar calendar;
 
+    @NullMarked
     AbstractWithoutTimeZoneField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -71,11 +74,11 @@ abstract class AbstractWithoutTimeZoneField extends FBField {
         setDate(value, getCalendar());
     }
 
-    final Calendar getCalendar() {
+    final @NonNull Calendar getCalendar() {
         return calendar != null ? calendar : initCalendar();
     }
 
-    private Calendar initCalendar() {
+    private @NonNull Calendar initCalendar() {
         TimeZone sessionTimeZone = gdsHelper != null ? gdsHelper.getSessionTimeZone() : null;
         return calendar = sessionTimeZone != null ? Calendar.getInstance(sessionTimeZone) : Calendar.getInstance();
     }
