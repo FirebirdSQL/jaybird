@@ -1111,13 +1111,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     @Override
     public void updateObject(int columnIndex, @Nullable Object x, int scaleOrLength) throws SQLException {
-        if (x instanceof InputStream) {
-            updateBinaryStream(columnIndex, (InputStream) x, scaleOrLength);
-        } else if (x instanceof Reader) {
-            updateCharacterStream(columnIndex, (Reader) x, scaleOrLength);
-        } else {
-            updateObject(columnIndex, x);
-        }
+        checkUpdatable();
+        getField(columnIndex).setObject(x, scaleOrLength);
     }
 
     /**
@@ -1410,13 +1405,8 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     @Override
     public void updateObject(String columnName, @Nullable Object x, int scaleOrLength) throws SQLException {
-        if (x instanceof InputStream) {
-            updateBinaryStream(columnName, (InputStream) x, scaleOrLength);
-        } else if (x instanceof Reader) {
-            updateCharacterStream(columnName, (Reader) x, scaleOrLength);
-        } else {
-            updateObject(columnName, x);
-        }
+        checkUpdatable();
+        getField(columnName).setObject(x, scaleOrLength);
     }
 
     /**

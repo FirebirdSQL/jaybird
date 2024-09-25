@@ -498,6 +498,16 @@ public abstract class FBField {
         }
     }
 
+    public void setObject(Object value, int scaleOrLength) throws SQLException {
+        if (value instanceof InputStream) {
+            setBinaryStream((InputStream) value, scaleOrLength);
+        } else if (value instanceof Reader) {
+            setCharacterStream((Reader) value, scaleOrLength);
+        } else {
+            setObject(value);
+        }
+    }
+
     private void setObjectWithInstanceOf(Object value) throws SQLException {
         if (value instanceof BigDecimal bigDecimal) {
             setBigDecimal(bigDecimal);
