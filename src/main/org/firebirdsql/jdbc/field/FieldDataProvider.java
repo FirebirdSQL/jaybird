@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Provider of the row data.
  * 
@@ -32,13 +34,13 @@ public interface FieldDataProvider {
      * @return contents of the field or <code>null</code> if NULL value was
      * sent from the server.
      */
-    byte[] getFieldData();
+    byte @Nullable [] getFieldData();
     
     /**
      * Set raw content of the field. 
      * 
      * @param data raw content of the field.
      */
-    void setFieldData(byte[] data);
+    void setFieldData(byte @Nullable [] data);
 
 }

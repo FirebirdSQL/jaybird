@@ -794,11 +794,11 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             final int fieldPosition = i;
 
             FieldDataProvider dataProvider = new FieldDataProvider() {
-                public byte[] getFieldData() {
+                public byte @Nullable [] getFieldData() {
                     return fieldValues.getFieldData(fieldPosition);
                 }
 
-                public void setFieldData(byte[] data) {
+                public void setFieldData(byte @Nullable [] data) {
                     fieldValues.setFieldData(fieldPosition, data);
                 }
             };
