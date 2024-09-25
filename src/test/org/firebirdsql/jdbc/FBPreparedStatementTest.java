@@ -39,6 +39,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -1486,6 +1487,41 @@ class FBPreparedStatementTest {
             assertThrows(SQLException.class, stmt::executeQuery);
             assertFalse(con.getLocalTransaction().inTransaction(),
                     "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void setObject_Reader_scaleOrLength() throws Exception {
+        executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
+        String sourceValue = "1234567890";
+        final int usedLength = 5;
+        try (var pstmt = con.prepareStatement("INSERT INTO testtab(id, field1, field2) VALUES(1, '', ?)")) {
+            pstmt.setObject(1, new StringReader(sourceValue), JDBCType.VARCHAR, usedLength);
+            pstmt.execute();
+        }
+
+        try (var stmt = con.createStatement()) {
+            var rs = stmt.executeQuery("select field2 from testtab");
+            assertNextRow(rs);
+            assertRowEquals(rs, List.of(sourceValue.substring(0, usedLength)));
+        }
+    }
+
+    @Test
+    void setObject_InputStream_scaleOrLength() throws Exception {
+        executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
+        String sourceValue = "1234567890";
+        final int usedLength = 5;
+        try (var pstmt = con.prepareStatement("INSERT INTO testtab(id, field1, field2) VALUES(1, '', ?)")) {
+            pstmt.setObject(1, new ByteArrayInputStream(sourceValue.getBytes(StandardCharsets.US_ASCII)),
+                    JDBCType.VARCHAR, usedLength);
+            pstmt.execute();
+        }
+
+        try (var stmt = con.createStatement()) {
+            var rs = stmt.executeQuery("select field2 from testtab");
+            assertNextRow(rs);
+            assertRowEquals(rs, List.of(sourceValue.substring(0, usedLength)));
         }
     }
 

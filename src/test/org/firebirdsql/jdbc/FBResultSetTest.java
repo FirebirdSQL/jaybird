@@ -1709,6 +1709,98 @@ class FBResultSetTest {
         }
     }
 
+    @Test
+    void updateObject_int_Reader_type_scaleOrLength() throws SQLException {
+        try (var connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            createTestData(1, connection);
+            String sourceValue = "1234567890";
+            final int usedLength = 5;
+
+            try (var stmt = connection.createStatement(TYPE_FORWARD_ONLY, CONCUR_UPDATABLE)) {
+                var rs = stmt.executeQuery(SELECT_TEST_TABLE);
+                assertNextRow(rs);
+
+                rs.updateObject(2, new StringReader(sourceValue), JDBCType.VARCHAR, usedLength);
+                rs.updateRow();
+
+                rs = stmt.executeQuery(SELECT_TEST_TABLE);
+                assertNextRow(rs);
+                assertRowEquals(rs, List.of(1, sourceValue.substring(0, usedLength)));
+            }
+        }
+    }
+
+    @Test
+    void updateObject_String_Reader_type_scaleOrLength() throws SQLException {
+        try (var connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            createTestData(1, connection);
+            String sourceValue = "1234567890";
+            final int usedLength = 5;
+
+            try (var stmt = connection.createStatement(TYPE_FORWARD_ONLY, CONCUR_UPDATABLE)) {
+                var rs = stmt.executeQuery(SELECT_TEST_TABLE);
+                assertNextRow(rs);
+
+                rs.updateObject("str", new StringReader(sourceValue), JDBCType.VARCHAR, usedLength);
+                rs.updateRow();
+
+                rs = stmt.executeQuery(SELECT_TEST_TABLE);
+                assertNextRow(rs);
+                assertRowEquals(rs, List.of(1, sourceValue.substring(0, usedLength)));
+            }
+        }
+    }
+
+    //
+
+    @Test
+    void updateObject_int_InputStream_type_scaleOrLength() throws SQLException {
+        try (var connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            createTestData(1, connection);
+            String sourceValue = "1234567890";
+            final int usedLength = 5;
+
+            try (var stmt = connection.createStatement(TYPE_FORWARD_ONLY, CONCUR_UPDATABLE)) {
+                var rs = stmt.executeQuery(SELECT_TEST_TABLE);
+                assertNextRow(rs);
+
+                rs.updateObject(2, new ByteArrayInputStream(sourceValue.getBytes(StandardCharsets.US_ASCII)),
+                        JDBCType.VARCHAR, usedLength);
+                rs.updateRow();
+
+                rs = stmt.executeQuery(SELECT_TEST_TABLE);
+                assertNextRow(rs);
+                assertRowEquals(rs, List.of(1, sourceValue.substring(0, usedLength)));
+            }
+        }
+    }
+
+    @Test
+    void updateObject_String_InputStream_type_scaleOrLength() throws SQLException {
+        try (var connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            createTestData(1, connection);
+            String sourceValue = "1234567890";
+            final int usedLength = 5;
+
+            try (var stmt = connection.createStatement(TYPE_FORWARD_ONLY, CONCUR_UPDATABLE)) {
+                var rs = stmt.executeQuery(SELECT_TEST_TABLE);
+                assertNextRow(rs);
+
+                rs.updateObject("str", new ByteArrayInputStream(sourceValue.getBytes(StandardCharsets.US_ASCII)),
+                        JDBCType.VARCHAR, usedLength);
+                rs.updateRow();
+
+                rs = stmt.executeQuery(SELECT_TEST_TABLE);
+                assertNextRow(rs);
+                assertRowEquals(rs, List.of(1, sourceValue.substring(0, usedLength)));
+            }
+        }
+    }
+
     static Stream<String> scrollableCursorPropertyValues() {
         // We are unconditionally emitting SERVER, to check if the value behaves appropriately on versions that do
         // not support server-side scrollable cursors

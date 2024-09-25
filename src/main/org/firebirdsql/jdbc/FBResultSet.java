@@ -1105,25 +1105,31 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird delegates to {@link #updateObject(int, Object)} and ignores the value of {@code scaleOrLength}.
+     * Jaybird delegates to {@link #updateObject(int, Object)} and ignores the value of {@code scaleOrLength}, if
+     * {@code x} is anything other than a {@link Reader} or {@link InputStream}.
      * </p>
      */
     @Override
     public void updateObject(int columnIndex, @Nullable Object x, int scaleOrLength) throws SQLException {
-        updateObject(columnIndex, x);
+        if (x instanceof InputStream) {
+            updateBinaryStream(columnIndex, (InputStream) x, scaleOrLength);
+        } else if (x instanceof Reader) {
+            updateCharacterStream(columnIndex, (Reader) x, scaleOrLength);
+        } else {
+            updateObject(columnIndex, x);
+        }
     }
 
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird delegates to {@link #updateObject(int, Object)} and ignores the values of {@code targetSqlType} and
-     * {@code scaleOrLength}.
+     * Jaybird delegates to {@link #updateObject(int, Object, int)} and ignores the value of {@code targetSqlType}.
      * </p>
      */
     @Override
     public void updateObject(int columnIndex, @Nullable Object x, SQLType targetSqlType, int scaleOrLength)
             throws SQLException {
-        updateObject(columnIndex, x);
+        updateObject(columnIndex, x, scaleOrLength);
     }
 
     @Override
@@ -1398,25 +1404,31 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird delegates to {@link #updateObject(String, Object)} and ignores the value of {@code scaleOrLength}.
+     * Jaybird delegates to {@link #updateObject(String, Object)} and ignores the value of {@code scaleOrLength}, if
+     * {@code x} is anything other than a {@link Reader} or {@link InputStream}.
      * </p>
      */
     @Override
     public void updateObject(String columnName, @Nullable Object x, int scaleOrLength) throws SQLException {
-        updateObject(columnName, x);
+        if (x instanceof InputStream) {
+            updateBinaryStream(columnName, (InputStream) x, scaleOrLength);
+        } else if (x instanceof Reader) {
+            updateCharacterStream(columnName, (Reader) x, scaleOrLength);
+        } else {
+            updateObject(columnName, x);
+        }
     }
 
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird delegates to {@link #updateObject(String, Object)} and ignores the value of {@code targetSqlType} and
-     * {@code scaleOrLength}.
+     * Jaybird delegates to {@link #updateObject(String, Object, int)} and ignores the value of {@code targetSqlType}.
      * </p>
      */
     @Override
     public void updateObject(String columnLabel, @Nullable Object x, SQLType targetSqlType, int scaleOrLength)
             throws SQLException {
-        updateObject(columnLabel, x);
+        updateObject(columnLabel, x, scaleOrLength);
     }
 
     @Override

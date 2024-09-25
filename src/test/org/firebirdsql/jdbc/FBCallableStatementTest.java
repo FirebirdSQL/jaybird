@@ -28,6 +28,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.ByteArrayInputStream;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Properties;
 import java.util.stream.Stream;
@@ -1189,6 +1192,35 @@ class FBCallableStatementTest {
             assertThrows(SQLException.class, stmt::executeQuery);
             assertFalse(con.getLocalTransaction().inTransaction(),
                     "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @Test
+    void setObject_Reader_scaleOrLength() throws Exception {
+        executeCreateTable(con, CREATE_SIMPLE_OUT_PROC);
+        String sourceValue = "1234567890";
+        final int usedLength = 5;
+        try (var cstmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_1)) {
+            cstmt.registerOutParameter(1, JDBCType.VARCHAR);
+            cstmt.setObject(2, new StringReader(sourceValue), JDBCType.VARCHAR, usedLength);
+            cstmt.execute();
+
+            assertEquals(sourceValue.substring(0, usedLength), cstmt.getString(1));
+        }
+    }
+
+    @Test
+    void setObject_InputStream_scaleOrLength() throws Exception {
+        executeDDL(con, CREATE_SIMPLE_OUT_PROC);
+        String sourceValue = "1234567890";
+        final int usedLength = 5;
+        try (var cstmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_1)) {
+            cstmt.registerOutParameter(1, JDBCType.VARCHAR);
+            cstmt.setObject(2, new ByteArrayInputStream(sourceValue.getBytes(StandardCharsets.US_ASCII)),
+                    JDBCType.VARCHAR, usedLength);
+            cstmt.execute();
+
+            assertEquals(sourceValue.substring(0, usedLength), cstmt.getString(1));
         }
     }
 

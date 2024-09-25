@@ -1219,9 +1219,24 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         setInputParam(parameterIndex, null);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: ignores {@code scaleOrLength} and {@code targetSqlType} and works as
+     * {@link #setObject(int, Object)}, {@code scaleOrLength} is not ignored if {@code x} is a {@link Reader} or
+     * {@link InputStream}.
+     * </p>
+     */
     @Override
-    public void setObject(int parameterIndex, @Nullable Object x, int targetSqlType, int scale) throws SQLException {
-        setInputParam(parameterIndex, x);
+    public void setObject(int parameterIndex, @Nullable Object x, int targetSqlType, int scaleOrLength)
+            throws SQLException {
+        if (x instanceof InputStream) {
+            setBinaryStream(parameterIndex, (InputStream) x, scaleOrLength);
+        } else if (x instanceof Reader) {
+            setCharacterStream(parameterIndex, (Reader) x, scaleOrLength);
+        } else {
+            setInputParam(parameterIndex, x);
+        }
     }
 
     @Override
