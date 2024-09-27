@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc.escape;
 import org.firebirdsql.jdbc.FBProcedureCall;
 import org.firebirdsql.jdbc.FBProcedureParam;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 
@@ -28,8 +29,12 @@ import static org.firebirdsql.jdbc.escape.FBEscapedCallParser.ParserState.*;
 
 /**
  * Parser for escaped procedure call.
+ * <p>
+ * This class is not thread-safe.
+ * </p>
  */
 @InternalApi
+@NullMarked
 public final class FBEscapedCallParser {
 
     private static final int INITIAL_CAPACITY = 32;
@@ -43,7 +48,7 @@ public final class FBEscapedCallParser {
 
     private int openBraceCount;
 
-    private FBProcedureCall procedureCall;
+    private FBProcedureCall procedureCall = new FBProcedureCall();
 
     /**
      * Test the character to be the state switching character and switches the state if necessary.
