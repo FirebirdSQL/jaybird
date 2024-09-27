@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.escape;
 
 import org.firebirdsql.jdbc.SQLStateConstants;
 
+import java.io.Serial;
 import java.sql.SQLSyntaxErrorException;
 
 /**
@@ -30,6 +31,7 @@ import java.sql.SQLSyntaxErrorException;
  */
 public class FBSQLParseException extends SQLSyntaxErrorException {
 
+    @Serial
     private static final long serialVersionUID = 4217078230221445003L;
 
     public FBSQLParseException(String msg) {

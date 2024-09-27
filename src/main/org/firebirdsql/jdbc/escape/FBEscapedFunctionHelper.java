@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc.escape;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -35,7 +36,7 @@ public final class FBEscapedFunctionHelper {
      * This map contains mapping between JDBC function names and Firebird ones.
      * Mapping to null means: execute as is (might fail if there is no built-in or UDF)
      */
-    private static final Map<String, SQLFunction> FUNCTION_MAP;
+    private static final Map<String, @Nullable SQLFunction> FUNCTION_MAP;
 
     /**
      * Supported numeric functions
@@ -58,24 +59,24 @@ public final class FBEscapedFunctionHelper {
     private static final Set<String> SUPPORTED_SYSTEM_FUNCTIONS;
 
     static {
-        final Map<String, SQLFunction> functionMap = new HashMap<>(71);
+        final Map<String, @Nullable SQLFunction> functionMap = new HashMap<>(71);
         /* Numeric Functions */
-        Map<String, SQLFunction> numericFunctionMap = getNumericFunctions();
+        Map<String, @Nullable SQLFunction> numericFunctionMap = getNumericFunctions();
         SUPPORTED_NUMERIC_FUNCTIONS = Set.copyOf(numericFunctionMap.keySet());
         functionMap.putAll(numericFunctionMap);
 
         /* String Functions */
-        Map<String, SQLFunction> stringFunctionMap = getStringFunctions();
+        Map<String, @Nullable SQLFunction> stringFunctionMap = getStringFunctions();
         SUPPORTED_STRING_FUNCTIONS = Set.copyOf(stringFunctionMap.keySet());
         functionMap.putAll(stringFunctionMap);
 
         /* Time and Date Functions */
-        Map<String, SQLFunction> timeDateFunctionMap = getTimeDateFunctions();
+        Map<String, @Nullable SQLFunction> timeDateFunctionMap = getTimeDateFunctions();
         SUPPORTED_TIME_DATE_FUNCTIONS = Set.copyOf(timeDateFunctionMap.keySet());
         functionMap.putAll(timeDateFunctionMap);
 
         /* System Functions */
-        Map<String, SQLFunction> systemFunctionMap = getSystemFunctions();
+        Map<String, @Nullable SQLFunction> systemFunctionMap = getSystemFunctions();
         SUPPORTED_SYSTEM_FUNCTIONS = Set.copyOf(systemFunctionMap.keySet());
         functionMap.putAll(systemFunctionMap);
 
@@ -103,8 +104,8 @@ public final class FBEscapedFunctionHelper {
         // no instances
     }
 
-    private static Map<String, SQLFunction> getNumericFunctions() {
-        Map<String, SQLFunction> functionMap = new HashMap<>(32);
+    private static Map<String, @Nullable SQLFunction> getNumericFunctions() {
+        Map<String, @Nullable SQLFunction> functionMap = new HashMap<>(32);
         functionMap.put("ABS", null);
         functionMap.put("ACOS", null);
         functionMap.put("ASIN", null);
@@ -132,8 +133,8 @@ public final class FBEscapedFunctionHelper {
         return functionMap;
     }
 
-    private static Map<String, SQLFunction> getStringFunctions() {
-        Map<String, SQLFunction> functionMap = new HashMap<>(32);
+    private static Map<String, @Nullable SQLFunction> getStringFunctions() {
+        Map<String, @Nullable SQLFunction> functionMap = new HashMap<>(32);
         functionMap.put("ASCII", new PatternSQLFunction("ASCII_VAL({0})"));
         functionMap.put("CHAR", new PatternSQLFunction("ASCII_CHAR({0})"));
         CharacterLengthFunction characterLengthFunction = new CharacterLengthFunction();
@@ -163,8 +164,8 @@ public final class FBEscapedFunctionHelper {
         return functionMap;
     }
 
-    private static Map<String, SQLFunction> getTimeDateFunctions() {
-        Map<String, SQLFunction> functionMap = new HashMap<>(32);
+    private static Map<String, @Nullable SQLFunction> getTimeDateFunctions() {
+        Map<String, @Nullable SQLFunction> functionMap = new HashMap<>(32);
         ConstantSQLFunction currentDate = new ConstantSQLFunction("CURRENT_DATE");
         functionMap.put("CURRENT_DATE", currentDate);
         ConstantSQLFunction currentTime = new ConstantSQLFunction("CURRENT_TIME");
@@ -212,8 +213,8 @@ public final class FBEscapedFunctionHelper {
         return functionMap;
     }
 
-    private static Map<String, SQLFunction> getSystemFunctions() {
-        Map<String, SQLFunction> functionMap = new HashMap<>(4, 1.0f);
+    private static Map<String, @Nullable SQLFunction> getSystemFunctions() {
+        Map<String, @Nullable SQLFunction> functionMap = new HashMap<>(4, 1.0f);
         functionMap.put("DATABASE", new ConstantSQLFunction("RDB$GET_CONTEXT('SYSTEM', 'DB_NAME')"));
         functionMap.put("IFNULL", new PatternSQLFunction("COALESCE({0}, {1})"));
         functionMap.put("USER", new ConstantSQLFunction("USER"));
@@ -368,7 +369,7 @@ public final class FBEscapedFunctionHelper {
      * @throws FBSQLParseException
      *         if escaped function call has incorrect syntax.
      */
-    public static String convertTemplate(final String functionCall) throws FBSQLParseException {
+    public static @Nullable String convertTemplate(final String functionCall) throws FBSQLParseException {
         final String functionName = parseFunction(functionCall).toUpperCase(Locale.ROOT);
         final String[] params = parseArguments(functionCall).toArray(new String[0]);
 

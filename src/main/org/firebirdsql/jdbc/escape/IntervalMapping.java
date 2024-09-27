@@ -48,28 +48,18 @@ final class IntervalMapping {
      * @return Firebird interval name, or original value if unsupported or unknown
      */
     static String getFirebirdInterval(String jdbcIntervalName) {
-        switch (jdbcIntervalName) {
-        case "SQL_TSI_SECOND":
-            return "SECOND";
-        case "SQL_TSI_MINUTE":
-            return "MINUTE";
-        case "SQL_TSI_HOUR":
-            return "HOUR";
-        case "SQL_TSI_DAY":
-            return "DAY";
-        case "SQL_TSI_WEEK":
-            return "WEEK";
-        case "SQL_TSI_MONTH":
-            return "MONTH";
-        case "SQL_TSI_QUARTER":
+        return switch (jdbcIntervalName) {
+            case "SQL_TSI_SECOND" -> "SECOND";
+            case "SQL_TSI_MINUTE" -> "MINUTE";
+            case "SQL_TSI_HOUR" -> "HOUR";
+            case "SQL_TSI_DAY" -> "DAY";
+            case "SQL_TSI_WEEK" -> "WEEK";
+            case "SQL_TSI_MONTH" -> "MONTH";
             // NOTE QUARTER not supported by Firebird
-            return "QUARTER";
-        case "SQL_TSI_YEAR":
-            return "YEAR";
-        case "SQL_TSI_FRAC_SECOND":
+            case "SQL_TSI_QUARTER" -> "QUARTER";
+            case "SQL_TSI_YEAR" -> "YEAR";
             // explicitly not supported, passing as-is
-        default:
-            return jdbcIntervalName;
-        }
+            default -> jdbcIntervalName;
+        };
     }
 }

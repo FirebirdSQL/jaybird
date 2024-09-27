@@ -24,7 +24,6 @@ import org.firebirdsql.util.InternalApi;
 import java.sql.SQLException;
 import java.text.BreakIterator;
 import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
