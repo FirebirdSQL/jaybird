@@ -19,6 +19,8 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -31,10 +33,11 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_PARAM_TYP
  * </p>
  */
 @InternalApi
+@NullMarked
 public class FBProcedureParam implements Cloneable {
 
     private final boolean isParam;
-    private Object value;
+    private @Nullable Object value;
     private final String paramValue;
     private final int position;
     private int type;
@@ -94,7 +97,7 @@ public class FBProcedureParam implements Cloneable {
     /**
      * Set the value for this parameter
      */
-    public Object getValue() {
+    public @Nullable Object getValue() {
         return value;
     }
 
@@ -106,7 +109,7 @@ public class FBProcedureParam implements Cloneable {
      * @throws SQLException
      *         if this parameter contains a constant value
      */
-    public void setValue(Object value) throws SQLException {
+    public void setValue(@Nullable Object value) throws SQLException {
         if (!isParam) {
             throw new SQLException("Cannot set parameter, since it is constant.", SQL_STATE_INVALID_PARAM_TYPE);
         }
