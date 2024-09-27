@@ -106,7 +106,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             procedureCall.checkParameters();
-            batchList.add((FBProcedureCall) procedureCall.clone());
+            batchList.add(FBProcedureCall.copyOf(procedureCall));
         }
     }
 

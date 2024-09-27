@@ -39,24 +39,26 @@ import static org.firebirdsql.jdbc.SQLStateConstants.*;
  */
 @InternalApi
 @NullMarked
-public class FBProcedureCall implements Cloneable {
+public class FBProcedureCall {
 
     private static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE ";
     private static final String NATIVE_SELECT_COMMAND = "SELECT * FROM ";
 
-    // TODO Replace with a copy constructor
-    public Object clone() {
-        try {
-            FBProcedureCall newProcedureCall = (FBProcedureCall) super.clone();
+    private @Nullable String name;
+    private List<@Nullable FBProcedureParam> inputParams = new ArrayList<>();
+    private List<@Nullable FBProcedureParam> outputParams = new ArrayList<>();
 
-            //Copy each input and output parameter.
-            newProcedureCall.inputParams = cloneParameters(inputParams);
-            newProcedureCall.outputParams = cloneParameters(outputParams);
+    public FBProcedureCall() {
+    }
 
-            return newProcedureCall;
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError("clone() unexpectedly not supported", e);
-        }
+    private FBProcedureCall(FBProcedureCall source) {
+        name = source.name;
+        inputParams = cloneParameters(source.inputParams);
+        outputParams = cloneParameters(source.outputParams);
+    }
+
+    public static FBProcedureCall copyOf(FBProcedureCall source) {
+        return new FBProcedureCall(source);
     }
 
     private static List<@Nullable FBProcedureParam> cloneParameters(final List<@Nullable FBProcedureParam> parameters) {
@@ -66,10 +68,6 @@ public class FBProcedureCall implements Cloneable {
         }
         return clonedParameters;
     }
-
-    private @Nullable String name;
-    private List<@Nullable FBProcedureParam> inputParams = new ArrayList<>();
-    private List<@Nullable FBProcedureParam> outputParams = new ArrayList<>();
 
     /**
      * Get the name of the procedure to be called.

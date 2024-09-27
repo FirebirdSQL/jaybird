@@ -1626,6 +1626,8 @@ use standard Java `InputStream.skipNBytes` instead
 * `FBResultSet`
 ** `close(boolean)` was removed;
 use `close(boolean, CompletionReason)`
+* `FBProcedureCall` is no longer cloneable;
+use `FBProcedureCall.copyOf(FBProcedureCall)`
 * `UnixCrypt` was replaced by `LegacyHash`, which only performs the password hash specific to Firebird legacy authentication
 * `GDSFactoryPlugin.getDatabasePath(String, Integer, String)` and `getDatabasePath(String)` no longer throw `GDSException`, but instead throw `SQLException`
 * `GDSFactory.getDatabasePath(...)` no longer throw `GDSException`, but instead throw `SQLException`
