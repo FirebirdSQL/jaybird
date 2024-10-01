@@ -86,7 +86,7 @@ public interface FirebirdPreparedStatement extends FirebirdStatement, PreparedSt
     /**
      * Get the statement type of this PreparedStatement.
      * <p>
-     * The returned value is one of the {@code {@code TYPE_*} constant values defined in this interface.
+     * The returned value is one of the {@code TYPE_*} constant values defined in this interface.
      * </p>
      *
      * @return The identifier for the given statement's type
