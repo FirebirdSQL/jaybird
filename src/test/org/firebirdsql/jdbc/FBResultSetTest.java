@@ -77,7 +77,7 @@ class FBResultSetTest {
               blob_bin BLOB SUB_TYPE BINARY
             )""";
 
-    private static final String SELECT_TEST_TABLE = "SELECT id, str FROM test_table";
+    private static final String SELECT_TEST_TABLE = "SELECT id, str FROM test_table order by id";
 
     private static final String CREATE_TABLE_STATEMENT2 = """
             CREATE TABLE test_table2(
@@ -1427,7 +1427,7 @@ class FBResultSetTest {
             try (var stmt = connection.createStatement()) {
                 // Reduce fetch size to trigger more fetches
                 stmt.setFetchSize(200);
-                try (var rs = stmt.executeQuery(SELECT_TEST_TABLE + " order by id")) {
+                try (var rs = stmt.executeQuery(SELECT_TEST_TABLE)) {
                     int expectedId = 0;
                     while (rs.next()) {
                         expectedId++;
