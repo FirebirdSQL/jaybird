@@ -8,7 +8,7 @@
 :toc: left
 :icons: font
 :sectnums:
-:jaybird-fbclient-version: 4.0.4.0
+:jaybird-fbclient-version: 5.0.1.1
 :jna-version: 5.15.0
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/5.0.x/release_notes.html
 
@@ -233,7 +233,7 @@ Feedback can be sent to the https://groups.google.com/g/firebird-java[Firebird-j
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.11, 4.0.4, and 5.0.0, but should also support other Firebird versions from 2.5 and up.
+Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.12, 4.0.5, and 5.0.1, but should also support other Firebird versions from 2.5 and up.
 
 This driver does not support InterBase servers due to Firebird-specific changes in the protocol and database attachment parameters that are sent to the server.
 
@@ -244,7 +244,7 @@ Jaybird 5 supports Java 8 (JDBC 4.2), and Java 9 and higher (JDBC 4.3).
 Support for earlier Java versions has been dropped.
 
 Given the limited support period for Java 9 and higher versions, we limit support to Java 8, 11, 17, 21 and the latest Java release.
-Currently, that means we support Java 8, 11, 17, 21, and 22.
+Currently, that means we support Java 8, 11, 17, 21, and 23.
 
 [NOTE]
 ====
@@ -1326,6 +1326,8 @@ Be aware that this dependency does not support `embedded`.
     <version>{jaybird-fbclient-version}</artifactId>
 </dependency>
 ----
+
+For more information about this library, see https://github.com/mrotteveel/jaybird-fbclient[^].
 
 In Jaybird 6 we will move the Type 2 support to a separate library.
 In the future we may provide JARs with the embedded libraries of a specific Firebird version.
