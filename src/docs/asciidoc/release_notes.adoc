@@ -13,6 +13,7 @@
 :jaybird-fbclient-version: 4.0.4.0
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
+:fb-canonical-html: https://firebirdsql.org/docs/drivers/java/6.0.x/release_notes.html
 
 ifeval::["{version_tag}" != ""]
 [WARNING]
