@@ -10,7 +10,7 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         libs {
-            library('jna', 'net.java.dev.jna', 'jna-jpms').version('5.14.0')
+            library('jna', 'net.java.dev.jna', 'jna-jpms').version('5.15.0')
             library('jakarta.servlet-api', 'jakarta.servlet', 'jakarta.servlet-api').version('5.0.0')
             library('bcprov-jdk18on', 'org.bouncycastle', 'bcprov-jdk18on').version('1.78.1')
             library('jspecify', 'org.jspecify', 'jspecify').version('1.0.0')

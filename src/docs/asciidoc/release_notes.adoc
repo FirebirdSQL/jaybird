@@ -9,7 +9,7 @@
 :icons: font
 :sectnums:
 :bc-version: 1.78.1
-:jna-version: 5.14.0
+:jna-version: 5.15.0
 :jaybird-fbclient-version: 4.0.4.0
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
