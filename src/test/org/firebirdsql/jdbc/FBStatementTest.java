@@ -37,11 +37,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.firebirdsql.common.DdlHelper.*;
+import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementClosed;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
@@ -1133,6 +1136,8 @@ class FBStatementTest {
 
     @Test
     void executeWithResultSetWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        assumeThat("Test doesn't work on NATIVE, there the exception is raised on fetch",
+                GDS_TYPE, not(isOtherNativeType()));
         //@formatter:off
         executeDDL(con,
                 "recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as\n" +
@@ -1163,6 +1168,8 @@ class FBStatementTest {
 
     @Test
     void executeQueryWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        assumeThat("Test doesn't work on NATIVE, there the exception is raised on fetch",
+                GDS_TYPE, not(isOtherNativeType()));
         //@formatter:off
         executeDDL(con,
                 "recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as\n" +
