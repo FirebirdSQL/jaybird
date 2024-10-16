@@ -7,9 +7,10 @@
 :source-highlighter: prettify
 :toc: left
 :icons: font
-:jaybird5-full-version: 5.0.5
+:jaybird5-full-version: 5.0.6
 :jaybird5-template-version: {jaybird5-full-version}.<java>
 :jaybird5-example-version: {jaybird5-full-version}.java11
+:jaybird5-jna-version: 5.15.0
 :jaybird4-full-version: 4.0.10
 :jaybird4-template-version: {jaybird4-full-version}.<java>
 :jaybird4-example-version: {jaybird4-full-version}.java11
@@ -50,14 +51,14 @@ For example, for Java 11:
 </dependency>
 ----
 
-If you want to use Type 2 support (native or embedded), you need to explicitly include JNA 5.14.0 as a dependency:
+If you want to use Type 2 support (native or embedded), you need to explicitly include JNA {jaybird5-jna-version} as a dependency:
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.14.0</version>
+    <version>{jaybird5-jna-version}</version>
 </dependency>
 ----
 
