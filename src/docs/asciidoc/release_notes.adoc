@@ -10,7 +10,7 @@
 :sectnums:
 :bc-version: 1.78.1
 :jna-version: 5.15.0
-:jaybird-fbclient-version: 4.0.4.0
+:jaybird-fbclient-version: 5.0.1.1
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/6.0.x/release_notes.html
@@ -1858,5 +1858,7 @@ Be aware that this dependency does not support `embedded`.
     <version>{jaybird-fbclient-version}</artifactId>
 </dependency>
 ----
+
+For more information about this library, see https://github.com/mrotteveel/jaybird-fbclient[^].
 
 In the future we may provide JARs with the embedded libraries of a specific Firebird version.
