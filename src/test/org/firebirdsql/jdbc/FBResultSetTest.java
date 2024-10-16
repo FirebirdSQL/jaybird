@@ -81,8 +81,7 @@ class FBResultSetTest {
         "  blob_bin BLOB SUB_TYPE BINARY" +
         ")";
 
-    private static final String SELECT_TEST_TABLE =
-        "SELECT id, str FROM test_table";
+    private static final String SELECT_TEST_TABLE = "SELECT id, str FROM test_table order by id";
 
     private static final String CREATE_TABLE_STATEMENT2 =
         "CREATE TABLE test_table2(" +
@@ -1561,7 +1560,7 @@ class FBResultSetTest {
                 List<Object> insertRow = Arrays.asList(2, "2");
                 List<List<Object>> expectedRows =
                         "SERVER".equals(scrollableCursorPropertyValue)
-                        && getDefaultSupportInfo().supportsScrollableCursors()
+                        && canSupportServerSideScrollable()
                                 ? Arrays.asList(row1, insertRow)
                                 : Arrays.asList(insertRow, row1);
 
@@ -1573,6 +1572,11 @@ class FBResultSetTest {
                 assertNoNextRow(rs, "expected only " + expectedRows.size() + " rows");
             }
         }
+    }
+
+    private static boolean canSupportServerSideScrollable() {
+        return "PURE_JAVA".equalsIgnoreCase(GDS_TYPE)
+               && getDefaultSupportInfo().supportsScrollableCursors();
     }
 
     static Stream<String> scrollableCursorPropertyValues() {
