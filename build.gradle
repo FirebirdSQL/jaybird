@@ -138,6 +138,8 @@ processResources {
 asciidoctorj {
     // NOTE: Don't upgrade to v 3.0.0, as it requires Java 11
     version = '2.5.13'
+
+    docExtensions file('doc-extension.groovy')
 }
 
 tasks.named('asciidoctor', AsciidoctorTask).configure {

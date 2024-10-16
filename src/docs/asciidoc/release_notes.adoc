@@ -10,6 +10,7 @@
 :sectnums:
 :jaybird-fbclient-version: 4.0.4.0
 :jna-version: 5.15.0
+:fb-canonical-html: https://firebirdsql.org/docs/drivers/java/5.0.x/release_notes.html
 
 ifeval::["{version_tag}" != ""]
 [WARNING]

@@ -15,6 +15,7 @@
 :jaybird4-example-version: {jaybird4-full-version}.java11
 :jaybird3-full-version: 3.0.12
 :sectnums:
+:fb-canonical-html: https://firebirdsql.org/docs/drivers/java/faq.html
 
 [#jaybird]
 = Jaybird
