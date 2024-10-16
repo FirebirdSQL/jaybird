@@ -57,6 +57,8 @@ import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.FbAssumptions.assumeServerBatchSupport;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.*;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -1446,6 +1448,8 @@ class FBPreparedStatementTest {
 
     @Test
     void executeWithResultSetWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        assumeThat("Test doesn't work on NATIVE, there the exception is raised on fetch",
+                GDS_TYPE, not(isOtherNativeType()));
         executeDDL(con, """
                 recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as
                 begin
@@ -1476,6 +1480,8 @@ class FBPreparedStatementTest {
 
     @Test
     void executeQueryWithExceptionShouldEndTransactionInAutocommit() throws Exception {
+        assumeThat("Test doesn't work on NATIVE, there the exception is raised on fetch",
+                GDS_TYPE, not(isOtherNativeType()));
         executeDDL(con, """
                 recreate procedure RAISE_EXCEPTION_RS (PARAM1 varchar(50) not null) returns (COLUMN1 varchar(50)) as
                 begin
