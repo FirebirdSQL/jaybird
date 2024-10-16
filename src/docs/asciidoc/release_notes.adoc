@@ -52,7 +52,7 @@ The value reported by `wasNull()` is reset to `false` on each cursor move (e.g. 
 +
 This could happen if the insert was performed when the server-side cursor was not fully materialized (e.g. by inserting the row immediately after execute).
 As the server-side cursor is only fully materialized on certain operations like requesting the cursor size, the inserted row could be included in the server-side cursor, as well as the local inserted rows collection.
-* Improvement: Updated JNA dependency to version 5.14.0 (https://github.com/FirebirdSQL/jaybird/issues/823[#823])
+* Improvement: Updated JNA dependency to version 5.15.0 (https://github.com/FirebirdSQL/jaybird/issues/823[#823])
 +
 If you use native or embedded connections, make sure the upgrade the JNA dependency to JNA 5.15.0 by replacing the JAR or updating the JNA (`net.java.dev.jna:jna`) version number in your build configuration.
 In practice, Jaybird should still be able to work with JNA 5.12.1 (used in Jaybird 5.0.0 -- 5.0.4), and JNA 5.14.0 (used in Jaybird 5.0.5).
