@@ -235,11 +235,10 @@ Alternatively, you can go directly to GitHub and download Jaybird from the https
 == Where can I get the sourcecode?
 
 All Jaybird distribution zips contain a `jaybird-<version>-sources.zip` with the sources used for that specific version.
-The full Jaybird sourcecode is also available from GitHub in the jaybird repository:
+The Maven Central repository also has the `jaybird-<version>-sources.zip`, and your IDE will generally offer to download it for you if you navigate to any Jaybird class.
 
-https://github.com/FirebirdSQL/jaybird
-
-Each release is also tagged in the repository.
+The full Jaybird sources are also available from GitHub in the jaybird repository, https://github.com/FirebirdSQL/jaybird.
+Each release is tagged in the repository.
 
 [#how-is-jaybird-licensed]
 == How is Jaybird licensed?
