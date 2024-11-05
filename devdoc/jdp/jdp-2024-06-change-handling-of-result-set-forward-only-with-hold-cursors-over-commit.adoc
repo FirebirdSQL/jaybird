@@ -11,8 +11,8 @@
 
 == Context
 
-Support for holdable result sets (`HOLD_CURSORS_OVER_COMMIT`) currently relies on using `TYPE_SCROLL_INSENSITIVE` with client-side emulation (not server-side scrollable cursors).
-The client-side emulation of `TYPE_SCROLL_INSENSITIVE` materializes the entire result set in memory, which is how it can provide the `HOLD_CURSORS_OVER_COMMIT` behaviour.
+Support for holdable result sets (`HOLD_CURSORS_OVER_COMMIT`) currently relies on using `FBCachedFetcher`, and this is generally used when requesting `TYPE_SCROLL_INSENSITIVE` (using client-side emulation, not server-side scrollable support).
+`FBCachedFetcher` materializes the entire result set in memory, which is how it can provide the `HOLD_CURSORS_OVER_COMMIT` behaviour.
 
 When the client code requests a result set with `TYPE_FORWARD_ONLY` _and_ `HOLD_CURSORS_OVER_COMMIT`, it is upgraded to `TYPE_SCROLL_INSENSITIVE`, and due to JDBC requirements, this then registers a `SQLWarning` on the `Connection`.
 
@@ -32,7 +32,7 @@ This is currently used for cached metadata-queries, which are required by specif
 == Decision
 
 Jaybird will stop "`upgrading`" forward-only holdable result sets to scroll-insensitive, though internally it will continue to use the same mechanism for caching the entire result set.
-It will do this by wrapping the fetcher in `ForwardOnlyFetcherDecorator`.
+It will do this by wrapping the cached fetcher in `ForwardOnlyFetcherDecorator`.
 
 === Rejected alternatives
 
