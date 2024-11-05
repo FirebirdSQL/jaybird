@@ -1086,6 +1086,9 @@ This improvement was backported to Jaybird 5.0.5.
 * Improvement: Added column `JB_PK_INDEX_NAME` and `JB_FK_INDEX_NAME` to the result set of to `getImportedKeys`, `getExportedKeys` and `getCrossReference` of `DatabaseMetaData` with the names of the index backing the primary key and foreign key (https://github.com/FirebirdSQL/jaybird/issues/798[#798])
 +
 Given this is a non-standard extension, it is advisable to retrieve these columns by name, not by position.
+* Change: `TYPE_FORWARD_ONLY` is no longer upgraded to `TYPE_SCROLL_INSENSITIVE` when requesting holdable result sets explicitly (holdability `HOLD_CUSORS_OVER_COMMIT`) or implicitly (`defaultResultSetHoldable=true` when not specifying holdability) (https://github.com/FirebirdSQL/jaybird/issues/802[#802])
++
+See also <<compat-rs-fw-only-holdable>>.
 * Improvement: `isPoolable()` on `PreparedStatement` and `CallableStatement` now returns the default of `true` -- `Statement` returns `false` -- as required by JDBC, and `setPoolable` records the value set to be returned by `isPoolable` (https://github.com/FirebirdSQL/jaybird/issues/803[#803])
 +
 To be clear, Jaybird does not provide statement pooling.
@@ -1286,6 +1289,16 @@ Switch to using one of the normal execute methods.
 
 See also <<allow-tx-stmts>>.
 
+[#compat-rs-fw-only-holdable]
+=== Forward-only holdable result sets no longer upgraded to scroll-insensitive
+
+Jaybird no longer upgrades `TYPE_FORWARD_ONLY` holdable result sets to `TYPE_SCROLL_INSENSITIVE`.
+As a result, for these result sets, only the `next()` navigation method is allowed, and other navigation methods will throw an `SQLException`, just like a forward-only non-holdable result set.
+
+In previous versions this upgrade occurred when creating a `TYPE_FORWARD_ONLY` result set, either explicitly when asking for holdability `HOLD_CURSORS_OVER_COMMIT`, or implicitly when `defaultResultsetHoldable=true` (or `defaultHoldable=true` or `result_set_holdable=true`) and no holdability was specified.
+
+If you relied on this type upgrade to access navigation methods other than `next()`, you will need to explicitly ask for a `TYPE_SCROLL_INSENSITIVE` result set.
+
 [#compat-read-only]
 === Read-only behaviour of connections
 
@@ -1307,7 +1320,6 @@ You will need to explicitly call `setReadOnly(false)`, or -- better yet -- do no
 For more information, see <<no-close-after-last>>.
 
 [#compat-scroll-rs-update-behavior]
-
 === Behavioural changes for updatable scrollable `ResultSet`
 
 For more information, see <<scroll-rs-update-behavior>>.
