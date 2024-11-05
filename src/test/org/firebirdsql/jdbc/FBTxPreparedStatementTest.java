@@ -227,7 +227,7 @@ class FBTxPreparedStatementTest {
     private static Stream<Arguments> resultSetTypeConcurrencyHoldability() {
         return Stream.of(
                 Arguments.of(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY, CLOSE_CURSORS_AT_COMMIT, TYPE_FORWARD_ONLY),
-                Arguments.of(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY, HOLD_CURSORS_OVER_COMMIT, TYPE_SCROLL_INSENSITIVE),
+                Arguments.of(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY, HOLD_CURSORS_OVER_COMMIT, TYPE_FORWARD_ONLY),
                 Arguments.of(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE, CLOSE_CURSORS_AT_COMMIT,
                         TYPE_SCROLL_INSENSITIVE),
                 Arguments.of(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE, HOLD_CURSORS_OVER_COMMIT,

@@ -118,7 +118,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
                     behavior.isScrollable() && behavior.isCloseCursorsAtCommit() && !metaDataQuery
                     && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
                     && stmt.supportsFetchScroll();
-            boolean cached = metaDataQuery || behavior.isScrollable() && !serverSideScrollable;
+            boolean cached =
+                    metaDataQuery
+                    || behavior.isScrollable() && !serverSideScrollable
+                    || behavior.isHoldCursorsOverCommit();
 
             fields = createFields(cached, metaDataQuery);
             closeableFields = toCloseableFields(fields);

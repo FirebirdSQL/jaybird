@@ -164,11 +164,9 @@ class ResultSetBehaviorTest {
     static Stream<Arguments> testCases() {
         return Stream.of(
                 testCaseBasic(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY, CLOSE_CURSORS_AT_COMMIT),
-                testCaseTypeChange(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY, HOLD_CURSORS_OVER_COMMIT,
-                        TYPE_SCROLL_INSENSITIVE, JaybirdErrorCodes.jb_resultSetTypeUpgradeReasonHoldability),
+                testCaseBasic(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY, HOLD_CURSORS_OVER_COMMIT),
                 testCaseBasic(TYPE_FORWARD_ONLY, CONCUR_UPDATABLE, CLOSE_CURSORS_AT_COMMIT),
-                testCaseTypeChange(TYPE_FORWARD_ONLY, CONCUR_UPDATABLE, HOLD_CURSORS_OVER_COMMIT,
-                        TYPE_SCROLL_INSENSITIVE, JaybirdErrorCodes.jb_resultSetTypeUpgradeReasonHoldability),
+                testCaseBasic(TYPE_FORWARD_ONLY, CONCUR_UPDATABLE, HOLD_CURSORS_OVER_COMMIT),
                 testCaseBasic(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY, CLOSE_CURSORS_AT_COMMIT),
                 testCaseBasic(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY, HOLD_CURSORS_OVER_COMMIT),
                 testCaseBasic(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE, CLOSE_CURSORS_AT_COMMIT),

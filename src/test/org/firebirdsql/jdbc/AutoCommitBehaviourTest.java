@@ -122,20 +122,18 @@ class AutoCommitBehaviourTest {
     @ValueSource(ints = { ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.TYPE_FORWARD_ONLY })
     void testHoldableDifferentStatementExecution_ResultSetRemainsOpen(int resultSetType) throws Exception {
         connection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
-        // TYPE_FORWARD_ONLY is upgraded to TYPE_SCROLL_INSENSITIVE
-        final int expectedType = ResultSet.TYPE_SCROLL_INSENSITIVE;
         var stmt1 = connection.createStatement(resultSetType, ResultSet.CONCUR_READ_ONLY);
-        assertEquals(expectedType, stmt1.getResultSetType(), "stmt1.getResultSetType");
+        assertEquals(resultSetType, stmt1.getResultSetType(), "stmt1.getResultSetType");
         var stmt2 = connection.createStatement(resultSetType, ResultSet.CONCUR_READ_ONLY);
-        assertEquals(expectedType, stmt2.getResultSetType(), "stmt2.getResultSetType");
+        assertEquals(resultSetType, stmt2.getResultSetType(), "stmt2.getResultSetType");
 
         var rs1 = stmt1.executeQuery(SELECT_ALL_ID_TABLE);
-        assertEquals(expectedType, rs1.getType(), "rs1.getType");
+        assertEquals(resultSetType, rs1.getType(), "rs1.getType");
         assertNextRow(rs1);
         assertResultSetOpen(rs1, "Expected rs1 open");
 
         var rs2 = stmt2.executeQuery(SELECT_ALL_ID_TABLE);
-        assertEquals(expectedType, rs2.getType(), "rs2.getType");
+        assertEquals(resultSetType, rs2.getType(), "rs2.getType");
 
         assertResultSetOpen(rs1, "Expected rs1 open");
 

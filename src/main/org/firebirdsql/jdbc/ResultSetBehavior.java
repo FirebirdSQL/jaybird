@@ -261,16 +261,7 @@ public final class ResultSetBehavior {
     public static ResultSetBehavior of(int type, int concurrency, int holdability, Consumer<SQLWarning> warningConsumer)
             throws SQLException {
         int bitset = switch (type) {
-            case ResultSet.TYPE_FORWARD_ONLY -> {
-                if (holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT) {
-                    warningConsumer.accept(
-                            FbExceptionBuilder.forWarning(JaybirdErrorCodes.jb_resultSetTypeUpgradeReasonHoldability)
-                                    .toSQLException(SQLWarning.class));
-                    // Upgrade to scrollable so we cache the result set to provide the holdable semantics
-                    yield SCROLLABLE_BIT;
-                }
-                yield NO_BIT_SET;
-            }
+            case ResultSet.TYPE_FORWARD_ONLY -> NO_BIT_SET;
             case ResultSet.TYPE_SCROLL_INSENSITIVE -> SCROLLABLE_BIT;
             case ResultSet.TYPE_SCROLL_SENSITIVE -> {
                 warningConsumer.accept(

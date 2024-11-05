@@ -56,6 +56,10 @@ public interface JaybirdErrorCodes {
     int jb_clumpletReaderUsageError = 337248262;
     int jb_invalidConnectionString  = 337248263;
     int jb_concurrencyResetReadOnlyReasonNotUpdatable    = 337248264;
+    /**
+     * @deprecated Jaybird no longer uses this error code
+     */
+    @Deprecated(since = "6")
     int jb_resultSetTypeUpgradeReasonHoldability         = 337248265;
     int jb_resultSetTypeDowngradeReasonScrollSensitive   = 337248266;
     int jb_concurrencyResetReadOnlyReasonStoredProcedure = 337248267;
