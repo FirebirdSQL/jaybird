@@ -1,0 +1,29 @@
+= work-in-progress: Experimental reimplementation of CallableStatement
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6 or 7
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+Jaybird's implementation of `java.sql.CallableStatement` works -- considering Jaybird 5 and older, but has a number of oddities and outright bugs that surface if you attempt to use it in a way we didn't intend or expect.
+
+Some examples (not exhaustive):
+
+* It is possible to use the `CallableStatement#registerOutParameter` methods for a "`selectable`" stored procedure, while formally it is a result set producing procedure, and thus has no output parameters.
+* Similarly, the rows produced by a "`selectable`" stored procedure can be accessed by `CallableStatement.getXXX` methods.
++
+It's even possible to iterate using the result set, and then access the current row through the `CallableStatement`.
+* Calling `CallableStatement.getXXX` with an index that is not mapped to an out parameter falls back to trying that index directly on the underlying result set.
+* Calling `CallableStatement.setXXX` with an index that is mapped to an out parameter, may be passed to the procedure anyway, potentially overwriting a literal parameter value or addressing an optional parameter.
+
+Previous attempts to address some of these issues, uncovered other problems or could lead to potential compatibility issues, which forced us to roll back to the original implementation.
+
+== Decision
+
+== Consequences
