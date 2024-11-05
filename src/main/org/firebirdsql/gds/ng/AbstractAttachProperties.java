@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
@@ -65,10 +66,8 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
      *         Source to copy from
      */
     protected AbstractAttachProperties(IAttachProperties<T> src) {
-        this();
-        if (src != null) {
-            propertyValues.putAll(src.connectionPropertyValues());
-        }
+        // Do not call this() as that also sets defaults, which should not be done when copying
+        propertyValues = src != null ? new HashMap<>(src.connectionPropertyValues()) : new HashMap<>();
     }
 
     /**
@@ -76,6 +75,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
      */
     protected AbstractAttachProperties() {
         propertyValues = new HashMap<>();
+        setEnableProtocol(JaybirdSystemProperties.getDefaultEnableProtocol());
     }
 
     // For internal use, to provide serialization support in FbConnectionProperties

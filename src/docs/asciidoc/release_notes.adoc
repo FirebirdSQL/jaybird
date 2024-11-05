@@ -487,6 +487,11 @@ However, we recommend using the unmasked version (e.g. `"12"` for protocol versi
 * `"*"` -- enable all available protocol versions
 * `null` or empty string (`++""++`) -- default behaviour, only use supported protocols
 
+A different default value of `enableProtocol` can be set using the system property `org.firebirdsql.jdbc.defaultEnableProtocol`.
+This system property is checked each time a connection configuration is created, so it can be changed at runtime.
+If you use a Jaybird `DataSource` implementation, it uses the value at the time the `DataSource` is created;
+if you use `DriverManager` -- this can include third-party data sources, it uses the value at the time the connection is created.
+
 [WARNING]
 ====
 Given these protocol versions and their Firebird version are not supported, there is no guarantee that the driver will function correctly when an unsupported protocol is enabled.

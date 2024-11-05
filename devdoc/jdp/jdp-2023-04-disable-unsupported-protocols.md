@@ -3,8 +3,9 @@
 ## Status
 
 - Published: 2023-02-25
-- Updated: 2024-01-10
+- Updated: 2024-11-05
 - Implemented in: Jaybird 6
+- Updated by: [jdp-2024-07](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-07-add-system-property-to-configure-default-enable-protocol.adoc)
 
 ## Type
 

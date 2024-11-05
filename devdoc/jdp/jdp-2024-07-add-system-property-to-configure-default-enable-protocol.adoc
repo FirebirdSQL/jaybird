@@ -1,0 +1,26 @@
+= jdp-2024-07: Add System Property to Configure Default of `enableProtocol`
+
+== Status
+
+* Published: 2024-11-05
+* Implemented in: Jaybird 6
+* Updates: https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-04-disable-unsupported-protocols.md[jdp-2023-04]
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+In https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-04-disable-unsupported-protocols.md[jdp-2023-04], we disabled unsupported protocols by default (that is, wire protocol versions 10 - 12 for pure Java connections), and added a connection property `enableProtocol` which can selectively enable unsupported protocols with a comma-separated list of versions, or all unsupported protocols with '```*```'.
+
+In some cases, it might be easier for users to configure a system property than update connection properties, so having a way to globally control this default will be handy to have as a fallback measure.
+
+== Decision
+
+Jaybird will add a connection property `org.firebirdsql.jdbc.defaultEnableProtocol` with the same syntax as the `enableProtocol` connection property.
+This system property will establish the default value for `enableProtocol`, and will be evaluated for each connection, so it can also be changed on the fly during run time.
+
+== Consequences
+
+A default value for `enableProtocol` can be established without having to specify the connection property explicitly, by setting a system property on startup, or during run time.

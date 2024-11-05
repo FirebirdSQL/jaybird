@@ -18,10 +18,14 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,6 +34,7 @@ import java.util.TimeZone;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.firebirdsql.common.SystemPropertyHelper.withTemporarySystemProperty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -259,6 +264,16 @@ class FbConnectionPropertiesTest {
     void testSessionTimeZoneNormalizationOfOffsets() {
         info.setSessionTimeZone("GMT+05:00");
         assertEquals("+05:00", info.getSessionTimeZone());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "*", "11" })
+    void enableProtocolDefaultDerivedFromSystemProperty(String defaultValue) throws Exception {
+        try (var ignored = withTemporarySystemProperty(JaybirdSystemProperties.DEFAULT_ENABLE_PROTOCOL, defaultValue)) {
+            assertEquals(defaultValue, new FbConnectionProperties().getEnableProtocol(),
+                    "Unexpected enableProtocol value");
+        }
     }
 
 }
