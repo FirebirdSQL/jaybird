@@ -1,0 +1,56 @@
+= jdp-2024-06: Change Handling of Result Set TYPE_FORWARD_ONLY with HOLD_CURSOR_OVER_COMMIT
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+Support for holdable result sets (`HOLD_CURSORS_OVER_COMMIT`) currently relies on using `TYPE_SCROLL_INSENSITIVE` with client-side emulation (not server-side scrollable cursors).
+The client-side emulation of `TYPE_SCROLL_INSENSITIVE` materializes the entire result set in memory, which is how it can provide the `HOLD_CURSORS_OVER_COMMIT` behaviour.
+
+When the client code requests a result set with `TYPE_FORWARD_ONLY` _and_ `HOLD_CURSORS_OVER_COMMIT`, it is upgraded to `TYPE_SCROLL_INSENSITIVE`, and due to JDBC requirements, this then registers a `SQLWarning` on the `Connection`.
+
+[quote,15.1.1 ResultSet Types,JDBC 4.3 Specification]
+____
+If the driver does not support the type supplied to the methods `createStatement`, `prepareStatement`, or `prepareCall`, it generates an `SQLWarning` on the `Connection` object that is creating the statement.
+When the statement is executed, the driver returns a `ResultSet` object of a type that most closely matches the requested type.
+____
+
+Technically, it would also be valid to deny the request for a holdable result set and downgrade to `CLOSE_CURSORS_AT_COMMIT`, but that also requires a warning, and would provide worse support of JDBC functionality.
+
+Our experience is that users don't like ``SQLWarning``s, especially if tools log them or even report those warnings to the end-user, and will complain about it to us, instead of disabling said logging or complaining to the tool author.
+
+Jaybird internally has a method for making a `TYPE_SCROLL_INSENSITIVE` behave like `TYPE_FORWARD_ONLY`, by wrapping the fetcher in a `ForwardOnlyFetcherDecorator`.
+This is currently used for cached metadata-queries, which are required by specification to be `TYPE_FORWARD_ONLY`.
+
+== Decision
+
+Jaybird will stop "`upgrading`" forward-only holdable result sets to scroll-insensitive, though internally it will continue to use the same mechanism for caching the entire result set.
+It will do this by wrapping the fetcher in `ForwardOnlyFetcherDecorator`.
+
+=== Rejected alternatives
+
+The following alternatives were considered but rejected:
+
+. If one or more result sets are `HOLD_CURSORS_OVER_COMMIT`, use commit/rollback retain and only really commit or rollback after all holdable result sets are closed.
++
+This is very complex, and would require a lot of rework in the internals of Jaybird, but may be interesting to explore in the future.
+. Add a connection property and/or system property to suppress/ignore JDBC warnings.
+That is, `getWarnings()` on `Connection`, `Statement` and `ResultSet` will always return `null`, or more correctly, their internal `addWarning` methods will throw away reported warnings.
++
+Returning a forward-only cursor when that is what is asked for has our preference.
+We will probably propose this separately as a generic approach for suppressing the ``SQLWarning``s.
+
+== Consequences
+
+When a statement is requested with `TYPE_FORWARD_ONLY` _and_ `HOLD_CURSORS_OVER_COMMIT` (or `TYPE_FORWARD_ONLY` without explicit holdability and `defaultResultSetHoldable` is `true`), Jaybird will no longer upgrade to `TYPE_SCROLL_INSENSITIVE`.
+This means that only `next()` is supported, and other result set navigation methods will throw a `SQLException`, sams as when `TYPE_FORWARD_ONLY` _and_ `CLOSE_CURSORS_AT_COMMIT` had been requested.
+This can be addressed by explicitly requesting `TYPE_SCROLL_INSENSITIVE`.
+
+Jaybird no longer registers a `SQLWarning`, because the result set type is no longer upgraded.
