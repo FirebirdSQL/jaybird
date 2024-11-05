@@ -102,6 +102,9 @@ The status section should also reference the JDP(s) it updates or replaces:
 A document can have multiple status values, but _Draft_ and _Published_ are 
 mutually exclusive.
 
+When a draft is not yet complete, it is advisable, but not required to not 
+assign a JDP number yet, and put it in the directory `work-in-progress`. 
+
 #### Type
 
 The type of document. Possible values:
