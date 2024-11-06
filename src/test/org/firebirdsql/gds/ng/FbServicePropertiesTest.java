@@ -34,7 +34,7 @@ class FbServicePropertiesTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = { "*", "11" })
-    void enableProtocolDefaultDerivedFromSystemProperty(String defaultValue) throws Exception {
+    void enableProtocolDefaultDerivedFromSystemProperty(String defaultValue) {
         try (var ignored = withTemporarySystemProperty(JaybirdSystemProperties.DEFAULT_ENABLE_PROTOCOL, defaultValue)) {
             assertEquals(defaultValue, new FbServiceProperties().getEnableProtocol(),
                     "Unexpected enableProtocol value");

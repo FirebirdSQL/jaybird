@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.common;
 
+import org.firebirdsql.common.function.UncheckedCloseable;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -46,9 +47,9 @@ public final class SystemPropertyHelper {
      *         value of the system property ({@code null} will clear/remove the system property if it exists)
      * @return auto-closeable which will restore the original value of the system property
      */
-    public static AutoCloseable withTemporarySystemProperty(String name, @Nullable String value) {
+    public static UncheckedCloseable withTemporarySystemProperty(String name, @Nullable String value) {
         record TemporarySystemProperty(String name, @Nullable String value, @Nullable String originalValue)
-                implements AutoCloseable {
+                implements UncheckedCloseable {
 
             TemporarySystemProperty {
                 if (name == null) {

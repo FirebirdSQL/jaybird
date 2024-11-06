@@ -42,7 +42,7 @@ class SystemPropertyHelperTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = { "Test value", INITIAL_VALUE })
-    void withTemporarySystemProperty_propertyDidNotExist(String testValue) throws Exception {
+    void withTemporarySystemProperty_propertyDidNotExist(String testValue) {
         try (var ignored = SystemPropertyHelper.withTemporarySystemProperty(TEST_PROPERTY_NAME, testValue)) {
             assertEquals(testValue, System.getProperty(TEST_PROPERTY_NAME), "Unexpected value in try");
         }
@@ -52,7 +52,7 @@ class SystemPropertyHelperTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = { "Test value", INITIAL_VALUE })
-    void withTemporarySystemProperty_propertyExisted(String testValue) throws Exception{
+    void withTemporarySystemProperty_propertyExisted(String testValue) {
         System.setProperty(TEST_PROPERTY_NAME, INITIAL_VALUE);
         try (var ignored = SystemPropertyHelper.withTemporarySystemProperty(TEST_PROPERTY_NAME, testValue)) {
             assertEquals(testValue, System.getProperty(TEST_PROPERTY_NAME), "Unexpected value in try");

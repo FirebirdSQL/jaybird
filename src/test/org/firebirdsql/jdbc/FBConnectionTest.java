@@ -24,7 +24,6 @@ import org.firebirdsql.common.extension.DatabaseUserExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbDatabase;
@@ -35,6 +34,8 @@ import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,6 +54,7 @@ import java.util.concurrent.*;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.SystemPropertyHelper.withTemporarySystemProperty;
 import static org.firebirdsql.common.assertions.CustomAssertions.assertThrowsForAutoCloseable;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
@@ -64,6 +66,10 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.firebirdsql.gds.ISCConstants.fb_info_wire_crypt;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.ISCConstants.isc_net_read_err;
+import static org.firebirdsql.gds.JaybirdSystemProperties.DEFAULT_CONNECTION_ENCODING_PROPERTY;
+import static org.firebirdsql.gds.JaybirdSystemProperties.PROCESS_ID_PROP;
+import static org.firebirdsql.gds.JaybirdSystemProperties.PROCESS_NAME_PROP;
+import static org.firebirdsql.gds.JaybirdSystemProperties.REQUIRE_CONNECTION_ENCODING_PROPERTY;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -335,12 +341,7 @@ class FBConnectionTest {
      */
     @Test
     void testNoCharacterSetWithDefaultConnectionEncoding() throws Exception {
-        String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
-        assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
-                defaultConnectionEncoding, nullValue());
-
-        try {
-            System.setProperty("org.firebirdsql.jdbc.defaultConnectionEncoding", "WIN1252");
+        try (var ignored = withTemporarySystemProperty(DEFAULT_CONNECTION_ENCODING_PROPERTY, "WIN1252")){
             Properties props = getDefaultPropertiesForConnection();
             props.remove("lc_ctype");
             try (Connection con = DriverManager.getConnection(getUrl(), props)) {
@@ -350,8 +351,6 @@ class FBConnectionTest {
                         con.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
                 assertEquals("WIN1252", connectionProperties.getEncoding(), "Unexpected connection encoding");
             }
-        } finally {
-            System.clearProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
         }
     }
 
@@ -362,16 +361,12 @@ class FBConnectionTest {
      */
     @Test
     void testNoCharacterSetWithoutDefaultConnectionEncodingDefaultsToNONEIfEncodingNotRequired() throws Exception {
-        String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
-        assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
-                defaultConnectionEncoding, nullValue());
-        String requireConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.requireConnectionEncoding");
-        assumeThat("Test only works if org.firebirdsql.jdbc.requireConnectionEncoding has not been specified",
-                requireConnectionEncoding, nullValue());
         Properties props = getDefaultPropertiesForConnection();
         props.remove("lc_ctype");
 
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+        try (var ignored1 = withTemporarySystemProperty(REQUIRE_CONNECTION_ENCODING_PROPERTY, null);
+             var ignored2 = withTemporarySystemProperty(DEFAULT_CONNECTION_ENCODING_PROPERTY, null);
+             var connection = DriverManager.getConnection(getUrl(), props)) {
             // Previously, a warning was registered, verify that doesn't happen
             assertNull(connection.getWarnings(), "Expected no warning for not specifying connection character set");
             IConnectionProperties connectionProperties =
@@ -387,19 +382,14 @@ class FBConnectionTest {
      */
     @Test
     void testNoCharacterSetExceptionWithoutDefaultConnectionEncodingAndEncodingRequired() {
-        String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
-        assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
-                defaultConnectionEncoding, nullValue());
         Properties props = getDefaultPropertiesForConnection();
         props.remove("lc_ctype");
 
-        try {
-            System.setProperty("org.firebirdsql.jdbc.requireConnectionEncoding", "true");
+        try (var ignored1 = withTemporarySystemProperty(DEFAULT_CONNECTION_ENCODING_PROPERTY, null);
+             var ignored2 = withTemporarySystemProperty(REQUIRE_CONNECTION_ENCODING_PROPERTY, "true")){
             var exception = assertThrowsForAutoCloseable(SQLNonTransientConnectionException.class,
                     () -> DriverManager.getConnection(getUrl(), props));
             assertThat(exception, message(equalTo(FBManagedConnection.ERROR_NO_CHARSET)));
-        } finally {
-            System.clearProperty("org.firebirdsql.jdbc.requireConnectionEncoding");
         }
     }
 
@@ -513,14 +503,11 @@ class FBConnectionTest {
         props.setProperty(PropertyNames.processId, String.valueOf(processIdThroughConnection));
         final var processNameThroughSystemProp = "Process name in system property";
         final int processIdThroughSystemProp = 132;
-        System.setProperty(JaybirdSystemProperties.PROCESS_NAME_PROP, processNameThroughSystemProp);
-        System.setProperty(JaybirdSystemProperties.PROCESS_ID_PROP, String.valueOf(processIdThroughSystemProp));
 
-        try (var connection = DriverManager.getConnection(getUrl(), props)) {
+        try (var ignored1 = withTemporarySystemProperty(PROCESS_NAME_PROP, processNameThroughSystemProp);
+             var ignored2 = withTemporarySystemProperty(PROCESS_ID_PROP, String.valueOf(processIdThroughSystemProp));
+             var connection = DriverManager.getConnection(getUrl(), props)) {
             assertProcessNameAndId(connection, processNameThroughConnection, processIdThroughConnection);
-        } finally {
-            System.clearProperty("org.firebirdsql.jdbc.processName");
-            System.clearProperty("org.firebirdsql.jdbc.pid");
         }
     }
 
@@ -1015,15 +1002,17 @@ class FBConnectionTest {
     /**
      * Single-use executor, delays the command to be executed until signalled.
      */
+    @NullMarked
     private static final class DelayingExecutor implements Executor {
 
         private final CountDownLatch countDownLatch = new CountDownLatch(1);
-        private volatile Thread thread;
+        private volatile @Nullable Thread thread;
 
         @Override
         public void execute(Runnable command) {
+            Thread thread = this.thread;
             if (thread != null) throw new IllegalStateException("Can only be used once");
-            thread = new Thread(() -> {
+            thread = this.thread = new Thread(() -> {
                 try {
                     countDownLatch.await();
                     command.run();
@@ -1043,7 +1032,8 @@ class FBConnectionTest {
          */
         void proceedAndAwait() throws InterruptedException {
             proceed();
-            thread.join();
+            Thread thread = this.thread;
+            if (thread != null) thread.join();
         }
     }
 
