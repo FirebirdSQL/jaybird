@@ -76,9 +76,9 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
     private static final System.Logger log = System.getLogger(WireConnection.class.getName());
     private static final String REJECTION_POSSIBLE_REASON =
-            "The server and client could not agree on connection options. A possible reasons is attempting to connect "
-            + "to an unsupported Firebird version. See the documentation of connection property 'enableProtocol' for "
-            + "a possible workaround.";
+            "The server and client could not agree on connection options. A possible reason is attempting to connect "
+            + "to an unsupported Firebird version; see the documentation of connection property 'enableProtocol' for "
+            + "a workaround.";
     private static final WarningMessageCallback NOOP_WARNING_MESSAGE_CALLBACK = warning -> {};
 
     // Micro-optimization: we usually expect at most 3 (Firebird 5)

@@ -701,7 +701,7 @@ Connecting to unsupported Firebird versions with the pure Java protocol can resu
 
 There are two options to address this:
 
-. Specify connection property `enableProtocol` with a list of unsupported protocol versions to try in addition to the supported protocol versions, or `"{asterisk}"` to try all available protocol versions (e.g. `enableProtocol=12` or `enableProtocol={asterisk}`).
+. Specify connection property `enableProtocol` with a list of unsupported protocol versions to try in addition to the supported protocol versions, or `"{asterisk}"` to try all available protocol versions (e.g. `enableProtocol=12` to try protocol 12 (Firebird 2.5) or `enableProtocol={asterisk}` to try all unsupported protocols).
 . Use a native connection instead of a pure Java connection.
 
 [#error-occurred-during-login-please-check-server-firebird-log-for-details-335545106]
