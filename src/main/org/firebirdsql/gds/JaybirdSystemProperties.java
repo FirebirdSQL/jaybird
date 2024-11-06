@@ -40,6 +40,7 @@ public final class JaybirdSystemProperties {
     public static final String DEFAULT_CONNECTION_ENCODING_PROPERTY = JDBC_PREFIX + "defaultConnectionEncoding";
     public static final String REQUIRE_CONNECTION_ENCODING_PROPERTY = JDBC_PREFIX + "requireConnectionEncoding";
     public static final String DEFAULT_ENABLE_PROTOCOL = JDBC_PREFIX + "defaultEnableProtocol";
+    public static final String DEFAULT_REPORT_SQL_WARNINGS = JDBC_PREFIX + "defaultReportSQLWarnings";
     public static final String DATATYPE_CODER_CACHE_SIZE = COMMON_PREFIX + "datatypeCoderCacheSize";
     public static final String NATIVE_LIBRARY_SHUTDOWN_DISABLED = COMMON_PREFIX + "nativeResourceShutdownDisabled";
     public static final String WIRE_DEFLATE_BUFFER_SIZE = WIRE_PREFIX + "deflateBufferSize";
@@ -102,6 +103,10 @@ public final class JaybirdSystemProperties {
 
     public static String getDefaultEnableProtocol() {
         return getSystemPropertyPrivileged(DEFAULT_ENABLE_PROTOCOL);
+    }
+
+    public static String getDefaultReportSQLWarnings() {
+        return getSystemPropertyPrivileged(DEFAULT_REPORT_SQL_WARNINGS);
     }
 
     private static int getWithDefault(String propertyName, int defaultValue) {

@@ -486,6 +486,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setCreateDatabaseIfNotExist(createDatabaseIfNotExist);
     }
 
+    @Override
+    public String getReportSQLWarnings() {
+        return FirebirdConnectionProperties.super.getReportSQLWarnings();
+    }
+
+    @Override
+    public void setReportSQLWarnings(String reportSQLWarnings) {
+        FirebirdConnectionProperties.super.setReportSQLWarnings(reportSQLWarnings);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated(since = "5")
     @Override

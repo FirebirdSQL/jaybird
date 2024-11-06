@@ -26,7 +26,10 @@ package org.firebirdsql.jaybird.props;
 
 import org.firebirdsql.jdbc.FirebirdCallableStatement;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 /**
  * Properties for database connections.
@@ -234,19 +237,19 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     /**
      * Get whether ResultSets are holdable by default.
      *
-     * @return {@code true} ResultSets by default are {@link java.sql.ResultSet#HOLD_CURSORS_OVER_COMMIT},
-     * {@code false} (default), ResultSets are {@link java.sql.ResultSet#CLOSE_CURSORS_AT_COMMIT}
+     * @return {@code true} ResultSets by default are {@link ResultSet#HOLD_CURSORS_OVER_COMMIT},
+     * {@code false} (default), ResultSets are {@link ResultSet#CLOSE_CURSORS_AT_COMMIT}
      */
     default boolean isDefaultResultSetHoldable() {
         return getBooleanProperty(PropertyNames.defaultResultSetHoldable, PropertyConstants.DEFAULT_RESULT_SET_HOLDABLE);
     }
 
     /**
-     * Set if {@link java.sql.ResultSet} should be {@link java.sql.ResultSet#HOLD_CURSORS_OVER_COMMIT} by default.
+     * Set if {@link ResultSet} should be {@link ResultSet#HOLD_CURSORS_OVER_COMMIT} by default.
      *
      * @param defaultResultSetHoldable
-     *         {@code true} ResultSets are holdable, {@code false} (default) ResultSets are {@link
-     *         java.sql.ResultSet#CLOSE_CURSORS_AT_COMMIT}
+     *         {@code true} ResultSets are holdable, {@code false} (default) ResultSets are
+     *         {@link ResultSet#CLOSE_CURSORS_AT_COMMIT}
      */
     default void setDefaultResultSetHoldable(boolean defaultResultSetHoldable) {
         setBooleanProperty(PropertyNames.defaultResultSetHoldable, defaultResultSetHoldable);
@@ -409,7 +412,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * </p>
      * <p>
      * The resource bundle should contain a mapping between the transaction isolation level (name of the constant in
-     * the {@link java.sql.Connection} interface and a comma-separated list of TPB parameters).
+     * the {@link Connection} interface and a comma-separated list of TPB parameters).
      * </p>
      * <p>
      *
@@ -623,11 +626,11 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * executed.
      * <p>
      * Setting to {@code true} will enable Jaybird to execute <em>equivalent</em> operations through the JDBC API
-     * (specifically, {@link java.sql.Statement#execute(String)}, {@link java.sql.Statement#executeUpdate(String)},
-     * {@link java.sql.Statement#executeLargeUpdate(String)} and siblings, and statements prepared with
-     * {@link java.sql.Connection#prepareStatement(String)} and siblings. Using callable statements (e.g. using
-     * {@link java.sql.Connection#prepareCall(String)}), {@link java.sql.Statement#executeQuery(String)}, or batch
-     * execution is never supported.
+     * (specifically, {@link Statement#execute(String)}, {@link Statement#executeUpdate(String)},
+     * {@link Statement#executeLargeUpdate(String)} and siblings, and statements prepared with
+     * {@link Connection#prepareStatement(String)} and siblings. Using callable statements (e.g. using
+     * {@link Connection#prepareCall(String)}), {@link Statement#executeQuery(String)}, or batch execution is never
+     * supported.
      * </p>
      * <p>
      * The implementation is free to execute the provided statement text or use an equivalent operation that has
@@ -711,6 +714,41 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      */
     default void setCreateDatabaseIfNotExist(boolean createDatabaseIfNotExist) {
         setBooleanProperty(PropertyNames.createDatabaseIfNotExist, createDatabaseIfNotExist);
+    }
+
+    /**
+     * @return {@code ALL} (default) if {@link java.sql.SQLWarning} should be reported by {@link Connection},
+     * {@link Statement} and {@link ResultSet}, {@code NONE} if {@link java.sql.SQLWarning} should not be reported
+     * @see #setReportSQLWarnings(String)
+     * @since 6
+     */
+    default String getReportSQLWarnings() {
+        return getProperty(PropertyNames.reportSQLWarnings, PropertyConstants.DEFAULT_REPORT_SQL_WARNINGS);
+    }
+
+    /**
+     * Sets if {@link java.sql.SQLWarning} should be reported by {@link Connection#getWarnings()},
+     * {@link Statement#getWarnings()}, and {@link ResultSet#getWarnings()}.
+     * <p>
+     * Allowed values (case-insensitive):
+     * <ul>
+     * <li>ALL &mdash; (default) report all {@link java.sql.SQLWarning}</li>
+     * <li>NONE &mdash; report no {@link java.sql.SQLWarning}; this behaviour is not JDBC-compliant</li>
+     * </ul>
+     * </p>
+     * <p>
+     * The default value can be overridden by setting system property
+     * {@code org.firebirdsql.jdbc.defaultReportSQLWarnings}.
+     * </p>
+     *
+     * @param reportSQLWarnings
+     *         {@code ALL} (default) if {@link java.sql.SQLWarning} should be reported by {@link Connection},
+     *         {@link Statement} and {@link ResultSet}, {@code NONE} if {@link java.sql.SQLWarning} should not be
+     *         reported; setting {@code null} will use {@code ALL}
+     * @since 6
+     */
+    default void setReportSQLWarnings(String reportSQLWarnings) {
+        setProperty(PropertyNames.reportSQLWarnings, reportSQLWarnings);
     }
 
 }

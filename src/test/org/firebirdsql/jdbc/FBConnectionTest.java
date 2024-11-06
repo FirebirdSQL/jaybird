@@ -42,6 +42,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -49,6 +50,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.*;
 
@@ -996,6 +998,31 @@ class FBConnectionTest {
                 var exception = assertThrows(SQLException.class, stmt::execute);
                 assertThat(exception, errorCodeEquals(ISCConstants.isc_read_only_trans));
             }
+        }
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = { "ALL", "all" })
+    void reportSQLWarnings_ALL_or_default_reportsWarning(String reportSQLWarning) throws Exception {
+        Map<String, String> props =
+                reportSQLWarning != null ? Map.of(PropertyNames.reportSQLWarnings, reportSQLWarning) : Map.of();
+        try (FBConnection connection = (FBConnection) getConnectionViaDriverManager(props)) {
+            var warning = new SQLWarning("test");
+            connection.addWarning(warning);
+
+            assertSame(warning, connection.getWarnings(), "Expected warning to be reported");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "NONE", "none" })
+    void reportSQLWarnings_NONE_ignoresWarning(String reportSQLWarning) throws Exception {
+        try (FBConnection connection =
+                     (FBConnection) getConnectionViaDriverManager(PropertyNames.reportSQLWarnings, reportSQLWarning)) {
+            connection.addWarning(new SQLWarning("test"));
+
+            assertNull(connection.getWarnings(), "Expected warning to be ignored");
         }
     }
 

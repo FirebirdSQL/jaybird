@@ -86,6 +86,7 @@ public final class PropertyNames {
     public static final String allowTxStmts = "allowTxStmts";
     public static final String extendedMetadata = "extendedMetadata";
     public static final String createDatabaseIfNotExist = "createDatabaseIfNotExist";
+    public static final String reportSQLWarnings = "reportSQLWarnings";
 
     // service connection
     public static final String expectedDb = "expectedDb";

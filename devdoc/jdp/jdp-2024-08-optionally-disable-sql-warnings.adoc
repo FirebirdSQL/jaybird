@@ -2,8 +2,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 6
+* Published: 2024-11-06
+* Implemented in: Jaybird 6
 
 == Type
 
@@ -19,7 +19,7 @@ Our experience is that users don't like ``SQLWarning``s, especially if tools log
 == Decision
 
 Jaybird will add a connection property and a system property to disable reporting of all ``SQLWarning``s.
-The property will also be added to data sources as an explicit setter.
+The property will also be added to data sources as an explicit getter/setter pair.
 
 The connection property is called `reportSQLWarnings` with case-insensitive values:
 
@@ -27,13 +27,14 @@ The connection property is called `reportSQLWarnings` with case-insensitive valu
 `ALL`:: Report all ``SQLWarning``s (the default)
 `NONE`:: Report no ``SQLWarning``s
 
-Invalid values will behave as `ALL`.
+Invalid values set as a connection property will be rejected.
 `ALL` is the default because it is behaviour required by the JDBC Specification.
 
 The use of names instead of Boolean values leaves the option open to add a value `SERVER` to report server-generated warnings, but not driver-generated warnings.
 However, at this time we don't think that is needed (especially as Firebird has very few warnings to report).
 
 The system property is called `org.firebirdsql.jdbc.defaultReportSQLWarnings` with the same values.
+Invalid values set through the system property will be ignored.
 It will be dynamically checked when the connection configuration is created.
 
 The ignored warnings will not be logged.

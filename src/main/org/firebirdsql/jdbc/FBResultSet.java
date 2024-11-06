@@ -695,6 +695,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     /**
      * {@inheritDoc}
      * <p>
+     * If connection property {@code reportSQLWarnings} is set to {@code NONE} (case-insensitive), this method will
+     * not report warnings and always return {@code null}.
+     * </p>
+     * <p>
      * <b>NOTE:</b> The implementation currently always returns {@code null} as warnings are never recorded for result
      * sets.
      * </p>

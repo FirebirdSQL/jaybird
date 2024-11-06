@@ -326,6 +326,13 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
         return cursorName;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * If connection property {@code reportSQLWarnings} is set to {@code NONE} (case-insensitive), this method will
+     * not report warnings and always return {@code null}.
+     * </p>
+     */
     @Override
     public final @Nullable SQLWarning getWarnings() throws SQLException {
         checkValidity();
@@ -340,6 +347,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
 
     protected final void addWarning(SQLWarning warning) {
         try (var ignored = withLock()) {
+            if (connection.isIgnoreSQLWarnings()) return;
             SQLWarning currentWarning = this.warning;
             if (currentWarning == null) {
                 this.warning = warning;

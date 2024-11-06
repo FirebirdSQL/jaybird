@@ -666,6 +666,13 @@ public class FBConnection implements FirebirdConnection {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * If connection property {@code reportSQLWarnings} is set to {@code NONE} (case-insensitive), this method will
+     * not report warnings and always return {@code null}.
+     * </p>
+     */
     @Override
     public SQLWarning getWarnings() throws SQLException {
         try (LockCloseable ignored = withLock()) {
@@ -1085,6 +1092,7 @@ public class FBConnection implements FirebirdConnection {
 
     public void addWarning(SQLWarning warning) {
         try (LockCloseable ignored = withLock()) {
+            if (isIgnoreSQLWarnings()) return;
             // TODO: Find way so this method can be protected (or less visible) again.
             if (firstWarning == null)
                 firstWarning = warning;
@@ -1422,6 +1430,12 @@ public class FBConnection implements FirebirdConnection {
     boolean isExtendedMetadata() {
         DatabaseConnectionProperties props = connectionProperties();
         return props != null && props.isExtendedMetadata();
+    }
+
+    boolean isIgnoreSQLWarnings() {
+        DatabaseConnectionProperties props = connectionProperties();
+        return props != null
+               && PropertyConstants.REPORT_SQL_WARNINGS_NONE.equalsIgnoreCase(props.getReportSQLWarnings());
     }
 
 }

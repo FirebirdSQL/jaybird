@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
@@ -64,6 +65,11 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     public FbConnectionProperties() {
         setSessionTimeZone(defaultTimeZone());
         setSqlDialect(PropertyConstants.DEFAULT_DIALECT);
+        try {
+            setReportSQLWarnings(JaybirdSystemProperties.getDefaultReportSQLWarnings());
+        } catch (IllegalArgumentException ignored) {
+            // Incorrect value, ignore
+        }
     }
 
     // For internal use, to provide serialization support

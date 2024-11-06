@@ -114,6 +114,7 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder(allowTxStmts).type(BOOLEAN),
                 builder(extendedMetadata).type(BOOLEAN),
                 builder(createDatabaseIfNotExist).type(BOOLEAN),
+                builder(reportSQLWarnings).choices(REPORT_SQL_WARNINGS_ALL, REPORT_SQL_WARNINGS_NONE),
 
                 // TODO Consider removing this property, otherwise formally add it to PropertyNames
                 builder("filename_charset"),

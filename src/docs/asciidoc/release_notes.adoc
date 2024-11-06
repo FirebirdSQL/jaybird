@@ -1133,6 +1133,9 @@ If the JSpecify JAR is not included on the classpath or modulepath, Jaybird will
 +
 This affects the return value of the methods `supportsResultSetType(int)`, `supportsResultSetConcurrency(int, int)`, `ownUpdatesAreVisible(int)`, `ownDeletesAreVisible(int)`, `ownInsertsAreVisible(int)`.
 * Improvement: `setObject`/`updateObject` methods on `PreparedStatement`, `CallableStatement` and `ResultSet` with the `int scaleOrLength` parameter will now redirect to variants accepting a length of `set/updateBinaryStream` for `InputStream` and `set/updateCharacterStream` for `Reader` (https://github.com/FirebirdSQL/jaybird/issues/822[#822])
+* New feature: Reporting of ``SQLWarning``s can be disabled with connection property `reportSQLWarnings` (supported case-insensitive values: `ALL` (default), `NONE`) (https://github.com/FirebirdSQL/jaybird/issues/825[#825])
++
+The default can also be configured globally using system property `org.firebirdsql.jdbc.defaultReportSQLWarnings`.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import java.sql.*;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.firebirdsql.common.DdlHelper.*;
@@ -1174,6 +1176,32 @@ class FBStatementTest {
             assertThrows(SQLException.class, () -> stmt.executeQuery("select * from RAISE_EXCEPTION_RS(null)"));
             assertFalse(con.getLocalTransaction().inTransaction(),
                     "expected no active transaction after exception in auto-commit");
+        }
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = { "ALL", "all" })
+    void reportSQLWarnings_ALL_or_default_reportsWarning(String reportSQLWarning) throws Exception {
+        Map<String, String> props =
+                reportSQLWarning != null ? Map.of(PropertyNames.reportSQLWarnings, reportSQLWarning) : Map.of();
+        try (var connection = getConnectionViaDriverManager(props);
+             FBStatement statement = (FBStatement) connection.createStatement()) {
+            var warning = new SQLWarning("test");
+            statement.addWarning(warning);
+
+            assertSame(warning, statement.getWarnings(), "Expected warning to be reported");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "NONE", "none" })
+    void reportSQLWarnings_NONE_ignoresWarning(String reportSQLWarning) throws Exception {
+        try (var connection = getConnectionViaDriverManager(PropertyNames.reportSQLWarnings, reportSQLWarning);
+             FBStatement statement = (FBStatement) connection.createStatement()) {
+            statement.addWarning(new SQLWarning("test"));
+
+            assertNull(statement.getWarnings(), "Expected warning to be ignored");
         }
     }
 

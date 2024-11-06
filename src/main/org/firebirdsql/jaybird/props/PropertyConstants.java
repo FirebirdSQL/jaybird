@@ -68,6 +68,10 @@ public final class PropertyConstants {
     public static final String SCROLLABLE_CURSOR_SERVER = "SERVER";
     public static final String DEFAULT_SCROLLABLE_CURSOR = SCROLLABLE_CURSOR_EMULATED;
 
+    public static final String REPORT_SQL_WARNINGS_ALL = "ALL";
+    public static final String REPORT_SQL_WARNINGS_NONE = "NONE";
+    public static final String DEFAULT_REPORT_SQL_WARNINGS = REPORT_SQL_WARNINGS_ALL;
+
     public static final int TIMEOUT_NOT_SET = -1;
     public static final int BUFFER_SIZE_NOT_SET = -1;
     static final int PARALLEL_WORKERS_NOT_SET = -1;
