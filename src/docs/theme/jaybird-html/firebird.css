@@ -438,3 +438,6 @@ div#preheader table{border:none}
     #footer{background:none}
     #footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
+/* Additional Firebird customizations */
+.hdlist.compact p{margin-bottom:0}
+.hdlist td.hdlist1,.hdlist td.hdlist2{padding-bottom:0}
