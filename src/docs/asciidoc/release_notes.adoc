@@ -21,7 +21,7 @@ ifeval::["{version_tag}" != ""]
 Jaybird {version_wo_target} is still in development, and intended for testing and evaluation purposes.
 We do not recommend this version for use in production environments.
 
-If you come across any issues when using this version, please report them on {issues}.
+If you come across any issues when using this version, please report them on {issues}[^].
 ====
 endif::[]
 
@@ -109,12 +109,13 @@ If you're using Jaybird with the native or embedded connections, you will need t
 See also <<upgrading-from-jaybird-5-to-jaybird-6>>.
 
 Bug reports about undocumented changes in behavior are appreciated.
-Feedback can be sent to the {firebird-java}[Firebird-java mailing list] or reported on the issue tracker {issues}.
+Feedback can be sent to the {firebird-java}[Firebird-java mailing list] or reported on the issue tracker {issues}[^].
 
 [#supported-firebird-versions]
 === Supported Firebird versions
 
 Jaybird {version_wo_target} was tested against Firebird 3.0.12, Firebird 4.0.5, Firebird 5.0.1 and a recent snapshot of Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
+Firebird 2.5 and older are not supported.
 
 Jaybird 6 will -- by default -- not connect to Firebird 2.5 or older.
 See also <<unsupported-protocol>>.
@@ -326,7 +327,9 @@ If you manage your dependencies manually, you need to do the following:
 ** `jaybird-5.0.x.<java>.jar` with `jaybird-{version_example}.jar`
 . If you use the NATIVE or EMBEDDED protocols, add the following JARs to the classpath or modulepath
 ** `jaybird-native-{version_example}.jar`
-** `jna-jpms-{jna-version}.jar` (if you have an older version of JNA or a `jna-{jna-version}` instead of `jna-jpms-{jna-version}`, make sure to remove and replace it with `jna-jpms`)
+** `jna-jpms-{jna-version}.jar` from the `lib` directory of the distribution zip
++
+If you have an older version of JNA or a `jna-{jna-version}` instead of `jna-jpms-{jna-version}`, make sure to remove and replace it with `jna-jpms`.
 . To enable "`ChaCha64`" wire encryption support add the following JARs to the classpath or modulepath
 ** `chacha64-plugin-{version_example}.jar`
 ** `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip
@@ -334,14 +337,14 @@ If you manage your dependencies manually, you need to do the following:
 [#gotchas]
 === Gotcha's
 
-If you find a problem while upgrading, or other bugs, please report it on {issues}.
+If you find a problem while upgrading, or other bugs, please report it on {issues}[^].
 
 For known issues, consult <<known-issues>>.
 
 [#whats-new-in-jaybird-6]
 == What's new in Jaybird 6
 
-For a full list of changes, see https://github.com/FirebirdSQL/jaybird/issues?q=label%3A%22fix-version%3A+Jaybird+6%22[Firebird tracker for Jaybird 6].
+For a full list of changes, see https://github.com/FirebirdSQL/jaybird/milestone/1?closed=1[Milestone "`v6-initial`"].
 
 [#jaybird-version-numbering]
 === Changes in version numbering
@@ -351,7 +354,7 @@ Our expectation is that Java version specific artifacts are no longer needed.
 As a consequence, the Java version has been dropped from the version number.
 The full version and naming convention is documented in https://github.com/FirebirdSQL/jaybird/blob/v5.0.0-beta-1/devdoc/jdp/jdp-2023-01-version-number-and-naming-scheme.md[jdp-2023-01: Version Number and Naming Scheme^]
 
-As a result of these new naming conventions, the following has been changed:
+As a result of these new naming conventions, the following has changed:
 
 * Maven version: `6.0.0` (was `5.0.0.java8`)
 * Distribution zip: `jaybird-6.0.0.zip` (was `jaybird-5.0.0.java8.zip`)
@@ -359,7 +362,7 @@ As a result of these new naming conventions, the following has been changed:
 * Jaybird sources: `jaybird-6.0.0-sources.jar` (was `jaybird-5.0.0.java8-sources.jar`)
 * Jaybird javadoc: `jaybird-6.0.0-javadoc.jar` (was `jaybird-5.0.0.java8-javadoc.jar`)
 
-Furthermore, the client name reported to Firebird 2.5 and higher has been changed from `Jaybird jaybird-5.0.0.java8` to `Jaybird jaybird-6.0.0`.
+Furthermore, the client name reported to Firebird is now `Jaybird jaybird-6.0.0` (was: `Jaybird jaybird-5.0.0.java8`).
 
 [#java-support]
 === Java support
@@ -391,7 +394,7 @@ Jaybird 6 will -- by default -- not connect to unsupported versions (that is, Fi
 See also <<unsupported-protocol>>.
 
 [#unsupported-protocol]
-=== Pure Java will not connect to unsupported Firebird version by default
+=== Pure Java will not connect to unsupported Firebird versions by default
 
 The pure Java protocol will by default no longer try the wire protocol versions of unsupported Firebird versions.
 This means that -- by default -- only protocol version 13 (Firebird 3.0) -- 18 (Firebird 5.0) are tried.
@@ -417,7 +420,7 @@ if you use `DriverManager` -- this can include third-party data sources, it uses
 
 [WARNING]
 ====
-Given these protocol versions and their Firebird version are not supported, there is no guarantee that the driver will function correctly when an unsupported protocol is enabled.
+Given these protocol versions and their Firebird versions are not supported, there is no guarantee that the driver will function correctly when an unsupported protocol is enabled.
 Especially things like database metadata could use features that are not supported by older Firebird versions.
 We recommend upgrading your Firebird version, or downgrading to a Jaybird version which still supports your Firebird version.
 
@@ -487,7 +490,7 @@ ChaCha64 wire encryption implementation (`chacha64-plugin-{version_example}.jar`
 native and embedded protocol implementation using JNA (`jaybird-native-{version_example}.jar`)
 
 We've tried to be liberal with exporting packages from Jaybird, but we have decided not to export some packages because we think they shouldn't normally be accessed by users of Jaybird.
-If you run into problems with packages not being exported, please report this on {firebird-java}[firebird-java^] or on {issues}[GitHub^].
+If you run into problems with packages not being exported, please report this on {firebird-java}[firebird-java^] or on {issues}[^].
 Please include an explanation why you need to access a specific package.
 As a workaround, you can also add exports yourself with the `--add-exports` commandline option of `java` and `javac` and the `Add-Exports` manifest entry of your application (similar options exist for _opens_).
 
@@ -514,7 +517,7 @@ The Boolean connection property `createDatabaseIfNotExist` instructs Jaybird to 
 This property can be used in the JDBC URL, in the `Properties` object passed to `DriverManager`, and can be set on data sources.
 
 Although Jaybird already allowed you to create databases using `org.firebirdsql.management.FBManager`, this is not always accessible, for example in tools or libraries that only expose or use the JDBC API.
-This new property provides an alternative to create databases.
+This new property provides an alternative way to create databases.
 
 Jaybird allows you to set or override connection properties specifically for creating the database by suffixing the property name with `@create` (case-sensitive).
 This can be used to set configuration properties that are only relevant for creating the database, or -- for example -- to use a different user or role for creating the database than used for normal connections.
@@ -634,7 +637,7 @@ See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-
 [#async-fetch]
 === Asynchronous fetching
 
-For pure Java connections, forward-only result sets now perform asynchronous fetches.
+For pure Java connections, non-holdable forward-only result sets now perform asynchronous fetches.
 Asynchronous fetches are implemented for protocol implementation version 11 and higher (i.e. Firebird 2.1 or higher), but are formally only supported for protocol version 13 and higher (i.e. Firebird 3.0 or higher).
 
 In normal usage of a result set, the first fetch will be a normal synchronous fetch.
@@ -668,7 +671,7 @@ Native connections do not support this type of asynchronous fetching, but `fbcli
 [#blob-performance-read]
 ==== Reading blobs
 
-Performance of reading blobs has been improved, especially when using `getBytes`, `getBytes` on `ResultSet` or `Blob`, or `getString` on `ResultSet` or `Clob`, or reading from a blob input stream with `read(byte[], int, int)` and similar methods with a byte array and requested length greater than 50% of the configured `blobBufferSize`.
+Performance of reading blobs has been improved, especially when using `getBytes` on `ResultSet` or `Blob`, or `getString` on `ResultSet` or `Clob`, or reading from a blob input stream with `read(byte[], int, int)` and similar methods with a byte array and requested length greater than 50% of the configured `blobBufferSize`.
 
 Testing on a local network (Wi-Fi) shows an increase in throughput of roughly 50-100% for reading large blobs with the default `blobBufferSize` of 16384.
 
@@ -680,7 +683,7 @@ We were able to realise some other optimizations (in both pure Java and JNA), by
 [#blob-performance-write]
 ==== Writing blobs
 
-Performance of writing blobs was improved, especially when using `setBytes`, `setBytes` on `PreparedStatement`, `ResultSet` or `Blob`, or `setString` on `PreparedStatement`, `ResultSet` or `Clob`, or writing to a blob output stream with `write(byte[], int, int)` and similar methods with a byte array larger than the configured `blobBufferSize`.
+Performance of writing blobs was improved, especially when using `setBytes` on `PreparedStatement`, `ResultSet` or `Blob`, or `setString` on `PreparedStatement`, `ResultSet` or `Clob`, or writing to a blob output stream with `write(byte[], int, int)` and similar methods with a byte array larger than the configured `blobBufferSize`.
 A smaller improvement was made when using arrays larger than 50% of the `blobBufferSize`.
 
 Testing on a local network (Wi-Fi) shows an increase in throughput of roughly 300-400% for writing large blobs with the default `blobBufferSize` of 16384.
@@ -743,7 +746,8 @@ This contradiction has been removed, and the implementations will now send array
 In Jaybird 5 and earlier, it was not possible to execute the transaction management statements `COMMIT`, `ROLLBACK` (without `RETAIN` or a savepoint) and `SET TRANSACTION`.
 For `COMMIT` and `ROLLBACK` it would seem to work, but subsequent use of the connection would then break because the connection assumed it still had an active transaction.
 
-Formally, the JDBC specification says -- paraphrased -- that if something can be done through the JDBC API, that those API methods should be used, and not using equivalent statements.
+Formally, the JDBC specification says -- paraphrased -- that if something can be done through the JDBC API, that those API methods should be used;
+you should not use equivalent statements.
 However, from a perspective of flexibility, and for example for executing scripts, it can be useful to be able to execute those statements.
 
 Jaybird now optionally allows you to execute `COMMIT [WORK]`, `ROLLBACK [WORK]` and `SET TRANSACTION [...]`.
@@ -762,12 +766,12 @@ Only use this solution for scripts, or in case it is cumbersome or not possible 
 In the implementation, the use of `COMMIT` and `ROLLBACK` will not be executed as statements on the server, but instead call `Connection.commit()` and `Connection.rollback()`.
 The `SET TRANSACTION` statement -- if allowed -- is executed with execute immediate, and not through a statement handle.
 
-Enabling this feature can also make it easier to use the table reservation feature, compared to `FirebirdConnection.setTransactionParameters(TransactionParameterBuffer)` or `FirebirdConnection.setTransactionParameters(int, TransactionParameterBuffer)`, which requires access to the Jaybird API interfaces.
-
 [NOTE]
 ====
 Contrary to its name, and the SQL standard behaviour, Firebird's `SET TRANSACTION` immediately *starts* a transaction.
 ====
+
+Enabling this feature can also make it easier to use the table reservation feature, compared to `FirebirdConnection.setTransactionParameters(TransactionParameterBuffer)` or `FirebirdConnection.setTransactionParameters(int, TransactionParameterBuffer)`, which requires access to the Jaybird API interfaces.
 
 This feature has the following limitations:
 
@@ -1098,6 +1102,8 @@ The modified implementation returns an empty array, but given this is unspecifie
 This change was also backported to Jaybird 4.0.10 and Jaybird 5.0.3.
 * `FBResultSetNotUpdatableException` now extends `SQLNonTransientException` instead of `FBSQLException`.
 * Jaybird no longer throws any instances of `FBSQLException`.
++
+`FBSQLException` has been deprecated for removal in Jaybird 7.
 * Fixed: FBRowUpdater incorrectly considers result set with only partial PK updatable (https://github.com/FirebirdSQL/jaybird/issues/780[#780])
 +
 This change also improves performance of `updateRow()`, `insertRow()`, `deleteRow()` and `refreshRow()`.
@@ -1111,7 +1117,7 @@ If the best row identifier was not matched, but the result set contains `RDB$DB_
 However, if the table in question has a primary key, and the columns missing from the result set are not generated, this may still fail when calling `ResultSet.insertRow()`.
 * The user manager API (`UserManager`/`FBUserManager` and `User`/`FBUser` in package `org.firebirdsql.management`) has been deprecated (https://github.com/FirebirdSQL/jaybird/issues/782[#782])
 +
-We do not plan to remove this API at this time, but we recommend that you switch to using the SQL user management statements.
+We do not plan to remove this API at this time, but we recommend that you switch to using the https://www.firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-security-user.html#fblangref50-security-user[SQL user management statements].
 * Fixed: Use of offset timezone names (e.g. `+05:00`) for `sessionTimeZone` would result in a warning being logged, and an incorrect conversion applied (in UTC instead of the offset) when using the legacy time types (https://github.com/FirebirdSQL/jaybird/issues/786[#786])
 +
 This change was also backported to Jaybird 5.0.4.
@@ -1153,7 +1159,7 @@ Where possible, use the standard JDBC interfaces.
 If you need access to Firebird-specifics, unwrap or cast to the `org.firebirdsql.jdbc.FirebirdXXX` interfaces.
 Only cast to or otherwise access the concrete classes of `org.firebirdsql.jdbc` if you really have to, and keep in mind that their API -- if not defined in `java.sql` or `FirebirdXXX` interfaces -- may change in point releases.
 +
-If you have a clear use-case that currently requires access to the concrete implementation classes, and you think it should be possible through a public API, please let us know on {firebird-java}[firebird-java] or the {issues}[issue tracker].
+If you have a clear use-case that currently requires access to the concrete implementation classes, and you think it should be possible through a public API, please let us know on {firebird-java}[firebird-java] or the {issues}[^].
 * Improvement: moved methods `getExecutionPlan()` and `getExplainedExcutionPlan()` from `FirebirdPreparedStatement` to `FirebirdStatement`, and clarified behaviour.
 +
 We also fixed a potential `NullPointerException` in the implementation of these methods in `PreparedStatement` and `CallableStatement`.
@@ -1167,7 +1173,7 @@ We are working on adding nullability information where applicable, but right now
 The addition of these annotations is intended for making it easier for us to reason about the implementation, and get static analysis warnings about possible programming errors.
 Hopefully it will -- in time -- provide some benefits for users of Jaybird's extension interfaces and "`internal`" APIs.
 +
-If a type is not annotated, consider it nullable unless stated otherwise in the API documentation.
+If a type or its containing package is not annotated, consider return values and parameters of its methods nullable unless stated otherwise in the API documentation.
 +
 In practice, this is an optional dependency, but Maven will pull it in by default, as that is recommended by JSpecify.
 If the JSpecify JAR is not included on the classpath or modulepath, Jaybird will still work.
@@ -1177,7 +1183,7 @@ This affects the return value of the methods `supportsResultSetType(int)`, `supp
 * Improvement: `setObject`/`updateObject` methods on `PreparedStatement`, `CallableStatement` and `ResultSet` with the `int scaleOrLength` parameter will now redirect to variants accepting a length of `set/updateBinaryStream` for `InputStream` and `set/updateCharacterStream` for `Reader` (https://github.com/FirebirdSQL/jaybird/issues/822[#822])
 * New feature: Reporting of ``SQLWarning``s can be disabled with connection property `reportSQLWarnings` (supported case-insensitive values: `ALL` (default), `NONE`) (https://github.com/FirebirdSQL/jaybird/issues/825[#825])
 +
-The default can also be configured globally using system property `org.firebirdsql.jdbc.defaultReportSQLWarnings`.
+The default can be overridden globally using system property `org.firebirdsql.jdbc.defaultReportSQLWarnings`.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes
@@ -1196,7 +1202,7 @@ See <<removal-of-deprecated-classes-packages-and-methods,Removal of deprecated c
 
 Jaybird 6 introduces some changes in compatibility and announces future breaking changes.
 
-*The list might not be complete, if you notice a difference in behavior that is not listed, please {issues}[report it as bug].*
+*The list might not be complete, if you notice a difference in behavior that is not listed, please {issues}[report it as bug^].*
 It might have been a change we forgot to document, but it could just as well be an implementation bug.
 
 [#support-for-firebird-25-dropped]
@@ -1207,7 +1213,7 @@ Jaybird 6 has dropped support for Firebird 2.5 (see also https://github.com/Fire
 By default, Jaybird 6 will only connect to Firebird 3.0 and higher.
 See also <<unsupported-protocols-disabled>>.
 
-If the version 12 protocol (for Firebird 2.5) is explicitly enabled, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer Firebird versions.
+If the version 12 protocol (Firebird 2.5) is explicitly enabled, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer Firebird versions.
 
 [#unsupported-protocols-disabled]
 === Unsupported protocol version disabled by default
@@ -1215,6 +1221,8 @@ If the version 12 protocol (for Firebird 2.5) is explicitly enabled, we expect t
 The wire protocol versions for Firebird 2.5 and earlier are disabled by default to disallow connection for the pure Java protocol.
 Attempts to connect to Firebird 2.5 or earlier will result in error "`__connection rejected by remote interface__`" (`335544421` or `isc_connect_reject`).
 You can use connection property `enableProtocol=*` or -- for example -- `enableProtocol=10,11,12` to re-enable these protocols, or use the native protocol to connect instead.
+
+As these protocols are not supported, it is possible things will break, especially for metadata -- e.g. `DatabaseMetaData` if we use features introduced in newer Firebird versions.
 
 See also <<unsupported-protocol>>.
 
@@ -1798,7 +1806,7 @@ Possible effects include:
 
 * If a close/cleanup is performed by the `Cleaner`, listeners will not get notified.
 Given it is unlikely there will not be strong reference to an object if something is still interested in its listener events, we think this is acceptable.
-* The closing of a pure Java connection is now simply a socket close handled by the cleanup action of the socket itself.
+* The closing of a pure Java connection which was not explicitly closed is now simply a socket close handled by the cleanup action of the socket itself.
 Server-side this may result in delayed cleanup of a connection and its resources, and occurrences of "`connection reset by peer`" (e.g. error 10054 on Windows, error 104 on Linux).
 If you see an increase of these errors, we recommend you hunt for connection leaks in your application.
 
@@ -1817,11 +1825,6 @@ With Jaybird 7 the following breaking changes will be introduced.
 
 [#removal-of-deprecated-classes-packages-and-methods-7]
 ==== Removal of deprecated classes, packages and methods
-
-[WARNING]
-====
-Some deprecations currently listed for removal -- especially of internal API -- may be removed without deprecation later during Jaybird 6 development.
-====
 
 [#removal-of-deprecated-methods-7]
 ===== Removal of deprecated methods
