@@ -185,9 +185,10 @@ Jaybird {version_wo_target} is available on the Sonatype snapshot repository.
 NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://oss.sonatype.org/content/repositories/snapshots
 endif::[]
 
-groupId: `org.firebirdsql.jdbc`, +
-artifactId: `jaybird`, +
-version: `{version_example}`
+[horizontal.compact]
+groupId:: `org.firebirdsql.jdbc`
+artifactId:: `jaybird`
+version:: `{version_example}`
 
 For example:
 
