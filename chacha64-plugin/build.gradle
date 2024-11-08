@@ -52,6 +52,17 @@ javadoc {
     options.addBooleanOption('Xdoclint:none', true)
 }
 
+parent.tasks.named('dist', Zip) {
+    from jar.outputs
+    from javadocJar.outputs
+    from sourcesJar.outputs
+    from(configurations.runtimeClasspath) {
+        exclude 'jaybird-*'
+        exclude 'jspecify-*'
+        into 'lib'
+    }
+}
+
 publishing {
     publications {
         // chacha-64 maven artifact

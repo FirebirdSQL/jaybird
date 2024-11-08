@@ -185,4 +185,5 @@ allprojects {
 signing {
     required { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
     sign publishing.publications.jaybird
+    sign dist
 }

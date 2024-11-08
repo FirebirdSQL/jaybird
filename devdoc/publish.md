@@ -4,12 +4,13 @@ Publishing
 To publish to Maven use
 
 ```
-gradlew clean publish -PcredentialsPassphrase=<credentials password>
+gradlew clean assemble publish -PcredentialsPassphrase=<credentials password>
 ```
-
 Where `<credentials password>` is the password used to add the credentials (see
 also below).
 
+The `assemble` task is not strictly necessary, but will also generate the `dist`
+zip and sign it.
 
 Publishing to Maven Central (non-SNAPSHOT releases) requires an explicit close 
 and release through <https://oss.sonatype.org/>.

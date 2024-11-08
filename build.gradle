@@ -120,7 +120,7 @@ tasks.named('asciidoctor', AsciidoctorTask).configure {
 }
 
 tasks.register('dist', Zip) {
-    dependsOn assemble, asciidoctor
+    //dependsOn jar, javadocJar, sourcesJar, asciidoctor
     destinationDirectory = layout.buildDirectory.dir('dist')
 
     from jar.outputs
@@ -143,22 +143,7 @@ tasks.register('dist', Zip) {
     from(configurations.runtimeClasspath) {
         into 'lib'
     }
-    def chacha64 = project('chacha64-plugin')
-    from chacha64.jar.outputs
-    from chacha64.javadocJar.outputs
-    from chacha64.sourcesJar.outputs
-    from(chacha64.configurations.runtimeClasspath) {
-        exclude 'jaybird-*'
-        into 'lib'
-    }
-    def jaybirdNative = project('jaybird-native')
-    from jaybirdNative.jar.outputs
-    from jaybirdNative.javadocJar.outputs
-    from jaybirdNative.sourcesJar.outputs
-    from(jaybirdNative.configurations.runtimeClasspath) {
-        exclude 'jaybird-*'
-        into 'lib'
-    }
+    // NOTE: Inclusion of files from sub-projects is handled in their respective build.gradle files
 }
 
 jar {
