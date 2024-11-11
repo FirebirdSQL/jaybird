@@ -669,6 +669,8 @@ class FBConnectionTest {
                 fbMessageStartsWith(JaybirdErrorCodes.jb_invalidConnectionPropertyValue, "NOT_A_VALID_VALUE", "wireCrypt")));
     }
 
+    /* When testing NATIVE, this test may fail if fbclient doesn't have the ChaCha plugin, e.g. when using fbclient
+       installed in %windir%\System32 instead of the Firebird installation directory. */
     @Test
     void expectedWireCryptPluginApplied() throws Exception {
         assumeThat("Test doesn't work with embedded", GDS_TYPE, not(isEmbeddedType()));
