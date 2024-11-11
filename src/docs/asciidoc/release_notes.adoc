@@ -726,7 +726,7 @@ In general, setting the `blobBufferSize` larger than 65535 bytes will likely not
 [#blob-put-segment-limit]
 ==== Internal API changes for `FbBlob`
 
-Two new methods were added to `FbBlob`:
+Three new methods were added to `FbBlob`:
 
 `int get(byte[] b, int off, int len)`::
 populates the array `b`, starting at `off`, for the requested `len` bytes from the blob, and returns the actual number of bytes read.
