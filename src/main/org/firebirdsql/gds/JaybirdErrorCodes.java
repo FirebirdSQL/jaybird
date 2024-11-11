@@ -120,7 +120,7 @@ public interface JaybirdErrorCodes {
     int jb_setTransactionNotAllowedInAutoCommit          = 337248316;
     int jb_setTransactionNotAllowedActiveTx              = 337248317;
     /**
-     * @deprecated Jaybird does not use this error code; retained for potential future use
+     * @deprecated Jaybird no longer uses this error code
      */
     @Deprecated(since = "6")
     int jb_statementNotAssociatedWithConnection          = 337248318;
