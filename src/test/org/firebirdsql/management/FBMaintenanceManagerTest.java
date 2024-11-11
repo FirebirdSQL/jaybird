@@ -551,6 +551,7 @@ class FBMaintenanceManagerTest {
     @Test
     void testUpgradeOds_machineSpecific(@TempDir Path tempDir) throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsUpgradeOds(), "test requires upgrade ODS support");
+        assumeTrue(getDefaultSupportInfo().supportsOds(13, 0), "Test requires ODS 13.0 support (DB to be upgraded)");
         assumeTrue(EnvironmentRequirement.DB_LOCAL_FS.isMet(), "Requires DB on local file system");
         // In the future, this may need to declare an upper version limit, or select DB based on the actual version
         Path fb4DbPath;

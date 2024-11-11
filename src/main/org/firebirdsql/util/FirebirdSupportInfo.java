@@ -730,8 +730,7 @@ public final class FirebirdSupportInfo {
             case 3 -> OdsVersion.of(12, 0);
             case 4 -> OdsVersion.of(13, 0);
             case 5 -> OdsVersion.of(13, 1);
-            // Might change before final release?
-            case 6 -> OdsVersion.of(13, 2);
+            case 6 -> OdsVersion.of(14, 0);
             default -> throw new IllegalArgumentException("Unsupported version: " + serverVersion);
         };
     }
@@ -757,12 +756,11 @@ public final class FirebirdSupportInfo {
             };
             case 12 -> isVersionEqualOrAbove(3) && isVersionBelow(4);
             case 13 -> switch (minor) {
-                case 0 -> isVersionEqualOrAbove(4) && isVersionBelow(7);
-                case 1 -> isVersionEqualOrAbove(5) && isVersionBelow(7);
-                // TODO Might change before release of Firebird 6
-                case 2 -> isVersionEqualOrAbove(6) && isVersionBelow(7);
+                case 0 -> isVersionEqualOrAbove(4) && isVersionBelow(6);
+                case 1 -> isVersionEqualOrAbove(5) && isVersionBelow(6);
                 default -> false;
             };
+            case 14 -> isVersionEqualOrAbove(6) && isVersionBelow(7);
             default -> false;
         };
     }
