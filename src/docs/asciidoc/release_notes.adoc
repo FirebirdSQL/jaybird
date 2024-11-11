@@ -229,7 +229,7 @@ To enable the "`ChaCha64`" wire encryption support for pure Java connections, al
 ----
 
 [#gradle]
-=== Gradle
+==== Gradle
 
 See also <<maven>>.
 
