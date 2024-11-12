@@ -161,8 +161,7 @@ tasks.named('asciidoctor', AsciidoctorTask).configure {
     }
 }
 
-task dist(type: Zip) {
-    dependsOn assemble, asciidoctor
+tasks.register('dist', Zip) {
     destinationDirectory = layout.buildDirectory.dir("dist")
 
     from jar.outputs
