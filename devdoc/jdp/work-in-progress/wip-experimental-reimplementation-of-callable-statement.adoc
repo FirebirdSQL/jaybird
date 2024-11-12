@@ -3,7 +3,7 @@
 == Status
 
 * Draft
-* Proposed for: Jaybird 6 or 7
+* Proposed for: Jaybird 7
 
 == Type
 
