@@ -1385,25 +1385,12 @@ For more information, see <<scroll-rs-update-behavior>>.
 
 // TODO Document compatibility issues
 
-[#removal-of-classes-packages-and-methods-without-deprecation]
-=== Removal of classes, packages and methods without deprecation
-
-Below list of removals may look daunting, but if you use Jaybird only as a JDBC driver, through the JDBC API, you're likely unaffected.
-Although we list them as removed without deprecation, some were marked as deprecated retroactively in Jaybird 5.0.3 or later.
-
-This section does not include all changes to packages or classes considered internal API.
-
-[#removal-of-packages-without-deprecation]
-==== Removal of packages without deprecation
-
-The following packages have been removed in Jaybird 6 without deprecation:
-
-* `org.firebirdsql.logging`;
-there is no replacement
+[#compat-modular]
+=== Some packages not accessible when Jaybird is on the modulepath
 
 Due to modularization, the following packages are no longer accessible when Jaybird is used from the modulepath:
 
-===== `jaybird` dependency
+==== `jaybird` dependency
 
 * `org.firebirdsql.gds.ng.dbcrypt.simple`
 * `org.firebirdsql.gds.ng.tz`
@@ -1419,12 +1406,28 @@ Due to modularization, the following packages are no longer accessible when Jayb
 * `org.firebirdsql.jdbc.escape`
 * `org.firebirdsql.jdbc.meta`
 
-===== `jaybird-native` dependency
+==== `jaybird-native` dependency
 
 * `org.firebirdsql.gds.impl.jni`
 * `org.firebirdsql.gds.ng.jna`
 * `org.firebirdsql.jna.embedded`
 * `org.firebirdsql.jna.fbclient`
+
+[#removal-of-classes-packages-and-methods-without-deprecation]
+=== Removal of classes, packages and methods without deprecation
+
+Below list of removals may look daunting, but if you use Jaybird only as a JDBC driver, through the JDBC API, you're likely unaffected.
+Although we list them as removed without deprecation, some were marked as deprecated retroactively in Jaybird 5.0.3 or later.
+
+This section does not include all changes to packages or classes considered internal API.
+
+[#removal-of-packages-without-deprecation]
+==== Removal of packages without deprecation
+
+The following packages have been removed in Jaybird 6 without deprecation:
+
+* `org.firebirdsql.logging`;
+there is no replacement
 
 [#removal-of-methods-without-deprecation]
 ==== Removal of methods without deprecation
