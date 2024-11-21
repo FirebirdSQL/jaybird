@@ -1,5 +1,5 @@
 /**
- * Low-level field (i.e. column or parameter) and row descriptors, and row values.
+ * Low-level field (column or parameter) descriptors, row descriptors, and row values.
  *
  * @since 3
  */
