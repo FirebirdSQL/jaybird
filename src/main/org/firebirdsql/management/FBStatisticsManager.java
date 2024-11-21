@@ -156,6 +156,7 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
      * @throws SQLException
      *         If {@code connection} does not unwrap to {@link FirebirdConnection}, or for failures to
      *         retrieve information
+     * @since 3
      */
     public static DatabaseTransactionInfo getDatabaseTransactionInfo(Connection connection) throws SQLException {
         FirebirdConnection firebirdConnection = connection.unwrap(FirebirdConnection.class);

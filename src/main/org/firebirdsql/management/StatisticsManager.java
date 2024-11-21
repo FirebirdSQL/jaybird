@@ -159,6 +159,7 @@ public interface StatisticsManager extends ServiceManager {
      * @return Database transaction information
      * @throws SQLException
      *         If {@code database} is not specified, or for failures to connect or retrieve information
+     * @since 3
      */
     DatabaseTransactionInfo getDatabaseTransactionInfo() throws SQLException;
 
