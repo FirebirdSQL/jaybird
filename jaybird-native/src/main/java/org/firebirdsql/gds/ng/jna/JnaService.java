@@ -131,10 +131,8 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
     @Override
     public void attach() throws SQLException {
         try {
-            if (isAttached()) {
-                throw new SQLException("Already attached to a service");
-            }
-            try (LockCloseable ignored = withLock()) {
+            requireNotAttached();
+            try (var ignored = withLock()) {
                 attachImpl();
                 setAttached();
                 afterAttachActions();

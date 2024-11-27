@@ -1543,7 +1543,7 @@ class FBResultSetTest {
             assertWasNotNull(rs, "wasNull == false after end of result set");
             rs.close();
             var e = assertThrows(SQLException.class, rs::wasNull, "wasNull not allowed after result set close");
-            assertThat(e, message(equalTo("The result set is closed")));
+            assertThat(e, message(startsWith("The result set is closed")));
         }
     }
 

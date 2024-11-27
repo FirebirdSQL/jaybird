@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -120,7 +121,7 @@ class TransactionHelperTest {
     private void assertDefaultNoTransactionException(Executable executable) {
         SQLException exception = assertThrows(SQLNonTransientException.class, executable);
         assertThat(exception, allOf(
-                message(equalTo(TransactionHelper.NO_TRANSACTION_ACTIVE)),
+                fbMessageStartsWith(JaybirdErrorCodes.jb_noActiveTransaction),
                 sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_TX_STATE))));
     }
 

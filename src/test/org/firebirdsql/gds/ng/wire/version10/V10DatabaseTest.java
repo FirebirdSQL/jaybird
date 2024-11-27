@@ -158,7 +158,7 @@ public class V10DatabaseTest {
 
                 SQLException exception = assertThrows(SQLException.class, db::attach,
                         "Second attach should throw exception");
-                assertThat(exception, message(equalTo("Already attached to a database")));
+                assertThat(exception, message(startsWith("Already attached to a database")));
             }
         }
     }

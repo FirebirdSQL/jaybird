@@ -134,6 +134,17 @@ public interface JaybirdErrorCodes {
     int jb_eventHandleNotInitialized                     = 337248326;
     int jb_attemptToDestroyManagedConnectionActiveTx     = 337248327;
     int jb_cannotInstantiateConnection                   = 337248328;
+    int jb_databasePathRequired     = 337248329;
+    int jb_invalidStringLength      = 337248330;
+    int jb_alreadyAttached          = 337248331;
+    int jb_prepareNotAllowedByState = 337248332;
+    int jb_noActiveTransaction      = 337248333;
+    int jb_pooledConnectionClosed   = 337248334;
+    int jb_noManagedConnection      = 337248335;
+    int jb_logicalConnectionClosed  = 337248336;
+    int jb_logicalConnectionForciblyClosed               = 337248337;
+    int jb_unableToUnwrap           = 337248338;
+    int jb_resultSetClosed          = 337248339;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

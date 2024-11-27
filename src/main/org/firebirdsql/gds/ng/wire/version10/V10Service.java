@@ -48,10 +48,8 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
     public void attach() throws SQLException {
         try {
             checkConnected();
-            if (isAttached()) {
-                throw new SQLException("Already attached to a service");
-            }
-            try (LockCloseable ignored = withLock()) {
+            requireNotAttached();
+            try (var ignored = withLock()) {
                 try {
                     sendAttach();
                     receiveAttachResponse();

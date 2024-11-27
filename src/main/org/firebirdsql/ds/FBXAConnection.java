@@ -21,14 +21,14 @@ package org.firebirdsql.ds;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientConnectionException;
 
 import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.jdbc.FBConnection;
-import org.firebirdsql.jdbc.SQLStateConstants;
 
 /**
  * XAConnection implementation for {@link FBXADataSource}
@@ -69,8 +69,8 @@ public final class FBXAConnection extends FBPooledConnection implements XAConnec
     private FBManagedConnection getManagedConnection() throws SQLException {
         FBManagedConnection managedConnection = mc.get();
         if (managedConnection == null) {
-            throw new SQLNonTransientConnectionException("Managed Connection is null, connection unavailable",
-                    SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
+            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_noManagedConnection)
+                    .toSQLException();
         }
         return managedConnection;
     }

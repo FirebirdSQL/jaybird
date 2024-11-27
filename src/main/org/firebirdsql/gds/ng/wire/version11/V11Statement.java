@@ -35,10 +35,7 @@ import org.firebirdsql.gds.ng.wire.version10.V10Statement;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.util.Optional;
-
-import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
  * {@link org.firebirdsql.gds.ng.wire.FbWireStatement} implementation for the version 11 wire protocol.
@@ -62,13 +59,8 @@ public class V11Statement extends V10Statement {
 
     @Override
     public void prepare(final String statementText) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            checkTransactionActive(getTransaction());
-            final StatementState initialState = getState();
-            if (!isPrepareAllowed(initialState)) {
-                throw new SQLNonTransientException(
-                        "Current statement state (%s) does not allow call to prepare".formatted(initialState));
-            }
+        try (var ignored = withLock()) {
+            final StatementState initialState = checkPrepareAllowed();
             resetAll();
 
             int expectedResponseCount = 0;

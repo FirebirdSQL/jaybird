@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
@@ -26,11 +27,9 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
 
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
@@ -193,8 +192,9 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
             validateBufferLength(b, off, len);
             if (len == 0) return 0;
             if (minLen <= 0 || minLen > len ) {
-                throw new SQLNonTransientException("Value out of range 0 < minLen <= len, minLen was: " + minLen,
-                        SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
+                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidStringLength)
+                        .messageParameter("minLen", len, minLen)
+                        .toSQLException();
             }
             checkDatabaseAttached();
             checkTransactionActive();

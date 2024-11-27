@@ -82,7 +82,7 @@ class JnaServiceTest {
             //Second attach should throw exception
             SQLException exception = assertThrows(SQLException.class, service::attach,
                     "Second attach should throw exception");
-            assertThat(exception, message(equalTo("Already attached to a service")));
+            assertThat(exception, message(startsWith("Already attached to a service")));
         }
     }
 

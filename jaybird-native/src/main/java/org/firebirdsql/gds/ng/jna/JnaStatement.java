@@ -37,7 +37,6 @@ import org.firebirdsql.jna.fbclient.XSQLVAR;
 import java.lang.ref.Cleaner;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.util.Arrays;
 
 import static java.util.Objects.requireNonNull;
@@ -143,13 +142,8 @@ public class JnaStatement extends AbstractFbStatement {
                             .toSQLException();
                 }
             }
-            try (LockCloseable ignored = withLock()) {
-                checkTransactionActive(getTransaction());
-                final StatementState initialState = getState();
-                if (!isPrepareAllowed(initialState)) {
-                    throw new SQLNonTransientException(String.format(
-                            "Current statement state (%s) does not allow call to prepare", initialState));
-                }
+            try (var ignored = withLock()) {
+                final StatementState initialState = checkPrepareAllowed();
                 resetAll();
 
                 final JnaDatabase db = getDatabase();

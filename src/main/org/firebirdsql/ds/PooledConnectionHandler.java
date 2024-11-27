@@ -18,10 +18,10 @@
  */
 package org.firebirdsql.ds;
 
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -29,12 +29,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientConnectionException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_logicalConnectionClosed;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_logicalConnectionForciblyClosed;
 import static org.firebirdsql.jaybird.util.ReflectionHelper.findMethod;
 import static org.firebirdsql.jaybird.util.ReflectionHelper.getAllInterfaces;
 
@@ -50,9 +51,6 @@ import static org.firebirdsql.jaybird.util.ReflectionHelper.getAllInterfaces;
  */
 sealed class PooledConnectionHandler implements InvocationHandler permits XAConnectionHandler {
 
-    static final String CLOSED_MESSAGE = "Logical connection already closed";
-    static final String FORCIBLY_CLOSED_MESSAGE =
-            "Logical connection was forcibly closed by the connection pool";
     private final FBPooledConnection owner;
     @SuppressWarnings("java:S3077")
     volatile Connection connection;
@@ -95,8 +93,9 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
                 throw e.getTargetException();
             }
         } else if (isClosed() && !method.equals(CONNECTION_CLOSE)) {
-            String message = forcedClose ? FORCIBLY_CLOSED_MESSAGE : CLOSED_MESSAGE;
-            throw new SQLNonTransientConnectionException(message, SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
+            throw FbExceptionBuilder.forNonTransientConnectionException(
+                            forcedClose ? jb_logicalConnectionForciblyClosed : jb_logicalConnectionClosed)
+                    .toSQLException();
         }
 
         try {

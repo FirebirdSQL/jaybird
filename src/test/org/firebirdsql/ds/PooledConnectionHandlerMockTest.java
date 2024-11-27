@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,8 +31,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -135,7 +135,7 @@ class PooledConnectionHandlerMockTest {
         verify(pooled, atMostOnce()).fireConnectionClosed();
 
         SQLException exception = assertThrows(SQLException.class, proxy::clearWarnings);
-        assertThat(exception, message(equalTo(PooledConnectionHandler.FORCIBLY_CLOSED_MESSAGE)));
+        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_logicalConnectionForciblyClosed));
         verify(pooled, never()).fireConnectionError(any(SQLException.class));
     }
 
@@ -156,7 +156,7 @@ class PooledConnectionHandlerMockTest {
         verify(pooled, atMostOnce()).fireConnectionClosed();
 
         SQLException exception = assertThrows(SQLException.class, proxy::clearWarnings);
-        assertThat(exception, message(equalTo(PooledConnectionHandler.CLOSED_MESSAGE)));
+        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_logicalConnectionClosed));
         verify(pooled, never()).fireConnectionError(any(SQLException.class));
     }
 

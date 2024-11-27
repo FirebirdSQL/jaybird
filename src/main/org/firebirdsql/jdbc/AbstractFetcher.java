@@ -18,7 +18,9 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbAttachment;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.FBObjectListener.FetcherListener;
@@ -123,7 +125,7 @@ abstract sealed class AbstractFetcher implements FBFetcher
 
     protected final void checkOpen() throws SQLException {
         if (closed) {
-            throw new SQLException("The result set is closed", SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE);
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_resultSetClosed).toSQLException();
         }
     }
 

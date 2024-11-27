@@ -833,20 +833,23 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return iface.isAssignableFrom(getClass());
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (iface == null) {
-            throw new SQLException("Unable to unwrap to class (null)");
-        } else if (iface.isAssignableFrom(getClass())) {
-            return iface.cast(this);
-        } else if (FbStatement.class.isAssignableFrom(iface)) {
-            try (LockCloseable ignored = withLock()) {
-                if (iface.isInstance(fbStatement)) {
-                    return iface.cast(fbStatement);
+        if (iface != null) {
+            if (iface.isAssignableFrom(getClass())) {
+                return iface.cast(this);
+            } else if (FbStatement.class.isAssignableFrom(iface)) {
+                try (LockCloseable ignored = withLock()) {
+                    if (iface.isInstance(fbStatement)) {
+                        return iface.cast(fbStatement);
+                    }
                 }
             }
         }
-        throw new SQLException("Unable to unwrap to class " + iface.getName());
+        throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unableToUnwrap)
+                .messageParameter(iface != null ? iface.getName() : "(null)")
+                .toSQLException();
     }
 
     protected boolean internalExecute(String sql) throws SQLException {

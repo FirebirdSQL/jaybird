@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSServerVersionException;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
@@ -176,6 +177,21 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
         } catch (Exception ex) {
             // ignore, but log
             log.log(System.Logger.Level.DEBUG, "Exception on safely detach", ex);
+        }
+    }
+
+    /**
+     * Checks if not currently attached.
+     *
+     * @throws SQLException
+     *         if this attachment is currently attached
+     * @since 6
+     */
+    protected final void requireNotAttached() throws SQLException {
+        if (isAttached()) {
+            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_alreadyAttached)
+                    .messageParameter(this instanceof FbDatabase ? "database" : "service")
+                    .toSQLException();
         }
     }
 }

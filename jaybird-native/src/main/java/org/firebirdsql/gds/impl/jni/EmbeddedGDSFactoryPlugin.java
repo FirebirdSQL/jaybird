@@ -22,7 +22,6 @@ import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.jna.FbEmbeddedDatabaseFactory;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientConnectionException;
 import java.util.List;
 
 public final class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
@@ -72,10 +71,7 @@ public final class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     @Override
     public String getDatabasePath(String server, Integer port, String path) throws SQLException {
-        if (path == null) {
-            throw new SQLNonTransientConnectionException("Database name/path is required");
-        }
-
+        requirePath(path);
         return path;
     }
 

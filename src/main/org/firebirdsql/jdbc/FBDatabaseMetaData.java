@@ -18,9 +18,11 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.jaybird.Version;
@@ -1780,8 +1782,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (!isWrapperFor(iface))
-            throw new SQLException("Unable to unwrap to class " + iface.getName());
+        if (!isWrapperFor(iface)) {
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unableToUnwrap)
+                    .messageParameter(iface != null ? iface.getName() : "(null)")
+                    .toSQLException();
+        }
 
         return iface.cast(this);
     }

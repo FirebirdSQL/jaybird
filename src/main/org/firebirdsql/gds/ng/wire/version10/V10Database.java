@@ -84,10 +84,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      */
     protected final void attachOrCreate(DatabaseParameterBuffer dpb, boolean create) throws SQLException {
         checkConnected();
-        if (isAttached()) {
-            throw new SQLException("Already attached to a database");
-        }
-        try (LockCloseable ignored = withLock()) {
+        requireNotAttached();
+        try (var ignored = withLock()) {
             try {
                 sendAttachOrCreate(dpb, create);
                 receiveAttachOrCreateResponse();

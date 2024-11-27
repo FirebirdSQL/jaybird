@@ -119,9 +119,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     }
 
     protected void attachOrCreate(final DatabaseParameterBuffer dpb, final boolean create) throws SQLException {
-        if (isAttached()) {
-            throw new SQLException("Already attached to a database");
-        }
+        requireNotAttached();
         final byte[] dbName = getEncoding().encodeToCharset(connection.getAttachUrl());
         final byte[] dpbArray = dpb.toBytesWithType();
 

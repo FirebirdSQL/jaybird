@@ -637,7 +637,9 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
-            throw new SQLException("Unable to unwrap to class " + (iface != null ? iface.getName() : "(null)"));
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unableToUnwrap)
+                    .messageParameter(iface != null ? iface.getName() : "(null)")
+                    .toSQLException();
         }
         return iface.cast(this);
     }

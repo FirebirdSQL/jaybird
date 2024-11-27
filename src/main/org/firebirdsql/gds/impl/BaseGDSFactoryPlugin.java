@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.gds.impl;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jdbc.FBConnection;
 
 import java.sql.SQLException;
@@ -55,11 +57,25 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
         throw new SQLNonTransientConnectionException("Incorrect JDBC protocol handling: " + jdbcUrl);
     }
 
+    /**
+     * Checks if {@code path} is not {@code null}.
+     *
+     * @param path
+     *         path to check
+     * @throws SQLException
+     *         if {@code path} is {@code null}
+     * @since 6
+     */
+    protected static void requirePath(String path) throws SQLException {
+        if (path == null) {
+            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_databasePathRequired)
+                    .toSQLException();
+        }
+    }
+
     @Override
     public String getDatabasePath(String server, Integer port, String path) throws SQLException {
-        if (path == null) {
-            throw new SQLNonTransientConnectionException("Database name/path is required");
-        }
+        requirePath(path);
 
         if (server == null) {
             return path;

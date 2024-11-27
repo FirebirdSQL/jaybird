@@ -35,7 +35,7 @@ import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -108,7 +108,7 @@ class AutoCommitBehaviourTest {
         assertResultSetClosed(rs1, "Expected rs1 closed by execution of stmt2");
 
         var exception = assertThrows(SQLException.class, rs1::next, "Expected exception on rs1.next()");
-        assertThat(exception, message(equalTo("The result set is closed")));
+        assertThat(exception, message(startsWith("The result set is closed")));
 
         for (int count = 1; count <= MAX_ID; count++) {
             assertNextRow(rs2, "Expected true for rs2.next() nr " + count);

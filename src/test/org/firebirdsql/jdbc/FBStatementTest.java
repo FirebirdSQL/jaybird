@@ -754,7 +754,7 @@ class FBStatementTest {
     void testUnwrap_ResultSet() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class, () -> stmt.unwrap(ResultSet.class));
-            assertThat(exception, message(equalTo("Unable to unwrap to class java.sql.ResultSet")));
+            assertThat(exception, message(startsWith("Unable to unwrap to class java.sql.ResultSet")));
         }
     }
 

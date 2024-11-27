@@ -89,7 +89,7 @@ class JnaDatabaseTest {
 
             SQLException exception = assertThrows(SQLException.class, db::attach,
                     "Second attach should throw exception");
-            assertThat(exception, message(equalTo("Already attached to a database")));
+            assertThat(exception, message(startsWith("Already attached to a database")));
         }
     }
 
@@ -266,7 +266,7 @@ class JnaDatabaseTest {
     @Test
     public void testOdsVersionInformation() throws Exception {
         usesDatabase.createDefaultDatabase();
-        try (JnaDatabase db = factory.connect(connectionInfo);) {
+        try (JnaDatabase db = factory.connect(connectionInfo)) {
             db.attach();
 
             OdsVersion expectedOds = getDefaultSupportInfo().getDefaultOdsVersion();

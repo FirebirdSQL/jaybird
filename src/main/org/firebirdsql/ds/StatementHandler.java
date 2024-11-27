@@ -23,11 +23,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.sql.Statement;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jdbc.FirebirdStatement;
-import org.firebirdsql.jdbc.SQLStateConstants;
 
 import static org.firebirdsql.jaybird.util.ReflectionHelper.*;
 
@@ -85,8 +85,7 @@ class StatementHandler implements InvocationHandler {
         } else if (method.equals(STATEMENT_IS_CLOSED) || method.equals(FIREBIRD_STATEMENT_IS_CLOSED)) {
             return isClosed();
         } else if (isClosed() && !method.equals(STATEMENT_CLOSE)) {
-            throw new SQLNonTransientException("Statement is already closed",
-                    SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID);
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_stmtClosed).toSQLException();
         }
 
         // Methods of statement and subinterfaces

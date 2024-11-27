@@ -18,7 +18,9 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbAttachment;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.util.InternalApi;
@@ -26,14 +28,12 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_ATTR_VALUE;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID;
 
 /**
  * Common abstract base class for statement implementations.
@@ -125,7 +125,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      */
     protected final void checkValidity() throws SQLException {
         if (closed) {
-            throw new SQLNonTransientException("Statement is already closed", SQL_STATE_INVALID_STATEMENT_ID);
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_stmtClosed).toSQLException();
         }
     }
 

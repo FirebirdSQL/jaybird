@@ -23,19 +23,18 @@ import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.ShortByReference;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
-import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
@@ -203,9 +202,9 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             validateBufferLength(b, off, len);
             if (len == 0) return 0;
             if (minLen <= 0 || minLen > len ) {
-                throw new SQLNonTransientException(
-                        "Value out of range 0 < minLen <= %d, minLen was: %d".formatted(len, minLen),
-                        SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
+                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidStringLength)
+                        .messageParameter("minLen", len, minLen)
+                        .toSQLException();
             }
             checkDatabaseAttached();
             checkTransactionActive();

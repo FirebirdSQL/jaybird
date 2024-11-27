@@ -266,7 +266,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     protected void checkOpen() throws SQLException {
         if (isClosed()) {
-            throw new SQLException("The result set is closed", SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE);
+            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_resultSetClosed).toSQLException();
         }
     }
 
@@ -1837,7 +1837,9 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
-            throw new SQLException("Unable to unwrap to class " + (iface != null ? iface.getName() : "(null)"));
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unableToUnwrap)
+                    .messageParameter(iface != null ? iface.getName() : "(null)")
+                    .toSQLException();
         }
 
         return iface.cast(this);

@@ -19,6 +19,7 @@
 package org.firebirdsql.common.matchers;
 
 import org.firebirdsql.gds.GDSExceptionHelper;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.jdbc.FBPreparedStatement;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.hamcrest.FeatureMatcher;
@@ -190,7 +191,7 @@ public class SQLExceptionMatchers {
         return allOf(
                 isA(SQLException.class),
                 sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID)),
-                message(equalTo("Statement is already closed"))
+                fbMessageStartsWith(JaybirdErrorCodes.jb_stmtClosed)
         );
     }
 

@@ -20,7 +20,6 @@ package org.firebirdsql.ds;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientConnectionException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
@@ -31,11 +30,12 @@ import javax.sql.ConnectionEventListener;
 import javax.sql.PooledConnection;
 import javax.sql.StatementEventListener;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jaybird.xca.FatalErrorHelper;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.jdbc.SQLStateConstants;
 
 /**
  * PooledConnection implementation for {@link FBConnectionPoolDataSource}
@@ -63,26 +63,29 @@ sealed class FBPooledConnection implements PooledConnection permits FBXAConnecti
 
     @Override
     public Connection getConnection() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            if (connection == null) {
-                var ex = new SQLNonTransientConnectionException("The PooledConnection has been closed",
-                        SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
-                fireFatalConnectionError(ex);
-                throw ex;
-            }
+        try (var ignored = withLock()) {
             try {
+                Connection connection = requireConnection();
                 if (handler != null) {
                     handler.close();
                 }
                 resetConnection(connection);
+                handler = createConnectionHandler(connection);
+
+                return handler.getProxy();
             } catch (SQLException ex) {
                 fireFatalConnectionError(ex);
                 throw ex;
             }
-            handler = createConnectionHandler(connection);
-
-            return handler.getProxy();
         }
+    }
+
+    private Connection requireConnection() throws SQLException {
+        Connection connection = this.connection;
+        if (connection != null) return connection;
+        throw FbExceptionBuilder
+                .forNonTransientConnectionException(JaybirdErrorCodes.jb_pooledConnectionClosed)
+                .toSQLException();
     }
 
     void resetConnection(Connection connection) throws SQLException {

@@ -18,9 +18,11 @@
  */
 package org.firebirdsql.ds;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDataSource;
@@ -243,7 +245,9 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
-            throw new SQLException("Unable to unwrap to class " + iface.getName());
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unableToUnwrap)
+                    .messageParameter(iface != null ? iface.getName() : "(null)")
+                    .toSQLException();
         }
 
         return iface.cast(this);

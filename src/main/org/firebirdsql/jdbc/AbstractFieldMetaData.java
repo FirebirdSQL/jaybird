@@ -20,6 +20,8 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
@@ -67,7 +69,9 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     @Override
     public final <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
-            throw new SQLException("Unable to unwrap to class " + (iface != null ? iface.getName() : "(null)"));
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unableToUnwrap)
+                    .messageParameter(iface != null ? iface.getName() : "(null)")
+                    .toSQLException();
         }
         return iface.cast(this);
     }

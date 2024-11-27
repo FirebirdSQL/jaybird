@@ -18,10 +18,9 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.jdbc.SQLStateConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 
 /**
  * Class with static helper methods for use with transactions
@@ -30,8 +29,6 @@ import java.sql.SQLNonTransientException;
  * @since 3.0
  */
 public final class TransactionHelper {
-
-    public static final String NO_TRANSACTION_ACTIVE = "No transaction or transaction not ACTIVE";
 
     private TransactionHelper() {
         // no instances
@@ -46,9 +43,7 @@ public final class TransactionHelper {
      *         when {@code transaction} is {@code null}, or its state is not active
      */
     public static void checkTransactionActive(FbTransaction transaction) throws SQLException {
-        if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
-            throw new SQLNonTransientException(NO_TRANSACTION_ACTIVE, SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
-        }
+        checkTransactionActive(transaction, JaybirdErrorCodes.jb_noActiveTransaction);
     }
 
     /**
