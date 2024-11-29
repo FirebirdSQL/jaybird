@@ -156,7 +156,7 @@ class PooledConnectionHandlerMockTest {
         verify(pooled, atMostOnce()).fireConnectionClosed();
 
         SQLException exception = assertThrows(SQLException.class, proxy::clearWarnings);
-        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_logicalConnectionClosed));
+        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_connectionClosed));
         verify(pooled, never()).fireConnectionError(any(SQLException.class));
     }
 

@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.firebirdsql.gds.JaybirdErrorCodes.jb_logicalConnectionClosed;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_logicalConnectionForciblyClosed;
 import static org.firebirdsql.jaybird.util.ReflectionHelper.findMethod;
 import static org.firebirdsql.jaybird.util.ReflectionHelper.getAllInterfaces;
@@ -93,9 +92,9 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
                 throw e.getTargetException();
             }
         } else if (isClosed() && !method.equals(CONNECTION_CLOSE)) {
-            throw FbExceptionBuilder.forNonTransientConnectionException(
-                            forcedClose ? jb_logicalConnectionForciblyClosed : jb_logicalConnectionClosed)
-                    .toSQLException();
+            throw forcedClose
+                    ? FbExceptionBuilder.forNonTransientConnectionException(jb_logicalConnectionForciblyClosed).toSQLException()
+                    : FbExceptionBuilder.connectionClosed();
         }
 
         try {

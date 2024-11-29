@@ -239,7 +239,7 @@ public class V10DatabaseTest {
         SQLException exception = assertThrows(SQLException.class, db::close);
         assertThat(exception, allOf(
                 message(startsWith("No connection established to the database server")),
-                sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_CLOSED)));
+                sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_FAILURE)));
     }
 
     @Test

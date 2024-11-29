@@ -23,7 +23,6 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jdbc.FBConnection;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientConnectionException;
 
 /**
  * Base class for {@link GDSFactoryPlugin} implementations.
@@ -54,7 +53,9 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
             }
         }
 
-        throw new SQLNonTransientConnectionException("Incorrect JDBC protocol handling: " + jdbcUrl);
+        throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                .messageParameter(jdbcUrl, "JDBC URL not supported by protocol: " + getTypeName())
+                .toSQLException();
     }
 
     /**

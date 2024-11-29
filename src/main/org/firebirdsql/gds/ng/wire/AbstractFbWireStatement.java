@@ -25,6 +25,7 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbStatement;
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -93,7 +94,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         if (database != null) {
             return database.getXdrStreamAccess();
         } else {
-            throw new SQLException("Connection closed or no connection available");
+            throw FbExceptionBuilder.connectionClosed();
         }
     }
 

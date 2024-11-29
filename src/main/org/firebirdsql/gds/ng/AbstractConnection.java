@@ -24,14 +24,13 @@ import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallbackSpi;
 import org.firebirdsql.gds.ng.dbcrypt.simple.StaticValueDbCryptCallbackSpi;
-import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientConnectionException;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_dbCryptCallbackInitError;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidConnectionEncoding;
 
 /**
  * Abstract class with common logic for connections.
@@ -62,10 +61,9 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
             if (firebirdEncodingName == null && javaCharsetAlias == null) {
                 tempEncodingDefinition = encodingFactory.getEncodingDefinition("NONE", null);
             } else {
-                throw new SQLNonTransientConnectionException(
-                        String.format("No valid encoding definition for Firebird encoding %s and/or Java charset %s",
-                                firebirdEncodingName, javaCharsetAlias),
-                        SQLStateConstants.SQL_STATE_CONNECTION_ERROR);
+                throw FbExceptionBuilder.forNonTransientConnectionException(jb_invalidConnectionEncoding)
+                        .messageParameter(firebirdEncodingName, javaCharsetAlias)
+                        .toSQLException();
             }
         }
         encodingDefinition = tempEncodingDefinition;

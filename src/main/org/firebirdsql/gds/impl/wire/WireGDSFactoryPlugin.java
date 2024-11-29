@@ -33,7 +33,7 @@ public final class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     @Override
     public String getPluginName() {
-        return "Pure Java GDS implementation.";
+        return "Pure Java GDS implementation";
     }
 
     @Override

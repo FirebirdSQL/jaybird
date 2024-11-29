@@ -19,6 +19,7 @@
 package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -40,7 +41,6 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLWarning;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,11 +63,6 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_attemptToDestroyManagedCo
  * @version 1.0
  */
 public final class FBManagedConnection implements ExceptionListener {
-
-    public static final String ERROR_NO_CHARSET =
-            "Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or "
-            + "localEncoding). Please specify a connection character set (eg property charSet=utf-8) or consult the "
-            + "Jaybird documentation for more information.";
 
     private static final System.Logger log = System.getLogger(FBManagedConnection.class.getName());
 
@@ -113,13 +108,13 @@ public final class FBManagedConnection implements ExceptionListener {
 
         //TODO: XIDs in limbo should be loaded so that XAER_DUPID can be thrown appropriately
 
-        IConnectionProperties connectionProperties = this.cri.asIConnectionProperties();
+        IConnectionProperties connectionProperties = cri.asIConnectionProperties();
 
         if (connectionProperties.getEncoding() == null && connectionProperties.getCharSet() == null) {
             String defaultEncoding = getDefaultConnectionEncoding();
             if (defaultEncoding == null) {
-                throw new SQLNonTransientConnectionException(ERROR_NO_CHARSET,
-                        SQLStateConstants.SQL_STATE_CONNECTION_ERROR);
+                throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_noConnectionEncoding)
+                        .toSQLException();
             }
             connectionProperties.setEncoding(defaultEncoding);
         }

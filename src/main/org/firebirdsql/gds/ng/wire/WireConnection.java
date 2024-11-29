@@ -99,7 +99,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             if (isConnected() && xdrIn != null) {
                 return xdrIn;
             } else {
-                throw new SQLException("Connection closed or no connection available");
+                throw FbExceptionBuilder.connectionClosed();
             }
         }
 
@@ -108,7 +108,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             if (isConnected() && xdrOut != null) {
                 return xdrOut;
             } else {
-                throw new SQLException("Connection closed or no connection available");
+                throw FbExceptionBuilder.connectionClosed();
             }
         }
     };

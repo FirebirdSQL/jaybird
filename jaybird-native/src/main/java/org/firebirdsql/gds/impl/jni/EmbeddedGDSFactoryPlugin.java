@@ -32,7 +32,7 @@ public final class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     @Override
     public String getPluginName() {
-        return "GDS implementation for embedded server.";
+        return "GDS implementation for embedded server";
     }
 
     @Override

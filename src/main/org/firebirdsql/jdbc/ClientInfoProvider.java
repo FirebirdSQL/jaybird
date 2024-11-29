@@ -19,13 +19,13 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
 
 import java.sql.ClientInfoStatus;
 import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,6 +40,8 @@ import java.util.regex.Pattern;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.toUnmodifiableSet;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_clientInfoInvalidPropertyName;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_clientInfoSystemContextReadOnly;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
@@ -182,8 +184,10 @@ final class ClientInfoProvider {
         try {
             property = ClientInfoProperty.parse(name);
         } catch (RuntimeException e) {
-            throw new SQLNonTransientException("Invalid client info property name: " + name,
-                    SQLStateConstants.SQL_STATE_INVALID_ATTR_VALUE, e);
+            throw FbExceptionBuilder.forNonTransientException(jb_clientInfoInvalidPropertyName)
+                    .messageParameter(name)
+                    .cause(e)
+                    .toSQLException();
         }
         // Waste of resources to query USER_TRANSACTION in auto-commit mode
         if (USER_TRANSACTION.equals(property.context) && connection.getAutoCommit()) return null;
@@ -276,7 +280,7 @@ final class ClientInfoProvider {
     }
 
     /**
-     * Implementation of {@link FBConnection#setClientInfo(String, String)}, but throwing {@code SQLException}
+     * Implementation of {@link FBConnection#setClientInfo(String, String)}.
      *
      * @throws SQLClientInfoException
      *         for invalid property names or if {@code name} is a property in context {@code SYSTEM} (read-only)
@@ -288,13 +292,19 @@ final class ClientInfoProvider {
         try {
             property = ClientInfoProperty.parse(name);
         } catch (RuntimeException e) {
-            throw new SQLClientInfoException("Invalid client info property name: " + name,
-                    SQLStateConstants.SQL_STATE_INVALID_ATTR_VALUE,
+            SQLException forMessage = FbExceptionBuilder.forException(jb_clientInfoInvalidPropertyName)
+                    .messageParameter(name)
+                    .toSQLException();
+            throw new SQLClientInfoException(forMessage.getMessage(), forMessage.getSQLState(),
+                    forMessage.getErrorCode(),
                     Map.of(requireNonNullElse(name, "<null>"), ClientInfoStatus.REASON_UNKNOWN), e);
         }
         if (SYSTEM.equals(property.context)) {
-            throw new SQLClientInfoException("Properties in SYSTEM context are read-only: " + name,
-                    SQLStateConstants.SQL_STATE_ATT_CANNOT_SET_NOW, Map.of(name, ClientInfoStatus.REASON_UNKNOWN));
+            SQLException forMessage = FbExceptionBuilder.forException(jb_clientInfoSystemContextReadOnly)
+                    .messageParameter(name)
+                    .toSQLException();
+            throw new SQLClientInfoException(forMessage.getMessage(), forMessage.getSQLState(),
+                    forMessage.getErrorCode(), Map.of(name, ClientInfoStatus.REASON_UNKNOWN));
         }
         // Waste of resources to set USER_TRANSACTION in auto-commit mode
         if (USER_TRANSACTION.equals(property.context) && connection.getAutoCommit()) return;
@@ -303,7 +313,7 @@ final class ClientInfoProvider {
     }
 
     /**
-     * Implementation of {@link FBConnection#setClientInfo(Properties)}, but throwing {@code SQLException}.
+     * Implementation of {@link FBConnection#setClientInfo(Properties)}.
      *
      * @throws SQLException
      *         for database access errors

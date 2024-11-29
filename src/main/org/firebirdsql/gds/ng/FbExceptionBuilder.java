@@ -27,8 +27,10 @@ import org.firebirdsql.jdbc.SQLStateConstants;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_connectionClosed;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptAlgorithmNotAvailable;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptInvalidKey;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptNoCryptKeyAvailable;
@@ -163,6 +165,23 @@ public final class FbExceptionBuilder {
         return new FbExceptionBuilder(Type.WARNING, errorCode);
     }
 
+    private static final Map<Integer, CachedMessage> CACHED_MESSAGE_MAP = new ConcurrentHashMap<>(4, 1f, 1);
+
+    /**
+     * Gets a cached message.
+     * <p>
+     * Do not use for parameterized messages.
+     * </p>
+     *
+     * @param errorCode
+     *         Firebird/Jaybird error code
+     * @return cached message
+     * @since 6
+     */
+    private static CachedMessage getCachedMessage(int errorCode) {
+        return CACHED_MESSAGE_MAP.computeIfAbsent(errorCode, CachedMessage::of);
+    }
+
     /**
      * Creates an I/O write error ({@link org.firebirdsql.gds.ISCConstants#isc_net_write_err}).
      *
@@ -172,13 +191,8 @@ public final class FbExceptionBuilder {
      * @since 6
      */
     public static SQLException ioWriteError(IOException e) {
-        @SuppressWarnings("java:S1118")
-        final class Holder {
-            // Cache message and SQLSTATE to avoid constructing through builder every time
-            private static final CachedMessage IO_WRITE_ERROR = CachedMessage.of(isc_net_write_err);
-        }
-        return new SQLNonTransientConnectionException(
-                Holder.IO_WRITE_ERROR.message, Holder.IO_WRITE_ERROR.sqlState, Holder.IO_WRITE_ERROR.errorCode, e);
+        CachedMessage error = getCachedMessage(isc_net_write_err);
+        return new SQLNonTransientConnectionException(error.message, error.sqlState, isc_net_write_err, e);
     }
 
     /**
@@ -190,13 +204,19 @@ public final class FbExceptionBuilder {
      * @since 6
      */
     public static SQLException ioReadError(IOException e) {
-        @SuppressWarnings("java:S1118")
-        final class Holder {
-            // Cache message and SQLSTATE to avoid constructing through builder every time
-            private static final CachedMessage IO_READ_ERROR = CachedMessage.of(isc_net_read_err);
-        }
-        return new SQLNonTransientConnectionException(
-                Holder.IO_READ_ERROR.message, Holder.IO_READ_ERROR.sqlState, Holder.IO_READ_ERROR.errorCode, e);
+        CachedMessage error = getCachedMessage(isc_net_read_err);
+        return new SQLNonTransientConnectionException(error.message, error.sqlState, isc_net_read_err, e);
+    }
+
+    /**
+     * Creates a connection closed error ({@link org.firebirdsql.gds.JaybirdErrorCodes#jb_connectionClosed}).
+     *
+     * @return SQLException instance
+     * @since 6
+     */
+    public static SQLException connectionClosed() {
+        CachedMessage error = getCachedMessage(jb_connectionClosed);
+        return new SQLNonTransientConnectionException(error.message, error.sqlState, jb_connectionClosed);
     }
 
     /**
@@ -707,31 +727,29 @@ public final class FbExceptionBuilder {
     }
 
     /**
-     * Caches the rendered message, SQLSTATE and error code of an exception; used for internal optimization purposes.
+     * Caches the rendered message and SQLSTATE of an exception; used for internal optimization purposes.
      *
      * @param message
      *         rendered message string
      * @param sqlState
      *         SQLSTATE
-     * @param errorCode
-     *         vendor error code
      * @since 6
      */
-    private record CachedMessage(String message, String sqlState, int errorCode) {
+    private record CachedMessage(String message, String sqlState) {
 
         /**
-         * Renders the exception using {@code #toSQLException} and stores the resulting message and SQLSTATE, and
-         * {@code errorCode}.
+         * Renders the exception using {@code #toSQLException} and stores the resulting message and SQLSTATE.
          * <p>
-         * Do not use
+         * Do not use for parameterized messages.
          * </p>
          *
-         * @param errorCode Firebird/Jaybird error code
-         * @return cached message with the message, SQLSTATE from the generated exception, and {@code errorCode}
+         * @param errorCode
+         *         Firebird/Jaybird error code
+         * @return cached message with the message and SQLSTATE from the generated exception
          */
         private static CachedMessage of(int errorCode) {
             SQLException exception = forException(errorCode).toSQLException();
-            return new CachedMessage(exception.getMessage(), exception.getSQLState(), errorCode);
+            return new CachedMessage(exception.getMessage(), exception.getSQLState());
         }
 
     }

@@ -77,8 +77,7 @@ public record DbAttachInfo(String serverName, int portNumber, String attachObjec
     public static DbAttachInfo parseConnectString(String connectString) throws SQLException {
         if (connectString == null) {
             throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                    .messageParameter("(null)")
-                    .messageParameter("Connection string is missing")
+                    .messageParameter("(null)", "Connection string is missing")
                     .toSQLException();
         }
 
@@ -110,8 +109,7 @@ public record DbAttachInfo(String serverName, int portNumber, String attachObjec
             if (endIpv6Address == -1) {
                 throw FbExceptionBuilder
                         .forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                        .messageParameter(originalConnectString)
-                        .messageParameter("IPv6 address expected, missing closing ']'")
+                        .messageParameter(originalConnectString, "IPv6 address expected, missing closing ']'")
                         .toSQLException();
             }
             server = connectString.substring(1, endIpv6Address);
@@ -123,8 +121,8 @@ public record DbAttachInfo(String serverName, int portNumber, String attachObjec
             if (!(portSep == afterEndIpv6Address || pathSep == afterEndIpv6Address)) {
                 throw FbExceptionBuilder
                         .forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                        .messageParameter(originalConnectString)
-                        .messageParameter("Unexpected tokens '" + connectString.substring(afterEndIpv6Address)
+                        .messageParameter(originalConnectString,
+                                "Unexpected tokens '" + connectString.substring(afterEndIpv6Address)
                                 + "' after IPv6 address")
                         .toSQLException();
             }
@@ -143,8 +141,7 @@ public record DbAttachInfo(String serverName, int portNumber, String attachObjec
         }
         if (portSep == 0 || portSep == connectStringLength - 1) {
             throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                    .messageParameter(originalConnectString)
-                    .messageParameter("Port separator ':' at beginning or end")
+                    .messageParameter(originalConnectString, "Port separator ':' at beginning or end")
                     .toSQLException();
         } else if (portSep > 0) {
             port = parsePortNumber(originalConnectString, connectString.substring(portSep + 1, pathSep));
@@ -163,8 +160,7 @@ public record DbAttachInfo(String serverName, int portNumber, String attachObjec
         int sep = connectString.indexOf(':');
         if (sep == 0) {
             throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                    .messageParameter(connectString)
-                    .messageParameter("Path separator ':' at beginning")
+                    .messageParameter(connectString, "Path separator ':' at beginning")
                     .toSQLException();
         } else if (sep == 1 && !isLikelyWindowsAbsolutePath(connectString) || sep > 1) {
             server = connectString.substring(0, sep);
@@ -173,8 +169,7 @@ public record DbAttachInfo(String serverName, int portNumber, String attachObjec
             if (portSep == 0 || portSep == server.length() - 1) {
                 throw FbExceptionBuilder
                         .forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                        .messageParameter(connectString)
-                        .messageParameter("Port separator '/' at beginning or end")
+                        .messageParameter(connectString, "Port separator '/' at beginning or end")
                         .toSQLException();
             } else if (portSep > 0) {
                 String portString = server.substring(portSep + 1);
@@ -207,8 +202,7 @@ public record DbAttachInfo(String serverName, int portNumber, String attachObjec
             return Integer.valueOf(portString);
         } catch (NumberFormatException e) {
             throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                    .messageParameter(connectString)
-                    .messageParameter("Bad port: '" + portString + "' is not a number")
+                    .messageParameter(connectString, "Bad port: '" + portString + "' is not a number")
                     .cause(e)
                     .toSQLException();
         }

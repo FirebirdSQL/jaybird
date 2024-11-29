@@ -70,8 +70,8 @@ public class JnaDatabaseConnection extends JnaConnection<IConnectionProperties, 
         if (!dbAttachInfo.hasAttachObjectName()) {
             throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
                     // Using original attach object name as that may well be non-null even if it is null in dbAttachInfo
-                    .messageParameter(connectionProperties.getAttachObjectName())
-                    .messageParameter("null or empty database name in connection string")
+                    .messageParameter(connectionProperties.getAttachObjectName(),
+                            "null or empty database name in connection string")
                     .toSQLException();
         }
         return toAttachUrl(dbAttachInfo);

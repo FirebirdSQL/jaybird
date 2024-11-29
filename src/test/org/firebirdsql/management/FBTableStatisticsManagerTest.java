@@ -20,6 +20,7 @@ package org.firebirdsql.management;
 
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ import java.sql.Statement;
 import java.util.Map;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -99,7 +101,7 @@ class FBTableStatisticsManagerTest {
 
         SQLNonTransientConnectionException exception = assertThrows(SQLNonTransientConnectionException.class,
                 () -> FBTableStatisticsManager.of(connection));
-        assertThat(exception, message(containsString("connection is closed")));
+        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_connectionClosed));
     }
 
     @Test

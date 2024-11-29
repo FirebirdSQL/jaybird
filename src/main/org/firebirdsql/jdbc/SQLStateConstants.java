@@ -136,12 +136,23 @@ public final class SQLStateConstants {
     public static final String SQL_STATE_CONNECTION_ERROR = "08000";
     /**
      * ISO-9075-2: connection does not exist => 08003.
+     * <p>
+     * The historic use by Jaybird of SQLSTATE {@code 08003} to represent connection closed is wrong;
+     * {@link #SQL_STATE_CONNECTION_FAILURE} should be used. This was corrected in Jaybird 6.
+     * </p>
+     *
+     * @deprecated Use {@link #SQL_STATE_CONNECTION_FAILURE}; will be removed in Jaybird 7
      */
+    @Deprecated(since = "6", forRemoval = true)
     public static final String SQL_STATE_CONNECTION_CLOSED = "08003";
     /**
      * ISO-9075-2: connection failure => 08006.
      */
     public static final String SQL_STATE_CONNECTION_FAILURE = "08006";
+    /**
+     * ISO-9075-2: transaction resolution unknown => 08006.
+     */
+    public static final String SQL_STATE_TX_RESOLUTION_UNKNOWN = "08007";
 
     /**
      * ISO-9075-2: syntax error or access rule violation => 42000.

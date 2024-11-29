@@ -54,10 +54,11 @@ import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
 import static java.util.stream.Collectors.toMap;
 import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_CONNECTION_CLOSED;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_CONNECTION_FAILURE;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_TX_STATE;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_TX_ACTIVE;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_TX_RESOLUTION_UNKNOWN;
 
 /**
  * The class {@code FBConnection} is a handle to a {@link FBManagedConnection} and implements {@link Connection}.
@@ -144,8 +145,7 @@ public class FBConnection implements FirebirdConnection {
      */
     protected void checkValidity() throws SQLException {
         if (isClosed()) {
-            throw new SQLNonTransientConnectionException("This connection is closed and cannot be used now",
-                    SQL_STATE_CONNECTION_CLOSED);
+            throw FbExceptionBuilder.connectionClosed();
         }
     }
 
@@ -381,7 +381,7 @@ public class FBConnection implements FirebirdConnection {
         try (LockCloseable ignored = withLock()) {
             if (isClosed()) {
                 throw new SQLNonTransientConnectionException(
-                        "You cannot getAutoCommit on an unassociated closed connection.", SQL_STATE_CONNECTION_CLOSED);
+                        "You cannot getAutoCommit on an unassociated closed connection.", SQL_STATE_CONNECTION_FAILURE);
             }
             return txCoordinator.getAutoCommit();
         }
@@ -392,7 +392,7 @@ public class FBConnection implements FirebirdConnection {
         try (LockCloseable ignored = withLock()) {
             if (isClosed()) {
                 throw new SQLNonTransientConnectionException("You cannot commit a closed connection.",
-                        SQL_STATE_CONNECTION_CLOSED);
+                        SQL_STATE_TX_RESOLUTION_UNKNOWN);
             }
 
             if (mc.inDistributedTransaction()) {
@@ -413,7 +413,7 @@ public class FBConnection implements FirebirdConnection {
         try (LockCloseable ignored = withLock()) {
             if (isClosed()) {
                 throw new SQLNonTransientConnectionException("You cannot rollback closed connection.",
-                        SQL_STATE_CONNECTION_CLOSED);
+                        SQL_STATE_TX_RESOLUTION_UNKNOWN);
             }
 
             if (mc.inDistributedTransaction()) {
@@ -505,7 +505,7 @@ public class FBConnection implements FirebirdConnection {
                 try {
                     setAutoCommit(true);
                 } catch (SQLException e) {
-                    if (!SQL_STATE_CONNECTION_CLOSED.equals(e.getSQLState())) {
+                    if (e.getErrorCode() != JaybirdErrorCodes.jb_connectionClosed) {
                         chainBuilder.append(e);
                     }
                 }

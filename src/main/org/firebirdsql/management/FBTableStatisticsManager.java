@@ -20,17 +20,16 @@ package org.firebirdsql.management;
 
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.gds.ng.InfoTruncatedException;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.util.Volatile;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLNonTransientException;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,8 +69,7 @@ public final class FBTableStatisticsManager implements AutoCloseable {
 
     private FBTableStatisticsManager(FirebirdConnection connection) throws SQLException {
         if (connection.isClosed()) {
-            throw new SQLNonTransientConnectionException("This connection is closed and cannot be used now.",
-                    SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
+            throw FbExceptionBuilder.connectionClosed();
         }
         this.connection = connection;
     }

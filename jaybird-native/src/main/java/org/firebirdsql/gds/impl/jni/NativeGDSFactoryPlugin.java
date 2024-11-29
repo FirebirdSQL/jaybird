@@ -37,7 +37,7 @@ public final class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     @Override
     public String getPluginName() {
-        return "JNA-based GDS implementation.";
+        return "JNA-based GDS implementation";
     }
 
     @Override

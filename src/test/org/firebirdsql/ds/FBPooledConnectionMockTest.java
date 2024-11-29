@@ -24,7 +24,6 @@ import java.sql.SQLException;
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
 
-import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -178,7 +177,7 @@ class FBPooledConnectionMockTest {
         pooled.close();
 
         SQLException exception = assertThrows(SQLException.class, () -> pooled.getConnection());
-        assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_CLOSED));
+        assertThat(exception, sqlStateEquals(SQL_STATE_CONNECTION_FAILURE));
     }
 
     /**

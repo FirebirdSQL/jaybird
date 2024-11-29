@@ -33,7 +33,6 @@ import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
 import org.firebirdsql.jaybird.props.PropertyNames;
-import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
@@ -64,10 +63,10 @@ import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.firebirdsql.gds.ISCConstants.fb_info_wire_crypt;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.ISCConstants.isc_net_read_err;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidConnectionEncoding;
 import static org.firebirdsql.gds.JaybirdSystemProperties.DEFAULT_CONNECTION_ENCODING_PROPERTY;
 import static org.firebirdsql.gds.JaybirdSystemProperties.PROCESS_ID_PROP;
 import static org.firebirdsql.gds.JaybirdSystemProperties.PROCESS_NAME_PROP;
@@ -391,7 +390,7 @@ class FBConnectionTest {
              var ignored2 = withTemporarySystemProperty(REQUIRE_CONNECTION_ENCODING_PROPERTY, "true")){
             var exception = assertThrowsForAutoCloseable(SQLNonTransientConnectionException.class,
                     () -> DriverManager.getConnection(getUrl(), props));
-            assertThat(exception, message(equalTo(FBManagedConnection.ERROR_NO_CHARSET)));
+            assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_noConnectionEncoding));
         }
     }
 
@@ -716,8 +715,7 @@ class FBConnectionTest {
 
         var exception = assertThrowsForAutoCloseable(SQLNonTransientConnectionException.class,
                 () -> DriverManager.getConnection(getUrl(), props));
-        assertThat(exception, message(equalTo(
-                "No valid encoding definition for Firebird encoding DOES_NOT_EXIST and/or Java charset null")));
+        assertThat(exception, fbMessageStartsWith(jb_invalidConnectionEncoding, "DOES_NOT_EXIST", "(null)"));
     }
 
     @Test
@@ -728,8 +726,7 @@ class FBConnectionTest {
 
         var exception = assertThrowsForAutoCloseable(SQLNonTransientConnectionException.class,
                 () -> DriverManager.getConnection(getUrl(), props));
-        assertThat(exception, message(equalTo(
-                "No valid encoding definition for Firebird encoding null and/or Java charset DOES_NOT_EXIST")));
+        assertThat(exception, fbMessageStartsWith(jb_invalidConnectionEncoding, "(null)", "DOES_NOT_EXIST"));
     }
 
     @Test
