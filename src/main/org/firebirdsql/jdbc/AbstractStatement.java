@@ -125,7 +125,7 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
      */
     protected final void checkValidity() throws SQLException {
         if (closed) {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_stmtClosed).toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_stmtClosed);
         }
     }
 

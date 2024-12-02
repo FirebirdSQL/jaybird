@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbDatabase;
@@ -31,9 +30,9 @@ import org.firebirdsql.jaybird.parser.LocalStatementType;
 import org.firebirdsql.jaybird.parser.StatementDetector;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
-import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.util.InternalApi;
@@ -54,11 +53,8 @@ import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
 import static java.util.stream.Collectors.toMap;
 import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_CONNECTION_FAILURE;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_TX_STATE;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_TX_ACTIVE;
-import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_TX_RESOLUTION_UNKNOWN;
+import static org.firebirdsql.gds.JaybirdErrorCodes.*;
+import static org.firebirdsql.jdbc.SQLStateConstants.*;
 
 /**
  * The class {@code FBConnection} is a handle to a {@link FBManagedConnection} and implements {@link Connection}.
@@ -292,6 +288,7 @@ public class FBConnection implements FirebirdConnection {
         }
     }
 
+    @SuppressWarnings("MagicConstant")
     @Override
     public Statement createStatement() throws SQLException {
         return createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, resultSetHoldability);
@@ -442,8 +439,7 @@ public class FBConnection implements FirebirdConnection {
         if (isAllowTxStmts()) {
             commit();
         } else {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_commitStatementNotAllowed)
-                    .toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(jb_commitStatementNotAllowed);
         }
     }
 
@@ -451,8 +447,7 @@ public class FBConnection implements FirebirdConnection {
         if (isAllowTxStmts()) {
             rollback();
         } else {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_rollbackStatementNotAllowed)
-                    .toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(jb_rollbackStatementNotAllowed);
         }
     }
 
@@ -460,8 +455,7 @@ public class FBConnection implements FirebirdConnection {
         if (isAllowTxStmts()) {
             txCoordinator.startSqlTransaction(sql);
         } else {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_setTransactionStatementNotAllowed)
-                    .toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(jb_setTransactionStatementNotAllowed);
         }
     }
 
@@ -505,7 +499,7 @@ public class FBConnection implements FirebirdConnection {
                 try {
                     setAutoCommit(true);
                 } catch (SQLException e) {
-                    if (e.getErrorCode() != JaybirdErrorCodes.jb_connectionClosed) {
+                    if (e.getErrorCode() != jb_connectionClosed) {
                         chainBuilder.append(e);
                     }
                 }
@@ -689,9 +683,10 @@ public class FBConnection implements FirebirdConnection {
         }
     }
 
+    @SuppressWarnings("MagicConstant")
     @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-        return createStatement(resultSetType, resultSetConcurrency, this.resultSetHoldability);
+        return createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     @Override
@@ -711,10 +706,11 @@ public class FBConnection implements FirebirdConnection {
         return ResultSetBehavior.of(resultSetType, resultSetConcurrency, resultSetHoldability, this::addWarning);
     }
 
+    @SuppressWarnings("MagicConstant")
     @Override
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency)
             throws SQLException {
-        return prepareStatement(sql, resultSetType, resultSetConcurrency, this.resultSetHoldability);
+        return prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     @Override
@@ -853,12 +849,12 @@ public class FBConnection implements FirebirdConnection {
             return new FBTxPreparedStatement(this, statementType, sql, rsBehavior);
         }
         int errorCode = switch (statementType) {
-            case HARD_COMMIT -> JaybirdErrorCodes.jb_commitStatementNotAllowed;
-            case HARD_ROLLBACK -> JaybirdErrorCodes.jb_rollbackStatementNotAllowed;
-            case SET_TRANSACTION -> JaybirdErrorCodes.jb_setTransactionStatementNotAllowed;
+            case HARD_COMMIT -> jb_commitStatementNotAllowed;
+            case HARD_ROLLBACK -> jb_rollbackStatementNotAllowed;
+            case SET_TRANSACTION -> jb_setTransactionStatementNotAllowed;
             default -> throw new IllegalArgumentException("Unexpected statementType: " + statementType);
         };
-        throw FbExceptionBuilder.forNonTransientException(errorCode).toSQLException();
+        throw FbExceptionBuilder.toNonTransientException(errorCode);
     }
 
     @Override
@@ -874,14 +870,12 @@ public class FBConnection implements FirebirdConnection {
             checkValidity();
             // With the current implementation of FBCallableStatement, transaction statements would fail, but we
             // explicitly don't allow them, even if FBCallableStatement were to change so execution could work.
-            FBStatement.rejectIfTxStmt(sql, JaybirdErrorCodes.jb_prepareCallWithTxStmt);
+            FBStatement.rejectIfTxStmt(sql, jb_prepareCallWithTxStmt);
 
             ResultSetBehavior rsBehavior =
                     toResultSetBehavior(resultSetType, resultSetConcurrency, resultSetHoldability);
             if (rsBehavior.isUpdatable()) {
-                addWarning(FbExceptionBuilder
-                        .forWarning(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonStoredProcedure)
-                        .toSQLException(SQLWarning.class));
+                addWarning(FbExceptionBuilder.toWarning(jb_concurrencyResetReadOnlyReasonStoredProcedure));
                 rsBehavior = rsBehavior.withReadOnly();
             }
 
@@ -1061,7 +1055,7 @@ public class FBConnection implements FirebirdConnection {
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unableToUnwrap)
+            throw FbExceptionBuilder.forException(jb_unableToUnwrap)
                     .messageParameter(iface != null ? iface.getName() : "(null)")
                     .toSQLException();
         }
@@ -1125,7 +1119,7 @@ public class FBConnection implements FirebirdConnection {
     public GDSHelper getGDSHelper() throws SQLException {
         if (mc == null)
             // TODO Right error code?
-            throw FbExceptionBuilder.forException(ISCConstants.isc_req_no_trans).toSQLException();
+            throw FbExceptionBuilder.toException(ISCConstants.isc_req_no_trans);
 
         return mc.getGDSHelper();
     }
@@ -1294,7 +1288,7 @@ public class FBConnection implements FirebirdConnection {
         if (isClosed()) return;
         PERMISSION_CALL_ABORT.checkGuard(this);
         if (executor == null) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidExecutor).toSQLException();
+            throw FbExceptionBuilder.toException(jb_invalidExecutor);
         }
         final FbDatabase fbDatabase;
         try {
@@ -1338,10 +1332,10 @@ public class FBConnection implements FirebirdConnection {
     public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
         PERMISSION_SET_NETWORK_TIMEOUT.checkGuard(this);
         if (executor == null) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidExecutor).toSQLException();
+            throw FbExceptionBuilder.toException(jb_invalidExecutor);
         }
         if (milliseconds < 0) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidTimeout).toSQLException();
+            throw FbExceptionBuilder.toException(jb_invalidTimeout);
         }
         try (LockCloseable ignored = withLock()) {
             checkValidity();

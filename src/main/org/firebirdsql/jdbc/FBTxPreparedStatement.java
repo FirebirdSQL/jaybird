@@ -120,7 +120,7 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     @Override
     public ResultSet executeQuery() throws SQLException {
         checkValidity();
-        throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_executeQueryWithTxStmt).toSQLException();
+        throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_executeQueryWithTxStmt);
     }
 
     @Override
@@ -159,7 +159,7 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
     @Override
     public void addBatch() throws SQLException {
         checkValidity();
-        throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_addBatchWithTxStmt).toSQLException();
+        throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_addBatchWithTxStmt);
     }
 
     @Override

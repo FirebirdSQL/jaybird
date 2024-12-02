@@ -93,7 +93,7 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
             }
         } else if (isClosed() && !method.equals(CONNECTION_CLOSE)) {
             throw forcedClose
-                    ? FbExceptionBuilder.forNonTransientConnectionException(jb_logicalConnectionForciblyClosed).toSQLException()
+                    ? FbExceptionBuilder.toNonTransientConnectionException(jb_logicalConnectionForciblyClosed)
                     : FbExceptionBuilder.connectionClosed();
         }
 

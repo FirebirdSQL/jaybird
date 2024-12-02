@@ -36,6 +36,8 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_executeImmediateRequiresTransactionAttached;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
@@ -398,15 +400,11 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         try {
             if (isAttached()) {
                 if (transaction == null) {
-                    throw FbExceptionBuilder
-                            .forException(JaybirdErrorCodes.jb_executeImmediateRequiresTransactionAttached)
-                            .toSQLException();
+                    throw FbExceptionBuilder.toException(jb_executeImmediateRequiresTransactionAttached);
                 }
                 checkTransactionActive(transaction);
             } else if (transaction != null) {
-                throw FbExceptionBuilder
-                        .forException(JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached)
-                        .toSQLException();
+                throw FbExceptionBuilder.toException(jb_executeImmediateRequiresNoTransactionDetached);
             }
             try (LockCloseable ignored = withLock()) {
                 sendExecuteImmediate(statementText, transaction);
@@ -523,7 +521,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @param response
      *         The response object
      */
-    protected final void processReleaseObjectResponse(@SuppressWarnings("UnusedParameters") Response response) {
+    protected final void processReleaseObjectResponse(@SuppressWarnings("unused") Response response) {
         // Do nothing
     }
 

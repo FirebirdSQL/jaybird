@@ -36,6 +36,7 @@ import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.ISCConstants.isc_segstr_no_op;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
 
@@ -121,7 +122,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     public void open() throws SQLException {
         try {
             if (isOutput() && getBlobId() != NO_BLOB_ID) {
-                throw FbExceptionBuilder.forNonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
+                throw FbExceptionBuilder.toNonTransientException(isc_segstr_no_op);
             }
 
             final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
@@ -237,7 +238,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
         try (LockCloseable ignored = withLock()) {
             validateBufferLength(b, off, len);
             if (len == 0) {
-                throw FbExceptionBuilder.forException(jb_blobPutSegmentEmpty).toSQLException();
+                throw FbExceptionBuilder.toException(jb_blobPutSegmentEmpty);
             }
             checkDatabaseAttached();
             checkTransactionActive();

@@ -113,8 +113,7 @@ public final class FBManagedConnection implements ExceptionListener {
         if (connectionProperties.getEncoding() == null && connectionProperties.getCharSet() == null) {
             String defaultEncoding = getDefaultConnectionEncoding();
             if (defaultEncoding == null) {
-                throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_noConnectionEncoding)
-                        .toSQLException();
+                throw FbExceptionBuilder.toNonTransientConnectionException(JaybirdErrorCodes.jb_noConnectionEncoding);
             }
             connectionProperties.setEncoding(defaultEncoding);
         }
@@ -155,7 +154,7 @@ public final class FBManagedConnection implements ExceptionListener {
     public GDSHelper getGDSHelper() throws SQLException {
         if (gdsHelper == null) {
             // TODO Right error code?
-            throw FbExceptionBuilder.forException(ISCConstants.isc_req_no_trans).toSQLException();
+            throw FbExceptionBuilder.toException(ISCConstants.isc_req_no_trans);
         }
         return gdsHelper;
     }
@@ -350,8 +349,7 @@ public final class FBManagedConnection implements ExceptionListener {
             } else {
                 if (inTransaction()) {
                     // TODO should we skip disassociation in this case?
-                    throw FbExceptionBuilder.forException(jb_attemptToDestroyManagedConnectionActiveTx)
-                            .toSQLException();
+                    throw FbExceptionBuilder.toException(jb_attemptToDestroyManagedConnectionActiveTx);
                 }
 
                 gdsHelper.detachDatabase();

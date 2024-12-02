@@ -29,6 +29,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_connectionClosed;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptAlgorithmNotAvailable;
@@ -92,6 +93,21 @@ public final class FbExceptionBuilder {
     }
 
     /**
+     * Creates a {@link SQLException} (or subclass) with the specified error code.
+     * <p>
+     * Equivalent to calling {@code FbExceptionBuilder.forException(errorCode).toSQLException()}.
+     * </p>
+     *
+     * @param errorCode
+     *         Firebird error code
+     * @return exception with message, vendor code and SQLSTATE derived from {@code errorCode}
+     * @since 6
+     */
+    public static SQLException toException(int errorCode) {
+        return forException(errorCode).toSQLException();
+    }
+
+    /**
      * Creates an exception builder for timeout exceptions with the specified error code.
      * <p>
      * Equivalent to calling: {@code new FbExceptionBuilder().timeoutException(errorCode); }
@@ -104,6 +120,22 @@ public final class FbExceptionBuilder {
      */
     public static FbExceptionBuilder forTimeoutException(int errorCode) {
         return new FbExceptionBuilder(Type.TIMEOUT, errorCode);
+    }
+
+    /**
+     * Creates a {@link SQLException} (or subclass) for timeout exceptions with the specified error code.
+     * <p>
+     * Equivalent to calling {@code FbExceptionBuilder.forTimeoutException(errorCode).toSQLException()}.
+     * </p>
+     *
+     * @param errorCode
+     *         Firebird error code
+     * @return exception with message, vendor code and SQLSTATE derived from {@code errorCode}
+     * @since 6
+     */
+    @SuppressWarnings("unused")
+    public static SQLException toTimeoutException(int errorCode) {
+        return forTimeoutException(errorCode).toSQLException();
     }
 
     /**
@@ -122,6 +154,21 @@ public final class FbExceptionBuilder {
     }
 
     /**
+     * Creates a {@link SQLException} (or subclass) for non-transient exceptions with the specified error code.
+     * <p>
+     * Equivalent to calling {@code FbExceptionBuilder.forNonTransientException(errorCode).toSQLException()}.
+     * </p>
+     *
+     * @param errorCode
+     *         Firebird error code
+     * @return exception with message, vendor code and SQLSTATE derived from {@code errorCode}
+     * @since 6
+     */
+    public static SQLException toNonTransientException(int errorCode) {
+        return forNonTransientException(errorCode).toSQLException();
+    }
+
+    /**
      * Creates an exception builder for non-transient connection exceptions with the specified error code.
      * <p>
      * Equivalent to calling: {@code new FbExceptionBuilder().nonTransientConnectionException(errorCode); }
@@ -137,10 +184,23 @@ public final class FbExceptionBuilder {
     }
 
     /**
-     * Creates an exception builder for transient exceptions with the specified error code.
+     * Creates a {@link SQLException} (or subclass) for non-transient connection exceptions with the specified error
+     * code.
      * <p>
-     * Equivalent to calling: {@code new FbExceptionBuilder().transientException(errorCode); }
+     * Equivalent to calling {@code FbExceptionBuilder.forNonTransientConnectionException(errorCode).toSQLException()}.
      * </p>
+     *
+     * @param errorCode
+     *         Firebird error code
+     * @return exception with message, vendor code and SQLSTATE derived from {@code errorCode}
+     * @since 6
+     */
+    public static SQLException toNonTransientConnectionException(int errorCode) {
+        return forNonTransientConnectionException(errorCode).toSQLException();
+    }
+
+    /**
+     * Creates an exception builder for transient exceptions with the specified error code.
      *
      * @param errorCode
      *         Firebird error code
@@ -149,6 +209,21 @@ public final class FbExceptionBuilder {
      */
     public static FbExceptionBuilder forTransientException(int errorCode) {
         return new FbExceptionBuilder(Type.TRANSIENT, errorCode);
+    }
+
+    /**
+     * Creates a {@link SQLException} (or subclass) for transient exceptions with the specified error code.
+     * <p>
+     * Equivalent to calling {@code FbExceptionBuilder.forTransientException(errorCode).toSQLException()}.
+     * </p>
+     *
+     * @param errorCode
+     *         Firebird error code
+     * @return exception with message, vendor code and SQLSTATE derived from {@code errorCode}
+     * @since 6
+     */
+    public static SQLException toTransientException(int errorCode) {
+        return forTransientException(errorCode).toSQLException();
     }
 
     /**
@@ -163,6 +238,21 @@ public final class FbExceptionBuilder {
      */
     public static FbExceptionBuilder forWarning(int errorCode) {
         return new FbExceptionBuilder(Type.WARNING, errorCode);
+    }
+
+    /**
+     * Creates a {@link SQLWarning} with the specified error code.
+     * <p>
+     * Equivalent to calling {@code FbExceptionBuilder.forWarning(errorCode).toSQLException(SQLWarning.class)}.
+     * </p>
+     *
+     * @param errorCode
+     *         Firebird error code
+     * @return exception with message, vendor code and SQLSTATE derived from {@code errorCode}
+     * @since 6
+     */
+    public static SQLWarning toWarning(int errorCode) {
+        return forWarning(errorCode).toSQLException(SQLWarning.class);
     }
 
     private static final Map<Integer, CachedMessage> CACHED_MESSAGE_MAP = new ConcurrentHashMap<>(4, 1f, 1);
@@ -636,8 +726,7 @@ public final class FbExceptionBuilder {
         private Throwable cause;
 
         ExceptionInformation(Type type, int errorCode) {
-            if (type == null) throw new IllegalArgumentException("type must not be null");
-            this.type = type;
+            this.type = requireNonNull(type, "type");
             this.errorCode = errorCode;
             sqlState = GDSExceptionHelper.getSQLState(errorCode, type.getDefaultSQLState());
         }
@@ -748,7 +837,7 @@ public final class FbExceptionBuilder {
          * @return cached message with the message and SQLSTATE from the generated exception
          */
         private static CachedMessage of(int errorCode) {
-            SQLException exception = forException(errorCode).toSQLException();
+            SQLException exception = toException(errorCode);
             return new CachedMessage(exception.getMessage(), exception.getSQLState());
         }
 
@@ -766,7 +855,7 @@ public final class FbExceptionBuilder {
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 if (sqlState != null) {
                     if (sqlState.startsWith(SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX)) {
-                        // Feature not supported by Firebird
+                        // Feature not supported by Firebird or Jaybird
                         return new SQLFeatureNotSupportedException(message, sqlState, errorCode);
                     } else if (sqlState.startsWith(SQLSTATE_SYNTAX_ERROR_PREFIX)) {
                         return new SQLSyntaxErrorException(message, sqlState, errorCode);
@@ -788,7 +877,7 @@ public final class FbExceptionBuilder {
             }
         },
         /**
-         * Force builder to create an exception of {@link java.sql.SQLTimeoutException} or subclass
+         * Force builder to create a {@link java.sql.SQLTimeoutException} or subclass.
          */
         // TODO Specific default sqlstate for timeout?
         TIMEOUT(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
@@ -798,7 +887,7 @@ public final class FbExceptionBuilder {
             }
         },
         /**
-         * Force builder to create exception of {@link java.sql.SQLNonTransientException}
+         * Force builder to create a {@link java.sql.SQLNonTransientException} or subclass.
          */
         NON_TRANSIENT(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
             @Override
@@ -811,7 +900,10 @@ public final class FbExceptionBuilder {
                 case isc_login -> new SQLInvalidAuthorizationSpecException(message, sqlState, errorCode);
                 default -> {
                     if (sqlState != null) {
-                        if (sqlState.startsWith(SQLSTATE_SYNTAX_ERROR_PREFIX)) {
+                        if (sqlState.startsWith(SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX)) {
+                            // Feature not supported by Firebird or Jaybird
+                            yield new SQLFeatureNotSupportedException(message, sqlState, errorCode);
+                        } else if (sqlState.startsWith(SQLSTATE_SYNTAX_ERROR_PREFIX)) {
                             yield new SQLSyntaxErrorException(message, sqlState, errorCode);
                         } else if (sqlState.startsWith(SQLSTATE_CONNECTION_ERROR_PREFIX)) {
                             yield new SQLNonTransientConnectionException(message, sqlState, errorCode);
@@ -823,7 +915,7 @@ public final class FbExceptionBuilder {
             }
         },
         /**
-         * Force builder to create exception of {@link java.sql.SQLNonTransientConnectionException} or a subclass.
+         * Force builder to create a {@link java.sql.SQLNonTransientConnectionException} or a subclass.
          */
         NON_TRANSIENT_CONNECT(SQLStateConstants.SQL_STATE_CONNECTION_ERROR) {
             @Override

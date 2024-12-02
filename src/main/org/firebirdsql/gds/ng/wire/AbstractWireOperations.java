@@ -276,7 +276,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     @Override
     public void setNetworkTimeout(int milliseconds) throws SQLException {
         if (milliseconds < 0) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidTimeout).toSQLException();
+            throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_invalidTimeout);
         }
         connection.setSoTimeout(milliseconds);
     }

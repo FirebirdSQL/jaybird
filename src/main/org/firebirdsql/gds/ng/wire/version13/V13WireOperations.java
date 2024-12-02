@@ -56,6 +56,7 @@ import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptNoCryptKeyAvailable;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_receiveTrustedAuth_NotSupported;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
@@ -92,9 +93,7 @@ public class V13WireOperations extends V11WireOperations {
                 switch (operation) {
                 case op_trusted_auth -> {
                     xdrIn.skipNBytes(4); // skip int: p_trau_data
-                    throw FbExceptionBuilder
-                            .forNonTransientConnectionException(JaybirdErrorCodes.jb_receiveTrustedAuth_NotSupported)
-                            .toSQLException();
+                    throw FbExceptionBuilder.toNonTransientConnectionException(jb_receiveTrustedAuth_NotSupported);
                 }
                 case op_cont_auth -> {
                     data = xdrIn.readBuffer(); // p_data
@@ -166,7 +165,7 @@ public class V13WireOperations extends V11WireOperations {
         }
 
         // If we have exited from the cycle, this mean auth failed
-        throw FbExceptionBuilder.forException(ISCConstants.isc_login).toSQLException();
+        throw FbExceptionBuilder.toException(ISCConstants.isc_login);
     }
 
     private CryptSessionConfig getCryptSessionConfig(EncryptionIdentifier encryptionIdentifier, byte[] specificData)
@@ -174,7 +173,7 @@ public class V13WireOperations extends V11WireOperations {
         ClientAuthBlock clientAuthBlock = getClientAuthBlock();
         if (!clientAuthBlock.supportsEncryption() || !encryptionIdentifier.isTypeSymmetric()) {
             throw FbExceptionBuilder.forNonTransientException(jb_cryptNoCryptKeyAvailable)
-                    .messageParameter(encryptionIdentifier.toString())
+                    .messageParameter(encryptionIdentifier)
                     .toSQLException();
         }
         return CryptSessionConfig.symmetric(encryptionIdentifier, clientAuthBlock.getSessionKey(), specificData);

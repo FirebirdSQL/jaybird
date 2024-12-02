@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import static java.util.Objects.requireNonNull;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_notAttachedToDatabase;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_notConnectedToServer;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.PROTOCOL_VERSION18;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_blob;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_cursor;
@@ -132,7 +135,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     @Override
     protected final void checkConnected() throws SQLException {
         if (!connection.isConnected()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer).toSQLException();
+            throw FbExceptionBuilder.toNonTransientConnectionException(jb_notConnectedToServer);
         }
     }
 
@@ -150,7 +153,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     protected final void checkAttached() throws SQLException {
         checkConnected();
         if (!isAttached()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase).toSQLException();
+            throw FbExceptionBuilder.toNonTransientConnectionException(jb_notAttachedToDatabase);
         }
     }
 
@@ -265,9 +268,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
                 if (channel != null) {
                     AsynchronousProcessor.getInstance().unregisterAsynchronousChannel(channel);
                 }
-                throw FbExceptionBuilder
-                        .forNonTransientException(JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected)
-                        .toSQLException();
+                throw FbExceptionBuilder.toNonTransientException(jb_unableToCancelEventReasonNotConnected);
             }
             channel.cancelEvent(eventHandle);
         } catch (SQLException e) {

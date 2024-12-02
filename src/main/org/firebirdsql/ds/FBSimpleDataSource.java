@@ -201,8 +201,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
     }
 
     /**
-     * Get underlying connection factory (in our case instance of {@link FBDataSource} class) that will provide JDBC
-     * connections.
+     * Get underlying connection factory (an instance of {@link FBDataSource} class) that will provide JDBC connections.
      *
      * @return JDBC connection factory.
      * @throws SQLException
@@ -227,7 +226,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
             }
 
             if (trimToNull(mcf.getDatabaseName()) == null) {
-                throw new SQLException("Database was not specified. Cannot provide connections.");
+                throw FbExceptionBuilder.toNonTransientConnectionException(JaybirdErrorCodes.jb_databasePathRequired);
             }
             return ds = (FBDataSource) mcf.createConnectionFactory();
         } finally {

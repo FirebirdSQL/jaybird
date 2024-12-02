@@ -194,7 +194,7 @@ public final class FBCachedBlob implements FirebirdBlob {
 
     private void checkClosed() throws SQLException {
         if (blobData == FREED_MARKER) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_blobClosed).toSQLException();
+            throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_blobClosed);
         }
     }
 }

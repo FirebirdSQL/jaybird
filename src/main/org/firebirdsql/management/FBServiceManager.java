@@ -385,7 +385,7 @@ public class FBServiceManager implements ServiceManager {
             }
             case isc_info_truncated -> bufferSize = bufferSize * 2;
             case isc_info_end -> processing = false;
-            default -> throw FbExceptionBuilder.forException(isc_infunk).toSQLException();
+            default -> throw FbExceptionBuilder.toException(isc_infunk);
             }
         }
     }

@@ -109,7 +109,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @param response
      *         Response object
      */
-    protected void processFreeResponse(@SuppressWarnings("UnusedParameters") Response response) {
+    protected void processFreeResponse(@SuppressWarnings("unused") Response response) {
         // No processing needed
     }
 
@@ -248,7 +248,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             try (OperationCloseHandle operationCloseHandle = signalExecute()) {
                 if (operationCloseHandle.isCancelled()) {
                     // operation was synchronously cancelled from an OperationAware implementation
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
+                    throw FbExceptionBuilder.toException(ISCConstants.isc_cancelled);
                 }
                 try {
                     if (hasSingletonResult) {
@@ -392,7 +392,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             try (OperationCloseHandle operationCloseHandle = signalFetch()) {
                 if (operationCloseHandle.isCancelled()) {
                     // operation was synchronously cancelled from an OperationAware implementation
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
+                    throw FbExceptionBuilder.toException(ISCConstants.isc_cancelled);
                 }
                 sendFetch0(fetchSize);
                 receiveFetch0Response();

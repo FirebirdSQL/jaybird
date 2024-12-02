@@ -300,8 +300,7 @@ sealed class FBStatementFetcher extends AbstractFetcher implements FBFetcher per
     }
 
     private static SQLException notScrollable() {
-        return FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
-                .toSQLException();
+        return FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly);
     }
 
     @Override

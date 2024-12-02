@@ -83,8 +83,7 @@ public final class ChaCha64EncryptionPlugin implements EncryptionPlugin {
     private byte[] toChaChaKey(byte[] key) throws SQLException {
         if (key.length < 16) {
             throw FbExceptionBuilder.forNonTransientException(jb_cryptInvalidKey)
-                    .messageParameter(encryptionIdentifier())
-                    .messageParameter("Key too short")
+                    .messageParameter(encryptionIdentifier(), "Key too short")
                     .toSQLException();
         }
         try {
@@ -127,8 +126,7 @@ public final class ChaCha64EncryptionPlugin implements EncryptionPlugin {
             byte[] iv = cryptSessionConfig.specificData();
             if (iv == null || iv.length != 8) {
                 throw FbExceptionBuilder.forNonTransientException(jb_cryptInvalidKey)
-                        .messageParameter(encryptionIdentifier())
-                        .messageParameter("Wrong IV length, needs 8 bytes")
+                        .messageParameter(encryptionIdentifier(), "Wrong IV length, needs 8 bytes")
                         .toSQLException();
             }
 

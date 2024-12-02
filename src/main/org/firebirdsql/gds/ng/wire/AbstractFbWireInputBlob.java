@@ -59,7 +59,7 @@ public abstract class AbstractFbWireInputBlob extends AbstractFbWireBlob {
     }
 
     private SQLException writeNotSupported() {
-        SQLException e = FbExceptionBuilder.forNonTransientException(ISCConstants.isc_segstr_no_write).toSQLException();
+        SQLException e = FbExceptionBuilder.toNonTransientException(ISCConstants.isc_segstr_no_write);
         exceptionListenerDispatcher.errorOccurred(e);
         return e;
     }

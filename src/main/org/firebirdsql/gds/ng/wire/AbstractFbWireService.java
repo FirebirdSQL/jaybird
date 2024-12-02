@@ -105,7 +105,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
      */
     protected final void checkConnected() throws SQLException {
         if (!connection.isConnected()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer).toSQLException();
+            throw FbExceptionBuilder.toNonTransientConnectionException(JaybirdErrorCodes.jb_notConnectedToServer);
         }
     }
 
@@ -123,7 +123,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     protected final void checkAttached() throws SQLException {
         checkConnected();
         if (!isAttached()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase).toSQLException();
+            throw FbExceptionBuilder.toNonTransientConnectionException(JaybirdErrorCodes.jb_notAttachedToDatabase);
         }
     }
 

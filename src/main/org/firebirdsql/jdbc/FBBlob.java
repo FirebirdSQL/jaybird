@@ -658,7 +658,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
 
     private void checkClosed() throws SQLException {
         if (gdsHelper == null) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_blobClosed).toSQLException();
+            throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_blobClosed);
         }
     }
 

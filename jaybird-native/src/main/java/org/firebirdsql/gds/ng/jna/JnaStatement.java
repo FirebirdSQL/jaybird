@@ -29,6 +29,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.jaybird.util.Cleaners;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.jna.fbclient.XSQLDA;
@@ -137,8 +138,7 @@ public class JnaStatement extends AbstractFbStatement {
                     useNulTerminated = true;
                 } else {
                     throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_maxStatementLengthExceeded)
-                            .messageParameter(JnaDatabase.MAX_STATEMENT_LENGTH)
-                            .messageParameter(statementArray.length)
+                            .messageParameter(JnaDatabase.MAX_STATEMENT_LENGTH, statementArray.length)
                             .toSQLException();
                 }
             }
@@ -217,7 +217,7 @@ public class JnaStatement extends AbstractFbStatement {
             try (OperationCloseHandle operationCloseHandle = signalExecute()) {
                 if (operationCloseHandle.isCancelled()) {
                     // operation was synchronously cancelled from an OperationAware implementation
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
+                    throw FbExceptionBuilder.toException(ISCConstants.isc_cancelled);
                 }
                 if (hasSingletonResult) {
                     clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
@@ -392,7 +392,7 @@ public class JnaStatement extends AbstractFbStatement {
      */
     @Override
     public void fetchRows(int fetchSize) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             checkStatementHasOpenCursor();
             checkFetchSize(fetchSize);
             if (isAfterLast()) return;
@@ -400,24 +400,27 @@ public class JnaStatement extends AbstractFbStatement {
             try (OperationCloseHandle operationCloseHandle = signalFetch()) {
                 if (operationCloseHandle.isCancelled()) {
                     // operation was synchronously cancelled from an OperationAware implementation
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
+                    throw FbExceptionBuilder.toException(ISCConstants.isc_cancelled);
                 }
                 final ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
                         outXSqlDa);
                 processStatusVector();
 
-                int fetchStatusInt = fetchStatus.intValue();
-                if (fetchStatusInt == ISCConstants.FETCH_OK) {
+                switch (fetchStatus.intValue()) {
+                case ISCConstants.FETCH_OK -> {
                     queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
                     statementListenerDispatcher.fetchComplete(this, FetchDirection.FORWARD, 1);
-                } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
+                }
+                case ISCConstants.FETCH_NO_MORE_ROWS -> {
                     statementListenerDispatcher.fetchComplete(this, FetchDirection.FORWARD, 0);
                     setAfterLast();
                     // Note: we are not explicitly 'closing' the cursor here
-                } else {
-                    final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatusInt;
+                }
+                default -> {
+                    final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatus;
                     log.log(System.Logger.Level.DEBUG, message);
-                    throw new SQLException(message);
+                    throw new SQLException(message, SQLStateConstants.SQL_STATE_GENERAL_ERROR);
+                }
                 }
             }
         } catch (SQLException e) {

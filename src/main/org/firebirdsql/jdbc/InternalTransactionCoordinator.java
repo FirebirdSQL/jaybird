@@ -174,8 +174,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
      */
     void startSqlTransaction(String sql) throws SQLException {
         if (!connection.isAllowTxStmts()) {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_setTransactionStatementNotAllowed)
-                    .toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_setTransactionStatementNotAllowed);
         }
         try (LockCloseable ignored = withLock()) {
             coordinator.startSqlTransaction(sql);
@@ -442,8 +441,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         void startSqlTransaction(String setTransactionSql) throws SQLException {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_setTransactionNotAllowedInAutoCommit)
-                    .toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_setTransactionNotAllowedInAutoCommit);
         }
     }
 
@@ -604,8 +602,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         void startSqlTransaction(String sql) throws SQLException {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_setTransactionNotAllowedInAutoCommit)
-                    .toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_setTransactionNotAllowedInAutoCommit);
         }
     }
 
@@ -653,8 +650,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         void startSqlTransaction(String sql) throws SQLException {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_setTransactionNotAllowedActiveTx)
-                    .toSQLException();
+            throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_setTransactionNotAllowedActiveTx);
         }
         
     }

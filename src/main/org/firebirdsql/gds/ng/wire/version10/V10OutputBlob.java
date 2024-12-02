@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -31,6 +30,7 @@ import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.ISCConstants.isc_segstr_no_op;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
@@ -60,7 +60,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
             checkBlobClosed();
 
             if (getBlobId() != FbBlob.NO_BLOB_ID) {
-                throw FbExceptionBuilder.forNonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
+                throw FbExceptionBuilder.toNonTransientException(isc_segstr_no_op);
             }
 
             sendOpen(BlobOpenOperation.OUTPUT_BLOB);
@@ -88,7 +88,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
         try (LockCloseable ignored = withLock())  {
             validateBufferLength(b, off, len);
             if (len == 0) {
-                throw FbExceptionBuilder.forException(jb_blobPutSegmentEmpty).toSQLException();
+                throw FbExceptionBuilder.toException(jb_blobPutSegmentEmpty);
             }
             checkDatabaseAttached();
             checkTransactionActive();

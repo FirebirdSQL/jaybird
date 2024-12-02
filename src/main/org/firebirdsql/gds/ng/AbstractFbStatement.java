@@ -593,8 +593,7 @@ public abstract class AbstractFbStatement implements FbStatement {
         try {
             checkStatementValid();
             if (!getDatabase().getServerVersion().isEqualOrAbove(3, 0)) {
-                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_explainedExecutionPlanNotSupported)
-                        .toSQLException();
+                throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_explainedExecutionPlanNotSupported);
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -615,8 +614,7 @@ public abstract class AbstractFbStatement implements FbStatement {
             checkStatementValid();
             if (getState() == StatementState.CURSOR_OPEN && !isAfterLast()) {
                 // We disallow fetching count when we haven't fetched all rows yet.
-                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_closeCursorBeforeCount)
-                        .toSQLException();
+                throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_closeCursorBeforeCount);
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -710,7 +708,7 @@ public abstract class AbstractFbStatement implements FbStatement {
             return;
         }
         }
-        throw FbExceptionBuilder.forNonTransientException(errorCode).toSQLException();
+        throw FbExceptionBuilder.toNonTransientException(errorCode);
     }
 
     /**
@@ -738,7 +736,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     protected final void checkStatementHasOpenCursor() throws SQLException {
         checkStatementValid();
         if (!getState().isCursorOpen()) {
-            throw FbExceptionBuilder.forException(ISCConstants.isc_cursor_not_open).toSQLException();
+            throw FbExceptionBuilder.toException(ISCConstants.isc_cursor_not_open);
         }
     }
 
@@ -792,8 +790,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     public void setTimeout(long statementTimeout) throws SQLException {
         try {
             if (statementTimeout < 0) {
-                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidTimeout)
-                        .toSQLException();
+                throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_invalidTimeout);
             }
             try (LockCloseable ignored = withLock()) {
                 checkStatementValid(StatementState.NEW);

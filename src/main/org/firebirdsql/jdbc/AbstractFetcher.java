@@ -125,7 +125,7 @@ abstract sealed class AbstractFetcher implements FBFetcher
 
     protected final void checkOpen() throws SQLException {
         if (closed) {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_resultSetClosed).toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_resultSetClosed);
         }
     }
 

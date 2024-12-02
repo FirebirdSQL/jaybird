@@ -69,8 +69,7 @@ public final class FBXAConnection extends FBPooledConnection implements XAConnec
     private FBManagedConnection getManagedConnection() throws SQLException {
         FBManagedConnection managedConnection = mc.get();
         if (managedConnection == null) {
-            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_noManagedConnection)
-                    .toSQLException();
+            throw FbExceptionBuilder.toNonTransientConnectionException(JaybirdErrorCodes.jb_noManagedConnection);
         }
         return managedConnection;
     }

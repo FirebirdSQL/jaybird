@@ -318,8 +318,7 @@ final class GeneratedKeysQueryBuilder {
             if (columnName == null) {
                 throw FbExceptionBuilder
                         .forNonTransientException(JaybirdErrorCodes.jb_generatedKeysInvalidColumnPosition)
-                        .messageParameter(indexToAdd)
-                        .messageParameter(tableName)
+                        .messageParameter(indexToAdd, tableName)
                         .toSQLException();
             }
             columns.add(columnName);

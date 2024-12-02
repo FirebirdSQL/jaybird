@@ -27,6 +27,8 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.function.Consumer;
 
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive;
+
 /**
  * Aggregate type for result set behavior and logic for deriving supported combinations of type, concurrency and
  * holdability.
@@ -264,9 +266,7 @@ public final class ResultSetBehavior {
             case ResultSet.TYPE_FORWARD_ONLY -> NO_BIT_SET;
             case ResultSet.TYPE_SCROLL_INSENSITIVE -> SCROLLABLE_BIT;
             case ResultSet.TYPE_SCROLL_SENSITIVE -> {
-                warningConsumer.accept(
-                        FbExceptionBuilder.forWarning(JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive)
-                                .toSQLException(SQLWarning.class));
+                warningConsumer.accept(FbExceptionBuilder.toWarning(jb_resultSetTypeDowngradeReasonScrollSensitive));
                 // Given we downgrade to TYPE_SCROLL_INSENSITIVE, the SENSITIVE_BIT is not set
                 yield SCROLLABLE_BIT;
             }

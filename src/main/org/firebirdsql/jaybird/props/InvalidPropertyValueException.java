@@ -18,10 +18,12 @@
  */
 package org.firebirdsql.jaybird.props;
 
-import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 
+import java.io.Serial;
 import java.sql.SQLException;
+
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidConnectionPropertyValue;
 
 /**
  * Exception thrown when a connection property has an invalid value.
@@ -33,6 +35,9 @@ import java.sql.SQLException;
  * @since 5
  */
 public class InvalidPropertyValueException extends IllegalArgumentException {
+
+    @Serial
+    private static final long serialVersionUID = 8836337024456816650L;
 
     private InvalidPropertyValueException(SQLException cause) {
         super(cause.getMessage(), cause);
@@ -47,10 +52,8 @@ public class InvalidPropertyValueException extends IllegalArgumentException {
     }
 
     public static InvalidPropertyValueException invalidProperty(String name, String value, String additionalDetails) {
-        FbExceptionBuilder builder =
-                FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidConnectionPropertyValue)
-                        .messageParameter(value)
-                        .messageParameter(name);
+        FbExceptionBuilder builder = FbExceptionBuilder.forException(jb_invalidConnectionPropertyValue)
+                .messageParameter(value, name);
         if (additionalDetails != null) {
             builder.messageParameter(additionalDetails);
         }

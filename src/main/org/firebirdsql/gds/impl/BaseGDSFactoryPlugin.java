@@ -69,8 +69,7 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
      */
     protected static void requirePath(String path) throws SQLException {
         if (path == null) {
-            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_databasePathRequired)
-                    .toSQLException();
+            throw FbExceptionBuilder.toNonTransientConnectionException(JaybirdErrorCodes.jb_databasePathRequired);
         }
     }
 

@@ -85,7 +85,7 @@ class StatementHandler implements InvocationHandler {
         } else if (method.equals(STATEMENT_IS_CLOSED) || method.equals(FIREBIRD_STATEMENT_IS_CLOSED)) {
             return isClosed();
         } else if (isClosed() && !method.equals(STATEMENT_CLOSE)) {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_stmtClosed).toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_stmtClosed);
         }
 
         // Methods of statement and subinterfaces

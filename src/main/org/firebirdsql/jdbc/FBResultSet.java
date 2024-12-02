@@ -52,6 +52,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable;
 
 /**
  * Implementation of {@link ResultSet}.
@@ -147,9 +148,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
                         fbFetcher = new FBUpdatableFetcher(fbFetcher, this, rowDescriptor.createDeletedRowMarker());
                     }
                 } catch (FBResultSetNotUpdatableException ex) {
-                    statement.addWarning(FbExceptionBuilder
-                            .forWarning(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)
-                            .toSQLException(SQLWarning.class));
+                    statement.addWarning(FbExceptionBuilder.toWarning(jb_concurrencyResetReadOnlyReasonNotUpdatable));
                     fbFetcher.setReadOnly();
                 }
             }
@@ -266,7 +265,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     protected void checkOpen() throws SQLException {
         if (isClosed()) {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_resultSetClosed).toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_resultSetClosed);
         }
     }
 
@@ -278,8 +277,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      */
     protected void checkScrollable() throws SQLException {
         if (behavior().isForwardOnly()) {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
-                    .toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly);
         }
     }
 
@@ -1859,12 +1857,12 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         }
 
         @Override
-        public byte[] getFieldData() {
+        public byte @Nullable [] getFieldData() {
             return row.getFieldData(fieldPosition);
         }
 
         @Override
-        public void setFieldData(byte[] data) {
+        public void setFieldData(byte @Nullable [] data) {
             row.setFieldData(fieldPosition, data);
         }
     }

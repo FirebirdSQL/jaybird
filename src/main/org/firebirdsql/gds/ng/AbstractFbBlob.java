@@ -332,7 +332,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     protected void checkDatabaseAttached() throws SQLException {
         FbDatabase database = this.database;
         if (database == null || !database.isAttached()) {
-            throw FbExceptionBuilder.forNonTransientException(ISCConstants.isc_segstr_wrong_db).toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(ISCConstants.isc_segstr_wrong_db);
         }
     }
 
@@ -343,7 +343,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     protected void checkBlobOpen() throws SQLException {
         if (!isOpen()) {
             // TODO Use more specific exception message?
-            throw FbExceptionBuilder.forNonTransientException(ISCConstants.isc_bad_segstr_handle).toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(ISCConstants.isc_bad_segstr_handle);
         }
     }
 
@@ -353,7 +353,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      */
     protected void checkBlobClosed() throws SQLException {
         if (isOpen()) {
-            throw FbExceptionBuilder.forNonTransientException(ISCConstants.isc_no_segstr_close).toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(ISCConstants.isc_no_segstr_close);
         }
     }
 
@@ -398,7 +398,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         try (LockCloseable ignored = withLock()) {
             checkDatabaseAttached();
             if (isOutput() && getBlobId() == FbBlob.NO_BLOB_ID) {
-                throw FbExceptionBuilder.forException(ISCConstants.isc_bad_segstr_id).toSQLException();
+                throw FbExceptionBuilder.toException(ISCConstants.isc_bad_segstr_id);
             }
             BlobLengthProcessor blobLengthProcessor = createBlobLengthProcessor();
             return getBlobInfo(blobLengthProcessor.getBlobLengthItems(), 20, blobLengthProcessor);

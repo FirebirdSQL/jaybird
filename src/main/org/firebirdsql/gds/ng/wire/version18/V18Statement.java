@@ -68,7 +68,7 @@ public class V18Statement extends V16Statement {
             try (OperationCloseHandle operationCloseHandle = signalFetch()) {
                 if (operationCloseHandle.isCancelled()) {
                     // operation was synchronously cancelled from an OperationAware implementation
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
+                    throw FbExceptionBuilder.toException(ISCConstants.isc_cancelled);
                 }
                 try {
                     // We are allowing 0 and negative fetch sizes here, in case this triggers some server behaviour
@@ -105,7 +105,7 @@ public class V18Statement extends V16Statement {
         if (!hasFetched()) {
             // Attempting to retrieve cursor information when cursor is not open causes SQLDA errors on fetch.
             // This is an attempt to protect against that problem by disallowing such requests.
-            throw FbExceptionBuilder.forTransientException(ISCConstants.isc_cursor_not_open).toSQLException();
+            throw FbExceptionBuilder.toTransientException(ISCConstants.isc_cursor_not_open);
         }
         return getInfo(WireProtocolConstants.op_info_cursor, requestItems, bufferLength);
     }

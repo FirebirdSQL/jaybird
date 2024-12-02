@@ -149,6 +149,9 @@ public interface JaybirdErrorCodes {
     int jb_noConnectionEncoding     = 337248341;
     int jb_clientInfoInvalidPropertyName                 = 337248342;
     int jb_clientInfoSystemContextReadOnly               = 337248343;
+    int jb_noAuthenticationPlugin   = 337248344;
+    int jb_asyncChannelAlreadyEstablished                = 337248345;
+    int jb_asyncChannelNotConnected = 337248346;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

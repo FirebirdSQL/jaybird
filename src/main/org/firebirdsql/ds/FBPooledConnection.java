@@ -83,9 +83,7 @@ sealed class FBPooledConnection implements PooledConnection permits FBXAConnecti
     private Connection requireConnection() throws SQLException {
         Connection connection = this.connection;
         if (connection != null) return connection;
-        throw FbExceptionBuilder
-                .forNonTransientConnectionException(JaybirdErrorCodes.jb_pooledConnectionClosed)
-                .toSQLException();
+        throw FbExceptionBuilder.toNonTransientConnectionException(JaybirdErrorCodes.jb_pooledConnectionClosed);
     }
 
     void resetConnection(Connection connection) throws SQLException {

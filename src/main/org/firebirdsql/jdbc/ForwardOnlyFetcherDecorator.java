@@ -195,8 +195,7 @@ final class ForwardOnlyFetcherDecorator implements FBFetcher {
     }
 
     private static SQLException notScrollable() {
-        return FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
-                .toSQLException();
+        return FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly);
     }
 
 }

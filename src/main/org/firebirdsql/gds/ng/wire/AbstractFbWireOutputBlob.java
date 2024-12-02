@@ -56,8 +56,7 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
     protected final void setBlobId(long blobId) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (getBlobId() != FbBlob.NO_BLOB_ID) {
-                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_blobIdAlreadySet)
-                        .toSQLException();
+                throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_blobIdAlreadySet);
             }
             this.blobId = blobId;
         }
@@ -74,7 +73,7 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
     }
 
     private SQLException readNotSupported() {
-        SQLException e = FbExceptionBuilder.forNonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
+        SQLException e = FbExceptionBuilder.toNonTransientException(ISCConstants.isc_segstr_no_read);
         exceptionListenerDispatcher.errorOccurred(e);
         return e;
     }

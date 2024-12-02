@@ -239,7 +239,7 @@ public class DefaultBlrCalculator implements BlrCalculator {
         case SQL_TIME_TZ -> bout.write(blr_sql_time_tz);
         case SQL_TIMESTAMP_TZ_EX -> bout.write(blr_ex_timestamp_tz);
         case SQL_TIME_TZ_EX -> bout.write(blr_ex_time_tz);
-        default -> throw FbExceptionBuilder.forException(isc_dsql_sqlda_value_err).toSQLException();
+        default -> throw FbExceptionBuilder.toException(isc_dsql_sqlda_value_err);
         }
 
         bout.write(blr_short); // Null indicator
@@ -287,7 +287,7 @@ public class DefaultBlrCalculator implements BlrCalculator {
             case SQL_TIMESTAMP_TZ_EX, SQL_DEC34, SQL_INT128 -> -16;
             case SQL_NULL -> 0;
             case SQL_BOOLEAN -> 1 + 1;
-            default -> throw FbExceptionBuilder.forException(isc_dsql_datatype_err).toSQLException();
+            default -> throw FbExceptionBuilder.toException(isc_dsql_datatype_err);
         };
     }
 
@@ -321,7 +321,7 @@ public class DefaultBlrCalculator implements BlrCalculator {
             case SQL_FLOAT, SQL_LONG, SQL_TYPE_DATE, SQL_TYPE_TIME, SQL_TIMESTAMP, SQL_TIME_TZ_EX, SQL_BLOB, SQL_ARRAY,
                     SQL_QUAD, SQL_TIMESTAMP_TZ_EX, SQL_TIMESTAMP_TZ, SQL_TIME_TZ -> align = 4;
             case SQL_DOUBLE, SQL_D_FLOAT, SQL_INT64, SQL_DEC16, SQL_DEC34, SQL_INT128 -> align = 8;
-            default -> throw FbExceptionBuilder.forException(isc_dsql_datatype_err).toSQLException();
+            default -> throw FbExceptionBuilder.toException(isc_dsql_datatype_err);
             }
             if (align > 1) {
                 length = blrAlign(length, align);

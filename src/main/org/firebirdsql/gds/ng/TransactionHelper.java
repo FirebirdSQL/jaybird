@@ -58,7 +58,7 @@ public final class TransactionHelper {
      */
     public static void checkTransactionActive(FbTransaction transaction, final int fbErrorCode) throws SQLException {
         if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
-            throw FbExceptionBuilder.forNonTransientException(fbErrorCode).toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(fbErrorCode);
         }
     }
 

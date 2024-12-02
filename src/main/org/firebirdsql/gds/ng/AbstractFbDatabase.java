@@ -389,7 +389,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                     log.log(System.Logger.Level.DEBUG, "Received isc_info_truncated");
                     return AbstractFbDatabase.this;
                 }
-                default -> throw FbExceptionBuilder.forException(isc_infunk).toSQLException();
+                default -> throw FbExceptionBuilder.toException(isc_infunk);
                 }
             }
             return AbstractFbDatabase.this;

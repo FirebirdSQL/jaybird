@@ -36,6 +36,9 @@ import java.util.Set;
 
 import static java.util.Collections.emptySet;
 import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_executeImmediateRequiresTransactionAttached;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidTransactionHandleType;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
@@ -83,7 +86,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     protected void checkConnected() throws SQLException {
         if (!isAttached()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase).toSQLException();
+            throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_notAttachedToDatabase);
         }
     }
 
@@ -332,19 +335,15 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
         try {
             if (isAttached()) {
                 if (transaction == null) {
-                    throw FbExceptionBuilder
-                            .forException(JaybirdErrorCodes.jb_executeImmediateRequiresTransactionAttached)
-                            .toSQLException();
+                    throw FbExceptionBuilder.toException(jb_executeImmediateRequiresTransactionAttached);
                 } else if (!(transaction instanceof JnaTransaction)) {
-                    throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidTransactionHandleType)
+                    throw FbExceptionBuilder.forNonTransientException(jb_invalidTransactionHandleType)
                             .messageParameter(transaction.getClass())
                             .toSQLException();
                 }
                 checkTransactionActive(transaction);
             } else if (transaction != null) {
-                throw FbExceptionBuilder
-                        .forException(JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached)
-                        .toSQLException();
+                throw FbExceptionBuilder.toException(jb_executeImmediateRequiresNoTransactionDetached);
             }
 
             final byte[] statementArray = getEncoding().encodeToCharset(statementText);
@@ -393,8 +392,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
                     .toSQLException();
         }
         if (jnaEventHandle.getSize() == -1) {
-            throw FbExceptionBuilder.forTransientException(JaybirdErrorCodes.jb_eventHandleNotInitialized)
-                    .toSQLException();
+            throw FbExceptionBuilder.toTransientException(JaybirdErrorCodes.jb_eventHandleNotInitialized);
         }
         return jnaEventHandle;
     }

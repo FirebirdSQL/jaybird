@@ -135,6 +135,16 @@ public final class SQLStateConstants {
      */
     public static final String SQL_STATE_CONNECTION_ERROR = "08000";
     /**
+     * ISO-9075-2: SQL-client unable to establish SQL-connection => 08001.
+     */
+    @SuppressWarnings("unused")
+    public static final String SQL_STATE_CANNOT_CONNECT = "08001";
+    /**
+     * ISO-9075-2: connection name in use => 08002.
+     */
+    @SuppressWarnings("unused")
+    public static final String SQL_STATE_CONNECTION_IN_USE = "08002";
+    /**
      * ISO-9075-2: connection does not exist => 08003.
      * <p>
      * The historic use by Jaybird of SQLSTATE {@code 08003} to represent connection closed is wrong;
@@ -150,7 +160,7 @@ public final class SQLStateConstants {
      */
     public static final String SQL_STATE_CONNECTION_FAILURE = "08006";
     /**
-     * ISO-9075-2: transaction resolution unknown => 08006.
+     * ISO-9075-2: transaction resolution unknown => 08007.
      */
     public static final String SQL_STATE_TX_RESOLUTION_UNKNOWN = "08007";
 

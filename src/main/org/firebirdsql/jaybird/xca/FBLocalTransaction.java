@@ -66,7 +66,7 @@ public final class FBLocalTransaction {
     public void begin() throws SQLException {
         // throw exception only if xid is known to the managed connection
         if (xid != null && mc.isXidActive(xid)) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_localTransactionActive).toSQLException();
+            throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_localTransactionActive);
         }
 
         xid = new FBLocalXid();
@@ -85,10 +85,9 @@ public final class FBLocalTransaction {
 
     public void begin(String sql) throws SQLException {
         if (inTransaction()) {
-            throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_setTransactionNotAllowedActiveTx)
-                    .toSQLException();
+            throw FbExceptionBuilder.toNonTransientException(JaybirdErrorCodes.jb_setTransactionNotAllowedActiveTx);
         } else if (xid != null && mc.isXidActive(xid)) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_localTransactionActive).toSQLException();
+            throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_localTransactionActive);
         }
 
         xid = new FBLocalXid();

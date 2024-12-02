@@ -42,6 +42,8 @@ import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.util.Objects.requireNonNull;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_asyncChannelAlreadyEstablished;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_asyncChannelNotConnected;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
@@ -99,7 +101,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
     @Override
     public void connect(String hostName, int portNumber, int auxHandle) throws SQLException {
-        if (isConnected()) throw new SQLException("Asynchronous channel already established");
+        if (isConnected()) throw FbExceptionBuilder.toNonTransientException(jb_asyncChannelAlreadyEstablished);
         this.auxHandle = auxHandle;
         try {
             socketChannel = SocketChannel.open();
@@ -154,7 +156,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
     @Override
     public SocketChannel getSocketChannel() throws SQLException {
-        if (!isConnected()) throw new SQLException("Asynchronous channel not connected");
+        if (!isConnected()) throw FbExceptionBuilder.toNonTransientException(jb_asyncChannelNotConnected);
         return socketChannel;
     }
 

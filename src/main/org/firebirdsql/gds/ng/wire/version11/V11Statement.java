@@ -170,7 +170,7 @@ public class V11Statement extends V10Statement {
         try (OperationCloseHandle operationCloseHandle = signalAsyncFetchStart()){
             if (operationCloseHandle.isCancelled()) {
                 // operation was synchronously cancelled from an OperationAware implementation
-                throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
+                throw FbExceptionBuilder.toException(ISCConstants.isc_cancelled);
             }
             sendFetch(fetchSize);
             getXdrOut().flush();
