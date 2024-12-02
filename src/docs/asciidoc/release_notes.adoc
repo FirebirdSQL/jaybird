@@ -32,6 +32,12 @@ Changes per Jaybird 6 release.
 See also <<whats-new-in-jaybird-6>>.
 For known issues, consult <<known-issues>>.
 
+=== Jaybird 6.0.0
+
+The following was fixed or changed after 6.0.0-beta-1:
+
+* Improvement: stacktraces produced by `FbExceptionBuilder` no longer include `StackTraceElements` of the builder itself (https://github.com/FirebirdSQL/jaybird/issues/827[#827])
+
 [#jaybird-6-0-0-beta-1-changelog]
 === Jaybird 6.0.0-beta-1
 

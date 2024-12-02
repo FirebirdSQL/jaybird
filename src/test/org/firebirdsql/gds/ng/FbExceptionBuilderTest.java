@@ -307,6 +307,22 @@ class FbExceptionBuilderTest {
                 "Expected result to be SQLInvalidAuthorizationSpecException (no subclass!)");
     }
 
+    @Test
+    void toSQLExceptionStripsBuilderStackTraceElements() {
+        SQLException result = FbExceptionBuilder.forException(isc_login).toSQLException();
+
+        assertEquals(getClass().getName(), result.getStackTrace()[0].getClassName(),
+                "Expected first StackTraceElement to be from this class");
+    }
+
+    @Test
+    void toFlatSQLExceptionStripsBuilderStackTraceElements() {
+        SQLException result = FbExceptionBuilder.forException(isc_login).toFlatSQLException();
+
+        assertEquals(getClass().getName(), result.getStackTrace()[0].getClassName(),
+                "Expected first StackTraceElement to be from this class");
+    }
+
     /**
      * Helper method to assert exception for an uninitialized exception type.
      */

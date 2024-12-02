@@ -282,7 +282,8 @@ public final class FbExceptionBuilder {
      */
     public static SQLException ioWriteError(IOException e) {
         CachedMessage error = getCachedMessage(isc_net_write_err);
-        return new SQLNonTransientConnectionException(error.message, error.sqlState, isc_net_write_err, e);
+        return stripBuilderStackTraceElements(
+                new SQLNonTransientConnectionException(error.message, error.sqlState, isc_net_write_err, e));
     }
 
     /**
@@ -295,7 +296,8 @@ public final class FbExceptionBuilder {
      */
     public static SQLException ioReadError(IOException e) {
         CachedMessage error = getCachedMessage(isc_net_read_err);
-        return new SQLNonTransientConnectionException(error.message, error.sqlState, isc_net_read_err, e);
+        return stripBuilderStackTraceElements(
+                new SQLNonTransientConnectionException(error.message, error.sqlState, isc_net_read_err, e));
     }
 
     /**
@@ -306,7 +308,8 @@ public final class FbExceptionBuilder {
      */
     public static SQLException connectionClosed() {
         CachedMessage error = getCachedMessage(jb_connectionClosed);
-        return new SQLNonTransientConnectionException(error.message, error.sqlState, jb_connectionClosed);
+        return stripBuilderStackTraceElements(
+                new SQLNonTransientConnectionException(error.message, error.sqlState, jb_connectionClosed));
     }
 
     /**
@@ -600,7 +603,7 @@ public final class FbExceptionBuilder {
         SQLException exception = exceptionType.createSQLException(
                 fullExceptionMessage.toString(), interestingExceptionInfo.sqlState, interestingExceptionInfo.errorCode);
         exception.initCause(chain.getException());
-        return exception;
+        return stripBuilderStackTraceElements(exception);
     }
 
     private void checkNonEmpty() {
@@ -718,6 +721,58 @@ public final class FbExceptionBuilder {
         }
     }
 
+    /**
+     * Removes the {@link StackTraceElement} from this builder class or its nested classes from {@code exception}.
+     *
+     * @param exception
+     *         exception to modify
+     * @return same object as {@exception} after modification
+     * @since 6
+     */
+    private static SQLException stripBuilderStackTraceElements(SQLException exception) {
+        exception.setStackTrace(stripBuilderStackTraceElements(exception.getStackTrace()));
+        return exception;
+    }
+
+    /**
+     * Removes the {@link StackTraceElement} from this builder class or its nested classes from
+     * {@code stackTraceElements}.
+     *
+     * @param stackTraceElements
+     *         original stacktrace elements
+     * @return new array of {@link StackTraceElement} with the elements of this builder class or its nested classes
+     * removed (original array if there were no such elements, or all elements are from this builder class)
+     * @since 6
+     */
+    private static StackTraceElement[] stripBuilderStackTraceElements(StackTraceElement[] stackTraceElements) {
+        int startIndex = findFirstNonBuilderElement(stackTraceElements);
+        // No elements or all elements from this class, return original.
+        // This is unlikely to happen in practice, unless this method is called multiple times on the same exception
+        if (startIndex <= 0) return stackTraceElements;
+        return Arrays.copyOfRange(stackTraceElements, startIndex, stackTraceElements.length);
+    }
+
+    /**
+     * Finds the first {@link StackTraceElement} that was not produced by this builder class or its nested classes.
+     *
+     * @param stackTraceElements
+     *         stacktrace elements to search
+     * @return position of first element that was not produce by this builder class or its nested classes, {@code -1} if
+     * all elements are from this builder class
+     * @since 6
+     */
+    private static int findFirstNonBuilderElement(StackTraceElement[] stackTraceElements) {
+        final String thisClassName = FbExceptionBuilder.class.getName();
+        final String nestedClassPrefix = thisClassName + "$";
+        for (int idx = 0; idx < stackTraceElements.length; idx++) {
+            String className = stackTraceElements[idx].getClassName();
+            if (!className.equals(thisClassName) && !className.startsWith(nestedClassPrefix)) {
+                return idx;
+            }
+        }
+        return -1;
+    }
+
     private static final class ExceptionInformation {
         private final Type type;
         private final List<String> messageParameters = new ArrayList<>();
@@ -793,7 +848,7 @@ public final class FbExceptionBuilder {
             if (cause != null) {
                 result.initCause(cause);
             }
-            return result;
+            return stripBuilderStackTraceElements(result);
         }
 
         FBSQLExceptionInfo toSQLExceptionInfo() {
