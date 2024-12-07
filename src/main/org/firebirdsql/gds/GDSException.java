@@ -26,6 +26,7 @@ package org.firebirdsql.gds;
 
 import java.io.Serial;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * A GDS-specific exception
@@ -51,7 +52,7 @@ public class GDSException extends SQLException {
      *         Firebird error code, one of the constants declared in {@link ISCConstants}
      */
     public GDSException(int fbErrorCode) {
-        super(GDSExceptionHelper.getMessage(fbErrorCode).toString(), null, fbErrorCode);
+        super(formatMessage(fbErrorCode), null, fbErrorCode);
     }
 
     /**
@@ -75,6 +76,10 @@ public class GDSException extends SQLException {
      */
     public GDSException(String message) {
         super(message);
+    }
+
+    private static String formatMessage(int errorCode) {
+        return MessageTemplate.of(errorCode).toMessage(List.of());
     }
 
 }

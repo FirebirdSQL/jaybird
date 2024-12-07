@@ -18,11 +18,14 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.GDSExceptionHelper;
+import org.firebirdsql.gds.MessageTemplate;
 import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
+import org.firebirdsql.jaybird.util.CollectionUtils;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.FBSQLExceptionInfo;
 import org.firebirdsql.jdbc.SQLStateConstants;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.*;
@@ -44,14 +47,15 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptNoCryptKeyAvailable;
  *
  * @author Mark Rotteveel
  */
+@NullMarked
 public final class FbExceptionBuilder {
 
     private static final String SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX = "0A";
     private static final String SQLSTATE_SYNTAX_ERROR_PREFIX = "42";
     private static final String SQLSTATE_CONNECTION_ERROR_PREFIX = "08";
 
-    private final List<ExceptionInformation> exceptionInfo = new ArrayList<>();
-    private ExceptionInformation current;
+    // We generally only have a single ExceptionInformation, so presize at 1 instead of default of 10
+    private final List<ExceptionInformation> exceptionInfo = new ArrayList<>(1);
 
     public FbExceptionBuilder() {
     }
@@ -388,7 +392,8 @@ public final class FbExceptionBuilder {
      * @return this FbExceptionBuilder
      */
     public FbExceptionBuilder messageParameter(int parameter) {
-        return messageParameter(Integer.toString(parameter));
+        requireExceptionInformation().addMessageParameter(parameter);
+        return this;
     }
 
     /**
@@ -402,37 +407,7 @@ public final class FbExceptionBuilder {
      * @since 5
      */
     public FbExceptionBuilder messageParameter(int param1, int param2) {
-        return messageParameter(Integer.toString(param1), Integer.toString(param2));
-    }
-
-    /**
-     * Adds a string message parameter for the exception message.
-     *
-     * @param parameter
-     *         Message parameter
-     * @return this FbExceptionBuilder
-     */
-    public FbExceptionBuilder messageParameter(String parameter) {
-        checkExceptionInformation();
-        current.addMessageParameter(parameter);
-        return this;
-    }
-
-    /**
-     * Adds two string message parameters for the exception message.
-     *
-     * @param param1
-     *         message parameter
-     * @param param2
-     *         message parameter
-     * @return this FbExceptionBuilder
-     * @since 5
-     */
-    public FbExceptionBuilder messageParameter(String param1, String param2) {
-        checkExceptionInformation();
-        current.addMessageParameter(param1);
-        current.addMessageParameter(param2);
-        return this;
+        return messageParameter((Object) param1, param2);
     }
 
     /**
@@ -443,8 +418,9 @@ public final class FbExceptionBuilder {
      * @return this FbExceptionBuilder
      * @since 5
      */
-    public FbExceptionBuilder messageParameter(Object parameter) {
-        return messageParameter(String.valueOf(parameter));
+    public FbExceptionBuilder messageParameter(@Nullable Object parameter) {
+        requireExceptionInformation().addMessageParameter(parameter);
+        return this;
     }
 
     /**
@@ -457,8 +433,11 @@ public final class FbExceptionBuilder {
      * @return this FbExceptionBuilder
      * @since 5
      */
-    public FbExceptionBuilder messageParameter(Object param1, Object param2) {
-        return messageParameter(String.valueOf(param1), String.valueOf(param2));
+    public FbExceptionBuilder messageParameter(@Nullable Object param1, @Nullable Object param2) {
+        ExceptionInformation current = requireExceptionInformation();
+        current.addMessageParameter(param1);
+        current.addMessageParameter(param2);
+        return this;
     }
 
     /**
@@ -469,10 +448,11 @@ public final class FbExceptionBuilder {
      * @return this FbExceptionBuilder
      * @since 5
      */
-    public FbExceptionBuilder messageParameter(Object... params) {
-        checkExceptionInformation();
+    @SuppressWarnings("ForLoopReplaceableByForEach")
+    public FbExceptionBuilder messageParameter(@Nullable Object... params) {
+        ExceptionInformation current = requireExceptionInformation();
         for (int idx = 0; idx < params.length; idx++) {
-            current.addMessageParameter(String.valueOf(params[idx]));
+            current.addMessageParameter(params[idx]);
         }
         return this;
     }
@@ -480,8 +460,7 @@ public final class FbExceptionBuilder {
     /**
      * Sets the SQL state. Overriding the value derived from the Firebird error code.
      * <p>
-     * SQL State is usually derived from the errorCode. Use of this
-     * method is optional.
+     * SQL State is usually derived from the errorCode. Use of this method is optional.
      * </p>
      *
      * @param sqlState
@@ -489,8 +468,7 @@ public final class FbExceptionBuilder {
      * @return this FbExceptionBuilder
      */
     public FbExceptionBuilder sqlState(String sqlState) {
-        checkExceptionInformation();
-        current.setSqlState(sqlState);
+        requireExceptionInformation().setSqlState(sqlState);
         return this;
     }
 
@@ -502,8 +480,7 @@ public final class FbExceptionBuilder {
      * @return this FbExceptionBuilder
      */
     public FbExceptionBuilder cause(Throwable cause) {
-        checkExceptionInformation();
-        current.setCause(cause);
+        requireExceptionInformation().setCause(cause);
         return this;
     }
 
@@ -528,6 +505,7 @@ public final class FbExceptionBuilder {
         for (ExceptionInformation info : exceptionInfo) {
             chain.append(info.toSQLException());
         }
+        //noinspection DataFlowIssue
         return chain.getException();
     }
 
@@ -571,16 +549,15 @@ public final class FbExceptionBuilder {
 
         for (ExceptionInformation info : exceptionInfo) {
             if (interestingExceptionInfo == null
-                    && !UNINTERESTING_ERROR_CODES.contains(info.errorCode)
-                    && !SQLSTATE_SUCCESS.equals(info.sqlState)) {
+                    && !UNINTERESTING_ERROR_CODES.contains(info.errorCode())
+                    && !SQLSTATE_SUCCESS.equals(info.sqlState())) {
                 interestingExceptionInfo = info;
             }
 
             if (!fullExceptionMessage.isEmpty()) {
                 fullExceptionMessage.append("; ");
             }
-            fullExceptionMessage.append(info.toMessage());
-
+            info.appendMessage(fullExceptionMessage);
             chain.append(info.toSQLExceptionInfo());
         }
 
@@ -589,19 +566,16 @@ public final class FbExceptionBuilder {
             interestingExceptionInfo = firstExceptionInfo;
         }
 
-        fullExceptionMessage
-                .append(" [SQLState:").append(interestingExceptionInfo.sqlState)
-                .append(", ISC error code:").append(interestingExceptionInfo.errorCode)
-                .append(']');
+        interestingExceptionInfo.appendErrorInfoSuffix(fullExceptionMessage);
 
         /* If the type of the head of the chain is not Type.EXCEPTION we use that, not the type of the interesting
-         * exception info as the head of the chain has been set explicitly to an expected exception type (eg Type.WARNING).
+         * exception info as the head of the chain has been set explicitly to an expected exception type (e.g. Type.WARNING).
          */
         Type exceptionType = firstExceptionInfo.type != Type.EXCEPTION
                 ? firstExceptionInfo.type
                 : interestingExceptionInfo.type;
-        SQLException exception = exceptionType.createSQLException(
-                fullExceptionMessage.toString(), interestingExceptionInfo.sqlState, interestingExceptionInfo.errorCode);
+        SQLException exception = exceptionType.createSQLException(fullExceptionMessage.toString(),
+                interestingExceptionInfo.sqlState(), interestingExceptionInfo.errorCode());
         exception.initCause(chain.getException());
         return stripBuilderStackTraceElements(exception);
     }
@@ -655,7 +629,7 @@ public final class FbExceptionBuilder {
 
     @Override
     public String toString() {
-        if (current == null) return "empty";
+        if (exceptionInfo.isEmpty()) return "empty";
         return exceptionInfo.toString();
     }
 
@@ -668,8 +642,7 @@ public final class FbExceptionBuilder {
      *         The Firebird error code
      */
     private void setNextExceptionInformation(Type type, final int errorCode) {
-        current = new ExceptionInformation(upgradeType(type, errorCode), errorCode);
-        exceptionInfo.add(current);
+        exceptionInfo.add(new ExceptionInformation(upgradeType(type, errorCode), errorCode));
     }
 
     /**
@@ -715,10 +688,12 @@ public final class FbExceptionBuilder {
      * @throws IllegalStateException
      *         If current is null ({@link #warning(int)} or {@link #exception(int)} hasn't been called yet)
      */
-    private void checkExceptionInformation() throws IllegalStateException {
+    private ExceptionInformation requireExceptionInformation() throws IllegalStateException {
+        ExceptionInformation current = CollectionUtils.getLast(exceptionInfo);
         if (current == null) {
             throw new IllegalStateException("FbExceptionBuilder requires call to warning() or exception() first");
         }
+        return current;
     }
 
     /**
@@ -775,15 +750,21 @@ public final class FbExceptionBuilder {
 
     private static final class ExceptionInformation {
         private final Type type;
-        private final List<String> messageParameters = new ArrayList<>();
-        private final int errorCode;
-        private String sqlState;
-        private Throwable cause;
+        private final List<@Nullable Object> messageParameters = new ArrayList<>();
+        private MessageTemplate messageTemplate;
+        private @Nullable Throwable cause;
 
         ExceptionInformation(Type type, int errorCode) {
             this.type = requireNonNull(type, "type");
-            this.errorCode = errorCode;
-            sqlState = GDSExceptionHelper.getSQLState(errorCode, type.getDefaultSQLState());
+            messageTemplate = MessageTemplate.of(errorCode).withDefaultSqlState(type.getDefaultSQLState());
+        }
+
+        int errorCode() {
+            return messageTemplate.errorCode();
+        }
+
+        @Nullable String sqlState() {
+            return messageTemplate.sqlState();
         }
 
         /**
@@ -791,21 +772,20 @@ public final class FbExceptionBuilder {
          *
          * @param sqlState
          *         New SQL state value
+         * @throws NullPointerException
+         *         if {@code sqlState} is {@code null}
          * @throws IllegalArgumentException
-         *         If sqlState is null or not 5 characters long
+         *         if {@code sqlState} is not 5-characters long
          */
         void setSqlState(String sqlState) {
-            if (sqlState == null || sqlState.length() != 5) {
-                throw new IllegalArgumentException("Value of sqlState must be a 5 character string");
-            }
-            this.sqlState = sqlState;
+            messageTemplate = messageTemplate.withSqlState(sqlState);
         }
 
         /**
          * Sets the cause of the exception.
          *
          * @param cause
-         *         Cause of the exception
+         *         cause of the exception
          */
         void setCause(Throwable cause) {
             this.cause = cause;
@@ -815,26 +795,37 @@ public final class FbExceptionBuilder {
          * Adds a message parameter.
          *
          * @param argument
-         *         The value of the message parameter
+         *        message parameter
          */
-        void addMessageParameter(String argument) {
+        void addMessageParameter(@Nullable Object argument) {
             messageParameters.add(argument);
         }
 
         /**
-         * @return The list of message parameter values
+         * @return message string with the parameters substituted into the message.
          */
-        List<String> getMessageParameters() {
-            return Collections.unmodifiableList(messageParameters);
+        String toMessage() {
+            return messageTemplate.toMessage(messageParameters);
         }
 
         /**
-         * @return The message string with the parameter substituted into the message.
+         * Appends the message, with the parameters substituted, to {@code messageBuffer}.
+         *
+         * @param messageBuffer
+         *         string builder to append to
          */
-        String toMessage() {
-            GDSExceptionHelper.GDSMessage gdsMessage = GDSExceptionHelper.getMessage(errorCode);
-            gdsMessage.setParameters(getMessageParameters());
-            return gdsMessage.toString();
+        void appendMessage(StringBuilder messageBuffer) {
+            messageTemplate.appendMessage(messageBuffer, messageParameters);
+        }
+
+        /**
+         * Appends the SQLstate and error code suffix to {@code messageBuffer}.
+         *
+         * @param messageBuffer
+         *         string builder to append to
+         */
+        void appendErrorInfoSuffix(StringBuilder messageBuffer) {
+            messageTemplate.appendErrorInfoSuffix(messageBuffer);
         }
 
         /**
@@ -843,8 +834,11 @@ public final class FbExceptionBuilder {
          * @return SQLException
          */
         SQLException toSQLException() {
-            String message = toMessage() + " [SQLState:" + sqlState + ", ISC error code:" + errorCode + ']';
-            SQLException result = type.createSQLException(message, sqlState, errorCode);
+            // Sizing to 0, as appendMessage will resize, and that will almost always be bigger than the default
+            var messageBuffer = new StringBuilder(0);
+            appendMessage(messageBuffer);
+            appendErrorInfoSuffix(messageBuffer);
+            SQLException result = type.createSQLException(messageBuffer.toString(), sqlState(), errorCode());
             if (cause != null) {
                 result.initCause(cause);
             }
@@ -852,7 +846,7 @@ public final class FbExceptionBuilder {
         }
 
         FBSQLExceptionInfo toSQLExceptionInfo() {
-            FBSQLExceptionInfo result = new FBSQLExceptionInfo(toMessage(), sqlState, errorCode);
+            var result = new FBSQLExceptionInfo(toMessage(), sqlState(), errorCode());
             if (cause != null) {
                 result.initCause(cause);
             }
@@ -862,10 +856,10 @@ public final class FbExceptionBuilder {
         @Override
         public String toString() {
             return "Type: " + type +
-                    "; ErrorCode: " + errorCode +
+                    "; ErrorCode: " + errorCode() +
                     "; Message: \"" + toMessage() + '"' +
-                    "; SQLstate: " + sqlState +
-                    "; MessageParameters: " + getMessageParameters() +
+                    "; SQLstate: " + sqlState() +
+                    "; MessageParameters: " + messageParameters +
                     "; Cause: " + cause;
         }
     }
@@ -907,7 +901,7 @@ public final class FbExceptionBuilder {
          */
         EXCEPTION(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
             @Override
-            public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
+            public SQLException createSQLException(String message, @Nullable String sqlState, int errorCode) {
                 if (sqlState != null) {
                     if (sqlState.startsWith(SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX)) {
                         // Feature not supported by Firebird or Jaybird
@@ -927,7 +921,7 @@ public final class FbExceptionBuilder {
          */
         WARNING(SQLStateConstants.SQL_STATE_WARNING) {
             @Override
-            public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
+            public SQLException createSQLException(String message, @Nullable String sqlState, int errorCode) {
                 return new SQLWarning(message, sqlState, errorCode);
             }
         },
@@ -937,7 +931,7 @@ public final class FbExceptionBuilder {
         // TODO Specific default sqlstate for timeout?
         TIMEOUT(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
             @Override
-            public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
+            public SQLException createSQLException(String message, @Nullable String sqlState, int errorCode) {
                 return new SQLTimeoutException(message, sqlState, errorCode);
             }
         },
@@ -946,7 +940,7 @@ public final class FbExceptionBuilder {
          */
         NON_TRANSIENT(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
             @Override
-            public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
+            public SQLException createSQLException(String message, @Nullable String sqlState, int errorCode) {
                 // TODO We probably want these specific exception types also for 'normal' exceptions
                 return switch (errorCode) {
                 case isc_wirecrypt_incompatible, isc_miss_wirecrypt, isc_wirecrypt_key, isc_wirecrypt_plugin,
@@ -974,16 +968,16 @@ public final class FbExceptionBuilder {
          */
         NON_TRANSIENT_CONNECT(SQLStateConstants.SQL_STATE_CONNECTION_ERROR) {
             @Override
-            public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
+            public SQLException createSQLException(String message, @Nullable String sqlState, int errorCode) {
                 return new SQLNonTransientConnectionException(message, sqlState, errorCode);
             }
         },
         /**
-         * Force build to create exception of {@link java.sql.SQLTransientException} or a subclass.
+         * Force build to create a {@link java.sql.SQLTransientException} or a subclass.
          */
         TRANSIENT(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
             @Override
-            public SQLException createSQLException(String message, String sqlState, int errorCode) {
+            public SQLException createSQLException(String message, @Nullable String sqlState, int errorCode) {
                 return new SQLTransientException(message, sqlState, errorCode);
             }
         };
@@ -991,13 +985,13 @@ public final class FbExceptionBuilder {
         private final String defaultSQLState;
 
         Type(String defaultSQLState) {
-            this.defaultSQLState = defaultSQLState;
+            this.defaultSQLState = requireNonNull(defaultSQLState, "defaultSQLState");
         }
 
         /**
          * The default SQL State for this type
          *
-         * @return Default SQL State
+         * @return default SQL State
          */
         public final String getDefaultSQLState() {
             return defaultSQLState;
@@ -1008,13 +1002,13 @@ public final class FbExceptionBuilder {
          * on errorCode and/or SQLState.
          *
          * @param message
-         *         The message text
+         *         message text
          * @param sqlState
-         *         The SQL state
+         *         SQL state
          * @param errorCode
-         *         The Firebird error code
-         * @return Instance of SQLException (or a subclass).
+         *         error code
+         * @return instance of SQLException (or a subclass).
          */
-        public abstract SQLException createSQLException(String message, String sqlState, int errorCode);
+        public abstract SQLException createSQLException(String message, @Nullable String sqlState, int errorCode);
     }
 }

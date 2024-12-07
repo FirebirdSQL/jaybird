@@ -18,162 +18,207 @@
  */
 package org.firebirdsql.gds;
 
-import org.firebirdsql.jaybird.util.CollectionUtils;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.WARNING;
+import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 
 /**
  * Loads the messages and SQL states for Firebird/Jaybird error codes to a {@link MessageLookup}
  *
  * @author Mark Rotteveel
+ * @since 4
  */
+@NullMarked
 final class MessageLoader {
 
-    private static final String FIREBIRD_MESSAGES = "isc_error_msg";
-    private static final String JAYBIRD_MESSAGES = "org/firebirdsql/jaybird_error_msg";
-    private static final String FIREBIRD_SQLSTATES = "isc_error_sqlstates";
-    private static final String JAYBIRD_SQLSTATES = "org/firebirdsql/jaybird_error_sqlstates";
+    private final MessageDefinition messageDefinition;
+    private final Properties messages;
+    private final Properties sqlStates;
 
-    private final System.Logger log = System.getLogger(MessageLoader.class.getName());
-    // Implementation note, using Vector here as they can be sized and then populated by index
-    private final List<List<String>> facilityMessages;
-    private final List<List<String>> facilityStates;
-
-    private MessageLoader() {
-        facilityMessages = createFacilityLists();
-        facilityStates = createFacilityLists();
-    }
-
-    private static List<List<String>> createFacilityLists() {
-        int size = MessageLookup.FACILITY_SIZE;
-        final List<List<String>> facilities = new ArrayList<>(size);
-        while (size-- > 0) {
-            facilities.add(new ArrayList<>());
-        }
-        return facilities;
+    /**
+     * Creates a message loader for a message definition.
+     *
+     * @param messageDefinition
+     *         message definition
+     * @since 6
+     */
+    private MessageLoader(MessageDefinition messageDefinition) {
+        this.messageDefinition = messageDefinition;
+        messages = messageDefinition.loadMessages();
+        sqlStates = messageDefinition.loadSqlStates();
     }
 
     /**
-     * Loads the error messages and SQL states.
+     * Loads the message templates for the specified facility.
      *
-     * @return Error lookup object for messages and SQL states
-     * @throws IOException
-     *         For errors reading the resource(s) with error messages and SQL states
+     * @param facility
+     *         facility
+     * @return stream of message templates
+     * @since 6
      */
-    static MessageLookup loadErrorMessages() throws IOException {
-        final MessageLoader messageLoader = new MessageLoader();
-        messageLoader.loadMessages(FIREBIRD_MESSAGES);
-        messageLoader.loadMessages(JAYBIRD_MESSAGES);
-        messageLoader.loadSqlStates(FIREBIRD_SQLSTATES);
-        messageLoader.loadSqlStates(JAYBIRD_SQLSTATES);
-
-        return messageLoader.createErrorLookup();
-    }
-
-    private MessageLookup createErrorLookup() {
-        return new MessageLookup(facilityMessages, facilityStates);
-    }
-
-    private void loadMessages(String resource) throws IOException {
-        loadResource(ResourceType.ERROR_MESSAGE, resource);
-    }
-
-    private void loadSqlStates(String resource) throws IOException {
-        loadResource(ResourceType.SQL_STATE, resource);
-    }
-
-    private void loadResource(ResourceType resourceType, String resource) throws IOException {
-        Properties properties = loadProperties(resource);
-        mapToErrorCode(resourceType, properties);
-    }
-
-    private Properties loadProperties(String resource) throws IOException {
-        Properties properties = new Properties();
-        // Load from property files
-        try (InputStream in = getResourceAsStream("/" + resource + ".properties")) {
-            if (in != null) {
-                properties.load(in);
-            } else {
-                log.log(WARNING, "Unable to load resource; resource {0} is not found", resource);
-            }
-        } catch (IOException ioex) {
-            log.log(ERROR, "Unable to load resource " + resource, ioex);
-            throw ioex;
+    static Stream<MessageTemplate> loadMessageTemplates(int facility) {
+        try {
+            return new MessageLoader(MessageDefinition.of(facility)).createMessageTemplates();
+        } catch (IllegalArgumentException e) {
+            System.getLogger(MessageLoader.class.getName()).log(DEBUG,
+                    "Failed to load message templates for facility: " + facility, e);
+            return Stream.empty();
         }
-        return properties;
     }
 
-    private void mapToErrorCode(ResourceType resourceType, Properties properties) {
-        for (Object key : properties.keySet()) {
-            if (!(key instanceof String)) continue;
+    /**
+     * Creates the message templates.
+     *
+     * @return stream of message templates
+     */
+    Stream<MessageTemplate> createMessageTemplates() {
+        return messages.stringPropertyNames().stream()
+                .map(this::createMessageTemplate)
+                .filter(Objects::nonNull);
+    }
+
+    /**
+     * Creates a message template for {@code errorCodeString}.
+     *
+     * @param errorCodeString
+     *         error code as string
+     * @return message template, or {@code null} if {@code errorString} cannot be parsed to an integer, or if the
+     * message resource has no text for the error code
+     */
+    @Nullable MessageTemplate createMessageTemplate(String errorCodeString) {
+        try {
+            int errorCode = Integer.parseInt(errorCodeString);
+            String templateText = trimToNull(messages.getProperty(errorCodeString));
+            if (templateText == null) {
+                System.getLogger(MessageLoader.class.getName()).log(DEBUG,
+                        "No template text for error code {0} in resource {1}", errorCodeString, messageDefinition);
+                return null;
+            }
+            String sqlState = trimToNull(sqlStates.getProperty(errorCodeString));
+            if (sqlState != null) {
+                // Given the large number of duplicate SQL states, interning makes sense here
+                sqlState = sqlState.intern();
+            }
             try {
-                String keyString = (String) key;
-                int errorCode = Integer.parseInt(keyString);
-                String value = properties.getProperty(keyString);
+                return new DefaultMessageTemplate(errorCode, templateText, sqlState);
+            } catch (IllegalArgumentException e) {
+                System.getLogger(MessageLoader.class.getName()).log(DEBUG,
+                        "Error code {0} has invalid SQL state value ''{1}'' in resource {2}",
+                        errorCodeString, sqlState, messageDefinition);
+                // Graceful degradation: create without SQL state
+                return new DefaultMessageTemplate(errorCode, templateText);
+            }
+        } catch (NumberFormatException e) {
+            System.getLogger(MessageLoader.class.getName()).log(DEBUG,
+                    "Non-integer error code value ''{0}'' in resource {1}", errorCodeString, messageDefinition);
+            return null;
+        }
+    }
 
-                resourceType.store(errorCode, value, this);
-            } catch (NumberFormatException e) {
-                log.log(WARNING, "Key {0} is not a number; ignored; see debug level for stacktrace", key);
-                if (log.isLoggable(DEBUG)) {
-                    log.log(DEBUG, "Key " + key + " is not a number; ignored", e);
+    /**
+     * Definition of the message resource and accompanying SQL state resource.
+     *
+     * @param messageResourceName
+     *         name of the message resource (without {@code /} prefix and {@code .properties} suffix)
+     * @param sqlStateResourceName
+     *         name of the SQL state resource (without {@code /} prefix and {@code .properties} suffix)
+     * @since 6
+     */
+    private record MessageDefinition(String messageResourceName, String sqlStateResourceName) {
+
+        private static final String FIREBIRD_MESSAGE_FORMAT = "org/firebirdsql/firebird_%d_error_msg";
+        private static final String FIREBIRD_SQL_STATES_FORMAT = "org/firebirdsql/firebird_%d_sql_states";
+        private static final String JAYBIRD_MESSAGES = "org/firebirdsql/jaybird_error_msg";
+        private static final String JAYBIRD_SQLSTATES = "org/firebirdsql/jaybird_error_sqlstates";
+
+        /**
+         * Loads the message resource into a properties object.
+         *
+         * @return properties object with messages, empty if the resource was not found or could not be read
+         */
+        private Properties loadMessages() {
+            return loadProperties(messageResourceName);
+        }
+
+        /**
+         * Loads the SQL state resource into a properties object.
+         *
+         * @return properties object with SQL states, empty if the resource was not found or could not be read
+         */
+        private Properties loadSqlStates() {
+            return loadProperties(sqlStateResourceName);
+        }
+
+        /**
+         * Loads the resource into a properties object.
+         *
+         * @param resource
+         *         name of the resource (without {@code /} prefix and {@code .properties} suffix)
+         * @return properties object, empty if the resource was not found or could not be read
+         */
+        private static Properties loadProperties(String resource) {
+            // Load from property files
+            var properties = new Properties();
+            try (InputStream in = getResourceAsStream("/" + resource + ".properties")) {
+                if (in != null) {
+                    properties.load(in);
+                } else {
+                    System.getLogger(MessageLoader.class.getName())
+                            .log(WARNING, "Unable to load resource; resource {0} is not found", resource);
                 }
+            } catch (IOException e) {
+                System.getLogger(MessageLoader.class.getName()).log(ERROR, "Unable to load resource " + resource, e);
+                // Graceful degradation; Jaybird can load, but missing errors will produce the "not found" message, or
+                // not report the right SQLstate.
             }
+            return properties;
         }
-    }
 
-    private void storeMessage(int errorCode, String value) {
-        storeValue(errorCode, value, facilityMessages.get(MessageLookup.getFacility(errorCode)));
-    }
-
-    private void storeSqlState(int errorCode, String value) {
-        // Given the large number of duplicate sql states, interning makes sense here
-        storeValue(errorCode, value.intern(), facilityStates.get(MessageLookup.getFacility(errorCode)));
-    }
-
-    private void storeValue(int errorCode, String value, List<String> facilityList) {
-        if (facilityList == null) {
-            log.log(WARNING, "Invalid error code {0}, no valid facility; skipping", errorCode);
-            return;
-        }
-        final int code = MessageLookup.getCode(errorCode);
-        if (facilityList.size() <= code) {
-            CollectionUtils.growToSize(facilityList, code + 1);
-        }
-        facilityList.set(code, value);
-    }
-
-    private static InputStream getResourceAsStream(String res) {
-        InputStream in = MessageLoader.class.getResourceAsStream(res);
-        if (in == null) {
-            ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            in = cl.getResourceAsStream(res);
-        }
-        return in;
-    }
-
-    private enum ResourceType {
-        ERROR_MESSAGE {
-            @Override
-            void store(int errorCode, String value, MessageLoader messageLoader) {
-                messageLoader.storeMessage(errorCode, value);
+        /**
+         * Opens the resource as a stream using the class loader of this class, or otherwise the context class loader.
+         *
+         * @param res
+         *         resource name (contrary to {@link #loadProperties(String)}, it must include the file extension)
+         * @return input stream, or {@code null} if the resource was not found
+         */
+        private static @Nullable InputStream getResourceAsStream(String res) {
+            InputStream in = MessageLoader.class.getResourceAsStream(res);
+            if (in == null) {
+                ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                in = cl.getResourceAsStream(res);
             }
-        },
-        SQL_STATE {
-            @Override
-            void store(int errorCode, String value, MessageLoader messageLoader) {
-                messageLoader.storeSqlState(errorCode, value);
-            }
-        };
+            return in;
+        }
 
-        abstract void store(int errorCode, String value, MessageLoader messageLoader);
+        /**
+         * Creates a message definition for the specified facility.
+         *
+         * @param facility
+         *         facility [0 ... {@link MessageLookup#FACILITY_SIZE}&gt;
+         * @return message definition
+         * @throws IllegalArgumentException
+         *         if {@code facility} is out of range
+         */
+        private static MessageDefinition of(int facility) {
+            if (facility < 0 || facility >= MessageLookup.FACILITY_SIZE) {
+                throw new IllegalArgumentException("Unsupported facility: " + facility);
+            } else if (facility == MessageLookup.JAYBIRD_FACILITY) {
+                return new MessageDefinition(JAYBIRD_MESSAGES, JAYBIRD_SQLSTATES);
+            }
+            return new MessageDefinition(FIREBIRD_MESSAGE_FORMAT.formatted(facility),
+                    FIREBIRD_SQL_STATES_FORMAT.formatted(facility));
+        }
+
     }
 
 }

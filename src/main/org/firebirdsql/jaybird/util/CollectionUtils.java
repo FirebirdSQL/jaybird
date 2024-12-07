@@ -18,6 +18,9 @@
  */
 package org.firebirdsql.jaybird.util;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -28,6 +31,7 @@ import java.util.Vector;
  * @author Mark Rotteveel
  * @since 6
  */
+@NullMarked
 public final class CollectionUtils {
 
     private CollectionUtils() {
@@ -64,4 +68,21 @@ public final class CollectionUtils {
             list.add(null);
         }
     }
+
+    /**
+     * Returns the last item of a list, or {@code null} if the list is empty.
+     *
+     * @param list
+     *         list
+     * @param <T>
+     *         type of the list
+     * @return last item (which may be {@code null}), or {@code null} if the list is empty
+     * @throws NullPointerException
+     *         if {@code list} is {@code null}
+     */
+    public static <T extends @Nullable Object> @Nullable T getLast(final List<T> list) {
+        int size = list.size();
+        return size > 0 ? list.get(size - 1) : null;
+    }
+
 }

@@ -18,8 +18,8 @@
  */
 package org.firebirdsql.common.matchers;
 
-import org.firebirdsql.gds.GDSExceptionHelper;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.MessageTemplate;
 import org.firebirdsql.jdbc.FBPreparedStatement;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.hamcrest.FeatureMatcher;
@@ -57,7 +57,7 @@ public class SQLExceptionMatchers {
      * @return The Matcher
      */
     public static Matcher<SQLException> errorCode(final Matcher<Integer> matcher) {
-        return new FeatureMatcher<SQLException, Integer>(matcher, "error code", "error code") {
+        return new FeatureMatcher<>(matcher, "error code", "error code") {
             @Override
             protected Integer featureValueOf(SQLException e) {
                 return e.getErrorCode();
@@ -88,7 +88,7 @@ public class SQLExceptionMatchers {
      * @return The Matcher
      */
     public static Matcher<SQLException> sqlState(final Matcher<String> matcher) {
-        return new FeatureMatcher<SQLException, String>(matcher, "SQL state", "SQL state") {
+        return new FeatureMatcher<>(matcher, "SQL state", "SQL state") {
             @Override
             protected String featureValueOf(SQLException e) {
                 return e.getSQLState();
@@ -104,7 +104,7 @@ public class SQLExceptionMatchers {
      * @return The Matcher
      */
     public static <T extends Exception> Matcher<T> message(final Matcher<String> matcher) {
-        return new FeatureMatcher<T, String>(matcher, "exception message", "exception message") {
+        return new FeatureMatcher<>(matcher, "exception message", "exception message") {
             @Override
             protected String featureValueOf(Exception e) {
                 return e.getMessage();
@@ -176,9 +176,7 @@ public class SQLExceptionMatchers {
      * @return The message
      */
     public static String getFbMessage(int fbErrorCode, String... messageParameters) {
-        GDSExceptionHelper.GDSMessage message = GDSExceptionHelper.getMessage(fbErrorCode);
-        message.setParameters(Arrays.asList(messageParameters));
-        return message.toString();
+        return MessageTemplate.of(fbErrorCode).toMessage(Arrays.asList(messageParameters));
     }
 
     /**

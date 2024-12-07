@@ -18,7 +18,17 @@
  */
 package org.firebirdsql.gds;
 
-import java.util.List;
+import org.firebirdsql.jaybird.util.CollectionUtils;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static java.lang.System.Logger.Level.DEBUG;
 
 /**
  * Lookup table for error messages and sql states by error code.
@@ -27,60 +37,102 @@ import java.util.List;
  * </p>
  *
  * @author Mark Rotteveel
+ * @since 4
  */
+@NullMarked
 final class MessageLookup {
 
+    // See definitions in Firebird's msg_encode.h
     private static final int ISC_MASK = 0x14000000; // Defines the code as a valid ISC code
     private static final int FAC_MASK = 0x00FF0000; // Specifies the facility where the code is located
     private static final int CODE_MASK = 0x0000FFFF; // Specifies the code in the message file
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
+    static final int JAYBIRD_FACILITY = 26;
     // This constant will need to be updated if new facilities are added to Firebird
-    private static final int MAX_FACILITY = 26; // Jaybird = 26
+    private static final int MAX_FACILITY = JAYBIRD_FACILITY; // Jaybird = 26
     static final int FACILITY_SIZE = MessageLookup.MAX_FACILITY + 1;
+    /**
+     * Marker object for unloaded facilities; also returned for "out-of-range" facility codes.
+     */
+    private static final MessageTemplate[] FACILITY_NOT_LOADED = new MessageTemplate[0];
 
-    // Lookup from facility + code to message
-    private final String[][] messages;
-    // Lookup from facility + code to SQL state
-    private final String[][] sqlStates;
+    // Lookup from facility + code to message template
+    private final @Nullable MessageTemplate[][] messageTemplates = new @Nullable MessageTemplate[FACILITY_SIZE][];
+    // Only governs reads/writes to the first level of messageTemplates
+    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private final Lock readLock = rwLock.readLock();
+    private final Lock writeLock = rwLock.writeLock();
 
-    MessageLookup(List<List<String>> facilityMessages, List<List<String>> facilityStates) {
-        messages = toLookupArray(facilityMessages);
-        sqlStates = toLookupArray(facilityStates);
+    MessageLookup() {
+        Arrays.fill(messageTemplates, FACILITY_NOT_LOADED);
     }
 
     /**
-     * Retrieves the (error) message for the specified error code.
+     * Retrieves the (error) message template for the specified error code.
      *
      * @param errorCode
-     *         Error code
-     * @return Error message, or {@code null} if not found
+     *         error code
+     * @return error message, or {@code null} if not found
+     * @since 6
      */
-    String getErrorMessage(int errorCode) {
+    MessageTemplate getMessageTemplate(int errorCode) {
         if (isInvalidErrorCode(errorCode)) {
-            return null;
+            return DefaultMessageTemplate.notFound(errorCode);
         }
         try {
-            return messages[getFacility(errorCode)][getCode(errorCode)];
+            final @Nullable MessageTemplate[] facilityTemplates = getFacilityTemplates(getFacility(errorCode));
+            final int code = getCode(errorCode);
+            MessageTemplate template = facilityTemplates[code];
+            if (template == null) {
+                // Store not found message for reuse (if asked for it once, we'll likely ask for it again)
+                // NOTE: we're not using a write lock for this; we accept barging and/or visibility issues
+                template = facilityTemplates[code] = DefaultMessageTemplate.notFound(errorCode);
+            }
+            return template;
         } catch (ArrayIndexOutOfBoundsException e) {
-            return null;
+            return DefaultMessageTemplate.notFound(errorCode);
         }
     }
 
-    /**
-     * Retrieves the sql state for the specified error code.
-     *
-     * @param errorCode
-     *         Error code
-     * @return SQL state, or {@code null} if not found
-     */
-    String getSqlState(int errorCode) {
-        if (isInvalidErrorCode(errorCode)) {
-            return null;
-        }
+    private @Nullable MessageTemplate[] getFacilityTemplates(int facility) {
+        if (facility < 0 || facility > MAX_FACILITY) return FACILITY_NOT_LOADED;
+        readLock.lock();
         try {
-            return sqlStates[getFacility(errorCode)][getCode(errorCode)];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            return null;
+            @Nullable MessageTemplate[] facilityTemplates = messageTemplates[facility];
+            if (facilityTemplates != FACILITY_NOT_LOADED) {
+                return facilityTemplates;
+            }
+        } finally {
+            readLock.unlock();
+        }
+        return loadFacilityTemplates(facility);
+    }
+
+    private @Nullable MessageTemplate[] loadFacilityTemplates(int facility) {
+        writeLock.lock();
+        try {
+            @Nullable MessageTemplate[] facilityTemplates = messageTemplates[facility];
+            if (facilityTemplates != FACILITY_NOT_LOADED) {
+                return facilityTemplates;
+            }
+            var indexedByCode = new ArrayList<@Nullable MessageTemplate>();
+            MessageLoader.loadMessageTemplates(facility)
+                    .forEach(template -> {
+                        int errorCode = template.errorCode();
+                        if (isInvalidErrorCode(errorCode) || getFacility(errorCode) != facility) {
+                            System.getLogger(MessageLookup.class.getName())
+                                    .log(DEBUG, "Invalid error code or error code with out-of-range facility: {}", errorCode);
+                            return;
+                        }
+                        int code = getCode(errorCode);
+                        CollectionUtils.growToSize(indexedByCode, code + 1);
+                        if (indexedByCode.set(code, template) != null) {
+                            System.getLogger(MessageLookup.class.getName())
+                                    .log(DEBUG, "Duplicate error code: {}", errorCode);
+                        }
+                    });
+            return messageTemplates[facility] = indexedByCode.toArray(@Nullable MessageTemplate[]::new);
+        } finally {
+            writeLock.unlock();
         }
     }
 
@@ -88,21 +140,11 @@ final class MessageLookup {
         return (errorCode & ISC_MASK) != ISC_MASK;
     }
 
-    private static String[][] toLookupArray(List<List<String>> sourceData) {
-        final int facilitySize = sourceData.size();
-        final String[][] data = new String[facilitySize][];
-        for (int idx = 0; idx < facilitySize; idx++) {
-            data[idx] = sourceData.get(idx)
-                    .toArray(EMPTY_STRING_ARRAY);
-        }
-        return data;
-    }
-
     /**
      * Obtain the facility from an error code.
      *
      * @param errorCode
-     *         Error code
+     *         error code
      * @return Facility
      */
     static int getFacility(int errorCode) {
@@ -113,7 +155,7 @@ final class MessageLookup {
      * Obtain the code within a facility from an error code.
      *
      * @param errorCode
-     *         Error code
+     *         error code
      * @return Facility
      */
     static int getCode(int errorCode) {

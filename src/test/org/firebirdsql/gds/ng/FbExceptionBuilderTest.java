@@ -125,7 +125,6 @@ class FbExceptionBuilderTest {
 
     /**
      * Test incomplete parameter substitution in exception messages.
-     * TODO: Move to {@link org.firebirdsql.gds.GDSExceptionHelper}?
      */
     @Test
     void exception_parameterIncompleteSubstitution() {
@@ -171,14 +170,13 @@ class FbExceptionBuilderTest {
     }
 
     /**
-     * Tests if overriding the SQLState throws an {@link IllegalArgumentException} if null is passed
+     * Tests if overriding the SQLState throws an {@link NullPointerException} if null is passed
      */
     @Test
     void exception_overrideSQLState_null() {
         builder.exception(isc_req_wrong_db).toSQLException();
         // isc_req_wrong_db defaults to SQLState HY000
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> builder.sqlState(null));
-        assertThat(exception, message(equalTo("Value of sqlState must be a 5 character string")));
+        assertThrows(NullPointerException.class, () -> builder.sqlState(null));
     }
 
     /**
@@ -261,7 +259,7 @@ class FbExceptionBuilderTest {
     }
 
     /**
-     * Calling {@link FbExceptionBuilder#messageParameter(String)} before the exception type and code has been set
+     * Calling {@link FbExceptionBuilder#messageParameter(Object)} before the exception type and code has been set
      * should result in an {@link IllegalStateException}
      */
     @Test

@@ -72,8 +72,8 @@ class PerFacilityStore extends MessageStore {
 
     @Override
     public void save() throws IOException {
-        save(messagesPerFacility, code -> format("error_messages_%d.properties", code));
-        save(sqlStatesPerFacility, code -> format("sql_states_%d.properties", code));
+        save(messagesPerFacility, code -> format("firebird_%d_error_msg.properties", code));
+        save(sqlStatesPerFacility, code -> format("firebird_%d_sql_states.properties", code));
         symbolStore.save();
     }
 

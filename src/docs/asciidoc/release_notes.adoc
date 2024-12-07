@@ -1801,6 +1801,12 @@ replacement is `new SQLExceptionChainBuilder().append(exception)`
 ** `allRowsFetched(FBFetcher)` was removed
 * `FBObjectListener.ResultSetListener`
 ** `allRowsFetched(ResultSet)` was removed
+* `GDSExceptionHelper` and its nested class `GDSMessage`
+** Replacement is the class `MessageTemplate`
+
+The `/isc_error_msg.properties` and `/isc_error_sqlstates.properties` resources have been removed.
+Their replacements are the `/org/firebirdsql/firebird_N_error_msg.properties` and `/org/firebirdsql/firebird_N_sql_states.properties` resources, where _N_ is the facility code of the error.
+This allows us to avoid loading messages from facilities which are not actually used.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

@@ -34,6 +34,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -83,6 +84,25 @@ class CollectionUtilsTest {
     void growToSize_immutableList() {
         assertThrows(UnsupportedOperationException.class,
                 () -> CollectionUtils.growToSize(List.of("item1"), 4));
+    }
+
+    @Test
+    void getLast_emptyList() {
+        assertNull(CollectionUtils.getLast(List.of()));
+    }
+
+    @Test
+    void getLast_singleton() {
+        String item1 = "item1";
+        assertEquals(item1, CollectionUtils.getLast(List.of(item1)));
+    }
+
+    @Test
+    void getLast_multipleItems() {
+        String item1 = "item1";
+        String item2 = "item2";
+
+        assertEquals(item2, CollectionUtils.getLast(List.of(item1, item2)));
     }
 
     static Stream<Arguments> listFactories() {
