@@ -1,0 +1,44 @@
+= jdp-2024-09: Custom socket factory for pure Java connections
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+Jaybird 5 and earlier directly create `Socket` instances.
+There are use-cases where it might be worthwhile to have more control over socket creation.
+For example, for SOCKS proxy creation with custom instead of global config (see https://github.com/FirebirdSQL/jaybird/issues/826[#826]), or to allow TLS connections with a TLS proxy (gateway) instead of relying on built-in wire-encryption.
+
+Adding support for a custom `javax.net.SocketFactory` would allow users to override socket creation.
+
+As shown by the SOCKS proxy example of https://github.com/FirebirdSQL/jaybird/issues/826[#826], having some way to expose connection-specific information would also be useful.
+This should not expose *all* connection information, but only that information that the user explicitly wants to pass to the custom socket factory.
+
+== Decision
+
+Jaybird will add a connection property `socketFactory`, which accepts the name of a `javax.net.SocketFactory`.
+If the property is not set (the default), the default `SocketFactory` (`SocketFactory.getDefault()`) is used.
+The `SocketFactory` will be created anew for each connection.
+
+The implementation either has a parameterless constructor, or a constructor accepting a `java.util.Properties` object.
+This `Properties` object is used to pass custom properties to the socket factory.
+It is populated by selecting the connection properties with the suffix `@socketFactory` and including the non-``null`` string values in the `Properties` object.
+The suffix is retained for the property names (this reduces ambiguity, and will also allow us to include other properties in the future).
+
+We explicitly and intentionally do not add support to set a `SocketFactory` instance (e.g. on a `DataSource`).
+
+== Consequences
+
+Jaybird adds support for custom socket factories as described above.
+This support is limited to the pure Java implementation.
+
+The `socketFactory` option and passing of configuration must be documented in the Jaybird manual.
+
+Currently, Jaybird always creates unconnected sockets (that is, `SocketFactory.createSocket()`).
+We recommend that implementations that don't support the other `createSocket` methods to throw an `UnsupportedOperationException` or an `IOException` with a clear message that the socket factory does not support the method.
