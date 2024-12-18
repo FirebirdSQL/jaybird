@@ -37,6 +37,9 @@ For known issues, consult <<known-issues>>.
 The following was fixed or changed after 6.0.0-beta-1:
 
 * Improvement: stacktraces produced by `FbExceptionBuilder` no longer include `StackTraceElements` of the builder itself (https://github.com/FirebirdSQL/jaybird/issues/827[#827])
+* Improvement: support for custom SocketFactory in connection string and data sources (https://github.com/FirebirdSQL/jaybird/issues/828[#828])
++
+See also <<custom-socket-factory>>.
 
 [#jaybird-6-0-0-beta-1-changelog]
 === Jaybird 6.0.0-beta-1
@@ -108,6 +111,7 @@ See <<native-plugin>> for more information.
 * <<timestamp-localdate-localtime>>
 * <<no-close-after-last>>
 * <<scroll-rs-update-behavior>>
+* <<custom-socket-factory>>
 * ... and <<other-fixes-and-changes>>
 
 Upgrading from Jaybird 5 should be straightforward, but please make sure to read <<compatibility-changes>> before using Jaybird 6.
@@ -1053,14 +1057,14 @@ If `socketFactory` is not specified, Jaybird will use `SocketFactory.getDefault(
 
 The `SocketFactory` implementation must adhere to the following rules:
 
-- The class must have a public constructor accepting a `java.util.Properties` object, or a public no-arg constructor.
+- The class must have a public single-arg constructor accepting a `java.util.Properties` object, or a public no-arg constructor.
 - The implementation of `SocketFactory#createSocket()` must return an unconnected socket;
 the other `createSocket` methods are not called by Jaybird.
 +
 If you don't want to implement the other `createSocket` methods, we recommend throwing `java.lang.UnsupportedOperationException` with a clear message from those methods.
 
 It is possible to pass custom connection properties to the socket factory if it has a public single-arg constructor accepting a `Properties` object.
-Jaybird will instantiate the socket factory with a `Properties` object containing _only_ the connection properties with the suffix `@socketFactory` and a non-``null`` values;
+Jaybird will instantiate the socket factory with a `Properties` object containing _only_ the connection properties with the suffix `@socketFactory` and non-``null`` values;
 non-string values are converted to string.
 In the future, we may also -- selectively -- pass other connection properties, but for now we only expose those properties that are explicitly set for the socket factory.
 
