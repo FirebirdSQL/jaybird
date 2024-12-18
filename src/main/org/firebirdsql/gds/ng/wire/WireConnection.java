@@ -36,11 +36,14 @@ import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
 
+import javax.net.SocketFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
@@ -54,6 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.System.Logger.Level.DEBUG;
@@ -229,30 +233,25 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     }
 
     /**
-     * Establishes the TCP/IP connection to serverName and portNumber of this
-     * Connection
+     * Establishes the TCP/IP connection to serverName and portNumber of this connection.
      *
      * @throws SQLTimeoutException
-     *         If the connection cannot be established within the connect
-     *         timeout (either explicitly set or implied by the OS timeout
-     *         of the socket)
+     *         if the connection cannot be established within the connect timeout (either explicitly set or implied by
+     *         the OS timeout of the socket)
      * @throws SQLException
-     *         If the connection cannot be established.
+     *         if the connection cannot be established.
      */
     public final void socketConnect() throws SQLException {
         try {
-            socket = new Socket();
+            socket = createSocket();
             socket.setTcpNoDelay(true);
             final int connectTimeout = attachProperties.getConnectTimeout();
-            final int socketConnectTimeout;
-            if (connectTimeout != -1) {
-                // connectTimeout is in seconds, need milliseconds
-                socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(connectTimeout);
+            // connectTimeout is in seconds, need milliseconds, lower bound 0 (indefinite, for overflow or not set)
+            final int socketConnectTimeout = Math.max(0, (int) TimeUnit.SECONDS.toMillis(connectTimeout));
+            if (socketConnectTimeout != 0) {
                 // Blocking timeout initially identical to connect timeout
                 socket.setSoTimeout(socketConnectTimeout);
             } else {
-                // socket connect timeout is not set, so indefinite (0)
-                socketConnectTimeout = 0;
                 // Blocking timeout to normal socket timeout, 0 if not set
                 socket.setSoTimeout(Math.max(attachProperties.getSoTimeout(), 0));
             }
@@ -275,6 +274,70 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                     .cause(ioex)
                     .toSQLException();
         }
+    }
+
+    private Socket createSocket() throws IOException, SQLException {
+        try {
+            return createSocketFactory().createSocket();
+        } catch (RuntimeException e) {
+            throw FbExceptionBuilder
+                    .forNonTransientConnectionException(JaybirdErrorCodes.jb_socketFactoryFailedToCreateSocket)
+                    .messageParameter(attachProperties.getSocketFactory())
+                    .cause(e)
+                    .toSQLException();
+        }
+    }
+
+    private SocketFactory createSocketFactory() throws SQLException {
+        String socketFactoryName = attachProperties.getSocketFactory();
+        if (socketFactoryName == null) {
+            return SocketFactory.getDefault();
+        }
+        return createSocketFactory0(socketFactoryName);
+    }
+
+    private SocketFactory createSocketFactory0(String socketFactoryName) throws SQLException {
+        log.log(DEBUG, "Attempting to create custom socket factory {0}", socketFactoryName);
+        try {
+            Class<? extends SocketFactory> socketFactoryClass =
+                    Class.forName(socketFactoryName).asSubclass(SocketFactory.class);
+            try {
+                Constructor<? extends SocketFactory> propsConstructor =
+                        socketFactoryClass.getConstructor(Properties.class);
+                return propsConstructor.newInstance(getSocketFactoryProperties());
+            } catch (ReflectiveOperationException e) {
+                log.log(DEBUG, socketFactoryName
+                        + "has no Properties constructor, or constructor execution resulted in an exception", e);
+            }
+            try {
+                Constructor<? extends SocketFactory> noArgConstructor = socketFactoryClass.getConstructor();
+                return noArgConstructor.newInstance();
+            } catch (ReflectiveOperationException e) {
+                log.log(DEBUG, socketFactoryName
+                        + "has no no-arg constructor, or constructor execution resulted in an exception", e);
+            }
+            throw FbExceptionBuilder
+                    .forNonTransientConnectionException(JaybirdErrorCodes.jb_socketFactoryConstructorNotFound)
+                    .messageParameter(socketFactoryName)
+                    .toSQLException();
+        } catch (ClassNotFoundException | ClassCastException e) {
+            throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_socketFactoryClassNotFound)
+                    .messageParameter(socketFactoryName)
+                    .cause(e)
+                    .toSQLException();
+        }
+    }
+
+    private Properties getSocketFactoryProperties() {
+        var props = new Properties();
+        attachProperties.connectionPropertyValues().entrySet().stream()
+                .filter(e ->
+                        e.getValue() != null && e.getKey().name().endsWith("@socketFactory"))
+                .forEach(e -> {
+                    ConnectionProperty connectionProperty = e.getKey();
+                    props.setProperty(connectionProperty.name(), connectionProperty.type().asString(e.getValue()));
+                });
+        return props;
     }
 
     public final XdrStreamAccess getXdrStreamAccess() {

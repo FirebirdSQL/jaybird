@@ -447,6 +447,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
+    public String getSocketFactory() {
+        return FirebirdConnectionProperties.super.getSocketFactory();
+    }
+
+    @Override
+    public void setSocketFactory(String socketFactory) {
+        FirebirdConnectionProperties.super.setSocketFactory(socketFactory);
+    }
+
+    @Override
     public boolean isUseCatalogAsPackage() {
         return FirebirdConnectionProperties.super.isUseCatalogAsPackage();
     }

@@ -62,6 +62,7 @@ public final class PropertyNames {
     public static final String wireCompression = "wireCompression";
     public static final String enableProtocol = "enableProtocol";
     public static final String parallelWorkers = "parallelWorkers";
+    public static final String socketFactory = "socketFactory";
 
     // database connection
     public static final String sqlDialect = "sqlDialect";

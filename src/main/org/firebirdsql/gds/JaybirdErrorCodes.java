@@ -152,6 +152,9 @@ public interface JaybirdErrorCodes {
     int jb_noAuthenticationPlugin   = 337248344;
     int jb_asyncChannelAlreadyEstablished                = 337248345;
     int jb_asyncChannelNotConnected = 337248346;
+    int jb_socketFactoryClassNotFound                    = 337248347;
+    int jb_socketFactoryConstructorNotFound              = 337248348;
+    int jb_socketFactoryFailedToCreateSocket             = 337248349;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

@@ -20,10 +20,14 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.common.BlackholeServer;
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.NoArgSocketFactory;
+import org.firebirdsql.common.PropertiesSocketFactory;
+import org.firebirdsql.common.StringSocketFactory;
 import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
 import org.firebirdsql.gds.ng.wire.version13.Version13Descriptor;
@@ -33,9 +37,13 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
+import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLTimeoutException;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -257,4 +265,73 @@ class WireDatabaseConnectionTest {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
         assertDoesNotThrow(gdsConnection::close);
     }
+
+    @Test
+    void customSocketFactory_noArg() throws Exception {
+        connectionInfo.setSocketFactory(NoArgSocketFactory.class.getName());
+        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo)) {
+            gdsConnection.socketConnect();
+
+            assertTrue(NoArgSocketFactory.getCreateSocketCalledOnThread(),
+                    "Expected custom socket factory createSocket() to have been called");
+        } finally {
+            NoArgSocketFactory.clearCurrentThread();
+        }
+    }
+
+    @Test
+    void customSocketFactory_properties() throws Exception {
+        connectionInfo.setSocketFactory(PropertiesSocketFactory.class.getName());
+        connectionInfo.setProperty("customString@socketFactory", "customStringValue");
+        connectionInfo.setIntProperty("customInt@socketFactory", 7812);
+        connectionInfo.setBooleanProperty("customBoolean@socketFactory", true);
+        connectionInfo.setProperty("customString@notSocketFactory", "notIncluded");
+        try (var gdsConnection = new WireDatabaseConnection(connectionInfo)) {
+            gdsConnection.socketConnect();
+
+            assertTrue(PropertiesSocketFactory.getCreateSocketCalledOnThread(),
+                    "Expected custom socket factory createSocket() to have been called");
+
+            var expectedProps = new Properties();
+            expectedProps.putAll(Map.of("customString@socketFactory", "customStringValue",
+                    "customInt@socketFactory", "7812",
+                    "customBoolean@socketFactory", "true"));
+            assertEquals(expectedProps, PropertiesSocketFactory.getLastPropertiesOnThread(),
+                    "Unexpected properties received during socket factory creation");
+        } finally {
+            PropertiesSocketFactory.clearCurrentThread();
+        }
+    }
+
+    @Test
+    void customSocketFactory_classNotFound() throws Exception {
+        String socketFactory = "org.firebirdsql.gds.ng.wire.DoesNotExist";
+        connectionInfo.setSocketFactory(socketFactory);
+        try (var gdsConnection = new WireDatabaseConnection(connectionInfo)) {
+            var exception = assertThrows(SQLNonTransientConnectionException.class, gdsConnection::socketConnect);
+            assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_socketFactoryClassNotFound, socketFactory));
+        }
+    }
+
+    @Test
+    void customSocketFactory_noSocketFactory() throws Exception {
+        String socketFactory = getClass().getName();
+        connectionInfo.setSocketFactory(socketFactory);
+        try (var gdsConnection = new WireDatabaseConnection(connectionInfo)) {
+            var exception = assertThrows(SQLNonTransientConnectionException.class, gdsConnection::socketConnect);
+            assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_socketFactoryClassNotFound, socketFactory));
+        }
+    }
+
+    @Test
+    void customSocketFactory_noNoArgOrPropertiesConstructor() throws Exception {
+        String socketFactory = StringSocketFactory.class.getName();
+        connectionInfo.setSocketFactory(socketFactory);
+        try (var gdsConnection = new WireDatabaseConnection(connectionInfo)) {
+            var exception = assertThrows(SQLNonTransientConnectionException.class, gdsConnection::socketConnect);
+            assertThat(exception,
+                    fbMessageStartsWith(JaybirdErrorCodes.jb_socketFactoryConstructorNotFound, socketFactory));
+        }
+    }
+    
 }

@@ -1042,6 +1042,52 @@ We're considering to make server-side scrollable cursors the default in a future
 
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-05-behavior-of-updatable-result-sets.adoc[jdp-2024-05: Behaviour of Updatable Result Sets^].
 
+[#custom-socket-factory]
+=== Custom socket factory for pure Java connections
+
+A custom socket factory can now be specified, to customize the creation of the `java.net.Socket` instance of a pure Java database or service connection.
+
+The connection property `socketFactory` accepts the class name of an implementation of `javax.net.SocketFactory`.
+This socket factory is created anew for each connection.
+If `socketFactory` is not specified, Jaybird will use `SocketFactory.getDefault()` as its factory.
+
+The `SocketFactory` implementation must adhere to the following rules:
+
+- The class must have a public constructor accepting a `java.util.Properties` object, or a public no-arg constructor.
+- The implementation of `SocketFactory#createSocket()` must return an unconnected socket;
+the other `createSocket` methods are not called by Jaybird.
++
+If you don't want to implement the other `createSocket` methods, we recommend throwing `java.lang.UnsupportedOperationException` with a clear message from those methods.
+
+It is possible to pass custom connection properties to the socket factory if it has a public single-arg constructor accepting a `Properties` object.
+Jaybird will instantiate the socket factory with a `Properties` object containing _only_ the connection properties with the suffix `@socketFactory` and a non-``null`` values;
+non-string values are converted to string.
+In the future, we may also -- selectively -- pass other connection properties, but for now we only expose those properties that are explicitly set for the socket factory.
+
+For example, say we have some custom socket factory called `org.example.CustomProxySocketFactory` with a `CustomProxySocketFactory(Properties)` constructor:
+
+[source,java]
+----
+var props = new Properties()
+props.setProperty("user", "sysdba");
+props.setProperty("password", "masterkey");
+props.setProperty("socketFactory", "org.example.CustomProxySocketFactory");
+props.setProperty("proxyHost@socketFactory", "localhost");
+props.setProperty("proxyPort@socketFactory", "1234");
+props.setProperty("proxyUser@socketFactory", "proxy-user");
+props.setProperty("proxyPassword@socketFactory", "proxy-password");
+
+try (var connection = DriverManager.getConnection(
+        "jdbc:firebird://remoteserver.example.org/db", props)) {
+    // use connection
+}
+----
+
+This will create the specified socket factory, passing a `Properties` object containing *only* the four custom properties ending in `@socketFactory`.
+The other properties -- here `user`, `password` and `socketFactory` -- are *not* passed to the socket factory.
+
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-09-custom-socket-factory-for-pure-java-connections.adoc[jdp-2024-09: Custom socket factory for pure Java connections]
+
 // TODO add major changes
 
 [#other-fixes-and-changes]

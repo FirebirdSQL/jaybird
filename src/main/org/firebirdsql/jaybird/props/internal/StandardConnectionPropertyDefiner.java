@@ -78,6 +78,7 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder(enableProtocol),
                 builder(parallelWorkers).type(INT).aliases("parallel_workers", "isc_dpb_parallel_workers")
                         .dpbItem(isc_dpb_parallel_workers),
+                builder(socketFactory),
 
                 // Database properties
                 builder(charSet).aliases("charset", "localEncoding", "local_encoding"),

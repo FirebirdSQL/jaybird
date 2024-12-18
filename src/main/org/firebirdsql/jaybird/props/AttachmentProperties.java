@@ -465,4 +465,34 @@ public interface AttachmentProperties extends BaseProperties {
         setIntProperty(PropertyNames.parallelWorkers, parallelWorkers);
     }
 
+    /**
+     * The class name of a custom socket factory to be used for pure Java connections.
+     *
+     * @return fully-qualified class name of a {@link javax.net.SocketFactory} implementation, or (default) {@code null}
+     * for the default socket factory
+     * @since 6
+     * @see #setSocketFactory(String)
+     */
+    default String getSocketFactory() {
+        return getProperty(PropertyNames.socketFactory);
+    }
+
+    /**
+     * Sets the class name of a custom socket factory to be used for pure Java connections.
+     * <p>
+     * The class must extend {@link javax.net.SocketFactory} and have a public single-arg constructor accepting
+     * a {@link java.util.Properties}, or a public no-arg constructor. The {@code Properties} object passed in the first
+     * case contains custom connection properties with the suffix {@code @socketFactory}, and &mdash; possibly &mdash;
+     * other selected properties.
+     * </p>
+     *
+     * @param socketFactory
+     *         fully-qualified class name of a {@link javax.net.SocketFactory} implementation, or {@code null} for
+     *         the default socket factory
+     * @since 6
+     */
+    default void setSocketFactory(String socketFactory) {
+        setProperty(PropertyNames.socketFactory, socketFactory);
+    }
+
 }
