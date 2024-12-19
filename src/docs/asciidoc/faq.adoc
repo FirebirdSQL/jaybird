@@ -499,19 +499,19 @@ You can subscribe to the mailing list by sending an email to link:mailto:firebir
 * Looking for professional support of Jaybird?
 Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription].
 * The https://firebirdsql.org[Firebird project home page]
-* Firebird support and other https://firebirdsql.org/en/mailing-lists/[Firebird mailing lists] for questions not directly related to Jaybird and java.
+* Firebird-support and other https://firebirdsql.org/en/mailing-lists/[Firebird mailing lists] for questions not directly related to Jaybird and Java.
 
 [#contributing]
 == Contributing
 
 There are several ways you can contribute to Jaybird or Firebird in general:
 
-* Participate on the mailing lists (see https://firebirdsql.org/en/mailing-lists/)
+* Participate on the https://firebirdsql.org/en/mailing-lists/[mailing lists]
 * Report bugs or submit patches on the tracker (see <<reporting-bugs,Reporting Bugs>>)
 * Create pull requests on GitHub (https://github.com/FirebirdSQL/jaybird)
 * Become a developer (for Jaybird contact us on {firebird-java}[firebird-java], for Firebird in general, use the https://groups.google.com/g/firebird-devel[Firebird-devel] mailing list)
 * Donate to the Firebird Foundation (see https://firebirdsql.org/en/donate/)
-* Become a paying member or sponsor of the Firebird Foundation (see https://firebirdsql.org/en/firebird-foundation/)
+* Become a paying Associate, Partner or sponsor of the Firebird Foundation (see https://firebirdsql.org/en/firebird-foundation/)
 
 [#reporting-bugs]
 == Reporting Bugs
