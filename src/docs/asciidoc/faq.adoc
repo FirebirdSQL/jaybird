@@ -339,10 +339,10 @@ Support for Java 17 and higher is limited to Java 17, Java 21, -- once available
 [discrete]
 === Jaybird 5
 
-Jaybird 5 supports Java 8, 11, 17 and 21.
-Support for Java 9 and higher is limited to Java 8, 11, 17, 21 and the most recent LTS version after Java 21 and the latest Java release.
+Jaybird 5 supports Java 8, 11, 17, 21, and 23.
+Support for Java 9 and higher is limited to Java 8, 11, 17, 21, -- once available -- the latest LTS version after Java 21, and the latest Java release.
 
-Jaybird 5 is the last version to support Java 8 and 11, support will be dropped with Jaybird 6, raising the minimum supported version to Java 17.
+Jaybird 5 is the last version to support Java 8 and 11, support has been dropped with Jaybird 6, raising the minimum supported version to Java 17.
 
 [NOTE]
 ====
@@ -475,7 +475,7 @@ Instead, we recommend building a webservice (e.g. REST-based) to mediate between
 
 Apart from this FAQ, you can get additional information from:
 
-* https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html[Jaybird JDBC Driver Java Programmer's Manual] (HTML, https://firebirdsql.github.io/jaybird-manual/jaybird_manual.pdf[PDF version]) (covers Jaybird 2.2 and higher)
+* https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html[Jaybird JDBC Driver Java Programmer's Manual] (HTML, https://firebirdsql.github.io/jaybird-manual/jaybird_manual.pdf[PDF version]) (covers Jaybird 4 and higher)
 * https://www.firebirdsql.org/en/jdbc-driver/[Firebird website: Downloads, Connectivity, JDBC Driver]
 * https://firebirdsql.org/en/devel-jdbc-driver/[Firebird website: Development, JDBC Driver]
 * https://github.com/FirebirdSQL/jaybird/wiki/[Jaybird wiki]
