@@ -88,6 +88,7 @@ public final class PropertyNames {
     public static final String extendedMetadata = "extendedMetadata";
     public static final String createDatabaseIfNotExist = "createDatabaseIfNotExist";
     public static final String reportSQLWarnings = "reportSQLWarnings";
+    public static final String asyncFetch = "asyncFetch";
 
     // service connection
     public static final String expectedDb = "expectedDb";

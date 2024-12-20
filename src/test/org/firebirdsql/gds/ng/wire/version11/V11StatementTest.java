@@ -149,6 +149,32 @@ public class V11StatementTest extends V10StatementTest {
     }
 
     @Test
+    public void testAsyncFetchRows_noAsyncFetchIfAsyncFetchFalse() throws Exception {
+        db.close();
+        connectionInfo.setAsyncFetch(false);
+        db = createDatabase();
+        db.attach();
+
+        allocateStatement();
+        statement.prepare("select RDB$CHARACTER_SET_NAME from RDB$CHARACTER_SETS order by RDB$CHARACTER_SET_NAME");
+        statement.addStatementListener(listener);
+
+        statement.execute(RowValue.EMPTY_ROW_VALUE);
+
+        // this will be ignored as async fetch is disabled
+        statement.asyncFetchRows(10);
+
+        assertEquals(0, listener.getRows().size(), "Expected no rows to be fetched yet");
+        assertNull(listener.getLastFetchCount(), "Expected no rows to be fetched yet");
+
+        // Should fetch 1 rows, as the request to fetch 10 rows asynchronously was ignored
+        statement.fetchRows(1);
+
+        assertEquals(1, listener.getRows().size(), "Expected 1 rows to be fetched");
+        assertEquals(1, listener.getLastFetchCount(), "Expected 1 rows to be fetched");
+    }
+
+    @Test
     public void testAsyncFetchRows_allowCancel() throws Exception {
         allocateStatement();
         statement.prepare("select RDB$CHARACTER_SET_NAME from RDB$CHARACTER_SETS order by RDB$CHARACTER_SET_NAME");

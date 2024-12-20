@@ -2,8 +2,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 6
+* Published: 2024-12-20
+* Implemented in: Jaybird 6
 * Updates: https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-12-async-fetching-result-set-rows.adoc[jdp-2023-12]
 
 == Type
@@ -26,6 +26,8 @@ When set to `false` (or anything not case-insensitively equal to `true`, or empt
 
 The Boolean system property is called `org.firebirdsql.jdbc.defaultAsyncFetch` with the same values, and controls the global default.
 It will be dynamically checked when the connection configuration is created.
+
+When this feature has proven itself, we will consider removing these properties in a future major version of Jaybird.
 
 == Consequences
 

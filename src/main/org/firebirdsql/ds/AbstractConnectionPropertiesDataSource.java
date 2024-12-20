@@ -506,6 +506,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setReportSQLWarnings(reportSQLWarnings);
     }
 
+    @Override
+    public boolean isAsyncFetch() {
+        return FirebirdConnectionProperties.super.isAsyncFetch();
+    }
+
+    @Override
+    public void setAsyncFetch(boolean asyncFetch) {
+        FirebirdConnectionProperties.super.setAsyncFetch(asyncFetch);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated(since = "5")
     @Override

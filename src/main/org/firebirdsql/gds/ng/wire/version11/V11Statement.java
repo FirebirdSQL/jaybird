@@ -129,12 +129,7 @@ public class V11Statement extends V10Statement {
         try (LockCloseable ignored = withLock()) {
             checkStatementHasOpenCursor();
             checkFetchSize(fetchSize);
-            // Conditions for not performing an async fetch
-            if (isAfterLast()
-                || asyncFetchStatus.isPending()
-                || fetchSize == 1
-                || getCursorName() != null
-                || isCursorFlagSet(CursorFlag.CURSOR_TYPE_SCROLLABLE)) return;
+            if (isSkipAsyncFetch(fetchSize)) return;
 
             sendAsyncFetch(fetchSize);
             asyncFetchStatus = AsyncFetchStatus.pending();
@@ -164,6 +159,26 @@ public class V11Statement extends V10Statement {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
+    }
+
+    /**
+     * Conditions for not performing an async fetch.
+     *
+     * @param fetchSize
+     *         requested fetch size
+     * @return {@code true} if async fetch should be skipped, {@code false} if async fetch should be performed
+     */
+    private boolean isSkipAsyncFetch(int fetchSize) {
+        return isAfterLast()
+                || asyncFetchStatus.isPending()
+                || fetchSize == 1
+                || getCursorName() != null
+                || isCursorFlagSet(CursorFlag.CURSOR_TYPE_SCROLLABLE)
+                || isAsyncFetchDisabled();
+    }
+
+    private boolean isAsyncFetchDisabled() {
+        return !getDatabase().getConnectionProperties().isAsyncFetch();
     }
 
     private void sendAsyncFetch(int fetchSize) throws SQLException {

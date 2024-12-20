@@ -751,4 +751,35 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
         setProperty(PropertyNames.reportSQLWarnings, reportSQLWarnings);
     }
 
+    /**
+     * Gets if async fetching is enabled or disabled (pure Java only).
+     * <p>
+     * This property may get removed in Jaybird 7 or later, once this async fetching has proven itself.
+     * </p>
+     *
+     * @return {@code true} (default) async fetching is enabled, {@code false} async fetching is disabled
+     * @see #setAsyncFetch(boolean)
+     * @since 6
+     */
+    default boolean isAsyncFetch() {
+        return getBooleanProperty(PropertyNames.asyncFetch, PropertyConstants.DEFAULT_ASYNC_FETCH);
+    }
+
+    /**
+     * Sets if async fetching is enabled or disabled (pure Java only).
+     * <p>
+     * The default value can be overridden by setting system property {@code org.firebirdsql.jdbc.defaultAsyncFetch}.
+     * </p>
+     * <p>
+     * This property may get removed in Jaybird 7 or later, once this async fetching has proven itself.
+     * </p>
+     *
+     * @param asyncFetch
+     *         {@code true} (default) async fetching is enabled, {@code false} async fetching is disabled
+     * @since 6
+     */
+    default void setAsyncFetch(boolean asyncFetch) {
+        setBooleanProperty(PropertyNames.asyncFetch, asyncFetch);
+    }
+
 }

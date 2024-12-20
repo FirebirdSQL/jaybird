@@ -40,6 +40,9 @@ The following was fixed or changed after 6.0.0-beta-1:
 * Improvement: support for custom SocketFactory in connection string and data sources (https://github.com/FirebirdSQL/jaybird/issues/828[#828])
 +
 See also <<custom-socket-factory>>.
+* Improvement: added connection property `asyncFetch` and system property `org.firebirdsql.jdbc.defaultAsyncFetch` to disable async fetching for pure Java connections (https://github.com/FirebirdSQL/jaybird/issues/831[#831])
++
+See also <<async-fetch>>
 
 [#jaybird-6-0-0-beta-1-changelog]
 === Jaybird 6.0.0-beta-1
@@ -713,6 +716,11 @@ In that case a synchronous fetch is triggered when the buffer is empty.
 This may be the configured fetch size, or the fetch size derived taking into account the configured maximum row count.
 
 Native connections do not support this type of asynchronous fetching, but `fbclient` itself provides a different form of internal asynchronous fetching for native connections.
+
+Asynchronous fetching can be disabled with the Boolean connection property `asyncFetch`, by setting it to `false`.
+The system property `org.firebirdsql.jdbc.defaultAsyncFetch` can be used to set a global default, which is checked dynamically when the connection configuration is created.
+These properties are primarily intended for troubleshooting or workarounds if it turns out this feature has problems;
+they may be removed in a future Jaybird version once this feature has proven itself.
 
 [#blob-performance]
 === Blob performance improvements

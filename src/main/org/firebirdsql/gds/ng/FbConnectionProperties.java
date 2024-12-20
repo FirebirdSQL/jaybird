@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
@@ -31,6 +30,9 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+
+import static org.firebirdsql.gds.JaybirdSystemProperties.getDefaultAsyncFetch;
+import static org.firebirdsql.gds.JaybirdSystemProperties.getDefaultReportSQLWarnings;
 
 /**
  * Mutable implementation of {@link IConnectionProperties}
@@ -66,9 +68,13 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
         setSessionTimeZone(defaultTimeZone());
         setSqlDialect(PropertyConstants.DEFAULT_DIALECT);
         try {
-            setReportSQLWarnings(JaybirdSystemProperties.getDefaultReportSQLWarnings());
+            setReportSQLWarnings(getDefaultReportSQLWarnings());
         } catch (IllegalArgumentException ignored) {
             // Incorrect value, ignore
+        }
+        Boolean asyncFetch = getDefaultAsyncFetch();
+        if (asyncFetch != null) {
+            setAsyncFetch(asyncFetch);
         }
     }
 
@@ -95,6 +101,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
         return switch (property.name()) {
             case PropertyNames.sessionTimeZone -> defaultTimeZone();
             case PropertyNames.sqlDialect -> PropertyConstants.DEFAULT_DIALECT;
+            case PropertyNames.asyncFetch -> getDefaultAsyncFetch();
             default -> super.resolveStoredDefaultValue(property);
         };
     }

@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 import org.junit.jupiter.api.Test;
@@ -298,6 +299,33 @@ class FbConnectionPropertiesTest {
                 JaybirdSystemProperties.DEFAULT_REPORT_SQL_WARNINGS, "INVALID_VALUE")) {
             assertEquals(PropertyConstants.DEFAULT_REPORT_SQL_WARNINGS,
                     new FbConnectionProperties().getReportSQLWarnings(), "Unexpected reportSQLWarnings value");
+        }
+    }
+
+    @Test
+    void defaultAsyncFetchValue() {
+        assertEquals(PropertyConstants.DEFAULT_ASYNC_FETCH, info.isAsyncFetch(), "Unexpected asyncFetch value");
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "true", "false", "NOT_A_BOOLEAN" })
+    void asyncFetchDefaultDerivedFromSystemProperty(String defaultValue) {
+        try (var ignored = withTemporarySystemProperty(JaybirdSystemProperties.DEFAULT_ASYNC_FETCH, defaultValue)) {
+            // Handle empty string as true, null as normal default
+            boolean expectedValue = defaultValue == null
+                    ? PropertyConstants.DEFAULT_ASYNC_FETCH
+                    : defaultValue.isBlank() || Boolean.parseBoolean(defaultValue);
+            var props = new FbConnectionProperties();
+            assertEquals(expectedValue, props.isAsyncFetch(), "Unexpected asyncFetch value");
+
+            // checking inverted value
+            props.setAsyncFetch(!props.isAsyncFetch());
+            assertEquals(!expectedValue, props.isAsyncFetch(), "Unexpected asyncFetch value");
+
+            // explicitly clearing the property reverts to the default
+            props.setBooleanProperty(PropertyNames.asyncFetch, null);
+            assertEquals(expectedValue, props.isAsyncFetch(), "Unexpected asyncFetch value");
         }
     }
 

@@ -244,6 +244,7 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * <li>an asynchronous fetch is already pending</li>
      * <li>{@code fetchSize} is {@code 1} or the statement has a cursor name set</li>
      * <li>the current statement has a scrollable cursor (flag {@code CURSOR_TYPE_SCROLLABLE} set)</li>
+     * <li>the connection property {@code asyncFetch} is {@code false}</li>
      * </ul>
      * <p>
      * An asynchronous fetch can be completed explicitly by calling {@link #fetchRows(int)}, or implicitly by
