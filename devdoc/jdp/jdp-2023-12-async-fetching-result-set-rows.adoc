@@ -3,8 +3,9 @@
 == Status
 
 * Published: 2023-07-04
-* Updated: 2023-07-05
+* Updated: 2024-12-20
 * Implemented in: Jaybird 6
+* Updated by: https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2024-10-allow-disabling-async-fetch.adoc[jdp-2024-10]
 
 == Type
 

@@ -1,0 +1,34 @@
+= jdp-2024-10: Allow disabling async fetch
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 6
+* Updates: https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-12-async-fetching-result-set-rows.adoc[jdp-2023-12]
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+In https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-12-async-fetching-result-set-rows.adoc[jdp-2023-12], https://github.com/FirebirdSQL/jaybird/issues/755[#755], we introduced asynchronous fetching for pure Java connections.
+
+With every change, there is a risk we break something.
+To aid troubleshooting and be able to provide a workaround if we did break something, we should add a connection property which can be used to disable async fetching.
+
+== Decision
+
+Jaybird will add a connection property and a system property to disable async fetching by pure Java connections.
+
+The Boolean connection property is called `asyncFetch`, with a default value of `true` (overridable with the system property, see below).
+When set to `false` (or anything not case-insensitively equal to `true`, or empty string), Jaybird will not perform async fetching in the pue Java implementation.
+
+The Boolean system property is called `org.firebirdsql.jdbc.defaultAsyncFetch` with the same values, and controls the global default.
+It will be dynamically checked when the connection configuration is created.
+
+== Consequences
+
+When a connection is created with `asyncFetch=false` (whether explicitly set, or set using the system property), a pure Java connection will not perform async fetching.
+
+This property does not control async fetching performed by native connections, as there is no way to configure this behaviour.
