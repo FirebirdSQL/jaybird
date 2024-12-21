@@ -20,7 +20,7 @@ plugins {
     id 'nu.studer.credentials' version '3.0'
     id 'maven-publish'
     id 'signing'
-    id 'org.asciidoctor.jvm.convert' version '4.0.3'
+    id 'org.asciidoctor.jvm.convert' version '4.0.4'
 }
 
 defaultTasks 'clean', 'build'
