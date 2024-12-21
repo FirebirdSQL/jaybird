@@ -14,7 +14,7 @@ plugins {
     id 'nu.studer.credentials' version '3.0'
     id 'maven-publish'
     id 'signing'
-    id 'org.asciidoctor.jvm.convert' version '4.0.3'
+    id 'org.asciidoctor.jvm.convert' version '4.0.4'
 }
 
 defaultTasks 'clean', 'build'
@@ -97,8 +97,7 @@ processResources {
 }
 
 asciidoctorj {
-    // asciidoctorj 3.0.0 doesn't seem to work with asciidoctor-gradle-plugin 4.0.3
-    version = '2.5.13'
+    version = '3.0.0'
 
     docExtensions file('doc-extension.groovy')
 }
