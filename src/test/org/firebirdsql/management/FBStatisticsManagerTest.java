@@ -47,10 +47,10 @@ class FBStatisticsManagerTest {
     private FBStatisticsManager statManager;
     private OutputStream loggingStream;
 
-    private static final String DEFAULT_TABLE = ""
-        + "CREATE TABLE TEST ("
-        + "     TESTVAL INTEGER NOT NULL"
-        + ")";
+    private static final String DEFAULT_TABLE = """
+            CREATE TABLE TEST (
+                 TESTVAL INTEGER NOT NULL
+            )""";
 
     @BeforeEach
     void setUp() {
@@ -126,7 +126,7 @@ class FBStatisticsManagerTest {
     void testGetDatabaseTransactionInfo_usingServiceConfig() throws SQLException {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         int oldest = getExpectedOldest(supportInfo);
-        int expectedNextOffset = supportInfo.isVersionEqualOrAbove(3, 0) ? 1 : 2;
+        int expectedNextOffset = supportInfo.isVersionEqualOrAbove(3) ? 1 : 2;
         createTestTable();
         
         try (Connection conn = getConnectionViaDriverManager()) {
@@ -145,12 +145,12 @@ class FBStatisticsManagerTest {
     }
 
     private int getExpectedOldest(FirebirdSupportInfo supportInfo) {
-        if (supportInfo.isVersionEqualOrAbove(4, 0, 2) && !isEmbeddedType().matches(GDS_TYPE)) {
-            return 2;
+        if (supportInfo.isVersionEqualOrAbove(4, 0, 2)) {
+            return isEmbeddedType().matches(GDS_TYPE) ? 1 : 2;
         } else if (supportInfo.isVersionEqualOrAbove(4, 0)) {
             return 1;
         } else if (supportInfo.isVersionEqualOrAbove(3, 0, 10)) {
-            return 2;
+            return isEmbeddedType().matches(GDS_TYPE) ? 1 : 2;
         } else if (supportInfo.isVersionEqualOrAbove(2, 5)) {
             return 1;
         } else {
@@ -169,14 +169,7 @@ class FBStatisticsManagerTest {
     void testGetDatabaseTransactionInfo_usingConnection() throws SQLException {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         int oldest = getExpectedOldest(supportInfo);
-        int expectedNextOffset;
-        if (supportInfo.isVersionEqualOrAbove(3, 0)) {
-            expectedNextOffset = 1;
-        } else if (supportInfo.isVersionEqualOrAbove(2, 5)) {
-            expectedNextOffset = 2;
-        } else {
-            expectedNextOffset = 1;
-        }
+        int expectedNextOffset = supportInfo.isVersionEqualOrAbove(2, 5) && supportInfo.isVersionBelow(3) ? 2 : 1;
         createTestTable();
 
         try (Connection conn = getConnectionViaDriverManager()) {
