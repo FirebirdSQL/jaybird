@@ -467,7 +467,9 @@ The following methods have been removed in Jaybird 7:
 The following classes have been removed in Jaybird 7:
 
 * `GDSException`;
-use `SQLException` or one of its (normal) subclasses.
+use `SQLException` or one of its (normal) subclasses
+* `FBSQLException`;
+use `SQLException`
 
 [#removal-of-deprecated-constants]
 ==== Removal of deprecated constants
@@ -507,14 +509,6 @@ With Jaybird 7 the following breaking changes will be introduced.
 
 [#removal-of-deprecated-classes-packages-and-methods-7]
 ==== Removal of deprecated classes, packages and methods
-
-[#removal-of-deprecated-classes-7]
-===== Removal of deprecated classes
-
-The following classes have been deprecated and will be removed in Jaybird 7:
-
-* `FBSQLException`;
-use `SQLException`
 
 [#removal-of-deprecated-constants-7]
 ==== Removal of deprecated constants
