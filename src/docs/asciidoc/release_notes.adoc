@@ -9,7 +9,7 @@
 :icons: font
 :sectnums:
 :bc-version: 1.79
-:jna-version: 5.15.0
+:jna-version: 5.16.0
 :jaybird-fbclient-version: 5.0.1.1
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
@@ -44,6 +44,7 @@ See also <<custom-socket-factory>>.
 +
 See also <<async-fetch>>
 * Dependency update: updated `org.bouncycastle:bcprov-jdk18on` from 1.78.1 to 1.79 (used by `chacha64-plugin`)
+* Dependency update: updated `net.java.dev.jna:jna-jpms` from 5.15.0 to 5.16.0 (used by `jaybird-native`)
 
 [#jaybird-6-0-0-beta-1-changelog]
 === Jaybird 6.0.0-beta-1
@@ -366,7 +367,7 @@ If you use native or embedded, make sure to update your JNA dependency to versio
 
 [WARNING]
 ====
-Previous versions used `artifactId` `jna` instead of `jna-jpms`.
+Previous Jaybird versions used `artifactId` `jna` instead of `jna-jpms`.
 Although both artifacts are nearly identical, the `jna-jpms` artifact provides a `module-info.class`, while the `jna` artifact does not.
 If you want to use Jaybird as a module, and use `jaybird-native`, make sure to use the `jna-jpms` artifact.
 ====
