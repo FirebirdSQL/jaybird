@@ -492,6 +492,11 @@ use `DIALECT_3`
 * `SQLStateConstants`
 ** `SQL_STATE_CONNECTION_CLOSED` (`08003`);
 use `SQL_STATE_CONNECTION_FAILURE` (`08006`).
+* `ServiceManager`
+** `getHost`/`setHost`;
+use `getServerName`/`setServerName`
+** `getPort`/`setPort`;
+use `getPortNumber`/`setPortNumber`
 
 [#breaking-changes-internal-api]
 === Breaking changes internal API

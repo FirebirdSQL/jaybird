@@ -26,7 +26,6 @@ package org.firebirdsql.management;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.WireCrypt;
-import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
 
 import java.io.OutputStream;
@@ -59,47 +58,6 @@ public interface ServiceManager extends ServiceConnectionProperties {
      * @return the database path for the connection to the service manager.
      */
     String getDatabase();
-
-    /**
-     * Returns the host for the connection to the service manager.
-     *
-     * @return the host for the connection to the service manager.
-     * @deprecated Use {@link #getServerName()}; will be removed in Jaybird 6 or later
-     */
-    @Deprecated(since = "5", forRemoval = true)
-    String getHost();
-
-    /**
-     * Sets the host for the connection to the service manager.
-     * <p>
-     * See {@link AttachmentProperties#setServerName(String)} for details.
-     * </p>
-     *
-     * @param host
-     *         for the connection to the service manager.
-     * @deprecated Use {@link #setServerName(String)}; will be removed in Jaybird 6 or later
-     */
-    @Deprecated(since = "5", forRemoval = true)
-    void setHost(String host);
-
-    /**
-     * Returns the port for the connection to the service manager.
-     *
-     * @return the port for the connection to the service manager.
-     * @deprecated Use {@link #getPortNumber()}; will be removed in Jaybird 6 or later
-     */
-    @Deprecated(since = "5", forRemoval = true)
-    int getPort();
-
-    /**
-     * Sets the port for the connection to the service manager.
-     *
-     * @param port
-     *         for the connection to the service manager.
-     * @deprecated Use {@link #setPortNumber(int)}; will be removed in Jaybird 6 or later
-     */
-    @Deprecated(since = "5", forRemoval = true)
-    void setPort(int port);
 
     /**
      * Get the wire encryption level.
