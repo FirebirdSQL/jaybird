@@ -451,6 +451,8 @@ The following methods have been removed in Jaybird 7:
 * `GDSFactoryPlugin` (semi-internal API)
 ** `getTypeAliases()` -- use `getTypeAliasList()`
 ** `getSupportedProtocols` -- use `getSupportedProtocolList()`
+* `GDSHelper` (internal API)
+** `startTransaction(TransactionParameterBuffer)` -- use `FbDatabase.startTransaction(TransactionParameterBuffer)` followed by `GDSHelper.setCurrentTransaction(FbTransaction)`
 
 [#removal-of-deprecated-classes]
 ==== Removal of deprecated classes
@@ -503,8 +505,6 @@ With Jaybird 7 the following breaking changes will be introduced.
 
 The following methods will be removed in Jaybird 7:
 
-* `GDSHelper` (internal API)
-** `startTransaction(TransactionParameterBuffer)` -- use `FbDatabase.startTransaction(TransactionParameterBuffer)` followed by `GDSHelper.setCurrentTransaction(FbTransaction)`
 * `FirebirdStatement`
 ** `getCurrentResultSet()` -- use `getResultSet()`
 * `SqlCountHolder` (internal API)

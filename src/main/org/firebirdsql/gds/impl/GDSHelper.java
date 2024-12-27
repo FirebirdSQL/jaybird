@@ -147,17 +147,6 @@ public final class GDSHelper {
         return blob;
     }
 
-    /**
-     * @deprecated Will be removed in Jaybird 7, use {@link FbDatabase#startTransaction(TransactionParameterBuffer)} and
-     * {@link #setCurrentTransaction(FbTransaction)}
-     */
-    @Deprecated(forRemoval = true, since = "6")
-    public FbTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
-        FbTransaction newTx = database.startTransaction(tpb);
-        setCurrentTransaction(newTx);
-        return newTx;
-    }
-
     public void detachDatabase() throws SQLException {
         database.close();
     }
