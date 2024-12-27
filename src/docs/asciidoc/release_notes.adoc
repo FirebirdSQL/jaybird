@@ -486,6 +486,9 @@ there is no replacement
 use `DIALECT_1`
 ** `QUOTES`;
 use `DIALECT_3`
+* `SQLStateConstants`
+** `SQL_STATE_CONNECTION_CLOSED` (`08003`);
+use `SQL_STATE_CONNECTION_FAILURE` (`08006`).
 
 [#breaking-changes-internal-api]
 === Breaking changes internal API
@@ -508,26 +511,6 @@ If you are confronted with such a change, let us know on {firebird-java}[firebir
 The following changes might cause issues, though we think this is unlikely:
 
 // TODO Document unlikely breaking changes, or remove section
-
-[#breaking-changes-for-jaybird-7]
-=== Breaking changes for Jaybird 7
-
-// TODO Remove section once these changes have been done
-
-With Jaybird 7 the following breaking changes will be introduced.
-
-[#removal-of-deprecated-classes-packages-and-methods-7]
-==== Removal of deprecated classes, packages and methods
-
-[#removal-of-deprecated-constants-7]
-==== Removal of deprecated constants
-
-The following constants have been deprecated and will be removed in Jaybird 7:
-
-* `SQLStateConstants`
-** `SQL_STATE_CONNECTION_CLOSED` (`08003`);
-use `SQL_STATE_CONNECTION_FAILURE` (`08006`).
-The use of `08003` for a closed connection error was wrong, and has been updated to use `08006`.
 
 [#breaking-changes-for-jaybird-8]
 === Breaking changes for Jaybird 8
