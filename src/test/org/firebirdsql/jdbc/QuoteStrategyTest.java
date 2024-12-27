@@ -48,15 +48,9 @@ class QuoteStrategyTest {
             DIALECT_1, simpleName,  simpleName
             DIALECT_1, with"quoted, with"quoted
             DIALECT_1, with'quoted, with'quoted
-            NO_QUOTES, simpleName,  simpleName
-            NO_QUOTES, with"quoted, with"quoted
-            NO_QUOTES, with'quoted, with'quoted
             DIALECT_3, simpleName,  "simpleName"
             DIALECT_3, with"quoted, "with""quoted"
             DIALECT_3, with'quoted, "with'quoted"
-            QUOTES,    simpleName,  "simpleName"
-            QUOTES,    with"quoted, "with""quoted"
-            QUOTES,    with'quoted, "with'quoted"
             """)
     void test_appendQuoted_and_quoteObjectName(QuoteStrategy quoteStrategy, String input, String expectedOutput) {
         var sb = new StringBuilder();
@@ -73,15 +67,9 @@ class QuoteStrategyTest {
             DIALECT_1, simpleName,  "simpleName"
             DIALECT_1, with"quoted, "with""quoted"
             DIALECT_1, with'quoted, "with'quoted"
-            NO_QUOTES, simpleName,  "simpleName"
-            NO_QUOTES, with"quoted, "with""quoted"
-            NO_QUOTES, with'quoted, "with'quoted"
             DIALECT_3, simpleName,  'simpleName'
             DIALECT_3, with"quoted, 'with"quoted'
             DIALECT_3, with'quoted, 'with''quoted'
-            QUOTES,    simpleName,  'simpleName'
-            QUOTES,    with"quoted, 'with"quoted'
-            QUOTES,    with'quoted, 'with''quoted'
             """)
     void test_appendLiteral_and_quoteLiteral(QuoteStrategy quoteStrategy, String input, String expectedOutput) {
         var sb = new StringBuilder();

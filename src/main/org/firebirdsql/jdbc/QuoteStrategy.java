@@ -73,50 +73,6 @@ public enum QuoteStrategy {
         public StringBuilder appendLiteral(String value, StringBuilder sb) {
             return appendWithQuoteEscaped('\'', value, sb);
         }
-    },
-    /**
-     * Basically an alias for {@link #DIALECT_1} for backwards compatibility.
-     *
-     * @deprecated Will be removed in Jaybird 7, use {@link #DIALECT_1} instead
-     */
-    @Deprecated(since = "6", forRemoval = true)
-    NO_QUOTES {
-        @Override
-        public StringBuilder appendQuoted(String objectName, StringBuilder sb) {
-            return DIALECT_1.appendQuoted(objectName, sb);
-        }
-
-        @Override
-        public String quoteObjectName(String objectName) {
-            return DIALECT_1.quoteObjectName(objectName);
-        }
-
-        @Override
-        public StringBuilder appendLiteral(String value, StringBuilder sb) {
-            return DIALECT_1.appendLiteral(value, sb);
-        }
-    },
-    /**
-     * Basically an alias for {@link #DIALECT_3} for backwards compatibility.
-     *
-     * @deprecated Will be removed in Jaybird 7, use {@link #DIALECT_3} instead
-     */
-    @Deprecated(since = "6", forRemoval = true)
-    QUOTES {
-        @Override
-        public StringBuilder appendQuoted(String objectName, StringBuilder sb) {
-            return DIALECT_3.appendQuoted(objectName, sb);
-        }
-
-        @Override
-        public String quoteObjectName(String objectName) {
-            return DIALECT_3.quoteObjectName(objectName);
-        }
-
-        @Override
-        public StringBuilder appendLiteral(String value, StringBuilder sb) {
-            return DIALECT_3.appendLiteral(value, sb);
-        }
     };
 
     /**
