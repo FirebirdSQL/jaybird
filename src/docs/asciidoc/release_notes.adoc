@@ -476,7 +476,11 @@ use `SQLException`
 
 The following constants have been removed in Jaybird 7:
 
-* ...
+* `ISCConstants`
+** `isc_isc_sql_dialect_conflict_num`;
+use `isc_sql_dialect_conflict_num`
+** `isc_err_max`;
+there is no replacement
 
 [#breaking-changes-internal-api]
 === Breaking changes internal API
@@ -515,11 +519,6 @@ With Jaybird 7 the following breaking changes will be introduced.
 
 The following constants have been deprecated and will be removed in Jaybird 7:
 
-* `ISCConstants`
-** `isc_isc_sql_dialect_conflict_num` (was already deprecated, now for removal);
-use `isc_sql_dialect_conflict_num`
-** `isc_err_max`;
-there is no replacement
 * `QuoteStrategy` -- due to addition of methods `appendLiteral` and `quoteLiteral` the original enum names no longer made sense
 ** `NO_QUOTES` -- use `DIALECT_1`
 ** `QUOTES` -- use `DIALECT_3`

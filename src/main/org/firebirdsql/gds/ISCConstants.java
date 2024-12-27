@@ -1872,11 +1872,6 @@ public interface ISCConstants {
     int isc_dsql_dialect_warning_expr = 336003076;
     int isc_sql_db_dialect_dtype_unsupport = 336003077;
     int isc_sql_dialect_conflict_num = 336003079;
-    /**
-     * @deprecated This constant will be removed in Jaybird 7
-     */
-    @Deprecated(since = "4", forRemoval = true)
-    int isc_isc_sql_dialect_conflict_num = isc_sql_dialect_conflict_num;
     int isc_dsql_warning_number_ambiguous = 336003080;
     int isc_dsql_warning_number_ambiguous1 = 336003081;
     int isc_dsql_warn_precision_ambiguous = 336003082;
@@ -2385,11 +2380,6 @@ public interface ISCConstants {
     int isc_trace_switch_param_miss = 337182758;
     int isc_trace_param_act_notcompat = 337182759;
     int isc_trace_mandatory_switch_miss = 337182760;
-    /**
-     * @deprecated This constant will be removed in Jaybird 7
-     */
-    @Deprecated(since = "6", forRemoval = true)
-    int isc_err_max                          = 1431;
 
     /*******************/
     /* SQL definitions */
