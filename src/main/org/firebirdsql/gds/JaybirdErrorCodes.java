@@ -100,12 +100,6 @@ public interface JaybirdErrorCodes {
     int jb_stmtNotAllocated         = 337248302;
     int jb_stmtClosed               = 337248303;
     int jb_stmtInErrorRequireClose  = 337248304;
-    /**
-     * @deprecated use {@link #jb_stmtInErrorRequireClose}
-     */
-    @SuppressWarnings("java:S1845")
-    @Deprecated(forRemoval = true, since = "6")
-    int jb_stmtInErrorRequireCLose  = jb_stmtInErrorRequireClose;
     int jb_invalidTransactionStateTransition             = 337248305;
     int jb_unexpectedInfoResponse   = 337248306;
     int jb_infoResponseEmpty        = 337248307;
