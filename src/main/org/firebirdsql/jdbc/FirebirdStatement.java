@@ -87,18 +87,6 @@ public interface FirebirdStatement extends Statement {
     boolean hasOpenResultSet();
 
     /**
-     * Get current result set. Behaviour of this method is similar to the behavior of the
-     * {@link Statement#getResultSet()}.
-     *
-     * @return instance of {@link ResultSet} representing current result set or {@code null} if it is not available.
-     * @throws SQLException
-     *         if a database access error happens
-     * @deprecated Use {@link #getResultSet()} instead, will be removed in Jaybird 7
-     */
-    @Deprecated(since = "6", forRemoval = true)
-    @Nullable ResultSet getCurrentResultSet() throws SQLException;
-    
-    /**
      * Check if this statement is valid.
      * 
      * @return <code>true</code> if statement is valid and can be used to 

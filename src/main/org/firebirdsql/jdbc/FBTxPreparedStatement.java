@@ -544,18 +544,6 @@ final class FBTxPreparedStatement extends AbstractStatement implements FirebirdP
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @deprecated Use {@link #getResultSet()} instead, will be removed in Jaybird 7
-     */
-    @SuppressWarnings("removal")
-    @Deprecated(since = "6", forRemoval = true)
-    @Override
-    public @Nullable ResultSet getCurrentResultSet() throws SQLException {
-        return getResultSet();
-    }
-
     @SuppressWarnings("java:S4144")
     @Override
     public int getMaxFieldSize() throws SQLException {

@@ -803,18 +803,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         }
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @deprecated Use {@link #getResultSet()} instead, will be removed in Jaybird 7
-     */
-    @SuppressWarnings("removal")
-    @Deprecated(since = "6", forRemoval = true)
-    @Override
-    public @Nullable ResultSet getCurrentResultSet() throws SQLException {
-        return getResultSet();
-    }
-
     @SuppressWarnings("ConstantValue")
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
