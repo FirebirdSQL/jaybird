@@ -1,4 +1,4 @@
-rootProject.name = 'jaybird'
+rootProject.name = 'jaybird_6_0'
 include 'chacha64-plugin'
 include 'jaybird-native'
 include 'internal-tools'
