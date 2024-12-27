@@ -47,6 +47,7 @@ public interface GDSFactoryPlugin {
     /**
      * @return descriptive name of the plugin
      */
+    @SuppressWarnings("unused")
     String getPluginName();
 
     /**
@@ -56,36 +57,15 @@ public interface GDSFactoryPlugin {
     String getTypeName();
 
     /**
-     * List of type aliases.
-     * <p>
-     * Implementations with aliases are encouraged to explicitly implement {@link #getTypeAliasList()} to return
-     * an immutable list and override this method to use {@code return getTypeAliasList().toArray(new String[0])} or
-     * similar.
-     * </p>
-     *
-     * @return array with type aliases (empty array if there are no aliases)
-     * @see #getTypeAliasList()
-     * @deprecated Use {@link #getTypeAliasList()}, may be removed in Jaybird 7 or later
-     */
-    @Deprecated(since = "6", forRemoval = true)
-    String[] getTypeAliases();
-
-    /**
      * List of type aliases (in addition to {@link #getTypeName()}), for example the PURE_JAVA type has alias TYPE4.
      * <p>
      * In general, we recommend not to define aliases for types, but instead only have a {@code typeName}.
-     * </p>
-     * <p>
-     * The default implementation wraps {@link #getTypeAliases()}, but implementations are encouraged to implement this
-     * with an immutable list. This default implementation will be removed when {@link #getTypeAliases()} is removed.
      * </p>
      *
      * @return list of type aliases (empty list if there are no aliases)
      * @since 6
      */
-    default List<String> getTypeAliasList() {
-        return List.of(getTypeAliases());
-    }
+    List<String> getTypeAliasList();
 
     /**
      * Class used for connection.
@@ -110,39 +90,17 @@ public interface GDSFactoryPlugin {
     String getDefaultProtocol();
 
     /**
-     * List of JDBC supported protocol prefixes.
-     * <p>
-     * Implementations with aliases are encouraged to explicitly implement {@link #getSupportedProtocolList()} to
-     * return an immutable list and override this method to use {@code return getSupportedProtocolList().toArray(new String[0])}
-     * or similar.
-     * </p>
-     *
-     * @return array with supported protocol prefixes (must include the value of {@link #getDefaultProtocol()}).
-     * @see #getSupportedProtocolList()
-     * @deprecated Use {@link #getSupportedProtocolList()}, may be removed in Jaybird 7 or later
-     */
-    @Deprecated(since = "6", forRemoval = true)
-    String[] getSupportedProtocols();
-
-    /**
      * List of JDBC supported protocol prefixes, including {@code defaultProtocol}. For example the PURE_JAVA type has
      * supported protocols {@code ["jdbc:firebirdsql:java:", "jdbc:firebird:java:", "jdbc:firebird:", "jdbc:firebirdsql:"]}.
      * <p>
      * In general, one protocol should suffice. An exception can be made if the default is
      * {@code "jdbc:firebirdsql:subtype:"} to also define {@code "jdbc:firebird:subtype"}.
      * </p>
-     * <p>
-     * The default implementation wraps {@link #getSupportedProtocols()}, but implementations are encouraged to
-     * implement this with an immutable list. This default implementation will be removed when
-     * {@link #getSupportedProtocols()} is removed.
-     * </p>
      *
      * @return list of type aliases (must include the value of {@link #getDefaultProtocol()})
      * @since 6
      */
-    default List<String> getSupportedProtocolList() {
-        return List.of(getSupportedProtocols());
-    }
+    List<String> getSupportedProtocolList();
 
     /**
      * @return instance of {@link FbDatabaseFactory} for this implementation

@@ -41,23 +41,9 @@ public final class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         return PURE_JAVA_TYPE_NAME;
     }
 
-    @SuppressWarnings("removal")
-    @Deprecated(since = "6", forRemoval = true)
-    @Override
-    public String[] getTypeAliases() {
-        return TYPE_ALIASES.toArray(new String[0]);
-    }
-
     @Override
     public List<String> getTypeAliasList() {
         return TYPE_ALIASES;
-    }
-
-    @SuppressWarnings("removal")
-    @Deprecated(since = "6", forRemoval = true)
-    @Override
-    public String[] getSupportedProtocols() {
-        return JDBC_PROTOCOLS.toArray(new String[0]);
     }
 
     @Override
