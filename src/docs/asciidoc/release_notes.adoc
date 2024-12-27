@@ -65,7 +65,7 @@ The major changes and new features in Jaybird 7 are:
 * ...
 
 Upgrading from Jaybird 6 should be straightforward, but please make sure to read <<compatibility-changes>> before using Jaybird 7.
-See also <<upgrading-from-jaybird-5-to-jaybird-6>>.
+See also <<upgrading-from-jaybird-6-to-jaybird-7>>.
 
 Bug reports about undocumented changes in behavior are appreciated.
 Feedback can be sent to the {firebird-java}[Firebird-java mailing list] or reported on the issue tracker {issues}[^].
@@ -76,10 +76,9 @@ Feedback can be sent to the {firebird-java}[Firebird-java mailing list] or repor
 Jaybird {version_wo_target} was tested against Firebird 3.0.12, Firebird 4.0.5, Firebird 5.0.1 and a recent snapshot of Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
 Firebird 2.5 and older are not supported.
 
-Firebird 6.0 is currently also not considered supported (see also <<firebird-support>> in <<whats-new-in-jaybird-6>>).
+Firebird 6.0 is currently also not considered supported (see also <<firebird-support>> in <<whats-new-in-jaybird-7>>).
 
 Jaybird 7 will -- by default -- not connect to Firebird 2.5 or older.
-See also <<unsupported-protocol>>.
 
 This driver does not support InterBase.
 
