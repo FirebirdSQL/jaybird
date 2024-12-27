@@ -13,6 +13,7 @@
 :jaybird-fbclient-version: 5.0.1.1
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
+:jaybird-repo: https://github.com/FirebirdSQL/jaybird
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/6.0.x/release_notes.html
 
 ifeval::["{version_tag}" != ""]
@@ -120,6 +121,8 @@ Feedback can be sent to the {firebird-java}[Firebird-java mailing list] or repor
 
 Jaybird {version_wo_target} was tested against Firebird 3.0.12, Firebird 4.0.5, Firebird 5.0.1 and a recent snapshot of Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
 Firebird 2.5 and older are not supported.
+
+Firebird 6.0 is currently also not considered supported (see also <<firebird-support>> in <<whats-new-in-jaybird-6>>).
 
 Jaybird 6 will -- by default -- not connect to Firebird 2.5 or older.
 See also <<unsupported-protocol>>.
@@ -316,7 +319,7 @@ At minimum, Jaybird 6 requires `jaybird-{version_example}.jar`.
 For native or embedded support, also add `jaybird-native-{version_example}.jar` and `jna-jpms-{jna-version}.jar` on your classpath or modulepath.
 See also <<type-2-native-and-embedded-driver>>.
 
-For "`ChaCha64`" wire-encryption support with pure Java connections, also add `chacha64-plugin-{version_example}.jar` and `bcprov-jdk18on-{bc-version}.jar`.
+For "`ChaCha64`" wire-encryption support with pure Java connections, also add `chacha64-plugin-{version_example}.jar`, and `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip.
 
 [#upgrading-from-jaybird-5-to-jaybird-6]
 == Upgrading from Jaybird 5 to Jaybird 6
@@ -391,14 +394,14 @@ If you have an older version of JNA or a `jna-{jna-version}` instead of `jna-jpm
 [#gotchas]
 === Gotcha's
 
-If you find a problem while upgrading, or other bugs, please report it on {issues}[^].
+If you find a problem while upgrading, or other bugs, please report it on {issues}[^] (see also <<reporting-bugs>>).
 
 For known issues, consult <<known-issues>>.
 
 [#whats-new-in-jaybird-6]
 == What's new in Jaybird 6
 
-For a full list of changes, see https://github.com/FirebirdSQL/jaybird/milestone/1?closed=1[Milestone "`v6-initial`"].
+For a full list of changes, see milestones https://github.com/FirebirdSQL/jaybird/milestone/1?closed=1["`v6-initial`"] and https://github.com/FirebirdSQL/jaybird/milestone/8?closed=1["`v6.0.0`"].
 
 [#jaybird-version-numbering]
 === Changes in version numbering
@@ -442,7 +445,16 @@ Given the limited support period for Java 17 and higher versions, not all Java r
 Support for Firebird 2.5 has been dropped.
 See also <<support-for-firebird-25-dropped>>.
 
-Jaybird 6 supports Firebird 3.0, Firebird 4.0, and Firebird 5.0, and provides tentative support for Firebird 6.0.
+Jaybird 6 supports Firebird 3.0, Firebird 4.0, and Firebird 5.0.
+
+.No promises on Firebird 6.0 support
+[WARNING]
+====
+Firebird 6.0 is still in its early stages of development, and is expected to include changes -- like schema support -- that may impact Jaybird.
+
+As a result -- at this time -- we make no promises on the support for Firebird 6.0 by Jaybird 6.
+We may delay support for Firebird 6.0 until Jaybird 7, or we may improve support during maintenance releases of Jaybird 6.
+====
 
 Jaybird 6 will -- by default -- not connect to unsupported versions (that is, Firebird 2.5 or older) using the pure Java protocol.
 See also <<unsupported-protocol>>.
@@ -675,7 +687,7 @@ When this connection property is enabled, the `DatabaseMetaData` of that connect
 * `getCatalogSeparator()` returns `"."` (string with period).
 * `getCatalogTerm()` returns `"PACKAGE"`.
 * `isCatalogAtStart()` returns `true`.
-* `getMaxCatalogNameLength()` returns 31 or 63 depending on the max identifier length of the database.
+* `getMaxCatalogNameLength()` returns 31 or 63 depending on the maximum identifier length of the Firebird version.
 * `supportsCatalogsInDataManipulation()` returns `true` (i.e. access selectable stored procedures and functions from packages).
 * `supportsCatalogsInProcedureCalls()` returns `true`.
 * The other `supportsCatalogsIn__type__()` methods continue to return `false`.

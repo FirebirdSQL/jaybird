@@ -4,7 +4,7 @@ Publishing
 To publish to Maven use
 
 ```
-gradlew clean assemble publish -PcredentialsPassphrase=<credentials password>
+gradlew clean dist assemble publish -PcredentialsPassphrase=<credentials password>
 ```
 Where `<credentials password>` is the password used to add the credentials (see
 also below).
