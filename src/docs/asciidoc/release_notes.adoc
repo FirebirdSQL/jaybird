@@ -455,6 +455,11 @@ The following methods have been removed in Jaybird 7:
 ** `startTransaction(TransactionParameterBuffer)` -- use `FbDatabase.startTransaction(TransactionParameterBuffer)` followed by `GDSHelper.setCurrentTransaction(FbTransaction)`
 * `FirebirdStatement`
 ** `getCurrentResultSet()` -- use `getResultSet()`
+* `SqlCountHolder` (internal API)
+** `getLongUpdateCount()` -- use `updateCount()`
+** `getLongDeleteCount()` -- use `deleteCount()`
+** `getLongInsertCount()` -- use `insertCount()`
+** `getLongSelectCount()` -- use `selectCount()`
 
 [#removal-of-deprecated-classes]
 ==== Removal of deprecated classes
@@ -501,17 +506,6 @@ With Jaybird 7 the following breaking changes will be introduced.
 
 [#removal-of-deprecated-classes-packages-and-methods-7]
 ==== Removal of deprecated classes, packages and methods
-
-[#removal-of-deprecated-methods-7]
-===== Removal of deprecated methods
-
-The following methods will be removed in Jaybird 7:
-
-* `SqlCountHolder` (internal API)
-** `getLongUpdateCount()` -- use `updateCount()`
-** `getLongDeleteCount()` -- use `deleteCount()`
-** `getLongInsertCount()` -- use `insertCount()`
-** `getLongSelectCount()` -- use `selectCount()`
 
 [#removal-of-deprecated-classes-7]
 ===== Removal of deprecated classes

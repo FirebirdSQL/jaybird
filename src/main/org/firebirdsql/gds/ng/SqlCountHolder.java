@@ -61,31 +61,11 @@ public record SqlCountHolder(long updateCount, long deleteCount, long insertCoun
     }
 
     /**
-     * @return Number of updated records
-     * @see #updateCount()
-     * @deprecated Use {@link #updateCount()}, will be removed in Jaybird 7
-     */
-    @Deprecated(forRemoval = true, since = "6")
-    public long getLongUpdateCount() {
-        return updateCount;
-    }
-
-    /**
      * @return Delete count as {@code int}, or 0 if the delete count was too large.
      * @see #deleteCount()
      */
     public int getIntegerDeleteCount() {
         return countAsInteger(deleteCount);
-    }
-
-    /**
-     * @return Number of deleted records
-     * @see #deleteCount()
-     * @deprecated Use {@link #deleteCount()}, will be removed in Jaybird 7
-     */
-    @Deprecated(forRemoval = true, since = "6")
-    public long getLongDeleteCount() {
-        return deleteCount;
     }
 
     /**
@@ -97,31 +77,11 @@ public record SqlCountHolder(long updateCount, long deleteCount, long insertCoun
     }
 
     /**
-     * @return Number of inserted records
-     * @see #insertCount()
-     * @deprecated Use {@link #insertCount()}, will be removed in Jaybird 7
-     */
-    @Deprecated(forRemoval = true, since = "6")
-    public long getLongInsertCount() {
-        return insertCount;
-    }
-
-    /**
      * @return Select count as {@code int}, or 0 if the select count was too large.
      * @see #selectCount()
      */
     public int getIntegerSelectCount() {
         return countAsInteger(selectCount);
-    }
-
-    /**
-     * @return Number of selected records
-     * @see #selectCount()
-     * @deprecated Use {@link #selectCount()}, will be removed in Jaybird 7
-     */
-    @Deprecated(forRemoval = true, since = "6")
-    public long getLongSelectCount() {
-        return selectCount;
     }
 
     /**
