@@ -6,11 +6,11 @@ The following versions of Jaybird are actively maintained and supported.
 
 | Version | Supported                |
 |---------|--------------------------|
-| 6.0.x   | :heavy_exclamation_mark: |
+| 7.0.x   | :heavy_exclamation_mark: |
+| 6.0.x   | :white_check_mark:       |
 | 5.0.x   | :white_check_mark:       |
 | 4.0.x   | :x:                      |
-| 3.0.x   | :x:                      |
-| < 3.0   | :x:                      |
+| < 4.0   | :x:                      |
 
 :white_check_mark: = supported \
 :x: = not supported \
