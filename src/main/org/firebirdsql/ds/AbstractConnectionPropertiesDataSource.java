@@ -20,8 +20,6 @@ package org.firebirdsql.ds;
 
 import org.firebirdsql.jdbc.FirebirdConnectionProperties;
 
-import java.sql.SQLException;
-
 /**
  * Abstract implementation of {@link FirebirdConnectionProperties} to ensure subclasses can be introspected as beans.
  *
@@ -181,7 +179,7 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
      * </p>
      */
     @Override
-    public int getLoginTimeout() throws SQLException {
+    public int getLoginTimeout() {
         return getConnectTimeout();
     }
 
@@ -192,7 +190,7 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
      * </p>
      */
     @Override
-    public void setLoginTimeout(int seconds) throws SQLException {
+    public void setLoginTimeout(int seconds) {
         setConnectTimeout(seconds);
     }
 
