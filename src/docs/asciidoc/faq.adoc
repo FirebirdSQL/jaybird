@@ -738,9 +738,27 @@ On the other hand, this has the benefit that this works for all Jaybird versions
 
 This error means that the user does not exist, or that the specified password is not correct.
 
-When connecting to Firebird 3.0 and higher, this error can also mean that the user does exist (with that password), but not for the authentication plugins tried for this connection.
+The following are common causes authentication can fail with the same error even if the username and password are correct.
 
-For example, Jaybird 2.2.x and earlier only support legacy authentication, if you try to log in as a user created for SRP authentication, you will get the same error.
+==== Cause: authentication plugin mismatch
+
+When connecting to Firebird 3.0 and higher, this error can also mean that the user does exist (with that password), but not for the authentication plugins tried for this connection.
+The list of authentication plugins tried is the conjunction of the plugins offered by the client (connection property `authPlugins`) and the `AuthServer` setting in _firebird.conf_.
+
+For example, Jaybird 2.2.x and earlier only support legacy authentication, if you try to log in as a user created with the _Srp_ user manager, you will get the same error.
+
+Similarly, Jaybird 4 and higher -- by default -- only connect using the _Srp256_ and _Srp_ authentication plugins, which means only users created with the _Srp_ user manager can be authenticated, and users created with _Legacy_UserManager_ cannot be authenticated.
+The recommended solution is to create the user for the _Srp_ user manager (e.g. see https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-security-user.html#fblangref50-security-user-create[Firebird 5.0 `CREATE USER`^], specifically the `USING PLUGIN ...` clause).
+Alternatively, you can set connection property `authPlugins` to `Srp256,Srp,Legacy_Auth` to also try legacy authentication, see also https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html#ref-auth-plugins[Authentication plugins] in the Jaybird manual.
+
+You can check -- as `SYSDBA`, or with `RDB$ADMIN` in the security database -- what user manager(s) were used to create a user in the `SEC$USERS` virtual table.
+
+==== Cause: case-sensitive username
+
+With Firebird 3.0 and higher, this error can also be the result of using a case-sensitive username (i.e. the username was quoted, e.g. `CREATE USER "lowercaseuser" ...`).
+
+To login, you must surround the username with quotes so it's handled case-sensitive.
+In a Java string literal, that means using `"\"lowercaseuser\""` instead of `"lowercaseuser"`.
 
 [#incompatible-wire-encryption-levels-requested-on-client-and-server-335545064]
 === Incompatible wire encryption levels requested on client and server (335545064)
