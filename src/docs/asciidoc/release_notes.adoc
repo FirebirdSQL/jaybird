@@ -201,6 +201,7 @@ version:: `{version_example}`
 
 For example:
 
+.Main Jaybird artifact
 [source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
@@ -212,6 +213,7 @@ For example:
 
 If you want to use Type 2 support (native or embedded), you need to explicitly add `jaybird-native` as a dependency:
 
+.Jaybird native artifact (native and embedded protocol)
 [source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
@@ -228,6 +230,7 @@ See also <<type-2-native-and-embedded-driver>>.
 
 To enable the "`ChaCha64`" wire encryption support for pure Java connections, also add:
 
+.ChaCha64 wire encryption plugin
 [source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
