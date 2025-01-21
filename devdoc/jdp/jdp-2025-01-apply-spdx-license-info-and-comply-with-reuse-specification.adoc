@@ -1,0 +1,259 @@
+= jdp-2025-01: Apply SPDX license info and comply with REUSE specification
+
+// REUSE-IgnoreStart
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 7
+
+== Type
+
+* Project-Specification
+
+[#context]
+== Context
+
+Jaybird -- as of 2019-05-31 -- declares the SPDX `SPDX-License-Identifier: LGPL-2.1-or-later AND BSD-3-Clause` in its `README.md`.
+
+Individual files in Jaybird currently have a complete license header, or declare no license at all.
+
+There is also some confusion regarding licensing, as Jaybird's FAQ states under https://firebirdsql.org/docs/drivers/java/faq.html#how-is-jaybird-licensed[How is Jaybird licensed?]:
+
+[quote]
+____
+Even more, all extension interfaces to which an application might want to link are released under dual LGPL/modified BSD license.
+____
+
+However, those files actually only have the BSD-3-Clause license header.
+This inconsistency needs to be addressed, either by declaring them as `SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause` (this would also change the SPDX of the project as a whole to `LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause`), or by removing or amending the dual-license claim from the FAQ.
+
+Other snags or things we need to think about are:
+
+. Some files have a separate license, though it is not always clear which license (currently, only `LegacyHash.java` comes to mind, but there may be others).
+. Files where Alejandro Alberola contributed must assign the copyright of his contributions to "`Boix i Oltra, S.L.`" (his employer or company).
+. We need to do some additional investigation of the required or allowed copyright of files derived from the Firebird source code (e.g. the `firebird_\d+_error.properties` files, `ISCConstants.java`).
+. Documentation, like the Jaybird Design Proposal files, release notes, and FAQ, currently don't have an explicit license.
+We need to consider if we want to simply state them as LGPL (a license not really applicable to documentation, IMHO), or apply a license like Firebird's PDL (Public Documentation License), GFDL (GNU Free Documentation License), CC0-1.0 (public domain), CC BY-SA 4.0, or something else
+
+The REUSE specification (see also below) generally expects copyright to be assigned individually, with `SPDX-FileCopyrightText: Copyright <year-range> <contributor-name> [, <contributor-name>]...`, or multiple `SPDX-FileCopyrightText` -- one per contributor, and preferably not wholesale with "`the firebird development team`" or similar (unless `SPDX-FileContributor` is also used).
+Unfortunately, the commit history is not always easily traceable given file moves, renames, etc. not always being correctly recorded (especially during the CVS era).
+
+=== Need for SBOM information
+
+Recently, there have been legislative initiatives in multiple jurisdictions to require vendors of software to provide "`SBOM`" (Software Bill of Materials) information about the provenance of their software.
+(NOTE: I am not a lawyer, and this may be a wholly incorrect or insufficient description of those initiatives).
+
+It is my firm belief that open-source projects, especially those not backed by a for-profit and/or paid employees, which provide the software as-is and without further warranties, should be exempt from such efforts.
+That said, providing the information necessary to generate an SBOM is relatively straightforward.
+
+There are various standards and efforts to standardize production of SBOMs and/or machine-readable copyright information:
+
+* SPDX -- The Software Package Data Exchange (ISO/IEC 5962:2021)
+** https://spdx.dev/
+** https://spdx.dev/ids/#where
+** https://spdx.org/licenses/
+* REUSE (builds on SPDX)
+** https://reuse.software/spec/
+
+The REUSE specification specifies how to handle copyright information in a project, and provides a tool to verify if a project complies, to add SPDX information to files, and to generate an SPDX file.
+
+We will not repeat the relevant information from these specifications here.
+
+The https://github.com/mrotteveel/ext-table-gen[Firebird External Table Generator project] already follows this approach.
+
+== Decision
+
+=== Following the REUSE specification
+
+The Jaybird project will follow the REUSE specification to provide license and copyright information.
+
+The project will *not* publish an SPDX file.
+Users in need of an SPDX file for SBOM purposes will need to generate it themselves using the repository contents (e.g. of a tagged release).
+
+The project will also not provide SPDX information for dependencies.
+
+=== License applied to documentation
+
+Documentation -- including, but not limited to, release notes, FAQ, build documentation and Jaybird Design proposals -- will be licensed under the https://firebirdsql.org/en/public-documentation-license/[Public Documentation License, version 1.0].
+The choice of this license follows from the fact that most https://github.com/FirebirdSQL/firebird-documentation[Firebird documentation], and the https://github.com/FirebirdSQL/jaybird-manual[Jaybird JDBC Driver Java Programmer's Manual], are also licensed this way.
+That way, project documentation can be combined by other contributors without licensing issues.
+Such issues do not exist for the original contributor, as they are free to license their contributions any way they see fit.
+
+We considered to also license the documentation as `LGPL-2.1-or-later`, based on the assumption that not having explicitly declared the license, its license derived from the overall project license.
+As that is messy, and overly formal, we decided to simply choose one and only one license.
+
+That said, we consider the assumption valid, so to say explicitly: the documentation and its sources *before* implementation of this license change can be considered to be licensed under `LGPL-2.1-or-later`.
+
+=== License applied to files derived from Firebird source code
+
+For files containing constants (e.g. `ISCConstants.java`), we'll follow the current license: that is usually `BSD-3-Clause` as it's part of the Jaybird public API.
+We think this acceptable, as these are names and values copied from the Firebird source code, and such things are usually not considered copyrightable in and of itself, and as such could be considered a mirroring of parts of the Firebird API for interoperability.
+Existing comments which were also copied from the Firebird source code should be removed.
+
+For further clarification, an `SPDX-FileComment` (text TBD) should be added to these files to declare the origin and the license of the origin.
+
+For the error messages and SQLSTATE files, we consider them "`Executable`", derived by mechanical translation (by `MessageExtractor`), and as such -- as stated in the IDPL -- can have their own license, i.e. `LGPL-2.1-or-later`.
+The `SPDX-FileCopyrightText` will declare `2000-<build year> Firebird development team and individual contributors`, and also -- like the constants -- a `SPDX-FileComment` (text TBD) should be added to these files to declare the origin and the license of the origin.
+These comments should be automatically added by `MessageExtractor`.
+
+We admit this has a shaky legal foundation, but given this formalizes the current situation which has existed for the past 24 years without complaints, we think this is acceptable.
+
+=== Dual licensing
+
+Looking at the development history of Jaybird, originally between the https://github.com/FirebirdSQL/jaybird/commit/5e215213f916bc2c46d891da661131e18fb65f14[initial commit (2001-05-09)] and https://github.com/FirebirdSQL/jaybird/commit/70ccaee6[a commit in 2002-08-29], Jaybird was dual-licensed MPL 1.1 and LGPL.
+After that commit on 2002-08-09, Jaybird was only LGPL licensed.
+See also this discussion on Firebird-java, titled http://fb-list-archive.s3-website-eu-west-1.amazonaws.com/firebird-java/2002/8/1996.html[Change firebirdsql license to lgpl only? and, lets release next version.]
+
+On https://github.com/FirebirdSQL/jaybird/commit/a8040f98[2004-04-19], a change was committed by Roman Rokytskyy to the release notes, which said:
+
+[quote]
+____
+All extension interfaces are released under modified BSD license, on "`AS IS`" basis, this should make linking to these classes safe from the legal point of view.
+____
+
+The license of the JDBC extension interfaces itself was changed to BSD in https://github.com/FirebirdSQL/jaybird/commit/815d6ca0[this commit on 2004-03-29] by Roman Rokytskyy.
+
+A https://github.com/FirebirdSQL/jaybird/commit/05350247[commit on 2005-06-10] by Roman Rokytskyy added the following text to the release notes:
+
+[quote]
+____
+Even more, all extension interfaces to which application might want to link are released under dual LGPL/modified BSD license.
+____
+
+In other words, the intention seems to have always been to dual-license, but this was not correctly reflected in the files with the BSD license.
+
+As such, we will now formalize this, and annotate those files as `LGPL-2.1-or-later OR BSD-3-Clause`.
+As a result, Jaybird as a whole becomes `LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause`.
+
+== Consequences
+
+NOTE: This section may be updated while applying the necessary changes.
+
+[#apply-license]
+=== Applying the license
+
+All source files will provide a comment or comments (generally using line comments) with the following information.
+
+[listing]
+----
+SPDX-FileCopyrightText: <first-year> <author-name>
+SPDX-License-Identifier: LGPL-2.1-or-later
+----
+
+The license identifier will depend on the actual license of the file.
+
+These comments are used instead of a (more detailed) license comment;
+existing license comments must be removed when the SPDX information is added to a file.
+The full license text will be in the `./LICENSES` directory;
+the right license files can be downloaded and installed using the `reuse` tool.
+
+For example, in Java files, if contributor "`Mark Rotteveel`" authored or contributed to a file in 2023:
+
+[source]
+----
+// SPDX-FileCopyrightText: 2023 Mark Rotteveel
+// SPDX-License-Identifier: LGPL-2.1-or-later
+----
+
+or
+
+[listing]
+----
+SPDX-FileCopyrightText: <first-year>-<current-year> <author-name>
+SPDX-License-Identifier: LGPL-2.1-or-later
+----
+
+For example, in Java files, if contributor "`Jane Doe`" authored or contributed to a file in 2023 and 2025:
+
+[source]
+----
+// SPDX-FileCopyrightText: 2023-2025 Jane Doe
+// SPDX-License-Identifier: LGPL-2.1-or-later
+----
+
+That is, we'll not enumerate the individual years, just the first and last year of contribution.
+
+If we're not sure of the first and/or last year (e.g. due to broken file history), we will guess on the available information, like the years of their commits to a file, or based on their known period(s) of contribution based on other commits to the repository.
+
+If a file has multiple authors or contributors, each will add an individual `SPDX-FileCopyrightText` line.
+
+For example, combining the previous two examples:
+
+[source]
+----
+// SPDX-FileCopyrightText: 2023 Mark Rotteveel
+// SPDX-FileCopyrightText: 2023-2025 Jane Doe
+// SPDX-License-Identifier: LGPL-2.1-or-later
+----
+
+When we're unsure if we know all contributors (e.g. because of broken file commit history), we also add a `SPDX-FileCopyrightText: <file-creation-year>-<last-modified-year> Firebird development team and individual contributors`.
+
+In the special case mentioned earlier, where copyright of contributions of Alejandro Alberola must be attributed to "`Boix i Oltra, S.L.`", this will be recorded as:
+
+[source]
+----
+// SPDX-FileCopyrightText: 2023-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: 2001-2002 Boix i Oltra, S.L. (contributions of Alejandro Alberola)
+// SPFX-FileContributor: 2001-2002 Alejandro Alberola
+// SPDX-License-Identifier: LGPL-2.1-or-later
+----
+
+Related `SPDX-FileCopyrightText` and `SPDX-FileContributor` should be kept together when possible.
+
+These comments should be placed at the top of a file (e.g. `.java` files), or as soon as syntactically valid (e.g. after the XML preamble).
+If a file has a lot of different contributors -- say four or more -- the line comments may be replaced with a block comment.
+
+If a file cannot contain the copyright in itself (e.g. binary files, CSV files), or if adding the comment results in undesirable behaviour (e.g. files which contain expected results for tests, and thus can't contain the comment), the copyright and license should be added to the `REUSE.toml` file.
+
+Files from third-parties (like Gradle Wrapper) missing the relevant information also have to be added to `REUSE.toml`.
+Third-party files should not be modified to add the SPDX information.
+
+The preference at the moment is to use a single `REUSE.toml` at the root of the repository.
+However, we may deviate if this results in a too cluttered or too large file.
+
+The REUSE specification also allows registering copyright and license of a file `<something>.<extension>` in `<something>.<extension>.license`.
+The preference of this project is to avoid those files as we think this approach clutters the repository.
+In other words, we only record the information in the file itself, or -- if not possible for any valid reasonfootnote:[The main contributors are the judge of what are valid reasons ;)] -- in `REUSE.toml`.
+This position can change if there is a good argument/reason to record this in individual `*.license` files.
+
+Compliance with REUSE will be enforced with `reuse --lint` through a GitHub Action (see also <<compliance-check>>).
+
+The JAR files produced by this project will also contain the following information:
+
+* `Bundle-License` with value `LGPL-2.1-or-later AND BSD-3-Clause` (or whatever SPDX identifier is the correct one, see earlier mention of dual-licensing in <<context>>)
++
+The `Bundle-License` is specified by OSGi, but this is also commonly used by non-OSGI projects to communicate the license of a project
+* `SPDX-License-Identifier` with value `LGPL-2.1-or-later AND BSD-3-Clause` (see also previous item).
+* `SPDX-FileCopyrightText` with value `2001-<build-year> Firebird development team and individual contributors`.
++
+In other words, we're not going to enumerate all contributors in the JAR file.
+For reference, 2001 is the year of the https://github.com/FirebirdSQL/jaybird/commit/5e215213f916bc2c46d891da661131e18fb65f14[first commit] to the repository.
+
+.Example fragment of MANIFEST.MF
+[source]
+----
+Bundle-License: LGPL-2.1-or-later AND BSD-3-Clause
+SPDX-License-Identifier: LGPL-2.1-or-later AND BSD-3-Clause
+SPDX-FileCopyrightText: 2001-2025 Firebird development team and individual contributors
+----
+
+[#compliance-check]
+=== Compliance checking
+
+A GitHub Action will be configured to run a compliance check post commit and for pull requests.
+
+Instructions will be provided in `./devdoc/` how developers can run compliance checks locally, and how to install a local Git commit hook to run the compliance check before commit.
+
+=== Documentation
+
+Given the Public Documentation License version 1.0 is not a https://spdx.org/licenses/[standard license recognized by SPDX], it will need to be declared with the custom name `LicenseRef-PDL-1.0`, and an accompanying `LicenseRef-PDL-1.0.txt` with the license text in the `LICENSES` directory.
+
+Current documentation must also be modified to include the license notice as shown in the PDL appendix, and the right `SPDX-FileCopyRightText` and `SPDX-License-Identifier` comments (see also <<apply-license>>).
+
+=== Other needed changes
+
+* The `./licenses/jaybird-icla.txt` will be moved to `./devdoc/jaybird-icla.txt`, as `reuse` does not allow other files in `LICENSES` (case-insensitivity on Windows, not wanting two directories that only differ in case of other OSes).
+* The `./LICENSE` file should be modified to point to the `./LICENSES` directory, and maybe clarify status of licensing and SPDX information.
+
+// REUSE-IgnoreEnd
