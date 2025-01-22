@@ -36,7 +36,7 @@ Other snags or things we need to think about are:
 . Documentation, like the Jaybird Design Proposal files, release notes, and FAQ, currently don't have an explicit license.
 We need to consider if we want to simply state them as LGPL (a license not really applicable to documentation, IMHO), or apply a license like Firebird's PDL (Public Documentation License), GFDL (GNU Free Documentation License), CC0-1.0 (public domain), CC BY-SA 4.0, or something else
 
-The REUSE specification (see also below) generally expects copyright to be assigned individually, with `SPDX-FileCopyrightText: Copyright <year-range> <contributor-name> [, <contributor-name>]...`, or multiple `SPDX-FileCopyrightText` -- one per contributor, and preferably not wholesale with "`the firebird development team`" or similar (unless `SPDX-FileContributor` is also used).
+The REUSE specification (see also below) generally expects copyright to be assigned individually, with `SPDX-FileCopyrightText: Copyright <year-range> <contributor-name> [, <contributor-name>]...`, or multiple `SPDX-FileCopyrightText` -- one per contributor, and preferably not wholesale with "`the firebird development team`" or similar.
 Unfortunately, the commit history is not always easily traceable given file moves, renames, etc. not always being correctly recorded (especially during the CVS era).
 
 === Need for SBOM information
@@ -94,7 +94,7 @@ Existing comments which were also copied from the Firebird source code should be
 For further clarification, an `SPDX-FileComment` (text TBD) should be added to these files to declare the origin and the license of the origin.
 
 For the error messages and SQLSTATE files, we consider them "`Executable`", derived by mechanical translation (by `MessageExtractor`), and as such -- as stated in the IDPL -- can have their own license, i.e. `LGPL-2.1-or-later`.
-The `SPDX-FileCopyrightText` will declare `2000-<build year> Firebird development team and individual contributors`, and also -- like the constants -- a `SPDX-FileComment` (text TBD) should be added to these files to declare the origin and the license of the origin.
+The `SPDX-FileCopyrightText` will declare `Copyright 2000-<build year> Firebird development team and individual contributors`, and also -- like the constants -- a `SPDX-FileComment` (text TBD) should be added to these files to declare the origin and the license of the origin.
 These comments should be automatically added by `MessageExtractor`.
 
 We admit this has a shaky legal foundation, but given this formalizes the current situation which has existed for the past 24 years without complaints, we think this is acceptable.
@@ -137,7 +137,7 @@ All source files will provide a comment or comments (generally using line commen
 
 [listing]
 ----
-SPDX-FileCopyrightText: <first-year> <author-name>
+SPDX-FileCopyrightText: Copyright <first-year>[-<last-year>] <author-name>
 SPDX-License-Identifier: LGPL-2.1-or-later
 ----
 
@@ -152,23 +152,15 @@ For example, in Java files, if contributor "`Mark Rotteveel`" authored or contri
 
 [source]
 ----
-// SPDX-FileCopyrightText: 2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 ----
 
-or
-
-[listing]
-----
-SPDX-FileCopyrightText: <first-year>-<current-year> <author-name>
-SPDX-License-Identifier: LGPL-2.1-or-later
-----
-
-For example, in Java files, if contributor "`Jane Doe`" authored or contributed to a file in 2023 and 2025:
+or, for example, in Java files, if contributor "`Jane Doe`" authored or contributed to a file in 2023 and 2025:
 
 [source]
 ----
-// SPDX-FileCopyrightText: 2023-2025 Jane Doe
+// SPDX-FileCopyrightText: Copyright 2023-2025 Jane Doe
 // SPDX-License-Identifier: LGPL-2.1-or-later
 ----
 
@@ -182,27 +174,31 @@ For example, combining the previous two examples:
 
 [source]
 ----
-// SPDX-FileCopyrightText: 2023 Mark Rotteveel
-// SPDX-FileCopyrightText: 2023-2025 Jane Doe
+// SPDX-FileCopyrightText: Copyright 2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2025 Jane Doe
 // SPDX-License-Identifier: LGPL-2.1-or-later
 ----
 
-When we're unsure if we know all contributors (e.g. because of broken file commit history), we also add a `SPDX-FileCopyrightText: <file-creation-year>-<last-modified-year> Firebird development team and individual contributors`.
+New `SPDX-FileCopyrightText` should be added _below_ already existing `SPDX-FileCopyrightText` and related `SPDX-FileContributor` entries, and _above_ the `SPDX-License-Identifier`.
+
+When we're unsure if we know all contributors (e.g. because of broken file commit history), we also add a `SPDX-FileCopyrightText: <file-creation-year>-<last-modified-year> Firebird development team and individual contributors` to the top _above_ all other `SPDX-FileCopyrightText` entries.
 
 In the special case mentioned earlier, where copyright of contributions of Alejandro Alberola must be attributed to "`Boix i Oltra, S.L.`", this will be recorded as:
 
 [source]
 ----
-// SPDX-FileCopyrightText: 2023-2025 Mark Rotteveel
-// SPDX-FileCopyrightText: 2001-2002 Boix i Oltra, S.L. (contributions of Alejandro Alberola)
-// SPFX-FileContributor: 2001-2002 Alejandro Alberola
+// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2002 Boix i Oltra, S.L.
+// SPFX-FileContributor: 2001-2002 Alejandro Alberola (Boix i Oltra, S.L.)
 // SPDX-License-Identifier: LGPL-2.1-or-later
 ----
 
-Related `SPDX-FileCopyrightText` and `SPDX-FileContributor` should be kept together when possible.
+That is, the copyright is registered to the company, and the actual contributor is listed together with a reference to the company.
+
+Related `SPDX-FileCopyrightText` and `SPDX-FileContributor` should be kept together.
 
 These comments should be placed at the top of a file (e.g. `.java` files), or as soon as syntactically valid (e.g. after the XML preamble).
-If a file has a lot of different contributors -- say four or more -- the line comments may be replaced with a block comment.
+If a file has a lot of different SPDX entries -- say four or more -- the line comments may be replaced with a block comment.
 
 If a file cannot contain the copyright in itself (e.g. binary files, CSV files), or if adding the comment results in undesirable behaviour (e.g. files which contain expected results for tests, and thus can't contain the comment), the copyright and license should be added to the `REUSE.toml` file.
 
@@ -217,15 +213,15 @@ The preference of this project is to avoid those files as we think this approach
 In other words, we only record the information in the file itself, or -- if not possible for any valid reasonfootnote:[The main contributors are the judge of what are valid reasons ;)] -- in `REUSE.toml`.
 This position can change if there is a good argument/reason to record this in individual `*.license` files.
 
-Compliance with REUSE will be enforced with `reuse --lint` through a GitHub Action (see also <<compliance-check>>).
+Compliance with REUSE will be enforced with `reuse lint` through a GitHub Action (see also <<compliance-check>>).
 
 The JAR files produced by this project will also contain the following information:
 
-* `Bundle-License` with value `LGPL-2.1-or-later AND BSD-3-Clause` (or whatever SPDX identifier is the correct one, see earlier mention of dual-licensing in <<context>>)
+* `Bundle-License` with value `LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause` (or whatever SPDX identifier is the correct one, see earlier mention of dual-licensing in <<context>>)
 +
 The `Bundle-License` is specified by OSGi, but this is also commonly used by non-OSGI projects to communicate the license of a project
-* `SPDX-License-Identifier` with value `LGPL-2.1-or-later AND BSD-3-Clause` (see also previous item).
-* `SPDX-FileCopyrightText` with value `2001-<build-year> Firebird development team and individual contributors`.
+* `SPDX-License-Identifier` with value `LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause` (see also previous item).
+* `SPDX-FileCopyrightText` with value `Copyright 2001-<build-year> Firebird development team and individual contributors`.
 +
 In other words, we're not going to enumerate all contributors in the JAR file.
 For reference, 2001 is the year of the https://github.com/FirebirdSQL/jaybird/commit/5e215213f916bc2c46d891da661131e18fb65f14[first commit] to the repository.
@@ -233,9 +229,9 @@ For reference, 2001 is the year of the https://github.com/FirebirdSQL/jaybird/co
 .Example fragment of MANIFEST.MF
 [source]
 ----
-Bundle-License: LGPL-2.1-or-later AND BSD-3-Clause
-SPDX-License-Identifier: LGPL-2.1-or-later AND BSD-3-Clause
-SPDX-FileCopyrightText: 2001-2025 Firebird development team and individual contributors
+Bundle-License: LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause
+SPDX-License-Identifier: LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause
+SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
 ----
 
 [#compliance-check]
