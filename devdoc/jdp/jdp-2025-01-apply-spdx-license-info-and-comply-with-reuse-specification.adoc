@@ -1,5 +1,8 @@
 = jdp-2025-01: Apply SPDX license info and comply with REUSE specification
 
+// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
 // REUSE-IgnoreStart
 
 == Status
@@ -234,6 +237,9 @@ SPDX-License-Identifier: LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause
 SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
 ----
 
+Adding the license identifier information and removing the old license header is not considered a copyrightable change by the project.
+It should not result in addition of a `SPDX-FileCopyrightText` by the person making the change, or -- if they already contributed -- include the current year in the year range (unless their other contributions to the file were in this year).
+
 [#compliance-check]
 === Compliance checking
 
@@ -251,5 +257,28 @@ Current documentation must also be modified to include the license notice as sho
 
 * The `./licenses/jaybird-icla.txt` will be moved to `./devdoc/jaybird-icla.txt`, as `reuse` does not allow other files in `LICENSES` (case-insensitivity on Windows, not wanting two directories that only differ in case of other OSes).
 * The `./LICENSE` file should be modified to point to the `./LICENSES` directory, and maybe clarify status of licensing and SPDX information.
+* jdp-2019-01 (Jaybird Design Proposal) needs to be updated to document that the license notice needs to be added to each new JDP.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2025-01: Apply SPDX license info and comply with REUSE specification`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2025.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
 
 // REUSE-IgnoreEnd
