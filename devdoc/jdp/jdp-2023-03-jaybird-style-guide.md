@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2023 Mark Rotteveel
+SPDX-License-Identifier: LicenseRef-PDL-1.0
+-->
 # jdp-2023-03: Jaybird style guide
 
 ## Status
@@ -106,3 +110,24 @@ For test code, additional cases are allowed:
 6. The assignment expression clearly expresses its actual type through a _cast_
    (e.g. `var dbmd = (FirebirdDatabaseMetaData) connection.getMetaData()`) or
    `unwrap` (e.g. `var fbConnection = connection.unwrap(FirebirdConnection.class)`)
+
+## License Notice
+
+The contents of this Documentation are subject to the Public Documentation
+License Version 1.0 (the “License”); you may only use this Documentation if you
+comply with the terms of this License. A copy of the License is available at
+<https://firebirdsql.org/en/public-documentation-license/>.
+
+The Original Documentation is "jdp-2023-03: Jaybird style guide".
+The Initial Writer of the Original Documentation is Mark Rotteveel,
+Copyright © 2023. All Rights Reserved. (Initial Writer contact(s):
+mark (at) lawinegevaar (dot) nl).
+
+<!--
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)]. All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+-->
+
+The exact file history is recorded in our Git repository; see
+<https://github.com/FirebirdSQL/jaybird>

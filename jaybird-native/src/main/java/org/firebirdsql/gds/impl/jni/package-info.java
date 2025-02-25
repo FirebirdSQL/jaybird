@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Copyright 2023 Mark Rotteveel
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /**
  * Implementations of {@link org.firebirdsql.gds.impl.GDSFactoryPlugin} for native and embedded access.
  * <p>

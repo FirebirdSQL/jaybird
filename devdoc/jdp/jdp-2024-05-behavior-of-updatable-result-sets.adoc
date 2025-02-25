@@ -1,5 +1,8 @@
 = jdp-2024-05: Behaviour of Updatable Result Sets
 
+// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
 == Status
 
 * Published: 2024-09-24
@@ -61,3 +64,25 @@ The following will change in Jaybird, and may lead to incompatible behaviour com
 * `DatabaseMetaData` will report `true` for `deletesAreDetected(int)`, `insertsAreDetected(int)` and `updatesAreDetected(int)` for `TYPE_SCROLL_INSENSITIVE`
 
 Like in the previous behaviour, inserted rows are not covered by the `maxRows` setting (if any) of the result set.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2024-05: Behaviour of Updatable Result Sets`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2024.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird

@@ -1,5 +1,8 @@
 = jdp-2024-08: Optionally disable ``SQLWarning``s
 
+// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
 == Status
 
 * Published: 2024-11-06
@@ -44,3 +47,25 @@ We may reconsider this in the future to log on `TRACE` for debugging purposes.
 
 When a connection is created with `reportSQLWarning=NONE` (whether explicitly set, or set using the system property), the `getWarnings()` method of `Connection`, `Statement`, and `ResultSet` will never return a non-``null`` value.
 Implementation-wise, the `addWarning` methods of those classes will drop the warning and not register it on the object.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2024-08: Optionally disable ``SQLWarning``s`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2024.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird

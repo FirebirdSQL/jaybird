@@ -1,5 +1,8 @@
 = jdp-2024-04: Nullability Annotations
 
+// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
 == Status
 
 * Published: 2024-09-20
@@ -45,3 +48,25 @@ In the case of a Maven build, that is no problem.
 However, for manual deployments, having to take additional libraries into consideration is in our experience error-prone (users are quick to forget to include such additional libraries).
 
 As absence of an annotation class at runtime elides/ignores the annotation, we'll mark the library as `requires static` in our module-info so deployments without the JSpecify library will still work.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2024-04: Nullability Annotations`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2024.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird

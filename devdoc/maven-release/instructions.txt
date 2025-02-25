@@ -64,3 +64,16 @@ NOTE: When deploying a snapshot, signing is optional
 
 Step 4: (release only)
 Promote the artifact following steps in section 8 of https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide
+
+License Notice
+--------------
+
+The contents of this Documentation are subject to the Public Documentation
+License Version 1.0 (the “License”); you may only use this Documentation if you
+comply with the terms of this License. A copy of the License is available at
+<https://firebirdsql.org/en/public-documentation-license/>.
+
+The Original Documentation is "Instructions for releasing Jaybird to Maven".
+The Initial Writer of the Original Documentation is Mark Rotteveel,
+Copyright © 2012-2023. All Rights Reserved. (Initial Writer contact(s):
+mark (at) lawinegevaar (dot) nl).

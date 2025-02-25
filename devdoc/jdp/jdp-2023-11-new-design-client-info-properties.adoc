@@ -1,5 +1,8 @@
 = jdp-2023-11: New design client info properties
 
+// SPDX-FileCopyrightText: Copyright 2023 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
 == Status
 
 * Published: 2023-06-17
@@ -191,3 +194,25 @@ If an application attempts to get or set a large number properties, this may res
 Given we think this will be a rare event, we will currently not attempt to address this (e.g. by breaking it up into multiple blocks).
 
 Although not a direct consequence of this JDP, we'll also add the aliases `ApplicationName` and `applicationName` for the connection property `processName`.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2023-11: New design client info properties`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2023.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird

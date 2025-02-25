@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2020-2022 Mark Rotteveel
+SPDX-License-Identifier: LicenseRef-PDL-1.0
+-->
 # jdp-2020-06: OffsetTime derivation for named zone
 
 ## Status
@@ -113,3 +117,24 @@ We are aware of the inconsistency with our reasoning in _`OffsetDateTime` from
 `TIME WITH TIME ZONE`_. In our opinion, having a value that is consistent both
 as `OffsetTime` and `OffsetDateTime` is more important here, because the
 presence of the date makes the value non-ambiguous.
+
+## License Notice
+
+The contents of this Documentation are subject to the Public Documentation
+License Version 1.0 (the “License”); you may only use this Documentation if you
+comply with the terms of this License. A copy of the License is available at
+<https://firebirdsql.org/en/public-documentation-license/>.
+
+The Original Documentation is "jdp-2020-06: OffsetTime derivation for named zone".
+The Initial Writer of the Original Documentation is Mark Rotteveel,
+Copyright © 2020-2022. All Rights Reserved. (Initial Writer contact(s):
+mark (at) lawinegevaar (dot) nl).
+
+<!--
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)]. All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+-->
+
+The exact file history is recorded in our Git repository; see
+<https://github.com/FirebirdSQL/jaybird>

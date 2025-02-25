@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+SPDX-License-Identifier: LicenseRef-PDL-1.0
+-->
 # jdp-2019-01: Jaybird Design Proposal
 
 ## Status
@@ -159,4 +163,25 @@ As we start with this 18 years after Jaybird started, we have a lot of
 undocumented historical decisions. It is unlikely we can reconstruct that, 
 instead moving forward we will attempt to formalize if and when a JDP touches 
 an aspect of Jaybird even if the JDP doesn't change that part.
+
+## License Notice
+
+The contents of this Documentation are subject to the Public Documentation
+License Version 1.0 (the “License”); you may only use this Documentation if you
+comply with the terms of this License. A copy of the License is available at
+<https://firebirdsql.org/en/public-documentation-license/>.
+
+The Original Documentation is "jdp-2019-01: Jaybird Design Proposal".
+The Initial Writer of the Original Documentation is Mark Rotteveel,
+Copyright © 2019-2024. All Rights Reserved. (Initial Writer contact(s):
+mark (at) lawinegevaar (dot) nl).
+
+<!--
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)]. All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+-->
+
+The exact file history is recorded in our Git repository; see
+<https://github.com/FirebirdSQL/jaybird>
  

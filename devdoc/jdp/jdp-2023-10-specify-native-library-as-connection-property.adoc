@@ -1,5 +1,8 @@
 = jdp-2023-10: Specify Native Library as Connection Property
 
+// SPDX-FileCopyrightText: Copyright 2023 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
 == Status
 
 * Published: 2023-05-29
@@ -49,3 +52,25 @@ Using an explicit and clear name is preferred for understandability, even if it 
 If `nativeLibraryPath` is specified for the first (and only the first) native or embedded connection (as indicated by the client resource of the database factory being `null`), and it contains a valid, _existing_ directory or file path, it (or in the case of a file, its parent directory) will be added to the JNA search path using `com.sun.jna.NativeLibrary.addSearchPath` for the library name(s) loaded by the specific `AbstractNativeDatabaseFactory`.
 
 NOTE: Although this will be done per database factory, globally the first library loaded still "`wins`".
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2023-10: Specify Native Library as Connection Property`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2023.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird

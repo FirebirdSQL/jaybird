@@ -23,6 +23,13 @@
 :sectnums:
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/faq.html
 
+////
+SPDX-FileCopyrightText: Copyright 2021-2024 Firebird development team and individual contributors
+SPDX-FileCopyrightText: Copyright 2002-2004 Rick Fincher
+SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+SPDX-License-Identifier: LicenseRef-PDL-1.0
+////
+
 [#jaybird]
 = Jaybird
 
@@ -987,3 +994,23 @@ With Jaybird 3.0.4 and higher for Java 7 (but not Java 8!) in Wildfly (or JBoss)
 ----
 
 Alternatively, use Jaybird for Java 8 (or higher).
+
+[appendix#license-notice]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`Jaybird Frequently Asked Questions`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2013-2025.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+Contributor(s): Rick Fincher. +
+Portions created by Rick Fincher are Copyright © 2002-2004.
+All Rights Reserved.
+(Contributor contact(s): _unknown_).
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird

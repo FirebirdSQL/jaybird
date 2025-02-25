@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Copyright 2020-2024 Mark Rotteveel
+// SPDX-License-Identifier: LGPL-2.1-or-later
 import org.apache.tools.ant.filters.*
 
 publishing {
@@ -116,6 +118,16 @@ publishing {
                     contributor {
                         name = 'Julien Nabet'
                         url = 'https://github.com/serval2412'
+                    }
+                    contributor {
+                        name = 'Tobias Weimer'
+                    }
+                    contributor {
+                        name = 'Michael Romankiewicz'
+                    }
+                    contributor {
+                        name = 'Adriano dos Santos Fernandes'
+                        url = 'https://github.com/asfernandes'
                     }
                 }
 

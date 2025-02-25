@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2020-2022 Mark Rotteveel
+SPDX-License-Identifier: LicenseRef-PDL-1.0
+-->
 # jdp-2020-01: Extended Time Zone Types Support
 
 ## Status
@@ -69,3 +73,24 @@ for a named zone).
 
 We recommend users not to set their binds to the 'extended' types, but if they
 do its behaviour will be identical.
+
+## License Notice
+
+The contents of this Documentation are subject to the Public Documentation
+License Version 1.0 (the “License”); you may only use this Documentation if you
+comply with the terms of this License. A copy of the License is available at
+<https://firebirdsql.org/en/public-documentation-license/>.
+
+The Original Documentation is "jdp-2020-01: Extended Time Zone Types Support".
+The Initial Writer of the Original Documentation is Mark Rotteveel,
+Copyright © 2020-2022. All Rights Reserved. (Initial Writer contact(s):
+mark (at) lawinegevaar (dot) nl).
+
+<!--
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)]. All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+-->
+
+The exact file history is recorded in our Git repository; see
+<https://github.com/FirebirdSQL/jaybird>

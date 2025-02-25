@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Copyright 2022 Mark Rotteveel
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /**
  * Provides version information for the Jaybird library.
  * <p>

@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Copyright 2013-2022 Mark Rotteveel
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /**
  * The Jaybird GDS-ng API provides the abstraction for connecting to Firebird either through a wire protocol
  * implementation, a native firebird client or other means. These classes are used by the JDBC implementation of

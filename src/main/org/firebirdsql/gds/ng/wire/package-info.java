@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Copyright 2022 Mark Rotteveel
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /**
  * Pure-java implementation of the {@link org.firebirdsql.gds.ng} API for the Firebird wire protocol.
  * <p>

@@ -1,27 +1,7 @@
-/*
- * Public Firebird Java API.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice,
- *       this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *    3. The name of the author may not be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+// SPDX-FileCopyrightText: 2000-2024 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
+// SPDX-FileComment: The constants listed here were obtained from the Firebird sources, which are licensed under the IPL (InterBase Public License) and/or IDPL (Initial Developer Public License), both are variants of the Mozilla Public License version 1.1
 package org.firebirdsql.gds;
 
 /**
@@ -41,7 +21,7 @@ public interface BlrConstants {
     int blr_double = 27;
     int blr_d_float = 11;
     int blr_timestamp = 35;
-    int blr_date = blr_timestamp; // Historical alias for pre V6 applications
+    int blr_date = blr_timestamp;
     int blr_varying = 37;
     int blr_varying2 = 38;
     int blr_blob = 261;
@@ -66,7 +46,6 @@ public interface BlrConstants {
     int blr_ex_time_tz = 30;
     int blr_ex_timestamp_tz = 31;
 
-    // first sub parameter for blr_domain_name[2]
     int blr_domain_type_of = 0;
     int blr_domain_full = 1;
 
@@ -118,8 +97,6 @@ public interface BlrConstants {
     int blr_minimum = 30;
     int blr_total = 31;
 
-    // unused codes: 32..33
-
     int blr_add = 34;
     int blr_subtract = 35;
     int blr_multiply = 36;
@@ -151,8 +128,6 @@ public interface BlrConstants {
     int blr_unique = 62;
     int blr_like = 63;
 
-    // unused codes: 64..66
-
     int blr_rse = 67;
     int blr_first = 68;
     int blr_project = 69;
@@ -168,14 +143,12 @@ public interface BlrConstants {
     int blr_aggregate = 79;
     int blr_join_type = 80;
 
-    // unused codes: 81..82
-
     int blr_agg_count = 83;
     int blr_agg_max = 84;
     int blr_agg_min = 85;
     int blr_agg_total = 86;
     int blr_agg_average = 87;
-    int blr_parameter3 = 88;	/* same as Rdb definition */
+    int blr_parameter3 = 88;
 
     /* unsupported
     int blr_run_max = 89;
@@ -189,8 +162,6 @@ public interface BlrConstants {
     int blr_agg_total_distinct = 95;
     int blr_agg_average_distinct = 96;
 
-    // unused codes: 97..99
-
     int blr_function = 100;
     int blr_gen_id = 101;
     //int blr_prot_mask = 102;
@@ -202,13 +173,9 @@ public interface BlrConstants {
     int blr_ansi_like = 108;
     int blr_scrollable = 109;
 
-    // unused codes: 110..117
-
     int blr_run_count = 118;
     int blr_rs_stream = 119;
     int blr_exec_proc = 120;
-
-    // unused codes: 121..123
 
     int blr_procedure = 124;
     int blr_pid = 125;
@@ -223,9 +190,7 @@ public interface BlrConstants {
     int blr_start_savepoint = 134;
     int blr_end_savepoint = 135;
 
-    // unused codes: 136..138
-
-    int blr_plan = 139;	/* access plan items */
+    int blr_plan = 139;
     int blr_merge = 140;
     int blr_join = 141;
     int blr_sequential = 142;
@@ -235,23 +200,16 @@ public interface BlrConstants {
     int blr_relation2 = 146;
     int blr_rid2 = 147;
 
-    // unused codes: 148..149
-
     int blr_set_generator = 150;
-    int blr_ansi_any = 151;   /* required for NULL handling */
-    int blr_exists = 152;   /* required for NULL handling */
+    int blr_ansi_any = 151;
+    int blr_exists = 152;
 
-    // unused codes: 153
+    int blr_record_version = 154;
+    int blr_stall = 155;
 
-    int blr_record_version = 154;	/* get tid of record */
-    int blr_stall = 155;	/* fake server stall */
-
-    // unused codes: 156..157
-
-    int blr_ansi_all = 158;   /* required for NULL handling */
+    int blr_ansi_all = 158;
     int blr_extract = 159;
 
-    /* sub parameters for blr_extract */
     int blr_extract_year = 0;
     int blr_extract_month = 1;
     int blr_extract_day = 2;
@@ -266,7 +224,6 @@ public interface BlrConstants {
     int blr_current_timestamp = 161;
     int blr_current_time = 162;
 
-    /* These codes reuse BLR code space */
     int blr_post_arg = 163;
     int blr_exec_into = 164;
     int blr_user_savepoint = 165;
@@ -278,51 +235,40 @@ public interface BlrConstants {
     int blr_agg_list_distinct = 171;
     int blr_modify2 = 172;
 
-    // unused codes: 173
-
-    /* FB 1.0 specific BLR */
     int blr_current_role = 174;
     int blr_skip = 175;
 
-    /* FB 1.5 specific BLR */
     int blr_exec_sql = 176;
     int blr_internal_info = 177;
     int blr_nullsfirst = 178;
     int blr_writelock = 179;
     int blr_nullslast = 180;
 
-    /* FB 2.0 specific BLR */
     int blr_lowcase = 181;
     int blr_strlen = 182;
 
-    /* sub parameter for blr_strlen */
     int blr_strlen_bit = 0;
     int blr_strlen_char = 1;
     int blr_strlen_octet = 2;
     int blr_trim = 183;
 
-    /* first sub parameter for blr_trim */
     int blr_trim_both = 0;
     int blr_trim_leading = 1;
     int blr_trim_trailing = 2;
 
-    /* second sub parameter for blr_trim */
     int blr_trim_spaces = 0;
     int blr_trim_characters = 1;
 
-    /* These codes are actions for user-defined savepoints */
     int blr_savepoint_set = 0;
     int blr_savepoint_release = 1;
     int blr_savepoint_undo = 2;
     int blr_savepoint_release_single = 3;
 
-    /* These codes are actions for cursors */
     int blr_cursor_open = 0;
     int blr_cursor_close = 1;
     int blr_cursor_fetch = 2;
     int blr_cursor_fetch_scroll = 3;
 
-    /* scroll options */
     int blr_scroll_forward = 0;
     int blr_scroll_backward = 1;
     int blr_scroll_bof = 2;
@@ -330,35 +276,31 @@ public interface BlrConstants {
     int blr_scroll_absolute = 4;
     int blr_scroll_relative = 5;
 
-    /* FB 2.1 specific BLR */
     int blr_init_variable = 184;
     int blr_recurse = 185;
     int blr_sys_function = 186;
 
-    // FB 2.5 specific BLR
     int blr_auto_trans = 187;
     int blr_similar = 188;
     int blr_exec_stmt = 189;
 
-    // subcodes of blr_exec_stmt
-    int blr_exec_stmt_inputs = 1;    // input parameters count
-    int blr_exec_stmt_outputs = 2;    // output parameters count
+    int blr_exec_stmt_inputs = 1;
+    int blr_exec_stmt_outputs = 2;
     int blr_exec_stmt_sql = 3;
     int blr_exec_stmt_proc_block = 4;
     int blr_exec_stmt_data_src = 5;
     int blr_exec_stmt_user = 6;
     int blr_exec_stmt_pwd = 7;
-    int blr_exec_stmt_tran = 8;    // not implemented yet
-    int blr_exec_stmt_tran_clone = 9;    // make transaction parameters equal to current transaction
+    int blr_exec_stmt_tran = 8;
+    int blr_exec_stmt_tran_clone = 9;
     int blr_exec_stmt_privs = 10;
-    int blr_exec_stmt_in_params = 11;    // not named input parameters
-    int blr_exec_stmt_in_params2 = 12;    // named input parameters
-    int blr_exec_stmt_out_params = 13;    // output parameters
+    int blr_exec_stmt_in_params = 11;
+    int blr_exec_stmt_in_params2 = 12;
+    int blr_exec_stmt_out_params = 13;
     int blr_exec_stmt_role = 14;
     int blr_stmt_expr = 190;
     int blr_derived_expr = 191;
 
-    // FB 3.0 specific BLR
     int blr_procedure3 = 192;
     int blr_exec_proc2 = 193;
     int blr_function2 = 194;

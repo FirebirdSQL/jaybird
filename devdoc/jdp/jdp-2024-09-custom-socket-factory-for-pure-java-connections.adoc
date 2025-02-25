@@ -1,5 +1,8 @@
 = jdp-2024-09: Custom socket factory for pure Java connections
 
+// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
 == Status
 
 * Published: 2024-12-18
@@ -41,3 +44,25 @@ The `socketFactory` option and passing of configuration must be documented in th
 
 Currently, Jaybird always creates unconnected sockets (that is, `SocketFactory.createSocket()`).
 We recommend that implementations that don't support the other `createSocket` methods to throw an `UnsupportedOperationException` with a clear message that the socket factory does not support the method.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2024-09: Custom socket factory for pure Java connections`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2024.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird

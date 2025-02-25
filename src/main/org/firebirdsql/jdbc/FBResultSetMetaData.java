@@ -1,21 +1,14 @@
 /*
- * Firebird Open Source JDBC Driver
- *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
- *
- * All rights reserved.
- */
+ SPDX-FileCopyrightText: Copyright 2001-2002 David Jencks
+ SPDX-FileCopyrightText: Copyright 2001 Boix i Oltra, S.L.
+ SPDX-FileContributor: Alejandro Alberola (Boix i Oltra, S.L.)
+ SPDX-FileCopyrightText: Copyright 2001-2010 Roman Rokytskyy
+ SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
+ SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
+ SPDX-FileCopyrightText: Copyright 2005-2006 Steven Jardine
+ SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-License-Identifier: LGPL-2.1-or-later
+*/
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;

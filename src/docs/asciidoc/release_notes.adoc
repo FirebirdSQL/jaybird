@@ -16,6 +16,15 @@
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/6.0.x/release_notes.html
 
+////
+SPDX-FileCopyrightText: Copyright 2021-2025 Firebird development team and individual contributors
+SPDX-FileCopyrightText: Copyright 2002 David Jencks
+SPDX-FileCopyrightText: Copyright 2002-2003 Rick Fincher
+SPDX-FileCopyrightText: Copyright 2004-2010 Roman Rokytskyy
+SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+SPDX-License-Identifier: LicenseRef-PDL-1.0
+////
+
 ifeval::["{version_tag}" != ""]
 [WARNING]
 ====
@@ -590,3 +599,29 @@ Be aware that this dependency does not support `embedded`.
 For more information about this library, see https://github.com/mrotteveel/jaybird-fbclient[^].
 
 In the future we may provide JARs with the embedded libraries of a specific Firebird version.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`Jaybird {version_wo_target} Release Notes`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2012-2025.
+All Rights Reserved.
+(Initial Writer contact(s): _unknown_).
+
+Contributor(s): David Jencks, Rick Fincher, Roman Rokytskyy. +
+Portions created by David Jencks are Copyright © 2002.
+All Rights Reserved.
+(Contributor contact(s): _unknown_). +
+Portions created by Rick Fincher are Copyright © 2002-2003.
+All Rights Reserved.
+(Contributor contact(s): _unknown_). +
+Portions created by Roman Rokytskyy are Copyright © 2004-2010.
+All Rights Reserved.
+(Contributor contact(s): _unknown_).
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird

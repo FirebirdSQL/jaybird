@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Copyright 2022 Mark Rotteveel
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.wire} for version 16 of the Firebird wire protocol.
  * <p>

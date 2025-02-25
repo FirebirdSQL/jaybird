@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2019-2022 Mark Rotteveel
+# SPDX-License-Identifier: CC0-1.0
 github: mrotteveel
 tidelift: maven/org.firebirdsql.jdbc:jaybird
 custom: https://firebirdsql.org/en/donate/

@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: Copyright 2007 Roman Rokytskyy
+-- SPDX-FileContributor: Bill Oliver
+-- SPDX-License-Identifier: LGPL-2.1-or-later
 alter table system_errors drop sql_state ;
 alter table system_errors drop sql_class ;
 alter table system_errors drop sql_subclass ;

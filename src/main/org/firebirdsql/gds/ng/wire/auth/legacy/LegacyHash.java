@@ -1,25 +1,12 @@
 /*
- * @(#)UnixCrypt.java	0.9 96/11/25
- *
- * Copyright (c) 1996 Aki Yoshida. All rights reserved.
- *
- * Permission to use, copy, modify and distribute this software
- * for non-commercial or commercial purposes and without fee is
- * hereby granted provided that this copyright notice appears in
- * all copies.
- */
-
-/*
- * Unix crypt(3C) utility
- *
- * @version 	0.9, 11/25/96
- * @author 	Aki Yoshida
- */
-
-/*
- * modified April 2001
- * by Iris Van den Broeke, Daniel Deville
- */
+ SPDX-FileCopyrightText: Copyright 1996 Aki Yoshida
+ SPDX-FileCopyrightText: Copyright 2001 Iris Van den Broeke
+ SPDX-FileCopyrightText: Copyright 2001 Daniel Deville
+ SPDX-FileCopyrightText: Copyright 2004 Greg Wilkins
+ SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
+ SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+ SPDX-License-Identifier: UnixCrypt
+*/
 package org.firebirdsql.gds.ng.wire.auth.legacy;
 
 /**

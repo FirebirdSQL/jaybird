@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
+SPDX-FileCopyrightText: Copyright 2019-2022 Mark Rotteveel
+SPDX-License-Identifier: LicenseRef-PDL-1.0
+-->
 # jdp-2019-06: Ability to monitor driver operations
 
 ## Status
@@ -124,3 +129,22 @@ This implementation will allow centralized monitoring of any statements.
 
 In this implementation, we tried to minimize changes in the driver so 
 as not to affect its operation.
+
+## License Notice
+
+The contents of this Documentation are subject to the Public Documentation
+License Version 1.0 (the “License”); you may only use this Documentation if you
+comply with the terms of this License. A copy of the License is available at
+<https://firebirdsql.org/en/public-documentation-license/>.
+
+The Original Documentation is "jdp-2019-06: Ability to monitor driver operations".
+The Initial Writer of the Original Documentation is Vasiliy Yashkov,
+Copyright © 2019. All Rights Reserved. (Initial Writer contact(s):
+https://github.com/vasiliy-yashkov).
+
+Contributor(s): Mark Rotteveel. \
+Portions created by Mark Rotteveel are Copyright © 2019-2022. All Rights Reserved.
+(Contributor contact(s): mark (at) lawinegevaar (dot) nl).
+
+The exact file history is recorded in our Git repository; see
+<https://github.com/FirebirdSQL/jaybird>

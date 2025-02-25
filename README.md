@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+SPDX-License-Identifier: LicenseRef-PDL-1.0
+-->
 # Jaybird
 Jaybird is a JDBC driver suite to connect to Firebird database servers.
 
@@ -25,8 +29,32 @@ For bugs or improvement, go to our [Issue tracker](https://github.com/FirebirdSQ
 Jaybird is licensed under LGPL 2.1 or later, with extension interfaces licensed
 under the BSD 3-clause. See source headers for the specific license.
 
-`SPDX-License-Identifier: LGPL-2.1-or-later AND BSD-3-Clause`
+<!-- REUSE-IgnoreStart -->
+
+`SPDX-License-Identifier: LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause`
+
+<!-- Reuse-IgnoreEnd -->
 
 ## Support
 
 Looking for professional support of Jaybird? Jaybird is now part of the [Tidelift subscription](https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=readme).
+
+## License Notice
+
+The contents of this Documentation are subject to the Public Documentation
+License Version 1.0 (the “License”); you may only use this Documentation if you
+comply with the terms of this License. A copy of the License is available at
+<https://firebirdsql.org/en/public-documentation-license/>.
+
+The Original Documentation is "Jaybird" (README.md). The Initial Writer of 
+the Original Documentation is Mark Rotteveel, Copyright © 2015-2024. All Rights
+Reserved. (Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+<!--
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)]. All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+-->
+
+The exact file history is recorded in our Git repository; see
+<https://github.com/FirebirdSQL/jaybird>

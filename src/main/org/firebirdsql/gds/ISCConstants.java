@@ -1,27 +1,19 @@
 /*
- * Public Firebird Java API.
- *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
- *       this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
- *       documentation and/or other materials provided with the distribution. 
- *    3. The name of the author may not be used to endorse or promote products 
- *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ SPDX-FileCopyrightText: 2000-2024 Firebird development team and individual contributors
+ SPDX-FileCopyrightText: Copyright 2001 Boix i Oltra, S.L.
+ SPDX-FileContributor: Alejandro Alberola (Boix i Oltra, S.L.)
+ SPDX-FileCopyrightText: Copyright 2001-2002 David Jencks
+ SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
+ SPDX-FileCopyrightText: Copyright 2002-2010 Roman Rokytskyy
+ SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
+ SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
+ SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
+ SPDX-FileCopyrightText: Copyright 2009 Thomas Steinmaurer
+ SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
+ SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
+ SPDX-FileComment: The constants listed here were obtained from the Firebird sources, which are licensed under the IPL (InterBase Public License) and/or IDPL (Initial Developer Public License), both are variants of the Mozilla Public License version 1.1
+*/
 package org.firebirdsql.gds;
 
 import org.firebirdsql.jaybird.fb.constants.StandardBlobTypes;
@@ -41,9 +33,8 @@ import org.firebirdsql.jaybird.fb.constants.StandardBlobTypes;
  *
  * @author Alejandro Alberola
  * @author David Jencks
- * @version 1.0
  */
-@SuppressWarnings({ "unused", "DanglingJavadoc", "java:S115", "java:S1214" })
+@SuppressWarnings({ "unused", "java:S115", "java:S1214" })
 public interface ISCConstants {
 
     int SQLDA_VERSION1             = 1;
@@ -56,47 +47,37 @@ public interface ISCConstants {
     int DSQL_drop      = 2;
     int DSQL_unprepare = 4;
 
-    /************************/
-    /* Blob seek parameters */
-    /************************/
+    // Blob seek parameters
 
     int blb_seek_from_head = 0;
     int blb_seek_relative =  1;
     int blb_seek_from_tail = 2;
 
-    /*******************/
-    /* blob_get_result */
-    /*******************/
+
+    // blob_get_result
+
     int blb_got_fragment     = -1;
     int blb_got_eof          = 0;
     int blb_got_full_segment = 1;
 
-    /**********************************/
-    /* Database parameter block stuff */
-    /**********************************/
+    // Database parameter block versioning
 
     int isc_dpb_version1                = 1;
     int isc_dpb_version2                = 2;
 
-    /*************************************/
-    /* Transaction parameter block stuff */
-    /*************************************/
+    // Transaction parameter block versioning
 
     int isc_tpb_version1                = 1;
     int isc_tpb_version3                = 3;
 
-    /*************************************/
-    /* Service parameter block stuff */
-    /*************************************/
+    // Service parameter block versioning
 
     int isc_spb_version1                = 1;
     int isc_spb_current_version         = 2;
     int isc_spb_version			        = isc_spb_current_version;
     int isc_spb_version3                = 3;
 
-    /*****************************************
-     * Parameters for isc_action_svc_nbak    *
-     *****************************************/
+    // Parameters for isc_action_svc_nbak
 
     int isc_spb_nbk_level  = 5;
     int isc_spb_nbk_file   = 6;
@@ -109,77 +90,65 @@ public interface ISCConstants {
     int isc_spb_nbk_inplace     = 0x02;
     int isc_spb_nbk_sequence    = 0x04;
 
-    /*****************************
-     * Service action items      *
-     *****************************/
+    // Service actions
 
-    int isc_action_svc_backup         = 1;	/* Starts database backup process on the server */
-    int isc_action_svc_restore        = 2;	/* Starts database restore process on the server */
-    int isc_action_svc_repair         = 3;	/* Starts database repair process on the server */
-    int isc_action_svc_add_user       = 4;	/* Adds a new user to the security database */
-    int isc_action_svc_delete_user    = 5;	/* Deletes a user record from the security database */
-    int isc_action_svc_modify_user    = 6;	/* Modifies a user record in the security database */
-    int isc_action_svc_display_user   = 7;	/* Displays a user record from the security database */
-    int isc_action_svc_properties     = 8;	/* Sets database properties */
-    int isc_action_svc_add_license    = 9;	/* Adds a license to the license file */
-    int isc_action_svc_remove_license = 10;	/* Removes a license from the license file */
-    int isc_action_svc_db_stats	      = 11;	/* Retrieves database statistics */
-    int isc_action_svc_get_ib_log     = 12;	/* Retrieves the InterBase log file from the server */
-    int isc_action_svc_get_fb_log     = 12;	/* Retrieves the Firebird log file from the server */
-    // NBackup - New with Firebird 2.5
-    int isc_action_svc_nbak   		  = 20; // Starts Nbackup
-    int isc_action_svc_nrest  		  = 21; // Restores Nbackup
-    // Trace - New with Firebird 2.5
-    int isc_action_svc_trace_start    = 22; // Starts a trace
-    int isc_action_svc_trace_stop     = 23; // Stops a trace
-    int isc_action_svc_trace_suspend  = 24; // Suspends a trace
-    int isc_action_svc_trace_resume   = 25; // Resumes a trace
-    int isc_action_svc_trace_list     = 26; // Lists all trace sessions
-    // RDB$ADMIN mapping - New with Firebird 2.5
-    int isc_action_svc_set_mapping    = 27; // Sets RDB$ADMIN auto mapping in security database
-    int isc_action_svc_drop_mapping   = 28; // Drops RDB$ADMIN auto mapping in security database
-    // Firebird 3
-    int isc_action_svc_display_user_adm = 29; // Displays user(s) from security database with admin info
-    int isc_action_svc_validate         = 30; // Starts database online validation
-    int isc_action_svc_nfix             = 31; // Fixup database after file system copy
+    int isc_action_svc_backup         = 1;
+    int isc_action_svc_restore        = 2;
+    int isc_action_svc_repair         = 3;
+    int isc_action_svc_add_user       = 4;
+    int isc_action_svc_delete_user    = 5;
+    int isc_action_svc_modify_user    = 6;
+    int isc_action_svc_display_user   = 7;
+    int isc_action_svc_properties     = 8;
+    int isc_action_svc_add_license    = 9;
+    int isc_action_svc_remove_license = 10;
+    int isc_action_svc_db_stats	      = 11;
+    int isc_action_svc_get_ib_log     = 12;
+    int isc_action_svc_get_fb_log     = 12;
+    int isc_action_svc_nbak   		  = 20;
+    int isc_action_svc_nrest  		  = 21;
+    int isc_action_svc_trace_start    = 22;
+    int isc_action_svc_trace_stop     = 23;
+    int isc_action_svc_trace_suspend  = 24;
+    int isc_action_svc_trace_resume   = 25;
+    int isc_action_svc_trace_list     = 26;
+    int isc_action_svc_set_mapping    = 27;
+    int isc_action_svc_drop_mapping   = 28;
+    int isc_action_svc_display_user_adm = 29;
+    int isc_action_svc_validate         = 30;
+    int isc_action_svc_nfix             = 31;
 
-    /*****************************************
-     * Parameters for isc_action_svc_trace   *
-     *****************************************/
+    // Parameters for isc_action_svc_trace
 
-    int isc_spb_trc_id    = 1; // relevant for stop, suspend and resume
-    int isc_spb_trc_name  = 2; // relevant for start
-    int isc_spb_trc_cfg   = 3; // relevant for start
+    int isc_spb_trc_id    = 1;
+    int isc_spb_trc_name  = 2;
+    int isc_spb_trc_cfg   = 3;
 
-    /*****************************
-     * Service information items *
-     *****************************/
+    // Service information items
 
-    int isc_info_svc_svr_db_info      =50;	/* Retrieves the number of attachments and databases */
-    int isc_info_svc_get_license      =51;	/* Retrieves all license keys and IDs from the license file */
-    int isc_info_svc_get_license_mask =52;	/* Retrieves a bitmask representing licensed options on the server */
-    int isc_info_svc_get_config       =53;	/* Retrieves the parameters and values for IB_CONFIG */
-    int isc_info_svc_version          =54;	/* Retrieves the version of the services manager */
-    int isc_info_svc_server_version   =55;	/* Retrieves the version of the InterBase server */
-    int isc_info_svc_implementation   =56;	/* Retrieves the implementation of the InterBase server */
-    int isc_info_svc_capabilities     =57;	/* Retrieves a bitmask representing the server's capabilities */
-    int isc_info_svc_user_dbpath      =58;	/* Retrieves the path to the security database in use by the server */
-    int isc_info_svc_get_env	      =59;	/* Retrieves the setting of $INTERBASE */
-    int isc_info_svc_get_env_lock     =60;	/* Retrieves the setting of $INTERBASE_LCK */
-    int isc_info_svc_get_env_msg      =61;	/* Retrieves the setting of $INTERBASE_MSG */
-    int isc_info_svc_line             =62;	/* Retrieves 1 line of service output per call */
-    int isc_info_svc_to_eof           =63;	/* Retrieves as much of the server output as will fit in the supplied buffer */
-    int isc_info_svc_timeout          =64;	/* Sets / signifies a timeout value for reading service information */
-    int isc_info_svc_get_licensed_users =65;	/* Retrieves the number of users licensed for accessing the server */
-    int isc_info_svc_limbo_trans      =66;	/* Retrieve the limbo transactions */
-    int isc_info_svc_running          =67;	/* Checks to see if a service is running on an attachment */
-    int isc_info_svc_get_users        =68;	/* Returns the user information from isc_action_svc_display_users */
-    int isc_info_svc_auth_block       =69;	/* Sets authentication block for service query() call */
-    int isc_info_svc_stdin            =78;	/* Returns maximum size of data, needed as stdin for service */
+    int isc_info_svc_svr_db_info      =50;
+    int isc_info_svc_get_license      =51;
+    int isc_info_svc_get_license_mask =52;
+    int isc_info_svc_get_config       =53;
+    int isc_info_svc_version          =54;
+    int isc_info_svc_server_version   =55;
+    int isc_info_svc_implementation   =56;
+    int isc_info_svc_capabilities     =57;
+    int isc_info_svc_user_dbpath      =58;
+    int isc_info_svc_get_env	      =59;
+    int isc_info_svc_get_env_lock     =60;
+    int isc_info_svc_get_env_msg      =61;
+    int isc_info_svc_line             =62;
+    int isc_info_svc_to_eof           =63;
+    int isc_info_svc_timeout          =64;
+    int isc_info_svc_get_licensed_users =65;
+    int isc_info_svc_limbo_trans      =66;
+    int isc_info_svc_running          =67;
+    int isc_info_svc_get_users        =68;
+    int isc_info_svc_auth_block       =69;
+    int isc_info_svc_stdin            =78;
 
-    /******************************************************
-     * Parameters for isc_action_{add|delete|modify)_user *
-     ******************************************************/
+    // Parameters for isc_action_{add|delete|modify)_user
 
     int isc_spb_sec_userid           = 5;
     int isc_spb_sec_groupid          = 6;
@@ -191,18 +160,13 @@ public interface ISCConstants {
     int isc_spb_sec_lastname         = 12;
     int isc_spb_sec_admin            = 13;
 
-    /*******************************************************
-     * Parameters for isc_action_svc_(add|remove)_license, *
-     * isc_info_svc_get_license                            *
-     *******************************************************/
+    // Parameters for isc_action_svc_(add|remove)_license, isc_info_svc_get_license
 
     int isc_spb_lic_key              = 5;
     int isc_spb_lic_id               = 6;
     int isc_spb_lic_desc             = 7;
 
-    /*****************************************
-     * Parameters for isc_action_svc_backup  *
-     *****************************************/
+    // Parameters for isc_action_svc_backup
 
     int isc_spb_bkp_file               =  5;
     int isc_spb_bkp_factor             =  6;
@@ -226,9 +190,7 @@ public interface ISCConstants {
     int isc_spb_bkp_zip	               =  0x010000;
     int isc_spb_bkp_direct_io          =  0x020000;
 
-    /********************************************
-     * Parameters for isc_action_svc_properties *
-     ********************************************/
+    // Parameters for isc_action_svc_properties
 
     int isc_spb_prp_page_buffers          = 5;
     int isc_spb_prp_sweep_interval        = 6;
@@ -242,7 +204,6 @@ public interface ISCConstants {
     int isc_spb_prp_activate			  = 0x0100;
     int isc_spb_prp_db_online			  = 0x0200;
     int isc_spb_prp_nolinger              = 0x0400;
-    // New shutdown/online modes - New with Firebird 2.5
     int isc_spb_prp_force_shutdown        = 41;
     int isc_spb_prp_attachments_shutdown  = 42;
     int isc_spb_prp_transactions_shutdown = 43;
@@ -250,48 +211,35 @@ public interface ISCConstants {
     int isc_spb_prp_online_mode           = 45;
     int isc_spb_prp_replica_mode          = 46;
 
-    /********************************************
-     * Parameters for isc_spb_prp_shutdown_mode *
-     *            and isc_spb_prp_online_mode   *
-     ********************************************/
+    // Parameters for isc_spb_prp_shutdown_mode and isc_spb_prp_online_mode
     
     int isc_spb_prp_sm_normal             = 0;
     int isc_spb_prp_sm_multi              = 1;
     int isc_spb_prp_sm_single             = 2;
     int isc_spb_prp_sm_full               = 3;
 
-    /********************************************
-     * Parameters for isc_spb_prp_reserve_space *
-     ********************************************/
+    // Parameters for isc_spb_prp_reserve_space
 
     int isc_spb_prp_res_use_full	=35;
     int isc_spb_prp_res			    =36;
 
-    /******************************************
-     * Parameters for isc_spb_prp_write_mode  *
-     ******************************************/
+    // Parameters for isc_spb_prp_write_mode
 
     int isc_spb_prp_wm_async		=37;
     int isc_spb_prp_wm_sync			=38;
 
-    /******************************************
-     * Parameters for isc_spb_prp_access_mode *
-     ******************************************/
+    // Parameters for isc_spb_prp_access_mode
 
     int isc_spb_prp_am_readonly		=39;
     int isc_spb_prp_am_readwrite	=40;
 
-    /*******************************************
-     * Parameters for isc_spb_prp_replica_mode *
-     *******************************************/
+    // Parameters for isc_spb_prp_replica_mode
 
     int isc_spb_prp_rm_none = 0;
     int isc_spb_prp_rm_readonly = 1;
     int isc_spb_prp_rm_readwrite = 2;
 
-    /*****************************************
-     * Parameters for isc_action_svc_repair  *
-     *****************************************/
+    // Parameters for isc_action_svc_repair
 
     int isc_spb_rpr_commit_trans	=	15;
     int isc_spb_rpr_rollback_trans	=	34;
@@ -330,9 +278,7 @@ public interface ISCConstants {
     int isc_spb_rpr_icu				= 0x0800;
     int isc_spb_rpr_upgrade_db      = 0x1000;
 
-    /*****************************************
-     * Parameters for isc_action_svc_restore *
-     *****************************************/
+    // Parameters for isc_action_svc_restore
 
     int isc_spb_res_skip_data		=   isc_spb_bkp_skip_data;
     int isc_spb_res_include_data    =   isc_spb_bkp_include_data;
@@ -358,41 +304,31 @@ public interface ISCConstants {
     int isc_spb_res_direct_io       =   isc_spb_bkp_direct_io;
     int isc_spb_res_replica_mode    =   20;
 
-    /*****************************************
-     * Parameters for isc_action_svc_validate *
-     *****************************************/
+    // Parameters for isc_action_svc_validate
 
-    int isc_spb_val_tab_incl     = 1;  // include filter based on regular expression
-    int isc_spb_val_tab_excl     = 2;  // exclude filter based on regular expression
-    int isc_spb_val_idx_incl     = 3;  // regexp of indices to validate
-    int isc_spb_val_idx_excl     = 4;  // regexp of indices to NOT validate
-    int isc_spb_val_lock_timeout = 5;  // how long to wait for table lock
+    int isc_spb_val_tab_incl     = 1;
+    int isc_spb_val_tab_excl     = 2;
+    int isc_spb_val_idx_incl     = 3;
+    int isc_spb_val_idx_excl     = 4;
+    int isc_spb_val_lock_timeout = 5;
 
-    /******************************************
-     * Parameters for isc_spb_res_access_mode  *
-     ******************************************/
+    // Parameters for isc_spb_res_access_mode
 
     int isc_spb_res_am_readonly		=	isc_spb_prp_am_readonly;
     int isc_spb_res_am_readwrite	=	isc_spb_prp_am_readwrite;
 
-    /*******************************************
-     * Parameters for isc_spb_res_replica_mode *
-     *******************************************/
+    // Parameters for isc_spb_res_replica_mode
 
-     int isc_spb_res_rm_none = isc_spb_prp_rm_none;
-     int isc_spb_res_rm_readonly = isc_spb_prp_rm_readonly;
-     int isc_spb_res_rm_readwrite = isc_spb_prp_rm_readwrite;
+    int isc_spb_res_rm_none = isc_spb_prp_rm_none;
+    int isc_spb_res_rm_readonly = isc_spb_prp_rm_readonly;
+    int isc_spb_res_rm_readwrite = isc_spb_prp_rm_readwrite;
 
-    /*******************************************
-     * Parameters for isc_info_svc_svr_db_info *
-     *******************************************/
+    // Parameters for isc_info_svc_svr_db_info
 
     int isc_spb_num_att		=	5;
     int isc_spb_num_db		=	6;
 
-    /*****************************************
-     * Parameters for isc_info_svc_db_stats  *
-     *****************************************/
+    // Parameters for isc_info_svc_db_stats
 
     int isc_spb_sts_data_pages	=	0x01;
     int isc_spb_sts_db_log		=	0x02;
@@ -404,9 +340,7 @@ public interface ISCConstants {
     int isc_spb_sts_nocreation  =   0x80;
     int isc_spb_sts_encryption	=  0x100;
 
-    /****************************/
-    /* Common, structural codes */
-    /****************************/
+    // Common, structural codes
 
     int isc_info_end                    = 1;
     int isc_info_truncated              = 2;
@@ -415,9 +349,7 @@ public interface ISCConstants {
     int isc_info_length                 = 126;
     int isc_info_flag_end               = 127;
 
-    /*************************/
-    /* SQL information items */
-    /*************************/
+    // SQL information items
 
     int isc_info_sql_select              = 4;
     int isc_info_sql_bind                = 5;
@@ -447,9 +379,7 @@ public interface ISCConstants {
     int isc_info_sql_stmt_timeout_run    = 29;
     int isc_info_sql_stmt_blob_align     = 30;
 
-    /*********************************/
-    /* SQL information return values */
-    /*********************************/
+    // SQL information return values
 
     int isc_info_sql_stmt_select         = 1;
     int isc_info_sql_stmt_insert         = 2;
@@ -470,9 +400,7 @@ public interface ISCConstants {
     
     int INF_RECORD_COUNT = 10;
 
-    /*****************************/
-    /* Request information items */
-    /*****************************/
+    // Request information items
 
     int isc_info_number_messages        =  4;
     int isc_info_max_message            =  5;
@@ -488,9 +416,7 @@ public interface ISCConstants {
     int isc_info_req_update_count       =  15;
     int isc_info_req_delete_count       =  16;
 
-    /*****************************/
-    /* Request information items */
-    /*****************************/
+    // Database information items
 
     int isc_info_db_id = 4;
     int isc_info_reads = 5;
@@ -553,8 +479,6 @@ public interface ISCConstants {
     int isc_info_db_read_only = 63;
     int isc_info_db_size_in_pages = 64;
 
-    /* Values 65-100 unused to avoid conflict with InterBase */
-
     int frb_info_att_charset = 101;
     int isc_info_db_class = 102;
     int isc_info_firebird_version = 103;
@@ -579,7 +503,6 @@ public interface ISCConstants {
     int fb_info_pip_warns = 123;
     int fb_info_pages_used = 124;
     int fb_info_pages_free = 125;
-    // codes 126 and 127 are used for special purposes do not use them here
     int fb_info_ses_idle_timeout_db = 129;
     int fb_info_ses_idle_timeout_att = 130;
     int fb_info_ses_idle_timeout_run = 131;
@@ -592,7 +515,6 @@ public interface ISCConstants {
     int fb_info_crypt_plugin = 138;
     int fb_info_creation_timestamp_tz = 139;
     int fb_info_wire_crypt = 140;
-    // Return list of features supported by provider of current connection
     int fb_info_features = 141;
     int fb_info_next_attachment = 142;
     int fb_info_next_statement = 143;
@@ -696,19 +618,15 @@ public interface ISCConstants {
     int RBL_eof_pending      = 4;
     int RBL_create           = 8;
 
+    // Blob information items
 
-    /**************************/
-    /* Blob information items */
-    /**************************/
     int isc_info_blob_num_segments      = 4;
     int isc_info_blob_max_segment       = 5;
     int isc_info_blob_total_length      = 6;
     int isc_info_blob_type              = 7;
 
+    // Transaction information items
 
-    /*********************************/
-    /* Transaction information items */
-    /*********************************/
     int isc_info_tra_id = 4;
     int isc_info_tra_oldest_interesting = 5;
     int isc_info_tra_oldest_snapshot = 6;
@@ -731,41 +649,37 @@ public interface ISCConstants {
     int isc_info_tra_readonly = 0;
     int isc_info_tra_readwrite = 1;
 
-    /****************************************/
-    /* Cancel types for fb_cancel_operation */
-    /****************************************/
+    // Cancel types for fb_cancel_operation
+
     int fb_cancel_disable = 1;
     int fb_cancel_enable = 2;
     int fb_cancel_raise = 3;
     int fb_cancel_abort = 4;
 
-
-    /*******************/
-    /* ISC Error Codes */
-    /*******************/
+    // ISC Error Codes
 
     int SUCCESS = 0;
 
     int isc_facility = 20;
     int isc_err_base = 335544320;
     int isc_err_factor = 1;
-    int isc_arg_end = 0;           /* end of argument list */
-    int isc_arg_gds = 1;           /* generic DSRI status value */
-    int isc_arg_string = 2;        /* string argument */
-    int isc_arg_cstring = 3;       /* count & string argument */
-    int isc_arg_number = 4;        /* numeric argument (long) */
-    int isc_arg_interpreted = 5;   /* interpreted status code (string) */
-    int isc_arg_vms = 6;           /* VAX/VMS status code (long) */
-    int isc_arg_unix = 7;          /* UNIX error code */
-    int isc_arg_domain = 8;        /* Apollo/Domain error code */
-    int isc_arg_dos = 9;           /* MSDOS/OS2 error code */
-    int isc_arg_mpexl = 10;        /* HP MPE/XL error code */
-    int isc_arg_mpexl_ipc = 11;    /* HP MPE/XL IPC error code */
-    int isc_arg_next_mach = 15;    /* NeXT/Mach error code */
-    int isc_arg_netware = 16;      /* NetWare error code */
-    int isc_arg_win32 = 17;        /* Win32 error code */
-    int isc_arg_warning = 18;      /* warning argument */
-    int isc_arg_sql_state = 19;    /* SQLSTATE */
+    int isc_arg_end = 0;
+    int isc_arg_gds = 1;
+    int isc_arg_string = 2;
+    int isc_arg_cstring = 3;
+    int isc_arg_number = 4;
+    int isc_arg_interpreted = 5;
+    int isc_arg_vms = 6;
+    int isc_arg_unix = 7;
+    int isc_arg_domain = 8;
+    int isc_arg_dos = 9;
+    int isc_arg_mpexl = 10;
+    int isc_arg_mpexl_ipc = 11;
+    int isc_arg_next_mach = 15;
+    int isc_arg_netware = 16;
+    int isc_arg_win32 = 17;
+    int isc_arg_warning = 18;
+    int isc_arg_sql_state = 19;
 
     int isc_arith_except = 335544321;
     int isc_bad_dbkey = 335544322;
@@ -2381,9 +2295,7 @@ public interface ISCConstants {
     int isc_trace_param_act_notcompat = 337182759;
     int isc_trace_mandatory_switch_miss = 337182760;
 
-    /*******************/
-    /* SQL definitions */
-    /*******************/
+    // SQL type codes
 
     int SQL_TEXT      = 452;
     int SQL_VARYING   = 448;
@@ -2412,12 +2324,10 @@ public interface ISCConstants {
     int SQL_BOOLEAN   = 32764;
     int SQL_NULL      = 32766;
 
-    /* Historical alias for pre V6 applications */
+    // Historical alias for pre V6 applications
     int SQL_DATE      = SQL_TIMESTAMP;
 
-    /*******************/
-    /* Other stuff     */
-    /*******************/
+    // Other stuff
     int CS_NONE    = 0; /* No Character Set */
     int CS_BINARY  = 1; /* BINARY BYTES */
     int CS_dynamic = 127; // Pseudo number for runtime charset (see intl\charsets.h and references to it in Firebird)

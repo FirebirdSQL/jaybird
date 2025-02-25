@@ -1,5 +1,8 @@
 = jdp-2024-06: Change Handling of Result Set TYPE_FORWARD_ONLY with HOLD_CURSOR_OVER_COMMIT
 
+// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
 == Status
 
 * Published: 2024-11-05
@@ -54,3 +57,25 @@ This means that only `next()` is supported, and other result set navigation meth
 This can be addressed by explicitly requesting `TYPE_SCROLL_INSENSITIVE`.
 
 Jaybird no longer registers a `SQLWarning`, because the result set type is no longer upgraded.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2024-06: Change Handling of Result Set TYPE_FORWARD_ONLY with HOLD_CURSOR_OVER_COMMIT`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2024.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird

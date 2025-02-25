@@ -1,0 +1,23 @@
+The Individual Contributor License Agreement (devdoc/jaybird-icla.txt) is
+derived from the Apache ICLA (https://www.apache.org/licenses/icla.pdf).
+
+The Apache Software Foundation does not seem to specify a license for their
+licenses, however their Licensing FAQ states under "May I re-use (and modify)
+the ASF Contributor License Agreements (CLAs) for my own purposes?" (see
+https://www.apache.org/foundation/license-faq.html#CLA-Usage):
+
+""""
+Yes, you can re-use and modify them; You just can't hold the ASF legally
+responsible if these documents are not exactly what you intend them to be. We
+recommend that you obtain your own legal advice so you know exactly what you are
+getting yourself into.
+
+If you adapt these agreements for your own purposes, make sure that the phrase
+'Apache Software Foundation' and any confusingly similar references or parts
+that specifically refer to the Apache organisation do not appear in your version
+of the agreements (except to note that your version is derived and differs from
+the original provided by the ASF).
+""""
+
+In other words, attribution is required, but beyond that, there doesn't seem to
+be an explicit license.

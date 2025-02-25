@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Copyright 2020-2024 Mark Rotteveel
+// SPDX-License-Identifier: LGPL-2.1-or-later
 rootProject.name = 'jaybird'
 include 'chacha64-plugin'
 include 'jaybird-native'

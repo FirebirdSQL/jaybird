@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2017-2023 Mark Rotteveel
+# SPDX-License-Identifier: LGPL-2.1-or-later
+#
 # Reserved words not reserved by SQL:2003
 # This file is only provided for reference, see FirebirdVersionMetaData for actually used values
 ADD

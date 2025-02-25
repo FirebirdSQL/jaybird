@@ -243,7 +243,7 @@ Instructions will be provided in `./devdoc/` how developers can run compliance c
 
 === Documentation
 
-Given the Public Documentation License version 1.0 is not a https://spdx.org/licenses/[standard license recognized by SPDX], it will need to be declared with the custom name `LicenseRef-PDL-1.0`, and an accompanying `LicenseRef-PDL-1.0.txt` with the license text in the `LICENSES` directory.
+Given the Public Documentation License version 1.0 is not a https://spdx.org/licenses/[standard license recognized by SPDX], it will need to be declared with the custom name `LicenseRef-PDL-1.0`, and an accompanying `LicenseRef-PDL-1.0` with the license text in the `LICENSES` directory.
 
 Current documentation must also be modified to include the license notice as shown in the PDL appendix, and the right `SPDX-FileCopyRightText` and `SPDX-License-Identifier` comments (see also <<apply-license>>).
 
