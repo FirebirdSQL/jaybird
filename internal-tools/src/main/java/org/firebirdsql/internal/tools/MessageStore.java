@@ -7,6 +7,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Year;
 import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
@@ -97,6 +98,14 @@ abstract class MessageStore implements FirebirdErrorStore {
 
     final void store(Map<Integer, String> data, Path filePath) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, ISO_8859_1)) {
+            writer.write("# SPDX-FileCopyrightText: 2000-");
+            writer.write(Year.now().toString());
+            writer.write(" Firebird development team and individual contributors");
+            writer.newLine();
+            writeln(writer, "# SPDX-License-Identifier: LGPL-2.1-or-later");
+            writeln(writer, "# SPDX-FileComment: The keys and values listed here were obtained from the Firebird "
+                    + "sources, which are licensed under the IPL (InterBase Public License) and/or IDPL (Initial "
+                    + "Developer Public License), both are variants of the Mozilla Public License version 1.1");
             store(data, writer);
         }
     }
