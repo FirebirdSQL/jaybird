@@ -7,8 +7,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 7
+* Published
+* Implemented in: Jaybird 7
 
 == Type
 
@@ -74,6 +74,16 @@ The Jaybird project will follow the REUSE specification to provide license and c
 The project will *not* publish an SPDX file.
 Users in need of an SPDX file for SBOM purposes will need to generate it themselves using the repository contents (e.g. of a tagged release).
 
+This can be done with the reuse tool (see installation instructions on <https://github.com/fsfe/reuse-tool?tab=readme-ov-file#install>):
+
+[listing]
+----
+reuse spdx -o reuse.spdx
+----
+
+This will output the spdx information to the file `reuse.spdx`.
+See also <https://reuse.readthedocs.io/en/stable/man/reuse-spdx.html>.
+
 The project will also not provide SPDX information for dependencies.
 
 === License applied to documentation
@@ -131,8 +141,6 @@ As such, we will now formalize this, and annotate those files as `LGPL-2.1-or-la
 As a result, Jaybird as a whole becomes `LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause`.
 
 == Consequences
-
-NOTE: This section may be updated while applying the necessary changes.
 
 [#apply-license]
 === Applying the license
@@ -244,7 +252,7 @@ It should not result in addition of a `SPDX-FileCopyrightText` by the person mak
 [#compliance-check]
 === Compliance checking
 
-A GitHub Action will be configured to run a compliance check post commit and for pull requests.
+A GitHub Action will be configured to run a compliance check post-commit and for pull requests.
 
 Instructions will be provided in `./devdoc/` how developers can run compliance checks locally, and how to install a local Git commit hook to run the compliance check before commit.
 
