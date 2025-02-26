@@ -97,6 +97,7 @@ abstract class MessageStore implements FirebirdErrorStore {
     abstract void addSymbol(Facility facility, int number, String symbolName);
 
     final void store(Map<Integer, String> data, Path filePath) throws IOException {
+        // REUSE-IgnoreStart
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, ISO_8859_1)) {
             writer.write("# SPDX-FileCopyrightText: 2000-");
             writer.write(Year.now().toString());
@@ -108,6 +109,7 @@ abstract class MessageStore implements FirebirdErrorStore {
                     + "Developer Public License), both are variants of the Mozilla Public License version 1.1");
             store(data, writer);
         }
+        // REUSE-IgnoreEnd
     }
 
     final void store(Map<Integer, String> map, BufferedWriter writer) throws IOException {
