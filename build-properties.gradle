@@ -1,5 +1,6 @@
-// SPDX-FileCopyrightText: Copyright 2020-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
+import java.time.LocalDateTime
 
 // Property configuration for build
 
@@ -19,9 +20,9 @@ buildProperties.stringPropertyNames().each {
     ext.set(it, buildProperties[it])
 }
 
-def buildTime = new Date()
+def buildTime = LocalDateTime.now()
 ext.'build.id' = buildTime.format('yyyyMMddHHmm')
-ext.YEAR = buildTime.format("yyyy")
+ext.YEAR = buildTime.format('yyyy')
 
 // Build profile
 ext.'maven.jdkversion' = 'java17'

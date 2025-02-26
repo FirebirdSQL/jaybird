@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2020-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 import org.apache.tools.ant.filters.*
 
@@ -155,7 +155,8 @@ publishing {
                         name = 'Modified BSD (3-clause) License'
                         url = 'https://opensource.org/licenses/BSD-3-Clause'
                         distribution = 'repo'
-                        comments = 'The extension interfaces of Jaybird are defined under a modified BSD license'
+                        comments = 'The extension interfaces of Jaybird are dual-licensed under ' +
+                                'the modified BSD license and/or the GNU Lesser General Public License (LGPL).'
                     }
                 }
 

@@ -39,7 +39,7 @@ Other snags or things we need to think about are:
 . Documentation, like the Jaybird Design Proposal files, release notes, and FAQ, currently don't have an explicit license.
 We need to consider if we want to simply state them as LGPL (a license not really applicable to documentation, IMHO), or apply a license like Firebird's PDL (Public Documentation License), GFDL (GNU Free Documentation License), CC0-1.0 (public domain), CC BY-SA 4.0, or something else
 
-The REUSE specification (see also below) generally expects copyright to be assigned individually, with `SPDX-FileCopyrightText: Copyright <year-range> <contributor-name> [, <contributor-name>]...`, or multiple `SPDX-FileCopyrightText` -- one per contributor, and preferably not wholesale with "`the firebird development team`" or similar.
+The REUSE specification (see also below) generally expects copyright to be assigned individually, with `SPDX-FileCopyrightText: Copyright <year-range> <contributor-name> [, <contributor-name>]...`, or multiple `SPDX-FileCopyrightText` -- one per contributor, and preferably not wholesale with "`Firebird development team`" or similar.
 Unfortunately, the commit history is not always easily traceable given file moves, renames, etc. not always being correctly recorded (especially during the CVS era).
 
 === Need for SBOM information
@@ -90,18 +90,19 @@ That said, we consider the assumption valid, so to say explicitly: the documenta
 
 === License applied to files derived from Firebird source code
 
-For files containing constants (e.g. `ISCConstants.java`), we'll follow the current license: that is usually `BSD-3-Clause` as it's part of the Jaybird public API.
+For files containing constants (e.g. `ISCConstants.java`), we'll follow the current license: that is usually `BSD-3-Clause` as it's part of the Jaybird public API (but do also read <<dual-licensing>>).
 We think this acceptable, as these are names and values copied from the Firebird source code, and such things are usually not considered copyrightable in and of itself, and as such could be considered a mirroring of parts of the Firebird API for interoperability.
 Existing comments which were also copied from the Firebird source code should be removed.
 
-For further clarification, an `SPDX-FileComment` (text TBD) should be added to these files to declare the origin and the license of the origin.
+For further clarification, an `SPDX-FileComment` (with value _"`The constants listed here were obtained from the Firebird sources, which are licensed under the IPL (InterBase Public License) and/or IDPL (Initial Developer Public License), both are variants of the Mozilla Public License version 1.1`"_) should be added to these files to declare the origin and the license of the origin.
 
 For the error messages and SQLSTATE files, we consider them "`Executable`", derived by mechanical translation (by `MessageExtractor`), and as such -- as stated in the IDPL -- can have their own license, i.e. `LGPL-2.1-or-later`.
-The `SPDX-FileCopyrightText` will declare `Copyright 2000-<build year> Firebird development team and individual contributors`, and also -- like the constants -- a `SPDX-FileComment` (text TBD) should be added to these files to declare the origin and the license of the origin.
+The `SPDX-FileCopyrightText` will declare `Copyright 2000-<build year> Firebird development team and individual contributors`, and also -- like the constants -- a `SPDX-FileComment` (with value _"`The keys and values listed here were obtained from the Firebird sources, which are licensed under the IPL (InterBase Public License) and/or IDPL (Initial Developer Public License), both are variants of the Mozilla Public License version 1.1`"_) should be added to these files to declare the origin and the license of the origin.
 These comments should be automatically added by `MessageExtractor`.
 
 We admit this has a shaky legal foundation, but given this formalizes the current situation which has existed for the past 24 years without complaints, we think this is acceptable.
 
+[#dual-licensing]
 === Dual licensing
 
 Looking at the development history of Jaybird, originally between the https://github.com/FirebirdSQL/jaybird/commit/5e215213f916bc2c46d891da661131e18fb65f14[initial commit (2001-05-09)] and https://github.com/FirebirdSQL/jaybird/commit/70ccaee6[a commit in 2002-08-29], Jaybird was dual-licensed MPL 1.1 and LGPL.
