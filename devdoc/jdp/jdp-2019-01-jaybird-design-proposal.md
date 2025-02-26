@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 SPDX-License-Identifier: LicenseRef-PDL-1.0
 -->
 # jdp-2019-01: Jaybird Design Proposal
@@ -7,7 +7,7 @@ SPDX-License-Identifier: LicenseRef-PDL-1.0
 ## Status
 
 - Published
-- Updated: 2023-05-19
+- Updated: 2025-02-26
 
 ## Type
 
@@ -72,13 +72,29 @@ For example
 
     jdp-2019-01-jaybird-design-proposal.adoc
 
-A JDP should consist of the following sections. The sections _Status_ and _Type_
-are required. The other sections should be considered the preferred structure. 
-Feel free to use a different structure if it makes more sense for a document.
+A JDP should consist of the following sections. The sections _Status_, _Type_ 
+and _License Notice_ are required. The other sections should be considered 
+the preferred structure. Feel free to use a different structure if it makes more
+sense for a document.
 
 JDPs before _jdp-2023-06_ were specified in Markdown, not Asciidoc. They may be
 converted to Asciidoc if and when needed (e.g. large scale changes, or just when
 we feel like it), or remain in Markdown.
+
+At the start of the document, after the title and initial Asciidoc properties, the SPDX information of the author copyright and license should be declared:
+
+<!-- REUSE-IgnoreStart -->
+
+```asciidoc
+= jdp-yyyy-NN: <title>
+
+// SPDX-FileCopyrightText: Copyright <first-year>[-<last-year>] <author-name>
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+```
+
+<!-- REUSE-IgnoreEnd -->
+
+The license is always `LicenseRef-PDL-1.0` (for the Public Documentation License 1.0).
 
 #### Status
 
@@ -153,6 +169,38 @@ should be listed as well.
 Documents consequences of the decision. This includes identifying expected
 breaking changes caused by the decision.
 
+#### License Notice
+
+Contains the Public Documentation License Notice, with the details of the author(s):
+
+In Asciidoc format:
+
+```asciidoc
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-yyyy-NN: <title>`".
+The Initial Writer of the Original Documentation is <author-name>, Copyright © <first-year>[-<last-year>].
+All Rights Reserved.
+(Initial Writer contact(s): <email address, hyperlink, etc>.
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
+```
+
+The commented out part is a template for additional contributors.
+
 ## Consequences
 
 Jaybird Design Proposals will help make the design decisions for Jaybird 
@@ -173,7 +221,7 @@ comply with the terms of this License. A copy of the License is available at
 
 The Original Documentation is "jdp-2019-01: Jaybird Design Proposal".
 The Initial Writer of the Original Documentation is Mark Rotteveel,
-Copyright © 2019-2024. All Rights Reserved. (Initial Writer contact(s):
+Copyright © 2019-2025. All Rights Reserved. (Initial Writer contact(s):
 mark (at) lawinegevaar (dot) nl).
 
 <!--
