@@ -26,8 +26,6 @@ import java.time.LocalTime;
 @SuppressWarnings("RedundantThrows")
 final class FBTimeField extends AbstractWithoutTimeZoneField {
 
-    private static final LocalDate LOCAL_DATE_EPOCH = LocalDate.of(1970, 1, 1);
-
     @NullMarked
     FBTimeField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -51,7 +49,7 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
     @Override
     LocalDateTime getLocalDateTime() throws SQLException {
         LocalTime localTime = getLocalTime();
-        return localTime != null ? localTime.atDate(LOCAL_DATE_EPOCH) : null;
+        return localTime != null ? localTime.atDate(LocalDate.EPOCH) : null;
     }
 
     //--- setXXX methods
