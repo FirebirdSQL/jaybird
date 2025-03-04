@@ -390,6 +390,24 @@ As a result -- at this time -- we make no promises on the support for Firebird 6
 
 Jaybird 7 will -- by default -- not connect to unsupported versions (that is, Firebird 2.5 or older) using the pure Java protocol.
 
+[#reuse-spdx-info]
+=== REUSE SPDX copyright information
+
+Jaybird now includes copyright information complying with the https://reuse.software/[REUSE^] 3.3 specification.
+This can be used to generate an SBOM (Software Bill Of Materials) of the Jaybird sources.
+The project itself will not provide an SBOM, but people interested in that information can generate it themselves using the https://github.com/fsfe/reuse-tool[`reuse` tool^].
+
+The copyright headers in all source files were replaced with https://spdx.dev/[SPDX (System Package Data Exchange)^] information, with actual licenses consolidated in the `LICENSES` folder of the repository.
+We have tried to record copyright of all contributors to files, but due to file renames, moves, and other refactoring, and resulting discontinuities in the history, or contributions committed by someone else, we may have missed some.
+If you find any errors in the recorded copyright information, let us know.
+
+Files that were historically intended to be dual-licensed under LGPL and BSD, but only had a BSD license header, are now explicitly licensed as LGPL and BSD.
+
+As part of this change, project documentation -- Release Notes, FAQ, developer documentation, and the Jaybird Design Proposals -- are now licensed under the Public Documentation License.
+These were previously not explicitly licensed.
+
+For more information, see: https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2025-01-apply-spdx-license-info-and-comply-with-reuse-specification.adoc[jdp-2025-01: Apply SPDX license info and comply with REUSE specification^]
+
 // TODO add major changes
 
 [#other-fixes-and-changes]
