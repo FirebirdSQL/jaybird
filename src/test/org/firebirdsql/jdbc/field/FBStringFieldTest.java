@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright 2002 David Jencks
 // SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
 // SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.field;
 
@@ -126,7 +126,7 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     @Override
     void getBinaryStreamNonNull() throws Exception {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
-        String fromStream = new String(IOUtils.toBytes(field.getBinaryStream(), Integer.MAX_VALUE));
+        String fromStream = new String(field.getBinaryStream().readAllBytes());
 
         assertEquals(TEST_STRING_SHORT, fromStream.trim(), "Binary stream values test failure");
     }
@@ -135,7 +135,7 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     @Override
     void getObject_InputStream() throws Exception {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
-        String fromStream = new String(IOUtils.toBytes(field.getObject(InputStream.class), Integer.MAX_VALUE));
+        String fromStream = new String(field.getObject(InputStream.class).readAllBytes());
 
         assertEquals(TEST_STRING_SHORT, fromStream.trim(), "Binary stream values test failure");
     }
@@ -303,7 +303,7 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     void getCharacterStreamNonNull() throws Exception {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
 
-        String value = IOUtils.toString(field.getCharacterStream(), Integer.MAX_VALUE);
+        String value = IOUtils.toString(field.getCharacterStream(), -1);
         assertEquals(TEST_STRING_SHORT, value, "Unexpected value from getCharacterStream");
     }
 
@@ -312,7 +312,7 @@ class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
     void getObject_Reader() throws Exception {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
 
-        String value = IOUtils.toString(field.getObject(Reader.class), Integer.MAX_VALUE);
+        String value = IOUtils.toString(field.getObject(Reader.class), -1);
         assertEquals(TEST_STRING_SHORT, value, "Unexpected value from getCharacterStream");
     }
 
