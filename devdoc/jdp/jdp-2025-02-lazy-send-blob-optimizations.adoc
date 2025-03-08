@@ -1,0 +1,86 @@
+= jdp-2025-02: Lazy Send Blob Optimizations
+
+// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 5, Jaybird 6, Jaybird 7
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+The Firebird wire protocol -- at least since Firebird 2.1 (protocol 11) -- when `ptype_lazy_send` is negotiated, allows combining a blob open (`op_open_blob`/`op_open_blob2`) with immediately requesting blob info (`op_info_blob`) and/or a segment (`op_get_segment`) with the "`invalid object id`" (`0xFFFF`) as its handle.
+This avoids a round trip to obtain the actual object id.
+
+According to https://github.com/FirebirdSQL/firebird/pull/8307#issuecomment-2460409972[a comment on the ticket], on high latency connections, this could yield an improvement of ~33-49% in transfer speed (presumably for small blobs).
+
+Jaybird always requires `ptype_lazy_send` for protocol version 11 or higher.
+
+Only since Firebird 5.0.2, this optimization is actually used (implemented) in fbclient (see https://github.com/FirebirdSQL/firebird/pull/8307[firebird#8307]).
+This implementation requests both blob info (lengths and type), and a segment of 16,384 bytes.
+This segment is then cached to fulfill the next request(s) for a segment.
+
+A similar optimization should be available for creating blobs (`op_create_blob`/`op_create_blob2`) and put segment (`op_put_segment`), but for API reasons, this is not implemented in fbclient.
+
+The minimum supported Firebird version in Jaybird 5 is Firebird 2.5 (protocol version 12).
+
+== Decision
+
+Given the implementation in Jaybird, and the various ways of getting segments, the solution used in fbclient (cache blob info and a segment of 16,384 bytes on blob open) is not ideal for Jaybird.
+Instead, we'll allow `FbBlob.open()` (or more specifically, `FbWireBlob.open()`) to "`lazily`" open (or create) the blob (mark it open client-side), and only when blob info, put segment, or get segment (may need to check for other operations) is performed, will it actually open the blob server-side (assuming it was lazily opened client-side).
+
+This way, use of `FbBlob` -- including its requirement to open it before use -- can remain unchanged, with only a minor change to `getHandle()` (that it can return `0xFFFF` if it hasn't been opened server-side yet).
+If this can really be achieved, or if additional API changes are needed, will need to be evaluated during implementation and testing.
+
+Although Firebird 2.1 is not supported, we'll implement this for protocol 11 and higher.
+
+== Consequences
+
+Externally, the only visible change should be that `FbBlob.getHandle()` (for `FbWireBlob` implementations) can return `0xFFFF`, and some exceptions that could be thrown from `FbBlob.open()` might now be delayed until requesting blob info, get segment, or put segment.
+(It may turn out more is needed during implementation, but we'll try to avoid unnecessary API changes.)
+
+Internally, the blob implementation will need to use additional states to distinguish the lazy (client-side) open, a pending server-side open (open/create sent but response not yet processed), and server-side open.
+The current simple `boolean` will probably need to be replaced with an enum or similar (e.g. maybe some sealed object hierarchy that also holds the handle id, but that wouldn't be usable with Jaybird 5 given it supports Java 8).
+
+Certain operations need to handle blob open if only lazily opened:
+
+* blob info request
+* various get segment operations
+* various put segment operations
+
+We'll need to investigate closing of output blobs that were only ever opened (created) lazily.
+That is, should we explicitly open it on close, or will using blob id `0` (note: blob id, not blob handle!) to signify an empty blob be good enough.
+
+A cancel of a lazily opened output blob can simply close it client-side.
+
+Close and cancel of a lazily opened blob should probably reset the handle back to zero.
+
+Additionally, we'll need to investigate callers of `FbBlob.getHandle()` and `FbBlob.getBlobId()` for output blobs, to see if there are cases that require a valid ("`real`") blob handle or blob id.
+If so, we may need to provide a method to forcibly open the blob so a valid blob handle or blob id is available.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2025-02: Lazy Send Blob Optimizations`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2025.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
