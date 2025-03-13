@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
@@ -11,7 +11,6 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
@@ -116,10 +115,11 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             } else {
                 bpb = ByteArrayHelper.emptyByteArray();
             }
-            try (LockCloseable ignored = withLock()) {
+            try (var ignored = withLock()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobClosed();
+                clearDeferredException();
 
                 final JnaDatabase db = getDatabase();
                 if (isOutput()) {
@@ -130,11 +130,12 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
                             getJnaHandle(), blobId, (short) bpb.length, bpb);
                 }
                 processStatusVector();
-                setOpen(true);
+                setState(BlobState.OPEN);
                 resetEof();
+                throwAndClearDeferredException();
             }
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
@@ -146,7 +147,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
     @Override
     public byte[] getSegment(int sizeRequested) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             if (sizeRequested <= 0) {
                 throw FbExceptionBuilder.forException(jb_blobGetSegmentNegative)
                         .messageParameter(sizeRequested)
@@ -157,11 +158,12 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             checkBlobOpen();
             ShortByReference actualLength = new ShortByReference();
             ByteBuffer responseBuffer = getSegment0(sizeRequested, actualLength);
+            throwAndClearDeferredException();
             byte[] segment = new byte[actualLength.getValue() & 0xFFFF];
             responseBuffer.get(segment);
             return segment;
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
@@ -183,7 +185,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
     @Override
     protected int get(final byte[] b, final int off, final int len, final int minLen) throws SQLException {
-        try (LockCloseable ignored = withLock())  {
+        try (var ignored = withLock())  {
             validateBufferLength(b, off, len);
             if (len == 0) return 0;
             if (minLen <= 0 || minLen > len ) {
@@ -206,9 +208,10 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
                 segmentBuffer.get(b, off + count, dataLength);
                 count += dataLength;
             }
+            throwAndClearDeferredException();
             return count;
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
@@ -219,7 +222,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
     @Override
     public void put(final byte[] b, final int off, final int len) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             validateBufferLength(b, off, len);
             if (len == 0) {
                 throw FbExceptionBuilder.toException(jb_blobPutSegmentEmpty);
@@ -249,17 +252,19 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
                 processStatusVector();
                 count += segmentLength;
             }
+            throwAndClearDeferredException();
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
 
     @Override
     public void seek(int offset, SeekMode seekMode) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             checkDatabaseAttached();
             checkTransactionActive();
+            checkBlobOpen();
 
             // result is the current position in the blob (see .NET provider source)
             // We ignore the result TODO check if useful; not used in wire protocol either
@@ -267,8 +272,9 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             clientLibrary.isc_seek_blob(statusVector, getJnaHandle(), (short) seekMode.getSeekModeId(), offset,
                     result);
             processStatusVector();
+            throwAndClearDeferredException();
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
@@ -277,20 +283,21 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     public byte[] getBlobInfo(byte[] requestItems, int bufferLength) throws SQLException {
         try {
             final ByteBuffer responseBuffer;
-            try (LockCloseable ignored = withLock()) {
+            try (var ignored = withLock()) {
                 responseBuffer = getByteBuffer(bufferLength);
                 checkDatabaseAttached();
+                checkBlobOpen();
                 clientLibrary.isc_blob_info(statusVector, getJnaHandle(),
                         (short) requestItems.length, requestItems,
                         (short) bufferLength, responseBuffer);
                 processStatusVector();
+                throwAndClearDeferredException();
             }
-
             byte[] responseArr = new byte[bufferLength];
             responseBuffer.get(responseArr);
             return responseArr;
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }

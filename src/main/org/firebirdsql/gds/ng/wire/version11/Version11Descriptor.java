@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version11;
 
@@ -66,13 +66,15 @@ public final class Version11Descriptor extends AbstractProtocolDescriptor implem
     }
 
     @Override
-    public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
-        return new V10OutputBlob(database, transaction, blobParameterBuffer);
+    public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
+            BlobParameterBuffer blobParameterBuffer) {
+        return new V11OutputBlob(database, transaction, blobParameterBuffer);
     }
 
     @Override
-    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) {
-        return new V10InputBlob(database, transaction, blobParameterBuffer, blobId);
+    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction,
+            BlobParameterBuffer blobParameterBuffer, long blobId) {
+        return new V11InputBlob(database, transaction, blobParameterBuffer, blobId);
     }
 
     @Override

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -44,7 +44,7 @@ public abstract class AbstractFbWireInputBlob extends AbstractFbWireBlob {
 
     private SQLException writeNotSupported() {
         SQLException e = FbExceptionBuilder.toNonTransientException(ISCConstants.isc_segstr_no_write);
-        exceptionListenerDispatcher.errorOccurred(e);
+        errorOccurred(e);
         return e;
     }
 

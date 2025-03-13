@@ -408,6 +408,24 @@ These were previously not explicitly licensed.
 
 For more information, see: https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2025-01-apply-spdx-license-info-and-comply-with-reuse-specification.adoc[jdp-2025-01: Apply SPDX license info and comply with REUSE specification^]
 
+[#blob-performance]
+=== Blob performance improvements
+
+[#blob-performance-defer-open]
+==== Deferred blob open
+
+In the pure Java implementation, performance of reading and writing blobs was improved by deferring the server-side opening or creating of a blob until an actual server-side operation (putting or getting a segment, or getting blob info).
+The open or create blob request is pipelined with the subsequent operation, avoiding a round trip to the server.
+This is especially noticeable in connections with high latency.
+
+Artificial testing on local WiFi with small blobs shows around 85% increase in throughput (comparing a 6.0.1-SNAPSHOT against 6.0.0).
+
+This optimization is available for Firebird 2.1 and higher, but formally only supported for Firebird 3.0 and higher.
+
+This optimization was backported to Jaybird 5.0.7 and Jaybird 6.0.1.
+
+For native connections, a similar optimization -- but only for reading blobs -- is available when using a Firebird 5.0.2 or higher fbclient, independent of the Jaybird version.
+
 // TODO add major changes
 
 [#other-fixes-and-changes]

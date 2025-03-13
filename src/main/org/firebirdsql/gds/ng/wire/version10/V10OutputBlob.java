@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -6,7 +6,6 @@ import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
@@ -19,8 +18,10 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
+ * Output {@link org.firebirdsql.gds.ng.wire.FbWireBlob} implementation for the version 10 wire protocol.
+ *
  * @author Mark Rotteveel
- * @since 3.0
+ * @since 3
  */
 public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlob, DatabaseListener {
 
@@ -38,38 +39,29 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
 
     @Override
     public void open() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             checkDatabaseAttached();
             checkTransactionActive();
             checkBlobClosed();
+            clearDeferredException();
 
             if (getBlobId() != FbBlob.NO_BLOB_ID) {
                 throw FbExceptionBuilder.toNonTransientException(isc_segstr_no_op);
             }
 
-            sendOpen(BlobOpenOperation.OUTPUT_BLOB);
-            receiveCreateResponse();
+            sendOpen(BlobOpenOperation.OUTPUT_BLOB, true);
+            receiveOpenResponse();
+            throwAndClearDeferredException();
             // TODO Request information on the blob?
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
-        }
-    }
-
-    private void receiveCreateResponse() throws SQLException {
-        try {
-            final GenericResponse genericResponse = getDatabase().readGenericResponse(null);
-            setHandle(genericResponse.objectHandle());
-            setBlobId(genericResponse.blobId());
-            setOpen(true);
-        } catch (IOException e) {
-            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 
     @Override
     public void put(final byte[] b, final int off, final int len) throws SQLException {
-        try (LockCloseable ignored = withLock())  {
+        try (var ignored = withLock())  {
             validateBufferLength(b, off, len);
             if (len == 0) {
                 throw FbExceptionBuilder.toException(jb_blobPutSegmentEmpty);
@@ -79,8 +71,9 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
             checkBlobOpen();
 
             batchPutSegment(b, off, len);
+            throwAndClearDeferredException();
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }

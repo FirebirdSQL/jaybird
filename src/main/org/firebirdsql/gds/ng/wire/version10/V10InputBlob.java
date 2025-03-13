@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -8,7 +8,6 @@ import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
 
@@ -21,8 +20,10 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
+ * Input {@link org.firebirdsql.gds.ng.wire.FbWireBlob} implementation for the version 10 wire protocol.
+ *
  * @author Mark Rotteveel
- * @since 3.0
+ * @since 3
  */
 public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob, DatabaseListener {
     
@@ -30,8 +31,8 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
 
     // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open() and getMaximumSegmentSize()), find a way to unify this
 
-    public V10InputBlob(FbWireDatabase database, FbWireTransaction transaction,
-                        BlobParameterBuffer blobParameterBuffer, long blobId) {
+    public V10InputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer,
+            long blobId) {
         super(database, transaction, blobParameterBuffer, blobId);
     }
 
@@ -39,28 +40,20 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
 
     @Override
     public void open() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             checkDatabaseAttached();
             checkTransactionActive();
             checkBlobClosed();
+            clearDeferredException();
 
-            sendOpen(BlobOpenOperation.INPUT_BLOB);
+            sendOpen(BlobOpenOperation.INPUT_BLOB, true);
             receiveOpenResponse();
+            resetEof();
+            throwAndClearDeferredException();
             // TODO Request information on the blob?
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
-        }
-    }
-
-    private void receiveOpenResponse() throws SQLException {
-        try {
-            GenericResponse genericResponse = getDatabase().readGenericResponse(null);
-            setHandle(genericResponse.objectHandle());
-            setOpen(true);
-            resetEof();
-        } catch (IOException e) {
-            throw FbExceptionBuilder.ioReadError(e);
         }
     }
 
@@ -73,18 +66,18 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                         .toSQLException();
             }
             final GenericResponse response;
-            try (LockCloseable ignored = withLock()) {
+            try (var ignored = withLock()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobOpen();
 
                 requestGetSegment(sizeRequested);
                 response = receiveGetSegmentResponse();
+                throwAndClearDeferredException();
             }
-
             return extractGetSegmentResponse(response.data());
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
@@ -172,7 +165,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
 
     @Override
     protected int get(final byte[] b, final int off, final int len, final int minLen) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             validateBufferLength(b, off, len);
             if (len == 0) return 0;
             if (minLen <= 0 || minLen > len ) {
@@ -190,10 +183,10 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                 requestGetSegment(sizeRequested);
                 count += extractGetSegmentResponse(b, off + count, sizeRequested);
             }
-
+            throwAndClearDeferredException();
             return count;
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
@@ -270,14 +263,16 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
 
     @Override
     public void seek(int offset, SeekMode seekMode) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             checkDatabaseAttached();
             checkTransactionActive();
+            checkBlobOpen();
 
             sendSeek(offset, seekMode);
             receiveSeekResponse();
+            throwAndClearDeferredException();
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }

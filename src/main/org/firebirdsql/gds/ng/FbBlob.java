@@ -14,20 +14,44 @@ import java.sql.SQLException;
  * All methods defined in this interface are required to notify all {@code SQLException} thrown from the methods
  * defined in this interface.
  * </p>
+ * <p>
+ * Implementations may defer the open or create the blob (meaning it's only open client-side), so the actual open or
+ * create is done when server-side access to the blob is needed. As a result {@link #getBlobId()} and
+ * {@link #getHandle()} may report invalid or unexpected values, see those methods for details.
+ * </p>
  *
  * @author Mark Rotteveel
  * @since 3.0
  */
 public interface FbBlob extends ExceptionListenable, AutoCloseable {
 
+    /**
+     * No blob id
+     *
+     * @see #getBlobId()
+     */
     long NO_BLOB_ID = 0;
 
     /**
+     * Returns the blob id.
+     * <p>
+     * For output blobs, this will return {@link #NO_BLOB_ID} ({@code 0L}) if the blob wasn't opened yet, or if the blob
+     * is deferred opened (client-side only). The value {@link #NO_BLOB_ID} is technically invalid, but Firebird will
+     * handle it as an empty blob (both for input and output).
+     * </p>
+     *
      * @return The Firebird blob id
      */
     long getBlobId();
 
     /**
+     * Returns the blob handle identifier.
+     * <p>
+     * If the blob wasn't opened yet, this will return {@code 0}. If the blob was deferred opened (client-side only),
+     * this will return an invalid blob handle value (e.g. {@code 0xFFFF}, though this value is potentially
+     * protocol/implementation specific).
+     * </p>
+     *
      * @return The Firebird blob handle identifier
      */
     int getHandle();
