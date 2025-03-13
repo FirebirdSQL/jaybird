@@ -63,6 +63,12 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
     }
 
     @Override
+    protected void processOpenResponse(GenericResponse genericResponse) throws SQLException {
+        setBlobId(genericResponse.getBlobId());
+        super.processOpenResponse(genericResponse);
+    }
+
+    @Override
     public final boolean isOutput() {
         return true;
     }
@@ -72,7 +78,7 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
         try {
             throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
@@ -83,7 +89,7 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
             // This assumes seeks are not (nor in the future) supported on output blobs
             throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }

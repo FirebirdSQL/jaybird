@@ -91,13 +91,15 @@ public final class Version11Descriptor extends AbstractProtocolDescriptor implem
     }
 
     @Override
-    public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
-        return new V10OutputBlob(database, transaction, blobParameterBuffer);
+    public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
+            BlobParameterBuffer blobParameterBuffer) {
+        return new V11OutputBlob(database, transaction, blobParameterBuffer);
     }
 
     @Override
-    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) {
-        return new V10InputBlob(database, transaction, blobParameterBuffer, blobId);
+    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction,
+            BlobParameterBuffer blobParameterBuffer, long blobId) {
+        return new V11InputBlob(database, transaction, blobParameterBuffer, blobId);
     }
 
     @Override

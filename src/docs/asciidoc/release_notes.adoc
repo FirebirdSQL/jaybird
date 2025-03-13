@@ -29,6 +29,15 @@ Changes per Jaybird 5 release.
 See also <<whats-new-in-jaybird-5>>.
 For known issues, consult <<known-issues>>.
 
+[#jaybird-5-0-7-changelog]
+=== Jaybird 5.0.7
+
+The following has been changed or fixed since Jaybird 5.0.6:
+
+* Improvement: backported deferred blob open optimization from Jaybird 7 (https://github.com/FirebirdSQL/jaybird/issues/841[#841])
++
+See also <<blob-performance-defer-open>>.
+
 [#jaybird-5-0-6-changelog]
 === Jaybird 5.0.6
 
@@ -751,6 +760,24 @@ Create an instance with `FBTableStatisticsManager#of(java.sql.Connection)` -- th
 This is an experimental feature.
 Its API may change in point releases, or it may be removed or replaced entirely in a future major release.
 ====
+
+[#blob-performance]
+=== Blob performance improvements
+
+[#blob-performance-defer-open]
+==== Deferred blob open
+
+Added in: Jaybird 5.0.7, backported from Jaybird 7
+
+In the pure Java implementation, performance of reading and writing blobs was improved by deferring the server-side opening or creating of a blob until an actual server-side operation (putting or getting a segment, or getting blob info).
+The open or create blob request is pipelined with the subsequent operation, avoiding a round trip to the server.
+This is especially noticeable in connections with high latency.
+
+Artificial testing on local WiFi with small blobs shows around 85% increase in throughput (comparing a 6.0.1-SNAPSHOT against 6.0.0).
+
+This optimization is available for Firebird 2.1 and higher, but formally only supported for Firebird 2.5 and higher.
+
+For native connections, a similar optimization -- but only for reading blobs -- is available when using a Firebird 5.0.2 or higher fbclient, independent of the Jaybird version.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

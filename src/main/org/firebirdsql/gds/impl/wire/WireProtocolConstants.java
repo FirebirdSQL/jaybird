@@ -31,6 +31,14 @@ package org.firebirdsql.gds.impl.wire;
  */
 public interface WireProtocolConstants {
 
+    /**
+     * Object handle id that can be used to refer to a just created server-side object (for protocol versions supporting
+     * {@link #ptype_lazy_send}).
+     * <p>
+     * This can be used to pipeline the creation of an object with the subsequent use of that object without waiting on
+     * the server response with the actual handle id.
+     * </p>
+     */
     int INVALID_OBJECT = 0xFFFF;
 
     /* Operation (packet) types */

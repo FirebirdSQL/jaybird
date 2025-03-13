@@ -33,7 +33,7 @@ public abstract class AbstractFbWireInputBlob extends AbstractFbWireBlob {
     private final long blobId;
 
     protected AbstractFbWireInputBlob(FbWireDatabase database, FbWireTransaction transaction,
-                                      BlobParameterBuffer blobParameterBuffer, long blobId) {
+            BlobParameterBuffer blobParameterBuffer, long blobId) {
         super(database, transaction, blobParameterBuffer);
         this.blobId = blobId;
     }
@@ -53,7 +53,7 @@ public abstract class AbstractFbWireInputBlob extends AbstractFbWireBlob {
         try {
             throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_write).toSQLException();
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }

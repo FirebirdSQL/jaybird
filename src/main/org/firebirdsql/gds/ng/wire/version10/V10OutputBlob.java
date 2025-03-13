@@ -35,8 +35,10 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentTooLong;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.0
+ * Output {@link org.firebirdsql.gds.ng.wire.FbWireBlob} implementation for the version 10 wire protocol.
+ *
+ * @author Mark Rotteveel
+ * @since 3
  */
 public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlob, DatabaseListener {
 
@@ -55,38 +57,18 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
             checkDatabaseAttached();
             checkTransactionActive();
             checkBlobClosed();
+            clearDeferredException();
 
             if (getBlobId() != FbBlob.NO_BLOB_ID) {
                 throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
             }
 
-            final FbWireDatabase database = getDatabase();
-            try {
-                final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
-                if (blobParameterBuffer == null) {
-                    xdrOut.writeInt(op_create_blob);
-                } else {
-                    xdrOut.writeInt(op_create_blob2);
-                    xdrOut.writeTyped(blobParameterBuffer);
-                }
-                xdrOut.writeInt(getTransaction().getHandle());
-                xdrOut.writeLong(FbBlob.NO_BLOB_ID);
-                xdrOut.flush();
-            } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
-            }
-            try {
-                final GenericResponse genericResponse = database.readGenericResponse(null);
-                setHandle(genericResponse.getObjectHandle());
-                setBlobId(genericResponse.getBlobId());
-                setOpen(true);
-            } catch (IOException e) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
-            }
+            sendOpen(BlobOpenOperation.OUTPUT_BLOB, true);
+            receiveOpenResponse();
+            throwAndClearDeferredException();
             // TODO Request information on the blob?
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
@@ -106,9 +88,8 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
                 checkTransactionActive();
                 checkBlobOpen();
 
-                final FbWireDatabase database = getDatabase();
                 try {
-                    final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
+                    final XdrOutputStream xdrOut = getXdrOut();
                     xdrOut.writeInt(op_put_segment);
                     xdrOut.writeInt(getHandle());
                     xdrOut.writeInt(segment.length);
@@ -118,13 +99,14 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
                 }
                 try {
-                    database.readResponse(null);
+                    getDatabase().readResponse(null);
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
                 }
+                throwAndClearDeferredException();
             }
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
