@@ -33,6 +33,7 @@ import java.util.Objects;
 
 import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.TRACE;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Base class for low-level blob operations.
@@ -49,8 +50,9 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     private final int maximumSegmentSize;
     private FbTransaction transaction;
     private FbDatabase database;
-    private boolean open;
+    private BlobState state = BlobState.NEW;
     private boolean eof;
+    private SQLException deferredException;
 
     protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
         this.database = database;
@@ -62,16 +64,16 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public final boolean isOpen() {
-        // NOTE: Class implementation references field open directly under lock, when implementation changes, account for that
-        try (LockCloseable ignored = withLock()) {
-            return open;
+        // NOTE: Class implementation references field state directly under lock, when implementation changes, account for that
+        try (var ignored = withLock()) {
+            return state.isOpen();
         }
     }
 
     @Override
     public final boolean isEof() {
-        try (LockCloseable ignored = withLock()) {
-            return eof || !open;
+        try (var ignored = withLock()) {
+            return eof || state.isClosed();
         }
     }
 
@@ -92,49 +94,63 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     /**
      * Resets the eof state of the blob to false (not eof).
      * <p>
-     * This method should only be called by sub-classes of this class.
+     * This method should only be called by subclasses of this class.
      * </p>
      */
     protected final void resetEof() {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             eof = false;
         }
     }
 
     /**
-     * Sets the open state of the blob to the specified value.
+     * Sets the state of the blob to the specified value.
      * <p>
-     * This method should only be called by sub-classes of this class.
+     * This method should only be called by subclasses of this class.
      * </p>
      *
-     * @param open
-     *         new value of open
+     * @param newState
+     *         new value of state
+     * @since 5.0.7
      */
-    protected final void setOpen(boolean open) {
+    protected final void setState(BlobState newState) {
         // TODO Verify reopen behaviour, especially given close() shuts down exceptionListenerDispatcher
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
+            final BlobState previousState = this.state;
             final FbDatabase database = this.database;
             if (database != null) {
-                if (open) {
-                    database.addWeakDatabaseListener(this);
-                } else {
+                if (newState.isClosed()) {
                     database.removeDatabaseListener(this);
+                } else if (previousState.isClosed()) {
+                    database.addWeakDatabaseListener(this);
                 }
             }
-            if (!open) {
+            if (newState.isClosed()) {
                 final FbTransaction transaction = this.transaction;
                 if (transaction != null) {
                     transaction.removeTransactionListener(this);
                 }
             }
-            this.open = open;
+            this.state = newState;
+        }
+    }
+
+    /**
+     * The current blob state.
+     *
+     * @return current blob state
+     * @since 5.0.7
+     */
+    protected final BlobState getState() {
+        try (var ignored = withLock()) {
+            return state;
         }
     }
 
     @Override
     public final void close() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            if (!open) return;
+        try (var ignored = withLock()) {
+            if (state.isClosed()) return;
             try {
                 if (isEndingTransaction()) {
                     releaseResources();
@@ -144,10 +160,11 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
                     closeImpl();
                 }
             } finally {
-                setOpen(false);
+                setState(BlobState.CLOSED);
             }
+            throwAndClearDeferredException();
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         } finally {
             exceptionListenerDispatcher.shutdown();
@@ -162,7 +179,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public final void cancel() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             try {
                 if (isEndingTransaction()) {
                     releaseResources();
@@ -172,10 +189,11 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
                     cancelImpl();
                 }
             } finally {
-                setOpen(false);
+                setState(BlobState.CLOSED);
             }
+            throwAndClearDeferredException();
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
@@ -202,7 +220,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         if (minFillFactor <= 0f || minFillFactor > 1f || Float.isNaN(minFillFactor)) {
             var invalidFloatFactor = new SQLNonTransientException(
                     "minFillFactor out of range, must be 0 < minFillFactor <= 1, was: " + minFillFactor);
-            exceptionListenerDispatcher.errorOccurred(invalidFloatFactor);
+            errorOccurred(invalidFloatFactor);
             throw invalidFloatFactor;
         }
         return get(b, off, len, len != 0 ? Math.max(1, (int) (minFillFactor * len)) : 0);
@@ -233,6 +251,71 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     protected abstract void releaseResources();
 
     /**
+     * Registers an exception as a deferred exception.
+     * <p>
+     * This should only be used for exceptions from deferred response that need to be thrown.
+     * </p>
+     *
+     * @param deferredException
+     *         deferred exception
+     * @since 5.0.7
+     */
+    protected final void registerDeferredException(SQLException deferredException) {
+        requireNonNull(deferredException, "deferredException");
+        SQLException current = this.deferredException;
+        if (current == null) {
+            this.deferredException = deferredException;
+        } else {
+            current.setNextException(deferredException);
+        }
+    }
+
+    /**
+     * Clears the deferred exception.
+     *
+     * @since 5.0.7
+     */
+    protected final void clearDeferredException() {
+        this.deferredException = null;
+    }
+
+    /**
+     * If a deferred exception is registered it is cleared and thrown.
+     *
+     * @throws SQLException
+     *         the current deferred exception, if any
+     * @since 5.0.7
+     */
+    protected final void throwAndClearDeferredException() throws SQLException {
+        SQLException current = this.deferredException;
+        if (current != null) {
+            clearDeferredException();
+            throw current;
+        }
+    }
+
+    /**
+     * If a deferred exception is registered, it is cleared and set as a next exception on {@code target}.
+     *
+     * @param target
+     *         the target exception to add the deferred exception to (not {@code null})
+     * @throws NullPointerException
+     *         if there is a deferred exception, and {@code target == null}
+     * @since 5.0.7
+     */
+    protected final void transferDeferredExceptionTo(SQLException target) {
+        try (var ignored = withLock()) {
+            SQLException current = this.deferredException;
+            if (current != null) {
+                clearDeferredException();
+                if (current != target) {
+                    requireNonNull(target, "target").setNextException(current);
+                }
+            }
+        }
+    }
+
+    /**
      * @see FbAttachment#withLock() 
      */
     protected final LockCloseable withLock() {
@@ -260,9 +343,9 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             }
         }
         case COMMITTED, ROLLED_BACK -> {
-            try (LockCloseable ignored = withLock()) {
+            try (var ignored = withLock()) {
                 clearTransaction();
-                setOpen(false);
+                setState(BlobState.CLOSED);
                 releaseResources();
             }
         }
@@ -279,8 +362,8 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             database.removeDatabaseListener(this);
             return;
         }
-        try (LockCloseable ignored = withLock()) {
-            if (open) {
+        try (var ignored = withLock()) {
+            if (state.isOpen()) {
                 log.log(TRACE, "blob with blobId {0} still open on database detach", getBlobId());
                 try {
                     close();
@@ -293,9 +376,9 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public void detached(FbDatabase database) {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             if (this.database == database) {
-                open = false;
+                state = BlobState.CLOSED;
                 clearDatabase();
                 clearTransaction();
                 releaseResources();
@@ -337,8 +420,13 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     /**
+     * Checks if the blob is open.
+     * <p>
+     * NOTE: Subclasses may perform additional side effects, like queuing a server-side open for a deferred open blob.
+     * </p>
+     *
      * @throws SQLException
-     *         When the blob is closed.
+     *         when the blob is closed.
      */
     protected void checkBlobOpen() throws SQLException {
         if (!isOpen()) {
@@ -388,24 +476,38 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         try {
             return infoProcessor.process(blobInfo);
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
     }
 
     @Override
     public long length() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             checkDatabaseAttached();
-            if (isOutput() && getBlobId() == FbBlob.NO_BLOB_ID) {
+            if (isOutput() && getBlobId() == FbBlob.NO_BLOB_ID && !getState().isDeferredOpen()) {
                 throw FbExceptionBuilder.toException(ISCConstants.isc_bad_segstr_id);
             }
             BlobLengthProcessor blobLengthProcessor = createBlobLengthProcessor();
             return getBlobInfo(blobLengthProcessor.getBlobLengthItems(), 20, blobLengthProcessor);
         } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
+            errorOccurred(e);
             throw e;
         }
+    }
+
+    /**
+     * Notifies {@link ExceptionListenerDispatcher#errorOccurred(SQLException)}.
+     * <p>
+     * If there is a registered deferred exception, it is set as a next exception on {@code e} before notification.
+     * </p>
+     *
+     * @param e
+     *         exception to notify to exception listeners
+     */
+    protected final void errorOccurred(SQLException e) {
+        transferDeferredExceptionTo(e);
+        exceptionListenerDispatcher.errorOccurred(e);
     }
 
     @Override
@@ -484,6 +586,68 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         } catch (IndexOutOfBoundsException e) {
             throw new SQLNonTransientException(e.toString(), SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
         }
+    }
+
+    /**
+     * State of the blob.
+     *
+     * @since 5.0.7
+     */
+    protected enum BlobState {
+        /**
+         * Blob is new and not yet opened.
+         */
+        NEW(false, false),
+        /**
+         * Blob is deferred open, the open request is delayed (only client-side open).
+         */
+        DELAYED_OPEN(true, true),
+        /**
+         * Blob is deferred open, and open request is pending (already sent or in send buffer, and response not yet
+         * processed).
+         */
+        PENDING_OPEN(true, true),
+        /**
+         * Blob is open client-side and server-side.
+         */
+        OPEN(true, false),
+        /**
+         * Blob is closed.
+         */
+        CLOSED(false, false),
+        ;
+
+        private final boolean open;
+        private final boolean deferredOpen;
+
+        BlobState(boolean open, boolean deferredOpen) {
+            assert !deferredOpen || open : "open must be true when deferredOpen is true";
+            this.open = open;
+            this.deferredOpen = deferredOpen;
+        }
+
+        /**
+         * @return {@code true} if this state is an open blob
+         */
+        public final boolean isOpen() {
+            return open;
+        }
+
+        /**
+         * @return {@code true} if this state is a closed blob (including not yet opened)
+         */
+        public final boolean isClosed() {
+            return !open;
+        }
+
+        /**
+         * @return {@code true} if this state is a deferred state (i.e. the {@link #DELAYED_OPEN} and
+         * {@link #PENDING_OPEN} states)
+         */
+        public final boolean isDeferredOpen() {
+            return deferredOpen;
+        }
+
     }
 
 }

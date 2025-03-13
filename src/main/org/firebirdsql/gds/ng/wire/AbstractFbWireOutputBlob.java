@@ -36,7 +36,7 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
     private long blobId;
 
     protected AbstractFbWireOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
-                                       BlobParameterBuffer blobParameterBuffer) {
+            BlobParameterBuffer blobParameterBuffer) {
         super(database, transaction, blobParameterBuffer);
     }
 
@@ -63,6 +63,12 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
     }
 
     @Override
+    protected void processOpenResponse(GenericResponse genericResponse) throws SQLException {
+        setBlobId(genericResponse.blobId());
+        super.processOpenResponse(genericResponse);
+    }
+
+    @Override
     public final boolean isOutput() {
         return true;
     }
@@ -74,7 +80,7 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
 
     private SQLException readNotSupported() {
         SQLException e = FbExceptionBuilder.toNonTransientException(ISCConstants.isc_segstr_no_read);
-        exceptionListenerDispatcher.errorOccurred(e);
+        errorOccurred(e);
         return e;
     }
 

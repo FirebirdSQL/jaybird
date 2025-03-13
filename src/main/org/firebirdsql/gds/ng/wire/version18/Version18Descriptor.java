@@ -30,10 +30,10 @@ import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.gds.ng.wire.version10.V10AsynchronousChannel;
-import org.firebirdsql.gds.ng.wire.version10.V10InputBlob;
-import org.firebirdsql.gds.ng.wire.version10.V10OutputBlob;
 import org.firebirdsql.gds.ng.wire.version10.V10Service;
 import org.firebirdsql.gds.ng.wire.version10.V10Transaction;
+import org.firebirdsql.gds.ng.wire.version11.V11InputBlob;
+import org.firebirdsql.gds.ng.wire.version11.V11OutputBlob;
 import org.firebirdsql.gds.ng.wire.version13.V13ParameterConverter;
 
 /**
@@ -91,13 +91,13 @@ public final class Version18Descriptor extends AbstractProtocolDescriptor implem
     @Override
     public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
             BlobParameterBuffer blobParameterBuffer) {
-        return new V10OutputBlob(database, transaction, blobParameterBuffer);
+        return new V11OutputBlob(database, transaction, blobParameterBuffer);
     }
 
     @Override
     public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction,
             BlobParameterBuffer blobParameterBuffer, long blobId) {
-        return new V10InputBlob(database, transaction, blobParameterBuffer, blobId);
+        return new V11InputBlob(database, transaction, blobParameterBuffer, blobId);
     }
 
     @Override
