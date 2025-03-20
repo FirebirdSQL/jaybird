@@ -1,0 +1,111 @@
+= jdp-2025-03: Implement Protocol 19
+
+// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 5, Jaybird 6, Jaybird 7
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+Firebird 5.0.3 introduces protocol version 19, which will provide a significant performance improvement for small blobs.
+This improvement is achieved by sending small blobs inline during the response to cursor fetch, removing the need to explicitly open and request the blobs one by one.
+
+Overview of protocol changes:
+
+* The upper limit for inline blob length is 65535 bytes (0xFFFF);
+this includes segment length(s).
+* `op_execute`/`op_execute2` has an extra (unsigned) int `p_sqldata_inline_blob_size` with the requested inline blob size sent immediately after `p_sqldata_cursor_flags`
+* We don't cover the changes for `op_exec_immediate2` as Jaybird doesn't implement it
+* The response to `op_execute2` will have zero or more `op_inline_blob` (114) responses before the `op_sql_response` packet
+* The response to `op_fetch` will have zero or more `op_inline_blob` (114) responses before each `op_fetch_response`
+* The `op_line_blob` response is the `P_INLINE_BLOB` message with the following payload:
+** `p_tran_id` int (formally short): transaction handle
+** `p_blob_id` long: blob id
+** `p_blob_info` buffer: blob info with (`isc_info_blob_num_segments`, `isc_info_blob_max_segment`, `isc_info_blob_total_length`, `isc_info_blob_type`, `isc_info_end`)
+** `p_blob_data` buffer: blob data (including segment lengths!)
+* Two DPB items were added, `isc_dpb_max_blob_cache_size` (159) and `isc_dpb_max_inline_blob_size` (160), which are used to configure the client.
+
+The JDBC implementation in Jaybird requests blobs with a blob parameter buffer that should match the "`normal`" blob, but API-wise on the `FbDatabase` side, it could be anything.
+
+== Decision
+
+As Jaybird 5 is the "`long-term support`" version for Java 8, and this is a considerable improvement, implementation of protocol version 19 will be done in Jaybird 5, Jaybird 6, and Jaybird 7.
+
+=== Decision details
+
+* Two connection properties, `maxBlobCacheSize` and `maxInlineBlobSize`, are added and associated with their respective DPB items.
+That way the implementation will also support configuring inline blobs for native connections (when using fbclient 5.0.3 or higher).
+** If `maxInlineBlobSize` is not explicitly set, it will use a default of 64 KiB for pure Java connections;
+for native connections, it will use the fbclient default (currently also 64 KiB). +
+** Setting `maxInlineBlobSize` to `0` will disable inline blobs
+** If `maxBlobCacheSize` is not explicit set, it will use a default of 10 MiB for pure Java connections;
+for native connections, it will use the fbclient default (currently also 10 MiB).
+** Setting `maxBlobCacheSize` to `0` will *not* disable inline blobs.
+* The received inline blobs will be registered on the `FbWireDatabase` instance in a blob cache, to be returned from `createBlobForInput` as an inline blob instance implementing `FbWireBlob`.
+** The blob cache tracks memory use based on the blob length and will hold the blob data *without* segment lengths.
+If the blob cache exceeds the `maxInlineBlobSize`, the inline blob will be thrown away.
+** Once requested, the blob will be removed from the cache (i.e. a subsequent call to `createBlobForInput` for the same blob id will open a server-side blob).
+** If the transaction associated with the blob is committed or rolled back (when `COMMITTED` or `ROLLED_BACK` is notified), all blobs of that transaction are removed from the cache.
+
+=== Pending decisions
+
+The following needs to be investigated in more detail before a final decision can be made.
+
+* The local blob may need to be able to open a server-side blob for info requests, or explicitly throw an exception for those cases.
+* We may need some checks on the arguments of the BPB and/or `BlobConfig` to ensure it is suitable to return the local blob, or if a server-side blob needs to be opened, check for a subtype (not available in information items), and possibly the charset id requested.
++
+For example, currently Jaybird will set `isc_bpb_source_type` and `isc_bpb_target_type` to the subtype of the field, and for subtype `TEXT` `isc_bpb_target_interp` to the charset id of the field.
+We could assume that if source_type and target_type have the same value, we can use the cached inline blob.
+* Alternative for previous, there needs to be some mechanism so the caller can signal that the cache *should not* be used.
++
+This is probably too complex and will never actually be used.
+* Alternative for previous, there needs to be some mechanism so the caller can signal that the cache *should* be used.
++
+This is probably too complex, and would only get used by Jaybird itself.
+** A more
+
+=== Rejected decisions
+
+The following decisions were considered, but rejected:
+
+* Make `maxInlineBlobSize` default to `blobBufferSize` for pure Java connections.
++
+Using the same default as fbclient will probably result in less surprises for users.
+It also prevents overloading the meaning of `blobBufferSize`.
+* Make `maxBlobCacheSize` set to `0` disable inline blobs as well.
++
+Having a single property control enabling and disabling inline blobs is simpler.
+
+== Consequences
+
+A version 19 protocol implementation will be added.
+Inline blobs will be used by default when connecting to Firebird 5.0.3 or higher, but can be disabled by setting `maxInlineBlobSize` to `0`.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2025-03: Implement Protocol 19`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2025.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
