@@ -40,6 +40,11 @@ The following was fixed or changed since Jaybird 6.0.0:
 * Improvement: backported deferred blob open optimization from Jaybird 7 (https://github.com/FirebirdSQL/jaybird/issues/842[#842])
 +
 See also <<blob-performance-defer-open>>.
+* Fixed: `NullPointerException` in `getGeneratedKeys()` with blob columns after (auto)commit (https://github.com/FirebirdSQL/jaybird/issues/846[#846])
++
+As part of this fix, there was an incompatible change in the internal GDS-ng API.
+Various methods and constructors involved in blob handle creation now throw a `SQLException` if the database is not attached or the transaction is null or not active.
+See also <<breaking-changes-internal-api-6-0-1>>.
 
 === Jaybird 6.0.0
 
@@ -1929,6 +1934,21 @@ replacement is `new SQLExceptionChainBuilder().append(exception)`
 The `/isc_error_msg.properties` and `/isc_error_sqlstates.properties` resources have been removed.
 Their replacements are the `/org/firebirdsql/firebird_N_error_msg.properties` and `/org/firebirdsql/firebird_N_sql_states.properties` resources, where _N_ is the facility code of the error.
 This allows us to avoid loading messages from facilities which are not actually used.
+
+[#breaking-changes-internal-api-6-0-1]
+==== Breaking changes internal API for 6.0.1
+
+Bug fixes in Jaybird 6.0.1 introduced the following breaking changes in the GDS-ng API and its implementations.
+As this is an internal API, our policy allows breaking changes in point releases.
+This should only affect maintainers of Jaybird forks, or people using the internal API directly.
+
+* `FbDatabase`
+** `createInputBlob` and `createOutputBlob` now throw `SQLException`
+* `ProtocolDescriptor`
+** `createInputBlob` and `createOutputBlob` now throw `SQLException`
+* `AbstractFbWireBlob` and subclasses
+** Constructors now throw `SQLException` if the provided database is null or not attached, or the provided transaction is null or not active.
+Previously, passing in a null transaction would result in a `NullPointerException`.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
