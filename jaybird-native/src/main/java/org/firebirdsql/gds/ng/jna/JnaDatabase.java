@@ -298,14 +298,16 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     }
 
     @Override
-    public FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
+    public FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer)
+            throws SQLException {
         final JnaBlob jnaBlob = new JnaBlob(this, (JnaTransaction) transaction, blobParameterBuffer);
         jnaBlob.addExceptionListener(exceptionListenerDispatcher);
         return jnaBlob;
     }
 
     @Override
-    public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) {
+    public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId)
+            throws SQLException {
         final JnaBlob jnaBlob = new JnaBlob(this, (JnaTransaction) transaction, blobParameterBuffer, blobId);
         jnaBlob.addExceptionListener(exceptionListenerDispatcher);
         return jnaBlob;

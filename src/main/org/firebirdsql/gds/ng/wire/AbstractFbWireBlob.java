@@ -45,7 +45,7 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
     private int blobHandle;
 
     protected AbstractFbWireBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer) {
+            BlobParameterBuffer blobParameterBuffer) throws SQLException {
         super(database, transaction, blobParameterBuffer);
     }
 

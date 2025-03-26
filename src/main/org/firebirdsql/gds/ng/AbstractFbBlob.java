@@ -54,9 +54,12 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     private boolean eof;
     private SQLException deferredException;
 
-    protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
+    protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, BlobParameterBuffer blobParameterBuffer)
+            throws SQLException {
         this.database = database;
         this.transaction = transaction;
+        checkDatabaseAttached();
+        checkTransactionActive();
         this.blobParameterBuffer = blobParameterBuffer;
         maximumSegmentSize = maximumSegmentSize(database);
         transaction.addWeakTransactionListener(this);
@@ -402,7 +405,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     /**
      * @throws java.sql.SQLException
-     *         When no transaction is set, or the transaction state is not {@link TransactionState#ACTIVE}
+     *         when no transaction is set, or the transaction state is not {@link TransactionState#ACTIVE}
      */
     protected final void checkTransactionActive() throws SQLException {
         TransactionHelper.checkTransactionActive(getTransaction(), ISCConstants.isc_segstr_no_trans);
@@ -410,9 +413,9 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     /**
      * @throws SQLException
-     *         When no database is set, or the database is not attached
+     *         when no database is set, or the database is not attached
      */
-    protected void checkDatabaseAttached() throws SQLException {
+    protected final void checkDatabaseAttached() throws SQLException {
         FbDatabase database = this.database;
         if (database == null || !database.isAttached()) {
             throw FbExceptionBuilder.toNonTransientException(ISCConstants.isc_segstr_wrong_db);

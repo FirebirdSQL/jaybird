@@ -181,9 +181,11 @@ public interface ProtocolDescriptor {
      * @param blobParameterBuffer
      *         Blob Parameter Buffer
      * @return FbWireBlob implementation
+     * @throws SQLException
+     *         if the database is not attached or the transaction is not active
      */
     FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer);
+            BlobParameterBuffer blobParameterBuffer) throws SQLException;
 
     /**
      * Create an input {@link FbWireBlob} implementation for this protocol version.
@@ -197,9 +199,11 @@ public interface ProtocolDescriptor {
      * @param blobId
      *         Blob Id (must be non-zero for input blob)
      * @return FbWireBlob implementation
+     * @throws SQLException
+     *         if the database is not attached or the transaction is not active
      */
     FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer, long blobId);
+            BlobParameterBuffer blobParameterBuffer, long blobId) throws SQLException;
 
     /**
      * Create a disconnected asynchronous channel.

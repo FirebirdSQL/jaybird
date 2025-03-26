@@ -186,7 +186,8 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     @Override
-    public final FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
+    public final FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer)
+            throws SQLException {
         final FbWireBlob outputBlob =
                 protocolDescriptor.createOutputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer);
         outputBlob.addExceptionListener(exceptionListenerDispatcher);
@@ -195,7 +196,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
 
     @Override
     public final FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer,
-            long blobId) {
+            long blobId) throws SQLException {
         final FbWireBlob inputBlob =
                 protocolDescriptor.createInputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer, blobId);
         inputBlob.addExceptionListener(exceptionListenerDispatcher);

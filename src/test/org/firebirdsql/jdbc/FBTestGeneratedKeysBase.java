@@ -48,30 +48,32 @@ abstract class FBTestGeneratedKeysBase {
                     "Test requires support for INSERT ... RETURNING ...")
             .build();
 
-    //@formatter:off
-    private static final String CREATE_TABLE = "CREATE TABLE TABLE_WITH_TRIGGER (\n"
-                + " ID Integer NOT NULL,\n"
-                + " TEXT Varchar(200),\n"
-                + " \"quote_column\" INTEGER DEFAULT 2,\n"
-                + " CONSTRAINT PK_TABLE_WITH_TRIGGER_1 PRIMARY KEY (ID)\n"
-                + ")";
+    private static final String CREATE_TABLE = """
+            CREATE TABLE TABLE_WITH_TRIGGER (
+             ID Integer NOT NULL,
+             TEXT Varchar(200),
+             "quote_column" INTEGER DEFAULT 2,
+             CONSTRAINT PK_TABLE_WITH_TRIGGER_1 PRIMARY KEY (ID)
+            )""";
     private static final String CREATE_SEQUENCE = "CREATE GENERATOR GEN_TABLE_WITH_TRIGGER_ID";
     private static final String INIT_SEQUENCE = "SET GENERATOR GEN_TABLE_WITH_TRIGGER_ID TO 512";
-    private static final String CREATE_TRIGGER = "CREATE TRIGGER TABLE_WITH_TRIGGER_BI FOR TABLE_WITH_TRIGGER ACTIVE\n" +
-        		"BEFORE INSERT POSITION 0\n" +
-        		"AS\n" +
-        		"DECLARE VARIABLE tmp DECIMAL(18,0);\n" +
-        		"BEGIN\n" +
-        		"  IF (NEW.ID IS NULL) THEN\n" +
-        		"    NEW.ID = GEN_ID(GEN_TABLE_WITH_TRIGGER_ID, 1);\n" +
-        		"  ELSE\n" +
-        		"  BEGIN\n" +
-        		"    tmp = GEN_ID(GEN_TABLE_WITH_TRIGGER_ID, 0);\n" +
-        		"    if (tmp < new.ID) then\n" +
-        		"      tmp = GEN_ID(GEN_TABLE_WITH_TRIGGER_ID, new.ID-tmp);\n" +
-        		"  END\n" +
-        		"END";
-    //@formatter:on
+    private static final String CREATE_TRIGGER = """
+            CREATE TRIGGER TABLE_WITH_TRIGGER_BI FOR TABLE_WITH_TRIGGER ACTIVE
+            BEFORE INSERT POSITION 0
+            AS
+            DECLARE VARIABLE tmp DECIMAL(18,0);
+            BEGIN
+              IF (NEW.ID IS NULL) THEN
+                NEW.ID = GEN_ID(GEN_TABLE_WITH_TRIGGER_ID, 1);
+              ELSE
+              BEGIN
+                tmp = GEN_ID(GEN_TABLE_WITH_TRIGGER_ID, 0);
+                if (tmp < new.ID) then
+                  tmp = GEN_ID(GEN_TABLE_WITH_TRIGGER_ID, new.ID-tmp);
+              END
+            END""";
+    static final String ADD_BLOB_COLUMN = "alter table TABLE_WITH_TRIGGER add BLOB_COLUMN blob sub_type text";
+    static final String DROP_BLOB_COLUMN = "alter table TABLE_WITH_TRIGGER drop BLOB_COLUMN";
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(

@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jaybird.parser.LocalStatementType;
@@ -40,6 +41,7 @@ import java.util.regex.Pattern;
 import static java.lang.String.format;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.util.Collections.emptyList;
+import static org.firebirdsql.gds.ISCConstants.SQL_BLOB;
 import static org.firebirdsql.jaybird.parser.LocalStatementClass.TRANSACTION_BOUNDARY;
 import static org.firebirdsql.jdbc.SQLStateConstants.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
@@ -432,7 +434,8 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     public ResultSet getGeneratedKeys() throws SQLException {
         checkValidity();
         if (isGeneratedKeyQuery()) {
-            return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, resultSetListener, true);
+            // Blob retrieval was already done in internalExecute(RowValue)
+            return new FBResultSet(fbStatement.getRowDescriptor(), connection, specialResult, null, false);
         }
         return new FBResultSet(fbStatement.emptyRowDescriptor(), emptyList());
     }
@@ -857,9 +860,19 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         try {
             fbStatement.execute(rowValue);
             boolean hasResultSet = currentStatementResult.isResultSet();
-            if (hasResultSet && isGeneratedKeyQuery()) {
-                fetchMultiRowGeneratedKeys();
-                return false;
+            if (isGeneratedKeyQuery()) {
+                if (hasResultSet) {
+                    fetchMultiRowGeneratedKeys();
+                    hasResultSet = false;
+                }
+                RowDescriptor rowDescriptor = fbStatement.getRowDescriptor();
+                // Ensure blobs are cached, so there are no problems with getGeneratedKeys() after (auto)commit
+                if (!specialResult.isEmpty() && rowDescriptor.getFieldDescriptors().stream()
+                        .anyMatch(fieldDescriptor -> fieldDescriptor.isFbType(SQL_BLOB))) {
+                    new FBCachedFetcher(specialResult, new FetchConfig(ResultSetBehavior.of()),
+                            FBObjectListener.NoActionFetcherListener.instance(), rowDescriptor, gdsHelper,
+                            true);
+                }
             }
             return hasResultSet;
         } catch (SQLException e) {
