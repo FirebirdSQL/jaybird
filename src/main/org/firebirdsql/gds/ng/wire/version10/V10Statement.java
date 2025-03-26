@@ -432,10 +432,16 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         }
         do {
             if (!(response instanceof FetchResponse fetchResponse)) break;
-            if (fetchResponse.count() > 0 && fetchResponse.status() == ISCConstants.FETCH_OK) {
+            if (fetchResponse.status() == ISCConstants.FETCH_OK && fetchResponse.count() > 0) {
+                // Received a row
                 queueRowData(readSqlData());
                 rowsFetched++;
+            } else if (fetchResponse.status() == ISCConstants.FETCH_OK && fetchResponse.count() == 0) {
+                // end of batch, but not end of cursor
+                // Exit loop
+                break;
             } else if (fetchResponse.status() == ISCConstants.FETCH_NO_MORE_ROWS) {
+                // end of cursor
                 switch (direction) {
                 case IN_PLACE -> {
                     if (isBeforeFirst()) {
