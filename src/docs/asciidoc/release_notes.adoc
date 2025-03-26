@@ -44,6 +44,9 @@ Various methods and constructors involved in blob handle creation now throw a `S
 See also <<breaking-changes-internal-api-5-0-7>>.
 +
 This fix was backported from Jaybird 6.0.1.
+* Fixed: Fetch response with status=0 (FETCH_OK) and count=0 was logged on DEBUG as an unexpected response (https://github.com/FirebirdSQL/jaybird/issues/848[#848])
++
+This fix was backported from Jaybird 6.0.1.
 
 [#jaybird-5-0-6-changelog]
 === Jaybird 5.0.6

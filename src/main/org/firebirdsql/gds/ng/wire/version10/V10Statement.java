@@ -424,9 +424,14 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         Response response;
         while ((response = getDatabase().readResponse(getStatementWarningCallback())) instanceof FetchResponse) {
             final FetchResponse fetchResponse = (FetchResponse) response;
-            if (fetchResponse.getCount() > 0 && fetchResponse.getStatus() == ISCConstants.FETCH_OK) {
+            if (fetchResponse.getStatus() == ISCConstants.FETCH_OK && fetchResponse.getCount() > 0) {
                 queueRowData(readSqlData());
+            } else if (fetchResponse.getStatus() == ISCConstants.FETCH_OK && fetchResponse.getCount() == 0) {
+                // end of batch, but not end of cursor
+                // Exit loop
+                break;
             } else if (fetchResponse.getStatus() == ISCConstants.FETCH_NO_MORE_ROWS) {
+                // end of cursor
                 switch (direction) {
                 case IN_PLACE:
                     if (isBeforeFirst()) {
