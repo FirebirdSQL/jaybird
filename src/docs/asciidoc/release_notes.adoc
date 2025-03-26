@@ -37,6 +37,11 @@ The following has been changed or fixed since Jaybird 5.0.6:
 * Improvement: backported deferred blob open optimization from Jaybird 7 (https://github.com/FirebirdSQL/jaybird/issues/841[#841])
 +
 See also <<blob-performance-defer-open>>.
+* Fixed: `NullPointerException` in `getGeneratedKeys()` with blob columns after (auto)commit (https://github.com/FirebirdSQL/jaybird/issues/846[#846])
++
+As part of this fix, there was an incompatible change in the internal GDS-ng API.
+Various methods and constructors involved in blob handle creation now throw a `SQLException` if the database is not attached or the transaction is null or not active.
+See also <<breaking-changes-internal-api-5-0-7>>.
 
 [#jaybird-5-0-6-changelog]
 === Jaybird 5.0.6
@@ -1206,6 +1211,21 @@ To be able to detect preparing a new statement text on a statement handle, the s
 The state transition `ALLOCATED` -> `PREPARED` is no longer valid, and must now be `ALLOCATED` -> `PREPARING` -> `PREPARED`.
 
 Custom statement implementations need to add a state transition to `PREPARING` before preparing a new statement text.
+
+[#breaking-changes-internal-api-5-0-7]
+==== Breaking changes internal API for 5.0.7
+
+Bug fixes in Jaybird 5.0.7 introduced the following breaking changes in the GDS-ng API and its implementations.
+As this is an internal API, our policy allows breaking changes in point releases.
+This should only affect maintainers of Jaybird forks, or people using the internal API directly.
+
+* `FbDatabase`
+** `createInputBlob` and `createOutputBlob` now throw `SQLException`
+* `ProtocolDescriptor`
+** `createInputBlob` and `createOutputBlob` now throw `SQLException`
+* `AbstractFbWireBlob` and subclasses
+** Constructors now throw `SQLException` if the provided database is null or not attached, or the provided transaction is null or not active.
+Previously, passing in a null transaction would result in a `NullPointerException`.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
