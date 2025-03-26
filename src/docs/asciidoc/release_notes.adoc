@@ -45,6 +45,7 @@ See also <<blob-performance-defer-open>>.
 As part of this fix, there was an incompatible change in the internal GDS-ng API.
 Various methods and constructors involved in blob handle creation now throw a `SQLException` if the database is not attached or the transaction is null or not active.
 See also <<breaking-changes-internal-api-6-0-1>>.
+* Fixed: Fetch response with status=0 (FETCH_OK) and count=0 was logged on DEBUG as an unexpected response (https://github.com/FirebirdSQL/jaybird/issues/848[#848])
 
 === Jaybird 6.0.0
 
