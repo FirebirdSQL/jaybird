@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -6,6 +6,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,8 @@ class V10OutputBlobMockTest {
     void setUp() {
         lenient().when(db.withLock()).thenReturn(LockCloseable.NO_OP);
         lenient().when(db.getServerVersion()).thenReturn(GDSServerVersion.INVALID_VERSION);
+        lenient().when(db.isAttached()).thenReturn(true);
+        lenient().when(transaction.getState()).thenReturn(TransactionState.ACTIVE);
     }
 
     /**
@@ -50,7 +53,7 @@ class V10OutputBlobMockTest {
      * error {@link ISCConstants#isc_segstr_no_read}.
      */
     @Test
-    void testGetSegment() {
+    void testGetSegment() throws Exception {
         V10OutputBlob blob = new V10OutputBlob(db, transaction, null);
 
         SQLException exception = assertThrows(SQLNonTransientException.class, () -> blob.getSegment(1));
@@ -64,7 +67,7 @@ class V10OutputBlobMockTest {
      * error {@link ISCConstants#isc_segstr_no_read}.
      */
     @Test
-    void testSeek() {
+    void testSeek() throws Exception {
         V10OutputBlob blob = new V10OutputBlob(db, transaction, null);
 
         SQLException exception = assertThrows(SQLNonTransientException.class,
@@ -75,7 +78,7 @@ class V10OutputBlobMockTest {
     }
 
     @Test
-    void testNewBlob_eof() {
+    void testNewBlob_eof() throws Exception {
         V10OutputBlob blob = new V10OutputBlob(db, transaction, null);
 
         assertTrue(blob.isEof(), "Expected new output blob to be EOF");

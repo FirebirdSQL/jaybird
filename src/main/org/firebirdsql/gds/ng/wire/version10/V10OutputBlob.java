@@ -33,7 +33,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
     private static final int OUTSTANDING_PUT_SEGMENT_PACKETS = 8;
 
     public V10OutputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer) {
+            BlobParameterBuffer blobParameterBuffer) throws SQLException {
         super(database, transaction, blobParameterBuffer);
     }
 

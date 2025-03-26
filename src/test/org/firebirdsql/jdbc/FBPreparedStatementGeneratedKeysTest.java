@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2011-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -15,6 +15,7 @@ import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FbAssumptions.assumeServerBatchSupport;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -453,4 +454,32 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
             }
         }
     }
+
+    /**
+     * Checks if {@link FBPreparedStatement#getGeneratedKeys()} in auto-commit mode can return a blob column without
+     * error.
+     * <p>
+     * Rationale: <a href="https://github.com/FirebirdSQL/jaybird/issues/844">#844</a>.
+     * </p>
+     */
+    @Test
+    void getGeneratedKeys_autoCommit_withBlob() throws Exception {
+        con.setAutoCommit(false);
+        try (var stmt = con.createStatement()) {
+            stmt.execute(ADD_BLOB_COLUMN);
+            con.setAutoCommit(true);
+            try (var pstmt = con.prepareStatement("INSERT INTO TABLE_WITH_TRIGGER(BLOB_COLUMN)"
+                    + " VALUES (?) RETURNING ID, BLOB_COLUMN", Statement.RETURN_GENERATED_KEYS)){
+                pstmt.setString(1, TEXT_VALUE);
+                pstmt.execute();
+                try (ResultSet generatedKeys = assertDoesNotThrow(pstmt::getGeneratedKeys)) {
+                    assertNextRow(generatedKeys);
+                    assertEquals(TEXT_VALUE, generatedKeys.getString("BLOB_COLUMN"));
+                }
+            } finally {
+                stmt.execute(DROP_BLOB_COLUMN);
+            }
+        }
+    }
+
 }

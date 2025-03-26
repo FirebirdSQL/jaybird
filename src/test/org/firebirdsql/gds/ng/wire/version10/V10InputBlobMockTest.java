@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -44,6 +44,8 @@ class V10InputBlobMockTest {
     void setUp() {
         lenient().when(db.withLock()).thenReturn(LockCloseable.NO_OP);
         lenient().when(db.getServerVersion()).thenReturn(GDSServerVersion.INVALID_VERSION);
+        lenient().when(db.isAttached()).thenReturn(true);
+        lenient().when(transaction.getState()).thenReturn(TransactionState.ACTIVE);
     }
 
     /**
@@ -51,7 +53,7 @@ class V10InputBlobMockTest {
      * error {@link ISCConstants#isc_segstr_no_write}.
      */
     @Test
-    void testPutSegment() {
+    void testPutSegment() throws SQLException {
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
         SQLException exception = assertThrows(SQLNonTransientException.class,
@@ -65,7 +67,7 @@ class V10InputBlobMockTest {
      * Test if {@link V10InputBlob#getSegment(int)} with zero throws an exception.
      */
     @Test
-    void testGetSegment_requestedSizeZero() {
+    void testGetSegment_requestedSizeZero() throws SQLException {
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
         SQLException exception = assertThrows(SQLException.class, () -> blob.getSegment(0));
@@ -76,7 +78,7 @@ class V10InputBlobMockTest {
      * Test if {@link V10InputBlob#getSegment(int)} with less than zero throws an exception.
      */
     @Test
-    void testGetSegment_requestedSizeLessThanZero() {
+    void testGetSegment_requestedSizeLessThanZero() throws SQLException {
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
         SQLException exception = assertThrows(SQLException.class, () -> blob.getSegment(-1));
@@ -87,7 +89,7 @@ class V10InputBlobMockTest {
      * Test if {@link V10InputBlob#getSegment(int)} on closed blob throws exception.
      */
     @Test
-    void testGetSegment_blobClosed() {
+    void testGetSegment_blobClosed() throws SQLException {
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
         when(db.isAttached()).thenReturn(true);
@@ -100,7 +102,7 @@ class V10InputBlobMockTest {
     }
 
     @Test
-    void testIsEof_newBlob() {
+    void testIsEof_newBlob() throws SQLException {
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
         assertTrue(blob.isEof(), "Expected new input blob to be EOF");

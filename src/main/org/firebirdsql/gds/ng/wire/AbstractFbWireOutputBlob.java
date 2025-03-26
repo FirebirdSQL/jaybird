@@ -20,7 +20,7 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
     private long blobId;
 
     protected AbstractFbWireOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer) {
+            BlobParameterBuffer blobParameterBuffer) throws SQLException {
         super(database, transaction, blobParameterBuffer);
     }
 

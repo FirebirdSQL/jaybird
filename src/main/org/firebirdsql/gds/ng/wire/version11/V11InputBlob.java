@@ -23,7 +23,7 @@ import java.util.function.Function;
 public class V11InputBlob extends V10InputBlob {
 
     public V11InputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer,
-            long blobId) {
+            long blobId) throws SQLException {
         super(database, transaction, blobParameterBuffer, blobId);
     }
 

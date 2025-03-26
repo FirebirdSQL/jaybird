@@ -48,7 +48,8 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
      * @param blobParameterBuffer
      *         blob parameter buffer
      */
-    public JnaBlob(JnaDatabase database, JnaTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
+    public JnaBlob(JnaDatabase database, JnaTransaction transaction, BlobParameterBuffer blobParameterBuffer)
+            throws SQLException {
         this(database, transaction, blobParameterBuffer, NO_BLOB_ID, true);
     }
 
@@ -65,12 +66,12 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
      *         blob id
      */
     public JnaBlob(JnaDatabase database, JnaTransaction transaction, BlobParameterBuffer blobParameterBuffer,
-            long blobId) {
+            long blobId) throws SQLException {
         this(database, transaction, blobParameterBuffer, blobId, false);
     }
 
     private JnaBlob(JnaDatabase database, JnaTransaction transaction, BlobParameterBuffer blobParameterBuffer,
-            long blobId, boolean outputBlob) {
+            long blobId, boolean outputBlob) throws SQLException {
         super(database, transaction, blobParameterBuffer);
         this.blobId = new LongByReference(blobId);
         this.outputBlob = outputBlob;

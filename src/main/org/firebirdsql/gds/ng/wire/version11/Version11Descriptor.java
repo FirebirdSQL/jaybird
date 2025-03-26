@@ -14,6 +14,8 @@ import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.gds.ng.wire.version10.*;
 
+import java.sql.SQLException;
+
 /**
  * The {@link org.firebirdsql.gds.ng.wire.ProtocolDescriptor} for the Firebird version 11 protocol. This version
  * applies to Firebird 2.1, but also works with newer Firebird versions.
@@ -67,13 +69,13 @@ public final class Version11Descriptor extends AbstractProtocolDescriptor implem
 
     @Override
     public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer) {
+            BlobParameterBuffer blobParameterBuffer) throws SQLException {
         return new V11OutputBlob(database, transaction, blobParameterBuffer);
     }
 
     @Override
     public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer, long blobId) {
+            BlobParameterBuffer blobParameterBuffer, long blobId) throws SQLException {
         return new V11InputBlob(database, transaction, blobParameterBuffer, blobId);
     }
 

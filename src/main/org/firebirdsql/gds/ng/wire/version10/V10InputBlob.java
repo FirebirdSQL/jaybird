@@ -32,7 +32,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
     // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open() and getMaximumSegmentSize()), find a way to unify this
 
     public V10InputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer,
-            long blobId) {
+            long blobId) throws SQLException {
         super(database, transaction, blobParameterBuffer, blobId);
     }
 

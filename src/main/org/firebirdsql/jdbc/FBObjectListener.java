@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -40,6 +40,22 @@ public final class FBObjectListener {
          */
         default void rowChanged(FBFetcher fetcher, @Nullable RowValue newRow) throws SQLException {
             // do nothing
+        }
+
+    }
+
+    /**
+     * Implementation of {@link org.firebirdsql.jdbc.FBObjectListener.FetcherListener} that does nothing.
+     */
+    public static final class NoActionFetcherListener implements FetcherListener {
+
+        private static final FetcherListener INSTANCE = new NoActionFetcherListener();
+
+        public static FetcherListener instance() {
+            return INSTANCE;
+        }
+
+        private NoActionFetcherListener() {
         }
 
     }

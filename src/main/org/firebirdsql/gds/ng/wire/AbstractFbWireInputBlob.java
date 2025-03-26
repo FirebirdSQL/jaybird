@@ -17,7 +17,7 @@ public abstract class AbstractFbWireInputBlob extends AbstractFbWireBlob {
     private final long blobId;
 
     protected AbstractFbWireInputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer, long blobId) {
+            BlobParameterBuffer blobParameterBuffer, long blobId) throws SQLException {
         super(database, transaction, blobParameterBuffer);
         this.blobId = blobId;
     }

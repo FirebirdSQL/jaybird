@@ -18,6 +18,8 @@ import org.firebirdsql.gds.ng.wire.version11.V11InputBlob;
 import org.firebirdsql.gds.ng.wire.version11.V11OutputBlob;
 import org.firebirdsql.gds.ng.wire.version13.V13ParameterConverter;
 
+import java.sql.SQLException;
+
 /**
  * The {@link ProtocolDescriptor} for the Firebird version 16 protocol. This version
  * applies to Firebird 4, but also works with newer Firebird versions.
@@ -72,12 +74,14 @@ public final class Version16Descriptor extends AbstractProtocolDescriptor implem
     }
 
     @Override
-    public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
+    public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
+            BlobParameterBuffer blobParameterBuffer) throws SQLException {
         return new V11OutputBlob(database, transaction, blobParameterBuffer);
     }
 
     @Override
-    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) {
+    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction,
+            BlobParameterBuffer blobParameterBuffer, long blobId) throws SQLException {
         return new V11InputBlob(database, transaction, blobParameterBuffer, blobId);
     }
 
