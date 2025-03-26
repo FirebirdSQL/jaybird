@@ -71,6 +71,8 @@ abstract class FBTestGeneratedKeysBase {
         		"      tmp = GEN_ID(GEN_TABLE_WITH_TRIGGER_ID, new.ID-tmp);\n" +
         		"  END\n" +
         		"END";
+    static final String ADD_BLOB_COLUMN = "alter table TABLE_WITH_TRIGGER add BLOB_COLUMN blob sub_type text";
+    static final String DROP_BLOB_COLUMN = "alter table TABLE_WITH_TRIGGER drop BLOB_COLUMN";
     //@formatter:on
 
     @RegisterExtension

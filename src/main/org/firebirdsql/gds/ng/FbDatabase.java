@@ -129,8 +129,10 @@ public interface FbDatabase extends FbAttachment {
      * @param blobParameterBuffer
      *         blob parameter buffer
      * @return instance of {@link FbBlob}
+     * @throws SQLException
+     *         if the database is not attached or the transaction is not active
      */
-    FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer);
+    FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) throws SQLException;
 
     /**
      * Creates a blob for write access to a new blob on the server.
@@ -145,9 +147,11 @@ public interface FbDatabase extends FbAttachment {
      * @param transaction
      *         transaction associated with the blob
      * @return instance of {@link FbBlob}
+     * @throws SQLException
+     *         if the database is not attached or the transaction is not active
      * @since 5
      */
-    default FbBlob createBlobForOutput(FbTransaction transaction) {
+    default FbBlob createBlobForOutput(FbTransaction transaction) throws SQLException {
         return createBlobForOutput(transaction, (BlobParameterBuffer) null);
     }
 
@@ -162,9 +166,11 @@ public interface FbDatabase extends FbAttachment {
      * @param blobConfig
      *         blob config (cannot be {@code null})
      * @return instance of {@link FbBlob}
+     * @throws SQLException
+     *         if the database is not attached or the transaction is not active
      * @since 5
      */
-    default FbBlob createBlobForOutput(FbTransaction transaction, BlobConfig blobConfig) {
+    default FbBlob createBlobForOutput(FbTransaction transaction, BlobConfig blobConfig) throws SQLException {
         BlobParameterBuffer blobParameterBuffer = createBlobParameterBuffer();
         blobConfig.writeOutputConfig(blobParameterBuffer);
         return createBlobForOutput(transaction, blobParameterBuffer);
@@ -183,8 +189,11 @@ public interface FbDatabase extends FbAttachment {
      * @param blobId
      *         id of the blob
      * @return instance of {@link FbBlob}
+     * @throws SQLException
+     *         if the database is not attached or the transaction is not active
      */
-    FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId);
+    FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId)
+            throws SQLException;
 
     /**
      * Creates a blob for read access to an existing blob on the server.
@@ -201,9 +210,11 @@ public interface FbDatabase extends FbAttachment {
      * @param blobId
      *         id of the blob
      * @return instance of {@link FbBlob}
+     * @throws SQLException
+     *         if the database is not attached or the transaction is not active
      * @since 5
      */
-    default FbBlob createBlobForInput(FbTransaction transaction, long blobId) {
+    default FbBlob createBlobForInput(FbTransaction transaction, long blobId) throws SQLException {
         return createBlobForInput(transaction, (BlobParameterBuffer) null, blobId);
     }
 
@@ -221,8 +232,11 @@ public interface FbDatabase extends FbAttachment {
      *         handle id of the blob
      * @return instance of {@link FbBlob}
      * @since 5
+     * @throws SQLException
+     *         if the database is not attached or the transaction is not active
      */
-    default FbBlob createBlobForInput(FbTransaction transaction, BlobConfig blobConfig, long blobId) {
+    default FbBlob createBlobForInput(FbTransaction transaction, BlobConfig blobConfig, long blobId)
+            throws SQLException {
         BlobParameterBuffer blobParameterBuffer = createBlobParameterBuffer();
         blobConfig.writeInputConfig(blobParameterBuffer);
         return createBlobForInput(transaction, blobParameterBuffer, blobId);

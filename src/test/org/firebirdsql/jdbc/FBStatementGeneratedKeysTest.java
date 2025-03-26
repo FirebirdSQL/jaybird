@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import java.sql.*;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -641,6 +642,31 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
                 assertEquals(514, secondId);
                 assertEquals(TEXT_VALUE + "_" + secondId, rs.getString(2));
                 assertFalse(rs.next(), "Expected no third row");
+            }
+        }
+    }
+
+    /**
+     * Checks if {@link FBStatement#getGeneratedKeys()} in auto-commit mode can return a blob column without error.
+     * <p>
+     * Rationale: <a href="https://github.com/FirebirdSQL/jaybird/issues/844">#844</a>.
+     * </p>
+     */
+    @Test
+    void getGeneratedKeys_autoCommit_withBlob() throws Exception {
+        con.setAutoCommit(false);
+        try (var stmt = con.createStatement()) {
+            stmt.execute(ADD_BLOB_COLUMN);
+            con.setAutoCommit(true);
+            try {
+                stmt.execute("INSERT INTO TABLE_WITH_TRIGGER(BLOB_COLUMN)"
+                        + " VALUES ('" + TEXT_VALUE + "') RETURNING ID, BLOB_COLUMN", Statement.RETURN_GENERATED_KEYS);
+                try (ResultSet generatedKeys = assertDoesNotThrow(stmt::getGeneratedKeys)) {
+                    assertNextRow(generatedKeys);
+                    assertEquals(TEXT_VALUE, generatedKeys.getString("BLOB_COLUMN"));
+                }
+            } finally {
+                stmt.execute(DROP_BLOB_COLUMN);
             }
         }
     }

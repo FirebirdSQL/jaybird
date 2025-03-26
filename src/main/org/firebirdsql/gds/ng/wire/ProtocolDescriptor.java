@@ -183,7 +183,7 @@ public interface ProtocolDescriptor {
      * @return FbWireBlob implementation
      */
     FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer);
+            BlobParameterBuffer blobParameterBuffer) throws SQLException;
 
     /**
      * Create an input {@link FbWireBlob} implementation for this protocol version.
@@ -199,7 +199,7 @@ public interface ProtocolDescriptor {
      * @return FbWireBlob implementation
      */
     FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer, long blobId);
+            BlobParameterBuffer blobParameterBuffer, long blobId) throws SQLException;
 
     /**
      * Create a disconnected asynchronous channel.

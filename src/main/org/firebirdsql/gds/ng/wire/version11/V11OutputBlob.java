@@ -45,7 +45,7 @@ import static org.firebirdsql.gds.ISCConstants.isc_segstr_no_op;
 public class V11OutputBlob extends V10OutputBlob {
 
     public V11OutputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer) {
+            BlobParameterBuffer blobParameterBuffer) throws SQLException {
         super(database, transaction, blobParameterBuffer);
     }
 
