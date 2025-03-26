@@ -42,6 +42,8 @@ See also <<blob-performance-defer-open>>.
 As part of this fix, there was an incompatible change in the internal GDS-ng API.
 Various methods and constructors involved in blob handle creation now throw a `SQLException` if the database is not attached or the transaction is null or not active.
 See also <<breaking-changes-internal-api-5-0-7>>.
++
+This fix was backported from Jaybird 6.0.1.
 
 [#jaybird-5-0-6-changelog]
 === Jaybird 5.0.6
