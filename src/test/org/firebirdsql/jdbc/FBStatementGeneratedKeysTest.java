@@ -655,7 +655,7 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
     @Test
     void getGeneratedKeys_autoCommit_withBlob() throws Exception {
         con.setAutoCommit(false);
-        try (var stmt = con.createStatement()) {
+        try (Statement stmt = con.createStatement()) {
             stmt.execute(ADD_BLOB_COLUMN);
             con.setAutoCommit(true);
             try {

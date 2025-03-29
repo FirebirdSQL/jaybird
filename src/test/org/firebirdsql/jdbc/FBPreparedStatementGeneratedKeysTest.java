@@ -481,10 +481,10 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
     @Test
     void getGeneratedKeys_autoCommit_withBlob() throws Exception {
         con.setAutoCommit(false);
-        try (var stmt = con.createStatement()) {
+        try (Statement stmt = con.createStatement()) {
             stmt.execute(ADD_BLOB_COLUMN);
             con.setAutoCommit(true);
-            try (var pstmt = con.prepareStatement("INSERT INTO TABLE_WITH_TRIGGER(BLOB_COLUMN)"
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO TABLE_WITH_TRIGGER(BLOB_COLUMN)"
                     + " VALUES (?) RETURNING ID, BLOB_COLUMN", Statement.RETURN_GENERATED_KEYS)){
                 pstmt.setString(1, TEXT_VALUE);
                 pstmt.execute();
