@@ -45,7 +45,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
     
     private static final int STATE_END_OF_BLOB = 2;
 
-    // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open() and getMaximumSegmentSize()), find a way to unify this
+    // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open()), find a way to unify this
 
     public V10InputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer,
             long blobId) throws SQLException {

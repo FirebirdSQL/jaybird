@@ -96,6 +96,7 @@ public final class SQLExceptionChainBuilder {
 
     /**
      * @return the root SQLException or empty if no SQLException was added to this SQLExceptionChainBuilder
+     * @since 6
      */
     public @NonNull Optional<SQLException> optException() {
         return Optional.ofNullable(root);
