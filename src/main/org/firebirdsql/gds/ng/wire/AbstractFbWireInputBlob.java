@@ -50,11 +50,19 @@ public abstract class AbstractFbWireInputBlob extends AbstractFbWireBlob {
 
     @Override
     public final void putSegment(byte[] segment) throws SQLException {
-        try {
-            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_write).toSQLException();
-        } catch (SQLException e) {
-            errorOccurred(e);
-            throw e;
-        }
+        throw writeNotSupported();
     }
+
+    @Override
+    public final void put(byte[] b, int off, int len) throws SQLException {
+        throw writeNotSupported();
+    }
+
+    private SQLException writeNotSupported() {
+        SQLException e = new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_write)
+                .toSQLException();
+        errorOccurred(e);
+        return e;
+    }
+
 }

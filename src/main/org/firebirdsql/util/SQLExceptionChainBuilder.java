@@ -19,6 +19,7 @@
 package org.firebirdsql.util;
 
 import java.sql.SQLException;
+import java.util.Optional;
 
 /**
  * Helper class for building {@link java.sql.SQLException} chains.
@@ -107,4 +108,25 @@ public final class SQLExceptionChainBuilder<E extends SQLException> {
     public E getException() {
         return root;
     }
+
+    /**
+     * @return the root SQLException or empty if no SQLException was added to this SQLExceptionChainBuilder
+     * @since 5.0.7
+     */
+    public Optional<SQLException> optException() {
+        return Optional.ofNullable(root);
+    }
+
+    /**
+     * Throws the root SQLException stored in the chain, if present; otherwise does nothing.
+     *
+     * @throws SQLException
+     *         the root SQLException in this chain builder
+     * @since 5.0.7
+     */
+    public void throwIfPresent() throws SQLException {
+        SQLException root = this.root;
+        if (root != null) throw root;
+    }
+
 }

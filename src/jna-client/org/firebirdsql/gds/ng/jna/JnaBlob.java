@@ -23,6 +23,7 @@ import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.ShortByReference;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -30,18 +31,19 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
+import org.firebirdsql.util.ByteArrayHelper;
 
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.ISCConstants.isc_segstr_no_op;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
-import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentTooLong;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbBlob} for native client access.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener {
@@ -121,7 +123,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     public void open() throws SQLException {
         try {
             if (isOutput() && getBlobId() != NO_BLOB_ID) {
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
+                throw new FbExceptionBuilder().nonTransientException(isc_segstr_no_op).toSQLException();
             }
 
             final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
@@ -129,7 +131,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             if (blobParameterBuffer != null) {
                 bpb = blobParameterBuffer.toBytesWithType();
             } else {
-                bpb = new byte[0];
+                bpb = ByteArrayHelper.emptyByteArray();
             }
             try (LockCloseable ignored = withLock()) {
                 checkDatabaseAttached();
@@ -163,35 +165,19 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
     @Override
     public byte[] getSegment(int sizeRequested) throws SQLException {
-        try {
+        try (LockCloseable ignored = withLock()) {
             if (sizeRequested <= 0) {
-                throw new FbExceptionBuilder().exception(jb_blobGetSegmentNegative)
+                throw FbExceptionBuilder.forException(jb_blobGetSegmentNegative)
                         .messageParameter(sizeRequested)
                         .toSQLException();
             }
-            // TODO Honour request for larger sizes by looping?
-            sizeRequested = Math.min(sizeRequested, getMaximumSegmentSize());
-            final ByteBuffer responseBuffer;
-            final ShortByReference actualLength = new ShortByReference();
-            try (LockCloseable ignored = withLock()) {
-                checkDatabaseAttached();
-                checkTransactionActive();
-                checkBlobOpen();
-                responseBuffer = getByteBuffer(sizeRequested);
-
-                clientLibrary.isc_get_segment(statusVector, getJnaHandle(), actualLength, (short) sizeRequested,
-                        responseBuffer);
-                final int status = statusVector[1].intValue();
-                // status 0 means: more to come, isc_segment means: buffer was too small, rest will be returned on next call
-                if (status == ISCConstants.isc_segstr_eof) {
-                    setEof();
-                } else if (!(status == 0 || status == ISCConstants.isc_segment)) {
-                    processStatusVector();
-                }
-                throwAndClearDeferredException();
-            }
-            final int actualLengthInt = ((int) actualLength.getValue()) & 0xFFFF;
-            final byte[] segment = new byte[actualLengthInt];
+            checkDatabaseAttached();
+            checkTransactionActive();
+            checkBlobOpen();
+            ShortByReference actualLength = new ShortByReference();
+            ByteBuffer responseBuffer = getSegment0(sizeRequested, actualLength);
+            throwAndClearDeferredException();
+            byte[] segment = new byte[actualLength.getValue() & 0xFFFF];
             responseBuffer.get(segment);
             return segment;
         } catch (SQLException e) {
@@ -200,25 +186,91 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
         }
     }
 
-    @Override
-    public void putSegment(byte[] segment) throws SQLException {
-        try {
-            if (segment.length == 0) {
-                throw new FbExceptionBuilder().exception(jb_blobPutSegmentEmpty).toSQLException();
-            }
-            // TODO Handle by performing multiple puts? (Wrap in byte buffer, use position to move pointer?)
-            if (segment.length > getMaximumSegmentSize()) {
-                throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
-            }
-            try (LockCloseable ignored = withLock()) {
-                checkDatabaseAttached();
-                checkTransactionActive();
-                checkBlobOpen();
+    private ByteBuffer getSegment0(int sizeRequested, ShortByReference actualLength) throws SQLException {
+        sizeRequested = Math.min(sizeRequested, getMaximumSegmentSize());
+        ByteBuffer responseBuffer = getByteBuffer(sizeRequested);
+        clientLibrary.isc_get_segment(statusVector, getJnaHandle(), actualLength, (short) sizeRequested,
+                responseBuffer);
+        int status = statusVector[1].intValue();
+        // status 0 means: more to come, isc_segment means: buffer was too small, rest will be returned on next call
+        if (status == ISCConstants.isc_segstr_eof) {
+            setEof();
+        } else if (!(status == 0 || status == ISCConstants.isc_segment)) {
+            processStatusVector();
+        }
+        return responseBuffer;
+    }
 
-                clientLibrary.isc_put_segment(statusVector, getJnaHandle(), (short) segment.length, segment);
-                processStatusVector();
-                throwAndClearDeferredException();
+    @Override
+    protected int get(final byte[] b, final int off, final int len, final int minLen) throws SQLException {
+        try (LockCloseable ignored = withLock())  {
+            validateBufferLength(b, off, len);
+            if (len == 0) return 0;
+            if (minLen <= 0 || minLen > len ) {
+                throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_invalidStringLength)
+                        .messageParameter("minLen", len, minLen)
+                        .toSQLException();
             }
+            checkDatabaseAttached();
+            checkTransactionActive();
+            checkBlobOpen();
+
+            ShortByReference actualLength = new ShortByReference();
+            int count = 0;
+            while (count < minLen && !isEof()) {
+                // We honor the configured buffer size unless we somehow already allocated a bigger buffer earlier
+                ByteBuffer segmentBuffer = getSegment0(
+                        Math.min(len - count, Math.max(getBlobBufferSize(), currentBufferCapacity())),
+                        actualLength);
+                int dataLength = actualLength.getValue() & 0xFFFF;
+                segmentBuffer.get(b, off + count, dataLength);
+                count += dataLength;
+            }
+            throwAndClearDeferredException();
+            return count;
+        } catch (SQLException e) {
+            errorOccurred(e);
+            throw e;
+        }
+    }
+
+    private int getBlobBufferSize() {
+        return getDatabase().getConnectionProperties().getBlobBufferSize();
+    }
+
+    @Override
+    public void put(final byte[] b, final int off, final int len) throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            validateBufferLength(b, off, len);
+            if (len == 0) {
+                throw FbExceptionBuilder.forException(jb_blobPutSegmentEmpty).toSQLException();
+            }
+            checkDatabaseAttached();
+            checkTransactionActive();
+            checkBlobOpen();
+
+            int count = 0;
+            if (off == 0) {
+                // no additional buffer allocation needed, so we can send with max segment size
+                count = Math.min(len, getMaximumSegmentSize());
+                clientLibrary.isc_put_segment(statusVector, getJnaHandle(), (short) count, b);
+                processStatusVector();
+                if (count == len) {
+                    // put complete
+                    return;
+                }
+            }
+
+            byte[] segmentBuffer =
+                    new byte[Math.min(len - count, Math.min(getBlobBufferSize(), getMaximumSegmentSize()))];
+            while (count < len) {
+                int segmentLength = Math.min(len - count, segmentBuffer.length);
+                System.arraycopy(b, off + count, segmentBuffer, 0, segmentLength);
+                clientLibrary.isc_put_segment(statusVector, getJnaHandle(), (short) segmentLength, segmentBuffer);
+                processStatusVector();
+                count += segmentLength;
+            }
+            throwAndClearDeferredException();
         } catch (SQLException e) {
             errorOccurred(e);
             throw e;
@@ -299,11 +351,18 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     }
 
     private ByteBuffer getByteBuffer(int requiredSize) {
+        ByteBuffer byteBuffer = this.byteBuffer;
         if (byteBuffer == null || byteBuffer.capacity() < requiredSize) {
-            byteBuffer = ByteBuffer.allocateDirect(requiredSize);
-        } else {
-            byteBuffer.clear();
+            // Allocate buffer in increments of 512
+            return this.byteBuffer = ByteBuffer.allocateDirect((1 + (requiredSize - 1) / 512) * 512);
         }
+        byteBuffer.clear();
         return byteBuffer;
     }
+
+    private int currentBufferCapacity() {
+        ByteBuffer byteBuffer = this.byteBuffer;
+        return byteBuffer != null ? byteBuffer.capacity() : 0;
+    }
+
 }

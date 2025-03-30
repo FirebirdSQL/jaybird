@@ -25,14 +25,18 @@ import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
-import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.gds.ng.wire.AbstractFbWireOutputBlob;
+import org.firebirdsql.gds.ng.wire.FbWireBlob;
+import org.firebirdsql.gds.ng.wire.FbWireDatabase;
+import org.firebirdsql.gds.ng.wire.FbWireTransaction;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.IOException;
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.ISCConstants.isc_segstr_no_op;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
-import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentTooLong;
-import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_put_segment;
 
 /**
  * Output {@link org.firebirdsql.gds.ng.wire.FbWireBlob} implementation for the version 10 wire protocol.
@@ -42,14 +46,17 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlob, DatabaseListener {
 
-    // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open() and getMaximumSegmentSize()), find a way to unify this
+    // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open()), find a way to unify this
+
+    /**
+     * Number of op_put_segment calls batched by {@link #put(byte[], int, int)} without retrieving response.
+     */
+    private static final int OUTSTANDING_PUT_SEGMENT_PACKETS = 8;
 
     public V10OutputBlob(FbWireDatabase database, FbWireTransaction transaction,
             BlobParameterBuffer blobParameterBuffer) throws SQLException {
         super(database, transaction, blobParameterBuffer);
     }
-
-    // TODO Need blob specific warning callback?
 
     @Override
     public void open() throws SQLException {
@@ -60,7 +67,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
             clearDeferredException();
 
             if (getBlobId() != FbBlob.NO_BLOB_ID) {
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
+                throw new FbExceptionBuilder().nonTransientException(isc_segstr_no_op).toSQLException();
             }
 
             sendOpen(BlobOpenOperation.OUTPUT_BLOB, true);
@@ -74,40 +81,77 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
     }
 
     @Override
-    public void putSegment(byte[] segment) throws SQLException {
-        try {
-            if (segment.length == 0) {
-                throw new FbExceptionBuilder().exception(jb_blobPutSegmentEmpty).toSQLException();
+    public void put(final byte[] b, final int off, final int len) throws SQLException {
+        try (LockCloseable ignored = withLock())  {
+            validateBufferLength(b, off, len);
+            if (len == 0) {
+                throw FbExceptionBuilder.forException(jb_blobPutSegmentEmpty).toSQLException();
             }
-            // TODO Handle by performing multiple puts?
-            if (segment.length > getMaximumSegmentSize()) {
-                throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
-            }
-            try (LockCloseable ignored = withLock()) {
-                checkDatabaseAttached();
-                checkTransactionActive();
-                checkBlobOpen();
+            checkDatabaseAttached();
+            checkTransactionActive();
+            checkBlobOpen();
 
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_put_segment);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.writeInt(segment.length);
-                    xdrOut.writeBuffer(segment);
-                    xdrOut.flush();
-                } catch (IOException e) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
-                }
-                try {
-                    getDatabase().readResponse(null);
-                } catch (IOException e) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
-                }
-                throwAndClearDeferredException();
-            }
+            batchPutSegment(b, off, len);
+            throwAndClearDeferredException();
         } catch (SQLException e) {
             errorOccurred(e);
             throw e;
         }
     }
+
+    private void batchPutSegment(byte[] b, int off, int len) throws SQLException {
+        int requestCount = 0;
+        try {
+            XdrOutputStream xdrOut = getXdrOut();
+            int count = 0;
+            while (count < len) {
+                int segmentLength = Math.min(len - count, getMaximumSegmentSize());
+                xdrOut.writeInt(op_put_segment);
+                xdrOut.writeInt(getHandle());
+                xdrOut.writeInt(segmentLength);
+                xdrOut.writeBuffer(b, off + count, segmentLength);
+                count += segmentLength;
+                if (++requestCount >= OUTSTANDING_PUT_SEGMENT_PACKETS) {
+                    xdrOut.flush();
+                    try {
+                        consumePutSegmentResponses(requestCount);
+                    } finally {
+                        requestCount = 0;
+                    }
+                }
+            }
+            xdrOut.flush();
+        } catch (IOException e) {
+            getDatabase().consumePackets(requestCount, w -> {});
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+        }
+
+        consumePutSegmentResponses(requestCount);
+    }
+
+    protected void consumePutSegmentResponses(int requestCount) throws SQLException {
+        if (requestCount == 0) return;
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+        try {
+            while (requestCount-- > 0) {
+                consumePutSegmentResponse(chain);
+            }
+            chain.throwIfPresent();
+        } catch (IOException e) {
+            getDatabase().consumePackets(requestCount, w -> {});
+            SQLException exception = new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e)
+                    .toSQLException();
+            chain.optException().ifPresent(exception::addSuppressed);
+            throw exception;
+        }
+    }
+
+    private void consumePutSegmentResponse(SQLExceptionChainBuilder<SQLException> chain) throws IOException {
+        try {
+            getDatabase().readResponse(null);
+        } catch (SQLException e) {
+            chain.append(e);
+        }
+    }
+
 }

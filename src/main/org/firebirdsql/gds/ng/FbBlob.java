@@ -26,6 +26,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
+import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 
 import java.sql.SQLException;
 
@@ -132,15 +133,12 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
      */
     boolean isOutput();
 
-    // TODO Consider different blob api, eg more like InputStream / OutputStream methods taking a buffer with offset and length?
-
     /**
      * Gets a segment of blob data.
      * <p>
      * When {@code sizeRequested} exceeds {@link #getMaximumSegmentSize()} it is silently reduced to the maximum
      * segment size.
      * </p>
-     * TODO: Consider allowing this and have the implementation handle longer segments by sending multiple (batched?) requests.
      *
      * @param sizeRequested
      *         Requested segment size (&gt; 0).
@@ -148,25 +146,125 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
      * @throws SQLException
      *         If this is an output blob, the blob is closed, the transaction is not active, or a database connection
      *         error occurred.
+     * @see #get(byte[], int, int)
      */
     byte[] getSegment(int sizeRequested) throws SQLException;
 
     /**
+     * Reads content from the blob into {@code b} starting at {@code off} for {@code len} bytes.
+     * <p>
+     * Implementations must read the requested number of bytes ({@code len}), unless end-of-blob is reached before
+     * the requested number of bytes were read. The return value of this method is the actual number of bytes read.
+     * </p>
+     * <p>
+     * If the implementation cannot perform reads without additional allocation, it should use at most
+     * {@link DatabaseConnectionProperties#getBlobBufferSize()} as an internal buffer. If the implementation can
+     * perform reads without additional allocation, it is recommended it performs reads using (at most)
+     * {@link #getMaximumSegmentSize()}.
+     * </p>
+     * <p>
+     * Contrary to similar methods like {@link java.io.InputStream#read(byte[], int, int)}, this method returns
+     * {@code 0} when no bytes were read if end-of-blob is reached without reading any bytes, not {@code -1}.
+     * </p>
+     * <p>
+     * Given this method attempts to fulfill the entire request for {@code len} bytes, it may not always be efficient.
+     * For example, requests near multiples of the maximum segment size (or blob buffer size) may result in a final
+     * request for just a few bytes. This is not a problem if the entire blob is requested at once, but for intermediate
+     * buffering it might be better not to do that final request, and instead work with a smaller number of bytes than
+     * requested. For those cases, use {@link #get(byte[], int, int, float)}.
+     * </p>
+     *
+     * @param b
+     *         target byte array
+     * @param off
+     *         offset to start
+     * @param len
+     *         number of bytes
+     * @return actual number of bytes read; this will only be less than {@code len} when end-of-blob was reached
+     * @throws SQLException
+     *         for database access errors, if {@code off < 0}, {@code len < 0}, or if {@code off + len > b.length}
+     * @since 5.0.7
+     */
+    int get(byte[] b, int off, int len) throws SQLException;
+
+    /**
+     * Variant of {@link #get(byte[], int, int)} to exert some control over the number of requests performed.
+     * <p>
+     * This method will request segments until at least {@code (int) (minFillFactor * len)} bytes have been retrieved,
+     * or end-of-blob is reached. This method is intended as an alternative to {@link #get(byte[], int, int)} where
+     * avoiding the potential inefficiencies of that method are preferred over getting all the requested {@code len}
+     * bytes.
+     * </p>
+     * <p>
+     * If the implementation cannot perform reads without additional allocation, it should use at most
+     * {@link DatabaseConnectionProperties#getBlobBufferSize()} as an internal buffer. If the implementation can
+     * perform reads without additional allocation, it is recommended it performs reads using (at most)
+     * {@link #getMaximumSegmentSize()}.
+     * </p>
+     * <p>
+     * Contrary to similar methods like {@link java.io.InputStream#read(byte[], int, int)}, this method returns
+     * {@code 0} when no bytes were read if end-of-blob is reached without reading any bytes, not {@code -1}.
+     * </p>
+     *
+     * @param b
+     *         target byte array
+     * @param off
+     *         offset to start
+     * @param len
+     *         number of bytes
+     * @param minFillFactor
+     *         minimum fill factor ({@code 0 < minFillFactor <= 1})
+     * @return actual number of bytes read, this method returns at least {@code (int) (minFillFactor * len)} bytes,
+     * unless end-of-blob is reached
+     * @throws SQLException
+     *         for database access errors, if {@code off < 0}, {@code len < 0}, or if {@code off + len > b.length},
+     *         {@code minFillFactor <= 0}, or {@code minFillFactor > 1} or {@code minFillFactor is NaN}
+     * @since 5.0.7
+     */
+    int get(byte[] b, int off, int len, float minFillFactor) throws SQLException;
+
+    /**
      * Writes a segment of blob data.
      * <p>
-     * Implementation must handle segment length exceeding {@link #getMaximumSegmentSize()} by batching. TODO: reconsider and let caller handle that?
+     * Implementations must handle segment lengths exceeding {@link #getMaximumSegmentSize()} by batching. This method
+     * should either call {@code put(segment, 0, segment.length)}, or produce the same effects as that call.
      * </p>
      * <p>
      * Passing a section that is length 0 will throw an {@code SQLException}.
      * </p>
      *
      * @param segment
-     *         Segment to write
+     *         segment to write
      * @throws SQLException
-     *         If this is an input blob, the blob is closed, the transaction is not active, the segment is length 0 or
-     *         longer than the maximum segment size, or a database connection error occurred.
+     *         if this is an input blob, the blob is closed, the transaction is not active, the segment is length 0, or
+     *         a database connection error occurred
+     * @see #put(byte[], int, int)
      */
     void putSegment(byte[] segment) throws SQLException;
+
+    /**
+     * Writes content of {@code b} starting at {@code off} for {@code length} bytes to the blob.
+     * <p>
+     * Implementations must write all bytes to the blob, using multiple round-trips if necessary.
+     * </p>
+     * <p>
+     * If the implementation cannot perform writes without additional allocation, it should use at most
+     * {@link DatabaseConnectionProperties#getBlobBufferSize()} as an internal buffer. If the implementation can
+     * perform writes without additional allocation, it is recommended it performs reads using (at most)
+     * {@link #getMaximumSegmentSize()}.
+     * </p>
+     *
+     * @param b
+     *         source byte array
+     * @param off
+     *         offset to start
+     * @param len
+     *         number of bytes
+     * @throws SQLException
+     *         for database access errors, if {@code off < 0}, {@code len < 0}, or if {@code off + len > b.length}
+     * @since 5.0.7
+     */
+    void put(byte[] b, int off, int len) throws SQLException;
 
     /**
      * Performs a seek on a blob with the specified {@code seekMode} and {@code offset}.

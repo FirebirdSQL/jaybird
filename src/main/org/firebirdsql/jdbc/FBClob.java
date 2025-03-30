@@ -83,7 +83,7 @@ public final class FBClob implements Clob, NClob {
 			}
 			return sb.toString();
 		} catch (IOException e) {
-			throw new FBSQLException(e);
+			throw new SQLException(e.toString(), SQLStateConstants.SQL_STATE_GENERAL_ERROR, e);
 		}
 	}
 

@@ -47,6 +47,18 @@ This fix was backported from Jaybird 6.0.1.
 * Fixed: Fetch response with status=0 (FETCH_OK) and count=0 was logged on DEBUG as an unexpected response (https://github.com/FirebirdSQL/jaybird/issues/848[#848])
 +
 This fix was backported from Jaybird 6.0.1.
+* Improvement: backported performance improvements for blob reading and writing from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/850[#850])
++
+For details see:
++
+--
+* <<blob-performance-read>>
+* <<blob-performance-write>>
+* <<blob-performance-min-buf>>
+* <<blob-performance-max-segment>>
+* <<blob-buffer-size>>
+* <<blob-put-segment-limit>>
+--
 
 [#jaybird-5-0-6-changelog]
 === Jaybird 5.0.6
@@ -237,11 +249,12 @@ The major changes and new features in Jaybird 5 are:
 * <<jdbc-url-syntax>>
 * <<local-protocol-removed>>
 * <<stream-blobs-default>>
-* <<generated-keys-parser-replaced>> (back-ported to Jaybird 4.0.8)
+* <<generated-keys-parser-replaced>> (backported to Jaybird 4.0.8)
 * <<server-batch-updates>>
 * <<multirow-returning>>
 * <<embedded-locator-service-provider>>
 * <<table-statistics-manager>>
+* <<blob-performance>> (since Jaybird 5.0.7)
 
 Upgrading from Jaybird 4 to 5 should be simple, but please make sure to read <<compatibility-changes>> before using Jaybird 5.
 See also <<upgrading-from-jaybird-4-to-jaybird-5>>.
@@ -774,6 +787,38 @@ Its API may change in point releases, or it may be removed or replaced entirely 
 [#blob-performance]
 === Blob performance improvements
 
+[#blob-performance-read]
+==== Reading blobs
+
+Added in: Jaybird 5.0.7, backported from Jaybird 6
+
+Performance of reading blobs has been improved, especially when using `getBytes` on `ResultSet` or `Blob`, or `getString` on `ResultSet` or `Clob`, or reading from a blob input stream with `read(byte[], int, int)` and similar methods with a byte array and requested length greater than 50% of the configured `blobBufferSize`.
+
+Testing on a local network (Wi-Fi) shows an increase in throughput of roughly 50-100% for reading large blobs with the default `blobBufferSize` of 16384.
+
+These throughput improvements were only realised in the pure Java protocol, because there we had the opportunity to avoid all additional allocations by writing directly from the network stream into the destination byte array, and this allows us to ignore the configured `blobBufferSize` and use up to the maximum request size of 65535 bytes instead.
+
+This is not possible for the JNA-based protocols (native/embedded), as the implementation requires a direct byte buffer to bridge to the native API, and thus we can't ignore the `blobBufferSize`.
+We were able to realise some other optimizations (in both pure Java and JNA), by avoiding allocation of a number of intermediate objects, but this has only marginal effects on the throughput.
+
+[#blob-performance-write]
+==== Writing blobs
+
+Added in: Jaybird 5.0.7, backported from Jaybird 6
+
+Performance of writing blobs was improved, especially when using `setBytes` on `PreparedStatement`, `ResultSet` or `Blob`, or `setString` on `PreparedStatement`, `ResultSet` or `Clob`, or writing to a blob output stream with `write(byte[], int, int)` and similar methods with a byte array larger than the configured `blobBufferSize`.
+A smaller improvement was made when using arrays larger than 50% of the `blobBufferSize`.
+
+Testing on a local network (Wi-Fi) shows an increase in throughput of roughly 300-400% for writing large blobs with the default `blobBufferSize` of 16384.
+The improvement is not available for all methods of writing blobs, for example using `ResultSet.setBinaryStream` does not see this improvement, as it relies on the `blobBufferSize` for transferring the blob content.
+
+Most of these throughput improvements were only realised in the pure Java protocol, because there we had the opportunity to avoid all additional allocations by writing directly from the source byte array to the network stream, and this allows us to ignore the configured `blobBufferSize` and use up to the maximum segment size of 65535 bytes instead.
+
+For the JNA-based protocols (native/embedded) a smaller throughput improvement was realised, by using the maximum segment size for the first roundtrip if the array write used offset `0`.
+If the length is larger than the maximum segment size, or if the offset is non-zero, we need to allocate a buffer (for subsequent segments in case offset is `0`), and thus cannot ignore the `blobBufferSize`.
+
+Similar to the improvements for reading, we were also able to realise some other optimizations (in both pure Java and JNA), by avoiding allocation of a number of intermediate objects, but this has only marginal effects on the throughput.
+
 [#blob-performance-defer-open]
 ==== Deferred blob open
 
@@ -788,6 +833,58 @@ Artificial testing on local WiFi with small blobs shows around 85% increase in t
 This optimization is available for Firebird 2.1 and higher, but formally only supported for Firebird 2.5 and higher.
 
 For native connections, a similar optimization -- but only for reading blobs -- is available when using a Firebird 5.0.2 or higher fbclient, independent of the Jaybird version.
+
+[#blob-performance-min-buf]
+==== Minimum `blobBufferSize` 512 bytes
+
+Added in: Jaybird 5.0.7, backported from Jaybird 6
+
+As part of the performance improvements, a minimum `blobBufferSize` of 512 bytes was introduced.
+Configuring values less than 512 will be ignored and use 512 instead.
+
+[#blob-performance-max-segment]
+==== Maximum segment size raised
+
+Added in: Jaybird 5.0.7, backported from Jaybird 6
+
+For connections to Firebird 3.0 and higher, the maximum segment size was raised from 32765 to 65535 bytes to match the maximum segment size supported by Firebird.
+
+The maximum segment size is the maximum size for sending segments (_put_) to the server.
+Due to protocol limitations, retrieving segments from the server (_get_) is two bytes (or multiples of two bytes) shorterfootnote:[For _get_ the maximum segment size is actually the maximum buffer size to receive one or more segments which are prefixed with two bytes for the length].
+
+[#blob-buffer-size]
+==== Effectiveness of `blobBufferSize` larger than maximum segment size
+
+Added in: Jaybird 5.0.7, backported from Jaybird 6
+
+Previously, when reading blobs, a `blobBufferSize` larger than the maximum segment size was effectively ignored.
+Now, when reading through an input stream, a `blobBufferSize` larger than the maximum segment size can be used.
+
+Jaybird will use one or more roundtrips to fill the buffer.
+To avoid inefficient fetches, a minimum of 90% of the buffer size will be filled up to the `blobBufferSize`.
+This change is not likely to improve performance, but it may allow for optimizations when reading or transferring data in large chunks.
+
+In general, setting the `blobBufferSize` larger than 65535 bytes will likely not improve performance.
+
+[#blob-put-segment-limit]
+==== Internal API changes for `FbBlob`
+
+Added in: Jaybird 5.0.7, backported from Jaybird 6
+
+Three new methods were added to `FbBlob`:
+
+`int get(byte[] b, int off, int len)`::
+populates the array `b`, starting at `off`, for the requested `len` bytes from the blob, and returns the actual number of bytes read.
+This method will read until `len` bytes have been read, and only return less than `len` when end-of-blob was reached.
+
+`int get(byte[] b, int off, int len, float minFillFactor)`::
+populates the array `b`, starting at `off`, for at least `minFillFactor` * `len` bytes (up to `len` bytes) from the blob, and returns the actual number of bytes read.
+
+`void put(byte[] b, int off, int len)`::
+sends data from array `b` to the blob, starting at `off`, for the requested `len` bytes.
+
+The documentation of method `FbBlob.putSegment(byte[])` contradicted itself, by requiring implementations to batch larger arrays, but also requiring them to throw an exception for larger arrays, and the actual implementations provided by Jaybird threw an exception.
+This contradiction has been removed, and the implementations will now send arrays longer than the maximum segment size to the server in multiple _put_ requests.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

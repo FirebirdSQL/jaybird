@@ -24,10 +24,13 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.IOUtils;
 
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
 
 import static java.util.Objects.requireNonNull;
@@ -42,6 +45,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final BlobParameterBuffer blobParameterBuffer;
+    private final int maximumSegmentSize;
     private FbTransaction transaction;
     private FbDatabase database;
     private BlobState state = BlobState.NEW;
@@ -55,6 +59,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         checkDatabaseAttached();
         checkTransactionActive();
         this.blobParameterBuffer = blobParameterBuffer;
+        maximumSegmentSize = maximumSegmentSize(database);
         transaction.addWeakTransactionListener(this);
     }
 
@@ -199,6 +204,47 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      * to check for attached database and active transaction, nor does it need to mark this blob as closed.
      */
     protected abstract void cancelImpl() throws SQLException;
+
+    @Override
+    public void putSegment(byte[] segment) throws SQLException {
+        put(segment, 0, segment.length);
+    }
+
+    @Override
+    public final int get(byte[] b, int off, int len) throws SQLException {
+        // requested length is minimum length
+        return get(b, off, len, len);
+    }
+
+    @Override
+    public final int get(byte[] b, int off, int len, float minFillFactor) throws SQLException {
+        if (minFillFactor <= 0f || minFillFactor > 1f || Float.isNaN(minFillFactor)) {
+            SQLException invalidFloatFactor = new SQLNonTransientException(
+                    "minFillFactor out of range, must be 0 < minFillFactor <= 1, was: " + minFillFactor);
+            errorOccurred(invalidFloatFactor);
+            throw invalidFloatFactor;
+        }
+        return get(b, off, len, len != 0 ? Math.max(1, (int) (minFillFactor * len)) : 0);
+    }
+
+    /**
+     * Default implementation for {@link #get(byte[], int, int)} and {@link #get(byte[], int, int, float)}.
+     *
+     * @param b
+     *         target byte array
+     * @param off
+     *         offset to start
+     * @param len
+     *         number of bytes
+     * @param minLen
+     *         minimum number of bytes to fill (must be {@code 0 < minLen <= len} if {@code len != 0}
+     * @return actual number of bytes read; is {@code 0} if {@code len == 0}, will only be less than {@code minLen} if
+     * end-of-blob is reached
+     * @throws SQLException
+     *         for database access errors, if {@code off < 0}, {@code len < 0}, or if {@code off + len > b.length},
+     *         or {@code len != 0 && (minLen <= 0 || minLen > len)}
+     */
+    protected abstract int get(byte[] b, int off, int len, int minLen) throws SQLException;
 
     /**
      * Release Java resources held. This should not communicate with the Firebird server.
@@ -512,8 +558,45 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public int getMaximumSegmentSize() {
-        // TODO Max size in FB 3 is 2^16, not 2^15 - 1, is that for all versions, or only for newer protocols?
+        return maximumSegmentSize;
+    }
+
+    private static int maximumSegmentSize(FbDatabase db) {
+        /* Max size in FB 2.1 and higher is 2^16 - 1, not 2^15 - 3 (IB 6 docs mention max is 32KiB). However,
+           Firebird 2.1 and 2.5 have issues with conversion from SSHORT to 32-bit (applying sign extension), leading to
+           incorrect buffer sizes, instead of addressing that, we only apply the higher limit for Firebird 3.0 and
+           higher. */
+        if (db != null && db.getServerVersion().isEqualOrAbove(3, 0)) {
+            /* NOTE: getSegment can retrieve at most 65533 bytes of blob data as the buffer to receive segments is
+               max 65535 bytes, but the contents of the buffer are one or more segments prefixed with 2-byte lengths;
+               putSegment can write max 65535 bytes, because the buffer *is* the segment */
+            return 65535;
+        }
+        /* NOTE: This should probably be Short.MAX_VALUE, but we can no longer run the relevant tests on Firebird 2.0
+           and older (which aren't supported any way), and for Firebird 2.1 and 2.5, this may cause the same issue with
+           sign extension and buffer sizes mentioned above, so we leave this as is. */
         return Short.MAX_VALUE - 2;
+    }
+
+    /**
+     * Validates requested offset ({@code off}) and length ({@code len}) against the array ({@code b}).
+     *
+     * @param b
+     *         array
+     * @param off
+     *         position in array
+     * @param len
+     *         length from {@code off}
+     * @throws SQLException
+     *         if {@code off < 0}, {@code len < 0}, or if {@code off + len > b.length}
+     * @since 5.0.7
+     */
+    protected final void validateBufferLength(byte[] b, int off, int len) throws SQLException {
+        try {
+            IOUtils.checkFromIndexSize(off, len, b.length);
+        } catch (IndexOutOfBoundsException e) {
+            throw new SQLNonTransientException(e.toString(), SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+        }
     }
 
     /**

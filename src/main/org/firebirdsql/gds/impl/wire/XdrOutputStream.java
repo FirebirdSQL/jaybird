@@ -28,6 +28,7 @@ package org.firebirdsql.gds.impl.wire;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ParameterBuffer;
+import org.firebirdsql.util.IOUtils;
 import org.firebirdsql.util.InternalApi;
 
 import javax.crypto.Cipher;
@@ -165,21 +166,41 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
     }
 
     /**
-     * Write a {@code byte} buffer to the underlying output stream in
-     * XDR format.
+     * Write byte buffer {@code buf} to the underlying output stream in XDR format.
      *
-     * @param buffer The {@code byte} buffer to be written
-     * @throws IOException if an error occurs while writing to the
-     *         underlying output stream
+     * @param buf
+     *         byte buffer to be written
+     * @throws IOException
+     *         if an error occurs while writing to the underlying output stream
      */
-    public void writeBuffer(byte[] buffer) throws IOException {
-        if (buffer == null)
+    public void writeBuffer(byte[] buf) throws IOException {
+        if (buf == null) {
             writeInt(0);
-        else {
-            int len = buffer.length;
-            writeInt(len);
-            write(buffer, 0, len, (4 - len) & 3);
+        } else {
+            writeBuffer(buf, 0, buf.length);
         }
+    }
+
+    /**
+     * Write byte buffer {@code buf} from offset {@code off} for {@code len} bytes to the underlying output stream
+     * in XDR format.
+     *
+     * @param buf
+     *         byte buffer to be written
+     * @param off
+     *         offset to start
+     * @param len
+     *         length to write
+     * @throws IOException
+     *         if an error occurs while writing to the underlying output stream
+     * @throws IndexOutOfBoundsException
+     *         If {@code off} is negative, {@code len} is negative, or {@code len} is greater than
+     *         {@code buff.length - off}
+     */
+    public void writeBuffer(byte[] buf, int off, int len) throws IOException {
+        IOUtils.checkFromIndexSize(off, len, buf.length);
+        writeInt(len);
+        write(buf, off, len, (4 - len) & 3);
     }
 
     /**

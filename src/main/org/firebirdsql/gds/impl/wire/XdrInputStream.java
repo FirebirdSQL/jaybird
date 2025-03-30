@@ -97,7 +97,6 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
         if (numbytes <= 0) {
             return 0;
         }
-        // TODO Switch the readNBytes in Java 9, and simplify as it's currently only used for 1 - 3 bytes.
         int n = numbytes;
         int buflen = Math.min(1024, n);
         byte[] data = new byte[buflen];

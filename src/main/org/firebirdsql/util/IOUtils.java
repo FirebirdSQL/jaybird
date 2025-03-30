@@ -82,4 +82,11 @@ public final class IOUtils {
         }
         return out.toString();
     }
+
+    public static void checkFromIndexSize(int fromIndex, int size, int length) {
+        // based on Java 9+ Objects.checkFromIndexSize
+        if ((length | fromIndex | size) < 0 || size > length - fromIndex)
+            throw new IndexOutOfBoundsException(String.format("Range [%s, %<s + %s) out of bounds for length %s",
+                    fromIndex, size, length));
+    }
 }

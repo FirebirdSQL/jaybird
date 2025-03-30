@@ -195,7 +195,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
         try (LockCloseable ignored = withLock()) {
             checkClosed();
             if (isNew) {
-                throw new FBSQLException("No Blob ID is available in new Blob object.");
+                throw new FBSQLException("No Blob ID is available in new Blob object");
             }
             return gdsHelper.openBlob(blobId, config);
         }
@@ -337,29 +337,30 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
 
     @Override
     public byte[] getBytes(long pos, int length) throws SQLException {
-        if (pos < 1)
-            throw new FBSQLException("Blob position should be >= 1");
-
-        if (pos > Integer.MAX_VALUE)
-            throw new FBSQLException("Blob position is limited to 2^31 - 1 due to isc_seek_blob limitations.",
+        if (pos < 1) {
+            throw new SQLException("Expected value of pos > 0, got " + pos,
                     SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+        } else if (pos > Integer.MAX_VALUE) {
+            throw new SQLException("Blob position is limited to 2^31 - 1 due to isc_seek_blob limitations",
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+        } else if (length < 0) {
+            throw new SQLException("Expected value of length >= 0, got " + length,
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+        }
 
         try (LockCloseable ignored = withLock()) {
             blobListener.executionStarted(this);
-            try {
-                FirebirdBlob.BlobInputStream in = (FirebirdBlob.BlobInputStream) getBinaryStream();
-                try {
-                    if (pos != 1)
-                        in.seek((int) pos - 1);
-
-                    byte[] result = new byte[length];
-                    in.readFully(result);
-                    return result;
-                } finally {
-                    in.close();
+            try (FirebirdBlob.BlobInputStream in = (FirebirdBlob.BlobInputStream) getBinaryStream()) {
+                if (pos != 1) {
+                    in.seek((int) pos - 1);
                 }
-            } catch (IOException ex) {
-                throw new FBSQLException(ex);
+
+                return in.readNBytes(length);
+            } catch (IOException e) {
+                if (e.getCause() instanceof SQLException) {
+                    throw (SQLException) e.getCause();
+                }
+                throw new SQLException(e.toString(), SQLStateConstants.SQL_STATE_GENERAL_ERROR, e);
             } finally {
                 blobListener.executionCompleted(this);
             }
@@ -444,7 +445,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     public long getBlobId() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (isNew)
-                throw new FBSQLException("No Blob ID is available in new Blob object.");
+                throw new FBSQLException("No Blob ID is available in new Blob object");
 
             return blobId;
         }

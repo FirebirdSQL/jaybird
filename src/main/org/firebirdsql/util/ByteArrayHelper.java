@@ -48,6 +48,7 @@ public final class ByteArrayHelper {
             "E0E1E2E3E4E5E6E7E8E9EAEBECEDEEEF"+
             "F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF").toCharArray();
     //@formatter:on
+    private static final byte[] EMPTY = new byte[0];
 
     private ByteArrayHelper() {
         // no instances
@@ -137,6 +138,13 @@ public final class ByteArrayHelper {
             if (array[idx] == b) return idx;
         }
         return -1;
+    }
+
+    /**
+     * @return an empty array (length == 0)
+     */
+    public static byte[] emptyByteArray() {
+        return EMPTY;
     }
 
 }
