@@ -211,7 +211,7 @@ public abstract class BaseTestBlob {
      */
     @SuppressWarnings("SameParameterValue")
     protected void populateSegmentedBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
-        populateBlob(id, baseContent, requiredSize, false);;
+        populateBlob(id, baseContent, requiredSize, false);
     }
 
     /**
