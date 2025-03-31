@@ -1,0 +1,61 @@
+= jdp-2025-04: Lazy Send Blob Optimizations -- Info Items
+:jdp-2025-02: https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2025-02-lazy-send-blob-optimizations.adoc[jdp-2025-02: Lazy Send Blob Optimizations]
+
+// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 5, Jaybird 6, Jaybird 7
+* Updates: {jdp-2025-02}
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+In {jdp-2025-02}, opening of blobs server-side was delayed until a put, get, or info requests is performed.
+
+The Firebird 5.0.2 native client takes a slightly different approach, requesting info items and one segment of 16 KiB on open.
+We intentionally did not do this in the wire protocol implementation (see also jdp-2025-02).
+However, always requesting the known blob info items and serving subsequent info requests from that cache response does make sense.
+
+== Decision
+
+The V11 wire protocol blob implementation is modified to fetch known blob info items on the server-side open.
+This will only be done for input blobs, as most blob info items change for output blobs after each put.
+
+Info requests are served from this cache *if* the request contains a subset of the known info items, otherwise it is sent to the server in case there are blob info items unknown to Jaybird, but known to the server.
+
+An info response will be generated containing only the requested info items in the requested order (the cached info items will not be returned as-is).
+
+== Consequences
+
+There should be no visible consequences of this change, other than reduced latency of information item requests, if that request is not the request that triggered the server-side open nor contains unknown blob info items.
+
+Given a server-side open may be triggered by a blob info request, the implementation will need to be able to handle this (e.g. performing the request anyway, performing a ping to obtain the response, maybe something else).
+The decision on the exact solution for this will be deferred until implementation.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2025-04: Lazy Send Blob Optimizations -- Info Items`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2025.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird

@@ -1,4 +1,5 @@
 = jdp-2025-02: Lazy Send Blob Optimizations
+:jdp-2025-04: https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2025-04-lazy-send-blob-optimizations-info-items.adoc[jdp-2025-03: Lazy Send Blob Optimizations -- Info Items]
 
 // SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
 // SPDX-License-Identifier: LicenseRef-PDL-1.0
@@ -6,7 +7,9 @@
 == Status
 
 * Published: 2025-03-13
-* Implemented in: Jaybird 5, Jaybird 6, Jaybird 7
+* Updated: 2025-03-31
+* Implemented in: Jaybird 5.0.7, Jaybird 6.0.1, Jaybird 7
+* Updated by: {jdp-2025-04}
 
 == Type
 
