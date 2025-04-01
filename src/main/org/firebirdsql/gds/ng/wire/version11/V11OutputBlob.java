@@ -83,7 +83,7 @@ public class V11OutputBlob extends V10OutputBlob {
                             }
                         } else {
                             System.getLogger(getClass().getName()).log(System.Logger.Level.DEBUG,
-                                    "Expected response of type GenericResponse for blob create, but received a %s",
+                                    "Expected response of type GenericResponse for blob create, but received a {0}",
                                     response != null ? response.getClass().getName() : "(null)");
                         }
                     }

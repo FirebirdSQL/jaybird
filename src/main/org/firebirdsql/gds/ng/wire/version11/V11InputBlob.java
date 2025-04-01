@@ -97,7 +97,7 @@ public class V11InputBlob extends V10InputBlob {
                     }
                 } else {
                     System.getLogger(getClass().getName()).log(DEBUG,
-                            "Expected response of type GenericResponse for blob open, but received a %s",
+                            "Expected response of type GenericResponse for blob open, but received a {0}",
                             response != null ? response.getClass().getName() : "(null)");
                 }
             }
@@ -129,7 +129,7 @@ public class V11InputBlob extends V10InputBlob {
                     processBlobInfoOnDeferredOpenResponse(genericResponse);
                 } else {
                     System.getLogger(getClass().getName()).log(DEBUG,
-                            "Expected response of type GenericResponse for blob info on deferred open, but received a %s",
+                            "Expected response of type GenericResponse for blob info on deferred open, but received a {0}",
                             response != null ? response.getClass().getName() : "(null)");
                 }
             }
