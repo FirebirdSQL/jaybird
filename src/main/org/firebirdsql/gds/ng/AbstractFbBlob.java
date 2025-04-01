@@ -27,6 +27,7 @@ import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.ByteArrayHelper;
 import org.firebirdsql.util.IOUtils;
 
 import java.sql.SQLException;
@@ -490,6 +491,20 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             errorOccurred(e);
             throw e;
         }
+    }
+
+    /**
+     * The known blob info items for the connected server as a blob info request buffer.
+     *
+     * @return the known blob info items (possibly empty under implementation-specific circumstances)
+     * @since 7
+     */
+    protected byte[] getKnownBlobInfoItems() {
+        FbDatabase db = getDatabase();
+        if (db instanceof AbstractFbDatabase) {
+            return ((AbstractFbDatabase<?>) db).getServerVersionInformation().getBlobInfoRequestItems();
+        }
+        return ByteArrayHelper.emptyByteArray();
     }
 
     @Override

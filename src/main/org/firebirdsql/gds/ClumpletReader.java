@@ -27,6 +27,7 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.Arrays;
 
+import static org.firebirdsql.gds.ISCConstants.isc_spb_version;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_clumpletReaderUsageError;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidClumpletStructure;
 
@@ -49,18 +50,13 @@ public class ClumpletReader {
     }
 
     public boolean isTagged() {
-        switch (kind) {
-        case Tpb:
-        case Tagged:
-        case WideTagged:
-        case SpbAttach:
-            return true;
-        }
-
-        return false;
+        return kind.isTagged();
     }
 
     public int getBufferTag() throws SQLException {
+        if (!isTagged()) {
+            throw usageMistake("buffer is not tagged");
+        }
         switch (kind) {
         case Tpb:
         case Tagged:
@@ -69,33 +65,16 @@ public class ClumpletReader {
                 throw invalidStructure("empty buffer");
             }
             return buffer[0];
-        case SpbStart:
-        case UnTagged:
-        case WideUnTagged:
-        case SpbSendItems:
-        case SpbReceiveItems:
-            throw usageMistake("buffer is not tagged");
         case SpbAttach:
             if (buffer.length == 0) {
                 throw invalidStructure("empty buffer");
-            }
-            switch (buffer[0]) {
-            case ISCConstants.isc_spb_version1:
-                // This is old SPB format, it's almost like DPB -
-                // buffer's tag is the first byte.
-                return buffer[0];
-            case ISCConstants.isc_spb_version:
-                // Buffer's tag is the second byte
+             }else if (buffer[0] == isc_spb_version) {
                 if (buffer.length == 1) {
-                    throw invalidStructure("buffer too short (1 byte)");
+                    throw invalidStructure("empty buffer");
                 }
                 return buffer[1];
-            case ISCConstants.isc_spb_version3:
-                // This is wide SPB attach format - buffer's tag is the first byte.
-                return buffer[0];
-            default:
-                throw invalidStructure("spb in service attach should begin with isc_spb_version1 or isc_spb_version");
             }
+            return buffer[0];
         default:
             throw new SQLException("Unexpected clumplet kind: " + kind);
         }
@@ -132,6 +111,7 @@ public class ClumpletReader {
             }
             return ClumpletType.StringSpb;
         case SpbReceiveItems:
+        case InfoItems:
             return ClumpletType.SingleTpb;
         case SpbStart:
             switch (tag) {
@@ -293,6 +273,15 @@ public class ClumpletReader {
                 break;
             }
             throw invalidStructure("wrong spb state");
+        case InfoResponse:
+            switch (tag) {
+            case ISCConstants.isc_info_end:
+            case ISCConstants.isc_info_truncated:
+            case ISCConstants.isc_info_flag_end:
+                return ClumpletType.SingleTpb;
+            default:
+                return ClumpletType.StringSpb;
+            }
         }
         throw invalidStructure("unknown reason");
     }
@@ -383,32 +372,26 @@ public class ClumpletReader {
     public void moveNext() throws SQLException {
         if (isEof()) {
             return; // no need to raise useless exceptions
+        } else if (kind == Kind.InfoResponse) {
+            int clumpTag = getClumpTag();
+            // terminating clumplet
+            if (clumpTag == ISCConstants.isc_info_end || clumpTag == ISCConstants.isc_info_truncated) {
+                position = getBufferLength();
+                return;
+            }
         }
         int cs = getClumpletSize(true, true, true);
         adjustSpbState();
         position += cs;
     }
 
-    public void rewind() throws SQLException {
-        if (buffer == null || buffer.length == 0) {
+    public void rewind() {
+        if (buffer.length == 0 || !isTagged()) {
             position = 0;
-            spbState = 0;
-            return;
-        }
-        switch (kind) {
-        case UnTagged:
-        case WideUnTagged:
-        case SpbStart:
-        case SpbSendItems:
-        case SpbReceiveItems:
-            position = 0;
-            break;
-        default:
-            if (kind == Kind.SpbAttach && getBufferLength() > 0 && buffer[0] != ISCConstants.isc_spb_version1) {
-                position = 2;
-            } else {
-                position = 1;
-            }
+        } else if (kind == Kind.SpbAttach && getBufferLength() > 0 && buffer[0] == isc_spb_version) {
+            position = 2;
+        } else {
+            position = 1;
         }
         spbState = 0;
     }
@@ -537,9 +520,7 @@ public class ClumpletReader {
     }
 
     private int getBufferLength() {
-        if (buffer.length == 1 && kind != Kind.UnTagged && kind != Kind.SpbStart &&
-                kind != Kind.WideUnTagged && kind != Kind.SpbSendItems &&
-                kind != Kind.SpbReceiveItems) {
+        if (buffer.length == 1 && isTagged()) {
             return 0;
         }
         return buffer.length;
@@ -554,16 +535,30 @@ public class ClumpletReader {
     }
 
     public enum Kind {
-        EndOfList,
-        Tagged,
-        UnTagged,
-        SpbAttach,
-        SpbStart,
-        Tpb,
-        WideTagged,
-        WideUnTagged,
-        SpbSendItems,
-        SpbReceiveItems
+
+        Tagged(true),
+        UnTagged(false),
+        SpbAttach(true),
+        SpbStart(false),
+        Tpb(true),
+        WideTagged(true),
+        WideUnTagged(false),
+        SpbSendItems(false),
+        SpbReceiveItems(false),
+        InfoResponse(false),
+        InfoItems(false),
+        ;
+
+        private final boolean tagged;
+
+        Kind(boolean tagged) {
+            this.tagged = tagged;
+        }
+
+        public boolean isTagged() {
+            return tagged;
+        }
+
     }
 
     public enum ClumpletType {
