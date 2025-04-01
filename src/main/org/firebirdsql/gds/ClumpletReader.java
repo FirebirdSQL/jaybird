@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
@@ -6,286 +6,183 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.Arrays;
 
+import static org.firebirdsql.gds.ISCConstants.isc_spb_version;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_clumpletReaderUsageError;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidClumpletStructure;
 
 /**
- * Reader for clumplets, similar to the implementation {@code ClumpletReader.cpp}.
+ * Reader for clumplets, similar to the implementation of {@code ClumpletReader.cpp} in Firebird.
  *
  * @author Mark Rotteveel
  * @since 3.0
  */
-public class ClumpletReader {
+@NullMarked
+public final class ClumpletReader {
 
     private final Kind kind;
     private final byte[] buffer;
     private int spbState; // Reflects state of spb parser/writer
     private int position;
 
-    public ClumpletReader(Kind kind, byte[] buffer) {
+    public ClumpletReader(Kind kind, byte @Nullable [] buffer) {
         this.kind = kind;
-        this.buffer = buffer;
+        this.buffer = buffer != null ? buffer : ByteArrayHelper.emptyByteArray();
     }
 
     public boolean isTagged() {
-        switch (kind) {
-        case Tpb:
-        case Tagged:
-        case WideTagged:
-        case SpbAttach:
-            return true;
-        }
-
-        return false;
+        return kind.isTagged();
     }
 
     public int getBufferTag() throws SQLException {
-        switch (kind) {
-        case Tpb:
-        case Tagged:
-        case WideTagged:
-            if (buffer.length == 0) {
-                throw invalidStructure("empty buffer");
-            }
-            return buffer[0];
-        case SpbStart:
-        case UnTagged:
-        case WideUnTagged:
-        case SpbSendItems:
-        case SpbReceiveItems:
+        if (!isTagged()) {
             throw usageMistake("buffer is not tagged");
-        case SpbAttach:
-            if (buffer.length == 0) {
-                throw invalidStructure("empty buffer");
-            }
-            switch (buffer[0]) {
-            case ISCConstants.isc_spb_version1:
-                // This is old SPB format, it's almost like DPB -
-                // buffer's tag is the first byte.
-                return buffer[0];
-            case ISCConstants.isc_spb_version:
-                // Buffer's tag is the second byte
-                if (buffer.length == 1) {
-                    throw invalidStructure("buffer too short (1 byte)");
-                }
-                return buffer[1];
-            case ISCConstants.isc_spb_version3:
-                // This is wide SPB attach format - buffer's tag is the first byte.
-                return buffer[0];
-            default:
-                throw invalidStructure("spb in service attach should begin with isc_spb_version1 or isc_spb_version");
-            }
-        default:
-            throw new SQLException("Unexpected clumplet kind: " + kind);
         }
+        return switch (kind) {
+            case Tpb, Tagged, WideTagged -> {
+                if (buffer.length == 0) {
+                    throw invalidStructure("empty buffer");
+                }
+                yield buffer[0];
+            }
+            case SpbAttach -> {
+                if (buffer.length == 0) {
+                    throw invalidStructure("empty buffer");
+                } else if (buffer[0] == isc_spb_version) {
+                    if (buffer.length == 1) {
+                        throw invalidStructure("empty buffer");
+                    }
+                    yield buffer[1];
+                }
+                yield buffer[0];
+            }
+            default -> throw new SQLException("Unexpected clumplet kind: " + kind);
+        };
     }
 
     public ClumpletType getClumpletType(byte tag) throws SQLException {
-        switch (kind) {
-        case Tagged:
-        case UnTagged:
-        case SpbAttach:
-            return ClumpletType.TraditionalDpb;
-        case WideTagged:
-        case WideUnTagged:
-            return ClumpletType.Wide;
-        case Tpb:
-            switch (tag) {
-            case TpbItems.isc_tpb_lock_write:
-            case TpbItems.isc_tpb_lock_read:
-            case TpbItems.isc_tpb_lock_timeout:
-                return ClumpletType.TraditionalDpb;
-            default:
-                return ClumpletType.SingleTpb;
-            }
-        case SpbSendItems:
-            switch (tag) {
-            case ISCConstants.isc_info_svc_auth_block:
-                return ClumpletType.Wide;
-            case ISCConstants.isc_info_end:
-            case ISCConstants.isc_info_truncated:
-            case ISCConstants.isc_info_error:
-            case ISCConstants.isc_info_data_not_ready:
-            case ISCConstants.isc_info_length:
-            case ISCConstants.isc_info_flag_end:
-                return ClumpletType.SingleTpb;
-            default:
-                return ClumpletType.StringSpb;
-            }
-        case SpbReceiveItems:
-            return ClumpletType.SingleTpb;
-        case SpbStart:
+        return switch (kind) {
+        case Tagged, UnTagged, SpbAttach -> ClumpletType.TraditionalDpb;
+        case WideTagged, WideUnTagged -> ClumpletType.Wide;
+        case Tpb -> switch (tag) {
+                case TpbItems.isc_tpb_lock_write, TpbItems.isc_tpb_lock_read, TpbItems.isc_tpb_lock_timeout ->
+                        ClumpletType.TraditionalDpb;
+                default -> ClumpletType.SingleTpb;
+            };
+        case SpbSendItems -> switch (tag) {
+                case ISCConstants.isc_info_svc_auth_block -> ClumpletType.Wide;
+                case ISCConstants.isc_info_end, ISCConstants.isc_info_truncated, ISCConstants.isc_info_error,
+                     ISCConstants.isc_info_data_not_ready, ISCConstants.isc_info_length,
+                     ISCConstants.isc_info_flag_end -> ClumpletType.SingleTpb;
+                default -> ClumpletType.StringSpb;
+            };
+        case SpbReceiveItems, InfoItems -> ClumpletType.SingleTpb;
+        case SpbStart -> {
             switch (tag) {
             case SpbItems.isc_spb_auth_block:
             case SpbItems.isc_spb_trusted_auth:
             case SpbItems.isc_spb_auth_plugin_name:
             case SpbItems.isc_spb_auth_plugin_list:
-                return ClumpletType.Wide;
+                yield ClumpletType.Wide;
             }
-            switch (spbState) {
-            case 0:
-                return ClumpletType.SingleTpb;
-            case ISCConstants.isc_action_svc_backup:
-            case ISCConstants.isc_action_svc_restore:
-                switch (tag) {
-                case ISCConstants.isc_spb_bkp_file:
-                case SpbItems.isc_spb_dbname:
-                case ISCConstants.isc_spb_res_fix_fss_data:
-                case ISCConstants.isc_spb_res_fix_fss_metadata:
-                case ISCConstants.isc_spb_bkp_stat:
-                    return ClumpletType.StringSpb;
-                case ISCConstants.isc_spb_bkp_factor:
-                case ISCConstants.isc_spb_bkp_length:
-                case ISCConstants.isc_spb_res_length:
-                case ISCConstants.isc_spb_res_buffers:
-                case ISCConstants.isc_spb_res_page_size:
-                case SpbItems.isc_spb_options:
-                case SpbItems.isc_spb_verbint:
-                    return ClumpletType.IntSpb;
-                case SpbItems.isc_spb_verbose:
-                    return ClumpletType.SingleTpb;
-                case ISCConstants.isc_spb_res_access_mode:
-                    return ClumpletType.ByteSpb;
-                default:
-                    throw invalidStructure("unknown parameter for backup/restore");
-                }
-            case ISCConstants.isc_action_svc_repair:
-                switch (tag) {
-                case SpbItems.isc_spb_dbname:
-                    return ClumpletType.StringSpb;
-                case SpbItems.isc_spb_options:
-                case ISCConstants.isc_spb_rpr_commit_trans:
-                case ISCConstants.isc_spb_rpr_rollback_trans:
-                case ISCConstants.isc_spb_rpr_recover_two_phase:
-                    return ClumpletType.IntSpb;
-                case ISCConstants.isc_spb_rpr_commit_trans_64:
-                case ISCConstants.isc_spb_rpr_rollback_trans_64:
-                case ISCConstants.isc_spb_rpr_recover_two_phase_64:
-                    return ClumpletType.BigIntSpb;
-                default:
-                    throw invalidStructure("unknown parameter for repair");
-                }
-            case ISCConstants.isc_action_svc_add_user:
-            case ISCConstants.isc_action_svc_delete_user:
-            case ISCConstants.isc_action_svc_modify_user:
-            case ISCConstants.isc_action_svc_display_user:
-            case ISCConstants.isc_action_svc_display_user_adm:
-            case ISCConstants.isc_action_svc_set_mapping:
-            case ISCConstants.isc_action_svc_drop_mapping:
-                switch (tag) {
-                case SpbItems.isc_spb_dbname:
-                case SpbItems.isc_spb_sql_role_name:
-                case ISCConstants.isc_spb_sec_username:
-                case ISCConstants.isc_spb_sec_password:
-                case ISCConstants.isc_spb_sec_groupname:
-                case ISCConstants.isc_spb_sec_firstname:
-                case ISCConstants.isc_spb_sec_middlename:
-                case ISCConstants.isc_spb_sec_lastname:
-                    return ClumpletType.StringSpb;
-                case ISCConstants.isc_spb_sec_userid:
-                case ISCConstants.isc_spb_sec_groupid:
-                case ISCConstants.isc_spb_sec_admin:
-                    return ClumpletType.IntSpb;
-                default:
-                    throw invalidStructure("unknown parameter for security database operation");
-                }
-            case ISCConstants.isc_action_svc_properties:
-                switch (tag) {
-                case SpbItems.isc_spb_dbname:
-                    return ClumpletType.StringSpb;
-                case ISCConstants.isc_spb_prp_page_buffers:
-                case ISCConstants.isc_spb_prp_sweep_interval:
-                case ISCConstants.isc_spb_prp_shutdown_db:
-                case ISCConstants.isc_spb_prp_deny_new_attachments:
-                case ISCConstants.isc_spb_prp_deny_new_transactions:
-                case ISCConstants.isc_spb_prp_set_sql_dialect:
-                case SpbItems.isc_spb_options:
-                case ISCConstants.isc_spb_prp_force_shutdown:
-                case ISCConstants.isc_spb_prp_attachments_shutdown:
-                case ISCConstants.isc_spb_prp_transactions_shutdown:
-                    return ClumpletType.IntSpb;
-                case ISCConstants.isc_spb_prp_reserve_space:
-                case ISCConstants.isc_spb_prp_write_mode:
-                case ISCConstants.isc_spb_prp_access_mode:
-                case ISCConstants.isc_spb_prp_shutdown_mode:
-                case ISCConstants.isc_spb_prp_online_mode:
-                    return ClumpletType.ByteSpb;
-                default:
-                    throw invalidStructure("unknown parameter for setting database properties");
-                }
-            case ISCConstants.isc_action_svc_db_stats:
-                switch (tag) {
-                case SpbItems.isc_spb_dbname:
-                case SpbItems.isc_spb_command_line:
-                case ISCConstants.isc_spb_sts_table:
-                    return ClumpletType.StringSpb;
-                case SpbItems.isc_spb_options:
-                    return ClumpletType.IntSpb;
-                default:
-                    throw invalidStructure("unknown parameter for getting statistics");
-                }
-            case ISCConstants.isc_action_svc_get_ib_log:
-                throw invalidStructure("unknown parameter for getting log");
-            case ISCConstants.isc_action_svc_nbak:
-            case ISCConstants.isc_action_svc_nrest:
-                switch (tag) {
-                case ISCConstants.isc_spb_nbk_file:
-                case ISCConstants.isc_spb_nbk_direct:
-                case SpbItems.isc_spb_dbname:
-                case ISCConstants.isc_spb_nbk_guid:
-                    return ClumpletType.StringSpb;
-                case ISCConstants.isc_spb_nbk_level:
-                case SpbItems.isc_spb_options:
-                case ISCConstants.isc_spb_nbk_keep_days:
-                case ISCConstants.isc_spb_nbk_keep_rows:
-                    return ClumpletType.IntSpb;
-                case ISCConstants.isc_spb_nbk_clean_history:
-                    return ClumpletType.SingleTpb;
-                default:
-                    throw invalidStructure("unknown parameter for nbackup");
-                }
-            case ISCConstants.isc_action_svc_nfix:
-                switch (tag) {
-                case SpbItems.isc_spb_dbname:
-                    return ClumpletType.StringSpb;
-                case SpbItems.isc_spb_options:
-                    return ClumpletType.IntSpb;
-                default:
-                    throw invalidStructure("unknown parameter for nbackup");
-                }
-            case ISCConstants.isc_action_svc_trace_start:
-            case ISCConstants.isc_action_svc_trace_stop:
-            case ISCConstants.isc_action_svc_trace_suspend:
-            case ISCConstants.isc_action_svc_trace_resume:
-                switch (tag) {
-                case ISCConstants.isc_spb_trc_cfg:
-                case ISCConstants.isc_spb_trc_name:
-                    return ClumpletType.StringSpb;
-                case ISCConstants.isc_spb_trc_id:
-                    return ClumpletType.IntSpb;
-                }
-                break;
-            case ISCConstants.isc_action_svc_validate:
-                switch (tag) {
-                case ISCConstants.isc_spb_val_tab_incl:
-                case ISCConstants.isc_spb_val_tab_excl:
-                case ISCConstants.isc_spb_val_idx_incl:
-                case ISCConstants.isc_spb_val_idx_excl:
-                case SpbItems.isc_spb_dbname:
-                    return ClumpletType.StringSpb;
-                case ISCConstants.isc_spb_val_lock_timeout:
-                    return ClumpletType.IntSpb;
-                }
-                break;
-            }
-            throw invalidStructure("wrong spb state");
+
+            yield switch (spbState) {
+            case 0 -> ClumpletType.SingleTpb;
+            case ISCConstants.isc_action_svc_backup, ISCConstants.isc_action_svc_restore -> switch (tag) {
+                    case ISCConstants.isc_spb_bkp_file, SpbItems.isc_spb_dbname, ISCConstants.isc_spb_res_fix_fss_data,
+                         ISCConstants.isc_spb_res_fix_fss_metadata, ISCConstants.isc_spb_bkp_stat ->
+                            ClumpletType.StringSpb;
+                    case ISCConstants.isc_spb_bkp_factor, ISCConstants.isc_spb_bkp_length,
+                         ISCConstants.isc_spb_res_length, ISCConstants.isc_spb_res_buffers,
+                         ISCConstants.isc_spb_res_page_size, SpbItems.isc_spb_options, SpbItems.isc_spb_verbint ->
+                            ClumpletType.IntSpb;
+                    case SpbItems.isc_spb_verbose -> ClumpletType.SingleTpb;
+                    case ISCConstants.isc_spb_res_access_mode -> ClumpletType.ByteSpb;
+                    default -> throw invalidStructure("unknown parameter for backup/restore");
+                };
+            case ISCConstants.isc_action_svc_repair -> switch (tag) {
+                    case SpbItems.isc_spb_dbname -> ClumpletType.StringSpb;
+                    case SpbItems.isc_spb_options, ISCConstants.isc_spb_rpr_commit_trans,
+                         ISCConstants.isc_spb_rpr_rollback_trans, ISCConstants.isc_spb_rpr_recover_two_phase ->
+                            ClumpletType.IntSpb;
+                    case ISCConstants.isc_spb_rpr_commit_trans_64, ISCConstants.isc_spb_rpr_rollback_trans_64,
+                         ISCConstants.isc_spb_rpr_recover_two_phase_64 -> ClumpletType.BigIntSpb;
+                    default -> throw invalidStructure("unknown parameter for repair");
+                };
+            case ISCConstants.isc_action_svc_add_user, ISCConstants.isc_action_svc_delete_user,
+                 ISCConstants.isc_action_svc_modify_user, ISCConstants.isc_action_svc_display_user,
+                 ISCConstants.isc_action_svc_display_user_adm, ISCConstants.isc_action_svc_set_mapping,
+                 ISCConstants.isc_action_svc_drop_mapping -> switch (tag) {
+                    case SpbItems.isc_spb_dbname, SpbItems.isc_spb_sql_role_name, ISCConstants.isc_spb_sec_username,
+                         ISCConstants.isc_spb_sec_password, ISCConstants.isc_spb_sec_groupname,
+                         ISCConstants.isc_spb_sec_firstname, ISCConstants.isc_spb_sec_middlename,
+                         ISCConstants.isc_spb_sec_lastname -> ClumpletType.StringSpb;
+                    case ISCConstants.isc_spb_sec_userid, ISCConstants.isc_spb_sec_groupid,
+                         ISCConstants.isc_spb_sec_admin -> ClumpletType.IntSpb;
+                    default -> throw invalidStructure("unknown parameter for security database operation");
+                };
+            case ISCConstants.isc_action_svc_properties -> switch (tag) {
+                    case SpbItems.isc_spb_dbname -> ClumpletType.StringSpb;
+                    case ISCConstants.isc_spb_prp_page_buffers, ISCConstants.isc_spb_prp_sweep_interval,
+                         ISCConstants.isc_spb_prp_shutdown_db, ISCConstants.isc_spb_prp_deny_new_attachments,
+                         ISCConstants.isc_spb_prp_deny_new_transactions, ISCConstants.isc_spb_prp_set_sql_dialect,
+                         SpbItems.isc_spb_options, ISCConstants.isc_spb_prp_force_shutdown,
+                         ISCConstants.isc_spb_prp_attachments_shutdown,
+                         ISCConstants.isc_spb_prp_transactions_shutdown -> ClumpletType.IntSpb;
+                    case ISCConstants.isc_spb_prp_reserve_space, ISCConstants.isc_spb_prp_write_mode,
+                         ISCConstants.isc_spb_prp_access_mode, ISCConstants.isc_spb_prp_shutdown_mode,
+                         ISCConstants.isc_spb_prp_online_mode -> ClumpletType.ByteSpb;
+                    default -> throw invalidStructure("unknown parameter for setting database properties");
+                };
+            case ISCConstants.isc_action_svc_db_stats -> switch (tag) {
+                    case SpbItems.isc_spb_dbname, SpbItems.isc_spb_command_line, ISCConstants.isc_spb_sts_table ->
+                            ClumpletType.StringSpb;
+                    case SpbItems.isc_spb_options -> ClumpletType.IntSpb;
+                    default -> throw invalidStructure("unknown parameter for getting statistics");
+                };
+            case ISCConstants.isc_action_svc_get_ib_log -> throw invalidStructure("unknown parameter for getting log");
+            case ISCConstants.isc_action_svc_nbak, ISCConstants.isc_action_svc_nrest -> switch (tag) {
+                    case ISCConstants.isc_spb_nbk_file, ISCConstants.isc_spb_nbk_direct, SpbItems.isc_spb_dbname,
+                         ISCConstants.isc_spb_nbk_guid -> ClumpletType.StringSpb;
+                    case ISCConstants.isc_spb_nbk_level, SpbItems.isc_spb_options, ISCConstants.isc_spb_nbk_keep_days,
+                         ISCConstants.isc_spb_nbk_keep_rows -> ClumpletType.IntSpb;
+                    case ISCConstants.isc_spb_nbk_clean_history -> ClumpletType.SingleTpb;
+                    default -> throw invalidStructure("unknown parameter for nbackup");
+                };
+            case ISCConstants.isc_action_svc_nfix -> switch (tag) {
+                    case SpbItems.isc_spb_dbname -> ClumpletType.StringSpb;
+                    case SpbItems.isc_spb_options -> ClumpletType.IntSpb;
+                    default -> throw invalidStructure("unknown parameter for nbackup");
+                };
+            case ISCConstants.isc_action_svc_trace_start, ISCConstants.isc_action_svc_trace_stop,
+                 ISCConstants.isc_action_svc_trace_suspend, ISCConstants.isc_action_svc_trace_resume -> switch (tag) {
+                    case ISCConstants.isc_spb_trc_cfg, ISCConstants.isc_spb_trc_name -> ClumpletType.StringSpb;
+                    case ISCConstants.isc_spb_trc_id -> ClumpletType.IntSpb;
+                    default -> throw invalidStructure("wrong spb state");
+                };
+            case ISCConstants.isc_action_svc_validate -> switch (tag) {
+                    case ISCConstants.isc_spb_val_tab_incl, ISCConstants.isc_spb_val_tab_excl,
+                         ISCConstants.isc_spb_val_idx_incl, ISCConstants.isc_spb_val_idx_excl,
+                         SpbItems.isc_spb_dbname -> ClumpletType.StringSpb;
+                    case ISCConstants.isc_spb_val_lock_timeout -> ClumpletType.IntSpb;
+                    default -> throw invalidStructure("wrong spb state");
+                };
+            default -> throw invalidStructure("wrong spb state");
+            };
         }
-        throw invalidStructure("unknown reason");
+        case InfoResponse -> switch (tag) {
+                case ISCConstants.isc_info_end, ISCConstants.isc_info_truncated, ISCConstants.isc_info_flag_end ->
+                        ClumpletType.SingleTpb;
+                default -> ClumpletType.StringSpb;
+            };
+        };
     }
 
     public void adjustSpbState() throws SQLException {
@@ -374,32 +271,26 @@ public class ClumpletReader {
     public void moveNext() throws SQLException {
         if (isEof()) {
             return; // no need to raise useless exceptions
+        } else if (kind == Kind.InfoResponse) {
+            int clumpTag = getClumpTag();
+            // terminating clumplet
+            if (clumpTag == ISCConstants.isc_info_end || clumpTag == ISCConstants.isc_info_truncated) {
+                position = getBufferLength();
+                return;
+            }
         }
         int cs = getClumpletSize(true, true, true);
         adjustSpbState();
         position += cs;
     }
 
-    public void rewind() throws SQLException {
-        if (buffer == null || buffer.length == 0) {
+    public void rewind() {
+        if (buffer.length == 0 || !isTagged()) {
             position = 0;
-            spbState = 0;
-            return;
-        }
-        switch (kind) {
-        case UnTagged:
-        case WideUnTagged:
-        case SpbStart:
-        case SpbSendItems:
-        case SpbReceiveItems:
-            position = 0;
-            break;
-        default:
-            if (kind == Kind.SpbAttach && getBufferLength() > 0 && buffer[0] != ISCConstants.isc_spb_version1) {
-                position = 2;
-            } else {
-                position = 1;
-            }
+        } else if (kind == Kind.SpbAttach && getBufferLength() > 0 && buffer[0] == isc_spb_version) {
+            position = 2;
+        } else {
+            position = 1;
         }
         spbState = 0;
     }
@@ -528,9 +419,7 @@ public class ClumpletReader {
     }
 
     private int getBufferLength() {
-        if (buffer.length == 1 && kind != Kind.UnTagged && kind != Kind.SpbStart &&
-                kind != Kind.WideUnTagged && kind != Kind.SpbSendItems &&
-                kind != Kind.SpbReceiveItems) {
+        if (buffer.length == 1 && isTagged()) {
             return 0;
         }
         return buffer.length;
@@ -546,16 +435,30 @@ public class ClumpletReader {
 
     @SuppressWarnings("java:S115")
     public enum Kind {
-        EndOfList,
-        Tagged,
-        UnTagged,
-        SpbAttach,
-        SpbStart,
-        Tpb,
-        WideTagged,
-        WideUnTagged,
-        SpbSendItems,
-        SpbReceiveItems
+
+        Tagged(true),
+        UnTagged(false),
+        SpbAttach(true),
+        SpbStart(false),
+        Tpb(true),
+        WideTagged(true),
+        WideUnTagged(false),
+        SpbSendItems(false),
+        SpbReceiveItems(false),
+        InfoResponse(false),
+        InfoItems(false),
+        ;
+
+        private final boolean tagged;
+
+        Kind(boolean tagged) {
+            this.tagged = tagged;
+        }
+
+        public boolean isTagged() {
+            return tagged;
+        }
+
     }
 
     @SuppressWarnings("java:S115")
