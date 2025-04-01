@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
@@ -6,6 +6,7 @@ import com.sun.jna.NativeLibrary;
 import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
+import java.lang.System.Logger.Level;
 import java.lang.ref.Cleaner;
 import java.lang.reflect.Proxy;
 
@@ -64,7 +65,7 @@ final class FbClientResource extends NativeResourceTracker.NativeResource {
             disposeImpl();
         } catch (Throwable e) {
             System.getLogger(FbClientResource.class.getName())
-                    .log(System.Logger.Level.ERROR, "Error disposing of " + local, e);
+                    .log(Level.ERROR, "Error disposing of " + local, e);
         }
     }
 
@@ -86,18 +87,18 @@ final class FbClientResource extends NativeResourceTracker.NativeResource {
         public void run() {
             System.Logger log = System.getLogger(FbClientResource.class.getName());
             try {
-                log.log(System.Logger.Level.TRACE, "Calling fb_shutdown on %s", library);
+                log.log(Level.TRACE, "Calling fb_shutdown on {0}", library);
                 library.fb_shutdown(0, 1);
             } finally {
                 FbClientFeatureAccessHandler handler =
                         (FbClientFeatureAccessHandler) Proxy.getInvocationHandler(library);
                 NativeLibrary nativeLibrary = handler.getNativeLibrary();
-                log.log(System.Logger.Level.TRACE, "Disposing JNA native library {0}", nativeLibrary);
+                log.log(Level.TRACE, "Disposing JNA native library {0}", nativeLibrary);
                 try {
                     // Retaining use of dispose for backwards compatibility with older JNA versions for now
                     nativeLibrary.dispose();
                 } catch (Throwable e) {
-                    log.log(System.Logger.Level.ERROR, "Error disposing of " + nativeLibrary, e);
+                    log.log(Level.ERROR, "Error disposing of " + nativeLibrary, e);
                 }
             }
         }
