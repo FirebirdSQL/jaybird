@@ -6,8 +6,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 5, Jaybird 6, Jaybird 7
+* Published: 2025-04-01
+* Implemented in: Jaybird 5.0.7, Jaybird 6.0.1, Jaybird 7
 * Updates: {jdp-2025-02}
 
 == Type
@@ -35,8 +35,7 @@ An info response will be generated containing only the requested info items in t
 
 There should be no visible consequences of this change, other than reduced latency of information item requests, if that request is not the request that triggered the server-side open nor contains unknown blob info items.
 
-Given a server-side open may be triggered by a blob info request, the implementation will need to be able to handle this (e.g. performing the request anyway, performing a ping to obtain the response, maybe something else).
-The decision on the exact solution for this will be deferred until implementation.
+Given a server-side open may be triggered by a blob info request, the implementation will complete a pending open and try to fulfil the request from the then-cached blob info response.
 
 [appendix]
 == License Notice
