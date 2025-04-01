@@ -46,6 +46,9 @@ As part of this fix, there was an incompatible change in the internal GDS-ng API
 Various methods and constructors involved in blob handle creation now throw a `SQLException` if the database is not attached or the transaction is null or not active.
 See also <<breaking-changes-internal-api-6-0-1>>.
 * Fixed: Fetch response with status=0 (FETCH_OK) and count=0 was logged on DEBUG as an unexpected response (https://github.com/FirebirdSQL/jaybird/issues/848[#848])
+* Improvement: backported fetching all known blob info items on open from Jaybird 7 (https://github.com/FirebirdSQL/jaybird/issues/852[#852])
++
+See also <<blob-performance-info-items>>.
 
 === Jaybird 6.0.0
 
@@ -796,6 +799,23 @@ Artificial testing on local WiFi with small blobs shows around 85% increase in t
 This optimization is available for Firebird 2.1 and higher, but formally only supported for Firebird 3.0 and higher.
 
 For native connections, a similar optimization -- but only for reading blobs -- is available when using a Firebird 5.0.2 or higher fbclient, independent of the Jaybird version.
+
+[#blob-performance-info-items]
+==== Requesting known info items on open
+
+Added in: Jaybird 6.0.1, backported from Jaybird 7
+
+In the pure Java implementation, when an input blob is opened, all known blob information items are requested.
+Subsequent blob information requests on the same `FbBlob` handle are fulfilled using the cached information.
+If the request contains information items not in the cache, the request is sent to the server.
+
+For access through JDBC, this optimization has little to no effect, as one of the few times Jaybird itself requests blob information is immediately after opening the blob, which is optimized by the <<blob-performance-defer-open,deferred blob open>>.
+Direct use of `FirebirdBlob.BlobInputStream.length()` or the GDS-ng internal API may benefit from this change.
+We're also investigating further changes to the implementation of Jaybird that could benefit from this.
+
+This optimization is available for Firebird 2.1 and higher, but formally only supported for Firebird 3.0 and higher.
+
+For native connections, a similar optimization is available when using a Firebird 5.0.2 or higher fbclient, independent of the Jaybird version.
 
 [#blob-performance-min-buf]
 ==== Minimum `blobBufferSize` 512 bytes
