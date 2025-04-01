@@ -45,6 +45,7 @@ import java.sql.Statement;
 
 import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
@@ -243,6 +244,8 @@ class FBBackupManagerTest {
 
     @Test
     void testBackupMultiple() throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsLegacyMultiFileDatabase,
+                "Test requires legacy multi-file database support");
         usesDatabase.createDefaultDatabase();
         backupManager.clearBackupPaths();
         backupManager.clearRestorePaths();
