@@ -25,9 +25,6 @@ import static org.firebirdsql.gds.ISCConstants.*;
 /**
  * Strategy for handling server version specific information needs that do not depend on the wire protocol (or client
  * library) version, but on the Firebird server version.
- * <p>
- * Currently only contains information items for statement info requests.
- * </p>
  *
  * @author Mark Rotteveel
  * @since 3.0
@@ -85,6 +82,14 @@ enum ServerVersionInformation {
      * @see #getStatementInfoRequestItems()
      */
     public abstract byte[] getParameterDescriptionInfoRequestItems();
+
+    /**
+     * @return the known blob info request items
+     * @since 7
+     */
+    public byte[] getBlobInfoRequestItems() {
+        return Constants.V_1_0_BLOB_INFO.clone();
+    }
 
     /**
      * Convenience method to check if the majorVersion.minorVersion of this instance is equal to or smaller than the
@@ -176,6 +181,14 @@ enum ServerVersionInformation {
                 isc_info_sql_owner,
                 isc_info_sql_describe_end
         };
+        static final byte[] V_1_0_BLOB_INFO = new byte[] {
+                isc_info_blob_num_segments,
+                isc_info_blob_max_segment,
+                isc_info_blob_total_length,
+                isc_info_blob_type,
+                isc_info_end
+        };
+
         static final byte[] V_2_0_STATEMENT_INFO = new byte[] {
                 isc_info_sql_stmt_type,
                 isc_info_sql_select,
