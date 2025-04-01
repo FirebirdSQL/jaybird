@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2004-2006 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004-2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.management;
@@ -34,6 +34,7 @@ import java.sql.Statement;
 
 import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
@@ -232,6 +233,8 @@ class FBBackupManagerTest {
 
     @Test
     void testBackupMultiple() throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsLegacyMultiFileDatabase,
+                "Test requires legacy multi-file database support");
         usesDatabase.createDefaultDatabase();
         backupManager.clearBackupPaths();
         backupManager.clearRestorePaths();

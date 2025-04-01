@@ -699,6 +699,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} if server supports legacy multi-file databases
+     */
+    public boolean supportsLegacyMultiFileDatabase() {
+        return isVersionBelow(6);
+    }
+
+    /**
      * @return the ODS version used when creating a database or after using the gfix/service repair upgrade database
      * option
      */
