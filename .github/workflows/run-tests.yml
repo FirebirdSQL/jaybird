@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+# SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 # SPDX-License-Identifier: LGPL-2.1-or-later
 name: run-tests
 on: [push,pull_request]
@@ -10,11 +10,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: juarezr/firebirdsql-github-action@v1.2.0
+      - uses: juarezr/firebirdsql-github-action@v2
         with:
-          version: 'v4.0'
-          isc_password: 'masterkey'
+          version: '5.0.2'
+          firebird_root_password: 'masterkey'
           enable_legacy_client_auth: 'true'
+          firebird_conf: 'WireCrypt=Enabled'
       - uses: actions/checkout@v4
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -26,7 +27,7 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/master' }}
       - name: Build with Gradle
-        run: ./gradlew test -Ptest.dbondocker=true -Ptest.db.dir=/firebird/data
+        run: ./gradlew test -Ptest.dbondocker=true -Ptest.db.dir=/var/lib/firebird/data
       - name: Store Report Artifact
         uses: actions/upload-artifact@v4
         if: always()
