@@ -49,6 +49,7 @@ See also <<breaking-changes-internal-api-6-0-1>>.
 * Improvement: backported fetching all known blob info items on open from Jaybird 7 (https://github.com/FirebirdSQL/jaybird/issues/852[#852])
 +
 See also <<blob-performance-info-items>>.
+* Dependency update: updated `net.java.dev.jna:jna-jpms` from 5.16.0 to 5.17.0 (used by `jaybird-native`) (https://github.com/FirebirdSQL/jaybird/issues/854[#854])
 
 === Jaybird 6.0.0
 
