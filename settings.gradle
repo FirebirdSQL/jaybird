@@ -17,19 +17,19 @@ dependencyResolutionManagement {
         }
 
         testLibs {
-            version('junit', '5.11.4')
-            version('mockito', '5.14.2')
+            version('junit', '5.12.1')
+            version('mockito', '5.16.1')
 
             library('junit-bom', 'org.junit', 'junit-bom').versionRef('junit')
             library('junit-jupiter', 'org.junit.jupiter', 'junit-jupiter').withoutVersion()
             library('junit-platform-launcher', 'org.junit.platform', 'junit-platform-launcher').withoutVersion()
             library('hamcrest', 'org.hamcrest', 'hamcrest').version('3.0')
             library('hamcrest-optional', 'com.spotify', 'hamcrest-optional').version('1.3.2')
-            library('assertj-core', 'org.assertj', 'assertj-core').version('3.27.0')
+            library('assertj-core', 'org.assertj', 'assertj-core').version('3.27.3')
             library('mockito-bom', 'org.mockito', 'mockito-bom').versionRef('mockito')
             library('mockito-core', 'org.mockito', 'mockito-core').withoutVersion()
             library('mockito-junit-jupiter', 'org.mockito', 'mockito-junit-jupiter').withoutVersion()
-            library('awaitility', 'org.awaitility', 'awaitility').version('4.2.2')
+            library('awaitility', 'org.awaitility', 'awaitility').version('4.3.0')
 
             bundle('junit', ['junit-jupiter'])
             bundle('hamcrest', ['hamcrest', 'hamcrest-optional'])
