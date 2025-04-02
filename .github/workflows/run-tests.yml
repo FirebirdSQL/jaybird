@@ -8,11 +8,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Cache Docker images
-        uses: ScribeMD/docker-cache@fb28c93772363301b8d0a6072ce850224b73f74e
-        with:
-          key: docker-${{ runner.os }}-${{ hashFiles('.github/workflows/**') }}
-          read-only: ${{ github.ref != 'refs/heads/Branch_5_0' }}
       - uses: juarezr/firebirdsql-github-action@v2.0.0
         with:
           version: '5.0.2'
