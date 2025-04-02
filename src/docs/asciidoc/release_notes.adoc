@@ -8,7 +8,7 @@
 :toc: left
 :icons: font
 :sectnums:
-:bc-version: 1.79
+:bc-version: 1.80
 :jna-version: 5.17.0
 :jaybird-fbclient-version: 5.0.1.1
 :firebird-java: https://groups.google.com/g/firebird-java
@@ -50,6 +50,7 @@ See also <<breaking-changes-internal-api-6-0-1>>.
 +
 See also <<blob-performance-info-items>>.
 * Dependency update: updated `net.java.dev.jna:jna-jpms` from 5.16.0 to 5.17.0 (used by `jaybird-native`) (https://github.com/FirebirdSQL/jaybird/issues/854[#854])
+* Dependency update: updated `org.bouncycastle:bcprov-jdk18on` from 1.79 to 1.80 (used by `chacha64-plugin`) (https://github.com/FirebirdSQL/jaybird/issues/856[#856])
 
 === Jaybird 6.0.0
 
