@@ -9,7 +9,7 @@
 :icons: font
 :sectnums:
 :jaybird-fbclient-version: 5.0.1.1
-:jna-version: 5.15.0
+:jna-version: 5.17.0
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/5.0.x/release_notes.html
 
 ifeval::["{version_tag}" != ""]
@@ -62,6 +62,7 @@ For details see:
 * Improvement: backported fetching all known blob info items on open from Jaybird 7 (https://github.com/FirebirdSQL/jaybird/issues/852[#852])
 +
 See also <<blob-performance-info-items>>.
+* Dependency update: updated `net.java.dev.jna:jna-jpms` from 5.15.0 to 5.17.0 (used by `jaybird-native`) (https://github.com/FirebirdSQL/jaybird/issues/855[#855])
 
 [#jaybird-5-0-6-changelog]
 === Jaybird 5.0.6
