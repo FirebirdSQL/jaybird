@@ -36,13 +36,10 @@ import java.util.Objects;
  */
 public final class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobInputStream {
 
-    private final long LENGTH_UNKNOWN = -1;
-
     private byte[] buffer = ByteArrayHelper.emptyByteArray();
     private FbBlob blobHandle;
     private int pos;
     private int lim;
-    private long length = LENGTH_UNKNOWN;
     private boolean closed;
 
     private final FBBlob owner;
@@ -83,10 +80,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     public long length() throws IOException {
         try (LockCloseable ignored = owner.withLock()) {
             checkClosed();
-            if (length != LENGTH_UNKNOWN) {
-                return length;
-            }
-            return length = blobHandle.length();
+            return blobHandle.length();
         } catch (SQLException e) {
             throw new IOException(e);
         }
