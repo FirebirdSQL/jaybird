@@ -133,6 +133,6 @@ publishing {
 }
 
 signing {
-    required { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
+    required = { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
     sign publishing.publications.chacha64
 }

@@ -5,7 +5,7 @@ publishing {
         // Main maven artifact
         jaybird(MavenPublication) {
             from components.java
-            artifactId project.mavenName
+            artifactId = project.mavenName
             suppressPomMetadataWarningsFor 'nativeApiElements'
             suppressPomMetadataWarningsFor 'nativeRuntimeElements'
             pom {
@@ -183,7 +183,7 @@ allprojects {
 }
 
 signing {
-    required { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
+    required = { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
     sign publishing.publications.jaybird
     sign dist
 }
