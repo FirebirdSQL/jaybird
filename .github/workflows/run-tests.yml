@@ -25,7 +25,7 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/Branch_6_0' }}
       - name: Build with Gradle
-        run: ./gradlew test -Ptest.dbondocker=true -Ptest.db.dir=/firebird/data
+        run: ./gradlew test -Ptest.dbondocker=true -Ptest.db.dir==/var/lib/firebird/data
       - name: Store Report Artifact
         uses: actions/upload-artifact@v4
         if: always()
