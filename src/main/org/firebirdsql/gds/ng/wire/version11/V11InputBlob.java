@@ -87,7 +87,7 @@ public class V11InputBlob extends V10InputBlob {
 
     private void deferredOpen() throws SQLException {
         sendOpen(BlobOpenOperation.INPUT_BLOB, false);
-        getDatabase().enqueueDeferredAction(wrapDeferredResponse(new DeferredResponse<>() {
+        getDatabase().enqueueDeferredAction(wrapDeferredResponse(new DeferredResponse<Response>() {
             @Override
             public void onResponse(Response response) {
                 if (response instanceof GenericResponse) {
@@ -123,7 +123,7 @@ public class V11InputBlob extends V10InputBlob {
         } catch (IOException e) {
             throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
         }
-        getDatabase().enqueueDeferredAction(wrapDeferredResponse(new DeferredResponse<>() {
+        getDatabase().enqueueDeferredAction(wrapDeferredResponse(new DeferredResponse<Response>() {
             @Override
             public void onResponse(Response response) {
                 if (response instanceof GenericResponse) {

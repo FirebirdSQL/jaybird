@@ -48,7 +48,7 @@ public interface JaybirdErrorCodes {
     /**
      * @deprecated Jaybird no longer uses this error code
      */
-    @Deprecated(since = "5.0.7")
+    @Deprecated
     int jb_blobPutSegmentTooLong    = 337248259;
     int jb_blobIdAlreadySet         = 337248260;
     int jb_invalidClumpletStructure = 337248261;
