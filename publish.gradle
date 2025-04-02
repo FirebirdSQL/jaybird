@@ -5,7 +5,7 @@ publishing {
         // Main maven artifact
         mavenJava(MavenPublication) {
             from components.java
-            artifactId project.mavenName
+            artifactId = project.mavenName
             suppressPomMetadataWarningsFor 'nativeApiElements'
             suppressPomMetadataWarningsFor 'nativeRuntimeElements'
             pom {
@@ -181,7 +181,7 @@ tasks.withType(PublishToMavenRepository).each {
 }
 
 signing {
-    required { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
+    required = { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
     sign publishing.publications.mavenJava
     sign dist
 }
