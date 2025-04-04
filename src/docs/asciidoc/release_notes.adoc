@@ -138,7 +138,7 @@ Feedback can be sent to the {firebird-java}[Firebird-java mailing list] or repor
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 3.0.12, Firebird 4.0.5, Firebird 5.0.1 and a recent snapshot of Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
+Jaybird {version_wo_target} was tested against Firebird 3.0.12, Firebird 4.0.5, Firebird 5.0.2 and a recent snapshot of Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
 Firebird 2.5 and older are not supported.
 
 Firebird 6.0 is currently also not considered supported (see also <<firebird-support>> in <<whats-new-in-jaybird-6>>).
@@ -155,7 +155,7 @@ Jaybird 6 supports Java 17 and higher (JDBC 4.3).
 Support for earlier Java versions has been dropped.
 
 Given the limited support period for Java 9 and higher versions, we limit support to Java 17, the most recent LTS version after Java 17, and the latest Java release.
-Currently, that means we support Java 17, Java 21, and Java 23.
+Currently, that means we support Java 17, Java 21, and Java 24.
 
 [NOTE]
 ====
