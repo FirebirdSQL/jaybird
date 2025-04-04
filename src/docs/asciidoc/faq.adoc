@@ -7,16 +7,28 @@
 :source-highlighter: prettify
 :toc: left
 :icons: font
-:jaybird5-full-version: 5.0.6
+:jaybird6-full-version: 6.0.1
+:jaybird6-jna-version: 5.17.0
+:jaybird5-full-version: 5.0.7
 :jaybird5-template-version: {jaybird5-full-version}.<java>
 :jaybird5-example-version: {jaybird5-full-version}.java11
-:jaybird5-jna-version: 5.15.0
+:jaybird5-jna-version: 5.17.0
 :jaybird4-full-version: 4.0.10
 :jaybird4-template-version: {jaybird4-full-version}.<java>
 :jaybird4-example-version: {jaybird4-full-version}.java11
 :jaybird3-full-version: 3.0.12
+:firebird-java: https://groups.google.com/g/firebird-java
+:issues: https://github.com/FirebirdSQL/jaybird/issues
+:jaybird-repo: https://github.com/FirebirdSQL/jaybird
 :sectnums:
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/faq.html
+
+////
+SPDX-FileCopyrightText: Copyright 2021-2024 Firebird development team and individual contributors
+SPDX-FileCopyrightText: Copyright 2002-2004 Rick Fincher
+SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+SPDX-License-Identifier: LicenseRef-PDL-1.0
+////
 
 [#jaybird]
 = Jaybird
@@ -27,14 +39,63 @@
 [#maven]
 === Maven
 
+[#jaybird-6]
+==== Jaybird 6
+
+Jaybird 6 is available on Maven Central:
+
+[horizontal.compact]
+groupId:: `org.firebirdsql.jdbc`
+artifactId:: `jaybird`
+version:: `{jaybird6-full-version}`
+
+For example:
+
+[source,xml,subs="verbatim,attributes"]
+----
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird</artifactId>
+    <version>{jaybird6-full-version}</version>
+</dependency>
+----
+
+If you want to use Type 2 support (native or embedded), you need to add `jaybird-native` as a dependency:
+
+[source,xml,subs="verbatim,attributes"]
+----
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-native</artifactId>
+    <version>{jaybird6-full-version}</version>
+</dependency>
+----
+
+If -- with Jaybird 5 or older -- you added `net.java.dev.jna:jna` for native or embedded use, you can remove that explicit dependency.
+The `jaybird-native` dependency will automatically pull in `net.java.dev.jna:jna-jpms` (the modular variant of `jna`).
+
+For Windows and Linux, you can add the https://github.com/mrotteveel/jaybird-fbclient[`org.firebirdsql.jdbc:fbclient`] dependency on your classpath to provide the native libraries for the `native` protocol.
+Be aware that this dependency does not support `embedded`.
+
+To enable the "`ChaCha64`" wire encryption support for pure Java connections, you need to add `chacha64-plugin` as a dependency:
+
+[source,xml,subs="verbatim,attributes"]
+----
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>chacha64-plugin</artifactId>
+    <version>{jaybird6-full-version}</version>
+</dependency>
+----
+
 [#jaybird-5]
 ==== Jaybird 5
 
 Jaybird 5 is available on Maven Central:
 
-[horizontal]
+[horizontal.compact]
 groupId:: `org.firebirdsql.jdbc`
-artifactId:: `jaybird`,
+artifactId:: `jaybird`
 version:: `{jaybird5-template-version}` (where `<java>` is `java11` or `java8`)
 
 Contrary to Jaybird 4, a Maven relocation artifact with artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18`) is no longer provided.
@@ -68,9 +129,11 @@ If you want to use Type 2 support (native or embedded), you need to explicitly i
 Jaybird 4 is end-of-life and will receive no further updates.
 We recommend upgrading to <<jaybird-5>>.
 
+////
+// Stop showing Jaybird 4 Maven info, but keep available for now
 Jaybird 4 is available from Maven Central:
 
-[horizontal]
+[horizontal.compact]
 groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird`
 version:: `{jaybird4-template-version}` (where `<java>` is `java11`, `java8` or `java7`)
@@ -122,6 +185,7 @@ If you want to use Type 2 support (native, local or embedded), you need to expli
     <version>5.5.0</version>
 </dependency>
 ----
+////
 
 [#jaybird-3-0]
 ==== Jaybird 3
@@ -137,7 +201,7 @@ We recommend upgrading to <<jaybird-5>>.
 // Stop showing Jaybird 3 Maven info, but keep available for now
 Jaybird 3 is available from Maven Central:
 
-[horizontal]
+[horizontal.compact]
 groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird-XX` (where `XX` is `jdk18` or `jdk17`)
 version:: `{jaybird3-full-version}`
@@ -202,7 +266,7 @@ We recommend upgrading to <<jaybird-5>>.
 // Stop showing Jaybird 2.2 Maven info, but keep available for now
 Jaybird 2.2 is available on Maven, with a separate artifact for each supported Java version.
 
-[horizontal]
+[horizontal.compact]
 groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird-XX` (where `XX` is `jdk16`, `jdk17` or `jdk18`)
 version:: `2.2.15`
@@ -235,11 +299,10 @@ Alternatively, you can go directly to GitHub and download Jaybird from the https
 == Where can I get the sourcecode?
 
 All Jaybird distribution zips contain a `jaybird-<version>-sources.zip` with the sources used for that specific version.
-The full Jaybird sourcecode is also available from GitHub in the jaybird repository:
+The Maven Central repository also has the `jaybird-<version>-sources.zip`, and your IDE will generally offer to download it for you if you navigate to any Jaybird class.
 
-https://github.com/FirebirdSQL/jaybird
-
-Each release is also tagged in the repository.
+The full Jaybird sources are available from GitHub in the jaybird repository, {jaybird-repo}.
+Each release is tagged in the repository.
 
 [#how-is-jaybird-licensed]
 == How is Jaybird licensed?
@@ -264,18 +327,25 @@ Future versions of Jaybird may specify an explicit version, or be released under
 [#which-java-versions-are-supported]
 == Which Java versions are supported?
 
+[#java-jaybird-6]
+[discrete]
+=== Jaybird 6
+
+Jaybird 6 supports Java 17, Java 21, and Java 24.
+Support for Java 17 and higher is limited to Java 17, Java 21, -- once available -- the latest LTS after Java 21, and the latest Java release.
+
 [#java-jaybird-5]
 [discrete]
 === Jaybird 5
 
-Jaybird 5 supports Java 8, 11, 17 and 21.
-Support for Java 9 and higher is limited to Java 8, 11, 17, 21 and the most recent LTS version after Java 21 and the latest Java release.
+Jaybird 5 supports Java 8, Java 11, Java 17, Java 21, and Java 24.
+Support for Java 9 and higher is limited to Java 8, Java 11, Java 17, Java 21, -- once available -- the latest LTS version after Java 21, and the latest Java release.
 
-Jaybird 5 is the last version to support Java 8 and 11, support will be dropped with Jaybird 6, raising the minimum supported version to Java 17.
+Jaybird 5 is the last version to support Java 8 and Java 11, support has been dropped with Jaybird 6, raising the minimum supported version to Java 17.
 
 [NOTE]
 ====
-Jaybird 5 will serve as a form of long-term support for Java 8 and 11, with maintenance releases guaranteed at least until the release of Jaybird 7.
+Jaybird 5 will serve as a form of long-term support for Java 8 and Java 11, with maintenance releases guaranteed at least until the release of Jaybird 7.
 
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-03-java-17-minimum-version.md[jdp-2022-03: Java 17 minimum version].
 ====
@@ -284,10 +354,10 @@ See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-
 [discrete]
 === Jaybird 4
 
-Jaybird 4 supports Java 7, 8, 11, 17 and 21.
-Support for Java 9 and higher is limited to Java 11, 17 and 21.
+Jaybird 4 supports Java 7, Java 8, Java 11, Java 17 and Java 21.
+Support for Java 9 and higher is limited to Java 11, Java 17 and Java 21.
 
-Jaybird 4 is the last version to support Java 7, support will be dropped with Jaybird 5.
+Jaybird 4 is the last version to support Java 7, support was dropped with Jaybird 5.
 Jaybird 4.0.10 is the last release of Jaybird 4, and is end-of-life.
 We recommend upgrading to Jaybird 5.
 
@@ -295,7 +365,7 @@ We recommend upgrading to Jaybird 5.
 [discrete]
 === Jaybird 3
 
-Jaybird 3 supports Java 7 and 8 and has basic support for Java 9 and higher using the Java 8 version of the driver.
+Jaybird 3 supports Java 7 and Java 8 and has basic support for Java 9 and higher using the Java 8 version of the driver.
 Support for Java 9 and higher is limited to Java 11 and 17, but in practice Jaybird should work on all Java 9+ versions upto Java 17 (versions after Java 17 have not been tested).
 Jaybird 3.0.12 is the last release of Jaybird 3, and is end-of-life.
 We recommend upgrading to Jaybird 5.
@@ -304,7 +374,7 @@ We recommend upgrading to Jaybird 5.
 [discrete]
 === Jaybird 2.2
 
-Jaybird 2.2 supports Java 6, 7 and 8.
+Jaybird 2.2 supports Java 6, Java 7 and Java 8.
 Jaybird 2.2.15 is that last release of Jaybird 2.2, and is end-of-life.
 We recommend upgrading to Jaybird 5.
 
@@ -317,28 +387,47 @@ Jaybird 2.2 is the last version to support Java 6, support has been dropped with
 [#what-is-the-java-9-module-name-for-jaybird]
 == What is the Java 9 module name for Jaybird?
 
-Jaybird itself is not (yet) modularized.
-To ensure a stable module name, Jaybird, since 2.2.14 and 3.0.3, declares the automatic module name `org.firebirdsql.jaybird`.
+Jaybird 6 is modularized.
+The available modules are:
 
-Jaybird 6 will be modular.
+`org.firebirdsql.jaybird`::
+main Jaybird driver (`jaybird-{jaybird6-full-version}.jar`)
+
+`org.firebirdsql.jaybird.chacha64`::
+ChaCha64 wire encryption implementation (`chacha64-plugin-{jaybird6-full-version}.jar`)
+
+`org.firebirdsql.jna`::
+native and embedded protocol implementation using JNA (`jaybird-native-{jaybird6-full-version}.jar`)
+
+Jaybird 5 and older are not modularized.
+To ensure a stable module name, Jaybird 5 and older, since versions 2.2.14 and 3.0.3, declares the automatic module name `org.firebirdsql.jaybird`.
 
 [#which-firebird-versions-are-supported]
 == Which Firebird versions are supported?
+
+[#firebird-jaybird-6]
+[discrete]
+=== Jaybird 6
+
+Jaybird 6 supports Firebird 3.0, Firebird 4.0, and Firebird 5.0.
+
+By default, Jaybird 6 -- using the pure Java protocol -- will not connect to Firebird 2.5 and older.
+See <<connection-rejected-by-remote-interface-335544421>> for a workaround.
 
 [#firebird-jaybird-5]
 [discrete]
 === Jaybird 5
 
-Jaybird 5 supports Firebird version 2.5, 3.0, 4.0, and 5.0.
+Jaybird 5 supports Firebird 2.5, Firebird 3.0, Firebird 4.0, and Firebird 5.0.
 
 Jaybird 5 is the last version to support Firebird 2.5.
-Future versions of Jaybird are not guaranteed to work with version 2.5 and earlier.
+Future versions of Jaybird are not guaranteed to work with Firebird 2.5 and earlier.
 
 [#firebird-jaybird-4]
 [discrete]
 === Jaybird 4
 
-Jaybird 4 supports Firebird version 2.5, 3.0 and 4.0, and introduces support for Firebird 4.0 types `DECLOAT`, extended precision of `NUMERIC` and `DECIMAL`, and time zone types (`TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME ZONE`).
+Jaybird 4 supports Firebird 2.5, Firebird 3.0 and Firebird 4.0, and introduces support for Firebird 4.0 types `DECLOAT`, extended precision of `NUMERIC` and `DECIMAL`, and time zone types (`TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME ZONE`).
 
 Jaybird 4 only provides partial support for Firebird 5.0, and the generated-keys support does not work in all cases due to Firebird 5.0 now supporting multi-row `RETURNING`.
 Full Firebird 5.0 support is available in Jaybird 5.
@@ -347,23 +436,23 @@ Full Firebird 5.0 support is available in Jaybird 5.
 [discrete]
 === Jaybird 3
 
-Jaybird 3 supports Firebird versions 2.0 - 4.0.
+Jaybird 3 supports Firebird 2.0, Firebird 2.1, firebird 2.5, Firebird 3.0, and Firebird 4.0.
 Support for Firebird 4.0 is limited to the Firebird 3.0 feature set.
 Formally, Firebird 5.0 is not supported, though in practice the problems are similar as for Jaybird 4.
 
-Jaybird 3 is the last version to support Firebird 2.0 and 2.1.
-Future versions of Jaybird are not guaranteed to work with version 2.1 and earlier.
+Jaybird 3 is the last version to support Firebird 2.0 and Firebird 2.1.
+Jaybird 4 and higher are not guaranteed to work with Firebird 2.1 and earlier.
 
 [#firebird-jaybird-2-2]
 [discrete]
 === Jaybird 2.2
 
-Jaybird 2.2 supports Firebird versions 1.0 - 4.0.
+Jaybird 2.2 supports Firebird versions Firebird 1.0, Firebird 1.5, Firebird 2.0, Firebird 2.1, Firebird 2.5, Firebird 3.0, and Firebird 4.0.
 Jaybird 2.2.4 added support for new features of Firebird 3.0 (e.g. `BOOLEAN` support).
 Support for Firebird 4.0 is limited to the Firebird 3.0 feature set.
 
-Jaybird 2.2 is the last version to support Firebird 1.0 and 1.5.
-Future versions of Jaybird are not guaranteed to work with these versions.
+Jaybird 2.2 is the last version to support Firebird 1.0 and Firebird 1.5.
+Jaybird 3 and higher are not guaranteed to work with these versions.
 
 [#can-jaybird-connect-to-interbase]
 == Can Jaybird connect to Interbase?
@@ -385,55 +474,56 @@ Instead, we recommend building a webservice (e.g. REST-based) to mediate between
 
 Apart from this FAQ, you can get additional information from:
 
-* https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html[Jaybird JDBC Driver Java Programmer's Manual] (HTML, https://firebirdsql.github.io/jaybird-manual/jaybird_manual.pdf[PDF version]) (covers Jaybird 2.2 and higher)
-* https://firebirdsql.org/en/devel-jdbc-driver/[Firebird Website: Development, JDBC Driver]
+* https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html[Jaybird JDBC Driver Java Programmer's Manual] (HTML, https://firebirdsql.github.io/jaybird-manual/jaybird_manual.pdf[PDF version]) (covers Jaybird 4 and higher)
+* https://www.firebirdsql.org/en/jdbc-driver/[Firebird website: Downloads, Connectivity, JDBC Driver]
+* https://firebirdsql.org/en/devel-jdbc-driver/[Firebird website: Development, JDBC Driver]
 * https://github.com/FirebirdSQL/jaybird/wiki/[Jaybird wiki]
 
 For version specific details, consult the release notes
 
-* https://firebirdsql.org/file/documentation/drivers_documentation/java/5.0.x/release_notes.html[Jaybird 5.0.x release notes]
-* https://firebirdsql.org/file/documentation/drivers_documentation/java/4.0.x/release_notes.html[Jaybird 4.0.x release notes]
-* https://firebirdsql.org/file/documentation/drivers_documentation/java/3.0.x/release_notes.html[Jaybird 3.0.x release notes]
-* https://firebirdsql.org/file/documentation/drivers_documentation/java/2.2.x/release_notes.html[Jaybird 2.2.x release notes]
+* https://firebirdsql.org/docs/drivers/java/6.0.x/release_notes.html[Jaybird 6.0.x release notes]
+* https://firebirdsql.org/docs/drivers/java/5.0.x/release_notes.html[Jaybird 5.0.x release notes]
+* https://firebirdsql.org/docs/drivers/java/4.0.x/release_notes.html[Jaybird 4.0.x release notes]
+* https://firebirdsql.org/docs/drivers/java/3.0.x/release_notes.html[Jaybird 3.0.x release notes]
+* https://firebirdsql.org/docs/drivers/java/2.2.x/release_notes.html[Jaybird 2.2.x release notes]
 
 [#where-to-get-help]
 == Where to get help
 
 * On https://stackoverflow.com/[Stack Overflow], please tag your questions with _jaybird_ and _firebird_
-* The https://groups.google.com/g/firebird-java[Firebird-Java group] and corresponding mailing list firebird-java@googlegroups.com
+* The {firebird-java}[Firebird-Java group] and corresponding mailing list firebird-java@googlegroups.com
 +
 You can subscribe to the mailing list by sending an email to link:mailto:firebird-java+subscribe@googlegroups.com[firebird-java+subscribe@googlegroups.com]
-
 * Looking for professional support of Jaybird?
 Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription].
 * The https://firebirdsql.org[Firebird project home page]
-* Firebird support and other https://firebirdsql.org/en/mailing-lists/[Firebird mailing lists] for questions not directly related to Jaybird and java.
+* Firebird-support and other https://firebirdsql.org/en/mailing-lists/[Firebird mailing lists] for questions not directly related to Jaybird and Java.
 
 [#contributing]
 == Contributing
 
 There are several ways you can contribute to Jaybird or Firebird in general:
 
-* Participate on the mailing lists (see https://firebirdsql.org/en/mailing-lists/)
+* Participate on the https://firebirdsql.org/en/mailing-lists/[mailing lists]
 * Report bugs or submit patches on the tracker (see <<reporting-bugs,Reporting Bugs>>)
 * Create pull requests on GitHub (https://github.com/FirebirdSQL/jaybird)
-* Become a developer (for Jaybird contact us on firebird-java, for Firebird in general, use the Firebird-devel mailing list)
+* Become a developer (for Jaybird contact us on {firebird-java}[firebird-java], for Firebird in general, use the https://groups.google.com/g/firebird-devel[Firebird-devel] mailing list)
 * Donate to the Firebird Foundation (see https://firebirdsql.org/en/donate/)
-* Become a paying member or sponsor of the Firebird Foundation (see https://firebirdsql.org/en/firebird-foundation/)
+* Become a paying Associate, Partner or sponsor of the Firebird Foundation (see https://firebirdsql.org/en/firebird-foundation/)
 
 [#reporting-bugs]
 == Reporting Bugs
 
-The developers follow the https://groups.google.com/g/firebird-java[firebird-java Google Group].
+The developers follow the {firebird-java}[firebird-java Google Group].
 Join the list and post information about suspected bugs.
 List members may be able to help out to determine if it is an actual bug, provide a workaround and get you going again, whereas bug fixes might take a while.
 
-You can report bugs in the Jaybird bug tracker, https://github.com/FirebirdSQL/jaybird/issues/.
+You can report bugs in the Jaybird bug tracker, {issues}.
 
 When reporting bugs, please provide a minimal, but complete reproduction, including databases and sourcecode to reproduce the problem.
 Patches to fix bugs are also appreciated.
 Make sure the patch is against a recent master version of the code.
-You can also fork the jaybird repository and create pull requests.
+You can also fork the {jaybird-repo}[jaybird repository] and create pull requests.
 
 [#connecting-to-firebird]
 = Connecting to Firebird
@@ -475,7 +565,7 @@ Jaybird 4 and higher also support:
  jdbc:firebird:host[/port]:<database>
 
 [#open-officelibre-office-pure-java]
-=== Open Office/Libre Office (Pure Java)
+=== OpenOffice/LibreOffice (Pure Java)
 
 Jaybird 5 and earlier can be used together with OpenOffice and LibreOffice Base.
 To address some compatibility issues (and differences in interpretation of JDBC specifications) a separate sub-protocol is used:
@@ -488,7 +578,7 @@ Jaybird 4 and higher also support:
 
 [NOTE]
 ====
-This URL format is deprecated with jaybird 5 and will be removed in Jaybird 6.
+This URL format is deprecated with jaybird 5 and was removed in Jaybird 6.
 As a replacement, use the "`Firebird External`" option in LibreOffice Base.
 
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal].
@@ -532,7 +622,7 @@ The JDBC URL sub-protocol `jdbc:firebirdsql:local` and `jdbc:firebird:local` are
  jdbc:firebirdsql:embedded:<database>
 
 Similar to the Firebird client library, however `fbembed.dll` on Windows and `libfbembed.so` on Linux are used, falling back to `fbclient.dll`/`libfbclient.so` under the assumption it provides Embedded functionality.
-Requires correctly installed and configured Firebird embedded library and -- for Jaybird 2.2 or earlier -- the Jaybird native  library, or -- for Jaybird 3 and higher -- the JNA jar file.
+Requires correctly installed and configured Firebird embedded library and -- for Jaybird 2.2 or earlier -- the Jaybird native library, or -- for Jaybird 3 and higher -- the JNA jar file.
 
 Jaybird 4 and higher also support:
 
@@ -614,7 +704,6 @@ To address this error, you can set the default connection character set using on
 * Use connection property `encoding` (alias: `lc_ctype`) with a Firebird character set name.
 +
 Use `encoding=NONE` for the default behavior (with some caveats, see  <<how-does-character-set-none-work,How does character set `NONE` work?>>).
-
 * Use connection property `charSet` (alias: `localEncoding`) with a Java character set name.
 * Use a combination of `encoding` and `charSet`, if you want to reinterpret a Firebird character set in a Java character set other than the default  mapping.
 * By providing a default Firebird character set with system property  `org.firebirdsql.jdbc.defaultConnectionEncoding`.
@@ -654,9 +743,27 @@ On the other hand, this has the benefit that this works for all Jaybird versions
 
 This error means that the user does not exist, or that the specified password is not correct.
 
-When connecting to Firebird 3.0 and higher, this error can also mean that the user does exist (with that password), but not for the authentication plugins tried for this connection.
+The following are common causes authentication can fail with the same error even if the username and password are correct.
 
-For example, Jaybird 2.2.x and earlier only support legacy authentication, if you try to log in as a user created for SRP authentication, you will get the same error.
+==== Cause: authentication plugin mismatch
+
+When connecting to Firebird 3.0 and higher, this error can also mean that the user does exist (with that password), but not for the authentication plugins tried for this connection.
+The list of authentication plugins tried is the conjunction of the plugins offered by the client (connection property `authPlugins`) and the `AuthServer` setting in _firebird.conf_.
+
+For example, Jaybird 2.2.x and earlier only support legacy authentication, if you try to log in as a user created with the _Srp_ user manager, you will get the same error.
+
+Similarly, Jaybird 4 and higher -- by default -- only connect using the _Srp256_ and _Srp_ authentication plugins, which means only users created with the _Srp_ user manager can be authenticated, and users created with _Legacy_UserManager_ cannot be authenticated.
+The recommended solution is to create the user for the _Srp_ user manager (e.g. see https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-security-user.html#fblangref50-security-user-create[Firebird 5.0 `CREATE USER`^], specifically the `USING PLUGIN ...` clause).
+Alternatively, you can set connection property `authPlugins` to `Srp256,Srp,Legacy_Auth` to also try legacy authentication, see also https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html#ref-auth-plugins[Authentication plugins] in the Jaybird manual.
+
+You can check -- as `SYSDBA`, or with `RDB$ADMIN` in the security database -- what user manager(s) were used to create a user in the `SEC$USERS` virtual table.
+
+==== Cause: case-sensitive username
+
+With Firebird 3.0 and higher, this error can also be the result of using a case-sensitive username (i.e. the username was quoted, e.g. `CREATE USER "lowercaseuser" ...`).
+
+To login, you must surround the username with quotes so it's handled case-sensitive.
+In a Java string literal, that means using `"\"lowercaseuser\""` instead of `"lowercaseuser"`.
 
 [#incompatible-wire-encryption-levels-requested-on-client-and-server-335545064]
 === Incompatible wire encryption levels requested on client and server (335545064)
@@ -692,7 +799,7 @@ Relax this setting (in `firebird.conf`) to `WireCrypt = Enabled`.
 
 See also https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3[Jaybird Wiki -- Jaybird and Firebird 3].
 
-Make sure you check the other settings mentioned in that article, otherwise you'll get the next error.
+Make sure you check the other settings mentioned in that article, otherwise you'll get another error (<<error-occurred-during-login-please-check-server-firebird-log-for-details-335545106>>).
 
 [#cause-unsupported-protocol]
 ==== Cause: unsupported protocol version
@@ -702,7 +809,7 @@ Connecting to unsupported Firebird versions with the pure Java protocol can resu
 
 There are two options to address this:
 
-. Specify connection property `enableProtocol` with a list of unsupported protocol versions to try in addition to the supported protocol versions, or `"{asterisk}"` to try all available protocol versions (e.g. `enableProtocol=12` or `enableProtocol={asterisk}`).
+. Specify connection property `enableProtocol` with a list of unsupported protocol versions to try in addition to the supported protocol versions, or `"{asterisk}"` to try all available protocol versions (e.g. `enableProtocol=12` to try protocol 12 (Firebird 2.5) or `enableProtocol={asterisk}` to try all unsupported protocols).
 . Use a native connection instead of a pure Java connection.
 
 [#error-occurred-during-login-please-check-server-firebird-log-for-details-335545106]
@@ -792,19 +899,16 @@ The following optional features and the methods that support it are not implemen
 Excluding the unsupported features, the following methods are not yet implemented:
 
 * `java.sql.Blob`
-** `getBytes(long pos, int length)`
 ** `position(byte pattern[], long start)`
 ** `position(Blob pattern, long start)`
 ** `getBinaryStream(long pos, long length)`
 ** `truncate(long len)`
-** Methods with a position (`pos`) parameter with a value greater than 1
 * `java.sql.Clob`
 ** `length()`
 ** `truncate(long len)`
 ** `position(String searchstr, long start)`
 ** `position(Clob searchstr, long start)`
 ** `getCharacterStream(long pos, long length)`
-** Methods with a position (`pos`) parameter with a value greater than 1
 
 The following methods are implemented, but do not work as expected:
 
@@ -813,7 +917,7 @@ The following methods are implemented, but do not work as expected:
 ** `get/setQueryTimeout` supported since Jaybird 4 with Firebird 4.0 and higher
 * `java.sql.PreparedStatement`
 ** `setObject(index,object,type)` This method is implemented but behaves as `setObject(index,object)`
-** `setObject(index,object,type,scale)` This method is implemented but behaves as `setObject(index,object)`
+** `setObject(index,object,type,scaleOrLength)` This method is implemented but behaves as `setObject(index,object)`, except if `object` is a `Reader` or `InputStream`, then it is directed to the `setBinaryStream` or `setCharacterStream` method accepting a length.
 * `java.sql.CallableStatement`
 ** `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`.
 The method is deprecated, and we suggest using `getBigDecimal(index)` and adjust the scale of the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
@@ -888,3 +992,23 @@ With Jaybird 3.0.4 and higher for Java 7 (but not Java 8!) in Wildfly (or JBoss)
 ----
 
 Alternatively, use Jaybird for Java 8 (or higher).
+
+[appendix#license-notice]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`Jaybird Frequently Asked Questions`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2013-2025.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+Contributor(s): Rick Fincher. +
+Portions created by Rick Fincher are Copyright © 2002-2004.
+All Rights Reserved.
+(Contributor contact(s): _unknown_).
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
