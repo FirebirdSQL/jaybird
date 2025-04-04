@@ -85,6 +85,19 @@ Possible workarounds:
 --
 +
 This is caused by https://github.com/FirebirdSQL/firebird/issues/4971[firebird#4971]
+* In Java 24, the mapping of some named `WITH TIME ZONE` values changed as Java's mapping of short IDs changed.
+This should only affect cases where you explicitly obtain `ZonedDateTime` or `ZonedTime` instances with these named zones.
++
+--
+** EST (ID 65136) -> America/Panama;
+maps to -05:00 in older Java versions
+** HST (ID 65027) -> Pacific/Honolulu;
+maps to -10:00 in older Java versions
+** MST (ID 65002) -> America/Phoenix;
+maps to -07:00 in older Java versions
+--
++
+This is informational only, and not something that we can fix or change in a later Jaybird release.
 
 [#general-notes]
 == General Notes
