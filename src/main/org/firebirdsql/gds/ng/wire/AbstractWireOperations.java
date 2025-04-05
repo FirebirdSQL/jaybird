@@ -44,7 +44,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractWireOperations implements FbWireOperations {
@@ -208,6 +208,8 @@ public abstract class AbstractWireOperations implements FbWireOperations {
             return new SqlResponse(xdrIn.readInt());
         case op_batch_cs:
             return readBatchCompletionResponse(xdrIn);
+        case op_inline_blob:
+            return readInlineBlobResponse(xdrIn);
         default:
             throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_unexpectedOperationCode)
                     .messageParameter(operation)
@@ -233,6 +235,24 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     protected BatchCompletionResponse readBatchCompletionResponse(XdrInputStream xdrIn)
             throws SQLException, IOException {
         throw new FBDriverNotCapableException("Reading batch completion response not supported by " + this);
+    }
+
+    /**
+     * Reads the inline blob response ({@code op_inline_blob}) without reading the operation code itself.
+     *
+     * @param xdrIn
+     *         XDR input stream to read
+     * @return inline blob response
+     * @throws SQLException
+     *         for errors reading the response from the connection
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         when the protocol version does not support this response
+     * @throws IOException
+     *         for errors reading the response from the connection
+     * @since 5.0.8
+     */
+    protected InlineBlobResponse readInlineBlobResponse(XdrInputStream xdrIn) throws SQLException, IOException {
+        throw new FBDriverNotCapableException("Reading inline blob response not supported by " + this);
     }
 
     /**

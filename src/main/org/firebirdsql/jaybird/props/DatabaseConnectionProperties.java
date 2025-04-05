@@ -29,7 +29,7 @@ import org.firebirdsql.jdbc.FirebirdCallableStatement;
 /**
  * Properties for database connections.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public interface DatabaseConnectionProperties extends AttachmentProperties {
@@ -598,6 +598,70 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      */
     default void setExtendedMetadata(boolean extendedMetadata) {
         setBooleanProperty(PropertyNames.extendedMetadata, extendedMetadata);
+    }
+
+    /**
+     * @return the maximum inline blob size (native connections will use their own default if it was not explicitly set)
+     * @see #setMaxInlineBlobSize(int)
+     * @since 5.0.8
+     */
+    default int getMaxInlineBlobSize() {
+        return getIntProperty(PropertyNames.maxInlineBlobSize, PropertyConstants.DEFAULT_MAX_INLINE_BLOB_SIZE);
+    }
+
+    /**
+     * Sets the maximum inline blob size. This controls the maximum size of a blob (including segment lengths) that
+     * Firebird will send inline on fetch or execute.
+     * <p>
+     * This only applies to Firebird 5.0.3 or higher.
+     * </p>
+     * <p>
+     * Default value is 64 KiB. Native connections will use their own default if it was not explicitly set. The default
+     * value can be overridden by setting system property {@code org.firebirdsql.jdbc.defaultMaxInlineBlobSize}.
+     * </p>
+     *
+     * @param maxInlineBlobSize
+     *         maximum inline blob size, a value of {@code 0} will disable sending inline blobs, values
+     *         greater than 65535 will be effectively ignored (this is not enforced, so if Firebird introduces support
+     *         for larger values, it will work); negative values will set {@code 0}.
+     * @since 5.0.8
+     */
+    default void setMaxInlineBlobSize(int maxInlineBlobSize) {
+        setIntProperty(PropertyNames.maxInlineBlobSize, Math.max(0, maxInlineBlobSize));
+    }
+
+    /**
+     * @return the maximum blob cache size in bytes (native connections will use their own default if it was not
+     * explicitly set)
+     * @see #setMaxBlobCacheSize(int)
+     * @since 5.0.8
+     */
+    default int getMaxBlobCacheSize() {
+        return getIntProperty(PropertyNames.maxBlobCacheSize, PropertyConstants.DEFAULT_MAX_BLOB_CACHE_SIZE);
+    }
+
+    /**
+     * Sets the maximum inline blob cache size. This controls the size of the cache to store inline blobs. Only the
+     * actual blob length counts towards the cache size.
+     * <p>
+     * This only applies to Firebird 5.0.3 or higher.
+     * </p>
+     * <p>
+     * Default value is 10 MiB. Native connections will use their own default if it was not explicitly set. The default
+     * value can be overridden by setting system property {@code org.firebirdsql.jdbc.defaultMaxBlobCacheSize}.
+     * </p>
+     * <p>
+     * Disabling the cache by setting it to {@code 0} will <strong>not</strong> disable inline blobs; make sure you also
+     * set {@link #setMaxInlineBlobSize(int)} to {@code 0} to avoid unnecessary data transfer.
+     * </p>
+     *
+     * @param maxBlobCacheSize
+     *         the maximum blob cache size in bytes, a value of {@code 0} will disable the cache;
+     *         negative values will set {@code 0}
+     * @since 5.0.8
+     */
+    default void setMaxBlobCacheSize(int maxBlobCacheSize) {
+        setIntProperty(PropertyNames.maxBlobCacheSize, Math.max(0, maxBlobCacheSize));
     }
 
 }

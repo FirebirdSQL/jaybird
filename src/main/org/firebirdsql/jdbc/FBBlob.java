@@ -20,9 +20,9 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.ClumpletReader;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.BlobConfig;
 import org.firebirdsql.gds.ng.DatatypeCoder;
@@ -34,6 +34,7 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.firebirdsql.gds.ng.wire.InlineBlob;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -72,7 +73,8 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     private final Config config;
 
     private final Collection<FBBlobInputStream> inputStreams = Collections.synchronizedSet(new HashSet<>());
-    private FBBlobOutputStream blobOut = null;
+    private FBBlobOutputStream blobOut;
+    private InlineBlob cachedInlineBlob;
 
     private FBBlob(GDSHelper c, boolean isNew, FBObjectListener.BlobListener blobListener, Config config) {
         gdsHelper = c;
@@ -197,7 +199,18 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
             if (isNew) {
                 throw new FBSQLException("No Blob ID is available in new Blob object");
             }
-            return gdsHelper.openBlob(blobId, config);
+
+            if (cachedInlineBlob != null) {
+                InlineBlob copy = cachedInlineBlob.copy();
+                copy.open();
+                return copy;
+            }
+
+            FbBlob blob = gdsHelper.openBlob(blobId, config);
+            if (blob instanceof InlineBlob) {
+                this.cachedInlineBlob = (InlineBlob) blob;
+            }
+            return blob;
         }
     }
 
@@ -255,6 +268,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
                 gdsHelper = null;
                 blobListener = FBObjectListener.NoActionBlobListener.instance();
                 blobOut = null;
+                cachedInlineBlob = null;
             }
         }
     }
@@ -265,66 +279,51 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     }
 
     /**
-     * Get information about this Blob. This method should be considered as
-     * temporary because it provides access to low-level API. More information
-     * on how to use the API can be found in "API Guide".
+     * Get information about this Blob. This method should be considered as temporary because it provides access to
+     * low-level API. More information on how to use the API can be found in "API Guide".
      *
-     * @param items items in which we are interested.
-     * @param buffer_length buffer where information will be stored.
-     *
-     * @return array of bytes containing information about this Blob.
-     *
-     * @throws SQLException if something went wrong.
+     * @param items
+     *         items in which we are interested
+     * @param bufferLength
+     *         buffer where information will be stored
+     * @return array of bytes containing information about this Blob
+     * @throws SQLException
+     *         if something went wrong
      */
-    public byte[] getInfo(byte[] items, int buffer_length) throws SQLException {
+    public byte[] getInfo(byte[] items, int bufferLength) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkClosed();
             blobListener.executionStarted(this);
             // TODO Does it make sense to close blob here?
             try (FbBlob blob = gdsHelper.openBlob(blobId, config)) {
-                return blob.getBlobInfo(items, buffer_length);
+                return blob.getBlobInfo(items, bufferLength);
             } finally {
                 blobListener.executionCompleted(this);
             }
         }
     }
 
-    private static final byte[] BLOB_LENGTH_REQUEST = new byte[] { ISCConstants.isc_info_blob_total_length };
-
     @Override
     public long length() throws SQLException {
-        byte[] info = getInfo(BLOB_LENGTH_REQUEST, 20);
-        return interpretLength(info, 0);
-    }
-
-    /**
-     * Interpret BLOB length from buffer.
-     *
-     * @param info server response.
-     * @param position where to start interpreting.
-     *
-     * @return length of the blob.
-     *
-     * @throws SQLException if length cannot be interpreted.
-     */
-    long interpretLength(byte[] info, int position) throws SQLException {
-        if (info[position] != ISCConstants.isc_info_blob_total_length)
-            throw new FBSQLException("Length is not available.");
-
-        int dataLength = VaxEncoding.iscVaxInteger(info, position + 1, 2);
-        return VaxEncoding.iscVaxLong(info, position + 3, dataLength);
+        try (LockCloseable ignored = withLock()) {
+            checkClosed();
+            blobListener.executionStarted(this);
+            try (FbBlob blob = openBlob()) {
+                return blob.length();
+            } finally {
+                blobListener.executionCompleted(this);
+            }
+        }
     }
 
     @Override
     public boolean isSegmented() throws SQLException {
-        byte[] info = getInfo(new byte[] { ISCConstants.isc_info_blob_type }, 20);
-
-        if (info[0] != ISCConstants.isc_info_blob_type)
-            throw new FBSQLException("Cannot determine BLOB type");
-
-        int dataLength = VaxEncoding.iscVaxInteger(info, 1, 2);
-        int type = VaxEncoding.iscVaxInteger(info, 3, dataLength);
-        return type == isc_bpb_type_segmented;
+        byte[] info = getInfo(new byte[] { ISCConstants.isc_info_blob_type, ISCConstants.isc_info_end }, 20);
+        ClumpletReader clumpletReader = new ClumpletReader(ClumpletReader.Kind.InfoResponse, info);
+        if (!clumpletReader.find(ISCConstants.isc_info_blob_type)) {
+            throw new SQLException("Cannot determine BLOB type", SQLStateConstants.SQL_STATE_GENERAL_ERROR);
+        }
+        return clumpletReader.getInt() == isc_bpb_type_segmented;
     }
 
     @Override
@@ -669,18 +668,12 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
-        switch (newState) {
-        case COMMITTED:
-        case ROLLED_BACK:
+        if (newState == TransactionState.COMMITTED || newState == TransactionState.ROLLED_BACK) {
             try (LockCloseable ignored = withLock()) {
                 free();
             } catch (SQLException e) {
                 logger.error("Error calling free on blob during transaction end", e);
             }
-            break;
-        default:
-            // Do nothing
-            break;
         }
     }
 
@@ -798,19 +791,10 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
 
         @Override
         public void writeInputConfig(BlobParameterBuffer blobParameterBuffer) {
-            blobParameterBuffer.addArgument(isc_bpb_type, streamBlob ? isc_bpb_type_stream : isc_bpb_type_segmented);
-            /*
-             NOTE: It shouldn't be necessary to set source_type, but it looks like Firebird somehow ignores the actual
-             blob subtype, which then causes incorrect transliteration as it tries to convert as if it is
-             blob sub_type binary
-            */
-            blobParameterBuffer.addArgument(isc_bpb_source_type, subType);
-            blobParameterBuffer.addArgument(isc_bpb_target_type, subType);
-            if (subType == BLOB_SUB_TYPE_TEXT) {
-                int characterSetId = datatypeCoder.getEncodingDefinition().getFirebirdCharacterSetId();
-                // NOTE: Not writing (source_interp) should result in transliteration from the blob character set
-                blobParameterBuffer.addArgument(isc_bpb_target_interp, characterSetId);
-            }
+            // We use an empty buffer so the "default" blob is provided without type conversion or transliteration.
+            // This also ensures the inline blob cache is used (both for native and pure Java).
+            // NOTE: We are assuming that the parameter buffer passed in is empty to begin with.
         }
+
     }
 }

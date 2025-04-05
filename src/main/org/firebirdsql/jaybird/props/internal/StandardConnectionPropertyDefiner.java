@@ -41,7 +41,7 @@ import static org.firebirdsql.jaybird.props.internal.TransactionNameMapping.TRAN
 /**
  * Connection property definer for the standard connection properties of Jaybird.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi {
@@ -109,6 +109,10 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder(useServerBatch).type(BOOLEAN),
                 builder(serverBatchBufferSize).type(INT),
                 builder(extendedMetadata).type(BOOLEAN),
+                builder(maxInlineBlobSize).type(INT).aliases("max_inline_blob_size","isc_dpb_max_inline_blob_size")
+                        .dpbItem(isc_dpb_max_inline_blob_size),
+                builder(maxBlobCacheSize).type(INT).aliases("max_blob_cache_size", "isc_dpb_max_blob_cache_size")
+                        .dpbItem(isc_dpb_max_blob_cache_size),
                 // TODO Property should be considered deprecated, remove in Jaybird 6
                 builder("timestampUsesLocalTimezone").type(BOOLEAN).aliases("timestamp_uses_local_timezone"),
 

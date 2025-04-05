@@ -40,7 +40,7 @@ import java.util.function.Function;
 import static java.util.Objects.requireNonNull;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbWireStatement extends AbstractFbStatement implements FbWireStatement {
@@ -104,12 +104,17 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         this.handle = handle;
     }
 
+    @Override
+    public FbWireTransaction getTransaction() {
+        return (FbWireTransaction) super.getTransaction();
+    }
+
     /**
-     * Returns the (possibly cached) blr byte array for a {@link RowDescriptor}, or <code>null</code> if the parameter is null.
+     * Returns the (possibly cached) blr byte array for a {@link RowDescriptor}, or {@code null} if the parameter is null.
      *
      * @param rowDescriptor
      *         The row descriptor.
-     * @return blr byte array or <code>null</code> when <code>rowDescriptor</code> is <code>null</code>
+     * @return blr byte array or {@code null} when {@code rowDescriptor} is {@code null}
      * @throws SQLException
      *         When the {@link RowDescriptor} contains an unsupported field type.
      */
@@ -124,7 +129,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     /**
-     * Returns the blr byte array for a {@link RowValue}, or <code>null</code> if the parameter is null.
+     * Returns the blr byte array for a {@link RowValue}, or {@code null} if the parameter is null.
      * <p>
      * Contrary to {@link #calculateBlr(org.firebirdsql.gds.ng.fields.RowDescriptor)}, it is not allowed
      * to cache this value as it depends on the actual row value.
@@ -132,7 +137,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
      *
      * @param rowValue
      *         The row value.
-     * @return blr byte array or <code>null</code> when <code>rowValue</code> is <code>null</code>
+     * @return blr byte array or {@code null} when {@code rowValue} is {@code null}
      * @throws SQLException
      *         When the {@link RowValue} contains an unsupported field type.
      */
@@ -184,6 +189,17 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
 
     protected byte[] getInfo(int operation, byte[] requestItems, int bufferLength) throws SQLException {
         return getDatabase().getInfo(operation, getHandle(), requestItems, bufferLength, getStatementWarningCallback());
+    }
+
+    /**
+     * Handle the inline blob response from an {@code op_execute2} or {@code op_fetch_response}.
+     *
+     * @param inlineBlobResponse
+     *         inline blob response
+     * @since 5.0.8
+     */
+    protected void handleInlineBlobResponse(InlineBlobResponse inlineBlobResponse) {
+        // ignored
     }
 
     /**

@@ -27,6 +27,7 @@ import org.firebirdsql.gds.ng.wire.version13.Version13Descriptor;
 import org.firebirdsql.gds.ng.wire.version15.Version15Descriptor;
 import org.firebirdsql.gds.ng.wire.version16.Version16Descriptor;
 import org.firebirdsql.gds.ng.wire.version18.Version18Descriptor;
+import org.firebirdsql.gds.ng.wire.version19.Version19Descriptor;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -38,7 +39,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 class ProtocolCollectionTest {
@@ -61,7 +62,8 @@ class ProtocolCollectionTest {
                         Version13Descriptor.class,
                         Version15Descriptor.class,
                         Version16Descriptor.class,
-                        Version18Descriptor.class));
+                        Version18Descriptor.class,
+                        Version19Descriptor.class));
     }
 
     /**

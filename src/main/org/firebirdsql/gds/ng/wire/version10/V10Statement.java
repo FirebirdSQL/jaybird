@@ -38,7 +38,7 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 /**
  * {@link org.firebirdsql.gds.ng.wire.FbWireStatement} implementation for the version 10 wire protocol.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public class V10Statement extends AbstractFbWireStatement implements FbWireStatement {
@@ -112,7 +112,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @param response
      *         Response object
      */
-    protected void processFreeResponse(@SuppressWarnings("UnusedParameters") Response response) {
+    protected void processFreeResponse(@SuppressWarnings("unused") Response response) {
         // No processing needed
     }
 
@@ -276,12 +276,17 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                              * have a result set that will be fetched, instead we have a singleton result if we have fields
                              */
                             statementListenerDispatcher.statementExecuted(this, false, true);
+                            // NOTE: Inline blobs are supported since v19, but handling it here is simpler
+                            while (response instanceof InlineBlobResponse) {
+                                handleInlineBlobResponse((InlineBlobResponse) response);
+                                response = db.readResponse(statementWarningCallback);
+                            }
                             if (response instanceof SqlResponse) {
                                 processExecuteSingletonResponse((SqlResponse) response);
                                 expectedResponseCount--;
                                 response = db.readResponse(statementWarningCallback);
                             } else {
-                                // We didn't get an op_sql_response first, something is iffy, maybe cancellation or very low level problem?
+                                // We didn't get an op_sql_response, something is iffy, maybe cancellation or very low level problem?
                                 // We don't expect any more responses after this
                                 expectedResponseCount = 0;
                                 SQLWarning sqlWarning = new SQLWarning(
@@ -421,10 +426,19 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         fetch direction
      */
     protected void processFetchResponse(FetchDirection direction) throws IOException, SQLException {
-        Response response;
-        while ((response = getDatabase().readResponse(getStatementWarningCallback())) instanceof FetchResponse) {
-            final FetchResponse fetchResponse = (FetchResponse) response;
+        FbWireDatabase database = getDatabase();
+        WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
+        Response response = database.readResponse(statementWarningCallback);
+        do {
+            // NOTE: Inline blobs are supported since v19, but handling it here is simpler
+            while (response instanceof InlineBlobResponse) {
+                handleInlineBlobResponse((InlineBlobResponse) response);
+                response = database.readResponse(statementWarningCallback);
+            }
+            if (!(response instanceof FetchResponse)) break;
+            FetchResponse fetchResponse = (FetchResponse) response;
             if (fetchResponse.getStatus() == ISCConstants.FETCH_OK && fetchResponse.getCount() > 0) {
+                // Received a row
                 queueRowData(readSqlData());
             } else if (fetchResponse.getStatus() == ISCConstants.FETCH_OK && fetchResponse.getCount() == 0) {
                 // end of batch, but not end of cursor
@@ -456,7 +470,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 log.debugf("Received unexpected fetch response %s, ignored", fetchResponse);
                 break;
             }
-        }
+        } while ((response = database.readResponse(statementWarningCallback)) instanceof FetchResponse
+                || response instanceof InlineBlobResponse);
         // TODO Handle other response type?
     }
 

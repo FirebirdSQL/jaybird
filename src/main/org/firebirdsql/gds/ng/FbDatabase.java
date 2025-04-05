@@ -181,6 +181,11 @@ public interface FbDatabase extends FbAttachment {
      * <p>
      * The blob is initially closed.
      * </p>
+     * <p>
+     * If the server supports inline blobs, a locally cached blob may be returned if an inline blob was received for
+     * {@code transaction} and {@code blobId}, and if {@code blobParameterBuffer} is {@code null} or empty
+     * ({@link BlobParameterBuffer#isEmpty()}).
+     * </p>
      *
      * @param transaction
      *         transaction associated with the blob

@@ -35,7 +35,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
 public final class BlobLengthProcessor implements InfoProcessor<Long> {
 
     private static final byte[] BLOB_LENGTH_ITEMS = new byte[] {
-            ISCConstants.isc_info_blob_total_length
+            ISCConstants.isc_info_blob_total_length, ISCConstants.isc_info_end
     };
 
     @Override

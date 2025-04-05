@@ -125,7 +125,7 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
         try {
             XdrOutputStream xdrOut = getXdrOut();
             BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
-            if (blobParameterBuffer == null) {
+            if (blobParameterBuffer == null || blobParameterBuffer.isEmpty()) {
                 xdrOut.writeInt(openOperation.opCodeWithoutBpb());
             } else {
                 xdrOut.writeInt(openOperation.opCodeWithBpb());

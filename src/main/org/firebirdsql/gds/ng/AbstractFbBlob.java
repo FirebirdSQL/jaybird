@@ -24,11 +24,9 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
-import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.ByteArrayHelper;
-import org.firebirdsql.util.IOUtils;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -37,7 +35,9 @@ import java.sql.SQLWarning;
 import static java.util.Objects.requireNonNull;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * Base class for low-level blob operations.
+ *
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public abstract class AbstractFbBlob implements FbBlob, TransactionListener, DatabaseListener {
@@ -441,20 +441,15 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      *         when the blob is closed.
      */
     protected void checkBlobOpen() throws SQLException {
-        if (!isOpen()) {
-            // TODO Use more specific exception message?
-            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_bad_segstr_handle).toSQLException();
-        }
+        BlobHelper.checkBlobOpen(this);
     }
 
     /**
      * @throws SQLException
-     *         When the blob is open.
+     *         when the blob is open.
      */
     protected void checkBlobClosed() throws SQLException {
-        if (isOpen()) {
-            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_no_segstr_close).toSQLException();
-        }
+        BlobHelper.checkBlobClosed(this);
     }
 
     protected FbTransaction getTransaction() {
@@ -497,7 +492,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      * The known blob info items for the connected server as a blob info request buffer.
      *
      * @return the known blob info items (possibly empty under implementation-specific circumstances)
-     * @since 7
+     * @since 5.0.7
      */
     protected byte[] getKnownBlobInfoItems() {
         FbDatabase db = getDatabase();
@@ -594,27 +589,6 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     /**
-     * Validates requested offset ({@code off}) and length ({@code len}) against the array ({@code b}).
-     *
-     * @param b
-     *         array
-     * @param off
-     *         position in array
-     * @param len
-     *         length from {@code off}
-     * @throws SQLException
-     *         if {@code off < 0}, {@code len < 0}, or if {@code off + len > b.length}
-     * @since 5.0.7
-     */
-    protected final void validateBufferLength(byte[] b, int off, int len) throws SQLException {
-        try {
-            IOUtils.checkFromIndexSize(off, len, b.length);
-        } catch (IndexOutOfBoundsException e) {
-            throw new SQLNonTransientException(e.toString(), SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
-        }
-    }
-
-    /**
      * State of the blob.
      *
      * @since 5.0.7
@@ -675,5 +649,5 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         }
 
     }
-    
+
 }

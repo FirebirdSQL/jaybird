@@ -32,10 +32,13 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.firebirdsql.gds.JaybirdSystemProperties.getDefaultMaxBlobCacheSize;
+import static org.firebirdsql.gds.JaybirdSystemProperties.getDefaultMaxInlineBlobSize;
+
 /**
  * Mutable implementation of {@link IConnectionProperties}
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @see FbImmutableConnectionProperties
  * @since 3.0
  */
@@ -66,6 +69,14 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     public FbConnectionProperties() {
         setSessionTimeZone(defaultTimeZone());
         setSqlDialect(PropertyConstants.DEFAULT_DIALECT);
+        Integer maxInlineBlobSize = getDefaultMaxInlineBlobSize();
+        if (maxInlineBlobSize != null) {
+            setMaxInlineBlobSize(maxInlineBlobSize);
+        }
+        Integer maxBlobCacheSize = getDefaultMaxBlobCacheSize();
+        if (maxBlobCacheSize != null) {
+            setMaxBlobCacheSize(maxBlobCacheSize);
+        }
     }
 
     // For internal use, to provide serialization support
@@ -93,9 +104,18 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             return defaultTimeZone();
         case PropertyNames.sqlDialect:
             return PropertyConstants.DEFAULT_DIALECT;
+        case PropertyNames.maxInlineBlobSize:
+            return negativeToZero(getDefaultMaxInlineBlobSize());
+        case PropertyNames.maxBlobCacheSize:
+            return negativeToZero(getDefaultMaxBlobCacheSize());
         default:
             return super.resolveStoredDefaultValue(property);
         }
+    }
+
+    private static Integer negativeToZero(Integer value) {
+        if (value != null && value < 0) return 0;
+        return value;
     }
 
     private static String defaultTimeZone() {

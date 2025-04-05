@@ -32,7 +32,7 @@ import static java.lang.String.format;
  * the default collection.
  * </p>
  * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
@@ -119,6 +119,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                 "org.firebirdsql.gds.ng.wire.version15.Version15Descriptor",
                 "org.firebirdsql.gds.ng.wire.version16.Version16Descriptor",
                 "org.firebirdsql.gds.ng.wire.version18.Version18Descriptor",
+                "org.firebirdsql.gds.ng.wire.version19.Version19Descriptor",
         };
         final List<ProtocolDescriptor> protocols = new ArrayList<>(protocolClasses.length);
         for (String className : protocolClasses) {
@@ -219,7 +220,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
      * {@link ProtocolDescriptor#getWeight()} will be loaded into the default
      * collection.
      * </p>
-     * 
+     *
      * @return The default ProtocolCollection
      * @see ProtocolCollection#create(ProtocolDescriptor...)
      */

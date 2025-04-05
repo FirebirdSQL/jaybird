@@ -26,8 +26,11 @@ package org.firebirdsql.gds.impl;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Object representing a Firebird server version. The version string is returned
@@ -131,13 +134,23 @@ public final class GDSServerVersion implements Serializable {
         return variant;
     }
 
+    /**
+     * @return an unmodifiable list of the raw version strings
+     * @since 5.0.8
+     */
+    public List<String> getRawVersions() {
+        return unmodifiableList(Arrays.asList(rawVersions));
+    }
+
     public String getExtendedServerName() {
         if (rawVersions.length < 2) {
             return null;
         } else if (rawVersions.length == 2) {
             return rawVersions[1];
         } else {
-            StringBuilder sb = new StringBuilder();
+            // Reserve additional space for connection information, etc. We could be more precise by summing the length
+            // of each version string from index 1 in the array, but this is good enough
+            StringBuilder sb = new StringBuilder((rawVersions[1].length() + 50) * (rawVersions.length - 1));
             for (int idx = 1; idx < rawVersions.length; idx++) {
                 if (idx > 1) {
                     sb.append(',');
@@ -206,7 +219,9 @@ public final class GDSServerVersion implements Serializable {
         if (rawVersions.length == 1) {
             return rawVersions[0];
         }
-        StringBuilder sb = new StringBuilder();
+        // Reserve additional space for connection information, etc. We could be more precise by summing the length of
+        // each version string in the array, but this is good enough
+        StringBuilder sb = new StringBuilder((rawVersions[0].length() + 50) * rawVersions.length);
         int idx = 0;
         sb.append(rawVersions[idx++]);
         do {
@@ -283,7 +298,6 @@ public final class GDSServerVersion implements Serializable {
                                 minorVersion > requiredMinorVersion
                         )
                 );
-
     }
 
 }

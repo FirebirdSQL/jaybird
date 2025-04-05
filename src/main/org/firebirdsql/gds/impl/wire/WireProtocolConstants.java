@@ -27,8 +27,9 @@ package org.firebirdsql.gds.impl.wire;
 /**
  * Constants for wire protocol operations and messages.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
+@SuppressWarnings("unused")
 public interface WireProtocolConstants {
 
     /**
@@ -192,6 +193,8 @@ public interface WireProtocolConstants {
     int op_fetch_scroll = 112;
     int op_info_cursor = 113;
 
+    int op_inline_blob = 114;
+
     /* Protocol version constants */
 
     int CONNECT_VERSION2 = 2;
@@ -240,6 +243,7 @@ public interface WireProtocolConstants {
     /* Protocol 18:
         - supports op_fetch_scroll */
     int PROTOCOL_VERSION18 = (FB_PROTOCOL_FLAG | 18);
+    int PROTOCOL_VERSION19 = (FB_PROTOCOL_FLAG | 19);
 
     /* Architectures */
     int arch_generic = 1; /* Generic -- always use canonical forms */

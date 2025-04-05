@@ -31,7 +31,7 @@ package org.firebirdsql.jaybird.props;
  * (if syntactically valid).
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 5
  */
 public final class PropertyNames {
@@ -81,6 +81,8 @@ public final class PropertyNames {
     public static final String useServerBatch = "useServerBatch";
     public static final String serverBatchBufferSize = "serverBatchBufferSize";
     public static final String extendedMetadata = "extendedMetadata";
+    public static final String maxInlineBlobSize = "maxInlineBlobSize";
+    public static final String maxBlobCacheSize = "maxBlobCacheSize";
 
     // service connection
     public static final String expectedDb = "expectedDb";
@@ -94,4 +96,5 @@ public final class PropertyNames {
     private PropertyNames() {
         // no instances
     }
+
 }

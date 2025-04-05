@@ -113,6 +113,27 @@ public abstract class AbstractStatementTest {
 
     protected static final String SELECT_THEUTFVALUE =
             "SELECT theUTFVarcharValue, theUTFCharValue FROM keyvalue WHERE thekey = ?";
+
+    protected static final String PRODUCE_BLOB =
+              "execute block(SIZE integer = ?) returns (DATA blob)\n"
+            + "as\n"
+            + "declare variable CONTENT char(32767) character set ASCII;\n"
+            + "declare variable REMAINING integer;\n"
+            + "begin\n"
+            + "  CONTENT = rpad('', 32767, 'x');\n"
+            + "  REMAINING = SIZE;\n"
+            + "  DATA = RDB$BLOB_UTIL.NEW_BLOB(false, true);\n"
+            + "  while (REMAINING > 32767) do\n"
+            + "  begin\n"
+            + "    DATA = blob_append(DATA, CONTENT);\n"
+            + "    REMAINING = REMAINING - 32767;\n"
+            + "  end\n"
+            + "  if (REMAINING > 0) then\n"
+            + "  begin\n"
+            + "    DATA = blob_append(DATA, substring(CONTENT from 1 for REMAINING));\n"
+            + "  end\n"
+            + "  suspend;\n"
+            + "end\n";
     //@formatter:on
 
     protected final SimpleStatementListener listener = new SimpleStatementListener();
@@ -856,10 +877,21 @@ public abstract class AbstractStatementTest {
     }
 
     protected void allocateStatement() throws SQLException {
-        if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
-            transaction = getTransaction();
+        statement = db.createStatement(getOrCreateTransaction());
+    }
+
+    protected void replaceDbHandleWithInlineBlobConfig(Integer maxInlineBlobSize, Integer maxBlobCacheSize)
+            throws SQLException {
+        if (maxInlineBlobSize == null && maxBlobCacheSize == null) return;
+        db.close();
+        if (maxInlineBlobSize != null) {
+            connectionInfo.setMaxInlineBlobSize(maxInlineBlobSize);
         }
-        statement = db.createStatement(transaction);
+        if (maxBlobCacheSize != null) {
+            connectionInfo.setMaxBlobCacheSize(maxBlobCacheSize);
+        }
+        db = createDatabase();
+        db.attach();
     }
 
     @AfterEach

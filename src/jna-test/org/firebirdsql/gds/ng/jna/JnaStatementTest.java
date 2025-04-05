@@ -20,17 +20,32 @@ package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.gds.ClumpletReader;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.AbstractStatementTest;
 import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
+import static org.firebirdsql.gds.ISCConstants.fb_info_wire_rcv_bytes;
+import static org.firebirdsql.gds.ISCConstants.isc_info_end;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for JNA statement.
@@ -42,6 +57,11 @@ class JnaStatementTest extends AbstractStatementTest {
 
     @RegisterExtension
     static final GdsTypeExtension testType = GdsTypeExtension.supportsNativeOnly();
+
+    /**
+     * See also {@code INLINE_BLOB_TEST_MAX_SIZE} in {@link org.firebirdsql.gds.ng.wire.version19.V19StatementTest}.
+     */
+    protected static final int INLINE_BLOB_TEST_MAX_SIZE = 65531;
 
     private final AbstractNativeDatabaseFactory factory =
             (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
@@ -243,4 +263,105 @@ class JnaStatementTest extends AbstractStatementTest {
         assertNotNull(listener.getSqlCounts(), "Expected SQL counts");
         assertEquals(listener.getRows().size(), listener.getSqlCounts().getLongSelectCount(), "Unexpected select count");
     }
+
+    // NOTE The following tests are similar to the tests in V19StatementTest with the same name. In case of the JNA
+    // tests, they might have been more appropriate in JnaBlobTest, but for consistency with the pure Java tests, we put
+    // them here.
+
+    @ParameterizedTest
+    @ValueSource(ints = { 0, 1, 500, INLINE_BLOB_TEST_MAX_SIZE })
+    public void usesInlineBlob_defaultMax(int size) throws Exception {
+        assumeInlineBlobSupport();
+        assertFbBlob(size, true);
+    }
+
+    @Test
+    public void usesNormalBlob_defaultMax() throws Exception {
+        assumeInlineBlobSupport();
+        // First size that will produce a "normal" blob
+        final int size = INLINE_BLOB_TEST_MAX_SIZE + 1;
+        assertFbBlob(size, false);
+    }
+
+    @Test
+    public void usesInlineBlob_max16384() throws Exception {
+        assumeInlineBlobSupport();
+        replaceDbHandleWithInlineBlobConfig(16384, null);
+        final int size = 16384 - 2;
+        assertFbBlob(size, true);
+    }
+
+    @Test
+    public void usesNormalBlob_max16384() throws Exception {
+        assumeInlineBlobSupport();
+        replaceDbHandleWithInlineBlobConfig(16384, null);
+        final int size = 16384 - 1;
+        assertFbBlob(size, false);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 0, 1 })
+    public void usesNormalBlob_cacheSizeZero(int size) throws Exception {
+        assumeInlineBlobSupport();
+        replaceDbHandleWithInlineBlobConfig(null, 0);
+        assertFbBlob(size, false);
+    }
+
+    private void assumeInlineBlobSupport() {
+        assumeThat("Test requires non-embedded type", FBTestProperties.GDS_TYPE, isOtherNativeType());
+        // Formally, we should also check if we make a TCP/IP connection
+        assumeTrue(getDefaultSupportInfo().supportsInlineBlobs(), "Test requires inline blob support");
+        GDSServerVersion clientVersion = ((JnaDatabase) db).getClientVersion();
+        assumeTrue(clientVersion.isEqualOrAbove(5, 0, 3),
+                "Test requires fbclient version supporting inline blobs, was: " + clientVersion);
+    }
+
+    private void assertFbBlob(int size, boolean expectInlineBlob) throws SQLException {
+        allocateStatement();
+        statement.addStatementListener(listener);
+        statement.prepare(PRODUCE_BLOB);
+
+        final DatatypeCoder coder = db.getDatatypeCoder();
+        RowValue params = RowValue.of(coder.encodeInt(size));
+        statement.execute(params);
+        statement.fetchRows(1);
+
+        assertThat("expected a row", listener.getRows(), hasSize(1));
+        RowValue rowValue = listener.getRows().get(0);
+        long blobId = coder.decodeLong(rowValue.getFieldData(0));
+        FbBlob blob = db.createBlobForInput(getOrCreateTransaction(), blobId);
+
+        assertBlobLengthAndContent(blob, size, expectInlineBlob);
+    }
+
+    private void assertBlobLengthAndContent(FbBlob blob, int size, boolean expectInlineBlob) throws SQLException {
+        long receivedBytesBefore = getReceivedBytes();
+        blob.open();
+        assertEquals(size, blob.length(), "unexpected blob size");
+        if (size > 0) {
+            byte[] data = new byte[size];
+            blob.get(data, 0, size);
+            assertEquals("x".repeat(size), new String(data, StandardCharsets.US_ASCII));
+        }
+        long receivedBytesAfter = getReceivedBytes();
+        long receivedBytesDifference = receivedBytesAfter - receivedBytesBefore;
+        if (expectInlineBlob) {
+            assertEquals(0L, receivedBytesDifference, "expected an inline blob, so no received network data");
+        } else {
+            // For server-side blob, more bytes than size will have been received (i.e. open, get segment, etc.)
+            assertThat("expected a server-side blob", receivedBytesDifference, greaterThan((long) size));
+        }
+    }
+
+    private long getReceivedBytes() throws SQLException {
+        return db.getDatabaseInfo(new byte[] { (byte) fb_info_wire_rcv_bytes, isc_info_end }, 20, infoResponse -> {
+            ClumpletReader reader = new ClumpletReader(ClumpletReader.Kind.InfoResponse, infoResponse);
+            if (reader.find(fb_info_wire_rcv_bytes)) {
+                return reader.getLong();
+            }
+            throw new IllegalStateException(
+                    "Did not receive item fb_info_wire_rcv_bytes (157), this is probably a 5.0.1 or older fbclient");
+        });
+    }
+
 }

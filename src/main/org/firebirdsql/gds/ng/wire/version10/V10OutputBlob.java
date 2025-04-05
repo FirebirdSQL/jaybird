@@ -36,7 +36,8 @@ import java.sql.SQLException;
 
 import static org.firebirdsql.gds.ISCConstants.isc_segstr_no_op;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
-import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_put_segment;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
+import static org.firebirdsql.util.ByteArrayHelper.validateBufferLength;
 
 /**
  * Output {@link org.firebirdsql.gds.ng.wire.FbWireBlob} implementation for the version 10 wire protocol.

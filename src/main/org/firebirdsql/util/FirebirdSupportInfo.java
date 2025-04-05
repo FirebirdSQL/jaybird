@@ -44,7 +44,7 @@ import java.sql.SQLException;
  * the <a href="https://github.com/FirebirdSQL/jaybird/issues/">Jaybird tracker</a>.
  * </p>
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  * @since 3.0
  */
 public final class FirebirdSupportInfo {
@@ -299,7 +299,7 @@ public final class FirebirdSupportInfo {
 
     /**
      * Checks support for protocol versions. The check is limited to those protocol versions supported by Jaybird
-     * (10-16 and 18 at this time, although v14 is only implemented as part of v15).
+     * (10-16 and 18-19 at this time, although v14 is only implemented as part of v15).
      *
      * @param protocolVersion
      *         Protocol version number
@@ -320,9 +320,11 @@ public final class FirebirdSupportInfo {
         case 15:
             return isVersionEqualOrAbove(3, 0, 2);
         case 16:
-            return isVersionEqualOrAbove(4, 0, 0);
+            return isVersionEqualOrAbove(4, 0);
         case 18:
-            return isVersionEqualOrAbove(5, 0 ,0);
+            return isVersionEqualOrAbove(5, 0);
+        case 19:
+            return isVersionEqualOrAbove(5, 0, 3);
         default:
             return false;
         }
@@ -731,6 +733,15 @@ public final class FirebirdSupportInfo {
         default:
             return false;
         }
+    }
+
+    /**
+     * Reports if inline blobs are supported.
+     *
+     * @return {@code true} if inline blobs are supported, {@code false} otherwise
+     */
+    public boolean supportsInlineBlobs() {
+        return isVersionEqualOrAbove(5, 0, 3);
     }
 
     /**

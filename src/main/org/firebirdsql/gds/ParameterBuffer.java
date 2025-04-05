@@ -207,4 +207,13 @@ public interface ParameterBuffer extends Iterable<Parameter> {
      * @return the number of parameters stored.
      */
     int size();
+
+    /**
+     * @return {@code true} if empty, {@code false} if this buffer contains at least one parameter
+     * @since 5.0.8
+     */
+    default boolean isEmpty() {
+        return size() == 0;
+    }
+
 }

@@ -26,7 +26,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 
 /**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * Tests for {@link V18Statement} timeouts in the V18 protocol, reuses tests for V16.
+ *
+ * @author Mark Rotteveel
+ * @since 5
  */
 public class V18StatementTimeoutTest extends V16StatementTimeoutTest {
 

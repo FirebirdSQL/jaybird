@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,7 +24,7 @@ import java.security.PrivilegedAction;
 /**
  * Class to access Jaybird-specific system properties from a single place.
  *
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author Mark Rotteveel
  */
 public final class JaybirdSystemProperties {
 
@@ -53,6 +53,8 @@ public final class JaybirdSystemProperties {
     public static final String PROCESS_NAME_PROP = JDBC_PREFIX + "processName";
     public static final String DEFAULT_CONNECTION_ENCODING_PROPERTY = JDBC_PREFIX + "defaultConnectionEncoding";
     public static final String REQUIRE_CONNECTION_ENCODING_PROPERTY = JDBC_PREFIX + "requireConnectionEncoding";
+    public static final String DEFAULT_MAX_INLINE_BLOB_SIZE = JDBC_PREFIX + "defaultMaxInlineBlobSize";
+    public static final String DEFAULT_MAX_BLOB_CACHE_SIZE = JDBC_PREFIX + "defaultMaxBlobCacheSize";
     public static final String DATATYPE_CODER_CACHE_SIZE = COMMON_PREFIX + "datatypeCoderCacheSize";
     public static final String NATIVE_LIBRARY_SHUTDOWN_DISABLED = COMMON_PREFIX + "nativeResourceShutdownDisabled";
 
@@ -111,6 +113,14 @@ public final class JaybirdSystemProperties {
     public static int getDatatypeCoderCacheSize(int defaultValue) {
         Integer value = getIntegerSystemPropertyPrivileged(DATATYPE_CODER_CACHE_SIZE);
         return value != null ? value : defaultValue;
+    }
+
+    public static Integer getDefaultMaxInlineBlobSize() {
+        return getIntegerSystemPropertyPrivileged(DEFAULT_MAX_INLINE_BLOB_SIZE);
+    }
+
+    public static Integer getDefaultMaxBlobCacheSize() {
+        return getIntegerSystemPropertyPrivileged(DEFAULT_MAX_BLOB_CACHE_SIZE);
     }
 
     private static String getSystemPropertyPrivileged(final String propertyName) {
