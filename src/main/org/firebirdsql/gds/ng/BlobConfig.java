@@ -22,6 +22,10 @@ public interface BlobConfig {
 
     /**
      * Writes out the configuration for an input blob for an {@code open} operation (reading a blob).
+     * <p>
+     * In pure Java, the inline blob cache can be bypassed by including
+     * {@link org.firebirdsql.jaybird.fb.constants.BpbItems#jb_bpb_bypass_local_cache} in {@code blobParameterBuffer}.
+     * </p>
      *
      * @param blobParameterBuffer
      *         a blob parameter buffer to be configured by this instance (implementations can assume it is empty)

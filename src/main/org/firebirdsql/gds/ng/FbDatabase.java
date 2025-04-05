@@ -172,6 +172,11 @@ public interface FbDatabase extends FbAttachment {
      * <p>
      * The blob is initially closed.
      * </p>
+     * <p>
+     * If the server supports inline blobs, a locally cached blob will be returned. In the pure Java protocol, this
+     * cache can be bypassed by adding {@link org.firebirdsql.jaybird.fb.constants.BpbItems#jb_bpb_bypass_local_cache}
+     * to {@code blobParameterBuffer}.
+     * </p>
      *
      * @param transaction
      *         transaction associated with the blob

@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import static org.firebirdsql.gds.ISCConstants.isc_segstr_no_op;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
+import static org.firebirdsql.jaybird.util.ByteArrayHelper.validateBufferLength;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbBlob} for native client access.
@@ -157,6 +158,11 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             checkDatabaseAttached();
             checkTransactionActive();
             checkBlobOpen();
+
+            if (isEof()) {
+                return ByteArrayHelper.emptyByteArray();
+            }
+
             ShortByReference actualLength = new ShortByReference();
             ByteBuffer responseBuffer = getSegment0(sizeRequested, actualLength);
             throwAndClearDeferredException();

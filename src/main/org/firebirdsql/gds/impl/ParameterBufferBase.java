@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.gds.impl;
@@ -162,6 +162,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     public final void writeArgumentsTo(OutputStream outputStream) throws IOException {
         for (Argument currentArgument : arguments) {
+            if (isLocalArgument(currentArgument.getType())) continue;
             currentArgument.writeTo(outputStream);
         }
     }
@@ -174,6 +175,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     protected final int getLength() {
         int length = 0;
         for (Argument currentArgument : arguments) {
+            if (isLocalArgument(currentArgument.getType())) continue;
             length += currentArgument.getLength();
         }
         return length;
