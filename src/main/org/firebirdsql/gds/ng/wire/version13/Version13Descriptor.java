@@ -4,21 +4,15 @@
 package org.firebirdsql.gds.ng.wire.version13;
 
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
 import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.ParameterConverter;
-import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.gds.ng.wire.version10.*;
-import org.firebirdsql.gds.ng.wire.version11.V11InputBlob;
-import org.firebirdsql.gds.ng.wire.version11.V11OutputBlob;
-
-import java.sql.SQLException;
+import org.firebirdsql.gds.ng.wire.version12.Version12Descriptor;
 
 /**
  * The {@link org.firebirdsql.gds.ng.wire.ProtocolDescriptor} for the Firebird version 13 protocol. This version
@@ -27,10 +21,10 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 3.0
  */
-public final class Version13Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
+public class Version13Descriptor extends Version12Descriptor implements ProtocolDescriptor {
 
     public Version13Descriptor() {
-        super(
+        this(
                 WireProtocolConstants.PROTOCOL_VERSION13,
                 WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_lazy_send, // Protocol implementation expects lazy send
@@ -39,14 +33,14 @@ public final class Version13Descriptor extends AbstractProtocolDescriptor implem
                 4);
     }
 
-    @Override
-    public FbWireDatabase createDatabase(final WireDatabaseConnection connection) {
-        return new V13Database(connection, this);
+    protected Version13Descriptor(int version, int architecture, int minimumType, int maximumType,
+            boolean supportsWireCompression, int weight) {
+        super(version, architecture, minimumType, maximumType, supportsWireCompression, weight);
     }
 
     @Override
-    public FbWireService createService(WireServiceConnection connection) {
-        return new V10Service(connection, this);
+    public FbWireDatabase createDatabase(final WireDatabaseConnection connection) {
+        return new V13Database(connection, this);
     }
 
     @Override
@@ -63,31 +57,8 @@ public final class Version13Descriptor extends AbstractProtocolDescriptor implem
     }
 
     @Override
-    public FbWireTransaction createTransaction(final FbWireDatabase database, final int transactionHandle,
-            final TransactionState initialState) {
-        return new V10Transaction(database, transactionHandle, initialState);
-    }
-
-    @Override
     public FbWireStatement createStatement(final FbWireDatabase database) {
         return new V13Statement(database);
-    }
-
-    @Override
-    public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer) throws SQLException {
-        return new V11OutputBlob(database, transaction, blobParameterBuffer);
-    }
-
-    @Override
-    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction,
-            BlobParameterBuffer blobParameterBuffer, long blobId) throws SQLException {
-        return new V11InputBlob(database, transaction, blobParameterBuffer, blobId);
-    }
-
-    @Override
-    public FbWireAsynchronousChannel createAsynchronousChannel(FbWireDatabase database) {
-        return new V10AsynchronousChannel(database);
     }
 
     @Override

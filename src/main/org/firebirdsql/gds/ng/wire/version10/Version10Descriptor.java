@@ -22,16 +22,21 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 3.0
  */
-public final class Version10Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
+public class Version10Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
 
     public Version10Descriptor() {
-        super(
+        this(
                 WireProtocolConstants.PROTOCOL_VERSION10,
                 WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_rpc,
                 WireProtocolConstants.ptype_batch_send,
                 false,
                 1);
+    }
+
+    protected Version10Descriptor(int version, int architecture, int minimumType, int maximumType,
+            boolean supportsWireCompression, int weight) {
+        super(version, architecture, minimumType, maximumType, supportsWireCompression, weight);
     }
 
     @Override
