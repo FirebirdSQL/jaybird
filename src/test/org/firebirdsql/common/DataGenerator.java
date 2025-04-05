@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common;
 
@@ -27,6 +27,26 @@ public class DataGenerator {
         byte[] randomBytes = new byte[length];
         ThreadLocalRandom.current().nextBytes(randomBytes);
         return randomBytes;
+    }
+
+    /**
+     * Creates a byte array with bytes corresponding to their index. This can be useful for tests comparing array
+     * contents to see if indexed access or range copying is done properly.
+     * <p>
+     * Using a length greater than 128 may prove confusing.
+     * </p>
+     *
+     * @param length
+     *         length of the resulting byte array, values larger than 128 are not recommended
+     * @return byte array of length where each index has the value {@code (byte) index}
+     * @since 7
+     */
+    public static byte[] createIndexBytes(int length) {
+        byte[] indexBytes = new byte[length];
+        for (int idx = 0; idx < length; idx++) {
+            indexBytes[idx] = (byte) idx;
+        }
+        return indexBytes;
     }
 
     /**

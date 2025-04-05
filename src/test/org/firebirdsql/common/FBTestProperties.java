@@ -148,10 +148,18 @@ public final class FBTestProperties {
         return props;
     }
 
+    /**
+     * @return new connection properties object, configured with the test defaults
+     * @see #configureDefaultDbProperties(DatabaseConnectionProperties)
+     */
     public static FbConnectionProperties getDefaultFbConnectionProperties() {
         return configureDefaultDbProperties(new FbConnectionProperties());
     }
 
+    /**
+     * @return new service properties object, configured with the test defaults
+     * @see #configureDefaultServiceProperties(ServiceConnectionProperties)
+     */
     public static FbServiceProperties getDefaultServiceProperties() {
         return configureDefaultServiceProperties(new FbServiceProperties());
     }

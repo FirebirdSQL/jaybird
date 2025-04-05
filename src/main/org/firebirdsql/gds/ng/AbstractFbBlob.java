@@ -9,12 +9,10 @@ import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
-import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
-import java.util.Objects;
 
 import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.TRACE;
@@ -417,20 +415,15 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      *         when the blob is closed.
      */
     protected void checkBlobOpen() throws SQLException {
-        if (!isOpen()) {
-            // TODO Use more specific exception message?
-            throw FbExceptionBuilder.toNonTransientException(ISCConstants.isc_bad_segstr_handle);
-        }
+        BlobHelper.checkBlobOpen(this);
     }
 
     /**
      * @throws SQLException
-     *         When the blob is open.
+     *         when the blob is open.
      */
     protected void checkBlobClosed() throws SQLException {
-        if (isOpen()) {
-            throw FbExceptionBuilder.toNonTransientException(ISCConstants.isc_no_segstr_close);
-        }
+        BlobHelper.checkBlobClosed(this);
     }
 
     protected FbTransaction getTransaction() {
@@ -566,27 +559,6 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
            and older (which aren't supported any way), and for Firebird 2.1 and 2.5, this may cause the same issue with
            sign extension and buffer sizes mentioned above, so we leave this as is. */
         return Short.MAX_VALUE - 2;
-    }
-
-    /**
-     * Validates requested offset ({@code off}) and length ({@code len}) against the array ({@code b}).
-     *
-     * @param b
-     *         array
-     * @param off
-     *         position in array
-     * @param len
-     *         length from {@code off}
-     * @throws SQLException
-     *         if {@code off < 0}, {@code len < 0}, or if {@code off + len > b.length}
-     * @since 6
-     */
-    protected final void validateBufferLength(byte[] b, int off, int len) throws SQLException {
-        try {
-            Objects.checkFromIndexSize(off, len, b.length);
-        } catch (IndexOutOfBoundsException e) {
-            throw new SQLNonTransientException(e.toString(), SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
-        }
     }
 
     /**

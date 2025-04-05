@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -173,6 +173,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
             case op_sql_response -> new SqlResponse(
                     xdrIn.readInt()); // p_sqldata_messages
             case op_batch_cs -> readBatchCompletionResponse(xdrIn);
+            case op_inline_blob -> readInlineBlobResponse(xdrIn);
             default ->
                     throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_unexpectedOperationCode)
                             .messageParameter(operation)
@@ -198,6 +199,24 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     protected BatchCompletionResponse readBatchCompletionResponse(XdrInputStream xdrIn)
             throws SQLException, IOException {
         throw new FBDriverNotCapableException("Reading batch completion response not supported by " + this);
+    }
+
+    /**
+     * Reads the inline blob response ({@code op_inline_blob}) without reading the operation code itself.
+     *
+     * @param xdrIn
+     *         XDR input stream to read
+     * @return inline blob response
+     * @throws SQLException
+     *         for errors reading the response from the connection
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         when the protocol version does not support this response
+     * @throws IOException
+     *         for errors reading the response from the connection
+     * @since 7
+     */
+    protected InlineBlobResponse readInlineBlobResponse(XdrInputStream xdrIn) throws SQLException, IOException {
+        throw new FBDriverNotCapableException("Reading inline blob response not supported by " + this);
     }
 
     /**

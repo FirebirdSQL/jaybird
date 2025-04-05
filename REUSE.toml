@@ -105,5 +105,5 @@ SPDX-License-Identifier = "LGPL-2.1-or-later"
 [[annotations]]
 path = "src/resources/META-INF/services/org.firebirdsql.gds.ng.wire.ProtocolDescriptor"
 precedence = "aggregate"
-SPDX-FileCopyrightText = "Copyright 2013-2021 Mark Rotteveel"
+SPDX-FileCopyrightText = "Copyright 2013-2025 Mark Rotteveel"
 SPDX-License-Identifier = "LGPL-2.1-or-later"

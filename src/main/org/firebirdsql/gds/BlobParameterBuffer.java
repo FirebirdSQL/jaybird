@@ -1,8 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
 // SPDX-FileCopyrightText: Copyright 2004-2005 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2015-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds;
+
+import org.firebirdsql.jaybird.fb.constants.BpbItems;
 
 /**
  * Instance of this interface represents a BLOB Parameter Buffer from the
@@ -54,4 +56,9 @@ public interface BlobParameterBuffer extends ParameterBuffer {
     @Override
     void addArgument(int argumentType, int value);
 
+    @Override
+    default boolean isLocalArgument(int argumentType) {
+        return BpbItems.isLocalBpbItem(argumentType);
+    }
+    
 }

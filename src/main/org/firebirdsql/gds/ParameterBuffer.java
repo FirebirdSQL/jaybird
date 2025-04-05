@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2008 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 */
 package org.firebirdsql.gds;
@@ -190,4 +190,20 @@ public interface ParameterBuffer extends Iterable<Parameter>, Serializable {
      * @return the number of parameters stored.
      */
     int size();
+
+    /**
+     * Indicates the argument {@code argumentType} is a Jaybird-specific argument, and should not be sent to Firebird.
+     * <p>
+     * The default implementation returns {@code false}.
+     * </p>
+     *
+     * @param argumentType
+     *         type of the argument
+     * @return {@code true} if this argument should not be sent to Firebird, {@code false} otherwise
+     * @since 7
+     */
+    default boolean isLocalArgument(int argumentType) {
+        return false;
+    }
+
 }
