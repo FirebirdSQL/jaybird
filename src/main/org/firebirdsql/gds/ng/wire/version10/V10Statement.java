@@ -261,12 +261,17 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                              * have a result set that will be fetched, instead we have a singleton result if we have fields
                              */
                             statementListenerDispatcher.statementExecuted(this, false, true);
+                            // NOTE: Inline blobs are supported since v19, but handling it here is simpler
+                            while (response instanceof InlineBlobResponse inlineBlobResponse) {
+                                handleInlineBlobResponse(inlineBlobResponse);
+                                response = db.readResponse(statementWarningCallback);
+                            }
                             if (response instanceof SqlResponse sqlResponse) {
                                 processExecuteSingletonResponse(sqlResponse);
                                 expectedResponseCount--;
                                 response = db.readResponse(statementWarningCallback);
                             } else {
-                                // We didn't get an op_sql_response first, something is iffy, maybe cancellation or very low level problem?
+                                // We didn't get an op_sql_response, something is iffy, maybe cancellation or very low level problem?
                                 // We don't expect any more responses after this
                                 expectedResponseCount = 0;
                                 SQLWarning sqlWarning = new SQLWarning(
@@ -428,10 +433,16 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     protected void processFetchResponse(FetchDirection direction, Response response) throws IOException, SQLException {
         int rowsFetched = 0;
         FbWireDatabase database = getDatabase();
+        WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
         if (response == null) {
-            response = getDatabase().readResponse(getStatementWarningCallback());
+            response = database.readResponse(statementWarningCallback);
         }
         do {
+            // NOTE: Inline blobs are supported since v19, but handling it here is simpler
+            while (response instanceof InlineBlobResponse inlineBlobResponse) {
+                handleInlineBlobResponse(inlineBlobResponse);
+                response = database.readResponse(statementWarningCallback);
+            }
             if (!(response instanceof FetchResponse fetchResponse)) break;
             if (fetchResponse.status() == ISCConstants.FETCH_OK && fetchResponse.count() > 0) {
                 // Received a row
@@ -464,7 +475,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 log.log(System.Logger.Level.DEBUG, "Received unexpected fetch response {0}, ignored", fetchResponse);
                 break;
             }
-        } while ((response = database.readResponse(getStatementWarningCallback())) instanceof FetchResponse);
+        } while ((response = database.readResponse(statementWarningCallback)) instanceof FetchResponse
+                || response instanceof InlineBlobResponse);
         statementListenerDispatcher.fetchComplete(this, direction, rowsFetched);
         // TODO Handle other response type?
     }

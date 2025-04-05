@@ -18,6 +18,8 @@ import java.sql.SQLWarning;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
+import static org.firebirdsql.jaybird.util.ByteArrayHelper.emptyByteArray;
+import static org.firebirdsql.jaybird.util.ByteArrayHelper.validateBufferLength;
 
 /**
  * Input {@link org.firebirdsql.gds.ng.wire.FbWireBlob} implementation for the version 10 wire protocol.
@@ -70,6 +72,10 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobOpen();
+
+                if (isEof()) {
+                    return emptyByteArray();
+                }
 
                 requestGetSegment(sizeRequested);
                 response = receiveGetSegmentResponse();

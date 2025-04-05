@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2008 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 */
 package org.firebirdsql.gds;
@@ -190,4 +190,13 @@ public interface ParameterBuffer extends Iterable<Parameter>, Serializable {
      * @return the number of parameters stored.
      */
     int size();
+
+    /**
+     * @return {@code true} if empty, {@code false} if this buffer contains at least one parameter
+     * @since 7
+     */
+    default boolean isEmpty() {
+        return size() == 0;
+    }
+
 }

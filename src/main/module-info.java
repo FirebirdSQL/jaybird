@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2023-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 module org.firebirdsql.jaybird {
     requires transitive java.sql;
@@ -68,7 +68,8 @@ module org.firebirdsql.jaybird {
                     org.firebirdsql.gds.ng.wire.version13.Version13Descriptor,
                     org.firebirdsql.gds.ng.wire.version15.Version15Descriptor,
                     org.firebirdsql.gds.ng.wire.version16.Version16Descriptor,
-                    org.firebirdsql.gds.ng.wire.version18.Version18Descriptor;
+                    org.firebirdsql.gds.ng.wire.version18.Version18Descriptor,
+                    org.firebirdsql.gds.ng.wire.version19.Version19Descriptor;
 
     uses org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi;
 }

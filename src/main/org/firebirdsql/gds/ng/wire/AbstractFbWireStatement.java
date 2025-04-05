@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -97,6 +97,11 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(this));
     }
 
+    @Override
+    public FbWireTransaction getTransaction() {
+        return (FbWireTransaction) super.getTransaction();
+    }
+
     /**
      * Returns the (possibly cached) blr byte array for a {@link RowDescriptor}, or {@code null} if the parameter is null.
      *
@@ -180,6 +185,17 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
 
     protected byte[] getInfo(int operation, byte[] requestItems, int bufferLength) throws SQLException {
         return getDatabase().getInfo(operation, getHandle(), requestItems, bufferLength, getStatementWarningCallback());
+    }
+
+    /**
+     * Handle the inline blob response from an {@code op_execute2} or {@code op_fetch_response}.
+     *
+     * @param inlineBlobResponse
+     *         inline blob response
+     * @since 7
+     */
+    protected void handleInlineBlobResponse(InlineBlobResponse inlineBlobResponse) {
+        // ignored
     }
 
     /**

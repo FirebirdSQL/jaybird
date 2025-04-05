@@ -212,6 +212,11 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     @Override
+    public final boolean isEmpty() {
+        return arguments.isEmpty();
+    }
+
+    @Override
     @SuppressWarnings("java:S2097")
     public final boolean equals(Object other) {
         if (other == null || !(this.getClass().isAssignableFrom(other.getClass()))) {

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import static org.firebirdsql.gds.JaybirdSystemProperties.getDefaultAsyncFetch;
+import static org.firebirdsql.gds.JaybirdSystemProperties.getDefaultMaxBlobCacheSize;
+import static org.firebirdsql.gds.JaybirdSystemProperties.getDefaultMaxInlineBlobSize;
 import static org.firebirdsql.gds.JaybirdSystemProperties.getDefaultReportSQLWarnings;
 
 /**
@@ -61,6 +63,14 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
         if (asyncFetch != null) {
             setAsyncFetch(asyncFetch);
         }
+        Integer maxInlineBlobSize = getDefaultMaxInlineBlobSize();
+        if (maxInlineBlobSize != null) {
+            setMaxInlineBlobSize(maxInlineBlobSize);
+        }
+        Integer maxBlobCacheSize = getDefaultMaxBlobCacheSize();
+        if (maxBlobCacheSize != null) {
+            setMaxBlobCacheSize(maxBlobCacheSize);
+        }
     }
 
     // For internal use, to provide serialization support
@@ -87,8 +97,15 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             case PropertyNames.sessionTimeZone -> defaultTimeZone();
             case PropertyNames.sqlDialect -> PropertyConstants.DEFAULT_DIALECT;
             case PropertyNames.asyncFetch -> getDefaultAsyncFetch();
+            case PropertyNames.maxInlineBlobSize -> negativeToZero(getDefaultMaxInlineBlobSize());
+            case PropertyNames.maxBlobCacheSize -> negativeToZero(getDefaultMaxBlobCacheSize());
             default -> super.resolveStoredDefaultValue(property);
         };
+    }
+
+    private static Integer negativeToZero(Integer value) {
+        if (value != null && value < 0) return 0;
+        return value;
     }
 
     private static String defaultTimeZone() {

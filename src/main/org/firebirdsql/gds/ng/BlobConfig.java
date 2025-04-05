@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
 
@@ -22,6 +22,9 @@ public interface BlobConfig {
 
     /**
      * Writes out the configuration for an input blob for an {@code open} operation (reading a blob).
+     * <p>
+     * If you want to use the inline blob cache, the blob parameter buffer must be empty.
+     * </p>
      *
      * @param blobParameterBuffer
      *         a blob parameter buffer to be configured by this instance (implementations can assume it is empty)

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -46,60 +46,55 @@ public abstract class BaseTestBlob {
 
     private static final int BASE_CONTENT_SIZE = 16384;
 
-    //@formatter:off
-    protected static final String CREATE_BLOB_TABLE =
-            "CREATE TABLE blob_table (" +
-            "  id INTEGER PRIMARY KEY," +
-            "  blobvalue BLOB SUB_TYPE 0" +
-            ")";
+    protected static final String CREATE_BLOB_TABLE = """
+            CREATE TABLE blob_table (
+              id INTEGER PRIMARY KEY,
+              blobvalue BLOB SUB_TYPE 0
+            )""";
 
-    protected static final String CREATE_PROC_CHECK_BINARY_BLOB =
-            "CREATE PROCEDURE CHECK_BINARY_BLOB \n" +
-            " (  \n" +
-            "    ID INTEGER,\n" +
-            "    BASE_CONTENT VARCHAR( " + BASE_CONTENT_SIZE + " ) CHARACTER SET OCTETS,\n" +
-            "    REQUIRED_SIZE INTEGER \n" +
-            " ) \n" +
-            "RETURNS \n" +
-            " ( MATCHES SMALLINT )\n" +
-            "AS \n" +
-            "  DECLARE VARIABLE REMAINING INTEGER;\n" +
-            "  DECLARE VARIABLE BASE_CONTENT_SIZE INTEGER;\n" +
-            "  DECLARE VARIABLE TEMP_BLOB BLOB SUB_TYPE 0;\n" +
-            "BEGIN\n" +
-            "  REMAINING = REQUIRED_SIZE;\n" +
-            "  TEMP_BLOB = '';\n" +
-            "  BASE_CONTENT_SIZE = OCTET_LENGTH(BASE_CONTENT);\n" +
-            "  WHILE (REMAINING > 0) DO\n" +
-            "  BEGIN\n" +
-            "    TEMP_BLOB = TEMP_BLOB || \n" +
-            "        CASE \n" +
-            "            WHEN REMAINING > BASE_CONTENT_SIZE \n" +
-            "            THEN BASE_CONTENT \n" +
-            "            ELSE LEFT(BASE_CONTENT, REMAINING) \n" +
-            "        END;\n" +
-            "    REMAINING = REMAINING - BASE_CONTENT_SIZE;\n" +
-            "  END\n" +
-            "  SELECT \n" +
-            "        CASE \n" +
-            "          WHEN blobvalue IS DISTINCT FROM :TEMP_BLOB \n" +
-            "          THEN 0 \n" +
-            "          ELSE 1 \n" +
-            "        END \n" +
-            "      FROM blob_table \n" +
-            "      WHERE ID = :ID \n" +
-            "      INTO :MATCHES;\n" +
-            "END";
+    protected static final String CREATE_PROC_CHECK_BINARY_BLOB = """
+            CREATE PROCEDURE CHECK_BINARY_BLOB
+             (
+                ID INTEGER,
+                BASE_CONTENT VARCHAR(%d) CHARACTER SET OCTETS,
+                REQUIRED_SIZE INTEGER
+             )
+            RETURNS
+             ( MATCHES SMALLINT )
+            AS
+              DECLARE VARIABLE REMAINING INTEGER;
+              DECLARE VARIABLE BASE_CONTENT_SIZE INTEGER;
+              DECLARE VARIABLE TEMP_BLOB BLOB SUB_TYPE 0;
+            BEGIN
+              REMAINING = REQUIRED_SIZE;
+              TEMP_BLOB = '';
+              BASE_CONTENT_SIZE = OCTET_LENGTH(BASE_CONTENT);
+              WHILE (REMAINING > 0) DO
+              BEGIN
+                TEMP_BLOB = TEMP_BLOB ||
+                    CASE
+                        WHEN REMAINING > BASE_CONTENT_SIZE
+                        THEN BASE_CONTENT
+                        ELSE LEFT(BASE_CONTENT, REMAINING)
+                    END;
+                REMAINING = REMAINING - BASE_CONTENT_SIZE;
+              END
+              SELECT
+                    CASE
+                      WHEN blobvalue IS DISTINCT FROM :TEMP_BLOB
+                      THEN 0
+                      ELSE 1
+                    END
+                  FROM blob_table
+                  WHERE ID = :ID
+                  INTO :MATCHES;
+            END""".formatted(BASE_CONTENT_SIZE);
 
-    protected static final String EXECUTE_CHECK_BINARY_BLOB =
-            "{call CHECK_BINARY_BLOB(?, ?, ?)}";
+    protected static final String EXECUTE_CHECK_BINARY_BLOB = "{call CHECK_BINARY_BLOB(?, ?, ?)}";
 
-    protected static final String INSERT_BLOB_TABLE =
-            "INSERT INTO blob_table (id, blobvalue) VALUES (?, ?)";
+    protected static final String INSERT_BLOB_TABLE = "INSERT INTO blob_table (id, blobvalue) VALUES (?, ?)";
 
-    protected static final String SELECT_BLOB_TABLE =
-            "SELECT blobvalue FROM blob_table WHERE id = ?";
-    //@formatter:on
+    protected static final String SELECT_BLOB_TABLE = "SELECT blobvalue FROM blob_table WHERE id = ?";
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
@@ -313,10 +308,15 @@ public abstract class BaseTestBlob {
      * @return FbWireDatabase instance
      */
     protected FbDatabase createDatabaseConnection() throws SQLException {
-        return createFbDatabase(FBTestProperties.getDefaultFbConnectionProperties());
+        var props = FBTestProperties.getDefaultFbConnectionProperties();
+        // Disable inline blobs and blob caching as these tests expect to use server-side blobs
+        props.setMaxInlineBlobSize(0);
+        props.setMaxBlobCacheSize(0);
+        return createFbDatabase(props);
     }
 
     protected final FbTransaction getTransaction(FbDatabase db) throws SQLException {
         return db.startTransaction(getDefaultTpb());
     }
+
 }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 // SPDX-FileComment: The constants listed here were obtained from the Firebird sources, which are licensed under the IPL (InterBase Public License) and/or IDPL (Initial Developer Public License), both are variants of the Mozilla Public License version 1.1
 package org.firebirdsql.jaybird.fb.constants;
@@ -121,8 +121,16 @@ public final class DpbItems {
     // Firebird 5 constants
     public static final int isc_dpb_parallel_workers = 100;
     public static final int isc_dpb_worker_attach = 101;
+    // For 102, see isc_dpb_owner below
+    // Introduced in Firebird 5.0.3
+    public static final int isc_dpb_max_blob_cache_size = 103;
+    public static final int isc_dpb_max_inline_blob_size = 104;
+
+    // Firebird 6 constants
+    public static final int isc_dpb_owner = 102;
 
     private DpbItems() {
         // no instances
     }
+
 }

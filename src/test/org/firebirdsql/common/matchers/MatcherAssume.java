@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common.matchers;
 
@@ -8,7 +8,11 @@ import org.hamcrest.StringDescription;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class MatcherAssume {
+public final class MatcherAssume {
+
+    private MatcherAssume() {
+        // no instances
+    }
 
     public static <T> void assumeThat(String reason, T actual, Matcher<? super T> matcher) {
         assumeTrue(matcher.matches(actual),

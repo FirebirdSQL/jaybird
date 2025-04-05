@@ -524,6 +524,25 @@ public interface ISCConstants {
     int fb_info_username = 147;
     int fb_info_sqlrole = 148;
 
+    int fb_info_parallel_workers = 149;
+
+    // The following items are only known to fbclient 5.0.2 and higher, not to the server.
+    // The pure Java implementation is not aware of these either.
+    int fb_info_wire_out_packets = 150;
+    int fb_info_wire_in_packets = 151;
+    int fb_info_wire_out_bytes = 152;
+    int fb_info_wire_in_bytes = 153;
+    int fb_info_wire_snd_packets = 154;
+    int fb_info_wire_rcv_packets = 155;
+    int fb_info_wire_snd_bytes = 156;
+    int fb_info_wire_rcv_bytes = 157;
+    int fb_info_wire_roundtrips = 158;
+
+    // The following items are only known to fbclient 5.0.3 and higher, not to the server.
+    // The pure Java implementation is not aware of these either.
+    int fb_info_max_blob_cache_size = 159;
+    int fb_info_max_inline_blob_size = 160;
+
     int isc_info_db_impl_rdb_vms = 1;
     int isc_info_db_impl_rdb_eln = 2;
     int isc_info_db_impl_rdb_eln_dev = 3;

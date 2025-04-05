@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2017-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2017-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
@@ -26,6 +26,8 @@ public final class JaybirdSystemProperties {
     public static final String DEFAULT_ENABLE_PROTOCOL = JDBC_PREFIX + "defaultEnableProtocol";
     public static final String DEFAULT_REPORT_SQL_WARNINGS = JDBC_PREFIX + "defaultReportSQLWarnings";
     public static final String DEFAULT_ASYNC_FETCH = JDBC_PREFIX + "defaultAsyncFetch";
+    public static final String DEFAULT_MAX_INLINE_BLOB_SIZE = JDBC_PREFIX + "defaultMaxInlineBlobSize";
+    public static final String DEFAULT_MAX_BLOB_CACHE_SIZE = JDBC_PREFIX + "defaultMaxBlobCacheSize";
     public static final String DATATYPE_CODER_CACHE_SIZE = COMMON_PREFIX + "datatypeCoderCacheSize";
     public static final String NATIVE_LIBRARY_SHUTDOWN_DISABLED = COMMON_PREFIX + "nativeResourceShutdownDisabled";
     public static final String WIRE_DEFLATE_BUFFER_SIZE = WIRE_PREFIX + "deflateBufferSize";
@@ -99,6 +101,14 @@ public final class JaybirdSystemProperties {
         if (asyncFetch == null) return null;
         // Special handling for empty string to be equal to true
         return asyncFetch.isBlank() || Boolean.parseBoolean(asyncFetch);
+    }
+
+    public static Integer getDefaultMaxInlineBlobSize() {
+        return getIntegerSystemPropertyPrivileged(DEFAULT_MAX_INLINE_BLOB_SIZE);
+    }
+
+    public static Integer getDefaultMaxBlobCacheSize() {
+        return getIntegerSystemPropertyPrivileged(DEFAULT_MAX_BLOB_CACHE_SIZE);
     }
 
     private static int getWithDefault(String propertyName, int defaultValue) {

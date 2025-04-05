@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
@@ -38,7 +38,8 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                 "org.firebirdsql.gds.ng.wire.version13.Version13Descriptor",
                 "org.firebirdsql.gds.ng.wire.version15.Version15Descriptor",
                 "org.firebirdsql.gds.ng.wire.version16.Version16Descriptor",
-                "org.firebirdsql.gds.ng.wire.version18.Version18Descriptor"));
+                "org.firebirdsql.gds.ng.wire.version18.Version18Descriptor",
+                "org.firebirdsql.gds.ng.wire.version19.Version19Descriptor"));
 
         AVAILABLE_PROTOCOLS = create(availableProtocols);
         SUPPORTED_PROTOCOLS = create(availableProtocols.stream()

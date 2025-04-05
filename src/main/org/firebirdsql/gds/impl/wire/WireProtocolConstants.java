@@ -1,10 +1,10 @@
 /*
- SPDX-FileCopyrightText: 2000-2024 Firebird development team and individual contributors
+ SPDX-FileCopyrightText: 2000-2025 Firebird development team and individual contributors
  SPDX-FileCopyrightText: Copyright 2001 Boix i Oltra, S.L.
  SPDX-FileContributor: Alejandro Alberola (Boix i Oltra, S.L.)
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2010 Roman Rokytskyy
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
  SPDX-FileComment: The constants listed here were obtained from the Firebird sources, which are licensed under the IPL (InterBase Public License) and/or IDPL (Initial Developer Public License), both are variants of the Mozilla Public License version 1.1
@@ -168,6 +168,8 @@ public interface WireProtocolConstants {
     int op_fetch_scroll = 112;
     int op_info_cursor = 113;
 
+    int op_inline_blob = 114;
+
     int CONNECT_VERSION2 = 2;
     int CONNECT_VERSION3 = 3;
 
@@ -179,16 +181,17 @@ public interface WireProtocolConstants {
     int PROTOCOL_VERSION11 = (FB_PROTOCOL_FLAG | 11);
     int PROTOCOL_VERSION12 = (FB_PROTOCOL_FLAG | 12);
     int PROTOCOL_VERSION13 = (FB_PROTOCOL_FLAG | 13);
-    int PROTOCOL_VERSION14	= (FB_PROTOCOL_FLAG | 14);
+    int PROTOCOL_VERSION14 = (FB_PROTOCOL_FLAG | 14);
     int PROTOCOL_VERSION15 = (FB_PROTOCOL_FLAG | 15);
     int PROTOCOL_VERSION16 = (FB_PROTOCOL_FLAG | 16);
     int PROTOCOL_VERSION17 = (FB_PROTOCOL_FLAG | 17);
     int PROTOCOL_VERSION18 = (FB_PROTOCOL_FLAG | 18);
+    int PROTOCOL_VERSION19 = (FB_PROTOCOL_FLAG | 19);
 
     // Firebird 3.0.0
     int MINIMUM_SUPPORTED_PROTOCOL_VERSION = PROTOCOL_VERSION13;
-    // Firebird 5.0.0
-    int MAXIMUM_SUPPORTED_PROTOCOL_VERSION = PROTOCOL_VERSION18;
+    // Firebird 5.0.3
+    int MAXIMUM_SUPPORTED_PROTOCOL_VERSION = PROTOCOL_VERSION19;
 
     int arch_generic = 1;
 
