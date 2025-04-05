@@ -117,6 +117,10 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder(createDatabaseIfNotExist).type(BOOLEAN),
                 builder(reportSQLWarnings).choices(REPORT_SQL_WARNINGS_ALL, REPORT_SQL_WARNINGS_NONE),
                 builder(asyncFetch).type(BOOLEAN),
+                builder(maxInlineBlobSize).type(INT).aliases("max_inline_blob_size","isc_dpb_max_inline_blob_size")
+                        .dpbItem(isc_dpb_max_inline_blob_size),
+                builder(maxBlobCacheSize).type(INT).aliases("max_blob_cache_size", "isc_dpb_max_blob_cache_size")
+                        .dpbItem(isc_dpb_max_blob_cache_size),
 
                 // TODO Consider removing this property, otherwise formally add it to PropertyNames
                 builder("filename_charset"),

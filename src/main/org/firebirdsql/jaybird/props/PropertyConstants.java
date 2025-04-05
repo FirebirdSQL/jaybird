@@ -74,6 +74,9 @@ public final class PropertyConstants {
 
     public static final boolean DEFAULT_ASYNC_FETCH = true;
 
+    public static final int DEFAULT_MAX_INLINE_BLOB_SIZE = 64 * 1024;
+    public static final int DEFAULT_MAX_BLOB_CACHE_SIZE = 10 * 1024 * 1024;
+
     public static final int TIMEOUT_NOT_SET = -1;
     public static final int BUFFER_SIZE_NOT_SET = -1;
     static final int PARALLEL_WORKERS_NOT_SET = -1;
@@ -85,4 +88,5 @@ public final class PropertyConstants {
     private PropertyConstants() {
         // no instances
     }
+
 }

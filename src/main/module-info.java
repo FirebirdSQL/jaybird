@@ -84,7 +84,8 @@ module org.firebirdsql.jaybird {
                     org.firebirdsql.gds.ng.wire.version13.Version13Descriptor,
                     org.firebirdsql.gds.ng.wire.version15.Version15Descriptor,
                     org.firebirdsql.gds.ng.wire.version16.Version16Descriptor,
-                    org.firebirdsql.gds.ng.wire.version18.Version18Descriptor;
+                    org.firebirdsql.gds.ng.wire.version18.Version18Descriptor,
+                    org.firebirdsql.gds.ng.wire.version19.Version19Descriptor;
 
     uses org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi;
 }

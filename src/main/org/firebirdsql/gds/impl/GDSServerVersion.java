@@ -27,6 +27,7 @@ package org.firebirdsql.gds.impl;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -133,13 +134,23 @@ public final class GDSServerVersion implements Serializable {
         return variant;
     }
 
+    /**
+     * @return an unmodifiable list of the raw version strings
+     * @since 6.0.2
+     */
+    public List<String> getRawVersions() {
+        return List.of(rawVersions);
+    }
+
     public String getExtendedServerName() {
         if (rawVersions.length < 2) {
             return null;
         } else if (rawVersions.length == 2) {
             return rawVersions[1];
         } else {
-            StringBuilder sb = new StringBuilder();
+            // Reserve additional space for connection information, etc. We could be more precise by summing the length
+            // of each version string from index 1 in the array, but this is good enough
+            var sb = new StringBuilder((rawVersions[1].length() + 50) * (rawVersions.length - 1));
             for (int idx = 1; idx < rawVersions.length; idx++) {
                 if (idx > 1) {
                     sb.append(',');
@@ -196,19 +207,16 @@ public final class GDSServerVersion implements Serializable {
     }
 
     public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (!(obj instanceof GDSServerVersion)) return false;
-
-        GDSServerVersion that = (GDSServerVersion) obj;
-
-        return Arrays.equals(this.rawVersions, that.rawVersions);
+        return obj == this || obj instanceof GDSServerVersion that && Arrays.equals(this.rawVersions, that.rawVersions);
     }
 
     public String toString() {
         if (rawVersions.length == 1) {
             return rawVersions[0];
         }
-        StringBuilder sb = new StringBuilder();
+        // Reserve additional space for connection information, etc. We could be more precise by summing the length of
+        // each version string in the array, but this is good enough
+        var sb = new StringBuilder((rawVersions[0].length() + 50) * rawVersions.length);
         int idx = 0;
         sb.append(rawVersions[idx++]);
         do {
@@ -298,7 +306,6 @@ public final class GDSServerVersion implements Serializable {
                                 minorVersion > requiredMinorVersion
                         )
                 );
-
     }
 
 }

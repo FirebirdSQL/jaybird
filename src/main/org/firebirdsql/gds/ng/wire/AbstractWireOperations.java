@@ -178,10 +178,18 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         final XdrInputStream xdrIn = getXdrIn();
         return switch (operation) {
             case op_response ->
-                    new GenericResponse(xdrIn.readInt(), xdrIn.readLong(), xdrIn.readBuffer(), readStatusVector());
-            case op_fetch_response -> new FetchResponse(xdrIn.readInt(), xdrIn.readInt());
-            case op_sql_response -> new SqlResponse(xdrIn.readInt());
+                    new GenericResponse(
+                            xdrIn.readInt(), // p_resp_object
+                            xdrIn.readLong(), // p_resp_blob_id
+                            xdrIn.readBuffer(), // p_resp_data
+                            readStatusVector()); // p_resp_status_vector
+            case op_fetch_response -> new FetchResponse(
+                    xdrIn.readInt(), // p_sqldata_status
+                    xdrIn.readInt()); // p_sqldata_messages
+            case op_sql_response -> new SqlResponse(
+                    xdrIn.readInt()); // p_sqldata_messages
             case op_batch_cs -> readBatchCompletionResponse(xdrIn);
+            case op_inline_blob -> readInlineBlobResponse(xdrIn);
             default ->
                     throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_unexpectedOperationCode)
                             .messageParameter(operation)
@@ -207,6 +215,24 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     protected BatchCompletionResponse readBatchCompletionResponse(XdrInputStream xdrIn)
             throws SQLException, IOException {
         throw new FBDriverNotCapableException("Reading batch completion response not supported by " + this);
+    }
+
+    /**
+     * Reads the inline blob response ({@code op_inline_blob}) without reading the operation code itself.
+     *
+     * @param xdrIn
+     *         XDR input stream to read
+     * @return inline blob response
+     * @throws SQLException
+     *         for errors reading the response from the connection
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         when the protocol version does not support this response
+     * @throws IOException
+     *         for errors reading the response from the connection
+     * @since 6.0.2
+     */
+    protected InlineBlobResponse readInlineBlobResponse(XdrInputStream xdrIn) throws SQLException, IOException {
+        throw new FBDriverNotCapableException("Reading inline blob response not supported by " + this);
     }
 
     /**

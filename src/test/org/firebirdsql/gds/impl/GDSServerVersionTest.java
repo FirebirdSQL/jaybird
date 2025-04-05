@@ -30,6 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -232,4 +233,12 @@ class GDSServerVersionTest {
         assertTrue(fb304Version.isEqualOrAbove(3, 0, 4), "3.0.4 >= 3.0.4");
         assertTrue(fb400Version.isEqualOrAbove(3, 0, 4), "4.0.0 >= 3.0.4");
     }
+
+    @Test
+    void testGetRawVersions() throws Exception {
+        var version = GDSServerVersion.parseRawVersion(TEST_VERSION_30);
+
+        assertEquals(List.of(TEST_VERSION_30), version.getRawVersions(), "rawVersions");
+    }
+
 }

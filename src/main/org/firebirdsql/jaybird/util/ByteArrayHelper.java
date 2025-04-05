@@ -18,8 +18,13 @@
  */
 package org.firebirdsql.jaybird.util;
 
+import org.firebirdsql.jdbc.SQLStateConstants;
+
+import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.Objects;
 
 /**
  * Helper methods for byte arrays.
@@ -107,6 +112,27 @@ public final class ByteArrayHelper {
      */
     public static byte[] emptyByteArray() {
         return EMPTY;
+    }
+
+    /**
+     * Validates requested offset ({@code off}) and length ({@code len}) against the array ({@code b}).
+     *
+     * @param b
+     *         array
+     * @param off
+     *         position in array
+     * @param len
+     *         length from {@code off}
+     * @throws SQLException
+     *         if {@code off < 0}, {@code len < 0}, or if {@code off + len > b.length}
+     * @since 6.0.2
+     */
+    public static void validateBufferLength(byte[] b, int off, int len) throws SQLException {
+        try {
+            Objects.checkFromIndexSize(off, len, b.length);
+        } catch (IndexOutOfBoundsException e) {
+            throw new SQLNonTransientException(e.toString(), SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
+        }
     }
 
 }

@@ -25,6 +25,7 @@ import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -327,6 +328,108 @@ class FbConnectionPropertiesTest {
             props.setBooleanProperty(PropertyNames.asyncFetch, null);
             assertEquals(expectedValue, props.isAsyncFetch(), "Unexpected asyncFetch value");
         }
+    }
+
+    @Test
+    void defaultMaxInlineBlobSize() {
+        assertEquals(PropertyConstants.DEFAULT_MAX_INLINE_BLOB_SIZE, info.getMaxInlineBlobSize(),
+                "Unexpected maxInlineBlobSize value");
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            defaultValue, expectedValue
+            ,             -1
+            '',           -1
+            -100,         0
+            0,            0
+            12345,        12345
+            NOT_AN_INT,   -1
+            """)
+    void maxInlineBlobSizeDefaultDerivedFromSystemProperty(String defaultValue, int expectedValue) {
+        try (var ignored = withTemporarySystemProperty(
+                JaybirdSystemProperties.DEFAULT_MAX_INLINE_BLOB_SIZE, defaultValue)) {
+            if (expectedValue == -1) {
+                expectedValue = PropertyConstants.DEFAULT_MAX_INLINE_BLOB_SIZE;
+            }
+            var props = new FbConnectionProperties();
+            assertEquals(expectedValue, props.getMaxInlineBlobSize(), "Unexpected maxInlineBlobSize value");
+
+            // set to a different value
+            props.setMaxInlineBlobSize(expectedValue + 10);
+            assertEquals(expectedValue + 10, props.getMaxInlineBlobSize(), "Unexpected maxInlineBlobSize value");
+
+            // explicitly clearing the property reverts to the default
+            props.setIntProperty(PropertyNames.maxInlineBlobSize, null);
+            assertEquals(expectedValue, props.getMaxInlineBlobSize(), "Unexpected maxInlineBlobSize value");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            setValue,    expectedValue
+            # Integer.MIN_VALUE
+            -0x80000000, 0
+            -1,          0
+            0,           0
+            500,         500
+            # Integer.MAX_VALUE
+            0x7FFFFFFF,  0x7FFFFFFF
+            """)
+    void maxInlineBlobSize(int setValue, int expectedValue) {
+        info.setMaxInlineBlobSize(setValue);
+        assertEquals(expectedValue, info.getMaxInlineBlobSize(), "Unexpected maxInlineBlobSize value");
+    }
+
+    @Test
+    void defaultMaxBlobCacheSize() {
+        assertEquals(PropertyConstants.DEFAULT_MAX_BLOB_CACHE_SIZE, info.getMaxBlobCacheSize(),
+                "Unexpected maxBlobCacheSize value");
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            defaultValue, expectedValue
+            ,             -1
+            '',           -1
+            -100,         0
+            0,            0
+            12345,        12345
+            NOT_AN_INT,   -1
+            """)
+    void maxBlobCacheSizeDefaultDerivedFromSystemProperty(String defaultValue, int expectedValue) {
+        try (var ignored = withTemporarySystemProperty(
+                JaybirdSystemProperties.DEFAULT_MAX_BLOB_CACHE_SIZE, defaultValue)) {
+            if (expectedValue == -1) {
+                expectedValue = PropertyConstants.DEFAULT_MAX_BLOB_CACHE_SIZE;
+            }
+            var props = new FbConnectionProperties();
+            assertEquals(expectedValue, props.getMaxBlobCacheSize(), "Unexpected maxBlobCacheSize value");
+
+            // set to a different value
+            props.setMaxBlobCacheSize(expectedValue + 10);
+            assertEquals(expectedValue + 10, props.getMaxBlobCacheSize(), "Unexpected maxBlobCacheSize value");
+
+            // explicitly clearing the property reverts to the default
+            props.setIntProperty(PropertyNames.maxBlobCacheSize, null);
+            assertEquals(expectedValue, props.getMaxBlobCacheSize(), "Unexpected maxBlobCacheSize value");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            setValue,    expectedValue
+            # Integer.MIN_VALUE
+            -0x80000000, 0
+            -1,          0
+            0,           0
+            500,         500
+            # Integer.MAX_VALUE
+            0x7FFFFFFF,  0x7FFFFFFF
+            """)
+    void maxBlobCacheSize(int setValue, int expectedValue) {
+        info.setMaxBlobCacheSize(setValue);
+        assertEquals(expectedValue, info.getMaxBlobCacheSize(), "Unexpected maxBlobCacheSize value");
     }
 
 }

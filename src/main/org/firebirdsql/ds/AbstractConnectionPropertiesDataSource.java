@@ -516,6 +516,26 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setAsyncFetch(asyncFetch);
     }
 
+    @Override
+    public int getMaxInlineBlobSize() {
+        return FirebirdConnectionProperties.super.getMaxInlineBlobSize();
+    }
+
+    @Override
+    public void setMaxInlineBlobSize(int maxInlineBlobSize) {
+        FirebirdConnectionProperties.super.setMaxInlineBlobSize(maxInlineBlobSize);
+    }
+
+    @Override
+    public int getMaxBlobCacheSize() {
+        return FirebirdConnectionProperties.super.getMaxBlobCacheSize();
+    }
+
+    @Override
+    public void setMaxBlobCacheSize(int maxBlobCacheSize) {
+        FirebirdConnectionProperties.super.setMaxBlobCacheSize(maxBlobCacheSize);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated(since = "5")
     @Override

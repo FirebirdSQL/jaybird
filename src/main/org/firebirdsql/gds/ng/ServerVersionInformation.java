@@ -85,7 +85,7 @@ enum ServerVersionInformation {
 
     /**
      * @return the known blob info request items
-     * @since 7
+     * @since 6.0.2
      */
     public byte[] getBlobInfoRequestItems() {
         return Constants.V_1_0_BLOB_INFO.clone();

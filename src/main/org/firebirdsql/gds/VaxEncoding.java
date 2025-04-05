@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.gds;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +31,7 @@ import java.io.OutputStream;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public final class VaxEncoding {
 
     private VaxEncoding() {
@@ -243,7 +246,23 @@ public final class VaxEncoding {
      */
     public static void encodeVaxInteger2WithoutLength(OutputStream out, int val) throws IOException {
         out.write(val);
-        out.write(val >> 8);
+        out.write(val >>> 8);
+    }
+
+    /**
+     * Encodes an integer using two byte Vax encoding into {@code buf}, without length prefix.
+     *
+     * @param buf
+     *         byte array of sufficient size
+     * @param off
+     *         offset to start writing
+     * @param val
+     *         value to encode
+     * @since 6.0.2
+     */
+    public static void encodeVaxInteger2WithoutLength(byte[] buf, int off, int val) {
+        buf[off++] = (byte) val;
+        buf[off] = (byte) (val >>> 8);
     }
 
     /**

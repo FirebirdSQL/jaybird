@@ -46,6 +46,26 @@ public class DataGenerator {
     }
 
     /**
+     * Creates a byte array with bytes corresponding to their index. This can be useful for tests comparing array
+     * contents to see if indexed access or range copying is done properly.
+     * <p>
+     * Using a length greater than 128 may prove confusing.
+     * </p>
+     *
+     * @param length
+     *         length of the resulting byte array, values larger than 128 are not recommended
+     * @return byte array of length where each index has the value {@code (byte) index}
+     * @since 6.0.2
+     */
+    public static byte[] createIndexBytes(int length) {
+        byte[] indexBytes = new byte[length];
+        for (int idx = 0; idx < length; idx++) {
+            indexBytes[idx] = (byte) idx;
+        }
+        return indexBytes;
+    }
+
+    /**
      * Creates a byte array with random bytes in the range 0 - 127 with the specified length.
      *
      * @param length

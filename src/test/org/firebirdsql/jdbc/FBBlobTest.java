@@ -22,6 +22,7 @@ import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,9 +34,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.*;
+import java.util.Map;
 import java.util.Properties;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
@@ -293,11 +296,14 @@ class FBBlobTest {
 
     @Test
     void testGetBytes_withOffset_segmentedBlob_throwsSQLException() throws Exception {
-        try (Connection conn = getConnection(false)) {
+        try (var conn = getConnectionViaDriverManager(Map.of(
+                PropertyNames.useStreamBlobs, "false",
+                PropertyNames.maxInlineBlobSize, "0",
+                PropertyNames.maxBlobCacheSize, "0"))) {
             populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
-            try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
+            try (var select = conn.prepareStatement(SELECT_BLOB)) {
                 select.setInt(1, 1);
-                try (ResultSet rs = select.executeQuery()) {
+                try (var rs = select.executeQuery()) {
                     assertTrue(rs.next(), "Expected a row in result set");
                     FirebirdBlob blob = (FirebirdBlob) rs.getBlob(1);
 
@@ -573,7 +579,8 @@ class FBBlobTest {
 
     private Connection getConnection(boolean useStreamBlobs) throws SQLException {
         final Properties connectionProperties = getDefaultPropertiesForConnection();
-        connectionProperties.setProperty("useStreamBlobs", useStreamBlobs ? "true" : "false");
+        connectionProperties.setProperty(PropertyNames.useStreamBlobs, Boolean.toString(useStreamBlobs));
         return DriverManager.getConnection(getUrl(), connectionProperties);
     }
+
 }

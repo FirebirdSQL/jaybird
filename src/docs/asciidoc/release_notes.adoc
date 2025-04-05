@@ -54,6 +54,9 @@ The values were changed from the original default and maximum of 32,767 to:
 +
 This change improves the performance of preparing statements with a lot of columns and parameters by reducing the number of round-trips needed to retrieve the column and parameter information.
 It may also prevent truncation of "`explained plans`" for statements with very complex or extensive plans.
+* Improvement: backported inline blob support (Firebird 5.0.3 and higher) from Jaybird 7 (https://github.com/FirebirdSQL/jaybird/issues/870[#870])
++
+See also <<blob-performance-inline-blob>>.
 
 === Jaybird 6.0.1
 
@@ -833,6 +836,8 @@ This is especially noticeable in connections with high latency.
 
 Artificial testing on local WiFi with small blobs shows around 85% increase in throughput (comparing a 6.0.1-SNAPSHOT against 6.0.0).
 
+The <<blob-performance-inline-blob>> for Firebird 5.0.3 and higher replaces this improvement for smallish blobs, but it still has benefit for blobs larger than `maxInlineBlobSize` or blobs that are discarded when the inline blob cache is full.
+
 This optimization is available for Firebird 2.1 and higher, but formally only supported for Firebird 3.0 and higher.
 
 For native connections, a similar optimization -- but only for reading blobs -- is available when using a Firebird 5.0.2 or higher fbclient, independent of the Jaybird version.
@@ -853,6 +858,53 @@ We're also investigating further changes to the implementation of Jaybird that c
 This optimization is available for Firebird 2.1 and higher, but formally only supported for Firebird 3.0 and higher.
 
 For native connections, a similar optimization is available when using a Firebird 5.0.2 or higher fbclient, independent of the Jaybird version.
+
+[#blob-performance-inline-blob]
+==== Inline blob support
+
+Added in: Jaybird 6.0.2, backported from Jaybird 7
+
+Introduced in Firebird 5.0.3 (protocol 19), inline blobs offer a significant performance improvement for querying smallish blobs.
+As the name suggests, blobs are sent _inline_ together with the row data, avoiding additional round trips to the server for reading the blob data and blob information.
+
+There are two connection properties affecting inline blobs:
+
+`maxInlineBlobSize` (aliases: `max_inline_blob_size`, `isc_dpb_max_inline_blob_size`)::
+Maximum size in bytes of the blob (default: `65535`). +
+A value of `0` will disable sending of inline blobs.
++
+The maximum value is decided by the Firebird server, and is currently `65535`;
+this may change in the future
++
+If a blob is smaller than the specified size, the server will send it inline.
+The size includes segment lengths, so the actual maximum blob data received is `_N_ * 2` bytes smaller, where _N_ is the number of segments of the actual blob.
++
+The default can be changed with system property `org.firebirdsql.jdbc.defaultMaxInlineBlobSize`.
+
+`maxBlobCacheSize` (aliases: `max_blob_cache_size`, `isc_dpb max_blob_cache_size`)::
+Maximum size in bytes -- per connection -- of the blob cache (default: `10485760` or 10 MiB). +
+A value of `0` will disable the cache, but does not disable sending of inline blobs.
+Set `maxInlineBlobSize` to `0` to disable sending of inline blobs.
++
+For pure Java, only the data size is counted towards the cache size.
+For native, the segment lengths also count towards the cache size.
++
+The default can be changed with system property `org.firebirdsql.jdbc.defaultMaxBlobCacheSize`.
+
+This feature works with pure Java and native connections when connecting to Firebird 5.0.3 or higher.
+For native connections, a Firebird 5.0.3 or higher client library must be used.
+
+If the maximum blob cache size is reached, received inline blobs will be discarded.
+For pure Java connections, an inline blob is removed from the cache on first use, or when the transaction associated with the blob ends.
+The native client implementation may have different cache eviction rules.
+
+As pure java connections remove the inline blob from the cache on first use, subsequent attempts to read the same blob -- by getting a different instance of `java.sql.Blob` or through multiple calls to the `ResultSet.getXXX` methods -- will use a server-side blob.
+This can also happen if multiple columns or rows, even in different result sets on the same connection, point to the same blob id in the same transaction.
+
+If you execute queries returning blobs, while those blobs are never actually opened, you may fill up the cache and later received inline blobs are then discarded.
+Especially in long-running transactions, this may reduce the effectiveness of this feature.
+
+Artificial testing on local WiFi with small blobs (200 bytes) shows a 30,000-45,000% (yes, thousand)footnote:[The wide range of the percentages is due to running the test with a single hop and two hops between client and server, and thus a wide range of latency.] increase in throughput comparing a 6.0.2-SNAPSHOT against 6.0.0, and a 15,000-25,000% increase in throughput comparing a 6.0.2-SNAPSHOT against 6.0.1.
 
 [#blob-performance-min-buf]
 ==== Minimum `blobBufferSize` 512 bytes

@@ -27,6 +27,7 @@ import org.firebirdsql.gds.ng.wire.version13.Version13Descriptor;
 import org.firebirdsql.gds.ng.wire.version15.Version15Descriptor;
 import org.firebirdsql.gds.ng.wire.version16.Version16Descriptor;
 import org.firebirdsql.gds.ng.wire.version18.Version18Descriptor;
+import org.firebirdsql.gds.ng.wire.version19.Version19Descriptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -69,7 +70,8 @@ class ProtocolCollectionTest {
                         Version13Descriptor.class,
                         Version15Descriptor.class,
                         Version16Descriptor.class,
-                        Version18Descriptor.class));
+                        Version18Descriptor.class,
+                        Version19Descriptor.class));
     }
 
     /**
@@ -86,7 +88,8 @@ class ProtocolCollectionTest {
                         Version13Descriptor.class,
                         Version15Descriptor.class,
                         Version16Descriptor.class,
-                        Version18Descriptor.class));
+                        Version18Descriptor.class,
+                        Version19Descriptor.class));
     }
 
     /**

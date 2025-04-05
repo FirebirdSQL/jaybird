@@ -118,6 +118,28 @@ public abstract class AbstractStatementTest {
             FROM RDB$CHARACTER_SETS a
             WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?""";
 
+    protected static final String PRODUCE_BLOB = """
+            execute block(SIZE integer = ?) returns (DATA blob)
+            as
+            declare variable CONTENT char(32767) character set ASCII;
+            declare variable REMAINING integer;
+            begin
+              CONTENT = rpad('', 32767, 'x');
+              REMAINING = SIZE;
+              DATA = RDB$BLOB_UTIL.NEW_BLOB(false, true);
+              while (REMAINING > 32767) do
+              begin
+                DATA = blob_append(DATA, CONTENT);
+                REMAINING = REMAINING - 32767;
+              end
+              if (REMAINING > 0) then
+              begin
+                DATA = blob_append(DATA, substring(CONTENT from 1 for REMAINING));
+              end
+              suspend;
+            end
+            """;
+
     protected final SimpleStatementListener listener = new SimpleStatementListener();
     protected FbDatabase db;
     private FbTransaction transaction;
@@ -834,10 +856,21 @@ public abstract class AbstractStatementTest {
     }
 
     protected void allocateStatement() throws SQLException {
-        if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
-            transaction = getTransaction();
+        statement = db.createStatement(getOrCreateTransaction());
+    }
+    
+    protected void replaceDbHandleWithInlineBlobConfig(Integer maxInlineBlobSize, Integer maxBlobCacheSize)
+            throws SQLException {
+        if (maxInlineBlobSize == null && maxBlobCacheSize == null) return;
+        db.close();
+        if (maxInlineBlobSize != null) {
+            connectionInfo.setMaxInlineBlobSize(maxInlineBlobSize);
         }
-        statement = db.createStatement(transaction);
+        if (maxBlobCacheSize != null) {
+            connectionInfo.setMaxBlobCacheSize(maxBlobCacheSize);
+        }
+        db = createDatabase();
+        db.attach();
     }
 
     @AfterEach

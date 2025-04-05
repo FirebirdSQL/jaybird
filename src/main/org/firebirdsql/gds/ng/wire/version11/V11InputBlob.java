@@ -19,10 +19,9 @@
 package org.firebirdsql.gds.ng.wire.version11;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ClumpletReader;
-import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
+import org.firebirdsql.gds.ng.CachedInfoResponse;
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
@@ -30,17 +29,13 @@ import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
 import org.firebirdsql.gds.ng.wire.Response;
 import org.firebirdsql.gds.ng.wire.version10.V10InputBlob;
-import org.firebirdsql.jaybird.util.ByteArrayHelper;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.function.Function;
 
 import static java.lang.System.Logger.Level.DEBUG;
-import static java.lang.System.Logger.Level.WARNING;
-import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_blob;
 
 /**
@@ -51,7 +46,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_blob;
  */
 public class V11InputBlob extends V10InputBlob {
 
-    private byte[] cachedBlobInfo = ByteArrayHelper.emptyByteArray();
+    private CachedInfoResponse cachedBlobInfo = CachedInfoResponse.empty();
 
     public V11InputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer,
             long blobId) throws SQLException {
@@ -137,7 +132,7 @@ public class V11InputBlob extends V10InputBlob {
     }
 
     private void processBlobInfoOnDeferredOpenResponse(GenericResponse genericResponse) {
-        cachedBlobInfo = genericResponse.data();
+        cachedBlobInfo = new CachedInfoResponse(genericResponse.data());
     }
 
     @Override
@@ -149,7 +144,7 @@ public class V11InputBlob extends V10InputBlob {
             // Given the delayed open requests the known info items, complete it now, so we can use its response instead
             // of sending another request
             completePendingOpen();
-            Optional<byte[]> fromCache = blobInfoFromCache(requestItems);
+            Optional<byte[]> fromCache = cachedBlobInfo.filteredComplete(requestItems);
             return fromCache.isPresent() ? fromCache.get() : super.getBlobInfo(requestItems, bufferLength);
         }
     }
@@ -171,36 +166,6 @@ public class V11InputBlob extends V10InputBlob {
         } catch (SQLException e) {
             errorOccurred(e);
             throw e;
-        }
-    }
-
-    private Optional<byte[]> blobInfoFromCache(byte[] requestItems) {
-        if (cachedBlobInfo.length == 0) {
-            // Nothing cached (yet), defer to server
-            return Optional.empty();
-        }
-        try {
-            var requested = new ClumpletReader(ClumpletReader.Kind.InfoItems, requestItems);
-            var cached = new ClumpletReader(ClumpletReader.Kind.InfoResponse, cachedBlobInfo);
-            var response = new ByteArrayOutputStream();
-            for (requested.rewind(); !requested.isEof(); requested.moveNext()) {
-                int requestItem = requested.getClumpTag();
-                if (!cached.find(requestItem)) {
-                    // Unknown blob info item, defer to server
-                    System.getLogger(getClass().getName()).log(DEBUG,
-                            "Requested blob info item {0} not in cache, deferring to server", requestItem);
-                    return Optional.empty();
-                }
-                byte[] data = cached.getBytes();
-                response.write(requestItem);
-                VaxEncoding.encodeVaxInteger2WithoutLength(response, data.length);
-                response.write(data);
-            }
-            response.write(isc_info_end);
-            return Optional.of(response.toByteArray());
-        } catch (IOException | SQLException e) {
-            System.getLogger(getClass().getName()).log(WARNING, "Error in blobInfoFromCache, deferring to server", e);
-            return Optional.empty();
         }
     }
 

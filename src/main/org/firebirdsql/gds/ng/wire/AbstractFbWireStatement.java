@@ -113,6 +113,11 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(this));
     }
 
+    @Override
+    public FbWireTransaction getTransaction() {
+        return (FbWireTransaction) super.getTransaction();
+    }
+
     /**
      * Returns the (possibly cached) blr byte array for a {@link RowDescriptor}, or {@code null} if the parameter is null.
      *
@@ -199,6 +204,17 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     /**
+     * Handle the inline blob response from an {@code op_execute2} or {@code op_fetch_response}.
+     *
+     * @param inlineBlobResponse
+     *         inline blob response
+     * @since 6.0.2
+     */
+    protected void handleInlineBlobResponse(InlineBlobResponse inlineBlobResponse) {
+        // ignored
+    }
+
+    /**
      * Wraps a deferred response to produce a deferred action that can be added
      * using {@link FbWireDatabase#enqueueDeferredAction(DeferredAction)}, notifying the exception listener of this
      * statement for exceptions, and forcing the ERROR state for IO errors.
@@ -280,9 +296,9 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
             try (LockCloseable ignored = database.withLock()) {
                 if (!database.isAttached()) return;
                 XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_free_statement);
-                xdrOut.writeInt(handle);
-                xdrOut.writeInt(ISCConstants.DSQL_drop);
+                xdrOut.writeInt(WireProtocolConstants.op_free_statement); // p_operation
+                xdrOut.writeInt(handle); // p_sqlfree_statement
+                xdrOut.writeInt(ISCConstants.DSQL_drop); // p_sqlfree_option
                 xdrOut.flush();
                 database.enqueueDeferredAction(DeferredAction.NO_OP_INSTANCE);
             } catch (SQLException | IOException e) {

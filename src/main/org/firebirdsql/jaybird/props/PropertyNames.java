@@ -89,6 +89,8 @@ public final class PropertyNames {
     public static final String createDatabaseIfNotExist = "createDatabaseIfNotExist";
     public static final String reportSQLWarnings = "reportSQLWarnings";
     public static final String asyncFetch = "asyncFetch";
+    public static final String maxInlineBlobSize = "maxInlineBlobSize";
+    public static final String maxBlobCacheSize = "maxBlobCacheSize";
 
     // service connection
     public static final String expectedDb = "expectedDb";
@@ -96,4 +98,5 @@ public final class PropertyNames {
     private PropertyNames() {
         // no instances
     }
+
 }

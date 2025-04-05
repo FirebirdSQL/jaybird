@@ -24,7 +24,11 @@ import org.hamcrest.StringDescription;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class MatcherAssume {
+public final class MatcherAssume {
+
+    private MatcherAssume() {
+        // no instances
+    }
 
     public static <T> void assumeThat(String reason, T actual, Matcher<? super T> matcher) {
         assumeTrue(matcher.matches(actual),

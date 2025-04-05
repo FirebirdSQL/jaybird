@@ -323,7 +323,7 @@ public final class FirebirdSupportInfo {
 
     /**
      * Checks support for protocol versions. The check is limited to those protocol versions supported by Jaybird
-     * (10-16 and 18 at this time, although v14 is only implemented as part of v15).
+     * (10-16 and 18-19 at this time, although v14 is only implemented as part of v15).
      *
      * @param protocolVersion
      *         Protocol version number
@@ -337,8 +337,9 @@ public final class FirebirdSupportInfo {
             case 13 -> isVersionEqualOrAbove(3);
             // Jaybird has only implemented protocol version 14 as part of version 15
             case 14, 15 -> isVersionEqualOrAbove(3, 0, 2);
-            case 16 -> isVersionEqualOrAbove(4, 0, 0);
-            case 18 -> isVersionEqualOrAbove(5, 0, 0);
+            case 16 -> isVersionEqualOrAbove(4);
+            case 18 -> isVersionEqualOrAbove(5);
+            case 19 -> isVersionEqualOrAbove(5, 0, 3);
             default -> false;
         };
     }
@@ -789,6 +790,15 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsOds(OdsVersion odsVersion) {
         return supportsOds(odsVersion.major(), odsVersion.minor());
+    }
+
+    /**
+     * Reports if inline blobs are supported.
+     *
+     * @return {@code true} if inline blobs are supported, {@code false} otherwise
+     */
+    public boolean supportsInlineBlobs() {
+        return isVersionEqualOrAbove(5, 0, 3);
     }
 
     /**
