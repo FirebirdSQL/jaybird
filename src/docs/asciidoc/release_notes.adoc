@@ -10,7 +10,7 @@
 :sectnums:
 :bc-version: 1.80
 :jna-version: 5.17.0
-:jaybird-fbclient-version: 5.0.1.1
+:jaybird-fbclient-version: 5.0.2.0
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
