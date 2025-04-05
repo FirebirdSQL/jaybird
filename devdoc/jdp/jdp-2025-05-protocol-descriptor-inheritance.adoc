@@ -1,0 +1,75 @@
+= jdp-2025-05: Protocol Descriptor Inheritance
+
+// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 7
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+When implementing the GDS-ng wire protocol back in 2013, I (Mark Rotteveel) decided that classes implementing `ProtocolDescriptor` should be final and not inherit from each other.
+I had the expectation that each protocol version would require new classes for all objects created by a protocol descriptor.
+Requiring each implementation to be final ensured each implementation would provide the protocol version and type information explicitly.
+
+However, now there are 7 implementations (with number 8 (v19) on the way for Firebird 5.0.3 and in the near future number 9 (v20) for Firebird 6.0), it turns out they generally duplicate most of each others methods (as usually a new protocol only requires one or two new classes), so this seems to be more a burden than a good thing.
+
+This then leads to copy-pasting the previous version, and modifying just those parts needed for the new version, and that makes it easier to introduce errors.
+For example, it has already led to:
+
+* Forgetting to change the protocol priority, leading to bug https://github.com/FirebirdSQL/jaybird/issues/676[#676 Version16Descriptor has same priority has Version15Descriptor] (and earlier something similar happened with v11, v12 and v13 having the same priority)
+* Forgetting to change factory methods to create the object of the new protocol version (though caught during development)
+
+Of course, changing to inheritance doesn't automatically prevent such issues from occurring, but the reduced need for copy-pasting, and the reduced cognitive load (less code per class) hopefully makes it less likely.
+
+== Decision
+
+The `ProtocolDescriptor` implementations will inherit from the descriptor of their preceding version.
+Methods that have the same content as one of their superclasses will be pruned.
+This will only be done in Jaybird 7
+
+Given upcoming work to add protocol 19 (and possibly protocol 20) to Jaybird 5 and 6, we will allow the protocol 19 descriptor to inherit from `Version18Descriptor` in Jaybird 5 and 6, but we will not retrofit this to all other descriptors in Jaybird 5 and 6.
+
+=== Rejected Decisions
+
+We considered using a sealed class hierarchy, so only the immediate succeeding version can inherit from its preceding version.
+
+We don't really have good arguments for or against;
+it just seems like unnecessary ceremony to make it sealed.
+
+== Consequences
+
+Protocol descriptors will inherit from the descriptor of their preceding version.
+
+Custom protocol implementations -- if they exist -- can now inherit from descriptors too (if they are on the classpath, or add explicit exports on the commandline);
+this is not something that is considered supported, and given this is internal API, it may break from changes between point releases.
+
+Other than that, there should be no real consequences of this change.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2025-05: Protocol Descriptor Inheritance`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2025.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
