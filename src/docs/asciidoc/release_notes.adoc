@@ -611,7 +611,9 @@ With Jaybird 8 the following breaking changes will be introduced.
 
 The following methods will be removed in Jaybird 8:
 
-* ...
+* `WireConnection.getProtocolMinimumType()` -- use `WireConnection.getProtocolType()`
++
+Might still be removed before Jaybird 7 final release as this is internal API, and unlikely to be used in user code.
 
 [#removal-of-deprecated-classes-8]
 ===== Removal of deprecated classes

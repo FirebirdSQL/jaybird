@@ -112,7 +112,7 @@ class WireDatabaseConnectionTest {
                     database.getClass(), "Unexpected FbWireDatabase implementation");
             assertEquals(expectedProtocol.getArchitecture(), gdsConnection.getProtocolArchitecture(),
                     "Unexpected architecture");
-            assertEquals(expectedProtocol.getMaximumType(), gdsConnection.getProtocolMinimumType(), "Unexpected type");
+            assertEquals(expectedProtocol.getMaximumType(), gdsConnection.getProtocolType(), "Unexpected type");
             assertEquals(expectedProtocol.getVersion(), gdsConnection.getProtocolVersion(), "Unexpected version");
         }
     }
@@ -135,7 +135,7 @@ class WireDatabaseConnectionTest {
                     "Unexpected FbWireDatabase implementation");
             assertEquals(expectedProtocol.getArchitecture(), gdsConnection.getProtocolArchitecture(),
                     "Unexpected architecture");
-            assertEquals(expectedProtocol.getMaximumType(), gdsConnection.getProtocolMinimumType(), "Unexpected type");
+            assertEquals(expectedProtocol.getMaximumType(), gdsConnection.getProtocolType(), "Unexpected type");
             assertEquals(expectedProtocol.getVersion(), gdsConnection.getProtocolVersion(), "Unexpected version");
         }
     }

@@ -78,7 +78,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     private ProtocolCollection protocols;
     private int protocolVersion;
     private int protocolArchitecture;
-    private int protocolMinimumType;
+    private int protocolType;
 
     private XdrOutputStream xdrOut;
     private XdrInputStream xdrIn;
@@ -171,8 +171,16 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         return protocolArchitecture;
     }
 
+    /**
+     * @deprecated Use {@link #getProtocolType()}, will be removed in Jaybird 8 (or possibly before Jaybird 7 release)
+     */
+    @Deprecated(forRemoval = true, since = "7")
     public final int getProtocolMinimumType() {
-        return protocolMinimumType;
+        return protocolType;
+    }
+
+    public final int getProtocolType() {
+        return protocolType;
     }
 
     public final ClientAuthBlock getClientAuthBlock() {
@@ -409,8 +417,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         acceptPacket.operation = operation;
         protocolVersion = xdrIn.readInt(); // p_acpt_version - Protocol version
         protocolArchitecture = xdrIn.readInt(); // p_acpt_architecture - Architecture for protocol
-        int acceptType = xdrIn.readInt(); // p_acpt_type - Minimum type
-        protocolMinimumType = acceptType & ptype_MASK;
+        int acceptType = xdrIn.readInt(); // p_acpt_type - Accepted type
+        protocolType = acceptType & ptype_MASK;
         final boolean compress = (acceptType & pflag_compress) != 0;
 
         if (protocolVersion < 0) {
