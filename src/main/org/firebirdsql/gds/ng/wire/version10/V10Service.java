@@ -96,10 +96,10 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
      */
     protected void sendAttachToBuffer(ServiceParameterBuffer spb) throws SQLException, IOException {
         final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(op_service_attach);
-        xdrOut.writeInt(0); // Service object ID
-        xdrOut.writeString(connection.getAttachObjectName(), getEncoding());
-        xdrOut.writeTyped(spb);
+        xdrOut.writeInt(op_service_attach); // p_operation
+        xdrOut.writeInt(0); // p_atch_database - Service object ID
+        xdrOut.writeString(connection.getAttachObjectName(), getEncoding()); // p_atch_file
+        xdrOut.writeTyped(spb); // p_atch_dpb
     }
 
     @Override
@@ -133,10 +133,10 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
         try {
             XdrOutputStream xdrOut = getXdrOut();
             if (isAttached()) {
-                xdrOut.writeInt(op_service_detach);
-                xdrOut.writeInt(0);
+                xdrOut.writeInt(op_service_detach);  // p_operation
+                xdrOut.writeInt(0); // p_rlse_object
             }
-            xdrOut.writeInt(op_disconnect);
+            xdrOut.writeInt(op_disconnect); // p_operation
             xdrOut.flush();
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
@@ -169,12 +169,12 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
             ServiceRequestBuffer serviceRequestBuffer, int maxBufferLength) throws SQLException {
         try {
             XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_service_info);
-            xdrOut.writeInt(0);
-            xdrOut.writeInt(0); // incarnation
-            xdrOut.writeBuffer(serviceParameterBuffer != null ? serviceParameterBuffer.toBytes() : null);
-            xdrOut.writeBuffer(serviceRequestBuffer.toBytes());
-            xdrOut.writeInt(maxBufferLength);
+            xdrOut.writeInt(op_service_info); // p_operation
+            xdrOut.writeInt(0); // p_info_object
+            xdrOut.writeInt(0); // p_info_incarnation
+            xdrOut.writeBuffer(serviceParameterBuffer != null ? serviceParameterBuffer.toBytes() : null); // p_info_items
+            xdrOut.writeBuffer(serviceRequestBuffer.toBytes()); // p_info_recv_items
+            xdrOut.writeInt(maxBufferLength); // p_info_buffer_length
 
             xdrOut.flush();
         } catch (IOException e) {
@@ -205,10 +205,10 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
     private void sendServiceStart(ServiceRequestBuffer serviceRequestBuffer) throws SQLException {
         try {
             final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_service_start);
-            xdrOut.writeInt(0);
-            xdrOut.writeInt(0); // incarnation
-            xdrOut.writeBuffer(serviceRequestBuffer.toBytes());
+            xdrOut.writeInt(op_service_start); // p_operation
+            xdrOut.writeInt(0); // p_info_object
+            xdrOut.writeInt(0); // p_info_incarnation
+            xdrOut.writeBuffer(serviceRequestBuffer.toBytes()); // p_info_items
 
             xdrOut.flush();
         } catch (IOException e) {

@@ -162,9 +162,16 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         final XdrInputStream xdrIn = getXdrIn();
         return switch (operation) {
             case op_response ->
-                    new GenericResponse(xdrIn.readInt(), xdrIn.readLong(), xdrIn.readBuffer(), readStatusVector());
-            case op_fetch_response -> new FetchResponse(xdrIn.readInt(), xdrIn.readInt());
-            case op_sql_response -> new SqlResponse(xdrIn.readInt());
+                    new GenericResponse(
+                            xdrIn.readInt(), // p_resp_object
+                            xdrIn.readLong(), // p_resp_blob_id
+                            xdrIn.readBuffer(), // p_resp_data
+                            readStatusVector()); // p_resp_status_vector
+            case op_fetch_response -> new FetchResponse(
+                    xdrIn.readInt(), // p_sqldata_status
+                    xdrIn.readInt()); // p_sqldata_messages
+            case op_sql_response -> new SqlResponse(
+                    xdrIn.readInt()); // p_sqldata_messages
             case op_batch_cs -> readBatchCompletionResponse(xdrIn);
             default ->
                     throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_unexpectedOperationCode)

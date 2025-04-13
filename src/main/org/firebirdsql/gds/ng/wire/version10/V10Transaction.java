@@ -90,8 +90,8 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                 : "Unsupported operation code " + commitOrRollback;
         try {
             final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(commitOrRollback);
-            xdrOut.writeInt(handle);
+            xdrOut.writeInt(commitOrRollback); // p_operation
+            xdrOut.writeInt(handle); // p_rlse_object
             xdrOut.flush();
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
@@ -121,12 +121,12 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         try {
             XdrOutputStream xdrOut = getXdrOut();
             if (recoveryInformation != null) {
-                xdrOut.writeInt(op_prepare2);
-                xdrOut.writeInt(handle);
-                xdrOut.writeBuffer(recoveryInformation);
+                xdrOut.writeInt(op_prepare2); // p_operation
+                xdrOut.writeInt(handle); // p_prep_transaction
+                xdrOut.writeBuffer(recoveryInformation); // p_prep_data
             } else {
-                xdrOut.writeInt(op_prepare);
-                xdrOut.writeInt(handle);
+                xdrOut.writeInt(op_prepare); // p_operation
+                xdrOut.writeInt(handle); // p_rlse_object
             }
             xdrOut.flush();
         } catch (IOException e) {

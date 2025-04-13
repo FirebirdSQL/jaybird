@@ -367,14 +367,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     }
 
     private void sendConnectAttach(XdrOutputStream xdrOut) throws IOException, SQLException {
-        xdrOut.writeInt(op_connect);
+        xdrOut.writeInt(op_connect); // p_operation
         xdrOut.writeInt(op_attach); // p_cnct_operation
         xdrOut.writeInt(CONNECT_VERSION3); // p_cnct_cversion
         xdrOut.writeInt(arch_generic); // p_cnct_client
 
         xdrOut.writeString(getCnctFile(), getEncoding()); // p_cnct_file
-        xdrOut.writeInt(protocols.getProtocolCount()); // Count of protocols understood
-        xdrOut.writeBuffer(createUserIdentificationBlock());
+        xdrOut.writeInt(protocols.getProtocolCount()); // p_cnct_count - Count of protocols understood
+        xdrOut.writeBuffer(createUserIdentificationBlock()); // p_cnct_user_id
 
         for (ProtocolDescriptor protocol : protocols) {
             writeProtocolDescriptor(xdrOut, protocol);
@@ -384,15 +384,15 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     }
 
     private void writeProtocolDescriptor(XdrOutputStream xdrOut, ProtocolDescriptor protocol) throws IOException {
-        xdrOut.writeInt(protocol.getVersion()); // Protocol version
-        xdrOut.writeInt(protocol.getArchitecture()); // Architecture of client
-        xdrOut.writeInt(protocol.getMinimumType()); // Minimum type
+        xdrOut.writeInt(protocol.getVersion()); // p_cnct_version - Protocol version
+        xdrOut.writeInt(protocol.getArchitecture()); // p_cnct_architecture - Architecture of client
+        xdrOut.writeInt(protocol.getMinimumType()); // p_cnct_min_type - Minimum type
         if (protocol.supportsWireCompression() && attachProperties.isWireCompression()) {
-            xdrOut.writeInt(protocol.getMaximumType() | pflag_compress);
+            xdrOut.writeInt(protocol.getMaximumType() | pflag_compress); // p_cnct_max_type - Maximum type
         } else {
-            xdrOut.writeInt(protocol.getMaximumType()); // Maximum type
+            xdrOut.writeInt(protocol.getMaximumType()); // p_cnct_max_type - Maximum type
         }
-        xdrOut.writeInt(protocol.getWeight()); // Preference weight
+        xdrOut.writeInt(protocol.getWeight()); // p_cnct_weight - Preference weight
     }
 
     private int handleCryptKeyCallbackBeforeAttachResponse() throws IOException, SQLException {

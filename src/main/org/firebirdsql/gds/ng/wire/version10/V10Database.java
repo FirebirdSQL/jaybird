@@ -121,11 +121,11 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
         final Encoding filenameEncoding = getFilenameEncoding(dpb);
 
-        xdrOut.writeInt(operation);
-        xdrOut.writeInt(0); // Database object ID
-        xdrOut.writeString(connection.getAttachObjectName(), filenameEncoding);
+        xdrOut.writeInt(operation); // p_operation
+        xdrOut.writeInt(0); // p_atch_database
+        xdrOut.writeString(connection.getAttachObjectName(), filenameEncoding); // p_atch_file
 
-        xdrOut.writeTyped(dpb);
+        xdrOut.writeTyped(dpb); // p_atch_dpb
     }
 
     /**
@@ -202,10 +202,10 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         try {
             XdrOutputStream xdrOut = getXdrOut();
             if (isAttached()) {
-                xdrOut.writeInt(op_detach);
-                xdrOut.writeInt(0);
+                xdrOut.writeInt(op_detach); // p_operation
+                xdrOut.writeInt(0); // p_rlse_object
             }
-            xdrOut.writeInt(op_disconnect);
+            xdrOut.writeInt(op_disconnect); // p_operation
             xdrOut.flush();
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
@@ -257,8 +257,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     private void sendDropDatabase() throws SQLException {
         try {
             final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_drop_database);
-            xdrOut.writeInt(0);
+            xdrOut.writeInt(op_drop_database); // p_operation
+            xdrOut.writeInt(0); // p_rlse_object
             xdrOut.flush();
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
@@ -300,9 +300,9 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     private void sendStartTransaction(TransactionParameterBuffer tpb) throws SQLException {
         try {
             final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_transaction);
-            xdrOut.writeInt(0);
-            xdrOut.writeTyped(tpb);
+            xdrOut.writeInt(op_transaction); // p_operation
+            xdrOut.writeInt(0); // p_sttr_database
+            xdrOut.writeTyped(tpb); // p_sttr_tpb
             xdrOut.flush();
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
@@ -456,8 +456,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         try (LockCloseable ignored = withLock()) {
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(op_connect_request);
-                xdrOut.writeInt(P_REQ_async); // Connection type (p_req_type)
+                xdrOut.writeInt(op_connect_request); // p_operation
+                xdrOut.writeInt(P_REQ_async); // p_req_type - Connection type
                 xdrOut.writeInt(0); // p_req_object
                 xdrOut.writeInt(0); // p_req_partner
                 xdrOut.flush();
@@ -495,8 +495,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      */
     protected final void doReleaseObjectPacket(int operation, int objectId) throws IOException, SQLException {
         final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(operation);
-        xdrOut.writeInt(objectId);
+        xdrOut.writeInt(operation); // p_operation
+        xdrOut.writeInt(objectId); // p_rlse_object
     }
 
     /**

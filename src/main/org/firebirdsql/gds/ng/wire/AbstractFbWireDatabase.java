@@ -297,11 +297,11 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
         try (LockCloseable ignored = withLock()) {
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(operation);
-                xdrOut.writeInt(handle);
-                xdrOut.writeInt(0); // incarnation
-                xdrOut.writeBuffer(requestItems);
-                xdrOut.writeInt(maxBufferLength);
+                xdrOut.writeInt(operation); // p_operation
+                xdrOut.writeInt(handle); // p_info_object
+                xdrOut.writeInt(0); // p_info_incarnation
+                xdrOut.writeBuffer(requestItems); // p_info_items
+                xdrOut.writeInt(maxBufferLength); // p_info_buffer_length
                 xdrOut.flush();
             } catch (IOException e) {
                 throw FbExceptionBuilder.ioWriteError(e);

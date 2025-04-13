@@ -43,13 +43,13 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
     /*
      * Expecting:
-     * single operation: 1 byte (op_dummy, op_exit, op_disconnect, op_void)
+     * single operation: 4 bytes (op_dummy, op_exit, op_disconnect, op_void)
      *
      * Normal response:
      * (see processing)
      *
      * Event:
-     * - 1 byte operation (op_event)
+     * - 4 byte operation (op_event)
      * - 4 bytes db handle
      * - 4 bytes event buffer length
      * - buffer consisting of
@@ -60,7 +60,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
      * - 8 bytes AST info
      * - 4 bytes event id
      *
-     * Total: 282 per event; allocating 2048 to have sufficient space
+     * Total: 286 per event; allocating 2048 to have sufficient space
      */
     private static final int EVENT_BUFFER_SIZE = 2048;
 

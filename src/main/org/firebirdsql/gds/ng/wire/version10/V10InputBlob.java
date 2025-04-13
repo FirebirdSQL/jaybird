@@ -156,11 +156,11 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
      */
     protected void sendGetSegment(int len) throws SQLException, IOException {
         XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(op_get_segment);
-        xdrOut.writeInt(getHandle());
-        xdrOut.writeInt(len);
+        xdrOut.writeInt(op_get_segment); // p_operation
+        xdrOut.writeInt(getHandle()); // p_sgmt_blob
+        xdrOut.writeInt(len); // p_sgmt_length
         // length of segment send buffer (always 0 in get)
-        xdrOut.writeInt(0);
+        xdrOut.writeInt(0); // p_sgmt_segment
     }
 
     @Override
@@ -280,10 +280,10 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
     private void sendSeek(int offset, SeekMode seekMode) throws SQLException {
         try {
             XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_seek_blob);
-            xdrOut.writeInt(getHandle());
-            xdrOut.writeInt(seekMode.getSeekModeId());
-            xdrOut.writeInt(offset);
+            xdrOut.writeInt(op_seek_blob); // p_operation
+            xdrOut.writeInt(getHandle()); // p_seek_blob
+            xdrOut.writeInt(seekMode.getSeekModeId()); // p_seek_mode
+            xdrOut.writeInt(offset); // p_seek_offset
             xdrOut.flush();
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);

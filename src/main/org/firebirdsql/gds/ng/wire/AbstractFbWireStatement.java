@@ -264,9 +264,9 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
             try (LockCloseable ignored = database.withLock()) {
                 if (!database.isAttached()) return;
                 XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_free_statement);
-                xdrOut.writeInt(handle);
-                xdrOut.writeInt(ISCConstants.DSQL_drop);
+                xdrOut.writeInt(WireProtocolConstants.op_free_statement); // p_operation
+                xdrOut.writeInt(handle); // p_sqlfree_statement
+                xdrOut.writeInt(ISCConstants.DSQL_drop); // p_sqlfree_option
                 xdrOut.flush();
                 database.enqueueDeferredAction(DeferredAction.NO_OP_INSTANCE);
             } catch (SQLException | IOException e) {

@@ -85,10 +85,10 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
             int count = 0;
             while (count < len) {
                 int segmentLength = Math.min(len - count, getMaximumSegmentSize());
-                xdrOut.writeInt(op_put_segment);
-                xdrOut.writeInt(getHandle());
-                xdrOut.writeInt(segmentLength);
-                xdrOut.writeBuffer(b, off + count, segmentLength);
+                xdrOut.writeInt(op_put_segment); // p_operation
+                xdrOut.writeInt(getHandle()); // p_sgmt_blob
+                xdrOut.writeInt(segmentLength); // p_sgmt_length
+                xdrOut.writeBuffer(b, off + count, segmentLength); // p_sgmt_segment
                 count += segmentLength;
                 if (++requestCount >= OUTSTANDING_PUT_SEGMENT_PACKETS) {
                     xdrOut.flush();

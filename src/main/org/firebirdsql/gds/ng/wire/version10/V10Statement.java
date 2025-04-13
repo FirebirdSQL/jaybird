@@ -83,9 +83,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      */
     protected void sendFree(int option) throws IOException, SQLException {
         final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_free_statement);
-        xdrOut.writeInt(getHandle());
-        xdrOut.writeInt(option);
+        xdrOut.writeInt(WireProtocolConstants.op_free_statement); // p_operation
+        xdrOut.writeInt(getHandle()); // p_sqlfree_statement
+        xdrOut.writeInt(option); // p_sqlfree_option
     }
 
     /**
@@ -173,13 +173,13 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     protected void sendPrepare(final String statementText) throws SQLException, IOException {
         switchState(StatementState.PREPARING);
         final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_prepare_statement);
-        xdrOut.writeInt(getTransaction().getHandle());
-        xdrOut.writeInt(getHandle());
-        xdrOut.writeInt(getDatabase().getConnectionDialect());
-        xdrOut.writeString(statementText, getDatabase().getEncoding());
-        xdrOut.writeBuffer(getStatementInfoRequestItems());
-        xdrOut.writeInt(getDefaultSqlInfoSize());
+        xdrOut.writeInt(WireProtocolConstants.op_prepare_statement); // p_operation
+        xdrOut.writeInt(getTransaction().getHandle()); // p_sqlst_transaction
+        xdrOut.writeInt(getHandle()); // p_sqlst_statement
+        xdrOut.writeInt(getDatabase().getConnectionDialect()); // p_sqlst_SQL_dialect
+        xdrOut.writeString(statementText, getDatabase().getEncoding()); // p_sqlst_SQL_str
+        xdrOut.writeBuffer(getStatementInfoRequestItems()); // p_sqlst_items
+        xdrOut.writeInt(getDefaultSqlInfoSize()); // p_sqlst_buffer_length
     }
 
     /**
@@ -197,11 +197,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     protected void setCursorNameImpl(String cursorName)throws SQLException {
         try {
             final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(WireProtocolConstants.op_set_cursor);
-            xdrOut.writeInt(getHandle());
+            xdrOut.writeInt(WireProtocolConstants.op_set_cursor); // p_operation
+            xdrOut.writeInt(getHandle()); // p_sqlcur_statement
             // Null termination is needed due to a quirk of the protocol
-            xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding());
-            xdrOut.writeInt(0); // Cursor type
+            xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding()); // p_sqlcur_cursor_name
+            xdrOut.writeInt(0); // // p_sqlcur_type
             xdrOut.flush();
         } catch (IOException e) {
             switchState(StatementState.ERROR);
@@ -320,26 +320,27 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     protected void sendExecute(final int operation, final RowValue parameters) throws IOException, SQLException {
         assert operation == WireProtocolConstants.op_execute || operation == WireProtocolConstants.op_execute2 : "Needs to be called with operation op_execute or op_execute2";
         final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(operation);
-        xdrOut.writeInt(getHandle());
-        xdrOut.writeInt(getTransaction().getHandle());
+        xdrOut.writeInt(operation); // p_operation
+        xdrOut.writeInt(getHandle()); // p_sqldata_statement
+        xdrOut.writeInt(getTransaction().getHandle()); // p_sqldata_transaction
 
         if (parameters != null && parameters.getCount() > 0) {
             final RowDescriptor parameterDescriptor = getParameterDescriptor();
-            xdrOut.writeBuffer(calculateBlr(parameterDescriptor, parameters));
-            xdrOut.writeInt(0); // message number = in_message_type
-            xdrOut.writeInt(1); // Number of messages
-            writeSqlData(parameterDescriptor, parameters, true);
+            xdrOut.writeBuffer(calculateBlr(parameterDescriptor, parameters)); // p_sqldata_blr
+            xdrOut.writeInt(0); // p_sqldata_message_number
+            xdrOut.writeInt(1); // p_sqldata_messages
+            writeSqlData(parameterDescriptor, parameters, true); // parameter data
         } else {
-            xdrOut.writeBuffer(null);
-            xdrOut.writeInt(0); // message number = in_message_type
-            xdrOut.writeInt(0); // Number of messages
+            xdrOut.writeBuffer(null); // p_sqldata_blr
+            xdrOut.writeInt(0); // p_sqldata_message_number
+            xdrOut.writeInt(0); // p_sqldata_messages
         }
 
         if (operation == WireProtocolConstants.op_execute2) {
             final RowDescriptor fieldDescriptor = getRowDescriptor();
-            xdrOut.writeBuffer(fieldDescriptor != null && fieldDescriptor.getCount() > 0 ? calculateBlr(fieldDescriptor) : null);
-            xdrOut.writeInt(0); // out_message_number = out_message_type
+            xdrOut.writeBuffer(
+                    fieldDescriptor != null && fieldDescriptor.getCount() > 0 ? calculateBlr(fieldDescriptor) : null); // p_sqldata_out_blr
+            xdrOut.writeInt(0); // p_sqldata_out_message_number
         }
     }
 
@@ -475,11 +476,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      */
     protected void sendFetch(int fetchSize) throws SQLException, IOException {
         final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_fetch);
-        xdrOut.writeInt(getHandle());
-        xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor()));
-        xdrOut.writeInt(0); // out_message_number = out_message_type
-        xdrOut.writeInt(fetchSize); // fetch size
+        xdrOut.writeInt(WireProtocolConstants.op_fetch); // p_operation
+        xdrOut.writeInt(getHandle()); // p_sqldata_statement
+        xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor())); // p_sqldata_blr
+        xdrOut.writeInt(0); // p_sqldata_message_number
+        xdrOut.writeInt(fetchSize); // p_sqldata_messages
     }
 
     /**
