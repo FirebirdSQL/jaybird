@@ -589,7 +589,8 @@ This means there may be undocumented changes to internal API.
 If you are confronted with such a change, let us know on {firebird-java}[firebird-java], so we can take this into account when documenting future changes.
 ====
 
-* ...
+* `FbWireAsynchronousChannel`
+** `connect(String, int, int)` was replaced by `connect(String, int)`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

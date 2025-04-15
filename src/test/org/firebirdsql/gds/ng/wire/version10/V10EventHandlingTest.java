@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -15,6 +15,7 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
+import org.firebirdsql.jaybird.util.UncheckedSQLException;
 import org.firebirdsql.util.Unstable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -30,6 +31,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.with;
@@ -38,6 +40,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -198,17 +201,17 @@ public class V10EventHandlingTest {
         try (var simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
             channel.addChannelListener(listener);
-            executorService.submit(() -> {
+            Future<?> connect = executorService.submit(() -> {
                 try {
-                    channel.connect("localhost", simpleServer.getPort(), 1);
+                    channel.connect("localhost", simpleServer.getPort());
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    throw new UncheckedSQLException(e);
                 }
             });
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-            with().pollInterval(50, TimeUnit.MILLISECONDS)
-                    .await().atMost(500, TimeUnit.MILLISECONDS).until(channel::isConnected);
+            assertDoesNotThrow(() -> connect.get(500, TimeUnit.MILLISECONDS), "connect");
+            assertTrue(channel.isConnected(), "connected");
 
             OutputStream out = simpleServer.getOutputStream();
             out.write(eventMessage);
@@ -243,17 +246,17 @@ public class V10EventHandlingTest {
         try (var simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
             channel.addChannelListener(listener);
-            executorService.submit(() -> {
+            Future<?> connect = executorService.submit(() -> {
                 try {
-                    channel.connect("localhost", simpleServer.getPort(), 1);
+                    channel.connect("localhost", simpleServer.getPort());
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    throw new UncheckedSQLException(e);
                 }
             });
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-            with().pollInterval(50, TimeUnit.MILLISECONDS)
-                    .await().atMost(500, TimeUnit.MILLISECONDS).until(channel::isConnected);
+            assertDoesNotThrow(() -> connect.get(500, TimeUnit.MILLISECONDS), "connect");
+            assertTrue(channel.isConnected(), "connected");
 
             OutputStream out = simpleServer.getOutputStream();
             out.write(messagePart1);
@@ -298,17 +301,17 @@ public class V10EventHandlingTest {
         try (var simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
             channel.addChannelListener(listener);
-            executorService.submit(() -> {
+            Future<?> connect = executorService.submit(() -> {
                 try {
-                    channel.connect("localhost", simpleServer.getPort(), 1);
+                    channel.connect("localhost", simpleServer.getPort());
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    throw new UncheckedSQLException(e);
                 }
             });
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-            with().pollInterval(50, TimeUnit.MILLISECONDS)
-                    .await().atMost(500, TimeUnit.MILLISECONDS).until(channel::isConnected);
+            assertDoesNotThrow(() -> connect.get(500, TimeUnit.MILLISECONDS), "connect");
+            assertTrue(channel.isConnected(), "connected");
 
             OutputStream out = simpleServer.getOutputStream();
             out.write(eventMessages);
@@ -376,17 +379,17 @@ public class V10EventHandlingTest {
     private void checkAsynchronousDisconnection(int disconnectOperation) throws Exception {
         try (var simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
-            executorService.submit(() -> {
+            Future<?> connect = executorService.submit(() -> {
                 try {
-                    channel.connect("localhost", simpleServer.getPort(), 1);
+                    channel.connect("localhost", simpleServer.getPort());
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    throw new UncheckedSQLException(e);
                 }
             });
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-            with().pollInterval(50, TimeUnit.MILLISECONDS)
-                    .await().atMost(500, TimeUnit.MILLISECONDS).until(channel::isConnected);
+            assertDoesNotThrow(() -> connect.get(500, TimeUnit.MILLISECONDS), "connect");
+            assertTrue(channel.isConnected(), "connected");
 
             final var out = new XdrOutputStream(simpleServer.getOutputStream(), 8);
             out.writeInt(disconnectOperation);

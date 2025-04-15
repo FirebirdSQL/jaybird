@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.wire;
 
@@ -20,20 +20,19 @@ public interface FbWireAsynchronousChannel {
      * Connects the asynchronous channel to the specified port.
      *
      * @param hostName
-     *         Hostname
+     *         hostname
      * @param portNumber
-     *         The port number
-     * @param auxHandle
-     *         Handle identifier for this asynchronous channel
+     *         port number
      * @throws java.sql.SQLException
-     *         For errors connecting, or if the connection is already established
+     *         for errors connecting, or if the connection is already established
+     * @since 7
      */
-    void connect(String hostName, int portNumber, int auxHandle) throws SQLException;
+    void connect(String hostName, int portNumber) throws SQLException;
 
     /**
      * Disconnect the asynchronous channel.
      * <p>
-     * Once closed, the connection can be reestablished using {@link #connect(String, int, int)}.
+     * Once closed, the connection can be reestablished using {@link #connect(String, int)}.
      * </p>
      * <p>
      * Calling {@code close} on a closed channel is a no-op; no exception should be thrown.

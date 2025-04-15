@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -11,6 +11,7 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.firebirdsql.jaybird.util.UncheckedSQLException;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -26,6 +27,8 @@ import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.util.Objects.requireNonNull;
+import static org.firebirdsql.gds.ISCConstants.EPB_version1;
+import static org.firebirdsql.gds.ISCConstants.isc_bad_epb_form;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_asyncChannelAlreadyEstablished;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_asyncChannelNotConnected;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
@@ -68,7 +71,6 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     private final ChannelDatabaseListener databaseListener = new ChannelDatabaseListener();
     private final FbWireDatabase database;
     private final ByteBuffer eventBuffer = ByteBuffer.allocate(EVENT_BUFFER_SIZE);
-    private int auxHandle;
     private SocketChannel socketChannel;
 
     public V10AsynchronousChannel(FbWireDatabase database) {
@@ -84,9 +86,8 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     }
 
     @Override
-    public void connect(String hostName, int portNumber, int auxHandle) throws SQLException {
+    public void connect(String hostName, int portNumber) throws SQLException {
         if (isConnected()) throw FbExceptionBuilder.toNonTransientException(jb_asyncChannelAlreadyEstablished);
-        this.auxHandle = auxHandle;
         try {
             socketChannel = SocketChannel.open();
             socketChannel.socket().setTcpNoDelay(true);
@@ -195,22 +196,21 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         final int localId = wireEventHandle.assignNewLocalId();
         addChannelListener(wireEventHandle);
 
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             try {
                 log.log(TRACE, "Queue event: {0}", wireEventHandle);
                 final XdrOutputStream dbXdrOut = database.getXdrStreamAccess().getXdrOut();
-                dbXdrOut.writeInt(op_que_events);
-                dbXdrOut.writeInt(auxHandle);
-                dbXdrOut.writeBuffer(wireEventHandle.toByteArray());
-                dbXdrOut.writeLong(0); // AST info
-                dbXdrOut.writeInt(localId);
+                dbXdrOut.writeInt(op_que_events); // p_operation
+                dbXdrOut.writeInt(0); // p_event_database
+                dbXdrOut.writeBuffer(wireEventHandle.toByteArray()); // p_event_items
+                dbXdrOut.writeLong(0); // p_event_ast + p_event_arg
+                dbXdrOut.writeInt(localId); // p_event_rid
                 dbXdrOut.flush();
             } catch (IOException e) {
                 throw FbExceptionBuilder.ioWriteError(e);
             }
             try {
-                final GenericResponse response = database.readGenericResponse(null);
-                wireEventHandle.setEventId(response.objectHandle());
+                database.readGenericResponse(null);
             } catch (IOException e) {
                 throw FbExceptionBuilder.ioWriteError(e);
             }
@@ -261,13 +261,13 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             return false;
         }
         try {
-            eventBuffer.getInt(); // DB handle (ignore)
+            eventBuffer.getInt(); // p_event_database (ignore)
+
+            // p_event_items
             final int bufferLength = eventBuffer.getInt();
             final int padding = (4 - bufferLength) & 3;
-
             // No need to process if we don't have the full buffer + AST + event id
             if (eventBuffer.remaining() < bufferLength + padding + 12) return false;
-
             final byte[] buffer = new byte[bufferLength];
             eventBuffer.get(buffer);
             // Skip padding
@@ -276,11 +276,14 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             // We are only interested in the event count (last 4 bytes of the buffer)
             int eventCount = 0;
             if (bufferLength > 4) {
+                if (buffer[0] != EPB_version1) {
+                    throw new UncheckedSQLException(FbExceptionBuilder.toException(isc_bad_epb_form));
+                }
                 eventCount = iscVaxInteger(buffer, bufferLength - 4, 4);
             }
 
-            eventBuffer.getLong(); // AST info (ignore)
-            int eventId = eventBuffer.getInt();
+            eventBuffer.position(eventBuffer.position() + 8); // p_event_ast + p_event_arg (ignore)
+            int eventId = eventBuffer.getInt(); // p_event_rid
 
             log.log(TRACE, "Received event id {0}, eventCount {1}", eventId, eventCount);
 

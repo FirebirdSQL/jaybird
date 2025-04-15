@@ -1,5 +1,5 @@
 /*
- SPDX-FileCopyrightText: 2000-2024 Firebird development team and individual contributors
+ SPDX-FileCopyrightText: 2000-2025 Firebird development team and individual contributors
  SPDX-FileCopyrightText: Copyright 2001 Boix i Oltra, S.L.
  SPDX-FileContributor: Alejandro Alberola (Boix i Oltra, S.L.)
  SPDX-FileCopyrightText: Copyright 2001-2002 David Jencks
@@ -9,7 +9,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
  SPDX-FileCopyrightText: Copyright 2009 Thomas Steinmaurer
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
  SPDX-FileComment: The constants listed here were obtained from the Firebird sources, which are licensed under the IPL (InterBase Public License) and/or IDPL (Initial Developer Public License), both are variants of the Mozilla Public License version 1.1
@@ -2338,4 +2338,8 @@ public interface ISCConstants {
     // Fetch related constants
     int FETCH_OK = 0;
     int FETCH_NO_MORE_ROWS = 100;
+
+    // Event parameter buffer
+    int EPB_version1 = 1;
+
 }

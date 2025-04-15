@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -7,9 +7,10 @@ import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.ng.AbstractEventHandle;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.firebirdsql.gds.ISCConstants.EPB_version1;
 
 /**
  * Event handle for the wire protocol.
@@ -22,10 +23,9 @@ public final class WireEventHandle extends AbstractEventHandle implements Asynch
     private static final AtomicInteger localEventId = new AtomicInteger();
 
     private final byte[] eventNameBytes;
-    private int internalCount;
+    private volatile int internalCount;
     private int previousInternalCount;
     private int localId;
-    private int eventId;
 
     public WireEventHandle(String eventName, EventHandler eventHandler, Encoding encoding) {
         super(eventName, eventHandler);
@@ -36,21 +36,14 @@ public final class WireEventHandle extends AbstractEventHandle implements Asynch
     }
 
     public synchronized void calculateCount() {
-        // TODO Can't we just set the count directly?
+        // Determine event counts since previous notification
         setEventCount(internalCount - previousInternalCount);
         previousInternalCount = internalCount;
     }
 
-    /**
-     * @param eventId The server side id of this event
-     */
-    public synchronized void setEventId(int eventId) {
-        this.eventId = eventId;
-    }
-
     @Override
     public synchronized int getEventId() {
-        return eventId;
+        return localId;
     }
 
     /**
@@ -72,18 +65,12 @@ public final class WireEventHandle extends AbstractEventHandle implements Asynch
     }
 
     public byte[] toByteArray() throws IOException {
-        ByteArrayOutputStream byteOut = new ByteArrayOutputStream(2 + eventNameBytes.length + 4);
-
-        byteOut.write(1); // Event version
-        byteOut.write(eventNameBytes.length);
-        byteOut.write(eventNameBytes);
-        final int currentInternalCount;
-        synchronized (this) {
-            currentInternalCount = internalCount;
-        }
-        VaxEncoding.encodeVaxIntegerWithoutLength(byteOut, currentInternalCount);
-
-        return byteOut.toByteArray();
+        var byteOut = new byte[2 + eventNameBytes.length + 4];
+        byteOut[0] = EPB_version1; // event buffer version
+        byteOut[1] = (byte) eventNameBytes.length;
+        System.arraycopy(eventNameBytes, 0, byteOut, 2, eventNameBytes.length);
+        VaxEncoding.encodeVaxIntegerWithoutLength(byteOut, 2 + eventNameBytes.length, internalCount);
+        return byteOut;
     }
 
     @Override

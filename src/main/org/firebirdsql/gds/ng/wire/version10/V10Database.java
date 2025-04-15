@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -451,7 +451,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     public final FbWireAsynchronousChannel initAsynchronousChannel() throws SQLException {
         checkAttached();
-        final int auxHandle;
         final int port;
         try (LockCloseable ignored = withLock()) {
             try {
@@ -466,7 +465,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             }
             try {
                 final GenericResponse response = readGenericResponse(null);
-                auxHandle = response.objectHandle();
                 final byte[] data = response.data();
                 // bytes 0 - 1: sin family (ignore)
                 // bytes 2 - 3: sin port (port to connect to)
@@ -477,7 +475,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             }
         }
         final FbWireAsynchronousChannel channel = protocolDescriptor.createAsynchronousChannel(this);
-        channel.connect(connection.getServerName(), port, auxHandle);
+        channel.connect(connection.getServerName(), port);
         return channel;
     }
 
