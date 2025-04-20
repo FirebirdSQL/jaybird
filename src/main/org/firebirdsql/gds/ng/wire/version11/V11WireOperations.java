@@ -119,10 +119,10 @@ public class V11WireOperations extends V10WireOperations {
      * Can be used for additional actions after processing deferred actions (e.g. trim a large deferred actions list to
      * its default capacity).
      * <p>
-     * This implementation trims if {@code processedDeferredActions > 10}. When overridden, it is recommend to call this
-     * method through {@code super} to still trim (e.g. in a more limited set of circumstances) and perform any other
-     * actions this method may perform. If the overridden method wants to forgo trimming, it should pass {@code -1} for
-     * {@code processedDeferredActions}.
+     * This implementation trims if {@code processedDeferredActions > 10}. When overridden, it is recommended to call
+     * this method through {@code super} to still trim (e.g. in a more limited set of circumstances) and perform any
+     * other actions this method may perform. If the overridden method wants to forgo trimming, it should pass
+     * {@code -1} for {@code processedDeferredActions}.
      * </p>
      *
      * @param processedDeferredActions

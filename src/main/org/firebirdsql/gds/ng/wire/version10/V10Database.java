@@ -335,10 +335,10 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     private void sendReconnect(long transactionId) throws SQLException {
         try {
             final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_reconnect);
-            xdrOut.writeInt(0);
+            xdrOut.writeInt(op_reconnect); // p_operation
+            xdrOut.writeInt(0); // p_sttr_database
             final byte[] transactionIdBuffer = getTransactionIdBuffer(transactionId);
-            xdrOut.writeBuffer(transactionIdBuffer);
+            xdrOut.writeBuffer(transactionIdBuffer); // p_sttr_tpb
             xdrOut.flush();
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
