@@ -76,8 +76,8 @@ public class V13WireOperations extends V11WireOperations {
                 int operation = readNextOperation();
                 switch (operation) {
                 case op_trusted_auth -> {
-                    xdrIn.skipNBytes(4); // skip int: p_trau_data
-                    throw FbExceptionBuilder.toNonTransientConnectionException(jb_receiveTrustedAuth_NotSupported);
+                    xdrIn.skipBuffer(); // p_trau_data
+                     throw FbExceptionBuilder.toNonTransientConnectionException(jb_receiveTrustedAuth_NotSupported);
                 }
                 case op_cont_auth -> {
                     data = xdrIn.readBuffer(); // p_data
