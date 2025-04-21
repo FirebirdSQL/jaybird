@@ -56,6 +56,11 @@ final class MessageConverter {
         return sb.toString();
     }
 
+    static String toNetProviderMessageFormat(String fbMessage) {
+        // Format is the same as Jaybird's
+        return toJaybirdMessageFormat(fbMessage);
+    }
+
     static String toSqlState(String sqlStateClass, String sqlStateSubClass) {
         if (sqlStateClass.length() != 2) {
             throw new IllegalArgumentException("SQLSTATE class must be 2 characters, was: '" + sqlStateClass + "'");

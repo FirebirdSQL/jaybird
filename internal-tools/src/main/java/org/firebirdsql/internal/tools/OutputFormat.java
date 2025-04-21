@@ -27,6 +27,10 @@ public enum OutputFormat {
      * </p>
      */
     LANG_REF_CSV(LangRefCsvStore::new),
+    /**
+     * Format of Firebird .NET provider (FirebirdSql.Data.FirebirdClient) {@code IscErrorMessages.cs} class.
+     */
+    NET_PROVIDER(NetProviderStore::new),
     ;
 
     private final Supplier<FirebirdErrorStore> messageStoreSupplier;
