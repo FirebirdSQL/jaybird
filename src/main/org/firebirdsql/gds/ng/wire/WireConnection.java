@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
@@ -426,10 +426,10 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         }
 
         if (operation == op_cond_accept || operation == op_accept_data) {
-            byte[] data = acceptPacket.p_acpt_data = xdrIn.readBuffer();
-            acceptPacket.p_acpt_plugin = xdrIn.readString(getEncoding());
-            final boolean authComplete = xdrIn.readInt() == 1;
-            byte[] serverKeys = acceptPacket.p_acpt_keys = xdrIn.readBuffer();
+            byte[] data = acceptPacket.p_acpt_data = xdrIn.readBuffer(); // p_acpt_data
+            acceptPacket.p_acpt_plugin = xdrIn.readString(getEncoding()); // p_acpt_plugin
+            final boolean authComplete = xdrIn.readInt() == 1; // p_acpt_authenticated
+            byte[] serverKeys = acceptPacket.p_acpt_keys = xdrIn.readBuffer(); // p_acpt_keys
 
             clientAuthBlock.setServerData(data);
             clientAuthBlock.setAuthComplete(authComplete);

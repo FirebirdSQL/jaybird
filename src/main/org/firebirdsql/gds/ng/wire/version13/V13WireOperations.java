@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version13;
 
@@ -81,7 +81,7 @@ public class V13WireOperations extends V11WireOperations {
                 }
                 case op_cont_auth -> {
                     data = xdrIn.readBuffer(); // p_data
-                    pluginName = xdrIn.readString(encoding); //p_name
+                    pluginName = xdrIn.readString(encoding); // p_name
                     xdrIn.skipBuffer(); // skip: p_list (ignore?)
                     addServerKeys(xdrIn.readBuffer()); // p_keys
                 }
