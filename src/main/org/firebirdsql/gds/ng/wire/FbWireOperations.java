@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.wire;
 
@@ -212,26 +212,18 @@ public interface FbWireOperations {
 
     /**
      * Receive authentication response from the server.
-     * <p>
-     * This method is only relevant for protocol V13 or higher.
-     * </p>
      *
      * @param acceptPacket
-     *         Packet with {@code op_cond_accept} data, or {@code null} when the data should be read from the
-     *         connection.
+     *         packet with {@code op_cond_accept} data, or {@code null} when the data should be read from the
+     *         connection
      * @param dbCryptCallback
-     *         Database encryption callback (ignored by protocols v12 and lower)
-     * @param processAttachCallback
-     *         Callback for processing the final attach response
+     *         database encryption callback (ignored by protocols v12 and lower)
      * @throws IOException
-     *         For errors reading the response from the connection.
+     *         for errors reading the response from the connection
      * @throws SQLException
-     *         For errors returned from the server, or when attempting to
-     *         read.
+     *         for errors returned from the server, or when attempting to read
      */
-    void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket,
-            DbCryptCallback dbCryptCallback,
-            ProcessAttachCallback processAttachCallback)
+    void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback)
             throws IOException, SQLException;
 
     /**
@@ -248,7 +240,4 @@ public interface FbWireOperations {
      */
     void setNetworkTimeout(int milliseconds) throws SQLException;
 
-    interface ProcessAttachCallback {
-        void processAttachResponse(GenericResponse response);
-    }
 }

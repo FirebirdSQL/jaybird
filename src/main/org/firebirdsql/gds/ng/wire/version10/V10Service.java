@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -7,7 +7,6 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
-import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.*;
 
 import java.io.IOException;
@@ -65,17 +64,6 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
         } catch (IOException e) {
             throw FbExceptionBuilder.ioReadError(e);
         }
-    }
-
-    /**
-     * Processes the response from the server to the attach or create operation.
-     *
-     * @param genericResponse
-     *         GenericResponse received from the server.
-     */
-    @SuppressWarnings("unused")
-    protected void processAttachResponse(GenericResponse genericResponse) {
-        // nothing to do
     }
 
     protected void afterAttachActions() throws SQLException {
@@ -226,7 +214,6 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
 
     @Override
     public final void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
-        final DbCryptCallback dbCryptCallback = connection.createDbCryptCallback();
-        wireOperations.authReceiveResponse(acceptPacket, dbCryptCallback, V10Service.this::processAttachResponse);
+        wireOperations.authReceiveResponse(acceptPacket, connection.createDbCryptCallback());
     }
 }

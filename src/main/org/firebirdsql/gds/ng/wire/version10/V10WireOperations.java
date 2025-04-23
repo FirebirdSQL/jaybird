@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -25,12 +25,11 @@ public class V10WireOperations extends AbstractWireOperations {
 
     @Override
     @SuppressWarnings("java:S4274")
-    public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback,
-            ProcessAttachCallback processAttachCallback) throws IOException, SQLException {
+    public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback)
+            throws IOException, SQLException {
         assert acceptPacket == null : "Should not be called with non-null acceptPacket in V12 or earlier";
-        GenericResponse response = readGenericResponse(null);
+        readGenericResponse(null);
         getClientAuthBlock().setAuthComplete(true);
-        processAttachCallback.processAttachResponse(response);
 
         // fbclient also ignores REQUIRED when connecting to FB 2.5 or lower, apply same
         if (getAttachProperties().getWireCryptAsEnum() == WireCrypt.REQUIRED) {

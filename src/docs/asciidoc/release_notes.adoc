@@ -591,6 +591,9 @@ If you are confronted with such a change, let us know on {firebird-java}[firebir
 
 * `FbWireAsynchronousChannel`
 ** `connect(String, int, int)` was replaced by `connect(String, int)`
+* `FbWireOperations`
+** The `ProcessAttachCallback` parameter of `authReceiveResponse` was removed, as all implementations did nothing, and since protocol 13, it wasn't only called for the attach response
+** Interface `ProcessAttachCallback` was removed
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

@@ -10,7 +10,6 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
-import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.SQLStateConstants;
@@ -141,17 +140,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             return getEncodingFactory().getOrCreateEncodingForCharset(Charset.forName(filenameCharset));
         }
         return getEncoding();
-    }
-
-    /**
-     * Processes the response from the server to the attach or create operation.
-     *
-     * @param genericResponse
-     *         GenericResponse received from the server.
-     */
-    @SuppressWarnings("unused")
-    protected final void processAttachOrCreateResponse(GenericResponse genericResponse) {
-        // nothing to do
     }
 
     /**
@@ -422,7 +410,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     private void receiveExecuteImmediateResponse() throws SQLException {
         try {
             if (!isAttached()) {
-                processAttachOrCreateResponse(readGenericResponse(null));
+                readGenericResponse(null);
             }
             readGenericResponse(null);
         } catch (IOException e) {
@@ -517,7 +505,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public final void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
-        final DbCryptCallback dbCryptCallback = connection.createDbCryptCallback();
-        wireOperations.authReceiveResponse(acceptPacket, dbCryptCallback, this::processAttachOrCreateResponse);
+        wireOperations.authReceiveResponse(acceptPacket, connection.createDbCryptCallback());
     }
 }

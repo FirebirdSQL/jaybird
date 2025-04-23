@@ -13,7 +13,6 @@ import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptData;
 import org.firebirdsql.gds.ng.wire.FbWireAttachment;
-import org.firebirdsql.gds.ng.wire.FbWireOperations;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
 import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
@@ -56,8 +55,8 @@ public class V13WireOperations extends V11WireOperations {
     }
 
     @Override
-    public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback,
-            FbWireOperations.ProcessAttachCallback processAttachCallback) throws SQLException, IOException {
+    public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback)
+            throws SQLException, IOException {
         assert acceptPacket == null || acceptPacket.operation == op_cond_accept
                 : "Unexpected operation in AcceptPacket";
         final XdrInputStream xdrIn = getXdrIn();
@@ -103,7 +102,6 @@ public class V13WireOperations extends V11WireOperations {
                     GenericResponse response = (GenericResponse) readOperationResponse(operation, null);
                     boolean wasAuthComplete = clientAuthBlock.isAuthComplete();
                     clientAuthBlock.setAuthComplete(true);
-                    processAttachCallback.processAttachResponse(response);
                     addServerKeys(response.data());
 
                     WireCrypt wireCrypt = getAttachProperties().getWireCryptAsEnum();
