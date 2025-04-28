@@ -3,7 +3,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2006 Roman Rokytskyy
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.management;
@@ -32,17 +32,11 @@ import java.sql.SQLException;
  */
 public class FBManager implements FBManagerMBean {
 
-    private static final int DEFAULT_PORT = 3050;
     private static final System.Logger log = System.getLogger(FBManager.class.getName());
 
     private FbDatabaseFactory dbFactory;
-    private String host = "localhost";
-    private Integer port;
+    private final IConnectionProperties connectionProperties = new FbConnectionProperties();
     private String fileName;
-    private String userName;
-    private String password;
-    private String roleName;
-    private String enableProtocol;
     private int dialect = ISCConstants.SQL_DIALECT_CURRENT;
     private int pageSize = -1;
     private String defaultCharacterSet;
@@ -61,10 +55,11 @@ public class FBManager implements FBManagerMBean {
 
     public FBManager(GDSType type) {
         this.type = type;
+        connectionProperties.setType(type.toString());
     }
 
     public FBManager(String type) {
-        this.type = GDSType.getType(type);
+        this(GDSType.getType(type));
     }
 
     //Service methods
@@ -119,22 +114,22 @@ public class FBManager implements FBManagerMBean {
 
     @Override
     public void setServer(String host) {
-        this.host = host;
+        connectionProperties.setServerName(host);
     }
 
     @Override
     public String getServer() {
-        return host;
+        return connectionProperties.getServerName();
     }
 
     @Override
     public void setPort(int port) {
-        this.port = port;
+        connectionProperties.setPortNumber(port);
     }
 
     @Override
     public int getPort() {
-        return port != null ? port : DEFAULT_PORT;
+        return connectionProperties.getPortNumber();
     }
 
     @Override
@@ -161,46 +156,57 @@ public class FBManager implements FBManagerMBean {
         }
 
         this.type = gdsType;
+        connectionProperties.setType(gdsType.toString());
     }
 
     @Override
     public String getUserName() {
-        return userName;
+        return connectionProperties.getUser();
     }
 
     @Override
     public void setUserName(String userName) {
-        this.userName = userName;
+        connectionProperties.setUser(userName);
     }
 
     @Override
     public String getPassword() {
-        return password;
+        return connectionProperties.getPassword();
     }
 
     @Override
     public void setPassword(String password) {
-        this.password = password;
+        connectionProperties.setPassword(password);
     }
 
     @Override
     public String getRoleName() {
-        return roleName;
+        return connectionProperties.getRoleName();
     }
 
     @Override
     public void setRoleName(String roleName) {
-        this.roleName = roleName;
+        connectionProperties.setRoleName(roleName);
+    }
+
+    @Override
+    public String getAuthPlugins() {
+        return connectionProperties.getAuthPlugins();
+    }
+
+    @Override
+    public void setAuthPlugins(String authPlugins) {
+        connectionProperties.setAuthPlugins(authPlugins);
     }
 
     @Override
     public void setEnableProtocol(String enableProtocol) {
-        this.enableProtocol = enableProtocol;
+        connectionProperties.setEnableProtocol(enableProtocol);
     }
 
     @Override
     public String getEnableProtocol() {
-        return enableProtocol;
+        return connectionProperties.getEnableProtocol();
     }
 
     @Override
@@ -289,15 +295,16 @@ public class FBManager implements FBManagerMBean {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, roleName);
             connectionProperties.setDatabaseName(fileName);
             FbDatabase db = dbFactory.connect(connectionProperties);
-            db.attach();
-
-            // if forceCreate is set, drop the database correctly
-            // otherwise exit, database already exists
-            if (forceCreate)
-                db.dropDatabase();
-            else {
-                db.close();
-                return; //database exists, don't wipe it out.
+            try {
+                db.attach();
+                if (forceCreate) {
+                    db.dropDatabase();
+                } else {
+                    // database exists, don't wipe it out
+                    return;
+                }
+            } finally {
+                if (db.isAttached()) db.close();
             }
         } catch (SQLException e) {
             // we ignore it
@@ -339,8 +346,12 @@ public class FBManager implements FBManagerMBean {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, roleName);
             connectionProperties.setDatabaseName(fileName);
             FbDatabase db = dbFactory.connect(connectionProperties);
-            db.attach();
-            db.dropDatabase();
+            try {
+                db.attach();
+                db.dropDatabase();
+            } finally {
+                if (db.isAttached()) db.close();
+            }
         } catch (Exception e) {
             log.log(System.Logger.Level.ERROR, "Exception dropping database", e);
             throw e;
@@ -353,9 +364,9 @@ public class FBManager implements FBManagerMBean {
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, null);
             connectionProperties.setDatabaseName(fileName);
-            FbDatabase db = dbFactory.connect(connectionProperties);
-            db.attach();
-            db.close();
+            try (FbDatabase db = dbFactory.connect(connectionProperties)) {
+                db.attach();
+            }
             return true;
         } catch (Exception e) {
             return false;
@@ -363,13 +374,10 @@ public class FBManager implements FBManagerMBean {
     }
 
     private IConnectionProperties createDefaultConnectionProperties(String user, String password, String roleName) {
-        FbConnectionProperties connectionProperties = new FbConnectionProperties();
+        IConnectionProperties connectionProperties = this.connectionProperties.asNewMutable();
         connectionProperties.setUser(user);
         connectionProperties.setPassword(password);
         connectionProperties.setRoleName(roleName);
-        connectionProperties.setServerName(getServer());
-        connectionProperties.setPortNumber(getPort());
-        connectionProperties.setEnableProtocol(getEnableProtocol());
         return connectionProperties;
     }
 

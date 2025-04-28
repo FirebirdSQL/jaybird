@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2001-2003 David Jencks
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2004 Roman Rokytskyy
- SPDX-FileCopyrightText: Copyright 2016-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2016-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 */
 package org.firebirdsql.management;
@@ -180,6 +180,26 @@ public interface FBManagerMBean extends AutoCloseable {
      *         SQL role to use.
      */
     void setRoleName(String roleName);
+
+    /**
+     * Sets the authentication plugins to try.
+     * <p>
+     * Invalid names are skipped during authentication.
+     * </p>
+     *
+     * @param authPlugins
+     *         comma-separated list of authentication plugins
+     * @since 5.0.8
+     */
+    void setAuthPlugins(String authPlugins);
+
+    /**
+     * Get the list of authentication plugins to try.
+     *
+     * @return comma-separated list of authentication plugins
+     * @since 5.0.8
+     */
+    String getAuthPlugins();
 
     /**
      * @return enable protocol value (see also {@link AttachmentProperties#getEnableProtocol()}.
