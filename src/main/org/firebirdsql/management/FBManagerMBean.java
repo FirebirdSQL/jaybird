@@ -191,6 +191,26 @@ public interface FBManagerMBean extends AutoCloseable {
     void setRoleName(String roleName);
 
     /**
+     * Sets the authentication plugins to try.
+     * <p>
+     * Invalid names are skipped during authentication.
+     * </p>
+     *
+     * @param authPlugins
+     *         comma-separated list of authentication plugins
+     * @since 5.0.8
+     */
+    void setAuthPlugins(String authPlugins);
+
+    /**
+     * Get the list of authentication plugins to try.
+     *
+     * @return comma-separated list of authentication plugins
+     * @since 5.0.8
+     */
+    String getAuthPlugins();
+
+    /**
      * Set the database dialect to use when creating a new database.
      *
      * @param dialect
