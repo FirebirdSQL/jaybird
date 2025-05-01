@@ -25,8 +25,10 @@ import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * A tool for creating and dropping databases.
@@ -119,27 +121,48 @@ public class FBManager implements FBManagerMBean {
         return "Firebird Database manager";
     }
 
-    //Firebird specific methods
-    //Which server are we connecting to?
+    // Firebird specific methods
+    // We're redefining the getters and setters here so they can be found with bean introspection;
+    // This is primarily for historic reasons, and don't add redirection for all properties.
+
+    @Override
+    public void setServerName(String serverName) {
+        FBManagerMBean.super.setServerName(serverName);
+    }
+
+    @Override
+    public String getServerName() {
+        return FBManagerMBean.super.getServerName();
+    }
 
     @Override
     public void setServer(String host) {
-        connectionProperties.setServerName(host);
+        setServerName(host);
     }
 
     @Override
     public String getServer() {
-        return connectionProperties.getServerName();
+        return getServerName();
+    }
+
+    @Override
+    public void setPortNumber(int portNumber) {
+        FBManagerMBean.super.setPortNumber(portNumber);
+    }
+
+    @Override
+    public int getPortNumber() {
+        return FBManagerMBean.super.getPortNumber();
     }
 
     @Override
     public void setPort(int port) {
-        connectionProperties.setPortNumber(port);
+        setPortNumber(port);
     }
 
     @Override
     public int getPort() {
-        return connectionProperties.getPortNumber();
+        return getPortNumber();
     }
 
     @Override
@@ -170,53 +193,63 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
+    public String getUser() {
+        return FBManagerMBean.super.getUser();
+    }
+
+    @Override
+    public void setUser(String user) {
+        FBManagerMBean.super.setUser(user);
+    }
+
+    @Override
     public String getUserName() {
-        return connectionProperties.getUser();
+        return getUser();
     }
 
     @Override
     public void setUserName(String userName) {
-        connectionProperties.setUser(userName);
+        setUser(userName);
     }
 
     @Override
     public String getPassword() {
-        return connectionProperties.getPassword();
+        return FBManagerMBean.super.getPassword();
     }
 
     @Override
     public void setPassword(String password) {
-        connectionProperties.setPassword(password);
+        FBManagerMBean.super.setPassword(password);
     }
 
     @Override
     public String getRoleName() {
-        return connectionProperties.getRoleName();
+        return FBManagerMBean.super.getRoleName();
     }
 
     @Override
     public void setRoleName(String roleName) {
-        connectionProperties.setRoleName(roleName);
+        FBManagerMBean.super.setRoleName(roleName);
     }
 
     @Override
     public String getAuthPlugins() {
-        return connectionProperties.getAuthPlugins();
+        return FBManagerMBean.super.getAuthPlugins();
     }
 
     @Override
     public void setAuthPlugins(String authPlugins) {
-        connectionProperties.setAuthPlugins(authPlugins);
+        FBManagerMBean.super.setAuthPlugins(authPlugins);
     }
 
     @Override
     public void setEnableProtocol(String enableProtocol) {
-        connectionProperties.setEnableProtocol(enableProtocol);
+        FBManagerMBean.super.setEnableProtocol(enableProtocol);
     }
 
     @Override
     public String getEnableProtocol() {
-        return connectionProperties.getEnableProtocol();
+        return FBManagerMBean.super.getEnableProtocol();
     }
 
     @Override
@@ -396,4 +429,40 @@ public class FBManager implements FBManagerMBean {
             throw new IllegalStateException("FBManager has not been started. Call start() before use.");
         }
     }
+
+    @Override
+    public final String getProperty(String name) {
+        return connectionProperties.getProperty(name);
+    }
+
+    @Override
+    public final void setProperty(String name, String value) {
+        connectionProperties.setProperty(name, value);
+    }
+
+    @Override
+    public final Integer getIntProperty(String name) {
+        return connectionProperties.getIntProperty(name);
+    }
+
+    @Override
+    public final void setIntProperty(String name, Integer value) {
+        connectionProperties.setIntProperty(name, value);
+    }
+
+    @Override
+    public final Boolean getBooleanProperty(String name) {
+        return connectionProperties.getBooleanProperty(name);
+    }
+
+    @Override
+    public final void setBooleanProperty(String name, Boolean value) {
+        connectionProperties.setBooleanProperty(name, value);
+    }
+
+    @Override
+    public final Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return connectionProperties.connectionPropertyValues();
+    }
+
 }

@@ -38,6 +38,8 @@ For known issues, consult <<known-issues>>.
 The following was fixed or changed since Jaybird 6.0.1:
 
 * Improvement: added `authPlugins` property on `FBManager` (https://github.com/FirebirdSQL/jaybird/issues/866[#866])
++
+As part of this change, the interface `FBManagerMBean` now extends `AttachmentProperties`, so that all attachment properties are accessible.
 
 === Jaybird 6.0.1
 
