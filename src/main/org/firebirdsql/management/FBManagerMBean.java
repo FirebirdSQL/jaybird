@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.management;
 
-import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.jaybird.props.AttachmentProperties;
 
 /**
  * API for {@link FBManager}, for creating and dropping databases.
@@ -52,7 +52,7 @@ import org.firebirdsql.gds.impl.GDSFactory;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public interface FBManagerMBean extends AutoCloseable {
+public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
 
     /**
      * Start this manager.
@@ -102,15 +102,17 @@ public interface FBManagerMBean extends AutoCloseable {
     String getState();
 
     /**
-     * Set the host name of the Firebird server.
+     * Set the hostname of the Firebird server.
      *
      * @param host
-     *         Hostname
+     *         hostname
+     * @see #setServerName(String) 
      */
     void setServer(String host);
 
     /**
-     * @return The host name of the Firebird server (default is {@code "localhost"})
+     * @return hostname of the Firebird server (default is {@code "localhost"})
+     * @see #setServerName(String) 
      */
     String getServer();
 
@@ -118,12 +120,14 @@ public interface FBManagerMBean extends AutoCloseable {
      * Set the port of the Firebird server.
      *
      * @param port
-     *         Port of the Firebird server
+     *         port of the Firebird server
+     * @see #setPortNumber(int) 
      */
     void setPort(int port);
 
     /**
-     * @return The port of the Firebird server (default is {@code 3050})
+     * @return port of the Firebird server (default is {@code 3050})
+     * @see #getPortNumber()
      */
     int getPort();
 
@@ -141,20 +145,8 @@ public interface FBManagerMBean extends AutoCloseable {
     void setFileName(String fileName);
 
     /**
-     * @return GDS plugin type name (default is {@link GDSFactory#getDefaultGDSType()})
-     */
-    String getType();
-
-    /**
-     * Set the GDS plugin type to use.
-     *
-     * @param type
-     *         GDS plugin type name ({@code PURE_JAVA}, {@code NATIVE}, {@code EMBEDDED})
-     */
-    void setType(String type);
-
-    /**
-     * @return User name
+     * @return username
+     * @see #getUser()
      */
     String getUserName();
 
@@ -162,53 +154,10 @@ public interface FBManagerMBean extends AutoCloseable {
      * Set the username.
      *
      * @param userName
-     *         Username
+     *         username
+     * @see #setUser(String)
      */
     void setUserName(String userName);
-
-    /**
-     * @return password
-     */
-    String getPassword();
-
-    /**
-     * Set the password.
-     *
-     * @param password
-     *         Password
-     */
-    void setPassword(String password);
-
-    /**
-     * @return SQL role to use.
-     */
-    String getRoleName();
-
-    /**
-     * @param roleName
-     *         SQL role to use.
-     */
-    void setRoleName(String roleName);
-
-    /**
-     * Sets the authentication plugins to try.
-     * <p>
-     * Invalid names are skipped during authentication.
-     * </p>
-     *
-     * @param authPlugins
-     *         comma-separated list of authentication plugins
-     * @since 5.0.8
-     */
-    void setAuthPlugins(String authPlugins);
-
-    /**
-     * Get the list of authentication plugins to try.
-     *
-     * @return comma-separated list of authentication plugins
-     * @since 5.0.8
-     */
-    String getAuthPlugins();
 
     /**
      * Set the database dialect to use when creating a new database.

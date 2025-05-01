@@ -343,13 +343,7 @@ public final class FBTestProperties {
     }
 
     public static <T extends FBManager> T configureFBManager(T fbManager, boolean start) throws Exception {
-        if (not(isEmbeddedType()).matches(GDS_TYPE)) {
-            fbManager.setServer(DB_SERVER_URL);
-            fbManager.setPort(DB_SERVER_PORT);
-        }
-        if (isEnableNativeLegacyAuthCompat()) {
-            fbManager.setAuthPlugins(NATIVE_LEGACY_AUTH_COMPAT_AUTH_PLUGINS);
-        }
+        configureDefaultAttachmentProperties(fbManager);
         if (start) fbManager.start();
         fbManager.setForceCreate(true);
         // disable force write for minor increase in test throughput

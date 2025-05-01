@@ -23,7 +23,6 @@ import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.util.FirebirdSupportInfo;
@@ -296,12 +295,7 @@ class FBBackupManagerTest {
     void testBackupReplace_customSecurityDb() throws Exception {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         assumeTrue(supportInfo.supportsCustomSecurityDb(), "Requires custom security DB support");
-        try (FBManager mgr = new FBManager(getGdsType())) {
-            if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-                mgr.setServer(DB_SERVER_URL);
-                mgr.setPort(DB_SERVER_PORT);
-            }
-            mgr.start();
+        try (FBManager mgr = configureFBManager(createFBManager())) {
             mgr.createDatabase("test_with_custom_sec_db", "custom_sec", "custom_sec", "RDB$ADMIN");
         } catch (SQLException e) {
             // We assume that the exception occurred because the custom security database wasn't set up
