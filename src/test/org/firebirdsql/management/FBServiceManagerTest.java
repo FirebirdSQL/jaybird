@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2021-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -19,7 +20,9 @@ import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
 import static org.firebirdsql.common.FBTestProperties.ENABLE_PROTOCOL;
 import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
+import static org.firebirdsql.common.FBTestProperties.configureServiceManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.isLocalhost;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_SERVICE_NAME;
@@ -42,13 +45,15 @@ class FBServiceManagerTest {
     @ParameterizedTest
     @MethodSource
     void testGetServerVersion(String serverName, Integer portNumber, String serviceName) throws Exception {
-        final FBServiceManager fbServiceManager = new FBServiceManager(FBTestProperties.getGdsType());
+        final FBServiceManager fbServiceManager =
+                configureServiceManager(new FBServiceManager(FBTestProperties.getGdsType()));
         fbServiceManager.setServerName(serverName);
-        if (portNumber != null) fbServiceManager.setPortNumber(portNumber);
+        if (portNumber == null) {
+            fbServiceManager.setProperty(PropertyNames.portNumber, null);
+        } else {
+            fbServiceManager.setPortNumber(portNumber);
+        }
         fbServiceManager.setServiceName(serviceName);
-        fbServiceManager.setUser(FBTestProperties.DB_USER);
-        fbServiceManager.setPassword(FBTestProperties.DB_PASSWORD);
-        fbServiceManager.setEnableProtocol(ENABLE_PROTOCOL);
 
         final GDSServerVersion serverVersion = fbServiceManager.getServerVersion();
 
@@ -69,6 +74,7 @@ class FBServiceManagerTest {
             arguments.add(Arguments.of(null, null, DEFAULT_SERVICE_NAME));
         } else {
             final String serverName = DB_SERVER_URL;
+            final boolean localhost = isLocalhost();
             final String ipv6SafeServerName = serverName.indexOf(':') != -1 ? '[' + serverName + ']' : serverName;
             final List<String> urlFormats = new ArrayList<>();
             urlFormats.add("%1$s/%2$d:");
@@ -82,7 +88,7 @@ class FBServiceManagerTest {
                 urlFormats.add("//%1$s");
                 urlFormats.add("//%1$s/");
                 urlFormats.add("//%1$s/%3$s");
-                if (serverName.equals("localhost")) {
+                if (localhost) {
                     // no hostname + port:
                     urlFormats.add("%3$s");
                 }
@@ -108,12 +114,12 @@ class FBServiceManagerTest {
                         urlFormats.add("\\\\%4$s\\%3$s");
                         urlFormats.add("\\\\%4$s\\");
                         urlFormats.add("\\\\%4$s");
-                        if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
+                        if (localhost) {
                             urlFormats.add("wnet://%3$s");
                             urlFormats.add("wnet://");
                         }
                     }
-                    if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
+                    if (localhost) {
                         urlFormats.add("xnet://%3$s");
                         urlFormats.add("xnet://");
                     }

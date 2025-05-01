@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
 // SPDX-FileCopyrightText: Copyright 2003-2010 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common;
 
@@ -24,14 +24,17 @@ import org.firebirdsql.management.FBServiceManager;
 import org.firebirdsql.management.ServiceManager;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.Properties;
+import java.util.ResourceBundle;
 
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
+import static org.hamcrest.Matchers.not;
 
 /**
  * Helper class for test properties (database user, password, paths etc)
@@ -79,29 +82,30 @@ public final class FBTestProperties {
             Boolean.parseBoolean(getProperty("test.use_firebird_autocommit", "false"));
     public static final String ENABLE_PROTOCOL = trimToNull(getProperty("test.enableProtocol", "*"));
 
+    public static boolean isLocalhost() {
+        return "localhost".equals(DB_SERVER_URL) || "127.0.0.1".equals(DB_SERVER_URL);
+    }
+
     public static String getDatabasePath() {
         return getDatabasePath(DB_NAME);
     }
 
     public static String getDatabasePath(String name) {
-        if (!isEmbeddedType().matches(GDS_TYPE) &&
-            (!("127.0.0.1".equals(DB_SERVER_URL) || "localhost".equals(DB_SERVER_URL)) || DB_ON_DOCKER)) {
+        if (not(isEmbeddedType()).matches(GDS_TYPE) && (!isLocalhost() || DB_ON_DOCKER)) {
             return DB_PATH + "/" + name;
         }
-        return new File(DB_PATH, name).getAbsolutePath();
+        return Path.of(DB_PATH, name).toAbsolutePath().toString();
     }
 
     /**
-     * Builds a firebird database connection string for the supplied database
-     * file.
+     * Builds a firebird database connection string for the supplied database file.
      * 
      * @param name Database name
      * @return URL or path for the gds type.
      */
     public static String getdbpath(String name) {
-        final String gdsType = getProperty("test.gds_type", null);
-        if ("EMBEDDED".equalsIgnoreCase(gdsType)) {
-            return new File(DB_PATH, name).getAbsolutePath();
+        if (isEmbeddedType().matches(GDS_TYPE)) {
+            return Path.of(DB_PATH, name).toAbsolutePath().toString();
         } else {
             return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + getDatabasePath(name);
         }
@@ -162,7 +166,7 @@ public final class FBTestProperties {
     }
 
     public static <T extends AttachmentProperties> T configureDefaultAttachmentProperties(T connectionInfo) {
-        if (getGdsType() != GDSType.getType("EMBEDDED")) {
+        if (not(isEmbeddedType()).matches(GDS_TYPE)) {
             connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
             connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         }
@@ -316,14 +320,16 @@ public final class FBTestProperties {
     }
 
     public static <T extends FBManager> T configureFBManager(T fbManager) throws Exception {
-        final GDSType gdsType = getGdsType();
-        if (gdsType == GDSType.getType("PURE_JAVA")
-                || gdsType == GDSType.getType("NATIVE")) {
+        return configureFBManager(fbManager, true);
+    }
+
+    public static <T extends FBManager> T configureFBManager(T fbManager, boolean start) throws Exception {
+        if (not(isEmbeddedType()).matches(GDS_TYPE)) {
             fbManager.setServer(DB_SERVER_URL);
             fbManager.setPort(DB_SERVER_PORT);
         }
         fbManager.setEnableProtocol(ENABLE_PROTOCOL);
-        fbManager.start();
+        if (start) fbManager.start();
         fbManager.setForceCreate(true);
         // disable force write for minor increase in test throughput
         fbManager.setForceWrite(false);
