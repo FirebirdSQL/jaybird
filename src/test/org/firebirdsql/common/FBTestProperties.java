@@ -26,6 +26,9 @@ import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbServiceProperties;
+import org.firebirdsql.gds.ng.jna.AbstractNativeDatabaseFactory;
+import org.firebirdsql.gds.ng.jna.FbClientFeature;
+import org.firebirdsql.gds.ng.jna.FbClientFeatureAccess;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
@@ -33,15 +36,22 @@ import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
+import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBServiceManager;
 import org.firebirdsql.management.ServiceManager;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
-import java.io.File;
+import java.lang.reflect.Method;
+import java.nio.file.Paths;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
+
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
+import static org.hamcrest.Matchers.not;
 
 /**
  * Helper class for test properties (database user, password, paths etc)
@@ -84,33 +94,40 @@ public final class FBTestProperties {
     public static final int DB_SERVER_PORT = Integer.parseInt(getProperty("test.db.port", "3050"));
     public static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
     public static final boolean DB_ON_DOCKER = Boolean.parseBoolean(getProperty("test.db_on_docker", "false"));
-    public static final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
     public static final String GDS_TYPE = getProperty("test.gds_type", "PURE_JAVA");
+    public static final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
     public static final boolean USE_FIREBIRD_AUTOCOMMIT =
             Boolean.parseBoolean(getProperty("test.use_firebird_autocommit", "false"));
+    // Allows running native tests against Firebird 2.5 or older with a Firebird 3.0 or newer fbclient.
+    private static final boolean NATIVE_LEGACY_AUTH_COMPAT =
+            Boolean.parseBoolean(getProperty("test.native_legacy_auth_compat", "false"));
+    private static final String NATIVE_LEGACY_AUTH_COMPAT_AUTH_PLUGINS = "Legacy_Auth";
+
+    public static boolean isLocalhost() {
+        return "localhost".equals(DB_SERVER_URL) || "127.0.0.1".equals(DB_SERVER_URL);
+    }
 
     public static String getDatabasePath() {
         return getDatabasePath(DB_NAME);
     }
 
     public static String getDatabasePath(String name) {
-        if (!("127.0.0.1".equals(DB_SERVER_URL) || "localhost".equals(DB_SERVER_URL)) || DB_ON_DOCKER)
+        if (not(isEmbeddedType()).matches(GDS_TYPE) && (!isLocalhost() || DB_ON_DOCKER)) {
             return DB_PATH + "/" + name;
-        else
-            return new File(DB_PATH, name).getAbsolutePath();
+        } else {
+            return Paths.get(DB_PATH, name).toAbsolutePath().toString();
+        }
     }
 
     /**
-     * Builds a firebird database connection string for the supplied database
-     * file.
+     * Builds a firebird database connection string for the supplied database file.
      * 
      * @param name Database name
      * @return URL or path for the gds type.
      */
     public static String getdbpath(String name) {
-        final String gdsType = getProperty("test.gds_type", null);
-        if ("EMBEDDED".equalsIgnoreCase(gdsType)) {
-            return new File(DB_PATH, name).getAbsolutePath();
+        if (isEmbeddedType().matches(GDS_TYPE)) {
+            return Paths.get(DB_PATH, name).toAbsolutePath().toString();
         } else {
             return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + getDatabasePath(name);
         }
@@ -127,6 +144,9 @@ public final class FBTestProperties {
         props.setProperty("lc_ctype", DB_LC_CTYPE);
         if (USE_FIREBIRD_AUTOCOMMIT) {
             props.setProperty("useFirebirdAutocommit", "true");
+        }
+        if (isEnableNativeLegacyAuthCompat()) {
+            props.setProperty("authPlugins", NATIVE_LEGACY_AUTH_COMPAT_AUTH_PLUGINS);
         }
 
         return props;
@@ -168,7 +188,7 @@ public final class FBTestProperties {
     }
 
     public static <T extends AttachmentProperties> T configureDefaultAttachmentProperties(T connectionInfo) {
-        if (getGdsType() != GDSType.getType("EMBEDDED")) {
+        if (not(isEmbeddedType()).matches(GDS_TYPE)) {
             connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
             connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         }
@@ -179,6 +199,9 @@ public final class FBTestProperties {
         connectionInfo.setUser(DB_USER);
         connectionInfo.setPassword(DB_PASSWORD);
         connectionInfo.setEncoding(DB_LC_CTYPE);
+        if (isEnableNativeLegacyAuthCompat()) {
+            connectionInfo.setAuthPlugins(NATIVE_LEGACY_AUTH_COMPAT_AUTH_PLUGINS);
+        }
         return connectionInfo;
     }
 
@@ -202,11 +225,7 @@ public final class FBTestProperties {
      * @param serviceManager Service manager to configure
      */
     public static <T extends ServiceManager> T configureServiceManager(T serviceManager) {
-        serviceManager.setServerName(DB_SERVER_URL);
-        serviceManager.setPortNumber(DB_SERVER_PORT);
-        serviceManager.setUser(DB_USER);
-        serviceManager.setPassword(DB_PASSWORD);
-        return serviceManager;
+        return configureDefaultAttachmentProperties(serviceManager);
     }
 
     /**
@@ -228,16 +247,7 @@ public final class FBTestProperties {
     public static FirebirdSupportInfo getDefaultSupportInfo() {
         try {
             if (firebirdSupportInfo == null) {
-                final GDSType gdsType = getGdsType();
-                final FBServiceManager fbServiceManager = new FBServiceManager(gdsType);
-                if (gdsType == GDSType.getType("PURE_JAVA")
-                        || gdsType == GDSType.getType("NATIVE")
-                        || gdsType == GDSType.getType("OOREMOTE") ) {
-                    fbServiceManager.setServerName(DB_SERVER_URL);
-                    fbServiceManager.setPortNumber(DB_SERVER_PORT);
-                }
-                fbServiceManager.setUser(FBTestProperties.DB_USER);
-                fbServiceManager.setPassword(FBTestProperties.DB_PASSWORD);
+                FBServiceManager fbServiceManager = configureServiceManager(new FBServiceManager(getGdsType()));
                 firebirdSupportInfo = FirebirdSupportInfo.supportInfoFor(fbServiceManager.getServerVersion());
             }
             return firebirdSupportInfo;
@@ -262,7 +272,7 @@ public final class FBTestProperties {
      * @return JDBC URL (without parameters) for this testrun
      */
     public static String getUrl(String dbPath) {
-        if ("EMBEDDED".equalsIgnoreCase(GDS_TYPE)) {
+        if (isEmbeddedType().matches(GDS_TYPE)) {
             return getProtocolPrefix() + dbPath;
         } else {
             return getProtocolPrefix() + DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + dbPath;
@@ -292,6 +302,9 @@ public final class FBTestProperties {
         mcf.setUser(DB_USER);
         mcf.setPassword(DB_PASSWORD);
         mcf.setEncoding(DB_LC_CTYPE);
+        if (isEnableNativeLegacyAuthCompat()) {
+            mcf.setAuthPlugins(NATIVE_LEGACY_AUTH_COMPAT_AUTH_PLUGINS);
+        }
 
         return mcf;
     }
@@ -325,18 +338,23 @@ public final class FBTestProperties {
         return getConnectionViaDriverManager(getPropertiesForConnection(additionalProperties));
     }
 
-    public static void configureFBManager(FBManager fbManager) throws Exception {
-        final GDSType gdsType = getGdsType();
-        if (gdsType == GDSType.getType("PURE_JAVA")
-                || gdsType == GDSType.getType("NATIVE")
-                || gdsType == GDSType.getType("OOREMOTE")) {
+    public static <T extends FBManager> T configureFBManager(T fbManager) throws Exception {
+        return configureFBManager(fbManager, true);
+    }
+
+    public static <T extends FBManager> T configureFBManager(T fbManager, boolean start) throws Exception {
+        if (not(isEmbeddedType()).matches(GDS_TYPE)) {
             fbManager.setServer(DB_SERVER_URL);
             fbManager.setPort(DB_SERVER_PORT);
         }
-        fbManager.start();
+        if (isEnableNativeLegacyAuthCompat()) {
+            fbManager.setAuthPlugins(NATIVE_LEGACY_AUTH_COMPAT_AUTH_PLUGINS);
+        }
+        if (start) fbManager.start();
         fbManager.setForceCreate(true);
         // disable force write for minor increase in test throughput
         fbManager.setForceWrite(false);
+        return fbManager;
     }
 
     /**
@@ -363,6 +381,35 @@ public final class FBTestProperties {
         } finally {
             fbManager.stop();
         }
+    }
+
+    /**
+     * @return {@code true} if modern URLs (e.g. inet:// ...) are supported, {@code false} otherwise (i.e. a native test
+     * where a client library of Firebird 2.5 or older is used, or for pure Java)
+     */
+    public static boolean supportsNativeModernUrls() {
+        if (isPureJavaType().matches(GDS_TYPE)) {
+            return false;
+        } else {
+            try {
+                Method getClientLibrary = AbstractNativeDatabaseFactory.class.getDeclaredMethod("getClientLibrary");
+                getClientLibrary.setAccessible(true);
+                FbClientLibrary clientLibrary = (FbClientLibrary) getClientLibrary.invoke(
+                        FBTestProperties.getFbDatabaseFactory());
+                if (clientLibrary instanceof FbClientFeatureAccess) {
+                    return ((FbClientFeatureAccess) clientLibrary).hasFeature(FbClientFeature.FB_PING);
+                }
+                return false;
+            } catch (RuntimeException | Error e) {
+                throw e;
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private static boolean isEnableNativeLegacyAuthCompat() {
+        return NATIVE_LEGACY_AUTH_COMPAT && isOtherNativeType().matches(GDS_TYPE);
     }
 
     private FBTestProperties() {

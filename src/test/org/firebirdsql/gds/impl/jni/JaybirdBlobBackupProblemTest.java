@@ -29,7 +29,6 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.FbServiceProperties;
@@ -51,6 +50,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.*;
 
+import static org.firebirdsql.common.FBTestProperties.configureFBManager;
+import static org.firebirdsql.common.FBTestProperties.createFBManager;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -108,43 +109,29 @@ class JaybirdBlobBackupProblemTest {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private String mAbsoluteDatabasePath = null;
-    private String mAbsoluteBackupPath = null;
-    private FBManager fbManager = null;
+    private String absoluteDatabasePath;
+    private String absoluteBackupPath;
+    private FBManager fbManager;
     private FbDatabaseFactory dbFactory;
 
     @BeforeEach
-    void setUp() {
-        GDSType gdsType = FBTestProperties.getGdsType();
+    void setUp() throws Exception {
         dbFactory = FBTestProperties.getFbDatabaseFactory();
-        try {
-            fbManager = new FBManager(gdsType);
+        fbManager = configureFBManager(createFBManager());
 
-            fbManager.setServer("localhost");
-            fbManager.setPort(5066);
-            fbManager.start();
+        Path dbFolder = tempDir.resolve("db");
+        Files.createDirectories(dbFolder);
 
-            Path dbFolder = tempDir.resolve("db");
-            Files.createDirectories(dbFolder);
+        absoluteBackupPath = dbFolder.resolve("testES01344.fbk").toString();
+        absoluteDatabasePath = dbFolder.resolve("testES01344.fdb").toString();
 
-            mAbsoluteBackupPath = dbFolder.resolve("testES01344.fbk").toString();
-
-            mAbsoluteDatabasePath = dbFolder.resolve("testES01344.fdb").toString();
-
-            fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-        } catch (Exception e) {
-            log.warn("exception in setup", e);
-        }
+        fbManager.createDatabase(absoluteDatabasePath, "SYSDBA", "masterkey");
     }
 
     @AfterEach
-    void tearDown() {
-        try {
-            fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-            fbManager.stop();
-        } catch (Exception e) {
-            log.warn("exception in teardown", e);
-        }
+    void tearDown() throws Exception {
+        fbManager.dropDatabase(absoluteDatabasePath, "SYSDBA", "masterkey");
+        fbManager.stop();
     }
 
     @Test
@@ -164,7 +151,7 @@ class JaybirdBlobBackupProblemTest {
 
     private void writeSomeBlobData() throws SQLException {
         try (Connection connection = DriverManager.getConnection(
-                "jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath + "?encoding=NONE", "SYSDBA", "masterkey")) {
+                "jdbc:firebirdsql:embedded:" + absoluteDatabasePath + "?encoding=NONE", "SYSDBA", "masterkey")) {
             createTheTable(connection);
             writeTheData(connection);
         }
@@ -193,7 +180,7 @@ class JaybirdBlobBackupProblemTest {
     }
 
     private void backupDatabase(FbService service, String logFilePostfix) throws Exception {
-        new File(mAbsoluteBackupPath).delete();
+        new File(absoluteBackupPath).delete();
         Path logFolder = tempDir.resolve("log");
         Files.createDirectories(logFolder);
         String logfile = logFolder.resolve("backuptest_" + logFilePostfix + ".log").toString();
@@ -201,7 +188,7 @@ class JaybirdBlobBackupProblemTest {
         startBackup(service);
         queryService(service, logfile);
 
-        assertTrue(new File(mAbsoluteBackupPath).exists(), "Backup file doesn't exist");
+        assertTrue(new File(absoluteBackupPath).exists(), "Backup file doesn't exist");
     }
 
     private void queryService(FbService service, String outputFilename) throws Exception {
@@ -246,8 +233,8 @@ class JaybirdBlobBackupProblemTest {
         serviceRequestBuffer.addArgument(ISCConstants.isc_action_svc_backup);
 
         serviceRequestBuffer.addArgument(SpbItems.isc_spb_verbose);
-        serviceRequestBuffer.addArgument(SpbItems.isc_spb_dbname, mAbsoluteDatabasePath);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath);
+        serviceRequestBuffer.addArgument(SpbItems.isc_spb_dbname, absoluteDatabasePath);
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, absoluteBackupPath);
 
         service.startServiceAction(serviceRequestBuffer);
     }

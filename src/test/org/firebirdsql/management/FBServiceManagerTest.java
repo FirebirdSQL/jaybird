@@ -21,6 +21,7 @@ package org.firebirdsql.management;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -34,7 +35,10 @@ import java.util.stream.Stream;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
 import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
+import static org.firebirdsql.common.FBTestProperties.configureServiceManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.isLocalhost;
+import static org.firebirdsql.common.FBTestProperties.supportsNativeModernUrls;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_SERVICE_NAME;
@@ -57,15 +61,17 @@ class FBServiceManagerTest {
     @ParameterizedTest
     @MethodSource
     void testGetServerVersion(String serverName, Integer portNumber, String serviceName) throws Exception {
-        final FBServiceManager fbServiceManager = new FBServiceManager(FBTestProperties.getGdsType());
+        final FBServiceManager fbServiceManager = configureServiceManager(
+                new FBServiceManager(FBTestProperties.getGdsType()));
         fbServiceManager.setServerName(serverName);
-        if (portNumber != null) fbServiceManager.setPortNumber(portNumber);
+        if (portNumber == null) {
+            fbServiceManager.setProperty(PropertyNames.portNumber, null);
+        } else {
+            fbServiceManager.setPortNumber(portNumber);
+        }
         fbServiceManager.setServiceName(serviceName);
-        fbServiceManager.setUser(FBTestProperties.DB_USER);
-        fbServiceManager.setPassword(FBTestProperties.DB_PASSWORD);
 
         final GDSServerVersion serverVersion = fbServiceManager.getServerVersion();
-
         assertThat(serverVersion, allOf(
                 notNullValue(),
                 not(equalTo(GDSServerVersion.INVALID_VERSION))));
@@ -73,61 +79,79 @@ class FBServiceManagerTest {
 
     @SuppressWarnings("unused")
     static Stream<Arguments> testGetServerVersion() {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        final boolean supportsNamelessServiceManager = supportInfo.supportsNamelessServiceManager();
         List<Arguments> arguments = new ArrayList<>();
-        arguments.add(Arguments.of(DB_SERVER_URL, DB_SERVER_PORT, null));
+        if (supportsNamelessServiceManager) {
+            arguments.add(Arguments.of(DB_SERVER_URL, DB_SERVER_PORT, null));
+        }
         arguments.add(Arguments.of(DB_SERVER_URL, DB_SERVER_PORT, DEFAULT_SERVICE_NAME));
 
         final String gdsTypeName = GDS_TYPE;
         if (isEmbeddedType().matches(gdsTypeName)) {
-            arguments.add(Arguments.of(null, null, null));
+            if (supportsNamelessServiceManager) {
+                arguments.add(Arguments.of(null, null, null));
+            }
             arguments.add(Arguments.of(null, null, DEFAULT_SERVICE_NAME));
         } else {
             final String serverName = DB_SERVER_URL;
+            final boolean localhost = isLocalhost();
             final String ipv6SafeServerName = serverName.indexOf(':') != -1 ? '[' + serverName + ']' : serverName;
             final List<String> urlFormats = new ArrayList<>();
-            urlFormats.add("%1$s/%2$d:");
             urlFormats.add("%1$s/%2$d:%3$s");
-            urlFormats.add("//%1$s:%2$d");
-            urlFormats.add("//%1$s:%2$d/");
+            if (supportsNamelessServiceManager) {
+                urlFormats.add("%1$s/%2$d:");
+                urlFormats.add("//%1$s:%2$d");
+                urlFormats.add("//%1$s:%2$d/");
+            }
             urlFormats.add("//%1$s:%2$d/%3$s");
             if (DB_SERVER_PORT == PropertyConstants.DEFAULT_PORT) {
-                urlFormats.add("%1$s:");
                 urlFormats.add("%1$s:%3$s");
-                urlFormats.add("//%1$s");
-                urlFormats.add("//%1$s/");
+                if (supportsNamelessServiceManager) {
+                    urlFormats.add("%1$s:");
+                    urlFormats.add("//%1$s");
+                    urlFormats.add("//%1$s/");
+                }
                 urlFormats.add("//%1$s/%3$s");
-                if (serverName.equals("localhost")) {
+                if (localhost) {
                     // no hostname + port:
                     urlFormats.add("%3$s");
                 }
-                if (isOtherNativeType().matches(gdsTypeName)) {
+                if (isOtherNativeType().matches(gdsTypeName) && supportsNamelessServiceManager) {
                     urlFormats.add("%1$s");
                 }
             }
 
             if (isOtherNativeType().matches(gdsTypeName)) {
-                urlFormats.add("%1$s/%2$d");
-                // NOTE: This test assumes a Firebird 3.0 or higher client library is used
-                urlFormats.add("inet://%1$s:%2$d/%3$s");
-                urlFormats.add("inet://%1$s:%2$d/");
-                urlFormats.add("inet://%1$s:%2$d");
+                if (supportsNamelessServiceManager) {
+                    urlFormats.add("%1$s/%2$d");
+                }
+                final boolean supportsNativeModernUrls = supportsNativeModernUrls();
+                if (supportsNativeModernUrls) {
+                    urlFormats.add("inet://%1$s:%2$d/%3$s");
+                    urlFormats.add("inet://%1$s:%2$d/");
+                    urlFormats.add("inet://%1$s:%2$d");
+                }
                 // Not testing inet4/inet6
-                FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
                 if (supportInfo.isWindows() && isWindowsSystem()) {
                     if (supportInfo.supportsWnet()) {
                         // NOTE: This assumes the default WNET service name is used
-                        urlFormats.add("wnet://%1$s/%3$s");
-                        urlFormats.add("wnet://%1$s/");
-                        urlFormats.add("wnet://%1$s");
+                        if (supportsNativeModernUrls) {
+                            urlFormats.add("wnet://%1$s/%3$s");
+                            urlFormats.add("wnet://%1$s/");
+                            urlFormats.add("wnet://%1$s");
+                            if (localhost) {
+                                urlFormats.add("wnet://%3$s");
+                                urlFormats.add("wnet://");
+                            }
+                        }
                         urlFormats.add("\\\\%4$s\\%3$s");
-                        urlFormats.add("\\\\%4$s\\");
-                        urlFormats.add("\\\\%4$s");
-                        if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
-                            urlFormats.add("wnet://%3$s");
-                            urlFormats.add("wnet://");
+                        if (supportsNamelessServiceManager) {
+                            urlFormats.add("\\\\%4$s\\");
+                            urlFormats.add("\\\\%4$s");
                         }
                     }
-                    if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
+                    if (supportsNativeModernUrls && localhost) {
                         urlFormats.add("xnet://%3$s");
                         urlFormats.add("xnet://");
                     }

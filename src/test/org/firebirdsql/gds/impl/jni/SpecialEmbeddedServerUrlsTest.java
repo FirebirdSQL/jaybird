@@ -19,8 +19,6 @@
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.common.extension.GdsTypeExtension;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.management.FBManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +33,8 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
+import static org.firebirdsql.common.FBTestProperties.configureFBManager;
+import static org.firebirdsql.common.FBTestProperties.createFBManager;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -48,76 +48,69 @@ class SpecialEmbeddedServerUrlsTest {
     @TempDir
     private Path tempDir;
 
-    private String mRelativeDatabasePath;
-    private String mAbsoluteDatabasePath;
+    private String relativeDatabasePath;
+    private String absoluteDatabasePath;
     private FBManager fbManager;
-    private GDSType gdsType;
 
     @BeforeEach
     void setUp() throws Exception {
-        Class.forName(FBDriver.class.getName());
-        gdsType = GDSType.getType(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
-        fbManager = new FBManager(gdsType);
-
-        fbManager.setServer("localhost");
-        fbManager.setPort(5066);
-        fbManager.start();
+        fbManager = configureFBManager(createFBManager());
 
         Path dbFolder = tempDir.resolve("db");
         Files.createDirectories(dbFolder);
 
-        mRelativeDatabasePath = "testES01874.fdb";
-        mAbsoluteDatabasePath = dbFolder.resolve(mRelativeDatabasePath).toString();
+        relativeDatabasePath = "testES01874.fdb";
+        absoluteDatabasePath = dbFolder.resolve(relativeDatabasePath).toString();
 
-        fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
+        fbManager.createDatabase(absoluteDatabasePath, "SYSDBA", "masterkey");
     }
 
     @AfterEach
     void tearDown() throws Exception {
-        fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
+        fbManager.dropDatabase(absoluteDatabasePath, "SYSDBA", "masterkey");
         fbManager.stop();
         fbManager = null;
 
-        cleanUpFile(mRelativeDatabasePath);
+        cleanUpFile(relativeDatabasePath);
     }
 
     @Test
     void testFBManagerWithoutSettingServerAndPort() throws Exception {
-        try (FBManager testFBManager = new FBManager(gdsType)) {
+        try (FBManager testFBManager = createFBManager()) {
             testFBManager.start();
 
-            testFBManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-            testFBManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
+            testFBManager.dropDatabase(absoluteDatabasePath, "SYSDBA", "masterkey");
+            testFBManager.createDatabase(absoluteDatabasePath, "SYSDBA", "masterkey");
         }
     }
 
     @Test
     void testFBManagerWithRelativeDatabaseFile() throws Exception {
-        try (FBManager testFBManager = new FBManager(gdsType)) {
+        try (FBManager testFBManager = createFBManager()) {
             testFBManager.setDropOnStop(true);
             testFBManager.start();
 
-            testFBManager.createDatabase(mRelativeDatabasePath, "SYSDBA", "masterkey");
+            testFBManager.createDatabase(relativeDatabasePath, "SYSDBA", "masterkey");
         }
     }
 
     @Test
     void testDriverManagerGetConnectionWithoutServerAndPortInUrl() throws Exception {
         Connection connection = DriverManager.getConnection(
-                "jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath +"?encoding=NONE", "SYSDBA", "masterkey");
+                "jdbc:firebirdsql:embedded:" + absoluteDatabasePath +"?encoding=NONE", "SYSDBA", "masterkey");
         connection.close();
     }
 
     @Test
     void testDriverManagerGetConnectionWithoutServerAndPortInUrlWithRelativeDatabasePath() throws Exception {
-        try (FBManager testFBManager = new FBManager(gdsType)) {
+        try (FBManager testFBManager = createFBManager()) {
             testFBManager.setDropOnStop(true);
             testFBManager.start();
 
-            testFBManager.createDatabase(mRelativeDatabasePath, "SYSDBA", "masterkey");
+            testFBManager.createDatabase(relativeDatabasePath, "SYSDBA", "masterkey");
 
             try (Connection connection = DriverManager.getConnection(
-                    "jdbc:firebirdsql:embedded:" + mRelativeDatabasePath + "?encoding=NONE", "SYSDBA", "masterkey")) {
+                    "jdbc:firebirdsql:embedded:" + relativeDatabasePath + "?encoding=NONE", "SYSDBA", "masterkey")) {
                 assertTrue(connection.isValid(1000));
             }
         }

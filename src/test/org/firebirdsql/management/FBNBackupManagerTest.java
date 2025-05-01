@@ -304,8 +304,7 @@ class FBNBackupManagerTest {
     }
 
     private String getCurrentDbGuid(String databasePath) throws SQLException {
-        FBStatisticsManager statsMan = new FBStatisticsManager(getGdsType());
-        configureServiceManager(statsMan);
+        FBStatisticsManager statsMan = configureServiceManager(new FBStatisticsManager(getGdsType()));
         statsMan.setDatabase(databasePath);
         ByteArrayOutputStream loggingStream = new ByteArrayOutputStream();
         statsMan.setLogger(loggingStream);

@@ -21,7 +21,6 @@ package org.firebirdsql.management;
 import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.gds.impl.GDSType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -62,13 +61,7 @@ class FBStreamingBackupManagerTest {
 
     @BeforeEach
     void setUp() {
-        backupManager = new FBStreamingBackupManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            backupManager.setServerName(DB_SERVER_URL);
-            backupManager.setPortNumber(DB_SERVER_PORT);
-        }
-        backupManager.setUser(DB_USER);
-        backupManager.setPassword(DB_PASSWORD);
+        backupManager = configureServiceManager(new FBStreamingBackupManager(getGdsType()));
         backupManager.setDatabase(getDatabasePath());
         /* NOTE:
          1) Setting parallel workers unconditionally, but actual support was introduced in Firebird 5.0;

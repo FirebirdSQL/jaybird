@@ -44,11 +44,13 @@ import java.sql.Statement;
 
 import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -73,14 +75,10 @@ class FBBackupManagerTest {
 
     @BeforeEach
     void setUp() {
-        backupManager = new FBBackupManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+        backupManager = configureServiceManager(new FBBackupManager(getGdsType()));
+        if (not(isEmbeddedType()).matches(GDS_TYPE)) {
             assumeTrue(isLocalHost(DB_SERVER_URL), "Test needs to run on localhost for proper clean up");
-            backupManager.setServerName(DB_SERVER_URL);
-            backupManager.setPortNumber(DB_SERVER_PORT);
         }
-        backupManager.setUser(DB_USER);
-        backupManager.setPassword(DB_PASSWORD);
         backupManager.setDatabase(getDatabasePath());
         backupManager.setBackupPath(getBackupPath());
         /* NOTE:

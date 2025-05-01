@@ -689,6 +689,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} if the nameless service manager is supported
+     */
+    public boolean supportsNamelessServiceManager() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
      * @param odsMajor
      *         ODS major version
      * @param odsMinor

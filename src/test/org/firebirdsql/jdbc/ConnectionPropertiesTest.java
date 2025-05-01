@@ -76,11 +76,6 @@ class ConnectionPropertiesTest {
     }
 
     private FBSimpleDataSource createDataSource() {
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(getdbpath(DB_NAME));
-        ds.setType(GDS_TYPE);
-        ds.setUser(DB_USER);
-        ds.setPassword(DB_PASSWORD);
-        return ds;
+        return configureDefaultDbProperties(new FBSimpleDataSource());
     }
 }

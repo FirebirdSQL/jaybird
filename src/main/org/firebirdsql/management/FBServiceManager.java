@@ -319,6 +319,9 @@ public class FBServiceManager implements ServiceManager {
         createDatabaseAttachInfo().copyTo(connectionProperties);
         connectionProperties.setUser(serviceProperties.getUser());
         connectionProperties.setPassword(serviceProperties.getPassword());
+        connectionProperties.setRoleName(serviceProperties.getRoleName());
+        connectionProperties.setAuthPlugins(serviceProperties.getAuthPlugins());
+        connectionProperties.setWireCrypt(serviceProperties.getWireCrypt());
         FbDatabase fbDatabase = dbFactory.connect(connectionProperties);
         fbDatabase.attach();
         return fbDatabase;

@@ -40,13 +40,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
-import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
-import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
-import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -62,7 +56,7 @@ class DatabaseUrlFormatsTest {
     @ParameterizedTest
     @MethodSource
     void testConnectionWithDriverManager(String url) throws Exception {
-        try (Connection connection = DriverManager.getConnection(url, DB_USER, FBTestProperties.DB_PASSWORD)) {
+        try (Connection connection = DriverManager.getConnection(url, getDefaultPropertiesForConnection())) {
             assertTrue(connection.isValid(1000));
         }
     }
@@ -103,11 +97,14 @@ class DatabaseUrlFormatsTest {
     @MethodSource
     void testConnectionWithSimpleDataSource(String serverName, Integer portNumber, String databaseName)
             throws Exception {
-        FBSimpleDataSource dataSource = new FBSimpleDataSource(FBTestProperties.getGdsType());
-        dataSource.setUser(DB_USER);
-        dataSource.setPassword(DB_PASSWORD);
+        FBSimpleDataSource dataSource = configureDefaultDbProperties(
+                new FBSimpleDataSource(FBTestProperties.getGdsType()));
         dataSource.setServerName(serverName);
-        if (portNumber != null) dataSource.setPortNumber(portNumber);
+        if (portNumber == null) {
+            dataSource.setProperty(PropertyNames.portNumber, null);
+        } else {
+            dataSource.setPortNumber(portNumber);
+        }
         dataSource.setDatabaseName(databaseName);
 
         try (Connection connection = dataSource.getConnection()) {
@@ -128,6 +125,7 @@ class DatabaseUrlFormatsTest {
     private static List<String> urlsWithoutProtocolPrefix() {
         final String databasePath = getDatabasePath();
         final String serverName = DB_SERVER_URL;
+        final boolean localhost = isLocalhost();
         final String ipv6SafeServerName = serverName.indexOf(':') != -1 ? '[' + serverName + ']' : serverName;
         final int portNumber = DB_SERVER_PORT;
         final String gdsTypeName = GDS_TYPE;
@@ -143,7 +141,7 @@ class DatabaseUrlFormatsTest {
             if (portNumber == PropertyConstants.DEFAULT_PORT) {
                 urlFormats.add("%1$s:%3$s");
                 urlFormats.add("//%1$s/%3$s");
-                if (serverName.equals("localhost")) {
+                if (localhost) {
                     // no hostname + port:
                     urlFormats.add("%3$s");
                 }
@@ -161,20 +159,24 @@ class DatabaseUrlFormatsTest {
             urlFormats.add("doesnotexist/1234:nopath?databaseName=//%1$s:%2$d/%3$s");
 
             if (isOtherNativeType().matches(gdsTypeName)) {
-                // NOTE: This test assumes a Firebird 3.0 or higher client library is used
-                urlFormats.add("inet://%1$s:%2$d/%3$s");
-                // Not testing inet4/inet6
+                final boolean supportsNativeModernUrls = supportsNativeModernUrls();
+                if (supportsNativeModernUrls) {
+                    urlFormats.add("inet://%1$s:%2$d/%3$s");
+                    // Not testing inet4/inet6
+                }
                 FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
                 if (supportInfo.isWindows() && isWindowsSystem()) {
                     if (supportInfo.supportsWnet()) {
                         // NOTE: This assumes the default WNET service name is used
-                        urlFormats.add("wnet://%1$s/%3$s");
                         urlFormats.add("\\\\%4$s\\%3$s");
-                        if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
-                            urlFormats.add("wnet://%3$s");
+                        if (supportsNativeModernUrls) {
+                            urlFormats.add("wnet://%1$s/%3$s");
+                            if (localhost) {
+                                urlFormats.add("wnet://%3$s");
+                            }
                         }
                     }
-                    if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
+                    if (supportsNativeModernUrls && localhost) {
                         urlFormats.add("xnet://%3$s");
                     }
                 }

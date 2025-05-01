@@ -86,14 +86,7 @@ class FBMaintenanceManagerTest {
 
     @BeforeEach
     void setUp() {
-        maintenanceManager = new FBMaintenanceManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            maintenanceManager.setServerName(DB_SERVER_URL);
-            maintenanceManager.setPortNumber(DB_SERVER_PORT);
-        }
-
-        maintenanceManager.setUser(DB_USER);
-        maintenanceManager.setPassword(DB_PASSWORD);
+        maintenanceManager = configureServiceManager(new FBMaintenanceManager(getGdsType()));
         maintenanceManager.setDatabase(getDatabasePath());
         /* NOTE:
          1) Setting parallel workers unconditionally, but actual support was introduced in Firebird 5.0;

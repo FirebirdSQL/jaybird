@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
+import static org.firebirdsql.common.FBTestProperties.configureDefaultDbProperties;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
@@ -52,18 +53,14 @@ class FBSimpleDataSourceTest {
      */
     @Test
     void testJavaCharSetIsDefaultCharSet() {
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
+        ds.setEncoding(null);
         ds.setCharSet(System.getProperty("file.encoding"));
         try (Connection con = ds.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM RDB$DATABASE");
             JdbcResourceHelper.closeQuietly(ps);
         } catch (Exception e) {
-            e.printStackTrace();
-            fail("Preparing statement with property charSet equal to file.encoding should not fail");
+            fail("Preparing statement with property charSet equal to file.encoding should not fail", e);
         }
     }
 
@@ -106,11 +103,7 @@ class FBSimpleDataSourceTest {
 
     @Test
     void canChangeConfigAfterConnectionCreation() throws Exception {
-        FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource());
 
         // possible before connecting
         ds.setBlobBufferSize(1024);
@@ -126,11 +119,7 @@ class FBSimpleDataSourceTest {
     @Test
     void cannotChangeConfigAfterConnectionCreation_usingSharedMCF() throws Exception {
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
-        FBSimpleDataSource ds = new FBSimpleDataSource(mcf);
-        ds.setDatabaseName(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUser(FBTestProperties.DB_USER);
-        ds.setPassword(FBTestProperties.DB_PASSWORD);
-        ds.setType(FBTestProperties.getGdsType().toString());
+        FBSimpleDataSource ds = configureDefaultDbProperties(new FBSimpleDataSource(mcf));
 
         // possible before connecting
         ds.setBlobBufferSize(1024);

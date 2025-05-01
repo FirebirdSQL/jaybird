@@ -21,12 +21,10 @@ package org.firebirdsql.ds;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jaybird.xca.XidImpl;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -62,24 +60,7 @@ class FBXADataSourceTest {
 
     private final List<XAConnection> connections = new ArrayList<>();
 
-    private FBXADataSource ds;
-
-    @BeforeEach
-    void setUp() {
-        FBXADataSource newDs = new FBXADataSource();
-        newDs.setType(getProperty("test.gds_type", null));
-        if (getGdsType() == GDSType.getType("PURE_JAVA")
-                || getGdsType() == GDSType.getType("NATIVE")) {
-            newDs.setServerName(DB_SERVER_URL);
-            newDs.setPortNumber(DB_SERVER_PORT);
-        }
-        newDs.setDatabaseName(getDatabasePath());
-        newDs.setUser(DB_USER);
-        newDs.setPassword(DB_PASSWORD);
-        newDs.setEncoding(DB_LC_CTYPE);
-
-        ds = newDs;
-    }
+    private final FBXADataSource ds = configureDefaultDbProperties(new FBXADataSource());
 
     @AfterEach
     void tearDown() {

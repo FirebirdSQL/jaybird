@@ -32,6 +32,7 @@ import java.util.Properties;
 import static java.lang.String.format;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
+import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,9 +56,11 @@ class UseFirebirdAutocommitTest {
             "?encoding=NONE&useFirebirdAutocommit=true,  true"
     })
     void checkFirebirdAutocommitValue(String properties, boolean expectedUseFirebirdAutocommit) throws SQLException {
+        Properties props = getDefaultPropertiesForConnection();
+        props.remove("lc_ctype");
+        props.remove("useFirebirdAutocommit");
         String url = FBTestProperties.getUrl() + properties;
-        try (FBConnection connection = (FBConnection) DriverManager.getConnection(url, FBTestProperties.DB_USER,
-                FBTestProperties.DB_PASSWORD)) {
+        try (FBConnection connection = (FBConnection) DriverManager.getConnection(url, props)) {
             FBManagedConnectionFactory managedConnectionFactory = connection
                     .getManagedConnection().getManagedConnectionFactory();
             assertEquals(expectedUseFirebirdAutocommit, managedConnectionFactory.isUseFirebirdAutocommit(),
@@ -67,7 +70,7 @@ class UseFirebirdAutocommitTest {
 
     @Test
     void connectionPropertyUseFirebirdAutocommit_fromProperties_valueFalse() throws Exception {
-        Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
+        Properties properties = getDefaultPropertiesForConnection();
         properties.put("useFirebirdAutocommit", "false");
         try (FirebirdConnection connection = (FirebirdConnection) DriverManager.getConnection(FBTestProperties.getUrl(),
                 properties)) {
@@ -77,7 +80,7 @@ class UseFirebirdAutocommitTest {
 
     @Test
     void connectionPropertyUseFirebirdAutocommit_fromProperties_valueTrue() throws Exception {
-        Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
+        Properties properties = getDefaultPropertiesForConnection();
         properties.put("useFirebirdAutocommit", "true");
         try (FirebirdConnection connection = (FirebirdConnection) DriverManager.getConnection(FBTestProperties.getUrl(),
                 properties)) {
@@ -87,7 +90,7 @@ class UseFirebirdAutocommitTest {
 
     @Test
     void connectionPropertyUseFirebirdAutocommit_fromProperties_valueEmpty() throws Exception {
-        Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
+        Properties properties = getDefaultPropertiesForConnection();
         properties.put("useFirebirdAutocommit", "");
         try (FirebirdConnection connection = (FirebirdConnection) DriverManager.getConnection(FBTestProperties.getUrl(),
                 properties)) {
@@ -198,7 +201,7 @@ class UseFirebirdAutocommitTest {
     }
 
     private static Properties getFirebirdAutocommitProperties() {
-        Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
+        Properties properties = getDefaultPropertiesForConnection();
         properties.put("useFirebirdAutocommit", "true");
         return properties;
     }

@@ -19,9 +19,7 @@
 package org.firebirdsql.ds;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.gds.impl.GDSType;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.PooledConnection;
@@ -29,7 +27,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FBTestProperties.configureDefaultDbProperties;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 
 /**
@@ -43,24 +41,7 @@ abstract class FBConnectionPoolTestBase {
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     private final List<PooledConnection> connections = new ArrayList<>();
-    protected FBConnectionPoolDataSource ds;
-
-    @BeforeEach
-    void setUp() {
-        FBConnectionPoolDataSource newDs = new FBConnectionPoolDataSource();
-        newDs.setType(getProperty("test.gds_type", null));
-        if (getGdsType() == GDSType.getType("PURE_JAVA")
-                || getGdsType() == GDSType.getType("NATIVE")) {
-            newDs.setServerName(DB_SERVER_URL);
-            newDs.setPortNumber(DB_SERVER_PORT);
-        }
-        newDs.setDatabaseName(getDatabasePath());
-        newDs.setUser(DB_USER);
-        newDs.setPassword(DB_PASSWORD);
-        newDs.setEncoding(DB_LC_CTYPE);
-    
-        ds = newDs;
-    }
+    protected final FBConnectionPoolDataSource ds = configureDefaultDbProperties(new FBConnectionPoolDataSource());
 
     @AfterEach
     void tearDown() {
