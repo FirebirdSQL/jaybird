@@ -1,10 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2014-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.management.FBManager;
@@ -49,15 +48,8 @@ class Dialect1SpecificsTest {
 
     @BeforeEach
     void basicSetUp() throws Exception {
-        fbManager = createFBManager();
-
-        if (getGdsType() == GDSType.getType("PURE_JAVA")
-                || getGdsType() == GDSType.getType("NATIVE")) {
-            fbManager.setServer(DB_SERVER_URL);
-            fbManager.setPort(DB_SERVER_PORT);
-        }
+        fbManager = configureFBManager(createFBManager());
         fbManager.setDialect(ISCConstants.SQL_DIALECT_V5);
-        fbManager.start();
         fbManager.setForceCreate(true);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
     }

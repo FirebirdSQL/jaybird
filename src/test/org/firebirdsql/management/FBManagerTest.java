@@ -4,11 +4,12 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2006 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jaybird.util.StringUtils;
@@ -39,9 +40,7 @@ class FBManagerTest {
 
     @Test
     void testStart() throws Exception {
-        try (FBManager m = createFBManager()) {
-            m.setServer(DB_SERVER_URL);
-            m.setPort(DB_SERVER_PORT);
+        try (FBManager m = createFBManager(false)) {
             assertDoesNotThrow(m::start);
         }
     }
@@ -49,10 +48,6 @@ class FBManagerTest {
     @Test
     void testCreateDrop() throws Exception {
         try (FBManager m = createFBManager()) {
-            m.setServer(DB_SERVER_URL);
-            m.setPort(DB_SERVER_PORT);
-            m.start();
-
             // Adding .fdb suffix to prevent conflicts with other tests if drop fails
             final String databasePath = getDatabasePath() + ".fdb";
             // check create
@@ -86,10 +81,6 @@ class FBManagerTest {
 
     private void checkPageSizeCreated(int requestedPageSize) throws Exception {
         try (FBManager m = createFBManager()) {
-            m.setServer(DB_SERVER_URL);
-            m.setPort(DB_SERVER_PORT);
-            m.start();
-
             // Adding .fdb suffix to prevent conflicts with other tests if drop fails
             final String databasePath = getDatabasePath() + ".fdb";
 
@@ -115,7 +106,7 @@ class FBManagerTest {
     @SuppressWarnings("resource")
     @Test
     void testSetPageSize_Invalid_throwsIllegalArgumentException() {
-        FBManager m = createFBManager();
+        FBManager m = FBTestProperties.createFBManager();
 
         assertThrows(IllegalArgumentException.class, () -> m.setPageSize(4000));
     }
@@ -124,7 +115,7 @@ class FBManagerTest {
     @ParameterizedTest
     @ValueSource(ints = { SIZE_1K, SIZE_2K, SIZE_4K, SIZE_8K, SIZE_16K, SIZE_32K })
     void testSetPageSize_ValidValues(int pageSize) {
-        FBManager m = createFBManager();
+        FBManager m = FBTestProperties.createFBManager();
 
         assertDoesNotThrow(() -> m.setPageSize(pageSize));
     }
@@ -132,10 +123,6 @@ class FBManagerTest {
     @Test
     void testDialect3_dbCreatedWithRightDialect() throws Exception {
         try (FBManager m = createFBManager()) {
-            m.setServer(DB_SERVER_URL);
-            m.setPort(DB_SERVER_PORT);
-            m.start();
-
             // Adding .fdb suffix to prevent conflicts with other tests if drop fails
             final String databasePath = getDatabasePath() + ".fdb";
 
@@ -156,10 +143,6 @@ class FBManagerTest {
     @Test
     void testDialect1_dbCreatedWithRightDialect() throws Exception {
         try (FBManager m = createFBManager()) {
-            m.setServer(DB_SERVER_URL);
-            m.setPort(DB_SERVER_PORT);
-            m.start();
-
             // Adding .fdb suffix to prevent conflicts with other tests if drop fails
             final String databasePath = getDatabasePath() + ".fdb";
 
@@ -180,10 +163,6 @@ class FBManagerTest {
     @Test
     void testCreate_withDefaultCharacterSet() throws Exception {
         try (FBManager m = createFBManager()) {
-            m.setServer(DB_SERVER_URL);
-            m.setPort(DB_SERVER_PORT);
-            m.start();
-
             // Adding .fdb suffix to prevent conflicts with other tests if drop fails
             final String databasePath = getDatabasePath() + ".fdb";
             try {
@@ -221,10 +200,6 @@ class FBManagerTest {
 
     private void checkForceWrite(Boolean forceWrite, int expectedValue) throws Exception {
         try (FBManager m = createFBManager()) {
-            m.setServer(DB_SERVER_URL);
-            m.setPort(DB_SERVER_PORT);
-            m.start();
-
             // Adding .fdb suffix to prevent conflicts with other tests if drop fails
             final String databasePath = getDatabasePath() + ".fdb";
             try {
@@ -244,4 +219,13 @@ class FBManagerTest {
             }
         }
     }
+
+    private static FBManager createFBManager() throws Exception {
+        return createFBManager(true);
+    }
+
+    private static FBManager createFBManager(boolean start) throws Exception {
+        return configureFBManager(FBTestProperties.createFBManager(), start);
+    }
+
 }

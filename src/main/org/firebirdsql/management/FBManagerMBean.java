@@ -7,7 +7,6 @@
 */
 package org.firebirdsql.management;
 
-import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 
 /**
@@ -43,7 +42,7 @@ import org.firebirdsql.jaybird.props.AttachmentProperties;
  * @version 1.0
  */
 @SuppressWarnings("java:S112")
-public interface FBManagerMBean extends AutoCloseable {
+public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
 
     /**
      * Start this manager.
@@ -93,29 +92,37 @@ public interface FBManagerMBean extends AutoCloseable {
     String getState();
 
     /**
-     * Set the host name of the Firebird server.
+     * Set the hostname of the Firebird server.
      *
      * @param host
-     *         Hostname
+     *         hostname
+     * @deprecated use {@link #setServerName(String)}; will not be removed for now
      */
+    @Deprecated(since = "7")
     void setServer(String host);
 
     /**
-     * @return The host name of the Firebird server (default is {@code "localhost"})
+     * @return hostname of the Firebird server (default is {@code "localhost"})
+     * @deprecated use {@link #getServerName()}; will not be removed for now
      */
+    @Deprecated(since = "7")
     String getServer();
 
     /**
      * Set the port of the Firebird server.
      *
      * @param port
-     *         Port of the Firebird server
+     *         port of the Firebird server
+     * @deprecated use {@link #setPortNumber(int)}; will not be removed for now
      */
+    @Deprecated(since = "7")
     void setPort(int port);
 
     /**
-     * @return The port of the Firebird server (default is {@code 3050})
+     * @return port of the Firebird server (default is {@code 3050})
+     * @deprecated use {@link #getPortNumber()}; will not be removed for now
      */
+    @Deprecated(since = "7")
     int getPort();
 
     /**
@@ -132,89 +139,21 @@ public interface FBManagerMBean extends AutoCloseable {
     void setFileName(String fileName);
 
     /**
-     * @return GDS plugin type name (default is {@link GDSFactory#getDefaultGDSType()})
+     * @return username
+     * @deprecated use {@link #getUser()}; will not be removed for now
      */
-    String getType();
-
-    /**
-     * Set the GDS plugin type to use.
-     *
-     * @param type
-     *         GDS plugin type name ({@code PURE_JAVA}, {@code NATIVE}, {@code EMBEDDED})
-     */
-    void setType(String type);
-
-    /**
-     * @return User name
-     */
+    @Deprecated(since = "7")
     String getUserName();
 
     /**
      * Set the username.
      *
      * @param userName
-     *         Username
+     *         username
+     * @deprecated use {@link #setUser(String)}; will not be removed for now
      */
+    @Deprecated(since = "7")
     void setUserName(String userName);
-
-    /**
-     * @return password
-     */
-    String getPassword();
-
-    /**
-     * Set the password.
-     *
-     * @param password
-     *         Password
-     */
-    void setPassword(String password);
-
-    /**
-     * @return SQL role to use.
-     */
-    String getRoleName();
-
-    /**
-     * @param roleName
-     *         SQL role to use.
-     */
-    void setRoleName(String roleName);
-
-    /**
-     * Sets the authentication plugins to try.
-     * <p>
-     * Invalid names are skipped during authentication.
-     * </p>
-     *
-     * @param authPlugins
-     *         comma-separated list of authentication plugins
-     * @since 5.0.8
-     */
-    void setAuthPlugins(String authPlugins);
-
-    /**
-     * Get the list of authentication plugins to try.
-     *
-     * @return comma-separated list of authentication plugins
-     * @since 5.0.8
-     */
-    String getAuthPlugins();
-
-    /**
-     * @return enable protocol value (see also {@link AttachmentProperties#getEnableProtocol()}.
-     * @since 6
-     */
-    String getEnableProtocol();
-
-    /**
-     * Sets the enable protocol value.
-     *
-     * @param enableProtocol
-     *         enable protocol value
-     * @since 6
-     */
-    void setEnableProtocol(String enableProtocol);
 
     /**
      * Set the database dialect to use when creating a new database.
