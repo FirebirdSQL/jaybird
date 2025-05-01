@@ -59,8 +59,7 @@ class FBSimpleDataSourceTest {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM RDB$DATABASE");
             JdbcResourceHelper.closeQuietly(ps);
         } catch (Exception e) {
-            e.printStackTrace();
-            fail("Preparing statement with property charSet equal to file.encoding should not fail");
+            fail("Preparing statement with property charSet equal to file.encoding should not fail", e);
         }
     }
 

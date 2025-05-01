@@ -33,21 +33,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
-import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
-import static org.firebirdsql.common.FBTestProperties.ENABLE_PROTOCOL;
-import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
-import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -106,12 +98,14 @@ class DatabaseUrlFormatsTest {
     @MethodSource
     void testConnectionWithSimpleDataSource(String serverName, Integer portNumber, String databaseName)
             throws Exception {
-        FBSimpleDataSource dataSource = new FBSimpleDataSource(FBTestProperties.getGdsType());
-        dataSource.setUser(DB_USER);
-        dataSource.setPassword(DB_PASSWORD);
-        dataSource.setEnableProtocol(ENABLE_PROTOCOL);
+        FBSimpleDataSource dataSource =
+                configureDefaultDbProperties(new FBSimpleDataSource(FBTestProperties.getGdsType()));
         dataSource.setServerName(serverName);
-        if (portNumber != null) dataSource.setPortNumber(portNumber);
+        if (portNumber == null) {
+            dataSource.setProperty(PropertyNames.portNumber, null);
+        } else {
+            dataSource.setPortNumber(portNumber);
+        }
         dataSource.setDatabaseName(databaseName);
 
         try (Connection connection = dataSource.getConnection()) {
@@ -132,6 +126,7 @@ class DatabaseUrlFormatsTest {
     private static List<String> urlsWithoutProtocolPrefix() {
         final String databasePath = getDatabasePath();
         final String serverName = DB_SERVER_URL;
+        final boolean localhost = isLocalhost();
         final String ipv6SafeServerName = serverName.indexOf(':') != -1 ? '[' + serverName + ']' : serverName;
         final int portNumber = DB_SERVER_PORT;
         final String gdsTypeName = GDS_TYPE;
@@ -147,7 +142,7 @@ class DatabaseUrlFormatsTest {
             if (portNumber == PropertyConstants.DEFAULT_PORT) {
                 urlFormats.add("%1$s:%3$s");
                 urlFormats.add("//%1$s/%3$s");
-                if (serverName.equals("localhost")) {
+                if (localhost) {
                     // no hostname + port:
                     urlFormats.add("%3$s");
                 }
@@ -174,11 +169,11 @@ class DatabaseUrlFormatsTest {
                         // NOTE: This assumes the default WNET service name is used
                         urlFormats.add("wnet://%1$s/%3$s");
                         urlFormats.add("\\\\%4$s\\%3$s");
-                        if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
+                        if (localhost) {
                             urlFormats.add("wnet://%3$s");
                         }
                     }
-                    if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
+                    if (localhost) {
                         urlFormats.add("xnet://%3$s");
                     }
                 }

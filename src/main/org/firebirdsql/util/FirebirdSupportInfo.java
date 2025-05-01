@@ -708,6 +708,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} if the nameless service manager is supported
+     */
+    public boolean supportsNamelessServiceManager() {
+        return isVersionEqualOrAbove(3);
+    }
+
+    /**
      * @return {@code true} if server supports metadata privileges like {@code CREATE DATABASE}
      */
     public boolean supportsMetadataPrivileges() {
