@@ -37,6 +37,18 @@ The following has been changed or fixed since Jaybird 5.0.7:
 * Improvement: added `authPlugins` property on `FBManager` (https://github.com/FirebirdSQL/jaybird/issues/865[#865])
 +
 As part of this change, the interface `FBManagerMBean` now extends `AttachmentProperties`, so that all attachment properties are accessible.
+* Improvement: increased default and maximum SQL info sizes used for retrieving statement information like columns, parameters and plan information (https://github.com/FirebirdSQL/jaybird/issues/868[#868])
++
+--
+* For pure Java connections:
+** protocol 12 (Firebird 2.5): 65535 (default and maximum),
+** protocol 13 (Firebird 3.0) and higher: 512 KiB default, 16 MiB maximum. +
+* For native connections:
+** Firebird 2.5 and higher: 65535 (default and maximum)
+--
++
+This change improves the performance of preparing statements with a lot of columns and parameters by reducing the number of round-trips needed to retrieve the information.
+It may also prevent (or reduce occurrences of) truncation of "`explained plans`" for statements with complex or extensive plans.
 
 [#jaybird-5-0-7-changelog]
 === Jaybird 5.0.7
