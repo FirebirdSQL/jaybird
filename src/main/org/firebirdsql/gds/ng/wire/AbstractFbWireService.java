@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -78,7 +78,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
 
     @Override
     public final boolean isAttached() {
-        return super.isAttached() && connection.isConnected();
+        return super.isAttached() && isConnected();
     }
 
     /**
@@ -88,9 +88,19 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
      *         If not connected.
      */
     protected final void checkConnected() throws SQLException {
-        if (!connection.isConnected()) {
+        if (!isConnected()) {
             throw FbExceptionBuilder.toNonTransientConnectionException(JaybirdErrorCodes.jb_notConnectedToServer);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@code true} if a physical connection to the server is established
+     */
+    @Override
+    protected final boolean isConnected() {
+        return connection.isConnected();
     }
 
     /**

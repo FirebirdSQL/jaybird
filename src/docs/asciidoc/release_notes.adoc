@@ -589,6 +589,8 @@ This means there may be undocumented changes to internal API.
 If you are confronted with such a change, let us know on {firebird-java}[firebird-java], so we can take this into account when documenting future changes.
 ====
 
+* `FbAttachment`
+** The `close()` method should no longer throw an exception if already closed, or not connected/attached.
 * `FbWireAsynchronousChannel`
 ** `connect(String, int, int)` was replaced by `connect(String, int)`
 * `FbWireOperations`

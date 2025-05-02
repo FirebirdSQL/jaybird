@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
@@ -69,6 +69,11 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
         if (!isAttached()) {
             throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_notAttachedToDatabase);
         }
+    }
+
+    @Override
+    protected boolean isConnected() {
+        return isAttached();
     }
 
     @Override

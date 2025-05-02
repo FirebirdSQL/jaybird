@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -76,7 +76,7 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
     @Override
     public final void close() throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkConnected();
+            if (!isConnected()) return;
             serviceListenerDispatcher.detaching(this);
             try {
                 internalDetach();

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
 
@@ -29,9 +29,12 @@ public interface FbAttachment extends AutoCloseable, ExceptionListenable {
 
     /**
      * Detaches and closes the connection.
+     * <p>
+     * If the attachment is already closed or otherwise not connected, this is a no-op.
+     * </p>
      *
      * @throws SQLException
-     *         If not currently connected, or another problem occurred detaching.
+     *         if a problem occurred detaching.
      */
     @Override
     void close() throws SQLException;

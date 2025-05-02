@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
@@ -163,19 +163,15 @@ class JnaDatabaseTest {
 
     @SuppressWarnings("resource")
     @Test
-    void testDetach_NotConnected() throws Exception {
+    void testClose_notConnected() throws Exception {
         JnaDatabase db = factory.connect(connectionInfo);
 
-        SQLException exception = assertThrows(SQLException.class, db::close);
-        // Note: the error is different from the one in the pure java implementation as we cannot discern between
-        // not connected and not attached
-        assertThat(exception, allOf(
-                message(startsWith("The connection is not attached to a database")),
-                sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR)));
+        // Close for not connected should work (no-op)
+        assertDoesNotThrow(db::close);
     }
 
     @Test
-    void testBasicDetach() throws Exception {
+    void testBasicClose() throws Exception {
         usesDatabase.createDefaultDatabase();
         JnaDatabase db = factory.connect(connectionInfo);
         try {
@@ -190,7 +186,7 @@ class JnaDatabaseTest {
     }
 
     @Test
-    void testDetach_openTransactions() throws Exception {
+    void testClose_openTransactions() throws Exception {
         usesDatabase.createDefaultDatabase();
         JnaDatabase db = factory.connect(connectionInfo);
         FbTransaction transaction = null;

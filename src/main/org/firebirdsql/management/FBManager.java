@@ -333,8 +333,7 @@ public class FBManager implements FBManagerMBean {
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, roleName);
             connectionProperties.setDatabaseName(fileName);
-            FbDatabase db = dbFactory.connect(connectionProperties);
-            try {
+            try (FbDatabase db = dbFactory.connect(connectionProperties)) {
                 db.attach();
                 if (forceCreate) {
                     db.dropDatabase();
@@ -342,8 +341,6 @@ public class FBManager implements FBManagerMBean {
                     // database exists, don't wipe it out
                     return;
                 }
-            } finally {
-                if (db.isAttached()) db.close();
             }
         } catch (SQLException e) {
             // we ignore it
@@ -384,12 +381,9 @@ public class FBManager implements FBManagerMBean {
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, roleName);
             connectionProperties.setDatabaseName(fileName);
-            FbDatabase db = dbFactory.connect(connectionProperties);
-            try {
+            try (FbDatabase db = dbFactory.connect(connectionProperties)) {
                 db.attach();
                 db.dropDatabase();
-            } finally {
-                if (db.isAttached()) db.close();
             }
         } catch (Exception e) {
             log.log(System.Logger.Level.ERROR, "Exception dropping database", e);

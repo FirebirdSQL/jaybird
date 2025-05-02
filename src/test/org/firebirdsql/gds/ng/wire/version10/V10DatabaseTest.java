@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -217,32 +217,30 @@ public class V10DatabaseTest {
     }
 
     @Test
-    public void testDetach_NotConnected() throws Exception {
+    public void testClose_notConnected() throws Exception {
         AbstractFbWireDatabase db = createDummyDatabase();
 
-        SQLException exception = assertThrows(SQLException.class, db::close);
-        assertThat(exception, allOf(
-                message(startsWith("No connection established to the database server")),
-                sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_FAILURE)));
+        // Close for not connected should work (no-op)
+        assertDoesNotThrow(db::close);
     }
 
     @Test
-    public void testDetach_NotAttached() throws Exception {
+    public void testClose_notAttached() throws Exception {
         usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             FbWireDatabase db = gdsConnection.identify();
             assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
 
-            // Detach for connected but not attached should work
-            db.close();
+            // Close for connected but not attached should work
+            assertDoesNotThrow(db::close);
 
-            assertFalse(gdsConnection.isConnected(), "Expected connection closed after detach");
+            assertFalse(gdsConnection.isConnected(), "Expected connection closed after close");
         }
     }
 
     @Test
-    public void testBasicDetach() throws Exception {
+    public void testBasicClose() throws Exception {
         usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
@@ -262,7 +260,7 @@ public class V10DatabaseTest {
     }
 
     @Test
-    public void testDetach_openTransactions() throws Exception {
+    public void testClose_openTransactions() throws Exception {
         usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();

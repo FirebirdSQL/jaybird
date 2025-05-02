@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -152,7 +152,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     @Override
     public final void close() throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkConnected();
+            if (!isConnected()) return;
             int activeTransactionCount = getActiveTransactionCount();
             if (activeTransactionCount > 0) {
                 // Throw open transactions as exception, fbclient doesn't disconnect with outstanding (unprepared)

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -151,6 +151,18 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
      * Checks if the attachment is connected, and throws a {@link SQLException} if it isn't connected.
      */
     protected abstract void checkConnected() throws SQLException;
+
+    /**
+     * Returns if this attachment is connected as checked by {@link #checkConnected()}.
+     * <p>
+     * In general, {@link #isAttached()} should be used. An attachment might be connected (e.g. TCP/IP connection
+     * established to the server), but not (yet) attached to a database or service.
+     * </p>
+     *
+     * @return {@code true} if connected
+     * @since 7
+     */
+    protected abstract boolean isConnected();
 
     /**
      * Performs {@link #close()} suppressing any exception.
