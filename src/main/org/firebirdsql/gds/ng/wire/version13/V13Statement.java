@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
-// SPDX-FileCopyrightText: Copyright 2015-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version13;
 
@@ -84,4 +84,17 @@ public class V13Statement extends V12Statement {
             }
         }
     }
+
+    @Override
+    public int getDefaultSqlInfoSize() {
+        return 512 * 1024;
+    }
+
+    @Override
+    public int getMaxSqlInfoSize() {
+        // It can be higher: 0xFFFE_FFFF serverside, and Integer.MAX_VALUE - 8 due to Java array size limitations
+        // 16 MiB is probably already excessive
+        return 16 * 1024 * 1024;
+    }
+
 }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
@@ -635,13 +635,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     @Override
     public int getDefaultSqlInfoSize() {
-        // TODO Test for an optimal buffer size
         return getMaxSqlInfoSize();
     }
 
     @Override
     public int getMaxSqlInfoSize() {
-        // TODO Is this the actual max for the v10 protocol, or is it 65535?
         return 32767;
     }
 }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2017 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version12;
 
@@ -18,6 +18,12 @@ public class V12Statement extends V11Statement {
      */
     public V12Statement(FbWireDatabase database) {
         super(database);
+    }
+
+    @Override
+    public int getMaxSqlInfoSize() {
+        // Theoretically, also protocol 11 (Firebird 2.1), but not supported since before Jaybird 5
+        return 65535;
     }
 
 }

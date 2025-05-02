@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2018 Artyom Smirnov
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later
@@ -439,14 +439,13 @@ public class JnaStatement extends AbstractFbStatement {
 
     @Override
     public int getDefaultSqlInfoSize() {
-        // TODO Test for an optimal buffer size
         return getMaxSqlInfoSize();
     }
 
     @Override
     public int getMaxSqlInfoSize() {
-        // TODO Is this the actual max, or is it 65535?
-        return 32767;
+        // Theoretically, also Firebird 2.1, but not supported since before Jaybird 5
+        return getDatabase().getServerVersion().isEqualOrAbove(2, 5) ? 65535 : 32767;
     }
 
     @Override
