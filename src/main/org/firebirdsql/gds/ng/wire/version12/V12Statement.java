@@ -36,4 +36,10 @@ public class V12Statement extends V11Statement {
         super(database);
     }
 
+    @Override
+    public int getMaxSqlInfoSize() {
+        // Theoretically, also protocol 11 (Firebird 2.1), but not supported since before Jaybird 5
+        return 65535;
+    }
+
 }

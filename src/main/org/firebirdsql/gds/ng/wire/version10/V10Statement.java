@@ -649,13 +649,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     @Override
     public int getDefaultSqlInfoSize() {
-        // TODO Test for an optimal buffer size
         return getMaxSqlInfoSize();
     }
 
     @Override
     public int getMaxSqlInfoSize() {
-        // TODO Is this the actual max for the v10 protocol, or is it 65535?
         return 32767;
     }
 }
