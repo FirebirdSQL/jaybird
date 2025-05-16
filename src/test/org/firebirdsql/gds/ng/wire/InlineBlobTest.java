@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.common.InfoResponseWriter;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbBlob;
+import org.firebirdsql.jaybird.fb.constants.BpbItems;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -13,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -24,7 +27,10 @@ import static org.firebirdsql.common.DataGenerator.createRandomBytes;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.gds.ISCConstants.isc_bad_segstr_handle;
+import static org.firebirdsql.gds.ISCConstants.isc_info_blob_max_segment;
+import static org.firebirdsql.gds.ISCConstants.isc_info_blob_num_segments;
 import static org.firebirdsql.gds.ISCConstants.isc_info_blob_total_length;
+import static org.firebirdsql.gds.ISCConstants.isc_info_blob_type;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.ISCConstants.isc_no_segstr_close;
 import static org.firebirdsql.gds.ISCConstants.isc_segstr_no_write;
@@ -287,20 +293,20 @@ class InlineBlobTest {
         byte[] bytesRead = blob.getSegment(5);
         assertArrayEquals(Arrays.copyOfRange(data, 5, 10), bytesRead, "Unexpected bytes read");
 
-        // NOTE: Not sure if this is server behaviour
         blob.seek(-5, FbBlob.SeekMode.ABSOLUTE);
+        assertTrue(blob.isOpen(), "blob should still be open after seeking before start of blob");
         bytesRead = blob.getSegment(5);
-        assertArrayEquals(Arrays.copyOfRange(data, blobLength - 5, blobLength), bytesRead, "Unexpected bytes read");
+        assertArrayEquals(Arrays.copyOfRange(data, 0, 5), bytesRead, "Unexpected bytes read");
 
         blob.seek(0, FbBlob.SeekMode.ABSOLUTE);
         bytesRead = blob.getSegment(5);
         assertArrayEquals(Arrays.copyOfRange(data, 0, 5), bytesRead, "Unexpected bytes read");
 
-        // NOTE: Not sure if this is server behaviour
-        blob.seek(-(blobLength + 5), FbBlob.SeekMode.ABSOLUTE);
-        assertTrue(blob.isOpen(), "blob should still be open after seeking before start of blob");
+        blob.seek(blobLength + 5, FbBlob.SeekMode.ABSOLUTE);
+        assertTrue(blob.isOpen(), "blob should still be open after seeking beyond end of blob");
+        assertTrue(blob.isEof(), "Expected end of blob");
         bytesRead = blob.getSegment(5);
-        assertArrayEquals(Arrays.copyOfRange(data, 0, 5), bytesRead, "Unexpected bytes read");
+        assertArrayEquals(new byte[0], bytesRead, "Unexpected bytes read");
     }
 
     @Test
@@ -310,20 +316,21 @@ class InlineBlobTest {
         InlineBlob blob = createInlineBlob(1, 5, new byte[0], data);
         blob.open();
 
-        blob.seek(5, FbBlob.SeekMode.ABSOLUTE_FROM_END);
+        blob.seek(-5, FbBlob.SeekMode.ABSOLUTE_FROM_END);
         byte[] bytesRead = blob.getSegment(5);
         assertArrayEquals(Arrays.copyOfRange(data, blobLength - 5, blobLength), bytesRead, "Unexpected bytes read");
 
-        // NOTE: Not sure if this is server behaviour
-        blob.seek(-5, FbBlob.SeekMode.ABSOLUTE_FROM_END);
+        blob.seek(5, FbBlob.SeekMode.ABSOLUTE_FROM_END);
+        assertTrue(blob.isOpen(), "blob should still be open after seeking beyond end of blob");
+        assertTrue(blob.isEof(), "Expected end of blob");
         bytesRead = blob.getSegment(5);
-        assertArrayEquals(Arrays.copyOfRange(data, 5, 10), bytesRead, "Unexpected bytes read");
+        assertArrayEquals(new byte[0], bytesRead, "Unexpected bytes read");
 
-        blob.seek(blobLength, FbBlob.SeekMode.ABSOLUTE_FROM_END);
+        blob.seek(-blobLength, FbBlob.SeekMode.ABSOLUTE_FROM_END);
         bytesRead = blob.getSegment(5);
         assertArrayEquals(Arrays.copyOfRange(data, 0, 5), bytesRead, "Unexpected bytes read");
 
-        blob.seek(blobLength + 5, FbBlob.SeekMode.ABSOLUTE_FROM_END);
+        blob.seek(-blobLength - 5, FbBlob.SeekMode.ABSOLUTE_FROM_END);
         assertTrue(blob.isOpen(), "blob should still be open after seeking before start of blob");
         bytesRead = blob.getSegment(5);
         assertArrayEquals(Arrays.copyOfRange(data, 0, 5), bytesRead, "Unexpected bytes read");
@@ -374,11 +381,11 @@ class InlineBlobTest {
 
     @Test
     void getBlobInfo_returnsInput_ignoringRequestedItems() throws Exception {
-        final byte[] blobInfo = createRandomBytes(11);
+        final byte[] blobInfo = createBlobInfo(2, 3, 4, BpbItems.TypeValues.isc_bpb_type_stream);
         InlineBlob blob = createInlineBlob(1, 5, blobInfo, new byte[0]);
         blob.open();
 
-        byte[] result = blob.getBlobInfo(new byte[] { isc_info_blob_total_length, isc_info_end }, 10);
+        byte[] result = blob.getBlobInfo(getKnownItems(), 100);
         assertNotSame(blobInfo, result, "returned blob info should not be the same array as input");
         assertArrayEquals(blobInfo, result, "returned blob info should have same content as input");
     }
@@ -395,7 +402,7 @@ class InlineBlobTest {
 
     @Test
     void copy_returnsInitiallyClosedBlobWithSameData() throws Exception {
-        final byte[] info = createRandomBytes(10);
+        final byte[] info = createBlobInfo(3, 10, 15, BpbItems.TypeValues.isc_bpb_type_segmented);
         final byte[] data = createRandomBytes(15);
         InlineBlob blob = createInlineBlob(1, 5, info, data);
         blob.open();
@@ -405,12 +412,30 @@ class InlineBlobTest {
         assertNotSame(blob, copy, "blob and copy should not be the same object");
         assertFalse(copy.isOpen(), "copy should be closed");
         copy.open();
-        assertArrayEquals(info, copy.getBlobInfo(new byte[] { isc_info_end }, 10), "info of copy");
+        assertArrayEquals(info, copy.getBlobInfo(getKnownItems(), 100), "info of copy");
         assertArrayEquals(data, copy.getSegment(15), "data of copy");
     }
 
     private InlineBlob createInlineBlob(long blobId, int transactionHandle, byte[] blobInfo, byte[] data) {
         return new InlineBlob(database, blobId, transactionHandle, blobInfo, data);
+    }
+
+    /**
+     * @return known blob info items in the same order as used by {@link #createBlobInfo(int, int, int, int)}.
+     */
+    private byte[] getKnownItems() {
+        return new byte[] {
+                isc_info_blob_num_segments, isc_info_blob_max_segment, isc_info_blob_total_length, isc_info_blob_type,
+                isc_info_end };
+    }
+
+    private byte[] createBlobInfo(int numSegments, int maxSegment, int totalLength, int type) throws IOException {
+        return new InfoResponseWriter()
+                .addInt(isc_info_blob_num_segments, numSegments)
+                .addInt(isc_info_blob_max_segment, maxSegment)
+                .addInt(isc_info_blob_total_length, totalLength)
+                .addByte(isc_info_blob_type, type)
+                .toArray();
     }
 
 }

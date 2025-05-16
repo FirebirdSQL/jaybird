@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
@@ -819,10 +819,7 @@ public abstract class AbstractStatementTest {
     }
 
     protected void allocateStatement() throws SQLException {
-        if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
-            transaction = getTransaction();
-        }
-        statement = db.createStatement(transaction);
+        statement = db.createStatement(getOrCreateTransaction());
     }
 
     @AfterEach

@@ -4,6 +4,7 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.BlobHelper;
+import org.firebirdsql.gds.ng.CachedInfoResponse;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -19,7 +20,6 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Objects.requireNonNull;
-import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
 import static org.firebirdsql.jaybird.util.ByteArrayHelper.validateBufferLength;
 
@@ -43,7 +43,7 @@ public final class InlineBlob implements FbBlob {
     private final FbDatabase database;
     private final long blobId;
     private final int transactionHandle;
-    private final byte[] info;
+    private final CachedInfoResponse info;
     private final byte[] data;
     private final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     // Current position in the blob, a negative value signals the blob is closed
@@ -64,11 +64,17 @@ public final class InlineBlob implements FbBlob {
      *         actual blob data without segments (cannot be {@code null})
      */
     public InlineBlob(FbDatabase database, long blobId, int transactionHandle, byte[] info, byte[] data) {
+        this(database, blobId, transactionHandle,
+                requireNonNull(info, "info").length != 0 ? new CachedInfoResponse(info) : CachedInfoResponse.empty(),
+                data);
+    }
+
+    private InlineBlob(FbDatabase database, long blobId, int transactionHandle, CachedInfoResponse info, byte[] data) {
         this.database = database;
         this.blobId = blobId;
         this.transactionHandle = transactionHandle;
-        // NOTE: we're not copying info and data to avoid overhead
-        this.info = requireNonNull(info, "info").length != 0 ? info : new byte[] { isc_info_end };
+        this.info = info;
+        // NOTE: we're not copying data to avoid overhead
         this.data = requireNonNull(data, "data");
     }
 
@@ -207,25 +213,13 @@ public final class InlineBlob implements FbBlob {
         try (var ignored = withLock()) {
             checkBlobOpen();
             // NOTE: We're not distinguishing between stream or segmented blob, as the internal representation is
-            // the same in this implementation
-            // TODO Verify behaviour for negative offsets for ABSOLUTE/ABSOLUTE_FROM_END against server behaviour
-            switch (seekMode) {
-            case ABSOLUTE -> {
-                if (offset >= 0) {
-                    position = Math.min(offset, data.length);
-                } else {
-                    position = Math.max(0, data.length + offset);
-                }
-            }
-            case ABSOLUTE_FROM_END -> {
-                if (offset >= 0) {
-                    position = Math.max(0, data.length - offset);
-                } else {
-                    position = Math.min(-offset, data.length);
-                }
-            }
-            case RELATIVE -> position = Math.max(0, Math.min(position + offset, data.length));
-            }
+            // the same in this implementation; this may result in behavioural difference if a segmented blob doesn't
+            // get cached or is too big to be sent inline.
+            position = switch (seekMode) {
+            case ABSOLUTE -> Math.min(Math.max(0, offset), data.length);
+            case ABSOLUTE_FROM_END -> Math.max(0, Math.min(data.length + offset, data.length));
+            case RELATIVE -> Math.max(0, Math.min(position + offset, data.length));
+            };
         } catch (SQLException e) {
             errorOccurred(e);
             throw e;
@@ -258,17 +252,14 @@ public final class InlineBlob implements FbBlob {
     /**
      * {@inheritDoc}
      * <p>
-     * This implementation ignores {@code requestItems} and {@code bufferLength} and returns the information buffer from
-     * the inline blob. It behaves as if {@code requestItems} contains {@code { isc_info_blob_num_segments,
-     * isc_info_blob_max_segment, isc_info_blob_total_length, isc_info_blob_type, isc_info_end }}.
+     * Unknown blob info items are ignored, and only known items are returned.
      * </p>
      */
     @Override
     public byte[] getBlobInfo(byte[] requestItems, int bufferLength) throws SQLException {
-        // TODO Maybe filter and return only the requested items, in the requested order?
         try (var ignored = withLock()) {
             checkBlobOpen();
-            return info.clone();
+            return info.filtered(requestItems);
         } catch (SQLException e) {
             errorOccurred(e);
             throw e;
@@ -289,7 +280,7 @@ public final class InlineBlob implements FbBlob {
      * @return a copy of this inline blob, it is initially closed.
      */
     public InlineBlob copy() {
-        // We intentionally do not copy info and data arrays
+        // We intentionally do not copy data array
         return new InlineBlob(database, blobId, transactionHandle, info, data);
     }
 
