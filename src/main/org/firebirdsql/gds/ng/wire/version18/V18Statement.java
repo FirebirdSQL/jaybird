@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version18;
 
@@ -75,11 +75,11 @@ public class V18Statement extends V16Statement {
 
     protected void sendFetchScroll(FetchType fetchType, int fetchSize, int position) throws SQLException, IOException {
         final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_fetch_scroll);
-        xdrOut.writeInt(getHandle());
-        xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor()));
-        xdrOut.writeInt(0); // out_message_number = out_message_type
-        xdrOut.writeInt(fetchSize); // fetch size
+        xdrOut.writeInt(WireProtocolConstants.op_fetch_scroll); // p_operation
+        xdrOut.writeInt(getHandle()); // p_sqldata_statement
+        xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor())); // p_sqldata_blr
+        xdrOut.writeInt(0); // p_sqldata_message_number
+        xdrOut.writeInt(fetchSize); // p_sqldata_messages - fetch size
         xdrOut.writeInt(fetchType.getFbFetchType()); // p_sqldata_fetch_op
         xdrOut.writeInt(position); // p_sqldata_fetch_pos
     }

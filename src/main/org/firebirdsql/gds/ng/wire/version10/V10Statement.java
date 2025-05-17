@@ -480,7 +480,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         xdrOut.writeInt(getHandle()); // p_sqldata_statement
         xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor())); // p_sqldata_blr
         xdrOut.writeInt(0); // p_sqldata_message_number
-        xdrOut.writeInt(fetchSize); // p_sqldata_messages
+        xdrOut.writeInt(fetchSize); // p_sqldata_messages - fetch size
     }
 
     /**

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
@@ -170,11 +170,11 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * </p>
      * <p>
      * The caller is responsible for tracking and correcting for server-side positional state, taking into account any
-     * rows already fetched. For example, if 100 rows have been fetched with {@code NEXT} or {@code PRIOR}, and 80
-     * rows are still in the local buffer, the server-side position is actually 80 rows ahead (or behind). The next
-     * fetch with {@code RELATIVE} will need to correct this in {@code position}, and a {@code PRIOR} after
-     * a {@code NEXT} or a {@code NEXT} after a {@code PRIOR} will need to reposition with {@code RELATIVE} or
-     * {@code ABSOLUTE}, or know how many rows to ignore from the fetched batch.
+     * rows already fetched. For example, if 100 rows have been fetched with {@code NEXT}, and 80 rows are still in
+     * the local buffer, the server-side position is actually 80 rows ahead. The next fetch with {@code RELATIVE} will
+     * need to correct for this in {@code position}, and a {@code PRIOR} after a {@code NEXT} or a {@code NEXT} after
+     * a {@code PRIOR} will need to reposition with {@code RELATIVE} or {@code ABSOLUTE}, or know how many rows to
+     * ignore from the fetched batch.
      * </p>
      * <p>
      * If an asynchronous fetch is pending, the behaviour depends on the value of {@code fetchType}:
