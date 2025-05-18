@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version16;
 
@@ -131,7 +131,7 @@ public class V16Statement extends V13Statement {
         BlrCalculator blrCalculator = getBlrCalculator();
         xdrOut.writeInt(WireProtocolConstants.op_batch_msg);
         xdrOut.writeInt(getHandle()); // p_batch_statement
-        xdrOut.writeInt(rowValues.size());
+        xdrOut.writeInt(rowValues.size()); // p_batch_messages
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         XdrOutputStream rowOut = new XdrOutputStream(baos, 512);
         for (RowValue rowValue : rowValues) {
