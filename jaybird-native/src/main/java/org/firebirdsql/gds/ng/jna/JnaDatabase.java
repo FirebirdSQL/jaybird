@@ -501,5 +501,16 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             }
         }
     }
-    
+
+    @Override
+    public void forceClose() throws SQLException {
+        try {
+            cancelOperation(fb_cancel_abort);
+        } finally {
+            databaseListenerDispatcher.detached(this);
+            databaseListenerDispatcher.shutdown();
+            exceptionListenerDispatcher.shutdown();
+        }
+    }
+
 }

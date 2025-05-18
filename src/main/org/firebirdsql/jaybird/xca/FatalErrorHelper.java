@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2005-2007 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.xca;
 
@@ -207,6 +207,7 @@ public final class FatalErrorHelper {
 //                                          //InterBase just like Dbase.
 //
             ISCConstants.isc_shutdown,
+            ISCConstants.isc_exception_stack_overflow,
             ISCConstants.isc_att_shutdown,
 //        ISCConstants.isc_io_create_err,
 //        ISCConstants.isc_io_open_err,
@@ -233,6 +234,7 @@ public final class FatalErrorHelper {
             ISCConstants.isc_net_write_err,
             ISCConstants.isc_unavailable,
             ISCConstants.isc_shutdown,
+            ISCConstants.isc_exception_stack_overflow,
             ISCConstants.isc_att_shutdown,
     };
 
