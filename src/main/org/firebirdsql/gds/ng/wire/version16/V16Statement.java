@@ -140,6 +140,10 @@ public class V16Statement extends V13Statement {
             rowOut.flush();
             byte[] rowBytes = baos.toByteArray();
             xdrOut.write(rowBytes);
+            // TODO Verify if this padding is necessary, as writeSqlData should already result in multiples of 4.
+            //  Possibly this is an interpretation error or reverse-engineering mistake on our side. Commenting it out
+            //  does not result in test failures.
+            //  If unnecessary, remove this, and write directly to xdrOut instead of using the intermediate baos.
             xdrOut.writeZeroPadding((4 - rowBytes.length) & 3);
         }
         xdrOut.flush();
