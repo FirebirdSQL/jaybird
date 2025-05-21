@@ -371,7 +371,7 @@ artifactId:: `jaybird`
 version:: `{version_simple}.<java>{version_tag}` (where `<java>` is `java11` or `java8`)
 
 ifeval::["{version_tag}" == "-SNAPSHOT"]
-NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://oss.sonatype.org/content/repositories/snapshots
+NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://central.sonatype.com/repository/maven-snapshots
 endif::[]
 
 For example:
