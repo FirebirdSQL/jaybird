@@ -881,7 +881,7 @@ The size includes segment lengths, so the actual maximum blob data received is `
 +
 The default can be changed with system property `org.firebirdsql.jdbc.defaultMaxInlineBlobSize`.
 
-`maxBlobCacheSize` (aliases: `max_blob_cache_size`, `isc_dpb max_blob_cache_size`)::
+`maxBlobCacheSize` (aliases: `max_blob_cache_size`, `isc_dpb_max_blob_cache_size`)::
 Maximum size in bytes -- per connection -- of the blob cache (default: `10485760` or 10 MiB). +
 A value of `0` will disable the cache, but does not disable sending of inline blobs.
 Set `maxInlineBlobSize` to `0` to disable sending of inline blobs.
@@ -898,7 +898,7 @@ If the maximum blob cache size is reached, received inline blobs will be discard
 For pure Java connections, an inline blob is removed from the cache on first use, or when the transaction associated with the blob ends.
 The native client implementation may have different cache eviction rules.
 
-As pure java connections remove the inline blob from the cache on first use, subsequent attempts to read the same blob -- by getting a different instance of `java.sql.Blob` or through multiple calls to the `ResultSet.getXXX` methods -- will use a server-side blob.
+As pure Java connections remove the inline blob from the cache on first use, subsequent attempts to read the same blob -- by getting a different instance of `java.sql.Blob` or through multiple calls to the `ResultSet.getXXX` methods -- will use a server-side blob.
 This can also happen if multiple columns or rows, even in different result sets on the same connection, point to the same blob id in the same transaction.
 
 If you execute queries returning blobs, while those blobs are never actually opened, you may fill up the cache and later received inline blobs are then discarded.
