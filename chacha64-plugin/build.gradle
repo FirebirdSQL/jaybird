@@ -132,8 +132,8 @@ publishing {
         maven {
             url = project.isReleaseVersion.get() ? project.releaseRepository : project.snapshotRepository
             credentials {
-                username = findProperty('ossrhUsername') ?: null
-                password = findProperty('ossrhPassword') ?: null
+                username = findProperty('centralUsername') ?: null
+                password = findProperty('centralPassword') ?: null
             }
         }
     }

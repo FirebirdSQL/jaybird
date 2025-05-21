@@ -177,8 +177,8 @@ publishing {
         maven {
             url = project.isReleaseVersion.get() ? project.releaseRepository : project.snapshotRepository
             credentials {
-                username = findProperty('ossrhUsername') ?: null
-                password = findProperty('ossrhPassword') ?: null
+                username = findProperty('centralUsername') ?: null
+                password = findProperty('centralPassword') ?: null
             }
         }
     }
@@ -187,9 +187,9 @@ publishing {
 allprojects {
     tasks.withType(PublishToMavenRepository).each {
         it.doFirst {
-            if (findProperty('ossrhUsername') == null || findProperty('ossrhPassword') == null) {
+            if (findProperty('centralUsername') == null || findProperty('centralPassword') == null) {
                 throw new RuntimeException('No credentials for publishing, make sure to specify the properties ' +
-                        'credentialsPassphrase, or ossrhUsername and ossrhPassword. See devdoc/publish.md for details.')
+                        'credentialsPassphrase, or centralUsername and centralPassword. See devdoc/publish.md for details.')
             }
         }
     }
