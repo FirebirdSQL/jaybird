@@ -5,8 +5,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 5, Jaybird 6, Jaybird 7
+* Published: 2025-05-21
+* Implemented in: Jaybird 5.0.8, Jaybird 6.0.2, Jaybird 7
 
 == Type
 
