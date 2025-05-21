@@ -13,7 +13,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: juarezr/firebirdsql-github-action@v2.0.0
+      - uses: juarezr/firebirdsql-github-action@v2.0.1
         with:
           version: '5.0.2'
           firebird_root_password: 'masterkey'
