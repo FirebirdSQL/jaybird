@@ -213,7 +213,7 @@ endif::[]
 ifeval::["{version_tag}" == "-SNAPSHOT"]
 Jaybird {version_wo_target} is available on the Sonatype snapshot repository.
 
-NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://oss.sonatype.org/content/repositories/snapshots
+NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://central.sonatype.com/repository/maven-snapshots
 endif::[]
 
 [horizontal.compact]
