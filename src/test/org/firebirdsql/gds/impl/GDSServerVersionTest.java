@@ -30,7 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.List;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -236,9 +236,9 @@ class GDSServerVersionTest {
 
     @Test
     void testGetRawVersions() throws Exception {
-        var version = GDSServerVersion.parseRawVersion(TEST_VERSION_30);
+        GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_VERSION_30);
 
-        assertEquals(List.of(TEST_VERSION_30), version.getRawVersions(), "rawVersions");
+        assertEquals(Arrays.asList(TEST_VERSION_30), version.getRawVersions(), "rawVersions");
     }
 
 }

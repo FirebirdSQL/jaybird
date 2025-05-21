@@ -33,8 +33,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
@@ -341,7 +341,9 @@ class JnaStatementTest extends AbstractStatementTest {
         if (size > 0) {
             byte[] data = new byte[size];
             blob.get(data, 0, size);
-            assertEquals("x".repeat(size), new String(data, StandardCharsets.US_ASCII));
+            byte[] expected = new byte[size];
+            Arrays.fill(expected, (byte) 'x');
+            assertArrayEquals(expected, data);
         }
         long receivedBytesAfter = getReceivedBytes();
         long receivedBytesDifference = receivedBytesAfter - receivedBytesBefore;
