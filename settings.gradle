@@ -19,8 +19,8 @@ dependencyResolutionManagement {
         }
 
         testLibs {
-            version('junit', '5.12.1')
-            version('mockito', '5.16.1')
+            version('junit', '5.12.2')
+            version('mockito', '5.18.0')
 
             library('junit-bom', 'org.junit', 'junit-bom').versionRef('junit')
             library('junit-jupiter', 'org.junit.jupiter', 'junit-jupiter').withoutVersion()
