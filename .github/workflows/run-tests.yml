@@ -12,7 +12,7 @@ jobs:
           - version: 8
             profile: java8
           - version: 11
-            profiles: java11
+            profile: java11
     runs-on: ubuntu-latest
     steps:
       - name: Login to Docker Hub
@@ -37,7 +37,7 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/Branch_5_0' }}
       - name: Build with Gradle
-        run: ./gradlew test -PbuildProfile=java${{ matrix.java.profile }} -Ptest.dbondocker=true -Ptest.db.dir=/var/lib/firebird/data
+        run: ./gradlew test -PbuildProfile=${{ matrix.java.profile }} -Ptest.dbondocker=true -Ptest.db.dir=/var/lib/firebird/data
       - name: Store Report Artifact
         uses: actions/upload-artifact@v4
         if: always()
