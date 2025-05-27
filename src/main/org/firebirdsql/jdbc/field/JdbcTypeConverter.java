@@ -46,7 +46,7 @@ public final class JdbcTypeConverter {
      * Determines if a field descriptor matches a JDBC type value from {@link java.sql.Types}.
      *
      * @param fieldDescriptor
-     *         Field descritpor
+     *         Field descriptor
      * @param jdbcType
      *         JDBC type
      * @return {@code true} if the field descriptor and JDBC type are equivalent (using {@link #toJdbcType(FieldDescriptor)})

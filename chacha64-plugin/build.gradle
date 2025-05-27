@@ -44,7 +44,7 @@ jar {
                 'Implementation-Vendor-Id': project.'implementation.vendor.id',
                 'Bundle-License': 'LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause',
                 'SPDX-License-Identifier': 'LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause',
-                'SPDX-FileCopyrightText': "Copyright 2001-${project.YEAR} Firebird development team and invidual contributors"
+                'SPDX-FileCopyrightText': "Copyright 2001-${project.YEAR} Firebird development team and individual contributors"
         )
     }
 }

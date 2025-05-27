@@ -300,7 +300,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
     }
 
     /**
-     * Adds the backup source for the backup opration, depending on the manager used
+     * Adds the backup source for the backup operation, depending on the manager used
      *
      * @param backupSPB
      *         The buffer to be used during the backup operation

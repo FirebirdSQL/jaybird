@@ -151,7 +151,7 @@ public interface EventManager extends AttachmentProperties, AutoCloseable {
      *
      * @param eventName
      *         The name of the event to wait for
-     * @return The number of occurences of the requested event
+     * @return The number of occurrences of the requested event
      * @throws InterruptedException
      *         If interrupted while waiting
      * @throws SQLException
@@ -166,7 +166,7 @@ public interface EventManager extends AttachmentProperties, AutoCloseable {
      * {@code eventName} to occur. A timeout value of {@code 0} means wait indefinitely.
      * </p>
      * <p>
-     * The return value is the number of occurences of the event in question, or {@code -1} if the call timed out.
+     * The return value is the number of occurrences of the event in question, or {@code -1} if the call timed out.
      * </p>
      *
      * @param eventName
