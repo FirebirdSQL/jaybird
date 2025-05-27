@@ -23,7 +23,7 @@ import java.sql.SQLException;
 public interface TraceManager extends ServiceManager {
 
     /**
-     * Starts a trace session with an optioanl trace session name and configuration
+     * Starts a trace session with an optional trace session name and configuration
      *
      * @param traceSessionName
      *         The trace session name (optional)

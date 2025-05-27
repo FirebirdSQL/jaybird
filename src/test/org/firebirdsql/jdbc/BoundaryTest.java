@@ -118,8 +118,8 @@ class BoundaryTest {
             }
             statement.setBytes(1, guid);
             statement.setString(2, "Further");
-            statement.setString(3, "Further infomation field");
-            statement.setString(4, "Field to provide Further infomation capture");
+            statement.setString(3, "Further information field");
+            statement.setString(4, "Field to provide Further information capture");
             statement.setInt(5, 2);
             statement.setInt(6, 1);
             statement.executeUpdate(); // <---- WE WILL LOCK
@@ -141,8 +141,8 @@ class BoundaryTest {
             statement.clearParameters();
             // statement.setBytes( 1, new byte[16] );
             statement.setString(1, "Further");
-            statement.setString(2, "Further infomation field");
-            statement.setString(3, "Field to provide Further infomation capture");
+            statement.setString(2, "Further information field");
+            statement.setString(3, "Field to provide Further information capture");
             statement.setInt(4, 2);
             statement.setInt(5, 1);
             statement.executeUpdate(); // <---- WE WILL LOCK

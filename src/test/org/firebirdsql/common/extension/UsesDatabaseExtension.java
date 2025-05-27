@@ -142,7 +142,7 @@ public abstract class UsesDatabaseExtension {
     }
 
     /**
-     * Create a rule to intialize (and drop) a test database with specific initialization statements.
+     * Create a rule to initialize (and drop) a test database with specific initialization statements.
      * <p>
      * Statements are executed in a single transaction. If you need intermediate commits, add statement
      * {@code COMMIT WORK} (case insensitive).
@@ -176,7 +176,7 @@ public abstract class UsesDatabaseExtension {
     }
 
     /**
-     * Create a rule to intialize (and drop) a test database with specific initialization statements.
+     * Create a rule to initialize (and drop) a test database with specific initialization statements.
      * <p>
      * Statements are executed in a single transaction. If you need intermediate commits, add statement
      * {@code COMMIT WORK} (case insensitive).
