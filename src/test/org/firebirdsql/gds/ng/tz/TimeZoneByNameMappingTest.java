@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.tz;
 
@@ -668,8 +668,12 @@ class TimeZoneByNameMappingTest {
                 testCase(64906, "W-SU"),
                 testCase(64905, "WET"),
                 testCase(64904, "Zulu"),
-                testCase(64903, "America/Godthab", "America/Godthab", 65414), // was America/Nuuk (see also TimeZoneMapping)
-                testCase(64902, "Asia/Qostanay")
+                testCase(64903, "America/Nuuk"),
+                testCase(64902, "Asia/Qostanay"),
+                testCase(64901, "Pacific/Kanton"),
+                testCase(64900, "Europe/Kyiv"),
+                testCase(64899, "America/Ciudad_Juarez"),
+                testCase(64898, "GMT-03:00", "GMT-03:00", 1439) // was America/Coyhaique (see also TimeZoneMapping)
         );
     }
 
