@@ -57,6 +57,10 @@ It may also prevent truncation of "`explained plans`" for statements with very c
 * Improvement: backported inline blob support (Firebird 5.0.3 and higher) from Jaybird 7 (https://github.com/FirebirdSQL/jaybird/issues/870[#870])
 +
 See also <<blob-performance-inline-blob>>.
+* Improvement: The time zone mapping was updated (https://github.com/FirebirdSQL/jaybird/issues/874[#874])
+** The following time zone ids were added: `64901` => `Pacific/Kanton`, `64900` => `Europe/Kyiv`, `64899` => `America/Ciudad_Juarez`, `64898` => `GMT-03:00` (should be `America/Coyhaique`, but that zone name is not yet known in Java)
+** Time zone id `64903` is now mapped to `America/Nuuk`;
+previously it was mapped to `America/Godthab` as older versions of Java did not know `America/Nuuk`.
 
 === Jaybird 6.0.1
 
