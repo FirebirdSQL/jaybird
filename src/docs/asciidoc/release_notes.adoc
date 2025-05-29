@@ -345,17 +345,20 @@ See also <<java-support>> in <<whats-new-in-jaybird-5>>.
 Jaybird supports the following specifications:
 
 |===
-| Specification | Notes
+|Specification |Notes
 
-| JDBC 4.3
-| All JDBC 4.3 methods for features supported by Firebird;
+|JDBC 4.4
+|If a security manager is available, the driver still performs `SQLPermission` checks.
+
+|JDBC 4.3
+|All JDBC 4.3 methods for features supported by Firebird;
 Java 9 and higher supported using the Java 8 or Java 11 driver.
 
-| JDBC 4.2
-| All JDBC 4.2 methods for features supported by Firebird.
+|JDBC 4.2
+|All JDBC 4.2 methods for features supported by Firebird.
 
-| JTA 1.0.1
-| Implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
+|JTA 1.0.1
+|Implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
 |===
 
 [#getting-jaybird-5]
