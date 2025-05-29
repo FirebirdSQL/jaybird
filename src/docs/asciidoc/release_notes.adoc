@@ -140,13 +140,16 @@ See also <<java-support>> in <<whats-new-in-jaybird-7>>.
 Jaybird supports the following specifications:
 
 |===
-| Specification | Notes
+|Specification |Notes
 
-| JDBC 4.3
-| All JDBC 4.3 methods for features supported by Firebird.
+|JDBC 4.4
+|If a security manager is available, the driver still performs `SQLPermission` checks.
 
-| JTA 1.0.1
-| Implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
+|JDBC 4.3
+|All JDBC 4.3 methods for features supported by Firebird.
+
+|JTA 1.0.1
+|Implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
 |===
 
 [#support]
