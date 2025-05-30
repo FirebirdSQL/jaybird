@@ -170,7 +170,6 @@ class FBResultSetMetaDataParametrizedTest {
                 create(17, "java.sql.Timestamp", 19, "TIMESTAMP_FIELD", "TIMESTAMP_FIELD", TIMESTAMP, "TIMESTAMP", 19, 0, TABLE_NAME, columnNullable, true, false),
                 create(18, "[B", 0, "BLOB_FIELD", "BLOB_FIELD", LONGVARBINARY, "BLOB SUB_TYPE BINARY", 0, 0, TABLE_NAME, columnNullable, false, false),
                 create(19, "java.lang.String", 0, "BLOB_TEXT_FIELD", "BLOB_TEXT_FIELD", LONGVARCHAR, "BLOB SUB_TYPE TEXT", 0, 0, TABLE_NAME, columnNullable, false, false),
-                // TODO Report actual subtype value
                 create(20, "java.sql.Blob", 0, "BLOB_MINUS_ONE", "BLOB_MINUS_ONE", BLOB, "BLOB SUB_TYPE -1", 0, 0, TABLE_NAME, columnNullable, false, false)
         ));
         final FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
