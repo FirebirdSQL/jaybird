@@ -180,7 +180,7 @@ Feedback can be sent to the {firebird-java}[Firebird-java mailing list] or repor
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 3.0.12, Firebird 4.0.5, Firebird 5.0.2 and a recent snapshot of Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
+Jaybird {version_wo_target} was tested against Firebird 3.0.12, Firebird 4.0.5, Firebird 5.0.2, and recent snapshots of Firebird 5.0.3 and Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
 Firebird 2.5 and older are not supported.
 
 Firebird 6.0 is currently also not considered supported (see also <<firebird-support>> in <<whats-new-in-jaybird-6>>).
@@ -527,7 +527,7 @@ See also <<unsupported-protocol>>.
 === Pure Java will not connect to unsupported Firebird versions by default
 
 The pure Java protocol will by default no longer try the wire protocol versions of unsupported Firebird versions.
-This means that -- by default -- only protocol version 13 (Firebird 3.0) -- 18 (Firebird 5.0) are tried.
+This means that -- by default -- only protocol version 13 (Firebird 3.0) -- 19 (Firebird 5.0.3 and higher) are tried.
 As a result, attempts to connect to Firebird 2.5 or earlier will result in error "`__connection rejected by remote interface__`" (`335544421` or `isc_connect_reject`).
 
 The connection property `enableProtocol` can enable unsupported protocols, assuming a suitable protocol implementation is available on the classpath.
@@ -581,7 +581,7 @@ Unsupported protocol versions may be removed in future major releases of Jaybird
 |16footnote:[Jaybird has no protocol 17 implementation]
 
 |5.0
-|18
+|19footnote:[since Firebird 5.0.3, version 18 for 5.0.0 -- 5.0.2]
 
 |===
 
