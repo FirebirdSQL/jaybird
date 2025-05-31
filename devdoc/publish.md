@@ -16,8 +16,11 @@ also below).
 The `assemble` task is not strictly necessary, but will also generate the `dist`
 zip and sign it.
 
-Publishing to Maven Central (non-SNAPSHOT releases) requires an explicit close 
-and release through <https://central.sonatype.com/publishing/deployments>.
+Publishing to Maven Central (non-SNAPSHOT releases) requires the following
+additional steps:
+
+1. Promote the published artifacts to Central Portal through the SwaggerUI <https://ossrh-staging-api.central.sonatype.com/swagger-ui/>
+2. An explicit close through <https://central.sonatype.com/publishing/deployments>.
 
 To be able to deploy, you need the following:
 
