@@ -7,9 +7,9 @@
 :source-highlighter: prettify
 :toc: left
 :icons: font
-:jaybird6-full-version: 6.0.1
+:jaybird6-full-version: 6.0.2
 :jaybird6-jna-version: 5.17.0
-:jaybird5-full-version: 5.0.7
+:jaybird5-full-version: 5.0.8
 :jaybird5-template-version: {jaybird5-full-version}.<java>
 :jaybird5-example-version: {jaybird5-full-version}.java11
 :jaybird5-jna-version: 5.17.0
@@ -24,7 +24,7 @@
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/faq.html
 
 ////
-SPDX-FileCopyrightText: Copyright 2021-2024 Firebird development team and individual contributors
+SPDX-FileCopyrightText: Copyright 2021-2025 Firebird development team and individual contributors
 SPDX-FileCopyrightText: Copyright 2002-2004 Rick Fincher
 SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 SPDX-License-Identifier: LicenseRef-PDL-1.0
@@ -307,13 +307,13 @@ Each release is tagged in the repository.
 [#how-is-jaybird-licensed]
 == How is Jaybird licensed?
 
-Jaybird JDBC driver is distributed under the GNU Lesser General Public License (LGPL).
+The Jaybird JDBC driver is distributed under the GNU Lesser General Public License (LGPL).
 Text of the license can be obtained from http://www.gnu.org/copyleft/lesser.html.
 
 Using Jaybird (by importing Jaybird's public interfaces in your Java code), and extending Jaybird by subclassing or implementation of an extension interface (but not abstract or concrete class) is considered by the authors of Jaybird to be dynamic linking.
 Hence, our interpretation of the LGPL is that the use of the unmodified Jaybird source does not affect the license of your application code.
 
-Even more, all extension interfaces to which an application might want to link are released under dual LGPL/modified BSD license.
+Even more, all extension interfaces to which an application might want to link are released under a dual LGPL/modified BSD license.
 The latter is basically an "AS IS" license that allows any kind of use of that source code.
 Jaybird should be viewed as an implementation of those interfaces and the LGPL section for dynamic linking is applicable in this case.
 
@@ -366,7 +366,7 @@ We recommend upgrading to Jaybird 5.
 === Jaybird 3
 
 Jaybird 3 supports Java 7 and Java 8 and has basic support for Java 9 and higher using the Java 8 version of the driver.
-Support for Java 9 and higher is limited to Java 11 and 17, but in practice Jaybird should work on all Java 9+ versions upto Java 17 (versions after Java 17 have not been tested).
+Support for Java 9 and higher is limited to Java 11 and 17, but in practice Jaybird should work on all Java 9+ versions upto Java 17footnote:[versions after Java 17 have not been tested].
 Jaybird 3.0.12 is the last release of Jaybird 3, and is end-of-life.
 We recommend upgrading to Jaybird 5.
 
@@ -421,7 +421,6 @@ See <<connection-rejected-by-remote-interface-335544421>> for a workaround.
 Jaybird 5 supports Firebird 2.5, Firebird 3.0, Firebird 4.0, and Firebird 5.0.
 
 Jaybird 5 is the last version to support Firebird 2.5.
-Future versions of Jaybird are not guaranteed to work with Firebird 2.5 and earlier.
 
 [#firebird-jaybird-4]
 [discrete]
@@ -438,10 +437,9 @@ Full Firebird 5.0 support is available in Jaybird 5.
 
 Jaybird 3 supports Firebird 2.0, Firebird 2.1, firebird 2.5, Firebird 3.0, and Firebird 4.0.
 Support for Firebird 4.0 is limited to the Firebird 3.0 feature set.
-Formally, Firebird 5.0 is not supported, though in practice the problems are similar as for Jaybird 4.
+Formally, Firebird 5.0 is not supported, though in practice the problems are similar as described for Jaybird 4.
 
 Jaybird 3 is the last version to support Firebird 2.0 and Firebird 2.1.
-Jaybird 4 and higher are not guaranteed to work with Firebird 2.1 and earlier.
 
 [#firebird-jaybird-2-2]
 [discrete]
@@ -452,7 +450,6 @@ Jaybird 2.2.4 added support for new features of Firebird 3.0 (e.g. `BOOLEAN` sup
 Support for Firebird 4.0 is limited to the Firebird 3.0 feature set.
 
 Jaybird 2.2 is the last version to support Firebird 1.0 and Firebird 1.5.
-Jaybird 3 and higher are not guaranteed to work with these versions.
 
 [#can-jaybird-connect-to-interbase]
 == Can Jaybird connect to Interbase?
@@ -703,9 +700,9 @@ To address this error, you can set the default connection character set using on
 
 * Use connection property `encoding` (alias: `lc_ctype`) with a Firebird character set name.
 +
-Use `encoding=NONE` for the default behavior (with some caveats, see  <<how-does-character-set-none-work,How does character set `NONE` work?>>).
+Use `encoding=NONE` for the default behavior (with some caveats, see <<how-does-character-set-none-work,How does character set `NONE` work?>>).
 * Use connection property `charSet` (alias: `localEncoding`) with a Java character set name.
-* Use a combination of `encoding` and `charSet`, if you want to reinterpret a Firebird character set in a Java character set other than the default  mapping.
+* Use a combination of `encoding` and `charSet`, if you want to reinterpret a Firebird character set in a Java character set other than the default mapping.
 * By providing a default Firebird character set with system property  `org.firebirdsql.jdbc.defaultConnectionEncoding`.
 Jaybird will apply the specified character set as the default when no character set is specified in the connection properties.
 +
@@ -812,6 +809,8 @@ There are two options to address this:
 . Specify connection property `enableProtocol` with a list of unsupported protocol versions to try in addition to the supported protocol versions, or `"{asterisk}"` to try all available protocol versions (e.g. `enableProtocol=12` to try protocol 12 (Firebird 2.5) or `enableProtocol={asterisk}` to try all unsupported protocols).
 . Use a native connection instead of a pure Java connection.
 
+Be aware that Jaybird is not guaranteed to function correctly on unsupported Firebird versions.
+
 [#error-occurred-during-login-please-check-server-firebird-log-for-details-335545106]
 === Error occurred during login, please check server firebird.log for details (335545106)
 
@@ -827,7 +826,7 @@ With Jaybird 2.2 connecting to Firebird 3.0 or higher, this means that the setti
 Enable `Legacy_Auth` (in `firebird.conf`) by adding this value to the property  `AuthServer`, for example: `AuthServer = Srp, Legacy_Auth`.
 You also need to make sure your user is created with the legacy user manager, see https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3[Jaybird Wiki -- Jaybird and Firebird 3] for details.
 
-With Jaybird 4 and higher, this can also mean that none of the default authentication plugins, or those specified using connection property  `authPlugins`, are listed in the `AuthServer` setting.
+With Jaybird 4 and higher, this can also mean that none of the default authentication plugins, or those specified using connection property `authPlugins`, are listed in the `AuthServer` setting.
 Either revise the Firebird configuration, or explicitly configure connection property `authPlugins` with authentication plugins that are configured in Firebird.
 
 [#encryption-key-did-not-meet-algorithm-requirements-of-symmetricarc4-337248282]
@@ -940,7 +939,7 @@ Earlier versions had a `DataSource` implementation with connection pooling, but 
 This implementation (and all other classes in `org.firebirdsql.pool`) was deprecated in Jaybird 2.2 and dropped in Jaybird 3.
 
 Jaybird provides a basic `DataSource` implementation and a `ConnectionPoolDataSource` implementation.
-Contrary to its name the latter *does not provide a connection pool*, but is intended to be used by a connection pool (as implemented in an application server) to create connections _for_ the connection pool.
+Contrary to its name, the latter *does not provide a connection pool*, but is intended to be used by a connection pool (as implemented in an application server) to create connections _for_ a connection pool.
 
 If your application is built on a Java EE/Jakarta EE application server, we suggest you use the connection pooling provided by the application server using the `javax.sql.ConnectionPoolDataSource` implementation `org.firebirdsql.ds.FBConnectionPoolDataSource`, or using the `javax.sql.XADataSource` implementation `org.firebirdsql.ds.FBXADataSource`.
 
