@@ -33,6 +33,12 @@ Changes per Jaybird 6 release.
 See also <<whats-new-in-jaybird-6>>.
 For known issues, consult <<known-issues>>.
 
+=== Jaybird 6.0.3
+
+The following was fixed or changed since Jaybird 6.0.3:
+
+* ...
+
 === Jaybird 6.0.2
 
 The following was fixed or changed since Jaybird 6.0.1:
