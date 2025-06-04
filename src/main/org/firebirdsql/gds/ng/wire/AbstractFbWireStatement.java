@@ -26,6 +26,7 @@ import java.lang.ref.Cleaner;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -237,16 +238,32 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         }
     }
 
+    @SuppressWarnings("resource")
     private static final class CleanupAction implements Runnable, StatementListener, DatabaseListener {
 
+        private static final AtomicReferenceFieldUpdater<CleanupAction, FbWireDatabase> databaseUpdater =
+                AtomicReferenceFieldUpdater.newUpdater(CleanupAction.class, FbWireDatabase.class, "database");
+
+        private static final DeferredAction CLEANUP_FREE_DEFERRED_ACTION = new DeferredAction() {
+            @Override
+            public void processResponse(Response response) {
+                // nothing to do
+            }
+
+            @Override
+            public boolean requiresSync() {
+                return true;
+            }
+        };
+
         private final int handle;
-        @SuppressWarnings("java:S3077")
         private volatile FbWireDatabase database;
 
         private CleanupAction(AbstractFbWireStatement statement) {
             // NOTE: Care should be taken not to retain a handle to statement itself here
             handle = statement.getHandle();
-            database = statement.getDatabase();
+            FbWireDatabase database = statement.getDatabase();
+            databaseUpdater.set(this, database);
             database.addWeakDatabaseListener(this);
             statement.addWeakStatementListener(this);
         }
@@ -254,29 +271,35 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         @Override
         public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
             if (newState == StatementState.CLOSING) {
-                FbDatabase database = this.database;
-                if (database != null) {
-                    release(database);
-                }
+                releaseDatabaseReference();
                 sender.removeStatementListener(this);
             }
         }
 
         @Override
         public void detaching(FbDatabase database) {
-            release(database);
+            releaseDatabaseReference();
         }
 
-        private void release(FbDatabase database) {
-            this.database = null;
-            database.removeDatabaseListener(this);
+        private void releaseDatabaseReference() {
+            FbWireDatabase database = databaseUpdater.getAndSet(this, null);
+            if (database != null) {
+                database.removeDatabaseListener(this);
+            }
+        }
+
+        private FbWireDatabase releaseAndGetDatabaseReference() {
+            FbWireDatabase database = databaseUpdater.getAndSet(this, null);
+            if (database != null) {
+                database.removeDatabaseListener(this);
+            }
+            return database;
         }
 
         @Override
         public void run() {
-            FbWireDatabase database = this.database;
+            FbWireDatabase database = releaseAndGetDatabaseReference();
             if (database == null) return;
-            release(database);
             try (LockCloseable ignored = database.withLock()) {
                 if (!database.isAttached()) return;
                 XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
@@ -284,7 +307,8 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
                 xdrOut.writeInt(handle); // p_sqlfree_statement
                 xdrOut.writeInt(ISCConstants.DSQL_drop); // p_sqlfree_option
                 xdrOut.flush();
-                database.enqueueDeferredAction(DeferredAction.NO_OP_INSTANCE);
+                // TODO: This may process deferred actions on the cleaner thread, we may want to change that
+                database.enqueueDeferredAction(CLEANUP_FREE_DEFERRED_ACTION);
             } catch (SQLException | IOException e) {
                 System.getLogger(getClass().getName()).log(System.Logger.Level.TRACE,
                         "Ignored exception during statement clean up", e);

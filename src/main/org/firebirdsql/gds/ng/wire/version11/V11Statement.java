@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version11;
 
@@ -253,7 +253,9 @@ public class V11Statement extends V10Statement {
 
                     @Override
                     public boolean requiresSync() {
-                        return option == ISCConstants.DSQL_close;
+                        // DSQL_close requires sync as it isn't flushed,
+                        // other options require sync because server defers response
+                        return true;
                     }
                 });
             } catch (IOException e) {
