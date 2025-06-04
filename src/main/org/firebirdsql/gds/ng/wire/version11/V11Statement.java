@@ -269,7 +269,9 @@ public class V11Statement extends V10Statement {
 
                     @Override
                     public boolean requiresSync() {
-                        return option == ISCConstants.DSQL_close;
+                        // DSQL_close requires sync as it isn't flushed,
+                        // other options require sync because server defers response
+                        return true;
                     }
                 });
             } catch (IOException e) {

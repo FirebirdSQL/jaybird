@@ -37,7 +37,10 @@ For known issues, consult <<known-issues>>.
 
 The following was fixed or changed since Jaybird 6.0.3:
 
-* ...
+* Fixed: statement close could cause a hang of the connection (https://github.com/FirebirdSQL/jaybird/issues/876[#876])
++
+A large amount (>= 64) of statement closes (or cleanup of leaked statements) without interleaving other server operations could cause a connection to Firebird 4.0 or higher to hang.
+This could also hang the cleaner thread used for closing leaked statements.
 
 === Jaybird 6.0.2
 
