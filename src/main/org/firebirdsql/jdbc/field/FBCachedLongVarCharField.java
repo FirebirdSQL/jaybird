@@ -45,15 +45,20 @@ final class FBCachedLongVarCharField extends FBLongVarCharField {
     }
 
     @Override
-    public Blob getBlob() throws SQLException {
-        if (isNull()) return null;
-        return new FBCachedBlob(getFieldData());
+    public Blob getBlob() {
+        return getBlobInternal();
     }
 
-    @SuppressWarnings("DataFlowIssue")
     @Override
-    public Clob getClob() throws SQLException {
-    	if (isNull()) return null;
-    	return new FBCachedClob((FBCachedBlob) getBlob(), blobConfig);
+    protected FBCachedBlob getBlobInternal() {
+        final byte[] fieldData = getFieldData();
+        return fieldData != null ? new FBCachedBlob(fieldData) : null;
     }
+
+    @Override
+    public Clob getClob() {
+        final FBCachedBlob blob = getBlobInternal();
+        return blob != null ? new FBCachedClob(blob, blobConfig) : null;
+    }
+
 }

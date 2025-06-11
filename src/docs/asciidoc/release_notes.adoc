@@ -35,12 +35,13 @@ For known issues, consult <<known-issues>>.
 
 === Jaybird 6.0.3
 
-The following was fixed or changed since Jaybird 6.0.3:
+The following was fixed or changed since Jaybird 6.0.2:
 
 * Fixed: statement close could cause a hang of the connection (https://github.com/FirebirdSQL/jaybird/issues/876[#876])
 +
 A large amount (>= 64) of statement closes (or cleanup of leaked statements) without interleaving other server operations could cause a connection to Firebird 4.0 or higher to hang.
 This could also hang the cleaner thread used for closing leaked statements.
+* Fixed: `ResultSet` move incorrectly closes input `Clob` (https://github.com/FirebirdSQL/jaybird/issues/880[#880])
 
 === Jaybird 6.0.2
 
