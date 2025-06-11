@@ -30,6 +30,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
@@ -590,7 +591,7 @@ class FBResultSetTest {
                         counter++;
                     }
 
-                    assertEquals(counter - 1, recordCount, "Should process " + recordCount + " rows");
+                    assertEquals(recordCount, counter - 1, "Should process " + recordCount + " rows");
 
                     // check the insertRow() feature
                     int newId = recordCount + 1;
@@ -625,9 +626,9 @@ class FBResultSetTest {
                     if (SCROLLABLE_CURSOR_SERVER.equals(scrollableCursorPropertyValue)
                         && isPureJavaType().matches(GDS_TYPE)
                         && getDefaultSupportInfo().supportsScrollableCursors()) {
-                        assertEquals(counter - 1, recordCount + 1);
+                        assertEquals(recordCount + 1, counter - 1);
                     } else {
-                        assertEquals(counter - 1, recordCount);
+                        assertEquals(recordCount, counter - 1);
                     }
                 }
 
@@ -1445,6 +1446,7 @@ class FBResultSetTest {
      */
     @ParameterizedTest
     @MethodSource
+    @SuppressWarnings("MagicConstant")
     void testIsBeforeFirst_isAfterLast_emptyResultSet_bug807(int resultSetType, int resultSetConcurrency,
             String scrollableCursorPropertyValue) throws SQLException {
         try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
@@ -1477,6 +1479,7 @@ class FBResultSetTest {
 
     @ParameterizedTest
     @MethodSource
+    @SuppressWarnings("MagicConstant")
     void wasNull_onInsertRow(int resultSetType, String scrollableCursorPropertyValue) throws Exception {
         try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
             executeCreateTable(connection, CREATE_TABLE_STATEMENT);
@@ -1570,6 +1573,37 @@ class FBResultSetTest {
                     assertRowEquals("row " + i, rs, expectedRow);
                 }
                 assertNoNextRow(rs, "expected only " + expectedRows.size() + " rows");
+            }
+        }
+    }
+
+    @Test
+    void clobRemainsOpenAfterNext() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            connection.setAutoCommit(false);
+            createTestData(2, i -> "clob-value-" + i, connection, "blob_str");
+            connection.commit();
+
+            Clob secondClob;
+
+            try (Statement stmt = connection.createStatement()) {
+                ResultSet rs = stmt.executeQuery("select id, blob_str from test_table order by id");
+                assertNextRow(rs);
+                Clob firstClob = rs.getClob(2);
+                assertNextRow(rs);
+                try (BufferedReader firstReader = new BufferedReader(
+                        assertDoesNotThrow(() -> firstClob.getCharacterStream(),
+                                "should be able to get character stream from clob after next"))) {
+                    assertEquals("clob-value-1", firstReader.readLine());
+                }
+                secondClob = rs.getClob(2);
+                assertNoNextRow(rs);
+            }
+            try (BufferedReader secondReader = new BufferedReader(
+                    assertDoesNotThrow(() -> secondClob.getCharacterStream(),
+                            "should be able to get character stream from clob after statement close"))) {
+                assertEquals("clob-value-2", secondReader.readLine());
             }
         }
     }

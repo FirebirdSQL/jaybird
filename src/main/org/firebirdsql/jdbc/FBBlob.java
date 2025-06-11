@@ -327,10 +327,14 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     }
 
     @Override
-    public FirebirdBlob detach() throws SQLException {
+    public FBBlob detach() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkClosed();
-            return new FBBlob(gdsHelper, blobId, blobListener, config);
+            FBBlob blobCopy = new FBBlob(gdsHelper, blobId, blobListener, config);
+            if (cachedInlineBlob != null) {
+                blobCopy.cachedInlineBlob = cachedInlineBlob.copy();
+            }
+            return blobCopy;
         }
     }
 

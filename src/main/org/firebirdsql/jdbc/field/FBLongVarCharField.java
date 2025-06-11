@@ -19,11 +19,14 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBObjectListener;
+import org.firebirdsql.jdbc.FirebirdBlob;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -96,30 +99,35 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
 
     @Override
     public Blob getBlob() throws SQLException {
-        if (blob != null) return blob;
-        if (isNull()) return null;
+        final FirebirdBlob blob = getBlobInternal();
+        return blob != null ? registerWithTransaction(blob.detach()) : null;
+    }
 
-        blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(getFieldData()), blobListener, blobConfig);
-        return blob;
+    protected FirebirdBlob getBlobInternal() {
+        if (blob != null) return blob;
+        final byte[] bytes = getFieldData();
+        if (bytes == null) return null;
+
+        return blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(bytes), blobListener, blobConfig);
     }
 
     @Override
     public Clob getClob() throws SQLException {
-    	FBBlob blob = (FBBlob) getBlob();
-    	if (blob == null) return null;
-    	return new FBClob(blob);
+        final FBBlob blob = (FBBlob) getBlobInternal();
+        if (blob == null) return null;
+        return new FBClob(registerWithTransaction(blob.detach()));
     }
 
     @Override
     public InputStream getBinaryStream() throws SQLException {
-        Blob blob = getBlob();
+        final Blob blob = getBlobInternal();
         if (blob == null) return null;
         return blob.getBinaryStream();
     }
 
     @Override
     public byte[] getBytes() throws SQLException {
-        final Blob blob = getBlob();
+        final Blob blob = getBlobInternal();
         if (blob == null) return null;
 
         try (final InputStream in = blob.getBinaryStream()) {
@@ -317,6 +325,16 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
         blob.copyBytes(bytes, 0, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         blobExplicitNull = false;
+    }
+
+    private <T extends FirebirdBlob> T registerWithTransaction(T blob) {
+        if (blob instanceof TransactionListener) {
+            FbTransaction currentTransaction = gdsHelper.getCurrentTransaction();
+            if (currentTransaction != null) {
+                currentTransaction.addWeakTransactionListener((TransactionListener) blob);
+            }
+        }
+        return blob;
     }
 
 }

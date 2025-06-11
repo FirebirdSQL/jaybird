@@ -34,7 +34,7 @@ For known issues, consult <<known-issues>>.
 
 The following has been changed or fixed since Jaybird 5.0.8:
 
-* ...
+* Fixed: `ResultSet` move incorrectly closes input `Clob` (https://github.com/FirebirdSQL/jaybird/issues/881[#881])
 
 [#jaybird-5-0-8-changelog]
 === Jaybird 5.0.8
