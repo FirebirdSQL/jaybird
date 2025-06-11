@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2004 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc.field;
@@ -34,15 +34,20 @@ final class FBCachedLongVarCharField extends FBLongVarCharField {
     }
 
     @Override
-    public Blob getBlob() throws SQLException {
-        if (isNull()) return null;
-        return new FBCachedBlob(getFieldData());
+    public Blob getBlob() {
+        return getBlobInternal();
     }
 
-    @SuppressWarnings("DataFlowIssue")
     @Override
-    public Clob getClob() throws SQLException {
-    	if (isNull()) return null;
-    	return new FBCachedClob((FBCachedBlob) getBlob(), blobConfig);
+    protected FBCachedBlob getBlobInternal() {
+        final byte[] fieldData = getFieldData();
+        return fieldData != null ? new FBCachedBlob(fieldData) : null;
     }
+
+    @Override
+    public Clob getClob() {
+        final FBCachedBlob blob = getBlobInternal();
+        return blob != null ? new FBCachedClob(blob, blobConfig) : null;
+    }
+
 }

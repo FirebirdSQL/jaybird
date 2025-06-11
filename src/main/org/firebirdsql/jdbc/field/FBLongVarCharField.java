@@ -3,14 +3,16 @@
  SPDX-FileCopyrightText: Copyright 2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2020 Vasiliy Yashkov
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
@@ -85,8 +87,13 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
 
     @Override
     public Blob getBlob() throws SQLException {
+        final FirebirdBlob blob = getBlobInternal();
+        return blob != null ? registerWithTransaction(blob.detach()) : null;
+    }
+
+    protected FirebirdBlob getBlobInternal() {
         if (blob != null) return blob;
-        byte[] bytes = getFieldData();
+        final byte[] bytes = getFieldData();
         if (bytes == null) return null;
 
         return blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(bytes), blobListener, blobConfig);
@@ -94,19 +101,20 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
 
     @Override
     public Clob getClob() throws SQLException {
-    	FBBlob blob = (FBBlob) getBlob();
-        return blob != null ? new FBClob(blob) : null;
+        final FBBlob blob = (FBBlob) getBlobInternal();
+        if (blob == null) return null;
+        return new FBClob(registerWithTransaction(blob.detach()));
     }
 
     @Override
     public InputStream getBinaryStream() throws SQLException {
-        Blob blob = getBlob();
+        final Blob blob = getBlobInternal();
         return blob != null ? blob.getBinaryStream() : null;
     }
 
     @Override
     public byte[] getBytes() throws SQLException {
-        final FirebirdBlob blob = (FirebirdBlob) getBlob();
+        final FirebirdBlob blob = getBlobInternal();
         return blob != null ? blob.getBytes() : null;
     }
 
@@ -277,6 +285,17 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
         blob.copyBytes(bytes, 0, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         blobExplicitNull = false;
+    }
+
+    @NullMarked
+    private <T extends FirebirdBlob> T registerWithTransaction(T blob) {
+        if (blob instanceof TransactionListener transactionListener) {
+            FbTransaction currentTransaction = gdsHelper.getCurrentTransaction();
+            if (currentTransaction != null) {
+                currentTransaction.addWeakTransactionListener(transactionListener);
+            }
+        }
+        return blob;
     }
 
 }
