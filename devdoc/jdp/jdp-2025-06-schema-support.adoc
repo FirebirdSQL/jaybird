@@ -1,0 +1,119 @@
+= jdp-2025-06: Schema Support
+
+// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 7, potential backport to Jaybird 6 and/or Jaybird 5
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+Firebird 6.0 introduces support for schemas.
+To quote from `README.schemas.md` (of an early snapshot):
+
+____
+Firebird 6.0 introduces support for schemas in the database.
+Schemas are not an optional feature, so every Firebird 6 database has at least a `SYSTEM` schema, reserved for Firebird system objects (`RDB$*` and `MON$*`).
+
+User objects live in different schemas, which may be the automatically created `PUBLIC` schema or user-defined ones.
+It is not allowed (except for indexes) to create or modify objects in the `SYSTEM` schema.
+____
+
+Important details related to schemas:
+
+* Search path, defaults to `PUBLIC, SYSTEM`.
+The session default can be configured with `isc_dpb_search_path` (string DPB item).
+The current search path can be altered with `SET SEARCH_PATH TO ...`.
+`ALTER SESSION RESET` reverts to the session default.
+* The "`current`" schema cannot be set separately;
+the first valid schema listed in the search path is considered the current schema.
+* `CURRENT_SCHEMA` and `RDB$GET_CONTEXT('SYSTEM', 'CURRENT_SCHEMA')` return the first valid schema from the search path
+* `RDB$GET_CONTEXT('SYSTEM', 'SEARCH_PATH')` returns the current search path
+* Objects not qualified with a schema name will be resolved using the current search path.
+This is done -- with some exceptions -- at prepare time.
+* TBP has new item `isc_tpb_lock_table_schema` to specify the schema of a table to be locked (1 byte length + string data)
+* Gbak has additional options to include/exclude (skip) schema datas in backup or restore, similar to existing options to include/exclude tables
+* Gstat has additional options to specify a schema for operations involving tables
+* For validation, `val_sch_incl` and `val_sch_excl` (I don't think we use the equivalent,`val_tab_incl`/`val_tab_excl` in Jaybird, so might not be relevant)
+
+JDBC defines various methods, parameters, and return values or result set columns that are or are related to schemas.
+
+These are:
+
+* ...
+
+Jaybird 5 is the "`long-term support`" version for Java 8.
+
+[NOTE]
+====
+This document is in flux, and will be updated during implementation of the feature.
+====
+
+== Decision
+
+Jaybird 7 will implement schema support for Firebird 6.0.
+When Jaybird 7 is used on Firebird 5.0 or older, it will behave as before (no schemas at all).
+
+Further details can be found in <<consequences>>.
+
+Decision on backport to Jaybird 6 and/or Jaybird 5 is pending, and may be subject of a separate JDP.
+
+[#consequences]
+== Consequences
+
+The following changes are made to Jaybird to support schemas when connecting to Firebird 6.0 or higher:
+
+* Connection property `searchPath` (alias `search_path`, `isc_dpb_search_path`) to configure the default session search path.
++
+On Firebird 5.0 and older, this will be silently ignored.
+* In internal queries in Jaybird, and fully qualified object names, we'll always use the quoted identifier `"SYSTEM"`, because `SYSTEM` is SQL:2023 reserved word.
+* `Connection.getSchema()` will return the result of `select CURRENT_SCHEMA from "SYSTEM".RDB$DATABASE`;
+the connection will not store this value
+* `Connection.setSchema(String)` will query the current search path, if not previously called, it will prepend the schema name to the search path, otherwise it will _replace_ the previously prepended schema name.
+The schema name is stored _only_ for this replacement operation (i.e. it will not be returned by `getSchema`!)
++
+** The name must match exactly as is stored in the metadata (it is always case-sensitive!)
+** Jaybird will take care of quoting, and will always quote
+** Existence of the schema is **not** checked, so it is possible the current schema does not change with this operation, as `CURRENT_SCHEMA` reports the first _valid_ schema
+** JDBC specifies that "`__Calling ``setSchema`` has no effect on previously created or prepared Statement objects.__`";
+Jaybird cannot honour this requirement for plain `Statement`, as schema resolution is on prepare time (which for plain `Statement` is on execute), and not always for `CallableStatement` (as the implementation may delay actual prepare until execution).
+* Request `isc_info_sql_relation_schema` after preparing a query, record it in `FieldDescriptor`, and return it were relevant for JDBC (e.g. `ResultSetMetaData.getSchemaName(int)`)
+** For Firebird 5.0 and older, we need to ensure that JDBC methods continue to report the correct value (i.e. ``""`` for schema-less objects)
+* A Firebird 6.0 variant of the `DatabaseMetaData` and other internal metadata queries needs to be written to address at least the following things:
+** Explicitly qualify metadata tables with `"SYSTEM"`, so the queries will work even if `SYSTEM` is not on the search path.
+** Returning schema names, and qualified object names where relevant (e.g. in `DatabaseMetaData` result sets)
+** Include schema names in joins to ensure matching the right objects
+** Allow searching for schema or schema pattern as specified in JDBC, or were needed for internal metadata queries
+** TODO: investigate need for backwards compatible behaviour for `DatabaseMetaData` parameter `schema` with value `""` ("`__[...] retrieves those without a schema__`").
+*** Maybe make it search `PUBLIC`, or `PUBLIC` and `SYSTEM`, or those on the search path?
+*** Or add a compatibility connection property to make it behave as `null` ("`__[...] means that the schema name should not be used to narrow the search__`")?
+*** Or just accept it as a breaking change?
+* TODO: Define effects for management API
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2025-06: Schema Support`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2025.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
