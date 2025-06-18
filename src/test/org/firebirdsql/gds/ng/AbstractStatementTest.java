@@ -385,7 +385,11 @@ public abstract class AbstractStatementTest {
 
         String executionPlan = statement.getExecutionPlan();
 
-        assertEquals("PLAN (RDB$DATABASE NATURAL)", executionPlan, "Unexpected plan for prepared statement");
+        String expected = getDefaultSupportInfo().supportsSchemas()
+                ? "PLAN (\"SYSTEM\".\"RDB$DATABASE\" NATURAL)"
+                : "PLAN (RDB$DATABASE NATURAL)";
+
+        assertEquals(expected, executionPlan, "Unexpected plan for prepared statement");
     }
 
     @Test
@@ -428,9 +432,17 @@ public abstract class AbstractStatementTest {
 
         String executionPlan = statement.getExplainedExecutionPlan();
 
-        assertEquals("""
-                Select Expression
-                    -> Table "RDB$DATABASE" Full Scan""", executionPlan, "Unexpected plan for prepared statement");
+        //@formatter:off
+        String expected = getDefaultSupportInfo().supportsSchemas()
+                ? """
+                  Select Expression
+                      -> Table "SYSTEM"."RDB$DATABASE" Full Scan"""
+                : """
+                  Select Expression
+                      -> Table "RDB$DATABASE" Full Scan""";
+        //@formatter:on
+
+        assertEquals(expected, executionPlan, "Unexpected plan for prepared statement");
     }
 
     @Test

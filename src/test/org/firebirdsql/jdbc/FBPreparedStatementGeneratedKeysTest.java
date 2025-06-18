@@ -261,7 +261,9 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
         assertThat(exception, allOf(
                 errorCode(equalTo(errorCode)),
                 sqlState(equalTo("42S02")),
-                fbMessageContains(errorCode, "TABLE_NON_EXISTENT")));
+                anyOf(
+                        fbMessageContains(errorCode, "TABLE_NON_EXISTENT"),
+                        fbMessageContains(errorCode, "\"TABLE_NON_EXISTENT\""))));
     }
 
     /**
@@ -377,7 +379,9 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
         assertThat(exception, allOf(
                 errorCode(equalTo(ISCConstants.isc_dsql_field_err)),
                 sqlState(equalTo("42S22")),
-                message(containsString("Column unknown; NON_EXISTENT"))));
+                anyOf(
+                        message(containsString("Column unknown; NON_EXISTENT")),
+                        message(containsString("Column unknown; \"NON_EXISTENT\"")))));
     }
 
     // TODO In the current implementation executeUpdate uses almost identical logic as execute, decide to test separately or not
