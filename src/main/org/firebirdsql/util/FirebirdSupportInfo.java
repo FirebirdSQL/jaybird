@@ -517,8 +517,7 @@ public final class FirebirdSupportInfo {
             case 3 -> 50;
             case 4 -> 54;
             case 5 -> 56;
-            // Intentionally not merged with case 5 as it is likely to change during Firebird 6 development
-            case 6 -> 56;
+            case 6 -> 57;
             default -> -1;
         };
     }
@@ -783,6 +782,15 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsInlineBlobs() {
         return isVersionEqualOrAbove(5, 0, 3);
+    }
+
+    /**
+     * Reports if schemas are supported.
+     *
+     * @return {@code true} if schemas are not supported, {@code false} otherwise
+     */
+    public boolean supportsSchemas() {
+        return isVersionEqualOrAbove(6);
     }
 
     /**
