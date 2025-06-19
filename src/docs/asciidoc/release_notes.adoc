@@ -508,6 +508,21 @@ Artificial testing on local WiFi with small blobs (200 bytes) shows a 30,000-45,
 
 This optimization was backported to Jaybird 5.0.8 and Jaybird 6.0.2.
 
+[#schemas]
+=== Schema support
+
+Firebird 6.0 introduces schemas, and Jaybird 7 provides support for schemas as defined in the JDBC specification.
+
+Changes include:
+
+* `DatabaseMetaData`
+** `getSchemas()` returns all defined schemas
+** `getSchemas(String catalog, String schemaPattern)` returns all schemas matching the `LIKE` pattern `schemaPattern`, with the following caveats
+*** `catalog` non-empty will return no rows;
+we recommend to always use `null` for `catalog`.
+*** `schemaPattern` empty will return no rows (there are no schemas with an empty name);
+use `null` or `"%"` to match all schemas
+
 // TODO add major changes
 
 [#other-fixes-and-changes]
