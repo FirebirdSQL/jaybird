@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2001-2002 David Jencks
  SPDX-FileCopyrightText: Copyright 2002-2010 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
- SPDX-FileCopyrightText: Copyright 2011-2023 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
