@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2023 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 
 /**
@@ -33,7 +34,7 @@ public abstract class GetSchemas extends AbstractMetadataMethod {
     }
 
     public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
-        if (!(catalog == null || catalog.isEmpty()) || "".equals(schemaPattern)) {
+        if (!isNullOrEmpty(catalog) || "".equals(schemaPattern)) {
             // matching schema name not possible
             return createEmpty();
         }
