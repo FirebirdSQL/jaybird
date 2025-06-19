@@ -1263,6 +1263,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return getSchemas(null, null);
     }
 
+    @Override
+    public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
+        return GetSchemas.create(getDbMetadataMediator()).getSchemas(catalog, schemaPattern);
+    }
+
     /**
      * {@inheritDoc}
      * <p>
@@ -1763,11 +1768,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
             throws SQLException {
         return GetFunctions.create(getDbMetadataMediator()).getFunctions(catalog, functionNamePattern);
-    }
-
-    @Override
-    public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
-        return GetSchemas.create(getDbMetadataMediator()).getSchemas();
     }
 
     @Override
