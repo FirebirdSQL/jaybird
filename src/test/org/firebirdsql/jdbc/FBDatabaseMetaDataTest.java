@@ -9,6 +9,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -807,6 +808,32 @@ class FBDatabaseMetaDataTest {
             DatabaseMetaData md = connection.getMetaData();
             assertEquals(expectedIdentifierQuote, md.getIdentifierQuoteString());
         }
+    }
+
+    @Test
+    void testGetSchemaTerm() throws Exception {
+        final String expected = getDefaultSupportInfo().supportsSchemas() ? "SCHEMA" : null;
+        assertEquals(expected, dmd.getSchemaTerm(), "schemaTerm");
+    }
+
+    @Test
+    void testGetMaxSchemaNameLength() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        final int expected = getDefaultSupportInfo().supportsSchemas()
+                ? supportInfo.maxIdentifierLengthCharacters() : 0;
+        assertEquals(expected, dmd.getMaxSchemaNameLength(), "maxSchemaNameLength");
+    }
+
+    @Test
+    void testSupportsSchemasInXXX() {
+        final boolean expected = getDefaultSupportInfo().supportsSchemas();
+        assertAll(
+                () -> assertEquals(expected, dmd.supportsSchemasInDataManipulation(), "DataManipulation"),
+                () -> assertEquals(expected, dmd.supportsSchemasInIndexDefinitions(), "IndexDefinitions"),
+                () -> assertEquals(expected, dmd.supportsSchemasInPrivilegeDefinitions(), "PrivilegeDefinitions"),
+                () -> assertEquals(expected, dmd.supportsSchemasInProcedureCalls(), "ProcedureCalls"),
+                () -> assertEquals(expected, dmd.supportsSchemasInTableDefinitions(), "TableDefinitions")
+        );
     }
 
     @SuppressWarnings("SameParameterValue")

@@ -764,12 +764,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * {@inheritDoc}
      *
-     * @return the vendor term, always {@code null} because schemas are not supported by database server (see JDBC CTS
-     * for details).
+     * @return the vendor term; for Firebird 5.0 and older always {@code null} because schemas are not supported
      */
     @Override
     public String getSchemaTerm() throws SQLException {
-        return null;
+        return firebirdSupportInfo.supportsSchemas() ? "SCHEMA" : null;
     }
 
     @Override
@@ -814,27 +813,27 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public boolean supportsSchemasInDataManipulation() throws SQLException {
-        return false;
+        return firebirdSupportInfo.supportsSchemas();
     }
 
     @Override
     public boolean supportsSchemasInProcedureCalls() throws SQLException {
-        return false;
+        return firebirdSupportInfo.supportsSchemas();
     }
 
     @Override
     public boolean supportsSchemasInTableDefinitions() throws SQLException {
-        return false;
+        return firebirdSupportInfo.supportsSchemas();
     }
 
     @Override
     public boolean supportsSchemasInIndexDefinitions() throws SQLException {
-        return false;
+        return firebirdSupportInfo.supportsSchemas();
     }
 
     @Override
     public boolean supportsSchemasInPrivilegeDefinitions() throws SQLException {
-        return false;
+        return firebirdSupportInfo.supportsSchemas();
     }
 
     /**
@@ -1031,7 +1030,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public int getMaxSchemaNameLength() throws SQLException {
-        return 0; //No schemas
+        return firebirdSupportInfo.supportsSchemas() ? getMaxObjectNameLength() : 0;
     }
 
     /**
