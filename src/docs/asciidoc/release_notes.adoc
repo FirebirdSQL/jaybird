@@ -516,10 +516,14 @@ Firebird 6.0 introduces schemas, and Jaybird 7 provides support for schemas as d
 Changes include:
 
 * `DatabaseMetaData`
+** `getProcedures` now uses the `schemaPattern` to filter by schema, with the following caveats
+*** `schemaPattern` empty will return no rows on Firebird 6.0 and higher (all procedures are in a schema);
+use `null` or `"%"` to match all schemas
+*** `catalog` is (still) ignored if `useCatalogAsPackage` is `false`
 ** `getSchemas()` returns all defined schemas
 ** `getSchemas(String catalog, String schemaPattern)` returns all schemas matching the `LIKE` pattern `schemaPattern`, with the following caveats
 *** `catalog` non-empty will return no rows;
-we recommend to always use `null` for `catalog`.
+we recommend to always use `null` for `catalog`
 *** `schemaPattern` empty will return no rows (there are no schemas with an empty name);
 use `null` or `"%"` to match all schemas
 

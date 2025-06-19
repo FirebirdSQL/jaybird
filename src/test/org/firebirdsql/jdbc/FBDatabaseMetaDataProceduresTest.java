@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -36,6 +36,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataProceduresTest {
+
+    // TODO Add tests for filtering by schema
 
     private static final String CREATE_NORMAL_PROC_NO_RETURN = """
             CREATE PROCEDURE normal_proc_no_return
@@ -302,10 +304,11 @@ class FBDatabaseMetaDataProceduresTest {
     }
 
     static boolean isIgnoredProcedure(String specificName) {
-        class Ignored {
+        final class Ignored {
             // Skipping procedures from system packages (when testing with useCatalogAsPackage=true)
             private static final List<String> PREFIXES_TO_IGNORE =
-                    List.of("\"RDB$BLOB_UTIL\".", "\"RDB$PROFILER\".", "\"RDB$TIME_ZONE_UTIL\".", "\"RDB$SQL\".");
+                    List.of("\"SYSTEM\".\"RDB$", "\"RDB$BLOB_UTIL\".", "\"RDB$PROFILER\".", "\"RDB$TIME_ZONE_UTIL\".",
+                            "\"RDB$SQL\".");
         }
         return Ignored.PREFIXES_TO_IGNORE.stream().anyMatch(specificName::startsWith);
     }
@@ -322,7 +325,7 @@ class FBDatabaseMetaDataProceduresTest {
     static {
         Map<ProcedureMetaData, Object> defaults = new EnumMap<>(ProcedureMetaData.class);
         defaults.put(ProcedureMetaData.PROCEDURE_CAT, null);
-        defaults.put(ProcedureMetaData.PROCEDURE_SCHEM, null);
+        defaults.put(ProcedureMetaData.PROCEDURE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(ProcedureMetaData.FUTURE1, null);
         defaults.put(ProcedureMetaData.FUTURE2, null);
         defaults.put(ProcedureMetaData.FUTURE3, null);
@@ -369,13 +372,18 @@ class FBDatabaseMetaDataProceduresTest {
         }
     }
 
+    private static String ifSchemaElse(String forSchema, String withoutSchema) {
+        return getDefaultSupportInfo().supportsSchemas() ? forSchema : withoutSchema;
+    }
+
     private enum ProcedureTestData {
         NORMAL_PROC_NO_RETURN("normal_proc_no_return", List.of(CREATE_NORMAL_PROC_NO_RETURN)) {
             @Override
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "NORMAL_PROC_NO_RETURN");
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureNoResult);
-                rules.put(ProcedureMetaData.SPECIFIC_NAME, "NORMAL_PROC_NO_RETURN");
+                rules.put(ProcedureMetaData.SPECIFIC_NAME,
+                        ifSchemaElse("\"PUBLIC\".\"NORMAL_PROC_NO_RETURN\"", "NORMAL_PROC_NO_RETURN"));
                 return rules;
             }
         },
@@ -386,7 +394,8 @@ class FBDatabaseMetaDataProceduresTest {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "NORMAL_PROC_WITH_RETURN");
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureReturnsResult);
                 rules.put(ProcedureMetaData.REMARKS, "Some comment");
-                rules.put(ProcedureMetaData.SPECIFIC_NAME, "NORMAL_PROC_WITH_RETURN");
+                rules.put(ProcedureMetaData.SPECIFIC_NAME,
+                        ifSchemaElse("\"PUBLIC\".\"NORMAL_PROC_WITH_RETURN\"", "NORMAL_PROC_WITH_RETURN"));
                 return rules;
             }
 
@@ -396,7 +405,8 @@ class FBDatabaseMetaDataProceduresTest {
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "quoted_proc_no_return");
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureNoResult);
-                rules.put(ProcedureMetaData.SPECIFIC_NAME, "quoted_proc_no_return");
+                rules.put(ProcedureMetaData.SPECIFIC_NAME,
+                        ifSchemaElse("\"PUBLIC\".\"quoted_proc_no_return\"", "quoted_proc_no_return"));
                 return rules;
             }
         },
@@ -407,7 +417,8 @@ class FBDatabaseMetaDataProceduresTest {
                 rules.put(ProcedureMetaData.PROCEDURE_CAT, "WITH$PROCEDURE");
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "IN$PACKAGE");
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureReturnsResult);
-                rules.put(ProcedureMetaData.SPECIFIC_NAME, "\"WITH$PROCEDURE\".\"IN$PACKAGE\"");
+                rules.put(ProcedureMetaData.SPECIFIC_NAME, ifSchemaElse(
+                        "\"PUBLIC\".\"WITH$PROCEDURE\".\"IN$PACKAGE\"", "\"WITH$PROCEDURE\".\"IN$PACKAGE\""));
                 return rules;
             }
 
