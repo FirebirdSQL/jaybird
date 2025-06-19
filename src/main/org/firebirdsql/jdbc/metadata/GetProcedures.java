@@ -223,7 +223,7 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
                   trim(trailing from RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
                   RDB$DESCRIPTION as REMARKS,
                   RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
-                from "SYSTEM".RDB$PROCEDURES
+                from SYSTEM.RDB$PROCEDURES
                 where RDB$PACKAGE_NAME is null""";
 
         // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort
@@ -262,7 +262,7 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
                   trim(trailing from RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
                   RDB$DESCRIPTION as REMARKS,
                   RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
-                from "SYSTEM".RDB$PROCEDURES""";
+                from SYSTEM.RDB$PROCEDURES""";
 
         private static final String GET_PROCEDURES_ORDER_BY_6_W_PKG =
                 "\norder by RDB$PACKAGE_NAME nulls first, RDB$SCHEMA_NAME, RDB$PROCEDURE_NAME";

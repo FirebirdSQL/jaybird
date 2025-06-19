@@ -7,7 +7,6 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
-import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,9 +52,8 @@ public abstract class GetSchemas extends AbstractMetadataMethod {
 
     @SuppressWarnings("unused")
     public static GetSchemas create(DbMetadataMediator mediator) {
-        FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(6)) {
+        if (mediator.getFirebirdSupportInfo().isVersionEqualOrAbove(6)) {
             return FB6.createInstance(mediator);
         } else {
             return FB5.createInstance(mediator);
@@ -94,7 +92,7 @@ public abstract class GetSchemas extends AbstractMetadataMethod {
 
         private static final String GET_SCHEMAS_FRAGMENT_6 = """
                 select RDB$SCHEMA_NAME as TABLE_SCHEM
-                from "SYSTEM".RDB$SCHEMAS
+                from SYSTEM.RDB$SCHEMAS
                 """;
 
         private static final String GET_SCHEMAS_ORDER_BY_6 = "\norder by RDB$SCHEMA_NAME";
