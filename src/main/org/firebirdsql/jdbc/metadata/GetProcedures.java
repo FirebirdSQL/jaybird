@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2024 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -33,10 +33,12 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
 
     private static final String PROCEDURES = "PROCEDURES";
     private static final String COLUMN_PROCEDURE_NAME = "RDB$PROCEDURE_NAME";
+    private static final String COLUMN_SCHEMA_NAME = "RDB$SCHEMA_NAME";
+    private static final String COLUMN_PACKAGE_NAME = "RDB$PACKAGE_NAME";
     
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(9)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", PROCEDURES).addField()
-            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", "ROCEDURES").addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", PROCEDURES).addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_NAME", PROCEDURES).addField()
             .at(3).simple(SQL_VARYING, 31, "FUTURE1", PROCEDURES).addField()
             .at(4).simple(SQL_VARYING, 31, "FUTURE2", PROCEDURES).addField()
@@ -55,34 +57,42 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
     /**
      * @see DatabaseMetaData#getProcedures(String, String, String)
      */
-    public final ResultSet getProcedures(String catalog, String procedureNamePattern) throws SQLException {
+    public final ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
+            throws SQLException {
         if ("".equals(procedureNamePattern)) {
             return createEmpty();
         }
 
-        MetadataQuery metadataQuery = createGetProceduresQuery(catalog, procedureNamePattern);
+        MetadataQuery metadataQuery = createGetProceduresQuery(catalog, schemaPattern, procedureNamePattern);
         return createMetaDataResultSet(metadataQuery);
     }
 
     @Override
     final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
         String catalog = rs.getString("PROCEDURE_CAT");
+        String schema = rs.getString("PROCEDURE_SCHEM");
         String procedureName = rs.getString("PROCEDURE_NAME");
         return valueBuilder
                 .at(0).setString(catalog)
+                .at(1).setString(schema)
                 .at(2).setString(procedureName)
                 .at(6).setString(rs.getString("REMARKS"))
                 .at(7).setShort(rs.getShort("PROCEDURE_TYPE") == 0 ? procedureNoResult : procedureReturnsResult)
-                .at(8).setString(toSpecificName(catalog, procedureName))
+                .at(8).setString(toSpecificName(catalog, schema, procedureName))
                 .toRowValue(true);
     }
 
-    abstract MetadataQuery createGetProceduresQuery(String catalog, String procedureNamePattern);
+    abstract MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern);
 
     public static GetProcedures create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
+        if (firebirdSupportInfo.isVersionEqualOrAbove(6)) {
+            if (mediator.isUseCatalogAsPackage()) {
+                return FB6CatalogAsPackage.createInstance(mediator);
+            }
+            return FB6.createInstance(mediator);
+        }else if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
             if (mediator.isUseCatalogAsPackage()) {
                 return FB3CatalogAsPackage.createInstance(mediator);
             }
@@ -98,6 +108,7 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
         private static final String GET_PROCEDURES_FRAGMENT_2_5 = """
                 select
                   null as PROCEDURE_CAT,
+                  null as PROCEDURE_SCHEM,
                   RDB$PROCEDURE_NAME as PROCEDURE_NAME,
                   RDB$DESCRIPTION as REMARKS,
                   RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
@@ -114,7 +125,7 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetProceduresQuery(String catalog, String procedureNamePattern) {
+        MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern) {
             Clause procedureNameClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
             String queryText = GET_PROCEDURES_FRAGMENT_2_5
                     + procedureNameClause.getCondition("\nwhere ", "")
@@ -128,6 +139,7 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
         private static final String GET_PROCEDURES_FRAGMENT_3 = """
                 select
                   null as PROCEDURE_CAT,
+                  null as PROCEDURE_SCHEM,
                   trim(trailing from RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
                   RDB$DESCRIPTION as REMARKS,
                   RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
@@ -146,7 +158,7 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetProceduresQuery(String catalog, String procedureNamePattern) {
+        MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern) {
             Clause procedureNameClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
             String queryText = GET_PROCEDURES_FRAGMENT_3
                     + procedureNameClause.getCondition("\nand ", "")
@@ -160,12 +172,12 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
         private static final String GET_PROCEDURES_FRAGMENT_3_W_PKG = """
                 select
                   coalesce(trim(trailing from RDB$PACKAGE_NAME), '') as PROCEDURE_CAT,
+                  null as PROCEDURE_SCHEM,
                   trim(trailing from RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
                   RDB$DESCRIPTION as REMARKS,
                   RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
                 from RDB$PROCEDURES""";
 
-        // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort
         private static final String GET_PROCEDURES_ORDER_BY_3_W_PKG =
                 "\norder by RDB$PACKAGE_NAME nulls first, RDB$PROCEDURE_NAME";
 
@@ -178,16 +190,16 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetProceduresQuery(String catalog, String procedureNamePattern) {
+        MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern) {
             var clauses = new ArrayList<Clause>(2);
             if (catalog != null) {
                 // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
                 // should not be used to narrow the search
                 if (catalog.isEmpty()) {
-                    clauses.add(Clause.isNullClause("RDB$PACKAGE_NAME"));
+                    clauses.add(Clause.isNullClause(COLUMN_PACKAGE_NAME));
                 } else {
                     // Exact matches only
-                    clauses.add(Clause.equalsClause("RDB$PACKAGE_NAME", catalog));
+                    clauses.add(Clause.equalsClause(COLUMN_PACKAGE_NAME, catalog));
                 }
             }
             clauses.add(new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern));
@@ -197,6 +209,93 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
                     ? "\nwhere " + Clause.conjunction(clauses)
                     : "")
                     + GET_PROCEDURES_ORDER_BY_3_W_PKG;
+            //@formatter:on
+            return new MetadataQuery(sql, Clause.parameters(clauses));
+        }
+    }
+
+    private static final class FB6 extends GetProcedures {
+
+        private static final String GET_PROCEDURES_FRAGMENT_6 = """
+                select
+                  null as PROCEDURE_CAT,
+                  trim(trailing from RDB$SCHEMA_NAME) as PROCEDURE_SCHEM,
+                  trim(trailing from RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
+                  RDB$DESCRIPTION as REMARKS,
+                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
+                from "SYSTEM".RDB$PROCEDURES
+                where RDB$PACKAGE_NAME is null""";
+
+        // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort
+        private static final String GET_PROCEDURES_ORDER_BY_6 =
+                "\norder by RDB$SCHEMA_NAME, RDB$PACKAGE_NAME, RDB$PROCEDURE_NAME";
+
+        private FB6(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetProcedures createInstance(DbMetadataMediator mediator) {
+            return new FB6(mediator);
+        }
+
+        @Override
+        MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern) {
+            var schemaNameClause = new Clause(COLUMN_SCHEMA_NAME, schemaPattern);
+            var procedureNameClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
+            //@formatter:off
+            String queryText = GET_PROCEDURES_FRAGMENT_6
+                    + (Clause.anyCondition(schemaNameClause, procedureNameClause)
+                    ? "\nand " + Clause.conjunction(schemaNameClause, procedureNameClause)
+                    : "")
+                    + GET_PROCEDURES_ORDER_BY_6;
+            //@formatter:on
+            return new MetadataQuery(queryText, Clause.parameters(schemaNameClause, procedureNameClause));
+        }
+    }
+
+    private static final class FB6CatalogAsPackage extends GetProcedures {
+
+        private static final String GET_PROCEDURES_FRAGMENT_6_W_PKG = """
+                select
+                  coalesce(trim(trailing from RDB$PACKAGE_NAME), '') as PROCEDURE_CAT,
+                  trim(trailing from RDB$SCHEMA_NAME) as PROCEDURE_SCHEM,
+                  trim(trailing from RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
+                  RDB$DESCRIPTION as REMARKS,
+                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
+                from "SYSTEM".RDB$PROCEDURES""";
+
+        private static final String GET_PROCEDURES_ORDER_BY_6_W_PKG =
+                "\norder by RDB$PACKAGE_NAME nulls first, RDB$SCHEMA_NAME, RDB$PROCEDURE_NAME";
+
+        private FB6CatalogAsPackage(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetProcedures createInstance(DbMetadataMediator mediator) {
+            return new FB6CatalogAsPackage(mediator);
+        }
+
+        @Override
+        MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern) {
+            var clauses = new ArrayList<Clause>(3);
+            clauses.add(new Clause(COLUMN_SCHEMA_NAME, schemaPattern));
+            if (catalog != null) {
+                // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
+                // should not be used to narrow the search
+                if (catalog.isEmpty()) {
+                    clauses.add(Clause.isNullClause(COLUMN_PACKAGE_NAME));
+                } else {
+                    // Exact matches only
+                    clauses.add(Clause.equalsClause(COLUMN_PACKAGE_NAME, catalog));
+                }
+            }
+            clauses.add(new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern));
+            //@formatter:off
+            String sql = GET_PROCEDURES_FRAGMENT_6_W_PKG
+                    + (Clause.anyCondition(clauses)
+                    ? "\nwhere " + Clause.conjunction(clauses)
+                    : "")
+                    + GET_PROCEDURES_ORDER_BY_6_W_PKG;
             //@formatter:on
             return new MetadataQuery(sql, Clause.parameters(clauses));
         }
