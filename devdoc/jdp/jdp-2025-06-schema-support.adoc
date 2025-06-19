@@ -72,8 +72,8 @@ The following changes are made to Jaybird to support schemas when connecting to 
 * Connection property `searchPath` (alias `search_path`, `isc_dpb_search_path`) to configure the default session search path.
 +
 On Firebird 5.0 and older, this will be silently ignored.
-* In internal queries in Jaybird, and fully qualified object names, we'll always use the quoted identifier `"SYSTEM"`, because `SYSTEM` is SQL:2023 reserved word.
-* `Connection.getSchema()` will return the result of `select CURRENT_SCHEMA from "SYSTEM".RDB$DATABASE`;
+* In internal queries in Jaybird, and fully qualified object names, we'll use the regular -- unquoted -- identifier `SYSTEM`, even though `SYSTEM` is a SQL:2023 reserved word, to preserve dialect 1 compatibility.
+* `Connection.getSchema()` will return the result of `select CURRENT_SCHEMA from SYSTEM.RDB$DATABASE`;
 the connection will not store this value
 * `Connection.setSchema(String)` will query the current search path, if not previously called, it will prepend the schema name to the search path, otherwise it will _replace_ the previously prepended schema name.
 The schema name is stored _only_ for this replacement operation (i.e. it will not be returned by `getSchema`!)
@@ -95,6 +95,8 @@ Jaybird cannot honour this requirement for plain `Statement`, as schema resoluti
 *** Or add a compatibility connection property to make it behave as `null` ("`__[...] means that the schema name should not be used to narrow the search__`")?
 *** Or just accept it as a breaking change?
 * TODO: Define effects for management API
+
+Note to self: use `// TODO Add schema support` in places that you identify need to get/improve schema support, while working on schema support elsewhere
 
 [appendix]
 == License Notice
