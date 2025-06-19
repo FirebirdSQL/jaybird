@@ -8,7 +8,7 @@
  SPDX-FileCopyrightText: Copyright 2005 Michael Romankiewicz
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -1203,7 +1203,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
             throws SQLException {
-        return GetProcedures.create(getDbMetadataMediator()).getProcedures(catalog, procedureNamePattern);
+        return GetProcedures.create(getDbMetadataMediator())
+                .getProcedures(catalog, schemaPattern, procedureNamePattern);
     }
 
     /**
