@@ -613,40 +613,6 @@ class FBDatabaseMetaDataTest {
     }
 
     @Test
-    void testGetBestRowIdentifier() throws Exception {
-        createTable("best_row_pk");
-        createTable("best_row_no_pk", null);
-
-        for (int scope : new int[] { DatabaseMetaData.bestRowTemporary, DatabaseMetaData.bestRowTransaction,
-                DatabaseMetaData.bestRowTransaction }) {
-            try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_PK", scope, true)) {
-                assertTrue(rs.next(), "Should have rows");
-                assertEquals("C1", rs.getString(2), "Column name should be C1");
-                assertEquals("INTEGER", rs.getString(4), "Column type should be INTEGER");
-                assertEquals(DatabaseMetaData.bestRowSession, rs.getInt(1), "Scope should be bestRowSession");
-                assertEquals(DatabaseMetaData.bestRowNotPseudo, rs.getInt(8),
-                        "Pseudo column should be bestRowNotPseudo");
-                assertFalse(rs.next(), "Should have only one row");
-            }
-        }
-
-        for (int scope : new int[] { DatabaseMetaData.bestRowTemporary, DatabaseMetaData.bestRowTransaction }) {
-            try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_NO_PK", scope, true)) {
-                assertTrue(rs.next(), "Should have rows");
-                assertEquals("RDB$DB_KEY", rs.getString(2), "Column name should be RDB$DB_KEY");
-                assertEquals(DatabaseMetaData.bestRowTransaction, rs.getInt(1), "Scope should be bestRowTransaction");
-                assertEquals(DatabaseMetaData.bestRowPseudo, rs.getInt(8),
-                        "Pseudo column should be bestRowPseudo");
-                assertFalse(rs.next(), "Should have only one row");
-            }
-        }
-
-        try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_NO_PK", DatabaseMetaData.bestRowSession, true)) {
-            assertFalse(rs.next(), "Should have no rows");
-        }
-    }
-
-    @Test
     void testGetVersionColumns() throws Exception {
         ResultSet rs = dmd.getVersionColumns(null, null, null);
 

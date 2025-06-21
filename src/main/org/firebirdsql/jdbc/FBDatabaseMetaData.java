@@ -1372,13 +1372,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird considers the primary key (scoped as {@code bestRowSession} as the best identifier for all scopes.
-     * Pseudo column {@code RDB$DB_KEY} (scoped as {@code bestRowTransaction} is considered the second-best alternative
+     * Jaybird considers the primary key (scoped as {@code bestRowSession}) as the best identifier for all scopes.
+     * Pseudo column {@code RDB$DB_KEY} (scoped as {@code bestRowTransaction}) is considered the second-best alternative
      * for scopes {@code bestRowTemporary} and {@code bestRowTransaction} if {@code table} has no primary key.
      * </p>
      * <p>
      * Jaybird currently considers {@code RDB$DB_KEY} to be {@link DatabaseMetaData#bestRowTransaction} even if the
      * dbkey_scope is set to 1 (session). This may change in the future. See also {@link #getRowIdLifetime()}.
+     * </p>
+     * <p>
+     * On Firebird 6.0 and higher, passing {@code null} for {@code schema} will return columns of <strong>all</strong>
+     * tables with name {@code name}. It is recommended to <em>always</em> specify a non-{@code null} {@code schema} on
+     * Firebird 6.0 and higher.
      * </p>
      */
     @Override

@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2005-2011 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -250,8 +250,9 @@ final class FBRowUpdater implements FirebirdRowUpdater {
      */
     private static List<FieldDescriptor> keyColumnsOfBestRowIdentifier(String tableName, RowDescriptor rowDescriptor,
             DatabaseMetaData dbmd) throws SQLException {
+        // TODO Add schema support
         try (ResultSet bestRowIdentifier = dbmd
-                .getBestRowIdentifier("", "", tableName, DatabaseMetaData.bestRowTransaction, true)) {
+                .getBestRowIdentifier("", null, tableName, DatabaseMetaData.bestRowTransaction, true)) {
             int bestRowIdentifierColumnCount = 0;
             List<FieldDescriptor> keyColumns = new ArrayList<>();
             while (bestRowIdentifier.next()) {
