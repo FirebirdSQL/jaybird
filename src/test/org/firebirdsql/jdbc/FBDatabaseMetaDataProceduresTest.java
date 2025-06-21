@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  */
 class FBDatabaseMetaDataProceduresTest {
 
-    // TODO Add tests for filtering by schema
+    // TODO Add schema support: tests involving other schema
 
     private static final String CREATE_NORMAL_PROC_NO_RETURN = """
             CREATE PROCEDURE normal_proc_no_return
