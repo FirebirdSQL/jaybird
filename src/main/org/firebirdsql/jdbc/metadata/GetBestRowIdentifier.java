@@ -22,6 +22,7 @@ import static org.firebirdsql.gds.ISCConstants.CS_BINARY;
 import static org.firebirdsql.gds.ISCConstants.SQL_LONG;
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.char_type;
 import static org.firebirdsql.jdbc.metadata.MetadataPattern.escapeWildcards;
@@ -63,7 +64,7 @@ public abstract class GetBestRowIdentifier extends AbstractMetadataMethod {
     @SuppressWarnings("unused")
     public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
             throws SQLException {
-        if (table == null || table.isEmpty()) {
+        if (isNullOrEmpty(table)) {
             return createEmpty();
         }
 
@@ -204,7 +205,6 @@ public abstract class GetBestRowIdentifier extends AbstractMetadataMethod {
             String sql = GET_BEST_ROW_IDENT_START
                     + tableClause.getCondition(false)
                     + GET_BEST_ROW_IDENT_END;
-
             return new MetadataQuery(sql, Clause.parameters(tableClause));
         }
     }
@@ -217,7 +217,7 @@ public abstract class GetBestRowIdentifier extends AbstractMetadataMethod {
         //@formatter:off
         private static final String GET_BEST_ROW_IDENT_START_6 = """
                 select
-                  RF.RDB$FIELD_NAME as COLUMN_NAME,
+                  trim(trailing from RF.RDB$FIELD_NAME) as COLUMN_NAME,
                 """ +
                 "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n" +
                 "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n" +

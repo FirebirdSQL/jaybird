@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -24,6 +24,7 @@ import java.util.Map;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,6 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataColumnPrivilegesTest {
+
+    // TODO Add schema support: tests involving other schema
 
     private static final String SYSDBA = "SYSDBA";
     private static final String USER1 = "USER1";
@@ -125,7 +128,9 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
                 createRule("TBL1", "val3", USER1, false, "UPDATE"),
                 createRule("TBL1", "val3", user2, false, "UPDATE"));
 
-        validateExpectedColumnPrivileges("TBL1", allPattern, rules);
+        validateExpectedColumnPrivileges(ifSchemaElse("PUBLIC", ""), "TBL1", allPattern, rules);
+        // schema = null should also find it:
+        validateExpectedColumnPrivileges(null, "TBL1", allPattern, rules);
     }
 
     @Test
@@ -155,7 +160,9 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
                 createRule("TBL1", "COL2", SYSDBA, true, "UPDATE"),
                 createRule("TBL1", "COL2", USER1, false, "UPDATE"));
 
-        validateExpectedColumnPrivileges("TBL1", "COL%", rules);
+        validateExpectedColumnPrivileges(ifSchemaElse("PUBLIC", ""), "TBL1", "COL%", rules);
+        // schema = null should also find it:
+        validateExpectedColumnPrivileges(null, "TBL1", "COL%", rules);
     }
 
     @Test
@@ -181,13 +188,19 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
                 createRule("tbl2", "val3", user2, true, "SELECT"),
                 createRule("tbl2", "val3", SYSDBA, true, "UPDATE"));
 
-        validateExpectedColumnPrivileges("tbl2", "%", rules);
+        validateExpectedColumnPrivileges(ifSchemaElse("PUBLIC", ""), "tbl2", "%", rules);
     }
 
-    private Map<ColumnPrivilegesMetadata, Object> createRule(String tableName, String columnName, String grantee,
+    private Map<ColumnPrivilegesMetadata, Object> createRule(String table, String columnName, String grantee,
             boolean grantable, String privilege) {
+        return createRule(ifSchemaElse("PUBLIC", null), table, columnName, grantee, grantable, privilege);
+    }
+
+    private Map<ColumnPrivilegesMetadata, Object> createRule(String schema, String table, String columnName,
+            String grantee, boolean grantable, String privilege) {
         Map<ColumnPrivilegesMetadata, Object> rules = getDefaultValueValidationRules();
-        rules.put(ColumnPrivilegesMetadata.TABLE_NAME, tableName);
+        rules.put(ColumnPrivilegesMetadata.TABLE_SCHEM, schema);
+        rules.put(ColumnPrivilegesMetadata.TABLE_NAME, table);
         rules.put(ColumnPrivilegesMetadata.COLUMN_NAME, columnName);
         rules.put(ColumnPrivilegesMetadata.GRANTEE, grantee);
         rules.put(ColumnPrivilegesMetadata.PRIVILEGE, privilege);
@@ -195,9 +208,9 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
         return rules;
     }
 
-    private void validateExpectedColumnPrivileges(String tableName, String columnNamePattern,
+    private void validateExpectedColumnPrivileges(String schema, String table, String columnNamePattern,
             List<Map<ColumnPrivilegesMetadata, Object>> expectedColumnPrivileges) throws SQLException {
-        try (ResultSet columnPrivileges = dbmd.getColumnPrivileges(null, null, tableName, columnNamePattern)) {
+        try (ResultSet columnPrivileges = dbmd.getColumnPrivileges(null, schema, table, columnNamePattern)) {
             int privilegeCount = 0;
             while (columnPrivileges.next()) {
                 if (privilegeCount < expectedColumnPrivileges.size()) {
@@ -215,7 +228,7 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
     static {
         Map<ColumnPrivilegesMetadata, Object> defaults = new EnumMap<>(ColumnPrivilegesMetadata.class);
         defaults.put(ColumnPrivilegesMetadata.TABLE_CAT, null);
-        defaults.put(ColumnPrivilegesMetadata.TABLE_SCHEM, null);
+        defaults.put(ColumnPrivilegesMetadata.TABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(ColumnPrivilegesMetadata.GRANTOR, SYSDBA);
         defaults.put(ColumnPrivilegesMetadata.JB_GRANTEE_TYPE, "USER");
 
