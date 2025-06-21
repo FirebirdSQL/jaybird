@@ -366,6 +366,19 @@ public final class FBTestProperties {
         }
     }
 
+    /**
+     * If schema support is available, returns {@code forSchema}, otherwise returns {@code withoutSchema}.
+     *
+     * @param forSchema
+     *         value to return when schema support is available
+     * @param withoutSchema
+     *         value to return when schema support is not available
+     * @return {@code forSchema} if schema support is available, otherwise {@code withoutSchema}
+     */
+    public static <T> T ifSchemaElse(T forSchema, T withoutSchema) {
+        return getDefaultSupportInfo().supportsSchemas() ? forSchema : withoutSchema;
+    }
+
     private FBTestProperties() {
         // No instantiation
     }
