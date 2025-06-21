@@ -107,8 +107,8 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
 
         private static final String GET_PROCEDURES_FRAGMENT_2_5 = """
                 select
-                  null as PROCEDURE_CAT,
-                  null as PROCEDURE_SCHEM,
+                  cast(null as char(1)) as PROCEDURE_CAT,
+                  cast(null as char(1)) as PROCEDURE_SCHEM,
                   RDB$PROCEDURE_NAME as PROCEDURE_NAME,
                   RDB$DESCRIPTION as REMARKS,
                   RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE

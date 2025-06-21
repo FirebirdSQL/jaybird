@@ -1337,14 +1337,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      * <p>
      * <b>NOTE:</b> This implementation returns <b>all</b> privileges, not just applicable to the current user. It is
-     * unclear if this complies with the JDBC requirements. This may change in the future to only return only privileges
+     * unclear if this complies with the JDBC requirements. This may change in the future to only return privileges
      * applicable to the current user, user {@code PUBLIC} and &mdash; maybe &mdash; active roles.
+     * </p>
+     * <p>
+     * Contrary to specified in the JDBC API, the result set is ordered by {@code TABLE_SCHEM}, {@code COLUMN_NAME},
+     * {@code PRIVILEGE}, and {@code GRANTEE} (JDBC specifies ordering by {@code COLUMN_NAME} and {@code PRIVILEGE}).
+     * This only makes a difference when specifying {@code null} for {@code schema} (search all schemas) and there are
+     * multiples tables with the same {@code name}.
      * </p>
      */
     @Override
     public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern)
             throws SQLException {
-        return GetColumnPrivileges.create(getDbMetadataMediator()).getColumnPrivileges(table, columnNamePattern);
+        return GetColumnPrivileges.create(getDbMetadataMediator()).getColumnPrivileges(schema, table, columnNamePattern);
     }
 
     /**
