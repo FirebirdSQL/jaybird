@@ -1443,7 +1443,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
-        return GetImportedKeys.create(getDbMetadataMediator()).getImportedKeys(table);
+        return GetImportedKeys.create(getDbMetadataMediator()).getImportedKeys(schema, table);
     }
 
     /**
@@ -1458,7 +1458,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
-        return GetExportedKeys.create(getDbMetadataMediator()).getExportedKeys(table);
+        return GetExportedKeys.create(getDbMetadataMediator()).getExportedKeys(schema, table);
     }
 
     /**
@@ -1473,9 +1473,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public ResultSet getCrossReference(
-            String primaryCatalog, String primarySchema, String primaryTable,
+            String parentCatalog, String parentSchema, String parentTable,
             String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
-        return GetCrossReference.create(getDbMetadataMediator()).getCrossReference(primaryTable, foreignTable);
+        return GetCrossReference.create(getDbMetadataMediator())
+                .getCrossReference(parentSchema, parentTable, foreignSchema, foreignTable);
     }
 
     @Override

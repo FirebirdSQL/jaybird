@@ -52,7 +52,7 @@ public abstract class GetColumnPrivileges extends AbstractMetadataMethod {
     /**
      * @see java.sql.DatabaseMetaData#getColumnPrivileges(String, String, String, String) 
      */
-    public ResultSet getColumnPrivileges(String schema, String table, String columnNamePattern) throws SQLException {
+    public final ResultSet getColumnPrivileges(String schema, String table, String columnNamePattern) throws SQLException {
         if (isNullOrEmpty(table) || "".equals(columnNamePattern)) {
             return createEmpty();
         }
