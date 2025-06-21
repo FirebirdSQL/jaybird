@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -19,8 +19,10 @@ import java.util.Map;
 
 import static java.util.Collections.unmodifiableMap;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
+import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 
 /**
  * Base test class for subclasses of {@code org.firebirdsql.jdbc.metadata.AbstractKeysMethod}.
@@ -180,9 +182,18 @@ abstract class FBDatabaseMetaDataAbstractKeysTest {
     protected static Map<KeysMetaData, Object> createKeysTestData(String pkTable, String pkColumn, String fkTable,
             String fkColumn, int keySeq, int updateRule, int deleteRule, String pkName, String fkName,
             String pkIndexName, String fkIndexName) {
+        return createKeysTestData(ifSchemaElse("PUBLIC", null), pkTable, pkColumn, ifSchemaElse("PUBLIC", null),
+                fkTable, fkColumn, keySeq, updateRule, deleteRule, pkName, fkName, pkIndexName, fkIndexName);
+    }
+
+    protected static Map<KeysMetaData, Object> createKeysTestData(String pkSchema, String pkTable, String pkColumn,
+            String fkSchema, String fkTable, String fkColumn, int keySeq, int updateRule, int deleteRule,
+            String pkName, String fkName, String pkIndexName, String fkIndexName) {
         Map<KeysMetaData, Object> rules = getDefaultValidationRules();
+        rules.put(KeysMetaData.PKTABLE_SCHEM, trimToNull(pkSchema));
         rules.put(KeysMetaData.PKTABLE_NAME, pkTable);
         rules.put(KeysMetaData.PKCOLUMN_NAME, pkColumn);
+        rules.put(KeysMetaData.FKTABLE_SCHEM, trimToNull(fkSchema));
         rules.put(KeysMetaData.FKTABLE_NAME, fkTable);
         rules.put(KeysMetaData.FKCOLUMN_NAME, fkColumn);
         rules.put(KeysMetaData.KEY_SEQ, (short) keySeq);
@@ -207,6 +218,8 @@ abstract class FBDatabaseMetaDataAbstractKeysTest {
     static {
         var defaults = new EnumMap<>(KeysMetaData.class);
         Arrays.stream(KeysMetaData.values()).forEach(key -> defaults.put(key, null));
+        defaults.put(KeysMetaData.PKTABLE_SCHEM, ifSchemaElse("PUBLIC", null));
+        defaults.put(KeysMetaData.FKTABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(KeysMetaData.UPDATE_RULE, DatabaseMetaData.importedKeyNoAction);
         defaults.put(KeysMetaData.DELETE_RULE, DatabaseMetaData.importedKeyNoAction);
         defaults.put(KeysMetaData.DEFERRABILITY, DatabaseMetaData.importedKeyNotDeferrable);

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -12,12 +12,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+
 /**
  * Tests for {@link java.sql.DatabaseMetaData#getImportedKeys(String, String, String)}.
  *
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataImportedKeysTest extends FBDatabaseMetaDataAbstractKeysTest {
+
+    // TODO Add schema support: tests involving other schema
 
     @Test
     void testExportedKeysMetaDataColumns() throws Exception {
@@ -28,8 +32,8 @@ class FBDatabaseMetaDataImportedKeysTest extends FBDatabaseMetaDataAbstractKeysT
 
     @ParameterizedTest
     @MethodSource
-    void testImportedKeys(String table, List<Map<KeysMetaData, Object>> expectedKeys) throws Exception {
-        try (ResultSet importedKeys = dbmd.getImportedKeys(null, null, table)) {
+    void testImportedKeys(String schema, String table, List<Map<KeysMetaData, Object>> expectedKeys) throws Exception {
+        try (ResultSet importedKeys = dbmd.getImportedKeys(null, schema, table)) {
             validateExpectedKeys(importedKeys, expectedKeys);
         }
     }
@@ -47,7 +51,12 @@ class FBDatabaseMetaDataImportedKeysTest extends FBDatabaseMetaDataAbstractKeysT
     }
 
     private static Arguments importedKeysTestCase(String table, List<Map<KeysMetaData, Object>> expectedKeys) {
-        return Arguments.of(table, expectedKeys);
+        return importedKeysTestCase(ifSchemaElse("PUBLIC", ""), table, expectedKeys);
+    }
+
+    private static Arguments importedKeysTestCase(String schema, String table,
+            List<Map<KeysMetaData, Object>> expectedKeys) {
+        return Arguments.of(schema, table, expectedKeys);
     }
 
 }

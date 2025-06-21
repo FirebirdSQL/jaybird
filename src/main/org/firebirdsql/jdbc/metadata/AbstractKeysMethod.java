@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2024 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -51,8 +51,10 @@ abstract class AbstractKeysMethod extends AbstractMetadataMethod {
     @Override
     final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
         return valueBuilder
+                .at(1).setString(rs.getString("PKTABLE_SCHEM"))
                 .at(2).setString(rs.getString("PKTABLE_NAME"))
                 .at(3).setString(rs.getString("PKCOLUMN_NAME"))
+                .at(5).setString(rs.getString("FKTABLE_SCHEM"))
                 .at(6).setString(rs.getString("FKTABLE_NAME"))
                 .at(7).setString(rs.getString("FKCOLUMN_NAME"))
                 .at(8).setShort(rs.getShort("KEY_SEQ"))

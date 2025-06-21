@@ -62,7 +62,7 @@ public abstract class GetBestRowIdentifier extends AbstractMetadataMethod {
     }
 
     @SuppressWarnings("unused")
-    public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
+    public final ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
             throws SQLException {
         if (isNullOrEmpty(table)) {
             return createEmpty();
