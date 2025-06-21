@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+
 /**
  * Tests for {@link FBDatabaseMetaData#getCrossReference(String, String, String, String, String, String)}.
  * 
@@ -19,9 +21,12 @@ import java.util.stream.Stream;
  */
 class FBDatabaseMetaDataCrossReferenceTest extends FBDatabaseMetaDataAbstractKeysTest {
 
+    // TODO Add schema support: tests involving other schema
+
     @Test
     void testCrossReferenceMetaDataColumns() throws Exception {
-        try (ResultSet crossReference = dbmd.getCrossReference(null, null, "doesnotexit", null, null, "doesnotexist")) {
+        try (ResultSet crossReference = dbmd.getCrossReference(
+                null, null, "doesnotexist", null, null, "doesnotexist")) {
             keysDefinition.validateResultSetColumns(crossReference);
         }
     }
@@ -30,7 +35,8 @@ class FBDatabaseMetaDataCrossReferenceTest extends FBDatabaseMetaDataAbstractKey
     @MethodSource
     void testCrossReference(String parentTable, String foreignTable, List<Map<KeysMetaData, Object>> expectedKeys)
             throws Exception {
-        try (ResultSet crossReference = dbmd.getCrossReference(null, null, parentTable, null, null, foreignTable)) {
+        try (ResultSet crossReference = dbmd.getCrossReference(null, ifSchemaElse("PUBLIC", ""), parentTable, null,
+                ifSchemaElse("PUBLIC", ""), foreignTable)) {
             validateExpectedKeys(crossReference, expectedKeys);
         }
     }

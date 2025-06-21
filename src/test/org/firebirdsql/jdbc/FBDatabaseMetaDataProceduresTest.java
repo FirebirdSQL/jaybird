@@ -26,6 +26,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -370,10 +371,6 @@ class FBDatabaseMetaDataProceduresTest {
         public Class<?> getColumnClass() {
             return columnClass;
         }
-    }
-
-    private static String ifSchemaElse(String forSchema, String withoutSchema) {
-        return getDefaultSupportInfo().supportsSchemas() ? forSchema : withoutSchema;
     }
 
     private enum ProcedureTestData {
