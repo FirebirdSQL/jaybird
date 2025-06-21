@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2024 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -12,6 +12,7 @@ import org.firebirdsql.util.FirebirdSupportInfo;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.List;
 import java.util.Objects;
 
 import static java.sql.DatabaseMetaData.columnNoNulls;
@@ -78,13 +79,13 @@ public abstract class GetColumns extends AbstractMetadataMethod {
      * @see java.sql.DatabaseMetaData#getColumns(String, String, String, String)
      * @see org.firebirdsql.jdbc.FBDatabaseMetaData#getColumns(String, String, String, String) 
      */
-    public final ResultSet getColumns(String tableNamePattern, String columnNamePattern) throws SQLException {
+    public final ResultSet getColumns(String schemaPattern, String tableNamePattern, String columnNamePattern) throws SQLException {
         if ("".equals(tableNamePattern) || "".equals(columnNamePattern)) {
             // Matching table name or column not possible
             return createEmpty();
         }
 
-        MetadataQuery metadataQuery = createGetColumnsQuery(tableNamePattern, columnNamePattern);
+        MetadataQuery metadataQuery = createGetColumnsQuery(schemaPattern, tableNamePattern, columnNamePattern);
         return createMetaDataResultSet(metadataQuery);
     }
 
@@ -98,6 +99,7 @@ public abstract class GetColumns extends AbstractMetadataMethod {
         boolean isComputed = rs.getBoolean("IS_COMPUTED");
         boolean isIdentity = rs.getBoolean("IS_IDENTITY");
         return valueBuilder
+                .at(1).setString(rs.getString("SCHEMA_NAME"))
                 .at(2).setString(rs.getString("RELATION_NAME"))
                 .at(3).setString(rs.getString("FIELD_NAME"))
                 .at(4).setInt(typeMetadata.getJdbcType())
@@ -138,12 +140,15 @@ public abstract class GetColumns extends AbstractMetadataMethod {
         };
     }
 
-    abstract MetadataQuery createGetColumnsQuery(String tableNamePattern, String columnNamePattern);
+    abstract MetadataQuery createGetColumnsQuery(String schemaPattern, String tableNamePattern,
+            String columnNamePattern);
 
     public static GetColumns create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(3, 0)) {
+        if (firebirdSupportInfo.isVersionEqualOrAbove(6)) {
+            return FB6.createInstance(mediator);
+        } else if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
             return FB3.createInstance(mediator);
         } else {
             return FB2_5.createInstance(mediator);
@@ -153,29 +158,29 @@ public abstract class GetColumns extends AbstractMetadataMethod {
     @SuppressWarnings("java:S101")
     private static class FB2_5 extends GetColumns {
 
-        //@formatter:off
-        private static final String GET_COLUMNS_FRAGMENT_2_5 =
-                "select\n"
-                + "  RF.RDB$RELATION_NAME as RELATION_NAME,\n"
-                + "  RF.RDB$FIELD_NAME as FIELD_NAME,\n"
-                + "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n"
-                + "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n"
-                + "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n"
-                + "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n"
-                + "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n"
-                + "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n"
-                + "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n"
-                + "  RF.RDB$DESCRIPTION as REMARKS,\n"
-                + "  coalesce(RF.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as DEFAULT_SOURCE,\n"
-                + "  RF.RDB$FIELD_POSITION + 1 as FIELD_POSITION,\n"
-                + "  iif(coalesce(RF.RDB$NULL_FLAG, 0) + coalesce(F.RDB$NULL_FLAG, 0) = 0, 'T', 'F') as IS_NULLABLE,\n"
-                + "  iif(F.RDB$COMPUTED_BLR is not NULL, 'T', 'F') as IS_COMPUTED,\n"
-                + "  'F' as IS_IDENTITY,\n"
-                + "  cast(NULL as VARCHAR(10)) as JB_IDENTITY_TYPE\n"
-                + "from RDB$RELATION_FIELDS RF inner join RDB$FIELDS F on RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME";
+        private static final String GET_COLUMNS_FRAGMENT_2_5 = """
+                select
+                  cast(null as char(1)) AS SCHEMA_NAME,
+                  RF.RDB$RELATION_NAME as RELATION_NAME,
+                  RF.RDB$FIELD_NAME as FIELD_NAME,
+                """ +
+                "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n" +
+                "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n" +
+                "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n" +
+                "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n" +
+                "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n" +
+                "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n" +
+                "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n" + """
+                  RF.RDB$DESCRIPTION as REMARKS,
+                  coalesce(RF.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as DEFAULT_SOURCE,
+                  RF.RDB$FIELD_POSITION + 1 as FIELD_POSITION,
+                  iif(coalesce(RF.RDB$NULL_FLAG, 0) + coalesce(F.RDB$NULL_FLAG, 0) = 0, 'T', 'F') as IS_NULLABLE,
+                  iif(F.RDB$COMPUTED_BLR is not NULL, 'T', 'F') as IS_COMPUTED,
+                  'F' as IS_IDENTITY,
+                  cast(NULL as VARCHAR(10)) as JB_IDENTITY_TYPE
+                from RDB$RELATION_FIELDS RF inner join RDB$FIELDS F on RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME""";
 
         private static final String GET_COLUMNS_ORDER_BY_2_5 = "\norder by RF.RDB$RELATION_NAME, RF.RDB$FIELD_POSITION";
-        //@formatter:on
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
@@ -186,44 +191,43 @@ public abstract class GetColumns extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetColumnsQuery(String tableNamePattern, String columnNamePattern) {
-            Clause tableNameClause = new Clause("RF.RDB$RELATION_NAME", tableNamePattern);
-            Clause columnNameClause = new Clause("RF.RDB$FIELD_NAME", columnNamePattern);
+        MetadataQuery createGetColumnsQuery(String schemaPattern, String tableNamePattern, String columnNamePattern) {
+            var clauses = List.of(
+                    new Clause("RF.RDB$RELATION_NAME", tableNamePattern),
+                    new Clause("RF.RDB$FIELD_NAME", columnNamePattern));
             String sql = GET_COLUMNS_FRAGMENT_2_5
-                    + (Clause.anyCondition(tableNameClause, columnNameClause)
-                    ? "\nwhere " + tableNameClause.getCondition(columnNameClause.hasCondition())
-                    + columnNameClause.getCondition(false)
-                    : "")
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
                     + GET_COLUMNS_ORDER_BY_2_5;
-            return new MetadataQuery(sql, Clause.parameters(tableNameClause, columnNameClause));
+            return new MetadataQuery(sql, Clause.parameters(clauses));
         }
+
     }
 
     private static class FB3 extends GetColumns {
 
-        //@formatter:off
-        private static final String GET_COLUMNS_FRAGMENT_3 =
-                "select\n"
-                + "  trim(trailing from RF.RDB$RELATION_NAME) as RELATION_NAME,\n"
-                + "  trim(trailing from RF.RDB$FIELD_NAME) as FIELD_NAME,\n"
-                + "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n"
-                + "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n"
-                + "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n"
-                + "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n"
-                + "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n"
-                + "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n"
-                + "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n"
-                + "  RF.RDB$DESCRIPTION as REMARKS,\n"
-                + "  coalesce(RF.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as DEFAULT_SOURCE,\n"
-                + "  RF.RDB$FIELD_POSITION + 1 as FIELD_POSITION,\n"
-                + "  (coalesce(RF.RDB$NULL_FLAG, 0) + coalesce(F.RDB$NULL_FLAG, 0) = 0) as IS_NULLABLE,\n"
-                + "  (F.RDB$COMPUTED_BLR is not NULL) as IS_COMPUTED,\n"
-                + "  (RF.RDB$IDENTITY_TYPE IS NOT NULL) as IS_IDENTITY,\n"
-                + "  trim(trailing from decode(RF.RDB$IDENTITY_TYPE, 0, 'ALWAYS', 1, 'BY DEFAULT')) as JB_IDENTITY_TYPE\n"
-                + "from RDB$RELATION_FIELDS RF inner join RDB$FIELDS F on RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME";
+        private static final String GET_COLUMNS_FRAGMENT_3 = """
+                select
+                  null AS SCHEMA_NAME,
+                  trim(trailing from RF.RDB$RELATION_NAME) as RELATION_NAME,
+                  trim(trailing from RF.RDB$FIELD_NAME) as FIELD_NAME,
+                """ +
+                "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n" +
+                "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n" +
+                "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n" +
+                "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n" +
+                "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n" +
+                "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n" +
+                "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n" + """
+                  RF.RDB$DESCRIPTION as REMARKS,
+                  coalesce(RF.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as DEFAULT_SOURCE,
+                  RF.RDB$FIELD_POSITION + 1 as FIELD_POSITION,
+                  (coalesce(RF.RDB$NULL_FLAG, 0) + coalesce(F.RDB$NULL_FLAG, 0) = 0) as IS_NULLABLE,
+                  (F.RDB$COMPUTED_BLR is not NULL) as IS_COMPUTED,
+                  (RF.RDB$IDENTITY_TYPE IS NOT NULL) as IS_IDENTITY,
+                  trim(trailing from decode(RF.RDB$IDENTITY_TYPE, 0, 'ALWAYS', 1, 'BY DEFAULT')) as JB_IDENTITY_TYPE
+                from RDB$RELATION_FIELDS RF inner join RDB$FIELDS F on RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME""";
 
         private static final String GET_COLUMNS_ORDER_BY_3 = "\norder by RF.RDB$RELATION_NAME, RF.RDB$FIELD_POSITION";
-        //@formatter:on
 
         private FB3(DbMetadataMediator mediator) {
             super(mediator);
@@ -234,16 +238,67 @@ public abstract class GetColumns extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetColumnsQuery(String tableNamePattern, String columnNamePattern) {
-            Clause tableNameClause = new Clause("RF.RDB$RELATION_NAME", tableNamePattern);
-            Clause columnNameClause = new Clause("RF.RDB$FIELD_NAME", columnNamePattern);
+        MetadataQuery createGetColumnsQuery(String schemaPattern, String tableNamePattern, String columnNamePattern) {
+            var clauses = List.of(
+                    new Clause("RF.RDB$RELATION_NAME", tableNamePattern),
+                    new Clause("RF.RDB$FIELD_NAME", columnNamePattern));
             String sql = GET_COLUMNS_FRAGMENT_3
-                    + (Clause.anyCondition(tableNameClause, columnNameClause)
-                    ? "\nwhere " + tableNameClause.getCondition(columnNameClause.hasCondition())
-                    + columnNameClause.getCondition(false)
-                    : "")
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
                     + GET_COLUMNS_ORDER_BY_3;
-            return new MetadataQuery(sql, Clause.parameters(tableNameClause, columnNameClause));
+            return new MetadataQuery(sql, Clause.parameters(clauses));
         }
+
     }
+
+    private static class FB6 extends GetColumns {
+
+        private static final String GET_COLUMNS_FRAGMENT_6 = """
+                select
+                  trim(trailing from RF.RDB$SCHEMA_NAME) AS SCHEMA_NAME,
+                  trim(trailing from RF.RDB$RELATION_NAME) as RELATION_NAME,
+                  trim(trailing from RF.RDB$FIELD_NAME) as FIELD_NAME,
+                """ +
+                "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n" +
+                "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n" +
+                "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n" +
+                "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n" +
+                "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n" +
+                "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n" +
+                "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n" + """
+                  RF.RDB$DESCRIPTION as REMARKS,
+                  coalesce(RF.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as DEFAULT_SOURCE,
+                  RF.RDB$FIELD_POSITION + 1 as FIELD_POSITION,
+                  (coalesce(RF.RDB$NULL_FLAG, 0) + coalesce(F.RDB$NULL_FLAG, 0) = 0) as IS_NULLABLE,
+                  (F.RDB$COMPUTED_BLR is not NULL) as IS_COMPUTED,
+                  (RF.RDB$IDENTITY_TYPE IS NOT NULL) as IS_IDENTITY,
+                  trim(trailing from decode(RF.RDB$IDENTITY_TYPE, 0, 'ALWAYS', 1, 'BY DEFAULT')) as JB_IDENTITY_TYPE
+                from SYSTEM.RDB$RELATION_FIELDS RF
+                inner join SYSTEM.RDB$FIELDS F
+                  on RF.RDB$FIELD_SOURCE_SCHEMA_NAME = F.RDB$SCHEMA_NAME and RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME""";
+
+        private static final String GET_COLUMNS_ORDER_BY_6 =
+                "\norder by RF.RDB$SCHEMA_NAME, RF.RDB$RELATION_NAME, RF.RDB$FIELD_POSITION";
+
+        private FB6(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetColumns createInstance(DbMetadataMediator mediator) {
+            return new FB6(mediator);
+        }
+
+        @Override
+        MetadataQuery createGetColumnsQuery(String schemaPattern, String tableNamePattern, String columnNamePattern) {
+            var clauses = List.of(
+                    new Clause("RF.RDB$SCHEMA_NAME", schemaPattern),
+                    new Clause("RF.RDB$RELATION_NAME", tableNamePattern),
+                    new Clause("RF.RDB$FIELD_NAME", columnNamePattern));
+            String sql = GET_COLUMNS_FRAGMENT_6
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
+                    + GET_COLUMNS_ORDER_BY_6;
+            return new MetadataQuery(sql, Clause.parameters(clauses));
+        }
+
+    }
+
 }
