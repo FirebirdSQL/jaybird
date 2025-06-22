@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -338,9 +338,10 @@ class FBDatabaseMetaDataFunctionsTest {
             // Skipping RDB$GET_CONTEXT and RDB$SET_CONTEXT as that seems to be an implementation artifact:
             // present in FB 2.5, absent in FB 3.0
             private static final Set<String> FUNCTIONS_TO_IGNORE = Set.of("RDB$GET_CONTEXT", "RDB$SET_CONTEXT");
-            // Also skipping functions from system packages (when testing with useCatalogAsPackage=true)
+            // Also skipping functions from system packages (when testing with useCatalogAsPackage=true),
+            // and schema SYSTEM (Firebird 6+)
             private static final List<String> PREFIXES_TO_IGNORE =
-                    List.of("\"RDB$BLOB_UTIL\".", "\"RDB$PROFILER\".", "\"RDB$TIME_ZONE_UTIL\".");
+                    List.of("\"SYSTEM\".\"RDB$", "\"RDB$BLOB_UTIL\".", "\"RDB$PROFILER\".", "\"RDB$TIME_ZONE_UTIL\".");
         }
         if (Ignored.FUNCTIONS_TO_IGNORE.contains(specificName)) return true;
         return Ignored.PREFIXES_TO_IGNORE.stream().anyMatch(specificName::startsWith);
