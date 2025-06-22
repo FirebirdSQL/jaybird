@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -22,9 +22,10 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.jdbc.FBDatabaseMetaDataFunctionsTest.isIgnoredFunction;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -353,7 +354,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         try (var connection = DriverManager.getConnection(getUrl(), props)) {
             dbmd = connection.getMetaData();
             List<Map<FunctionColumnMetaData, Object>> expectedColumns = withCatalog("WITH$FUNCTION",
-                    withSpecificName("\"WITH$FUNCTION\".\"IN$PACKAGE\"",
+                    withSpecificName(ifSchemaElse("\"PUBLIC\".", "") + "\"WITH$FUNCTION\".\"IN$PACKAGE\"",
                             List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM1", 1, 10, 0, true))));
             validateExpectedFunctionColumns(catalog, "IN$PACKAGE", "PARAM1", expectedColumns);
         }
@@ -386,7 +387,13 @@ class FBDatabaseMetaDataFunctionColumnsTest {
 
     private void validateExpectedFunctionColumns(String catalog, String functionNamePattern, String columnNamePattern,
             List<Map<FunctionColumnMetaData, Object>> expectedColumns) throws Exception {
-        try (ResultSet columns = dbmd.getFunctionColumns(catalog, null, functionNamePattern, columnNamePattern)) {
+        validateExpectedFunctionColumns(catalog, null, functionNamePattern, columnNamePattern, expectedColumns);
+    }
+
+    private void validateExpectedFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
+            String columnNamePattern, List<Map<FunctionColumnMetaData, Object>> expectedColumns) throws Exception {
+        try (ResultSet columns = dbmd.getFunctionColumns(
+                catalog, schemaPattern, functionNamePattern, columnNamePattern)) {
             for (Map<FunctionColumnMetaData, Object> expectedColumn : expectedColumns) {
                 expectNextFunctionColumn(columns);
                 getFunctionColumnsDefinition.validateRowValues(columns, expectedColumn);
@@ -397,7 +404,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
 
     private static void expectNextFunctionColumn(ResultSet rs) throws SQLException {
         do {
-            assertTrue(rs.next(), "Expected a row");
+            assertNextRow(rs);
         } while (isIgnoredFunction(rs.getString("SPECIFIC_NAME")));
     }
 
@@ -477,7 +484,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
 
     private static List<Map<FunctionColumnMetaData, Object>> getWithFunctionInPackageColumns() {
         return withCatalog("WITH$FUNCTION",
-                withSpecificName("\"WITH$FUNCTION\".\"IN$PACKAGE\"",
+                withSpecificName(ifSchemaElse("\"PUBLIC\".", "") + "\"WITH$FUNCTION\".\"IN$PACKAGE\"",
                         List.of(
                                 withColumnTypeFunctionReturn(
                                         createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM_0", 0, 10, 0, true)),
@@ -510,7 +517,8 @@ class FBDatabaseMetaDataFunctionColumnsTest {
             int ordinalPosition, boolean nullable) {
         Map<FunctionColumnMetaData, Object> rules = getDefaultValidationRules();
         rules.put(FunctionColumnMetaData.FUNCTION_NAME, functionName);
-        rules.put(FunctionColumnMetaData.SPECIFIC_NAME, functionName);
+        rules.put(FunctionColumnMetaData.SPECIFIC_NAME, ifSchemaElse(
+                "\"PUBLIC\"." + QuoteStrategy.DIALECT_3.quoteObjectName(functionName), functionName));
         rules.put(FunctionColumnMetaData.COLUMN_NAME, columnName);
         rules.put(FunctionColumnMetaData.ORDINAL_POSITION, ordinalPosition);
         if (nullable) {
@@ -674,7 +682,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
     static {
         Map<FunctionColumnMetaData, Object> defaults = new EnumMap<>(FunctionColumnMetaData.class);
         defaults.put(FunctionColumnMetaData.FUNCTION_CAT, null);
-        defaults.put(FunctionColumnMetaData.FUNCTION_SCHEM, null);
+        defaults.put(FunctionColumnMetaData.FUNCTION_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(FunctionColumnMetaData.PRECISION, null);
         defaults.put(FunctionColumnMetaData.SCALE, null);
         defaults.put(FunctionColumnMetaData.RADIX, 10);
