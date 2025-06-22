@@ -24,6 +24,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -35,6 +36,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataFunctionsTest {
+
+    // TODO Add schema support: tests involving other schema
 
     private static final String CREATE_UDF_EXAMPLE = """
             declare external function UDF$EXAMPLE
@@ -274,7 +277,7 @@ class FBDatabaseMetaDataFunctionsTest {
             rules.put(FunctionMetaData.FUNCTION_CAT, "");
         }
         rules.put(FunctionMetaData.FUNCTION_NAME, "PSQL$EXAMPLE");
-        rules.put(FunctionMetaData.SPECIFIC_NAME, "PSQL$EXAMPLE");
+        rules.put(FunctionMetaData.SPECIFIC_NAME, ifSchemaElse("\"PUBLIC\".\"PSQL$EXAMPLE\"", "PSQL$EXAMPLE"));
         if (supportsComments) {
             rules.put(FunctionMetaData.REMARKS, "Comment on PSQL$EXAMPLE");
         }
@@ -298,7 +301,7 @@ class FBDatabaseMetaDataFunctionsTest {
             rules.put(FunctionMetaData.FUNCTION_CAT, "");
         }
         rules.put(FunctionMetaData.FUNCTION_NAME, "UDF$EXAMPLE");
-        rules.put(FunctionMetaData.SPECIFIC_NAME, "UDF$EXAMPLE");
+        rules.put(FunctionMetaData.SPECIFIC_NAME, ifSchemaElse("\"PUBLIC\".\"UDF$EXAMPLE\"", "UDF$EXAMPLE"));
         if (supportsComments) {
             rules.put(FunctionMetaData.REMARKS, "Comment on UDF$EXAMPLE");
         }
@@ -312,7 +315,7 @@ class FBDatabaseMetaDataFunctionsTest {
         Map<FunctionMetaData, Object> rules = getDefaultValidationRules();
         rules.put(FunctionMetaData.FUNCTION_CAT, "WITH$FUNCTION");
         rules.put(FunctionMetaData.FUNCTION_NAME, "IN$PACKAGE");
-        rules.put(FunctionMetaData.SPECIFIC_NAME, "\"WITH$FUNCTION\".\"IN$PACKAGE\"");
+        rules.put(FunctionMetaData.SPECIFIC_NAME, ifSchemaElse("\"PUBLIC\".", "") + "\"WITH$FUNCTION\".\"IN$PACKAGE\"");
         // Stored with package
         rules.put(FunctionMetaData.JB_FUNCTION_SOURCE, null);
         rules.put(FunctionMetaData.JB_FUNCTION_KIND, "PSQL");
@@ -351,7 +354,7 @@ class FBDatabaseMetaDataFunctionsTest {
     static {
         Map<FunctionMetaData, Object> defaults = new EnumMap<>(FunctionMetaData.class);
         defaults.put(FunctionMetaData.FUNCTION_CAT, null);
-        defaults.put(FunctionMetaData.FUNCTION_SCHEM, null);
+        defaults.put(FunctionMetaData.FUNCTION_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(FunctionMetaData.REMARKS, null);
         defaults.put(FunctionMetaData.FUNCTION_TYPE, (short) DatabaseMetaData.functionNoTable);
         defaults.put(FunctionMetaData.JB_FUNCTION_SOURCE, null);
