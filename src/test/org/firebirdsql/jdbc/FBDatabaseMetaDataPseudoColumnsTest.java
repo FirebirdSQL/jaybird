@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2018-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -13,11 +13,14 @@ import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class FBDatabaseMetaDataPseudoColumnsTest {
+
+    // TODO Add schema support: tests involving other schema
 
     //@formatter:off
     private static final String NORMAL_TABLE_NAME = "NORMAL_TABLE";
@@ -136,7 +139,8 @@ class FBDatabaseMetaDataPseudoColumnsTest {
     @Test
     void testMonitoringTable_allPseudoColumns() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test requires monitoring tables");
-        List<Map<PseudoColumnMetaData, Object>> validationRules = createStandardValidationRules("MON$DATABASE", "YES");
+        List<Map<PseudoColumnMetaData, Object>> validationRules =
+                createStandardValidationRules(ifSchemaElse("SYSTEM", null), "MON$DATABASE", "YES");
 
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, "MON$DATABASE", "%");
         validate(pseudoColumns, validationRules);
@@ -271,10 +275,15 @@ class FBDatabaseMetaDataPseudoColumnsTest {
 
     private List<Map<PseudoColumnMetaData, Object>> createStandardValidationRules(String tableName,
             String recordVersionNullable) {
+        return createStandardValidationRules(ifSchemaElse("PUBLIC", null), tableName, recordVersionNullable);
+    }
+
+    private List<Map<PseudoColumnMetaData, Object>> createStandardValidationRules(String schema, String tableName,
+            String recordVersionNullable) {
         List<Map<PseudoColumnMetaData, Object>> validationRules = new ArrayList<>();
-        validationRules.add(createDbkeyValidationRules(tableName, 8));
+        validationRules.add(createDbkeyValidationRules(schema, tableName, 8));
         if (supportsRecordVersion) {
-            validationRules.add(createRecordVersionValidationRules(tableName, recordVersionNullable));
+            validationRules.add(createRecordVersionValidationRules(schema, tableName, recordVersionNullable));
         }
         return validationRules;
     }
@@ -301,7 +310,7 @@ class FBDatabaseMetaDataPseudoColumnsTest {
     static {
         Map<PseudoColumnMetaData, Object> defaults = new EnumMap<>(PseudoColumnMetaData.class);
         defaults.put(PseudoColumnMetaData.TABLE_CAT, null);
-        defaults.put(PseudoColumnMetaData.TABLE_SCHEM, null);
+        defaults.put(PseudoColumnMetaData.TABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(PseudoColumnMetaData.DECIMAL_DIGITS, null);
         defaults.put(PseudoColumnMetaData.NUM_PREC_RADIX, 10);
         defaults.put(PseudoColumnMetaData.COLUMN_USAGE, PseudoColumnUsage.NO_USAGE_RESTRICTIONS.name());
@@ -317,7 +326,13 @@ class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     private Map<PseudoColumnMetaData, Object> createDbkeyValidationRules(String tableName, int expectedDbKeyLength) {
+        return createDbkeyValidationRules(ifSchemaElse("PUBLIC", null), tableName, expectedDbKeyLength);
+    }
+
+    private Map<PseudoColumnMetaData, Object> createDbkeyValidationRules(String schema, String tableName,
+            int expectedDbKeyLength) {
         Map<PseudoColumnMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(PseudoColumnMetaData.TABLE_SCHEM, schema);
         rules.put(PseudoColumnMetaData.TABLE_NAME, tableName);
         rules.put(PseudoColumnMetaData.COLUMN_NAME, "RDB$DB_KEY");
         rules.put(PseudoColumnMetaData.DATA_TYPE, Types.ROWID);
@@ -328,7 +343,13 @@ class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     private Map<PseudoColumnMetaData, Object> createRecordVersionValidationRules(String tableName, String nullable) {
+        return createRecordVersionValidationRules(ifSchemaElse("PUBLIC", null), tableName, nullable);
+    }
+
+    private Map<PseudoColumnMetaData, Object> createRecordVersionValidationRules(String schema, String tableName,
+            String nullable) {
         Map<PseudoColumnMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(PseudoColumnMetaData.TABLE_SCHEM, schema);
         rules.put(PseudoColumnMetaData.TABLE_NAME, tableName);
         rules.put(PseudoColumnMetaData.COLUMN_NAME, "RDB$RECORD_VERSION");
         rules.put(PseudoColumnMetaData.DATA_TYPE, Types.BIGINT);
