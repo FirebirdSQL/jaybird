@@ -1780,7 +1780,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
             throws SQLException {
-        return GetFunctions.create(getDbMetadataMediator()).getFunctions(catalog, functionNamePattern);
+        return GetFunctions.create(getDbMetadataMediator()).getFunctions(catalog, schemaPattern, functionNamePattern);
     }
 
     @Override

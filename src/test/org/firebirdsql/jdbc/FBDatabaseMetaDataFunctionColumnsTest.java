@@ -36,6 +36,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  */
 class FBDatabaseMetaDataFunctionColumnsTest {
 
+    // TODO Add schema support: tests involving other schema
+
     private static final String PSQL_EXAMPLE_1 = "PSQL$EXAMPLE$1";
     private static final String PSQL_EXAMPLE_2 = "PSQL$EXAMPLE$2";
     private static final String UDF_EXAMPLE_1 = "UDF$EXAMPLE$1";
