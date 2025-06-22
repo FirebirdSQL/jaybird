@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2012-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -23,6 +23,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.jdbc.FBDatabaseMetaDataProceduresTest.isIgnoredProcedure;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
@@ -36,7 +37,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataProcedureColumnsTest {
-    
+
+    // TODO Add schema support: tests involving other schema
     // TODO This test will need to be expanded with version dependent features 
     // (eg TYPE OF <domain> (2.1), TYPE OF COLUMN <table.column> (2.5), NOT NULL (2.1), DEFAULT <value> (2.0)
 
@@ -329,7 +331,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
 
             List<Map<ProcedureColumnMetaData, Object>> expectedColumns =
                     withCatalog("WITH$PROCEDURE",
-                            withSpecificName("\"WITH$PROCEDURE\".\"IN$PACKAGE\"",
+                            withSpecificName(ifSchemaElse("\"PUBLIC\".", "") + "\"WITH$PROCEDURE\".\"IN$PACKAGE\"",
                                     List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "RETURN1", 1, 10, 0, true,
                                                     DatabaseMetaData.procedureColumnOut))));
 
@@ -359,7 +361,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
 
     private static List<Map<ProcedureColumnMetaData, Object>> getInPackage_allColumns() {
         return withCatalog("WITH$PROCEDURE",
-                withSpecificName("\"WITH$PROCEDURE\".\"IN$PACKAGE\"",
+                withSpecificName(ifSchemaElse("\"PUBLIC\".", "") + "\"WITH$PROCEDURE\".\"IN$PACKAGE\"",
                         // TODO Having result columns first might be against JDBC spec
                         // TODO Describing result columns as procedureColumnOut might be against JDBC spec
                         List.of(
@@ -392,9 +394,16 @@ class FBDatabaseMetaDataProcedureColumnsTest {
 
     private static Map<ProcedureColumnMetaData, Object> createColumn(String procedureName, String columnName,
             int ordinalPosition, boolean nullable, int columnType) {
+        return createColumn(ifSchemaElse("PUBLIC", null), procedureName, columnName, ordinalPosition, nullable,
+                columnType);
+    }
+
+    private static Map<ProcedureColumnMetaData, Object> createColumn(String schema, String procedureName,
+            String columnName, int ordinalPosition, boolean nullable, int columnType) {
         Map<ProcedureColumnMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(ProcedureColumnMetaData.PROCEDURE_SCHEM, schema);
         rules.put(ProcedureColumnMetaData.PROCEDURE_NAME, procedureName);
-        rules.put(ProcedureColumnMetaData.SPECIFIC_NAME, procedureName);
+        rules.put(ProcedureColumnMetaData.SPECIFIC_NAME, getProcedureSpecificName(schema, procedureName));
         rules.put(ProcedureColumnMetaData.COLUMN_NAME, columnName);
         rules.put(ProcedureColumnMetaData.ORDINAL_POSITION, ordinalPosition);
         rules.put(ProcedureColumnMetaData.COLUMN_TYPE, columnType);
@@ -403,6 +412,16 @@ class FBDatabaseMetaDataProcedureColumnsTest {
             rules.put(ProcedureColumnMetaData.IS_NULLABLE, "NO");
         }
         return rules;
+    }
+
+    private static String getProcedureSpecificName(String schema, String procedureName) {
+        if (schema == null || schema.isEmpty()) return procedureName;
+        var quote = QuoteStrategy.DIALECT_3;
+        // 5 = 4 quotes + 1 period
+        var sb = new StringBuilder(schema.length() + procedureName.length() + 5);
+        quote.appendQuoted(schema, sb).append('.');
+        quote.appendQuoted(procedureName, sb);
+        return sb.toString();
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -554,7 +573,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     static {
         Map<ProcedureColumnMetaData, Object> defaults = new EnumMap<>(ProcedureColumnMetaData.class);
         defaults.put(ProcedureColumnMetaData.PROCEDURE_CAT, null);
-        defaults.put(ProcedureColumnMetaData.PROCEDURE_SCHEM, null);
+        defaults.put(ProcedureColumnMetaData.PROCEDURE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(ProcedureColumnMetaData.SCALE, null);
         defaults.put(ProcedureColumnMetaData.RADIX, FbMetadataConstants.RADIX_DECIMAL);
         defaults.put(ProcedureColumnMetaData.NULLABLE, DatabaseMetaData.procedureNullable);
