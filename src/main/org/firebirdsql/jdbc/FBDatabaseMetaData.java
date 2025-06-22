@@ -1817,7 +1817,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
             String columnNamePattern) throws SQLException {
-        return GetPseudoColumns.create(getDbMetadataMediator()).getPseudoColumns(tableNamePattern, columnNamePattern);
+        return GetPseudoColumns.create(getDbMetadataMediator())
+                .getPseudoColumns(schemaPattern, tableNamePattern, columnNamePattern);
     }
 
     @Override
