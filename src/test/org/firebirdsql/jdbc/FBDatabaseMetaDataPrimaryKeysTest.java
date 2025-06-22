@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -20,6 +20,7 @@ import java.util.Map;
 
 import static java.util.Collections.unmodifiableMap;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
 
@@ -29,6 +30,8 @@ import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNext
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataPrimaryKeysTest {
+
+    // TODO Add schema support: tests involving other schema
 
     private static final String UNNAMED_CONSTRAINT_PREFIX = "INTEG_";
     private static final String UNNAMED_PK_INDEX_PREFIX = "RDB$PRIMARY";
@@ -170,6 +173,7 @@ class FBDatabaseMetaDataPrimaryKeysTest {
     static {
         var defaults = new EnumMap<>(PrimaryKeysMetaData.class);
         Arrays.stream(PrimaryKeysMetaData.values()).forEach(key -> defaults.put(key, null));
+        defaults.put(PrimaryKeysMetaData.TABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         DEFAULT_COLUMN_VALUES = unmodifiableMap(defaults);
     }
 

@@ -1428,7 +1428,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
-        return GetPrimaryKeys.create(getDbMetadataMediator()).getPrimaryKeys(table);
+        return GetPrimaryKeys.create(getDbMetadataMediator()).getPrimaryKeys(schema, table);
     }
 
     /**
