@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2024 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -12,6 +12,7 @@ import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import static org.firebirdsql.gds.ISCConstants.SQL_LONG;
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
@@ -53,22 +54,22 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
     }
 
     @SuppressWarnings("unused")
-    public ResultSet getIndexInfo(String table, boolean unique, boolean approximate) throws SQLException {
+    public ResultSet getIndexInfo(String schema, String table, boolean unique, boolean approximate) throws SQLException {
         if (isNullOrEmpty(table)) {
             return createEmpty();
         }
 
-        MetadataQuery metadataQuery = createIndexInfoQuery(table, unique);
+        MetadataQuery metadataQuery = createIndexInfoQuery(schema, table, unique);
         return createMetaDataResultSet(metadataQuery);
     }
 
-    abstract MetadataQuery createIndexInfoQuery(String table, boolean unique);
+    abstract MetadataQuery createIndexInfoQuery(String schema, String table, boolean unique);
 
     @Override
     RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
         valueBuilder
                 .at(0).set(null)
-                .at(1).set(null)
+                .at(1).setString(rs.getString("TABLE_SCHEM"))
                 .at(2).setString(rs.getString("TABLE_NAME"))
                 .at(3).setString(rs.getInt("UNIQUE_FLAG") == 0 ? "T" : "F")
                 .at(4).set(null)
@@ -107,7 +108,9 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
 
     public static GetIndexInfo create(DbMetadataMediator mediator) {
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (mediator.getOdsVersion().compareTo(ODS_13_1) >= 0) {
+        if (mediator.getFirebirdSupportInfo().isVersionEqualOrAbove(6)) {
+            return FB6.createInstance(mediator);
+        } else if (mediator.getOdsVersion().compareTo(ODS_13_1) >= 0) {
             return FB5.createInstance(mediator);
         } else {
             return FB2_5.createInstance(mediator);
@@ -118,6 +121,7 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
 
         private static final String GET_INDEX_INFO_START_2_5 = """
             select
+              cast(null as char(1)) as TABLE_SCHEM,
               IND.RDB$RELATION_NAME as TABLE_NAME,
               IND.RDB$UNIQUE_FLAG as UNIQUE_FLAG,
               IND.RDB$INDEX_NAME as INDEX_NAME,
@@ -127,7 +131,8 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
               IND.RDB$INDEX_TYPE as ASC_OR_DESC,
               null as CONDITION_SOURCE
             from RDB$INDICES IND
-            left join RDB$INDEX_SEGMENTS ISE on IND.RDB$INDEX_NAME = ISE.RDB$INDEX_NAME where\s""";
+            left join RDB$INDEX_SEGMENTS ISE on IND.RDB$INDEX_NAME = ISE.RDB$INDEX_NAME
+            where\s""";
 
         private static final String GET_INDEX_INFO_END_2_5 =
                 "\norder by IND.RDB$UNIQUE_FLAG, IND.RDB$INDEX_NAME, ISE.RDB$FIELD_POSITION";
@@ -141,7 +146,7 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createIndexInfoQuery(String table, boolean unique) {
+        MetadataQuery createIndexInfoQuery(String schema, String table, boolean unique) {
             Clause tableClause = Clause.equalsClause("IND.RDB$RELATION_NAME", table);
             String sql = GET_INDEX_INFO_START_2_5
                     + tableClause.getCondition(unique)
@@ -156,6 +161,7 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
 
         private static final String GET_INDEX_INFO_START_5 = """
             select
+              null as TABLE_SCHEM,
               trim(trailing from IND.RDB$RELATION_NAME) as TABLE_NAME,
               IND.RDB$UNIQUE_FLAG as UNIQUE_FLAG,
               trim(trailing from IND.RDB$INDEX_NAME) as INDEX_NAME,
@@ -165,7 +171,8 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
               IND.RDB$INDEX_TYPE as ASC_OR_DESC,
               IND.RDB$CONDITION_SOURCE as CONDITION_SOURCE
             from RDB$INDICES IND
-            left join RDB$INDEX_SEGMENTS ISE on IND.RDB$INDEX_NAME = ISE.RDB$INDEX_NAME where\s""";
+            left join RDB$INDEX_SEGMENTS ISE on IND.RDB$INDEX_NAME = ISE.RDB$INDEX_NAME
+            where\s""";
 
         private static final String GET_INDEX_INFO_END_5 =
                 "\norder by IND.RDB$UNIQUE_FLAG, IND.RDB$INDEX_NAME, ISE.RDB$FIELD_POSITION";
@@ -179,13 +186,59 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createIndexInfoQuery(String table, boolean unique) {
+        MetadataQuery createIndexInfoQuery(String schema, String table, boolean unique) {
             Clause tableClause = Clause.equalsClause("IND.RDB$RELATION_NAME", table);
             String sql = GET_INDEX_INFO_START_5
                     + tableClause.getCondition(unique)
                     + (unique ? "IND.RDB$UNIQUE_FLAG = 1" : "")
                     + GET_INDEX_INFO_END_5;
             return new MetadataQuery(sql, Clause.parameters(tableClause));
+        }
+
+    }
+
+    private static final class FB6 extends GetIndexInfo {
+
+        private static final String GET_INDEX_INFO_START_6 = """
+            select
+              trim(trailing from IND.RDB$SCHEMA_NAME) as TABLE_SCHEM,
+              trim(trailing from IND.RDB$RELATION_NAME) as TABLE_NAME,
+              IND.RDB$UNIQUE_FLAG as UNIQUE_FLAG,
+              trim(trailing from IND.RDB$INDEX_NAME) as INDEX_NAME,
+              ISE.RDB$FIELD_POSITION + 1 as ORDINAL_POSITION,
+              trim(trailing from ISE.RDB$FIELD_NAME) as COLUMN_NAME,
+              IND.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE,
+              IND.RDB$INDEX_TYPE as ASC_OR_DESC,
+              IND.RDB$CONDITION_SOURCE as CONDITION_SOURCE
+            from SYSTEM.RDB$INDICES IND
+            left join SYSTEM.RDB$INDEX_SEGMENTS ISE
+              on IND.RDB$SCHEMA_NAME = ISE.RDB$SCHEMA_NAME and IND.RDB$INDEX_NAME = ISE.RDB$INDEX_NAME
+            where\s""";
+
+        private static final String GET_INDEX_INFO_END_6 =
+                "\norder by IND.RDB$UNIQUE_FLAG, IND.RDB$INDEX_NAME, ISE.RDB$FIELD_POSITION";
+
+        private FB6(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetIndexInfo createInstance(DbMetadataMediator mediator) {
+            return new FB6(mediator);
+        }
+
+        @Override
+        MetadataQuery createIndexInfoQuery(String schema, String table, boolean unique) {
+            var clauses = new ArrayList<Clause>(2);
+            if (schema != null) {
+                // NOTE: empty string will return no rows as required ("" retrieves those without a schema)
+                clauses.add(Clause.equalsClause("IND.RDB$SCHEMA_NAME", schema));
+            }
+            clauses.add(Clause.equalsClause("IND.RDB$RELATION_NAME", table));
+            String sql = GET_INDEX_INFO_START_6
+                    + Clause.conjunction(clauses)
+                    + (unique ? "\n and IND.RDB$UNIQUE_FLAG = 1" : "")
+                    + GET_INDEX_INFO_END_6;
+            return new MetadataQuery(sql, Clause.parameters(clauses));
         }
 
     }
