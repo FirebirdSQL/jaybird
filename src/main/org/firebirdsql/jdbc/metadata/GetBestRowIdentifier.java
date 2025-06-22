@@ -251,7 +251,7 @@ public abstract class GetBestRowIdentifier extends AbstractMetadataMethod {
 
         @Override
         MetadataQuery createGetPrimaryKeyIdentifierQuery(String schema, String table) {
-            List<Clause> clauses = new ArrayList<>(2);
+           var clauses = new ArrayList<Clause>(2);
             if (schema != null) {
                 // NOTE: empty string will return no rows as required ("" retrieves those without a schema)
                 clauses.add(Clause.equalsClause("RC.RDB$SCHEMA_NAME", schema));
