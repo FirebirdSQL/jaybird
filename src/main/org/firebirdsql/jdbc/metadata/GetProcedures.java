@@ -290,13 +290,9 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
                 }
             }
             clauses.add(new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern));
-            //@formatter:off
             String sql = GET_PROCEDURES_FRAGMENT_6_W_PKG
-                    + (Clause.anyCondition(clauses)
-                    ? "\nwhere " + Clause.conjunction(clauses)
-                    : "")
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
                     + GET_PROCEDURES_ORDER_BY_6_W_PKG;
-            //@formatter:on
             return new MetadataQuery(sql, Clause.parameters(clauses));
         }
     }
