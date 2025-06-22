@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -26,6 +26,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -39,6 +40,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataIndexInfoTest {
+
+    // TODO Add schema support: tests involving other schema
 
     private static final String CREATE_INDEX_TEST_TABLE_1 = """
             CREATE TABLE index_test_table_1 (
@@ -283,9 +286,16 @@ class FBDatabaseMetaDataIndexInfoTest {
         }
     }
 
-    private Map<IndexInfoMetaData, Object> createRule(String tableName, boolean nonUnique, String indexName, 
+    private Map<IndexInfoMetaData, Object> createRule(String tableName, boolean nonUnique, String indexName,
             String columnName, Integer ordinalPosition, boolean ascending) {
+        return createRule(ifSchemaElse("PUBLIC", null), tableName, nonUnique, indexName, columnName, ordinalPosition,
+                ascending);
+    }
+
+    private Map<IndexInfoMetaData, Object> createRule(String schema, String tableName, boolean nonUnique,
+            String indexName, String columnName, Integer ordinalPosition, boolean ascending) {
         Map<IndexInfoMetaData, Object> indexRules = getDefaultValueValidationRules();
+        indexRules.put(IndexInfoMetaData.TABLE_SCHEM, schema);
         indexRules.put(IndexInfoMetaData.TABLE_NAME, tableName);
         indexRules.put(IndexInfoMetaData.NON_UNIQUE, nonUnique ? "T" : "F");
         indexRules.put(IndexInfoMetaData.INDEX_NAME, indexName);
@@ -314,7 +324,7 @@ class FBDatabaseMetaDataIndexInfoTest {
     static {
         Map<IndexInfoMetaData, Object> defaults = new EnumMap<>(IndexInfoMetaData.class);
         defaults.put(IndexInfoMetaData.TABLE_CAT, null);
-        defaults.put(IndexInfoMetaData.TABLE_SCHEM, null);
+        defaults.put(IndexInfoMetaData.TABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(IndexInfoMetaData.INDEX_QUALIFIER, null);
         defaults.put(IndexInfoMetaData.TYPE, DatabaseMetaData.tableIndexOther);
         defaults.put(IndexInfoMetaData.CARDINALITY, null);

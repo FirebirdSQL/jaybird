@@ -1497,7 +1497,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate)
             throws SQLException {
-        return GetIndexInfo.create(getDbMetadataMediator()).getIndexInfo(table, unique, approximate);
+        return GetIndexInfo.create(getDbMetadataMediator()).getIndexInfo(schema, table, unique, approximate);
     }
 
     @Override
