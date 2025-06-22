@@ -1230,7 +1230,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
             String columnNamePattern) throws SQLException {
         return GetProcedureColumns.create(getDbMetadataMediator())
-                .getProcedureColumns(catalog, procedureNamePattern, columnNamePattern);
+                .getProcedureColumns(catalog, schemaPattern, procedureNamePattern, columnNamePattern);
     }
 
     public static final String TABLE = "TABLE";
