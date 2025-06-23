@@ -231,6 +231,7 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
         defaults.put(ColumnPrivilegesMetadata.TABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(ColumnPrivilegesMetadata.GRANTOR, SYSDBA);
         defaults.put(ColumnPrivilegesMetadata.JB_GRANTEE_TYPE, "USER");
+        defaults.put(ColumnPrivilegesMetadata.JB_GRANTEE_SCHEMA, null);
 
         DEFAULT_COLUMN_PRIVILEGES_VALUES = Collections.unmodifiableMap(defaults);
     }
@@ -248,7 +249,8 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
         GRANTEE(6),
         PRIVILEGE(7),
         IS_GRANTABLE(8),
-        JB_GRANTEE_TYPE(9);
+        JB_GRANTEE_TYPE(9),
+        JB_GRANTEE_SCHEMA(10);
 
         private final int position;
 
