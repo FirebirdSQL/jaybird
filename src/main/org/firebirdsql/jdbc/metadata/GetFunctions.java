@@ -28,7 +28,7 @@ import static org.firebirdsql.jdbc.metadata.NameHelper.toSpecificName;
  * @since 4.0
  */
 @InternalApi
-public abstract class GetFunctions extends AbstractMetadataMethod {
+public abstract sealed class GetFunctions extends AbstractMetadataMethod {
 
     private static final String FUNCTIONS = "FUNCTIONS";
     private static final String COLUMN_CATALOG_NAME = "RDB$PACKAGE_NAME";

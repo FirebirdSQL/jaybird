@@ -30,7 +30,7 @@ import static org.firebirdsql.jdbc.metadata.PrivilegeMapping.mapPrivilege;
  * @author Mark Rotteveel
  * @since 5
  */
-public abstract class GetColumnPrivileges extends AbstractMetadataMethod {
+public abstract sealed class GetColumnPrivileges extends AbstractMetadataMethod {
 
     private static final String COLUMNPRIV = "COLUMNPRIV";
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(10)

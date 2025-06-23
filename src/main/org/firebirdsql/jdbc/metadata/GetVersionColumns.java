@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2024 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -25,7 +25,7 @@ import static org.firebirdsql.jdbc.metadata.MetadataPattern.escapeWildcards;
 /**
  * @author Mark Rotteveel
  */
-public class GetVersionColumns {
+public final class GetVersionColumns {
 
     private static final String VERSIONCOL = "VERSIONCOL";
     

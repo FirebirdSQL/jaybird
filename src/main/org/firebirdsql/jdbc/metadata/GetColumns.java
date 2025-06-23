@@ -36,7 +36,7 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
  * @author Mark Rotteveel
  * @since 5
  */
-public abstract class GetColumns extends AbstractMetadataMethod {
+public abstract sealed class GetColumns extends AbstractMetadataMethod {
 
     private static final String COLUMNINFO = "COLUMNINFO";
     
@@ -156,7 +156,7 @@ public abstract class GetColumns extends AbstractMetadataMethod {
     }
 
     @SuppressWarnings("java:S101")
-    private static class FB2_5 extends GetColumns {
+    private static final class FB2_5 extends GetColumns {
 
         private static final String GET_COLUMNS_FRAGMENT_2_5 = """
                 select
@@ -203,7 +203,7 @@ public abstract class GetColumns extends AbstractMetadataMethod {
 
     }
 
-    private static class FB3 extends GetColumns {
+    private static final class FB3 extends GetColumns {
 
         private static final String GET_COLUMNS_FRAGMENT_3 = """
                 select
@@ -250,7 +250,7 @@ public abstract class GetColumns extends AbstractMetadataMethod {
 
     }
 
-    private static class FB6 extends GetColumns {
+    private static final class FB6 extends GetColumns {
 
         private static final String GET_COLUMNS_FRAGMENT_6 = """
                 select

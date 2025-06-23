@@ -42,7 +42,7 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.getDataTypeName;
  * @author Mark Rotteveel
  * @since 5
  */
-public abstract class GetBestRowIdentifier extends AbstractMetadataMethod {
+public abstract sealed class GetBestRowIdentifier extends AbstractMetadataMethod {
 
     private static final String ROWIDENTIFIER = "ROWIDENTIFIER";
     

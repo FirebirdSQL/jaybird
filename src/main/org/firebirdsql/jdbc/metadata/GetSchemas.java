@@ -21,7 +21,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  * @author Mark Rotteveel
  * @since 5
  */
-public abstract class GetSchemas extends AbstractMetadataMethod {
+public abstract sealed class GetSchemas extends AbstractMetadataMethod {
 
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(2)
             .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "TABLESCHEMAS").addField()

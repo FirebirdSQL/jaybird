@@ -29,7 +29,7 @@ import static org.firebirdsql.jdbc.metadata.NameHelper.toSpecificName;
  * @since 5
  */
 @InternalApi
-public abstract class GetProcedures extends AbstractMetadataMethod {
+public abstract sealed class GetProcedures extends AbstractMetadataMethod {
 
     private static final String PROCEDURES = "PROCEDURES";
     private static final String COLUMN_PROCEDURE_NAME = "RDB$PROCEDURE_NAME";

@@ -23,7 +23,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  * @author Mark Rotteveel
  * @since 5
  */
-public abstract class GetPrimaryKeys extends AbstractMetadataMethod {
+public abstract sealed class GetPrimaryKeys extends AbstractMetadataMethod {
 
     private static final String COLUMNINFO = "COLUMNINFO";
     
