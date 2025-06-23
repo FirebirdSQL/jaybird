@@ -18,7 +18,7 @@ import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
  * @author Mark Rotteveel
  * @since 5
  */
-public abstract class GetImportedKeys extends AbstractKeysMethod {
+public abstract sealed class GetImportedKeys extends AbstractKeysMethod {
 
     private GetImportedKeys(DbMetadataMediator mediator) {
         super(mediator);

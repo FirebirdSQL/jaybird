@@ -39,7 +39,7 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
  * @since 5
  */
 @SuppressWarnings("java:S1192")
-public abstract class GetProcedureColumns extends AbstractMetadataMethod {
+public abstract sealed class GetProcedureColumns extends AbstractMetadataMethod {
 
     private static final String COLUMNINFO = "COLUMNINFO";
     private static final String COLUMN_SCHEMA_NAME = "PP.RDB$SCHEMA_NAME";
@@ -153,7 +153,7 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
     }
 
     @SuppressWarnings("java:S101")
-    private static class FB2_5 extends GetProcedureColumns {
+    private static final class FB2_5 extends GetProcedureColumns {
 
         //@formatter:off
         private static final String GET_PROCEDURE_COLUMNS_FRAGMENT_2_5 = """
@@ -203,7 +203,7 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
 
     }
 
-    private static class FB3 extends GetProcedureColumns {
+    private static final class FB3 extends GetProcedureColumns {
 
         //@formatter:off
         private static final String GET_PROCEDURE_COLUMNS_FRAGMENT_3 = """
@@ -318,7 +318,7 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
 
     }
 
-    private static class FB6 extends GetProcedureColumns {
+    private static final class FB6 extends GetProcedureColumns {
 
         //@formatter:off
         private static final String GET_PROCEDURE_COLUMNS_FRAGMENT_6 = """

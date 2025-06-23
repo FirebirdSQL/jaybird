@@ -29,7 +29,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  * @author Mark Rotteveel
  * @since 5
  */
-public abstract class GetPseudoColumns {
+public abstract sealed class GetPseudoColumns {
 
     private static final String PSEUDOCOLUMNS = "PSEUDOCOLUMNS";
     public static final String COLUMN_SCHEMA_NAME = "RDB$SCHEMA_NAME";
