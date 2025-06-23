@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2024 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -9,7 +9,6 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.jdbc.FBResultSet;
-import org.firebirdsql.util.InternalApi;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -41,11 +40,18 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  * @author Mark Rotteveel
  * @since 5
  */
-@InternalApi
-public abstract class GetTables extends AbstractMetadataMethod {
+public abstract sealed class GetTables extends AbstractMetadataMethod {
 
+    private static final String LEGACY_IS_TABLE = "rdb$relation_type is null and rdb$view_blr is null";
+    private static final String LEGACY_IS_VIEW = "rdb$relation_type is null and rdb$view_blr is not null";
     private static final String TABLES = "TABLES";
     private static final String TABLE_TYPE = "TABLE_TYPE";
+
+    /**
+     * All table types supported for Firebird 2.5 and higher
+     */
+    private static final Set<String> ALL_TYPES = unmodifiableSet(new LinkedHashSet<>(
+            Arrays.asList(GLOBAL_TEMPORARY, SYSTEM_TABLE, TABLE, VIEW)));
 
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(12)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", TABLES).addField()
@@ -75,19 +81,19 @@ public abstract class GetTables extends AbstractMetadataMethod {
     /**
      * @see java.sql.DatabaseMetaData#getTables(String, String, String, String[])
      */
-    public final ResultSet getTables(String tableNamePattern, String[] types) throws SQLException {
+    public final ResultSet getTables(String schemaPattern, String tableNamePattern, String[] types) throws SQLException {
         if ("".equals(tableNamePattern) || types != null && types.length == 0) {
             // Matching table name not possible
             return createEmpty();
         }
-
-        MetadataQuery metadataQuery = createGetTablesQuery(tableNamePattern, toTypesSet(types));
+        MetadataQuery metadataQuery = createGetTablesQuery(schemaPattern, tableNamePattern, toTypesSet(types));
         return createMetaDataResultSet(metadataQuery);
     }
 
     @Override
     final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
         return valueBuilder
+                .at(1).setString(rs.getString("TABLE_SCHEM"))
                 .at(2).setString(rs.getString("TABLE_NAME"))
                 .at(3).setString(rs.getString(TABLE_TYPE))
                 .at(4).setString(rs.getString("REMARKS"))
@@ -116,7 +122,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
         return types != null ? new HashSet<>(Arrays.asList(types)) : allTableTypes();
     }
 
-    abstract MetadataQuery createGetTablesQuery(String tableNamePattern, Set<String> types);
+    abstract MetadataQuery createGetTablesQuery(String schemaPattern, String tableNamePattern, Set<String> types);
 
     /**
      * All supported table types.
@@ -126,7 +132,9 @@ public abstract class GetTables extends AbstractMetadataMethod {
      *
      * @return supported table types
      */
-    abstract Set<String> allTableTypes();
+    Set<String> allTableTypes() {
+        return ALL_TYPES;
+    }
 
     /**
      * The ODS of a Firebird 2.5 database.
@@ -135,10 +143,45 @@ public abstract class GetTables extends AbstractMetadataMethod {
     
     public static GetTables create(DbMetadataMediator mediator) {
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (mediator.getOdsVersion().compareTo(ODS_11_2) >= 0) {
+        if (mediator.getFirebirdSupportInfo().isVersionEqualOrAbove(6)) {
+            return FB6.createInstance(mediator);
+        } else if (mediator.getOdsVersion().compareTo(ODS_11_2) >= 0) {
             return FB2_5.createInstance(mediator);
         } else {
             return FB2_1.createInstance(mediator);
+        }
+    }
+
+    void buildTypeCondition(StringBuilder sb, Set<String> types) {
+        final int initialLength = sb.length();
+        if (types.contains(SYSTEM_TABLE) && types.contains(TABLE)) {
+            sb.append("(rdb$relation_type in (0, 2, 3) or " + LEGACY_IS_TABLE + ")");
+        } else if (types.contains(SYSTEM_TABLE)) {
+            // We assume that external tables are never system and that virtual tables are always system
+            sb.append("(rdb$relation_type in (0, 3) or " + LEGACY_IS_TABLE + ") and rdb$system_flag = 1");
+        } else if (types.contains(TABLE)) {
+            // We assume that external tables are never system and that virtual tables are always system
+            sb.append("(rdb$relation_type in (0, 2) or " + LEGACY_IS_TABLE + ") and rdb$system_flag = 0");
+        }
+
+        if (types.contains(VIEW)) {
+            if (sb.length() != initialLength) {
+                sb.append(" or ");
+            }
+            // We assume (but don't check) that views are never system
+            sb.append("(rdb$relation_type = 1 or " + LEGACY_IS_VIEW + ")");
+        }
+
+        if (types.contains(GLOBAL_TEMPORARY)) {
+            if (sb.length() != initialLength) {
+                sb.append(" or ");
+            }
+            sb.append("rdb$relation_type in (4, 5)");
+        }
+
+        if (sb.length() == initialLength) {
+            // Requested types are unknown, query nothing
+            sb.append("1 = 0");
         }
     }
 
@@ -150,7 +193,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
         private static final String TABLE_COLUMNS_NORMAL_2_1 =
                 formatTableQuery(TABLE, "RDB$SYSTEM_FLAG = 0 and rdb$view_blr is null");
         private static final String TABLE_COLUMNS_VIEW_2_1 = formatTableQuery(VIEW, "rdb$view_blr is not null");
-        private static final String GET_TABLE_ORDER_BY_2_1 = "\norder by 2, 1";
+        private static final String GET_TABLE_ORDER_BY_2_1 = "\norder by 3, 2";
 
         private static final Map<String, String> QUERY_PER_TYPE;
         static {
@@ -176,7 +219,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetTablesQuery(String tableNamePattern, Set<String> types) {
+        MetadataQuery createGetTablesQuery(String schemaPattern, String tableNamePattern, Set<String> types) {
             var tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
             var clauses = new ArrayList<Clause>(types.size());
             var queryBuilder = new StringBuilder(2000);
@@ -203,6 +246,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
         private static String formatTableQuery(String tableType, String condition) {
             return String.format("""
                             select
+                              cast(null as char(1)) as TABLE_SCHEM,
                               RDB$RELATION_NAME as TABLE_NAME,
                               cast('%s' as varchar(31)) as TABLE_TYPE,
                               RDB$DESCRIPTION as REMARKS,
@@ -217,33 +261,26 @@ public abstract class GetTables extends AbstractMetadataMethod {
     @SuppressWarnings("java:S101")
     private static final class FB2_5 extends GetTables {
 
-        private static final String GET_TABLE_ORDER_BY_2_5 = "\norder by 2, 1";
+        private static final String GET_TABLE_ORDER_BY_2_5 = "\norder by 3, 2";
 
         //@formatter:off
-        private static final String LEGACY_IS_TABLE = "rdb$relation_type is null and rdb$view_blr is null";
-        private static final String LEGACY_IS_VIEW = "rdb$relation_type is null and rdb$view_blr is not null";
-
-        private static final String TABLE_COLUMNS_2_5 =
-                "select\n"
-                + "  trim(trailing from RDB$RELATION_NAME) as TABLE_NAME,\n"
-                + "  trim(trailing from case"
-                + "    when rdb$relation_type = 0 or " + LEGACY_IS_TABLE + " then case when RDB$SYSTEM_FLAG = 1 then '" + SYSTEM_TABLE + "' else '" + TABLE + "' end\n"
-                + "    when rdb$relation_type = 1 or " + LEGACY_IS_VIEW + " then '" + VIEW + "'\n"
-                + "    when rdb$relation_type = 2 then '" + TABLE + "'\n" // external table; assume as normal table
-                + "    when rdb$relation_type = 3 then '" + SYSTEM_TABLE + "'\n" // virtual (monitoring) table: assume system
-                + "    when rdb$relation_type in (4, 5) then '" + GLOBAL_TEMPORARY + "'\n"
-                + "  end) as TABLE_TYPE,\n"
-                + "  RDB$DESCRIPTION as REMARKS,\n"
-                + "  trim(trailing from RDB$OWNER_NAME) as OWNER_NAME,\n"
-                + "  RDB$RELATION_ID as JB_RELATION_ID\n"
-                + "from RDB$RELATIONS";
+        private static final String TABLE_COLUMNS_2_5 = """
+                select
+                  null as TABLE_SCHEM,
+                  trim(trailing from RDB$RELATION_NAME) as TABLE_NAME,
+                  trim(trailing from case
+                """ +
+                "    when rdb$relation_type = 0 or " + LEGACY_IS_TABLE + " then case when RDB$SYSTEM_FLAG = 1 then '" + SYSTEM_TABLE + "' else '" + TABLE + "' end\n" +
+                "    when rdb$relation_type = 1 or " + LEGACY_IS_VIEW + " then '" + VIEW + "'\n" +
+                "    when rdb$relation_type = 2 then '" + TABLE + "' -- external table; assume as normal table\n" +
+                "    when rdb$relation_type = 3 then '" + SYSTEM_TABLE + "' -- virtual (monitoring) table: assume system\n" +
+                "    when rdb$relation_type in (4, 5) then '" + GLOBAL_TEMPORARY + "'\n" + """
+                  end) as TABLE_TYPE,
+                  RDB$DESCRIPTION as REMARKS,
+                  trim(trailing from RDB$OWNER_NAME) as OWNER_NAME,
+                  RDB$RELATION_ID as JB_RELATION_ID
+                from RDB$RELATIONS""";
         //@formatter:on
-
-        /**
-         * All table types supported for Firebird 2.5 and higher
-         */
-        private static final Set<String> ALL_TYPES_2_5 = unmodifiableSet(new LinkedHashSet<>(
-                Arrays.asList(GLOBAL_TEMPORARY, SYSTEM_TABLE, TABLE, VIEW)));
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
@@ -254,7 +291,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetTablesQuery(String tableNamePattern, Set<String> types) {
+        MetadataQuery createGetTablesQuery(String schemaPattern, String tableNamePattern, Set<String> types) {
             var tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
 
             var queryBuilder = new StringBuilder(1000).append(TABLE_COLUMNS_2_5);
@@ -266,13 +303,15 @@ public abstract class GetTables extends AbstractMetadataMethod {
                 params = Collections.emptyList();
             }
 
-            if (!types.containsAll(ALL_TYPES_2_5)) {
+            if (!types.containsAll(ALL_TYPES)) {
                 // Only construct conditions when we don't query for all
-                StringBuilder typeCondition = buildTypeCondition(types);
                 if (tableNameClause.hasCondition()) {
-                    queryBuilder.append("\nand (").append(typeCondition).append(")");
+                    queryBuilder.append("\nand (");
+                    buildTypeCondition(queryBuilder, types);
+                    queryBuilder.append(")");
                 } else {
-                    queryBuilder.append("\nwhere ").append(typeCondition);
+                    queryBuilder.append("\nwhere ");
+                    buildTypeCondition(queryBuilder, types);
                 }
             }
             queryBuilder.append(GET_TABLE_ORDER_BY_2_5);
@@ -280,43 +319,70 @@ public abstract class GetTables extends AbstractMetadataMethod {
             return new MetadataQuery(queryBuilder.toString(), params);
         }
 
-        private static StringBuilder buildTypeCondition(Set<String> types) {
-            var typeCondition = new StringBuilder(120);
-            if (types.contains(SYSTEM_TABLE) && types.contains(TABLE)) {
-                typeCondition.append("(rdb$relation_type in (0, 2, 3) or " + LEGACY_IS_TABLE + ")");
-            } else if (types.contains(SYSTEM_TABLE)) {
-                // We assume that external tables are never system and that virtual tables are always system
-                typeCondition.append("(rdb$relation_type in (0, 3) or " + LEGACY_IS_TABLE + ") and rdb$system_flag = 1");
-            } else if (types.contains(TABLE)) {
-                // We assume that external tables are never system and that virtual tables are always system
-                typeCondition.append("(rdb$relation_type in (0, 2) or " + LEGACY_IS_TABLE + ") and rdb$system_flag = 0");
-            }
+    }
 
-            if (types.contains(VIEW)) {
-                if (!typeCondition.isEmpty()) {
-                    typeCondition.append(" or ");
-                }
-                // We assume (but don't check) that views are never system
-                typeCondition.append("(rdb$relation_type = 1 or " + LEGACY_IS_VIEW + ")");
-            }
+    private static final class FB6 extends GetTables {
 
-            if (types.contains(GLOBAL_TEMPORARY)) {
-                if (!typeCondition.isEmpty()) {
-                    typeCondition.append(" or ");
-                }
-                typeCondition.append("rdb$relation_type in (4, 5)");
-            }
+        private static final String GET_TABLE_ORDER_BY_6 = "\norder by 3, 1, 2";
 
-            if (typeCondition.isEmpty()) {
-                // Requested types are unknown, query nothing
-                typeCondition.append("1 = 0");
-            }
-            return typeCondition;
+        //@formatter:off
+        private static final String TABLE_COLUMNS_6 = """
+                select
+                  trim(trailing from RDB$SCHEMA_NAME) as TABLE_SCHEM,
+                  trim(trailing from RDB$RELATION_NAME) as TABLE_NAME,
+                  trim(trailing from case
+                """ +
+                "    when rdb$relation_type = 0 or " + LEGACY_IS_TABLE + " then case when RDB$SYSTEM_FLAG = 1 then '" + SYSTEM_TABLE + "' else '" + TABLE + "' end\n" +
+                "    when rdb$relation_type = 1 or " + LEGACY_IS_VIEW + " then '" + VIEW + "'\n" +
+                "    when rdb$relation_type = 2 then '" + TABLE + "' -- external table; assume as normal table\n" +
+                "    when rdb$relation_type = 3 then '" + SYSTEM_TABLE + "' -- virtual (monitoring) table: assume system\n" +
+                "    when rdb$relation_type in (4, 5) then '" + GLOBAL_TEMPORARY + "'\n" + """
+                  end) as TABLE_TYPE,
+                  RDB$DESCRIPTION as REMARKS,
+                  trim(trailing from RDB$OWNER_NAME) as OWNER_NAME,
+                  RDB$RELATION_ID as JB_RELATION_ID
+                from SYSTEM.RDB$RELATIONS""";
+        //@formatter:on
+
+        private FB6(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetTables createInstance(DbMetadataMediator mediator) {
+            return new FB6(mediator);
         }
 
         @Override
-        Set<String> allTableTypes() {
-            return ALL_TYPES_2_5;
+        MetadataQuery createGetTablesQuery(String schemaPattern, String tableNamePattern, Set<String> types) {
+            var clauses = List.of(
+                    new Clause("RDB$SCHEMA_NAME", schemaPattern),
+                    new Clause("RDB$RELATION_NAME", tableNamePattern));
+
+            var queryBuilder = new StringBuilder(1000).append(TABLE_COLUMNS_6);
+            List<String> params;
+            if (Clause.anyCondition(clauses)) {
+                queryBuilder.append("\nwhere ").append(Clause.conjunction(clauses));
+                params = Clause.parameters(clauses);
+            } else {
+                params = Collections.emptyList();
+            }
+
+            if (!types.containsAll(ALL_TYPES)) {
+                // Only construct conditions when we don't query for all
+                if (Clause.anyCondition(clauses)) {
+                    queryBuilder.append("\nand (");
+                    buildTypeCondition(queryBuilder, types);
+                    queryBuilder.append(")");
+                } else {
+                    queryBuilder.append("\nwhere ");
+                    buildTypeCondition(queryBuilder, types);
+                }
+            }
+            queryBuilder.append(GET_TABLE_ORDER_BY_6);
+
+            return new MetadataQuery(queryBuilder.toString(), params);
         }
+
     }
+
 }
