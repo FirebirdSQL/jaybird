@@ -524,6 +524,9 @@ Within the limitations and specification of the JDBC API, this method cannot be 
 ** `getColumnPrivileges` and `getTablePrivileges` received an additional column, `JB_GRANTEE_SCHEMA`, which is non-``null`` for grantees that are schema-bound (e.g. a procedure).
 +
 As this is a non-standard column, we recommend to always retrieve it by name.
+** `getProcedureSourceCode`/`getTriggerSourceCode`/`getViewSourceCode` now also have an overload accepting the schema;
+the overloads without a `schema` parameter, or `schema` is `null` will return the source code of the first match found.
+The `schema` parameter is ignored on Firebird 5.0 and older.
 ** `getSchemas()` returns all defined schemas
 ** `getSchemas(String catalog, String schemaPattern)` returns all schemas matching the `LIKE` pattern `schemaPattern`, with the following caveats
 *** `catalog` non-empty will return no rows;
