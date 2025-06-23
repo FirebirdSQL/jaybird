@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2023-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -21,6 +21,7 @@ import java.util.Map;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,6 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataTablePrivilegesTest {
+
+    // TODO Add schema support: tests involving other schema
 
     private static final String SYSDBA = "SYSDBA";
     private static final String USER1 = "USER1";
@@ -116,7 +119,13 @@ class FBDatabaseMetaDataTablePrivilegesTest {
 
     private Map<TablePrivilegesMetadata, Object> createRule(String tableName, String grantee, boolean grantable,
             String privilege) {
+        return createRule(ifSchemaElse("PUBLIC", null), tableName, grantee, grantable, privilege);
+    }
+
+    private Map<TablePrivilegesMetadata, Object> createRule(String schema, String tableName, String grantee,
+            boolean grantable, String privilege) {
         Map<TablePrivilegesMetadata, Object> rules = getDefaultValueValidationRules();
+        rules.put(TablePrivilegesMetadata.TABLE_SCHEM, schema);
         rules.put(TablePrivilegesMetadata.TABLE_NAME, tableName);
         rules.put(TablePrivilegesMetadata.GRANTEE, grantee);
         rules.put(TablePrivilegesMetadata.PRIVILEGE, privilege);
@@ -126,7 +135,12 @@ class FBDatabaseMetaDataTablePrivilegesTest {
 
     private void validateExpectedColumnPrivileges(String tableNamePattern,
             List<Map<TablePrivilegesMetadata, Object>> expectedTablePrivileges) throws SQLException {
-        try (ResultSet tablePrivileges = dbmd.getTablePrivileges(null, null, tableNamePattern)) {
+        validateExpectedColumnPrivileges(null, tableNamePattern, expectedTablePrivileges);
+    }
+
+    private void validateExpectedColumnPrivileges(String schemaPattern, String tableNamePattern,
+            List<Map<TablePrivilegesMetadata, Object>> expectedTablePrivileges) throws SQLException {
+        try (ResultSet tablePrivileges = dbmd.getTablePrivileges(null, schemaPattern, tableNamePattern)) {
             int privilegeCount = 0;
             while (tablePrivileges.next()) {
                 if (privilegeCount < expectedTablePrivileges.size()) {
@@ -144,9 +158,10 @@ class FBDatabaseMetaDataTablePrivilegesTest {
     static {
         Map<TablePrivilegesMetadata, Object> defaults = new EnumMap<>(TablePrivilegesMetadata.class);
         defaults.put(TablePrivilegesMetadata.TABLE_CAT, null);
-        defaults.put(TablePrivilegesMetadata.TABLE_SCHEM, null);
+        defaults.put(TablePrivilegesMetadata.TABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(TablePrivilegesMetadata.GRANTOR, SYSDBA);
         defaults.put(TablePrivilegesMetadata.JB_GRANTEE_TYPE, "USER");
+        defaults.put(TablePrivilegesMetadata.JB_GRANTEE_SCHEMA, null);
 
         DEFAULT_TABLE_PRIVILEGES_VALUES = Collections.unmodifiableMap(defaults);
     }
@@ -163,7 +178,8 @@ class FBDatabaseMetaDataTablePrivilegesTest {
         GRANTEE(5),
         PRIVILEGE(6),
         IS_GRANTABLE(7),
-        JB_GRANTEE_TYPE(8);
+        JB_GRANTEE_TYPE(8),
+        JB_GRANTEE_SCHEMA(9);
 
         private final int position;
 

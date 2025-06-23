@@ -516,16 +516,15 @@ Firebird 6.0 introduces schemas, and Jaybird 7 provides support for schemas as d
 Changes include:
 
 * `DatabaseMetaData`
-** `getProcedures` now uses the `schemaPattern` to filter by schema, with the following caveats
-*** `schemaPattern` empty will return no rows on Firebird 6.0 and higher (all procedures are in a schema);
-use `null` or `"%"` to match all schemas
-*** `catalog` is (still) ignored if `useCatalogAsPackage` is `false`
+** Methods accepting a `schema` (exact match if not `null`) or `schemaPattern` (`LIKE` match if not `null`) will return no rows for value empty (`""`) on Firebird 6.0 and higher;
+use `null` or -- `schemaPattern` only -- `"%"` to match all schemas
 ** `getSchemas()` returns all defined schemas
 ** `getSchemas(String catalog, String schemaPattern)` returns all schemas matching the `LIKE` pattern `schemaPattern`, with the following caveats
 *** `catalog` non-empty will return no rows;
 we recommend to always use `null` for `catalog`
-*** `schemaPattern` empty will return no rows (there are no schemas with an empty name);
-use `null` or `"%"` to match all schemas
+** `getColumnPrivileges` and `getTablePrivileges` received an additional column, `JB_GRANTEE_SCHEMA`, which is non-``null`` for grantees that are schema-bound (e.g. a procedure).
++
+As this is a non-standard column, we recommend to always retrieve it by name.
 
 // TODO add major changes
 

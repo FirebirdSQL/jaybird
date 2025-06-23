@@ -33,7 +33,7 @@ import static org.firebirdsql.jdbc.metadata.PrivilegeMapping.mapPrivilege;
 public abstract class GetColumnPrivileges extends AbstractMetadataMethod {
 
     private static final String COLUMNPRIV = "COLUMNPRIV";
-    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(9)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(10)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", COLUMNPRIV).addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", COLUMNPRIV).addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", COLUMNPRIV).addField()
@@ -43,6 +43,7 @@ public abstract class GetColumnPrivileges extends AbstractMetadataMethod {
             .at(6).simple(SQL_VARYING, 31, "PRIVILEGE", COLUMNPRIV).addField()
             .at(7).simple(SQL_VARYING, 3, "IS_GRANTABLE", COLUMNPRIV).addField()
             .at(8).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_GRANTEE_TYPE", COLUMNPRIV).addField()
+            .at(9).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_GRANTEE_SCHEMA", COLUMNPRIV).addField()
             .toRowDescriptor();
 
     GetColumnPrivileges(DbMetadataMediator mediator) {
@@ -74,6 +75,7 @@ public abstract class GetColumnPrivileges extends AbstractMetadataMethod {
                 .at(6).setString(mapPrivilege(rs.getString("PRIVILEGE")))
                 .at(7).setString(rs.getBoolean("IS_GRANTABLE") ? "YES" : "NO")
                 .at(8).setString(rs.getString("JB_GRANTEE_TYPE"))
+                .at(9).setString(rs.getString("JB_GRANTEE_SCHEMA"))
                 .toRowValue(false);
     }
 
@@ -99,7 +101,8 @@ public abstract class GetColumnPrivileges extends AbstractMetadataMethod {
               UP.RDB$USER as GRANTEE,
               UP.RDB$PRIVILEGE as PRIVILEGE,
               UP.RDB$GRANT_OPTION as IS_GRANTABLE,
-              T.RDB$TYPE_NAME as JB_GRANTEE_TYPE
+              T.RDB$TYPE_NAME as JB_GRANTEE_TYPE,
+              cast(null as char(1)) as JB_GRANTEE_SCHEMA
             from RDB$RELATION_FIELDS RF
             inner join RDB$USER_PRIVILEGES UP
               on UP.RDB$RELATION_NAME = RF.RDB$RELATION_NAME
@@ -149,7 +152,8 @@ public abstract class GetColumnPrivileges extends AbstractMetadataMethod {
               trim(trailing from UP.RDB$USER) as GRANTEE,
               UP.RDB$PRIVILEGE as PRIVILEGE,
               UP.RDB$GRANT_OPTION as IS_GRANTABLE,
-              T.RDB$TYPE_NAME as JB_GRANTEE_TYPE
+              trim(trailing from T.RDB$TYPE_NAME) as JB_GRANTEE_TYPE,
+              trim(trailing from UP.RDB$USER_SCHEMA_NAME) as JB_GRANTEE_SCHEMA
             from SYSTEM.RDB$RELATION_FIELDS RF
             inner join SYSTEM.RDB$USER_PRIVILEGES UP
               on UP.RDB$RELATION_SCHEMA_NAME = RF.RDB$SCHEMA_NAME and UP.RDB$RELATION_NAME = RF.RDB$RELATION_NAME
@@ -162,7 +166,8 @@ public abstract class GetColumnPrivileges extends AbstractMetadataMethod {
 
         // NOTE: Sort by user and schema is not defined in JDBC, but we do this to ensure a consistent order for tests
         private static final String GET_COLUMN_PRIVILEGES_END_6 =
-                "\norder by RF.RDB$FIELD_NAME, UP.RDB$PRIVILEGE, UP.RDB$USER, RF.RDB$SCHEMA_NAME";
+                "\norder by RF.RDB$FIELD_NAME, UP.RDB$PRIVILEGE, UP.RDB$USER_SCHEMA_NAME nulls first, UP.RDB$USER, "
+                        + "RF.RDB$SCHEMA_NAME";
 
         private FB6(DbMetadataMediator mediator) {
             super(mediator);

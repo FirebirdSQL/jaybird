@@ -1327,10 +1327,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      *
      * <p>
-     * Jaybird defines an additional column:
+     * Jaybird defines these additional columns:
      * <ol start="9">
      * <li><b>JB_GRANTEE_TYPE</b> String  =&gt; Object type of {@code GRANTEE} (<b>NOTE: Jaybird specific column;
      * retrieve by name!</b>).</li>
+     * <li><b>JB_GRANTEE_SCHEMA</b> String =&gt; Schema of {@code GRANTEE} if it's a schema-bound object (<b>NOTE:
+     * Jaybird specific column; retrieve by name!</b>).</li>
      * </ol>
      * </p>
      * <p>
@@ -1358,10 +1360,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      *
      * <p>
-     * Jaybird defines an additional column:
+     * Jaybird defines these additional columns:
      * <ol start="8">
      * <li><b>JB_GRANTEE_TYPE</b> String  =&gt; Object type of {@code GRANTEE} (<b>NOTE: Jaybird specific column;
      * retrieve by name!</b>).</li>
+     * <li><b>JB_GRANTEE_SCHEMA</b> String =&gt; Schema of {@code GRANTEE} if it's a schema-bound object (<b>NOTE:
+     * Jaybird specific column; retrieve by name!</b>).</li>
      * </ol>
      * </p>
      * <p>
@@ -1373,7 +1377,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getTablePrivileges(String catalog, String schemaPattern, String tableNamePattern)
             throws SQLException {
-        return GetTablePrivileges.create(getDbMetadataMediator()).getTablePrivileges(tableNamePattern);
+        return GetTablePrivileges.create(getDbMetadataMediator()).getTablePrivileges(schemaPattern, tableNamePattern);
     }
 
     /**
