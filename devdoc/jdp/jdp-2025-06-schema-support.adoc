@@ -94,6 +94,7 @@ Jaybird cannot honour this requirement for plain `Statement`, as schema resoluti
 *** Maybe make it search `PUBLIC`, or `PUBLIC` and `SYSTEM`, or those on the search path?
 *** Or add a compatibility connection property to make it behave as `null` ("`__[...] means that the schema name should not be used to narrow the search__`")?
 *** Or just accept it as a breaking change?
+** `getCatalogs`: TODO: Maybe add a custom column with a list of schema names for `useCatalogAsPackage=true`?
 * TODO: Define effects for management API
 
 Note to self: use `// TODO Add schema support` in places that you identify need to get/improve schema support, while working on schema support elsewhere

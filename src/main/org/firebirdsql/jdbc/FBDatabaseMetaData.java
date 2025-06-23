@@ -1272,7 +1272,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      * <p>
      * When {@code useCatalogAsPackage = true} and packages are supported, this method will return the package names in
-     * column {@code TABLE_CAT}.
+     * column {@code TABLE_CAT}. In Firebird 6.0, packages are schema-bound, so finding procedures or functions in a
+     * package may require you to search in a specific schema, or in all schemas.
      * </p>>
      */
     @Override
