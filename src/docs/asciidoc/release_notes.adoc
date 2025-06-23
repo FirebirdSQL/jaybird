@@ -518,13 +518,16 @@ Changes include:
 * `DatabaseMetaData`
 ** Methods accepting a `schema` (exact match if not `null`) or `schemaPattern` (`LIKE` match if not `null`) will return no rows for value empty (`""`) on Firebird 6.0 and higher;
 use `null` or -- `schemaPattern` only -- `"%"` to match all schemas
+** `getCatalogs` -- when `useCatalogAsPackage=true` -- returns all (distinct) package names over all schemas.
+Within the limitations and specification of the JDBC API, this method cannot be used to find out which schema(s) contain a specific package name.
+// TODO Maybe add a custom column with a list of schema names?
+** `getColumnPrivileges` and `getTablePrivileges` received an additional column, `JB_GRANTEE_SCHEMA`, which is non-``null`` for grantees that are schema-bound (e.g. a procedure).
++
+As this is a non-standard column, we recommend to always retrieve it by name.
 ** `getSchemas()` returns all defined schemas
 ** `getSchemas(String catalog, String schemaPattern)` returns all schemas matching the `LIKE` pattern `schemaPattern`, with the following caveats
 *** `catalog` non-empty will return no rows;
 we recommend to always use `null` for `catalog`
-** `getColumnPrivileges` and `getTablePrivileges` received an additional column, `JB_GRANTEE_SCHEMA`, which is non-``null`` for grantees that are schema-bound (e.g. a procedure).
-+
-As this is a non-standard column, we recommend to always retrieve it by name.
 
 // TODO add major changes
 
