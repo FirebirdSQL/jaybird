@@ -1834,42 +1834,72 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public String getProcedureSourceCode(String procedureName) throws SQLException {
-        String sResult = null;
-        String sql = "Select RDB$PROCEDURE_SOURCE From RDB$PROCEDURES Where "
-                + "RDB$PROCEDURE_NAME = ?";
-        List<String> params = new ArrayList<>();
-        params.add(procedureName);
-        try (ResultSet rs = doQuery(sql, params)) {
-            if (rs.next()) sResult = rs.getString(1);
-        }
+        return getProcedureSourceCode(null, procedureName);
+    }
 
-        return sResult;
+    @Override
+    public String getProcedureSourceCode(String schema, String procedureName) throws SQLException {
+        return getSourceCode(schema, procedureName, SourceObjectType.PROCEDURE);
     }
 
     @Override
     public String getTriggerSourceCode(String triggerName) throws SQLException {
-        String sResult = null;
-        String sql = "Select RDB$TRIGGER_SOURCE From RDB$TRIGGERS Where RDB$TRIGGER_NAME = ?";
-        List<String> params = new ArrayList<>();
-        params.add(triggerName);
-        try (ResultSet rs = doQuery(sql, params)) {
-            if (rs.next()) sResult = rs.getString(1);
-        }
+        return getTriggerSourceCode(null, triggerName);
+    }
 
-        return sResult;
+    @Override
+    public String getTriggerSourceCode(String schema, String triggerName) throws SQLException {
+        return getSourceCode(schema, triggerName, SourceObjectType.TRIGGER);
     }
 
     @Override
     public String getViewSourceCode(String viewName) throws SQLException {
-        String sResult = null;
-        String sql = "Select RDB$VIEW_SOURCE From RDB$RELATIONS Where RDB$RELATION_NAME = ?";
-        List<String> params = new ArrayList<>();
-        params.add(viewName);
-        try (ResultSet rs = doQuery(sql, params)) {
-            if (rs.next()) sResult = rs.getString(1);
+        return getViewSourceCode(null, viewName);
+    }
+
+    @Override
+    public String getViewSourceCode(String schema, String viewName) throws SQLException {
+        return getSourceCode(schema, viewName, SourceObjectType.VIEW);
+    }
+
+    private enum SourceObjectType {
+        PROCEDURE("RDB$PROCEDURES", "RDB$PROCEDURE_SOURCE", "RDB$PROCEDURE_NAME"),
+        TRIGGER("RDB$TRIGGERS", "RDB$TRIGGER_SOUCE", "RDB$TRIGGER_NAME"),
+        VIEW("RDB$RELATIONS", "RDB$VIEW_SOURCE", "RDB$RELATION_NAME"),
+        ;
+
+        private final String tableName;
+        private final String objectSourceColumn;
+        private final String objectNameColumn;
+
+        SourceObjectType(String tableName, String objectSourceColumn, String objectNameColumn) {
+            this.tableName = tableName;
+            this.objectSourceColumn = objectSourceColumn;
+            this.objectNameColumn = objectNameColumn;
         }
 
-        return sResult;
+        List<Clause> toClauses(boolean supportsSchemas, String schema, String objectName) {
+            var objectNameClause = Clause.equalsClause(objectNameColumn, objectName);
+            return schema != null && supportsSchemas
+                    ? List.of(Clause.equalsClause("RDB$SCHEMA_NAME", schema), objectNameClause)
+                    : List.of(objectNameClause);
+        }
+
+        String toQuery(boolean supportsSchemas, List<Clause> clauses) {
+            return "select " + objectSourceColumn + " from " + (supportsSchemas ? "SYSTEM." : "") + tableName
+                    + " where " + Clause.conjunction(clauses);
+        }
+
+    }
+
+    private String getSourceCode(String schema, String objectName, SourceObjectType objectType) throws SQLException {
+        final boolean supportsSchemas = firebirdSupportInfo.supportsSchemas();
+        var clauses = objectType.toClauses(supportsSchemas, schema, objectName);
+        String sql = objectType.toQuery(supportsSchemas, clauses);
+        try (ResultSet rs = doQuery(sql, Clause.parameters(clauses))) {
+            if (rs.next()) return rs.getString(1);
+        }
+        return null;
     }
 
     protected static byte[] getBytes(String value) {

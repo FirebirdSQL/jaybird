@@ -16,39 +16,94 @@ import java.sql.SQLException;
  */
 @SuppressWarnings("unused")
 public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
-    
+
     /**
      * Get the source of a stored procedure.
-     * 
+     * <p>
+     * On Firebird 6.0 and higher, it is recommended to use {@link #getProcedureSourceCode(String, String)} instead.
+     * </p>
+     *
      * @param procedureName
-     *            name of the stored procedure.
-     * @return source of the stored procedure.
+     *         name of the stored procedure
+     * @return source of the stored procedure
      * @throws SQLException
-     *             if specified procedure cannot be found.
+     *         if specified procedure cannot be found
+     * @see #getProcedureSourceCode(String, String)
      */
     String getProcedureSourceCode(String procedureName) throws SQLException;
 
     /**
-     * Get the source of a trigger.
-     * 
-     * @param triggerName
-     *            name of the trigger.
-     * @return source of the trigger.
+     * Get the source of a stored procedure.
+     *
+     * @param schema
+     *         schema of the stored procedure ({@code null} drops the schema from the search; ignored on Firebird 5.0
+     *         and older)
+     * @param procedureName
+     *         name of the stored procedure
+     * @return source of the stored procedure
      * @throws SQLException
-     *             if specified trigger cannot be found.
+     *         if specified procedure cannot be found
+     * @since 7
+     */
+    String getProcedureSourceCode(String schema, String procedureName) throws SQLException;
+
+    /**
+     * Get the source of a trigger.
+     * <p>
+     * On Firebird 6.0 and higher, it is recommended to use {@link #getTriggerSourceCode(String, String)} instead.
+     * </p>
+     *
+     * @param triggerName
+     *         name of the trigger
+     * @return source of the trigger
+     * @throws SQLException
+     *         if specified trigger cannot be found
+     * @see #getTriggerSourceCode(String, String)
      */
     String getTriggerSourceCode(String triggerName) throws SQLException;
 
     /**
-     * Get the source of a view.
-     * 
-     * @param viewName
-     *            name of the view.
-     * @return source of the view.
+     * Get the source of a trigger.
+     *
+     * @param schema
+     *         schema of the trigger ({@code null} drops the schema from the search; ignored on Firebird 5.0 and older)
+     * @param triggerName
+     *         name of the trigger
+     * @return source of the trigger
      * @throws SQLException
-     *             if specified view cannot be found.
+     *         if specified trigger cannot be found
+     * @since 7
+     */
+    String getTriggerSourceCode(String schema, String triggerName) throws SQLException;
+
+    /**
+     * Get the source of a view.
+     * <p>
+     * On Firebird 6.0 and higher, it is recommended to use {@link #getViewSourceCode(String, String)} instead.
+     * </p>
+     *
+     * @param viewName
+     *         name of the view
+     * @return source of the view
+     * @throws SQLException
+     *         if specified view cannot be found
+     * @see #getViewSourceCode(String, String)
      */
     String getViewSourceCode(String viewName) throws SQLException;
+
+    /**
+     * Get the source of a view.
+     *
+     * @param schema
+     *         schema of the trigger ({@code null} drops the schema from the search; ignored on Firebird 5.0 and older)
+     * @param viewName
+     *         name of the view
+     * @return source of the view
+     * @throws SQLException
+     *         if specified view cannot be found
+     * @since 7
+     */
+    String getViewSourceCode(String schema, String viewName) throws SQLException;
     
     /**
      * Get the major version of the ODS (On-Disk Structure) of the database.
