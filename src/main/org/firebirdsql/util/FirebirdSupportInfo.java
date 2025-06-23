@@ -794,6 +794,19 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * If schema support is available, returns {@code forSchema}, otherwise returns {@code withoutSchema}.
+     *
+     * @param forSchema
+     *         value to return when schema support is available
+     * @param withoutSchema
+     *         value to return when schema support is not available
+     * @return {@code forSchema} if schema support is available, otherwise {@code withoutSchema}
+     */
+    public <T> T ifSchemaElse(T forSchema, T withoutSchema) {
+        return supportsSchemas() ? forSchema : withoutSchema;
+    }
+
+    /**
      * @return {@code true} when this Firebird version is considered a supported version
      */
     public boolean isSupportedVersion() {
