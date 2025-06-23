@@ -374,9 +374,10 @@ public final class FBTestProperties {
      * @param withoutSchema
      *         value to return when schema support is not available
      * @return {@code forSchema} if schema support is available, otherwise {@code withoutSchema}
+     * @see FirebirdSupportInfo#ifSchemaElse(Object, Object)
      */
     public static <T> T ifSchemaElse(T forSchema, T withoutSchema) {
-        return getDefaultSupportInfo().supportsSchemas() ? forSchema : withoutSchema;
+        return getDefaultSupportInfo().ifSchemaElse(forSchema, withoutSchema);
     }
 
     private FBTestProperties() {
