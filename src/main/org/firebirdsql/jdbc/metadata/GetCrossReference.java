@@ -18,7 +18,7 @@ import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
  * @author Mark Rotteveel
  * @since 5
  */
-public abstract class GetCrossReference extends AbstractKeysMethod {
+public abstract sealed class GetCrossReference extends AbstractKeysMethod {
 
     private GetCrossReference(DbMetadataMediator mediator) {
         super(mediator);
