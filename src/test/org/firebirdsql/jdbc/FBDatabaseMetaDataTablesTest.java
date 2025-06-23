@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2012-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -17,6 +17,7 @@ import java.util.*;
 import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -34,6 +35,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataTablesTest {
+
+    // TODO Add schema support: tests involving other schema
 
     // Valid values for TABLE_TYPE (separate from those defined in FBDatabaseMetaData for testing)
     private static final String VIEW = "VIEW";
@@ -233,6 +236,7 @@ class FBDatabaseMetaDataTablesTest {
         Set<String> expectedTables = new HashSet<>(Arrays.asList("RDB$FIELDS", "RDB$GENERATORS",
                 "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(TableMetaData.TABLE_SCHEM, ifSchemaElse("SYSTEM", null));
         rules.put(TableMetaData.TABLE_TYPE, SYSTEM_TABLE);
         try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { SYSTEM_TABLE })) {
             while (tables.next()) {
@@ -550,6 +554,7 @@ class FBDatabaseMetaDataTablesTest {
     private void updateTableRules(String tableName, Map<TableMetaData, Object> rules) {
         rules.put(TableMetaData.TABLE_NAME, tableName);
         if (tableName.startsWith("RDB$") || tableName.startsWith("MON$") || tableName.startsWith("SEC$")) {
+            rules.put(TableMetaData.TABLE_SCHEM, ifSchemaElse("SYSTEM", null));
             rules.put(TableMetaData.TABLE_TYPE, SYSTEM_TABLE);
         } else if (tableName.equals("TEST_NORMAL_TABLE") || tableName.equals("test_quoted_normal_table")
                 || tableName.equals("testquotedwith\\table")) {
@@ -570,7 +575,7 @@ class FBDatabaseMetaDataTablesTest {
     static {
         Map<TableMetaData, Object> defaults = new EnumMap<>(TableMetaData.class);
         defaults.put(TableMetaData.TABLE_CAT, null);
-        defaults.put(TableMetaData.TABLE_SCHEM, null);
+        defaults.put(TableMetaData.TABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(TableMetaData.REMARKS, null);
         defaults.put(TableMetaData.TYPE_CAT, null);
         defaults.put(TableMetaData.TYPE_SCHEM, null);

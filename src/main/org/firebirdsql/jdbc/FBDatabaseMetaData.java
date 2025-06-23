@@ -1251,7 +1251,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
             throws SQLException {
-        return createGetTablesInstance().getTables(tableNamePattern, types);
+        return createGetTablesInstance().getTables(schemaPattern, tableNamePattern, types);
     }
 
     private GetTables createGetTablesInstance() {
