@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.fields;
 
@@ -33,6 +33,7 @@ public final class FieldDescriptor {
     private final String fieldName;
     private final String tableAlias;
     private final String originalName;
+    private final String originalSchema;
     private final String originalTableName;
     private final String ownerName;
 
@@ -62,6 +63,8 @@ public final class FieldDescriptor {
      *         Column table alias
      * @param originalName
      *         Column original name
+     * @param originalSchema
+     *         Column original schema
      * @param originalTableName
      *         Column original table
      * @param ownerName
@@ -69,8 +72,8 @@ public final class FieldDescriptor {
      */
     public FieldDescriptor(int position, DatatypeCoder datatypeCoder,
             int type, int subType, int scale, int length,
-            String fieldName, String tableAlias, String originalName, String originalTableName,
-            String ownerName) {
+            String fieldName, String tableAlias,
+            String originalName, String originalSchema, String originalTableName, String ownerName) {
         this.position = position;
         this.datatypeCoder = datatypeCoderForType(datatypeCoder, type, subType, scale);
         this.type = type;
@@ -82,8 +85,33 @@ public final class FieldDescriptor {
         // TODO May want to do the reverse, or handle this better; see FirebirdResultSetMetaData contract
         this.tableAlias = trimToNull(tableAlias);
         this.originalName = originalName;
+        this.originalSchema = originalSchema;
         this.originalTableName = originalTableName;
         this.ownerName = ownerName;
+    }
+
+    /**
+     * Constructor for metadata FieldDescriptor.
+     * <p>
+     * This constructor sets all string-fields {@code null}, and is primarily intended for testing purposes.
+     * </p>
+     *
+     * @param position
+     *         Position of this field (0-based), or {@code -1} if position is not known (e.g. for test code)
+     * @param datatypeCoder
+     *         Instance of DatatypeCoder to use when decoding column data (note that another instance may be derived
+     *         internally, which then will be returned by {@link #getDatatypeCoder()})
+     * @param type
+     *         Column SQL type
+     * @param subType
+     *         Column subtype
+     * @param scale
+     *         Column scale
+     * @param length
+     *         Column defined length
+     */
+    public FieldDescriptor(int position, DatatypeCoder datatypeCoder, int type, int subType, int scale, int length) {
+        this(position, datatypeCoder, type, subType, scale, length, null, null, null, null, null, null);
     }
 
     /**
@@ -160,6 +188,14 @@ public final class FieldDescriptor {
      */
     public String getOriginalName() {
         return originalName;
+    }
+
+    /**
+     * @return The original schema ({@code null} if schemaless, e.g. Firebird 5.0 or older, or a column not backed by
+     * a table)
+     */
+    public String getOriginalSchema() {
+        return originalSchema;
     }
 
     /**

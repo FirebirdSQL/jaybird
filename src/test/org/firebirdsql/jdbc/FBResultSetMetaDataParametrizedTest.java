@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -41,51 +41,51 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class FBResultSetMetaDataParametrizedTest {
 
-    private static final String TABLE_NAME = "TEST_P_METADATA";
-    //@formatter:off
-    private static final String CREATE_TABLE =
-        "CREATE TABLE test_p_metadata (" +
-        "  id INTEGER, " +
-        "  simple_field VARCHAR(60) CHARACTER SET WIN1251 COLLATE PXW_CYRL, " +
-        "  two_byte_field VARCHAR(60) CHARACTER SET BIG_5, " +
-        "  three_byte_field VARCHAR(60) CHARACTER SET UNICODE_FSS, " +
-        "  long_field BIGINT, " +
-        "  int_field INTEGER, " +
-        "  short_field SMALLINT, " +
-        "  float_field FLOAT, " +
-        "  double_field DOUBLE PRECISION, " +
-        "  smallint_numeric NUMERIC(3,1), " +
-        "  integer_decimal_1 DECIMAL(3,1), " +
-        "  integer_numeric NUMERIC(5,2), " +
-        "  integer_decimal_2 DECIMAL(9,3), " +
-        "  bigint_numeric NUMERIC(10,4), " +
-        "  bigint_decimal DECIMAL(18,9), " +
-        "  date_field DATE, " +
-        "  time_field TIME, " +
-        "  timestamp_field TIMESTAMP, " +
-        "  blob_field BLOB, " +
-        "  blob_text_field BLOB SUB_TYPE TEXT, " +
-        "  blob_minus_one BLOB SUB_TYPE -1 " +
-        "  /* boolean */ " +
-        "  /* decfloat */ " +
-        "  /* extended numerics */ " +
-        "  /* time zone */ " +
-        "  /* int128 */ " +
-        ")";
+    // TODO Add schema support: tests involving other schema
 
-    private static final String TEST_QUERY =
-            "SELECT " +
-            "simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field," +
-            "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
-            "integer_decimal_2, bigint_numeric, bigint_decimal, date_field, time_field," +
-            "timestamp_field, blob_field, blob_text_field, blob_minus_one " +
-            "/* boolean */ " +
-            "/* decfloat */ " +
-            "/* extended numerics */ " +
-            "/* time zone */ " +
-            "/* int128 */ " +
-            "FROM test_p_metadata";
-    //@formatter:on
+    private static final String TABLE_NAME = "TEST_P_METADATA";
+    private static final String CREATE_TABLE = """
+            CREATE TABLE test_p_metadata (
+              id INTEGER,
+              simple_field VARCHAR(60) CHARACTER SET WIN1251 COLLATE PXW_CYRL,
+              two_byte_field VARCHAR(60) CHARACTER SET BIG_5,
+              three_byte_field VARCHAR(60) CHARACTER SET UNICODE_FSS,
+              long_field BIGINT,
+              int_field INTEGER,
+              short_field SMALLINT,
+              float_field FLOAT,
+              double_field DOUBLE PRECISION,
+              smallint_numeric NUMERIC(3,1),
+              integer_decimal_1 DECIMAL(3,1),
+              integer_numeric NUMERIC(5,2),
+              integer_decimal_2 DECIMAL(9,3),
+              bigint_numeric NUMERIC(10,4),
+              bigint_decimal DECIMAL(18,9),
+              date_field DATE,
+              time_field TIME,
+              timestamp_field TIMESTAMP,
+              blob_field BLOB,
+              blob_text_field BLOB SUB_TYPE TEXT,
+              blob_minus_one BLOB SUB_TYPE -1
+              /* boolean */
+              /* decfloat */
+              /* extended numerics */
+              /* time zone */
+              /* int128 */
+            )""";
+
+    private static final String TEST_QUERY = """
+            SELECT
+            simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field,
+            float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric,
+            integer_decimal_2, bigint_numeric, bigint_decimal, date_field, time_field,
+            timestamp_field, blob_field, blob_text_field, blob_minus_one
+            /* boolean */
+            /* decfloat */
+            /* extended numerics */
+            /* time zone */
+            /* int128 */
+            FROM test_p_metadata""";
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
@@ -259,7 +259,7 @@ class FBResultSetMetaDataParametrizedTest {
     @ParameterizedTest(name = "Index {0} ({2})")
     @MethodSource("testData")
     void testGetSchemaName(Integer columnIndex, ResultSetMetaDataInfo ignored1, String ignored2) throws Exception {
-        assertEquals("", rsmd.getSchemaName(columnIndex), "getSchemaName");
+        assertEquals(supportInfo.ifSchemaElse("PUBLIC", ""), rsmd.getSchemaName(columnIndex), "getSchemaName");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
