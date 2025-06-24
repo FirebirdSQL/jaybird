@@ -31,6 +31,7 @@ Important details related to schemas:
 The session default can be configured with `isc_dpb_search_path` (string DPB item).
 The current search path can be altered with `SET SEARCH_PATH TO ...`.
 `ALTER SESSION RESET` reverts to the session default.
+* If `SYSTEM` is not on the search path, it is automatically searched last
 * The "`current`" schema cannot be set separately;
 the first valid schema listed in the search path is considered the current schema.
 * `CURRENT_SCHEMA` and `RDB$GET_CONTEXT('SYSTEM', 'CURRENT_SCHEMA')` return the first valid schema from the search path
@@ -38,15 +39,11 @@ the first valid schema listed in the search path is considered the current schem
 * Objects not qualified with a schema name will be resolved using the current search path.
 This is done -- with some exceptions -- at prepare time.
 * TBP has new item `isc_tpb_lock_table_schema` to specify the schema of a table to be locked (1 byte length + string data)
-* Gbak has additional options to include/exclude (skip) schema datas in backup or restore, similar to existing options to include/exclude tables
+* Gbak has additional options to include/exclude (skip) schema data in backup or restore, similar to existing options to include/exclude tables
 * Gstat has additional options to specify a schema for operations involving tables
 * For validation, `val_sch_incl` and `val_sch_excl` (I don't think we use the equivalent,`val_tab_incl`/`val_tab_excl` in Jaybird, so might not be relevant)
 
 JDBC defines various methods, parameters, and return values or result set columns that are or are related to schemas.
-
-These are:
-
-* ...
 
 Jaybird 5 is the "`long-term support`" version for Java 8.
 
@@ -62,7 +59,7 @@ When Jaybird 7 is used on Firebird 5.0 or older, it will behave as before (no sc
 
 Further details can be found in <<consequences>>.
 
-Decision on backport to Jaybird 6 and/or Jaybird 5 is pending, and may be subject of a separate JDP.
+Decision on backport to Jaybird 6 and/or Jaybird 5 is pending, and may be the subject of a separate JDP.
 
 [#consequences]
 == Consequences
@@ -84,16 +81,12 @@ The schema name is stored _only_ for this replacement operation (i.e. it will no
 ** JDBC specifies that "`__Calling ``setSchema`` has no effect on previously created or prepared Statement objects.__`";
 Jaybird cannot honour this requirement for plain `Statement`, as schema resolution is on prepare time (which for plain `Statement` is on execute), and not always for `CallableStatement` (as the implementation may delay actual prepare until execution).
 * Request `isc_info_sql_relation_schema` after preparing a query, record it in `FieldDescriptor`, and return it were relevant for JDBC (e.g. `ResultSetMetaData.getSchemaName(int)`)
-** For Firebird 5.0 and older, we need to ensure that JDBC methods continue to report the correct value (i.e. ``""`` for schema-less objects)
+** For Firebird 5.0 and older, we need to ensure that JDBC methods continue to report the correct value (i.e. `""` for schema-less objects)
 * A Firebird 6.0 variant of the `DatabaseMetaData` and other internal metadata queries needs to be written to address at least the following things:
-** Explicitly qualify metadata tables with `"SYSTEM"`, so the queries will work even if `SYSTEM` is not on the search path.
+** Explicitly qualify metadata tables with `SYSTEM`, so the queries will work even if `SYSTEM` is not on the search path.
 ** Returning schema names, and qualified object names where relevant (e.g. in `DatabaseMetaData` result sets)
 ** Include schema names in joins to ensure matching the right objects
 ** Allow searching for schema or schema pattern as specified in JDBC, or were needed for internal metadata queries
-** TODO: investigate need for backwards compatible behaviour for `DatabaseMetaData` parameter `schema` with value `""` ("`__[...] retrieves those without a schema__`").
-*** Maybe make it search `PUBLIC`, or `PUBLIC` and `SYSTEM`, or those on the search path?
-*** Or add a compatibility connection property to make it behave as `null` ("`__[...] means that the schema name should not be used to narrow the search__`")?
-*** Or just accept it as a breaking change?
 ** `getCatalogs`: TODO: Maybe add a custom column with a list of schema names for `useCatalogAsPackage=true`?
 * TODO: Define effects for management API
 * TODO: Redesign retrieval of selectable procedure information (`StoredProcedureMetaDataFactory`) to be able to find stored procedures by schema
