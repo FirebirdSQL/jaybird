@@ -105,6 +105,7 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                         .dpbItem(isc_dpb_max_inline_blob_size),
                 builder(maxBlobCacheSize).type(INT).aliases("max_blob_cache_size", "isc_dpb_max_blob_cache_size")
                         .dpbItem(isc_dpb_max_blob_cache_size),
+                builder(searchPath).aliases("search_path", "isc_dpb_search_path").dpbItem(isc_dpb_search_path),
 
                 // TODO Consider removing this property, otherwise formally add it to PropertyNames
                 builder("filename_charset"),

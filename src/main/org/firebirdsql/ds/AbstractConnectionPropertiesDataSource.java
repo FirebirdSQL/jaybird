@@ -518,6 +518,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setMaxBlobCacheSize(maxBlobCacheSize);
     }
 
+    @Override
+    public String getSearchPath() {
+        return FirebirdConnectionProperties.super.getSearchPath();
+    }
+
+    @Override
+    public void setSearchPath(String searchPath) {
+        FirebirdConnectionProperties.super.setSearchPath(searchPath);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated(since = "5")
     @Override

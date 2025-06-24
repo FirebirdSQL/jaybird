@@ -90,6 +90,7 @@ Jaybird cannot honour this requirement for plain `Statement`, as schema resoluti
 ** `getCatalogs`: TODO: Maybe add a custom column with a list of schema names for `useCatalogAsPackage=true`?
 * TODO: Define effects for management API
 * TODO: Redesign retrieval of selectable procedure information (`StoredProcedureMetaDataFactory`) to be able to find stored procedures by schema
+* TODO: Add information to Jaybird manual
 
 Note to self: use `// TODO Add schema support` in places that you identify need to get/improve schema support, while working on schema support elsewhere
 
