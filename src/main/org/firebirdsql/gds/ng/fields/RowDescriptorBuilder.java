@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.fields;
 
@@ -28,6 +28,7 @@ public final class RowDescriptorBuilder {
     private String fieldName;
     private String tableAlias;
     private String originalName;
+    private String originalSchema;
     private String originalTableName;
     private String ownerName;
     private final FieldDescriptor[] fieldDescriptors;
@@ -144,6 +145,18 @@ public final class RowDescriptorBuilder {
     }
 
     /**
+     * Sets the original schema of the underlying table.
+     *
+     * @param originalSchema
+     *         The schema of the table
+     * @return this builder
+     */
+    public RowDescriptorBuilder setOriginalSchema(final String originalSchema) {
+        this.originalSchema = originalSchema;
+        return this;
+    }
+
+    /**
      * Sets the original name of the underlying table.
      *
      * @param originalTableName
@@ -247,7 +260,7 @@ public final class RowDescriptorBuilder {
      */
     public FieldDescriptor toFieldDescriptor() {
         return new FieldDescriptor(currentFieldIndex, datatypeCoder, type, subType, scale, length, fieldName,
-                tableAlias, originalName, originalTableName, ownerName);
+                tableAlias, originalName, originalSchema, originalTableName, ownerName);
     }
 
     /**
@@ -261,6 +274,7 @@ public final class RowDescriptorBuilder {
         fieldName = null;
         tableAlias = null;
         originalName = null;
+        originalSchema = null;
         originalTableName = null;
         ownerName = null;
         return this;
@@ -281,6 +295,7 @@ public final class RowDescriptorBuilder {
         fieldName = sourceFieldDescriptor.getFieldName();
         tableAlias = sourceFieldDescriptor.getTableAlias();
         originalName = sourceFieldDescriptor.getOriginalName();
+        originalSchema = sourceFieldDescriptor.getOriginalSchema();
         originalTableName = sourceFieldDescriptor.getOriginalTableName();
         ownerName = sourceFieldDescriptor.getOwnerName();
         return this;

@@ -43,6 +43,22 @@ enum ServerVersionInformation {
         public byte[] getParameterDescriptionInfoRequestItems() {
             return Constants.V_2_0_PARAMETER_INFO.clone();
         }
+    },
+    /**
+     * Information for Version 6.0 and higher
+     *
+     * @since 7
+     */
+    VERSION_6_0(6, 0) {
+        @Override
+        public byte[] getStatementInfoRequestItems() {
+            return Constants.V_6_0_STATEMENT_INFO.clone();
+        }
+
+        @Override
+        public byte[] getParameterDescriptionInfoRequestItems() {
+            return Constants.V_6_0_PARAMETER_INFO.clone();
+        }
     };
 
     private final int majorVersion;
@@ -207,6 +223,49 @@ enum ServerVersionInformation {
                 isc_info_sql_scale, isc_info_sql_length,
                 isc_info_sql_field,
                 isc_info_sql_alias,
+                isc_info_sql_relation,
+                isc_info_sql_relation_alias,
+                isc_info_sql_owner,
+                isc_info_sql_describe_end
+        };
+
+        static final byte[] V_6_0_STATEMENT_INFO = new byte[] {
+                isc_info_sql_stmt_type,
+                isc_info_sql_select,
+                isc_info_sql_describe_vars,
+                isc_info_sql_sqlda_seq,
+                isc_info_sql_type, isc_info_sql_sub_type,
+                isc_info_sql_scale, isc_info_sql_length,
+                isc_info_sql_field,
+                isc_info_sql_alias,
+                isc_info_sql_relation_schema,
+                isc_info_sql_relation,
+                isc_info_sql_relation_alias,
+                isc_info_sql_owner,
+                isc_info_sql_describe_end,
+
+                isc_info_sql_bind,
+                isc_info_sql_describe_vars,
+                isc_info_sql_sqlda_seq,
+                isc_info_sql_type, isc_info_sql_sub_type,
+                isc_info_sql_scale, isc_info_sql_length,
+                // TODO: Information not available in normal queries, check for procedures, otherwise remove
+                //isc_info_sql_field,
+                //isc_info_sql_alias,
+                //isc_info_sql_relation_schema,
+                //isc_info_sql_relation,
+                //isc_info_sql_relation_alias,
+                //isc_info_sql_owner,
+                isc_info_sql_describe_end
+        };
+        static final byte[] V_6_0_PARAMETER_INFO = new byte[] {
+                isc_info_sql_describe_vars,
+                isc_info_sql_sqlda_seq,
+                isc_info_sql_type, isc_info_sql_sub_type,
+                isc_info_sql_scale, isc_info_sql_length,
+                isc_info_sql_field,
+                isc_info_sql_alias,
+                isc_info_sql_relation_schema,
                 isc_info_sql_relation,
                 isc_info_sql_relation_alias,
                 isc_info_sql_owner,

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -164,6 +164,10 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
 
             case ISCConstants.isc_info_sql_alias:
                 rdb.setFieldName(readStringValue(info));
+                break;
+
+            case ISCConstants.isc_info_sql_relation_schema:
+                rdb.setOriginalSchema(readStringValue(info));
                 break;
 
             case ISCConstants.isc_info_sql_relation:
