@@ -824,4 +824,30 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
         setIntProperty(PropertyNames.maxBlobCacheSize, Math.max(0, maxBlobCacheSize));
     }
 
+    /**
+     * @return the initial search path of the connection, {@code null} if the server default search path is used
+     * @see #setSearchPath(String)
+     */
+    default String getSearchPath() {
+        return getProperty(PropertyNames.searchPath);
+    }
+
+    /**
+     * Sets the initial search path of the connection. The search path is a list of schemas that will be searched for
+     * unqualified objects (i.e. without an explicit schema).
+     * <p>
+     * This only applies to Firebird 6.0 and higher.
+     * </p>
+     * <p>
+     * The default value is {@code null}, which uses the server default (on Firebird 6.0, `PUBLIC, SYSTEM`).
+     * Case-sensitive, or otherwise non-regular identifiers need to be explicitly quoted.
+     * </p>
+     *
+     * @param searchPath
+     *         list of comma-separated schema names
+     */
+    default void setSearchPath(String searchPath) {
+        setProperty(PropertyNames.searchPath, searchPath);
+    }
+
 }
