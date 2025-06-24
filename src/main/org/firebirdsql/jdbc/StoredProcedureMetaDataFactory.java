@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -61,6 +61,10 @@ final class StoredProcedureMetaDataFactory {
  */
 final class DefaultCallableStatementMetaData implements StoredProcedureMetaData {
 
+    // TODO Add schema support: solution needs to be reworked to support schemas, which will cascade into
+    //  callable statement parsing. This needs further investigation. In addition, the current solution doesn't handle
+    //  case-sensitivity
+
     final Set<String> selectableProcedureNames = new HashSet<>();
 
     public DefaultCallableStatementMetaData(Connection connection)
@@ -71,7 +75,9 @@ final class DefaultCallableStatementMetaData implements StoredProcedureMetaData 
     private void loadSelectableProcedureNames(Connection connection) throws SQLException {
         try (Statement stmt = connection.createStatement()) {
             // TODO Replace with looking for specific procedure
-            String sql = "SELECT RDB$PROCEDURE_NAME FROM RDB$PROCEDURES WHERE RDB$PROCEDURE_TYPE = 1";
+            String sql = connection.getMetaData().supportsSchemasInDataManipulation()
+                    ? "SELECT RDB$PROCEDURE_NAME FROM SYSTEM.RDB$PROCEDURES WHERE RDB$PROCEDURE_TYPE = 1"
+                    : "SELECT RDB$PROCEDURE_NAME FROM RDB$PROCEDURES WHERE RDB$PROCEDURE_TYPE = 1";
             try (ResultSet resultSet = stmt.executeQuery(sql)) {
                 while (resultSet.next()) {
                     selectableProcedureNames.add(resultSet.getString(1).trim().toUpperCase(Locale.ROOT));
