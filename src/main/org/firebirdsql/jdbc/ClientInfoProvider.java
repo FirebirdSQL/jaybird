@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2023-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -179,7 +179,7 @@ final class ClientInfoProvider {
         QuoteStrategy quoteStrategy = connection.getQuoteStrategy();
         var sb = new StringBuilder("select ");
         renderGetValue(sb, property, quoteStrategy);
-        sb.append(" from RDB$DATABASE");
+        sb.append(" from ").append(hasSystemSchema() ? "SYSTEM.RDB$DATABASE" : "RDB$DATABASE");
         try (var rs = getStatement().executeQuery(sb.toString())) {
             if (rs.next()) {
                 registerKnownProperty(property);
@@ -193,6 +193,10 @@ final class ClientInfoProvider {
             }
             throw e;
         }
+    }
+
+    private boolean hasSystemSchema() throws SQLException {
+        return connection.getMetaData().supportsSchemasInDataManipulation();
     }
 
     private void renderGetValue(StringBuilder sb, ClientInfoProperty property, QuoteStrategy quoteStrategy) {
