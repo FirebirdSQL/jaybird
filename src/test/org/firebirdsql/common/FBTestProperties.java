@@ -135,7 +135,9 @@ public final class FBTestProperties {
      */
     public static Properties getPropertiesForConnection(String k1, String v1) {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(k1, v1);
+        if (v1 != null) {
+            props.setProperty(k1, v1);
+        }
         return props;
     }
 

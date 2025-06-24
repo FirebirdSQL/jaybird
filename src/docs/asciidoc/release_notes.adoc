@@ -515,6 +515,14 @@ Firebird 6.0 introduces schemas, and Jaybird 7 provides support for schemas as d
 
 Changes include:
 
+* Connection property `searchPath` sets the initial search path of the connection.
+The search path is the list of schemas that will be searched for schema-bound objects if they are not explicitly qualified with a schema name.
+The first _valid_ schema is the current schema of the connection.
++
+The value of `searchPath` is a comma-separated list of schema names.
+Schema names that are case-sensitive or otherwise non-regular identifiers, must be quoted.
+Unknown schema names are ignored.
+If `SYSTEM` is not included, the server will automatically add it as the last schema.
 * `DatabaseMetaData`
 ** Methods accepting a `schema` (exact match if not `null`) or `schemaPattern` (`LIKE` match if not `null`) will return no rows for value empty (`""`) on Firebird 6.0 and higher;
 use `null` or -- `schemaPattern` only -- `"%"` to match all schemas
@@ -531,6 +539,8 @@ The `schema` parameter is ignored on Firebird 5.0 and older.
 ** `getSchemas(String catalog, String schemaPattern)` returns all schemas matching the `LIKE` pattern `schemaPattern`, with the following caveats
 *** `catalog` non-empty will return no rows;
 we recommend to always use `null` for `catalog`
+* `ResultSetMetaData`
+** `getSchemaName` reports the schema if the column is backed by a table, otherwise empty string (`""`)
 
 // TODO add major changes
 

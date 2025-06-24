@@ -128,6 +128,9 @@ public final class DpbItems {
 
     // Firebird 6 constants
     public static final int isc_dpb_owner = 102;
+    public static final int isc_dpb_search_path = 105;
+    public static final int isc_dpb_blr_request_search_path = 106;
+    public static final int isc_dpb_gbak_restore_has_schema = 107;
 
     private DpbItems() {
         // no instances
