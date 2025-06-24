@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.fields;
 
@@ -9,8 +9,6 @@ import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,17 +22,13 @@ class RowDescriptorBuilderTest {
     private static final DatatypeCoder datatypeCoder =
             DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
-    private static final List<FieldDescriptor> TEST_FIELD_DESCRIPTORS;
-    static {
-        List<FieldDescriptor> fields = new ArrayList<>();
-        fields.add(new FieldDescriptor(0, datatypeCoder, 1, 1, 1, 1, "1", "1", "1", "1", "1"));
-        fields.add(new FieldDescriptor(1, datatypeCoder, 2, 2, 2, 2, "2", "2", "2", "2", "2"));
-        fields.add(new FieldDescriptor(2, datatypeCoder, 3, 3, 3, 3, "3", "3", "3", "3", "3"));
+    private static final List<FieldDescriptor> TEST_FIELD_DESCRIPTORS = List.of(
+            new FieldDescriptor(0, datatypeCoder, 1, 1, 1, 1, "1", "1", "1", "1", "1", "1"),
+            new FieldDescriptor(1, datatypeCoder, 2, 2, 2, 2, "2", "2", "2", "2", "2", "2"),
+            new FieldDescriptor(2, datatypeCoder, 3, 3, 3, 3, "3", "3", "3", "3", "3", "3"));
 
-        TEST_FIELD_DESCRIPTORS = Collections.unmodifiableList(fields);
-    }
-
-    private static final FieldDescriptor SOURCE = new FieldDescriptor(-1, datatypeCoder, 1, 2, 3, 4, "5", "6", "7", "8", "9");
+    private static final FieldDescriptor SOURCE =
+            new FieldDescriptor(-1, datatypeCoder, 1, 2, 3, 4, "5", "6", "7", "8", "9", "10");
 
     @Test
     void testEmptyField() {
@@ -49,6 +43,7 @@ class RowDescriptorBuilderTest {
         assertNull(descriptor.getFieldName(), "Unexpected FieldName");
         assertNull(descriptor.getTableAlias(), "Unexpected TableAlias");
         assertNull(descriptor.getOriginalName(), "Unexpected OriginalName");
+        assertNull(descriptor.getOriginalSchema(), "Unexpected OriginalSchema");
         assertNull(descriptor.getOriginalTableName(), "Unexpected OriginalTableName");
         assertNull(descriptor.getOwnerName(), "Unexpected OwnerName");
     }
@@ -64,8 +59,9 @@ class RowDescriptorBuilderTest {
                         .setFieldName("5")
                         .setTableAlias("6")
                         .setOriginalName("7")
-                        .setOriginalTableName("8")
-                        .setOwnerName("9")
+                        .setOriginalSchema("8")
+                        .setOriginalTableName("9")
+                        .setOwnerName("10")
                         .toFieldDescriptor();
 
         assertEquals(0, descriptor.getPosition(), "Unexpected Position");
@@ -76,8 +72,9 @@ class RowDescriptorBuilderTest {
         assertEquals("5", descriptor.getFieldName(), "Unexpected FieldName");
         assertEquals("6", descriptor.getTableAlias(), "Unexpected TableAlias");
         assertEquals("7", descriptor.getOriginalName(), "Unexpected OriginalName");
-        assertEquals("8", descriptor.getOriginalTableName(), "Unexpected OriginalTableName");
-        assertEquals("9", descriptor.getOwnerName(), "Unexpected OwnerName");
+        assertEquals("8", descriptor.getOriginalSchema(), "Unexpected OriginalSchema");
+        assertEquals("9", descriptor.getOriginalTableName(), "Unexpected OriginalTableName");
+        assertEquals("10", descriptor.getOwnerName(), "Unexpected OwnerName");
     }
 
     @Test
@@ -94,8 +91,9 @@ class RowDescriptorBuilderTest {
         assertEquals("5", fieldDescriptor.getFieldName(), "Unexpected FieldName");
         assertEquals("6", fieldDescriptor.getTableAlias(), "Unexpected TableAlias");
         assertEquals("7", fieldDescriptor.getOriginalName(), "Unexpected OriginalName");
-        assertEquals("8", fieldDescriptor.getOriginalTableName(), "Unexpected OriginalTableName");
-        assertEquals("9", fieldDescriptor.getOwnerName(), "Unexpected OwnerName");
+        assertEquals("8", fieldDescriptor.getOriginalSchema(), "Unexpected OriginalSchema");
+        assertEquals("9", fieldDescriptor.getOriginalTableName(), "Unexpected OriginalTableName");
+        assertEquals("10", fieldDescriptor.getOwnerName(), "Unexpected OwnerName");
     }
 
     @Test
@@ -113,6 +111,7 @@ class RowDescriptorBuilderTest {
         assertNull(fieldDescriptor.getFieldName(), "Unexpected FieldName");
         assertNull(fieldDescriptor.getTableAlias(), "Unexpected TableAlias");
         assertNull(fieldDescriptor.getOriginalName(), "Unexpected OriginalName");
+        assertNull(fieldDescriptor.getOriginalSchema(), "Unexpected OriginalSchema");
         assertNull(fieldDescriptor.getOriginalTableName(), "Unexpected OriginalTableName");
         assertNull(fieldDescriptor.getOwnerName(), "Unexpected OwnerName");
     }
