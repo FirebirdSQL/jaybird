@@ -682,13 +682,14 @@ If you are confronted with such a change, let us know on {firebird-java}[firebir
 * `FbWireOperations`
 ** The `ProcessAttachCallback` parameter of `authReceiveResponse` was removed, as all implementations did nothing, and since protocol 13, it wasn't only called for the attach response
 ** Interface `ProcessAttachCallback` was removed
+* Interface `StoredProcedureMetaData` was made package-private
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
 
 The following changes might cause issues, though we think this is unlikely:
 
-// TODO Document unlikely breaking changes, or remove section
+// TODO Document unlikely breaking changes, or comment out this section
 
 [#breaking-changes-for-jaybird-8]
 === Breaking changes for Jaybird 8

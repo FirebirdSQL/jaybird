@@ -195,8 +195,8 @@ final class ClientInfoProvider {
         }
     }
 
-    private boolean hasSystemSchema() throws SQLException {
-        return connection.getMetaData().supportsSchemasInDataManipulation();
+    private boolean hasSystemSchema() {
+        return supportInfoFor(connection).supportsSchemas();
     }
 
     private void renderGetValue(StringBuilder sb, ClientInfoProperty property, QuoteStrategy quoteStrategy) {
