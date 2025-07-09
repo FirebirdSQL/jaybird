@@ -45,7 +45,7 @@ final class StoredProcedureMetaDataFactory {
         if (connection.isIgnoreProcedureType()) {
             return false;
         }
-        FirebirdDatabaseMetaData metaData = (FirebirdDatabaseMetaData) connection.getMetaData();
+        FirebirdDatabaseMetaData metaData = connection.getMetaData();
 
         return versionEqualOrAboveFB21(metaData.getDatabaseMajorVersion(), metaData.getDatabaseMinorVersion())
                 && versionEqualOrAboveFB21(metaData.getOdsMajorVersion(), metaData.getOdsMinorVersion());
