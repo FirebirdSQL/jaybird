@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -221,6 +221,37 @@ class SqlTokenizerTest {
                 new GenericToken(88, "pass"),
                 new ParenthesisClose(92)
         );
+    }
+
+    @Test
+    void simpleColumnList() {
+        String statementText = "select a,b, c, d , e from some_table";
+
+        var tokenizer = SqlTokenizer.withReservedWords(FirebirdReservedWords.latest())
+                .of(statementText);
+
+        assertThat(tokenizer).toIterable().containsExactly(
+                new ReservedToken(0, "select"),
+                new WhitespaceToken(6, " "),
+                new GenericToken(7, "a"),
+                new CommaToken(8),
+                new GenericToken(9, "b"),
+                new CommaToken(10),
+                new WhitespaceToken(11, " "),
+                new GenericToken(12, "c"),
+                new CommaToken(13),
+                new WhitespaceToken(14, " "),
+                new GenericToken(15, "d"),
+                new WhitespaceToken(16, " "),
+                new CommaToken(17),
+                new WhitespaceToken(18, " "),
+                new GenericToken(19, "e"),
+                new WhitespaceToken(20, " "),
+                new ReservedToken(21, "from"),
+                new WhitespaceToken(25, " "),
+                new GenericToken(26, "some_table")
+        );
+
     }
 
     private static void expectSingleToken(String input, Token expectedToken) {

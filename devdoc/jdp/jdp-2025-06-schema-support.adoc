@@ -33,17 +33,17 @@ The current search path can be altered with `SET SEARCH_PATH TO ...`.
 `ALTER SESSION RESET` reverts to the session default.
 * If `SYSTEM` is not on the search path, it is automatically searched last
 * The "`current`" schema cannot be set separately;
-the first valid schema listed in the search path is considered the current schema.
+the first valid (i.e. existing) schema listed in the search path is considered the current schema.
 * `CURRENT_SCHEMA` and `RDB$GET_CONTEXT('SYSTEM', 'CURRENT_SCHEMA')` return the first valid schema from the search path
 * `RDB$GET_CONTEXT('SYSTEM', 'SEARCH_PATH')` returns the current search path
 * Objects not qualified with a schema name will be resolved using the current search path.
 This is done -- with some exceptions -- at prepare time.
-* TBP has new item `isc_tpb_lock_table_schema` to specify the schema of a table to be locked (1 byte length + string data)
+* TPB has new item `isc_tpb_lock_table_schema` to specify the schema of a table to be locked (1 byte length + string data)
 * Gbak has additional options to include/exclude (skip) schema data in backup or restore, similar to existing options to include/exclude tables
 * Gstat has additional options to specify a schema for operations involving tables
 * For validation, `val_sch_incl` and `val_sch_excl` (I don't think we use the equivalent,`val_tab_incl`/`val_tab_excl` in Jaybird, so might not be relevant)
 
-JDBC defines various methods, parameters, and return values or result set columns that are or are related to schemas.
+JDBC defines various methods, parameters, and return values or result set columns that are related to schemas.
 
 Jaybird 5 is the "`long-term support`" version for Java 8.
 
@@ -76,18 +76,21 @@ the connection will not store this value
 The schema name is stored _only_ for this replacement operation (i.e. it will not be returned by `getSchema`!)
 +
 ** The name must match exactly as is stored in the metadata (it is always case-sensitive!)
-** Jaybird will take care of quoting, and will always quote
+** Jaybird will take care of quoting, and will always quote on dialect 3
 ** Existence of the schema is **not** checked, so it is possible the current schema does not change with this operation, as `CURRENT_SCHEMA` reports the first _valid_ schema
 ** JDBC specifies that "`__Calling ``setSchema`` has no effect on previously created or prepared Statement objects.__`";
 Jaybird cannot honour this requirement for plain `Statement`, as schema resolution is on prepare time (which for plain `Statement` is on execute), and not always for `CallableStatement` (as the implementation may delay actual prepare until execution).
 * Request `isc_info_sql_relation_schema` after preparing a query, record it in `FieldDescriptor`, and return it were relevant for JDBC (e.g. `ResultSetMetaData.getSchemaName(int)`)
 ** For Firebird 5.0 and older, we need to ensure that JDBC methods continue to report the correct value (i.e. `""` for schema-less objects)
 * A Firebird 6.0 variant of the `DatabaseMetaData` and other internal metadata queries needs to be written to address at least the following things:
-** Explicitly qualify metadata tables with `SYSTEM`, so the queries will work even if `SYSTEM` is not on the search path.
+** Explicitly qualify metadata tables with `SYSTEM`, so the queries will work even if another schema on the search path contains tables with the same names as the system tables.
 ** Returning schema names, and qualified object names where relevant (e.g. in `DatabaseMetaData` result sets)
 ** Include schema names in joins to ensure matching the right objects
 ** Allow searching for schema or schema pattern as specified in JDBC, or were needed for internal metadata queries
 ** `getCatalogs`: TODO: Maybe add a custom column with a list of schema names for `useCatalogAsPackage=true`?
+* `FirebirdConnection`
+** Added method `String getSearchPath()` to obtain the search path as reported by `RBB$GET_CONTEXT('SYSTEM', 'SEARCH_PATH')`, or `null` if schemas are not supported
+** Added method `List<String> getSearchPatList()` to obtain the search path as a list of unquoted object names, or empty list if schemas are not supported
 * TODO: Define effects for management API
 * TODO: Redesign retrieval of selectable procedure information (`StoredProcedureMetaDataFactory`) to be able to find stored procedures by schema
 * TODO: Add information to Jaybird manual
