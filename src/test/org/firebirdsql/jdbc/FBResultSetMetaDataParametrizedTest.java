@@ -38,10 +38,9 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Mark Rotteveel
  * @since 3.0
+ * @see FBResultSetMetaDataTest
  */
 class FBResultSetMetaDataParametrizedTest {
-
-    // TODO Add schema support: tests involving other schema
 
     private static final String TABLE_NAME = "TEST_P_METADATA";
     private static final String CREATE_TABLE = """
@@ -85,7 +84,16 @@ class FBResultSetMetaDataParametrizedTest {
             /* extended numerics */
             /* time zone */
             /* int128 */
-            FROM test_p_metadata""";
+            , column_from_secondary as secondary_aliased
+            FROM test_p_metadata cross join SECONDARY_TABLE""";
+
+    private static final String OTHER_SCHEMA = "OTHER_SCHEMA";
+    private static final String SECONDARY_TABLE_NAME = "SECONDARY_TABLE";
+
+    private static final String CREATE_SECONDARY_TABLE = """
+            create table SECONDARY_TABLE (
+              column_from_secondary integer
+            )""";
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
@@ -101,6 +109,7 @@ class FBResultSetMetaDataParametrizedTest {
         supportInfo = supportInfoFor(connection);
 
         String createTable = CREATE_TABLE;
+        String createSecondaryTable = CREATE_SECONDARY_TABLE;
         String testQuery = TEST_QUERY;
         if (!supportInfo.supportsBigint()) {
             // No BIGINT support, replacing type so number of columns remain the same
@@ -129,8 +138,19 @@ class FBResultSetMetaDataParametrizedTest {
             createTable =createTable.replace("/* int128 */", ", col_int128 INT128");
             testQuery = testQuery.replace("/* int128 */", ", col_int128");
         }
+        if (supportInfo.supportsSchemas()) {
+            createSecondaryTable = createSecondaryTable.replace(
+                    SECONDARY_TABLE_NAME, OTHER_SCHEMA + "." + SECONDARY_TABLE_NAME);
+            testQuery = testQuery.replace(SECONDARY_TABLE_NAME, OTHER_SCHEMA + "." + SECONDARY_TABLE_NAME);
+        }
 
+        connection.setAutoCommit(false);
         DdlHelper.executeCreateTable(connection, createTable);
+        if (supportInfo.supportsSchemas()) {
+            DdlHelper.executeDDL(connection, "create schema " + OTHER_SCHEMA);
+        }
+        DdlHelper.executeCreateTable(connection, createSecondaryTable);
+        connection.setAutoCommit(true);
 
         pstmt = connection.prepareStatement(testQuery);
         rsmd = pstmt.getMetaData();
@@ -150,47 +170,49 @@ class FBResultSetMetaDataParametrizedTest {
 
     static Stream<Arguments> testData() {
         final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
+        final String defaultSchema = ifSchemaElse("PUBLIC", "");
         List<Arguments> testData = new ArrayList<>(Arrays.asList(
-                create(1, "java.lang.String", 60, "SIMPLE_FIELD", "SIMPLE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
-                create(2, "java.lang.String", 60, "TWO_BYTE_FIELD", "TWO_BYTE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
-                create(3, "java.lang.String", 60, "THREE_BYTE_FIELD", "THREE_BYTE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
-                create(4, "java.lang.Long", 20, "LONG_FIELD", "LONG_FIELD", BIGINT, "BIGINT", 19, 0, TABLE_NAME, columnNullable, true, true),
-                create(5, "java.lang.Integer", 11, "INT_FIELD", "INT_FIELD", INTEGER, "INTEGER", 10, 0, TABLE_NAME, columnNullable, true, true),
-                create(6, "java.lang.Integer", 6, "SHORT_FIELD", "SHORT_FIELD", SMALLINT, "SMALLINT", 5, 0, TABLE_NAME, columnNullable, true, true),
-                create(7, "java.lang.Double", 13, "FLOAT_FIELD", "FLOAT_FIELD", FLOAT, "FLOAT", supportsFloatBinaryPrecision ? 24 : 7, 0, TABLE_NAME, columnNullable, true, true),
-                create(8, "java.lang.Double", 22, "DOUBLE_FIELD", "DOUBLE_FIELD", DOUBLE, "DOUBLE PRECISION", supportsFloatBinaryPrecision ? 53 : 15, 0, TABLE_NAME, columnNullable, true, true),
-                create(9, "java.math.BigDecimal", 5, "SMALLINT_NUMERIC", "SMALLINT_NUMERIC", NUMERIC, "NUMERIC", 3, 1, TABLE_NAME, columnNullable, true, true),
-                create(10, "java.math.BigDecimal", 5, "INTEGER_DECIMAL_1", "INTEGER_DECIMAL_1", DECIMAL, "DECIMAL", 3, 1, TABLE_NAME, columnNullable, true, true),
-                create(11, "java.math.BigDecimal", 7, "INTEGER_NUMERIC", "INTEGER_NUMERIC", NUMERIC, "NUMERIC", 5, 2, TABLE_NAME, columnNullable, true, true),
-                create(12, "java.math.BigDecimal", 11, "INTEGER_DECIMAL_2", "INTEGER_DECIMAL_2", DECIMAL, "DECIMAL", 9, 3, TABLE_NAME, columnNullable, true, true),
-                create(13, "java.math.BigDecimal", 12, "BIGINT_NUMERIC", "BIGINT_NUMERIC", NUMERIC, "NUMERIC", 10, 4, TABLE_NAME, columnNullable, true, true),
-                create(14, "java.math.BigDecimal", 20, "BIGINT_DECIMAL", "BIGINT_DECIMAL", DECIMAL, "DECIMAL", 18, 9, TABLE_NAME, columnNullable, true, true),
-                create(15, "java.sql.Date", 10, "DATE_FIELD", "DATE_FIELD", DATE, "DATE", 10, 0, TABLE_NAME, columnNullable, true, false),
-                create(16, "java.sql.Time", 8, "TIME_FIELD", "TIME_FIELD", TIME, "TIME", 8, 0, TABLE_NAME, columnNullable, true, false),
-                create(17, "java.sql.Timestamp", 19, "TIMESTAMP_FIELD", "TIMESTAMP_FIELD", TIMESTAMP, "TIMESTAMP", 19, 0, TABLE_NAME, columnNullable, true, false),
-                create(18, "[B", 0, "BLOB_FIELD", "BLOB_FIELD", LONGVARBINARY, "BLOB SUB_TYPE BINARY", 0, 0, TABLE_NAME, columnNullable, false, false),
-                create(19, "java.lang.String", 0, "BLOB_TEXT_FIELD", "BLOB_TEXT_FIELD", LONGVARCHAR, "BLOB SUB_TYPE TEXT", 0, 0, TABLE_NAME, columnNullable, false, false),
-                create(20, "java.sql.Blob", 0, "BLOB_MINUS_ONE", "BLOB_MINUS_ONE", BLOB, "BLOB SUB_TYPE -1", 0, 0, TABLE_NAME, columnNullable, false, false)
+                create(1, "java.lang.String", 60, "SIMPLE_FIELD", "SIMPLE_FIELD", VARCHAR, "VARCHAR", 60, 0, defaultSchema, TABLE_NAME, columnNullable, true, false),
+                create(2, "java.lang.String", 60, "TWO_BYTE_FIELD", "TWO_BYTE_FIELD", VARCHAR, "VARCHAR", 60, 0, defaultSchema, TABLE_NAME, columnNullable, true, false),
+                create(3, "java.lang.String", 60, "THREE_BYTE_FIELD", "THREE_BYTE_FIELD", VARCHAR, "VARCHAR", 60, 0, defaultSchema, TABLE_NAME, columnNullable, true, false),
+                create(4, "java.lang.Long", 20, "LONG_FIELD", "LONG_FIELD", BIGINT, "BIGINT", 19, 0, defaultSchema, TABLE_NAME, columnNullable, true, true),
+                create(5, "java.lang.Integer", 11, "INT_FIELD", "INT_FIELD", INTEGER, "INTEGER", 10, 0, defaultSchema, TABLE_NAME, columnNullable, true, true),
+                create(6, "java.lang.Integer", 6, "SHORT_FIELD", "SHORT_FIELD", SMALLINT, "SMALLINT", 5, 0, defaultSchema, TABLE_NAME, columnNullable, true, true),
+                create(7, "java.lang.Double", 13, "FLOAT_FIELD", "FLOAT_FIELD", FLOAT, "FLOAT", supportsFloatBinaryPrecision ? 24 : 7, 0, defaultSchema, TABLE_NAME, columnNullable, true, true),
+                create(8, "java.lang.Double", 22, "DOUBLE_FIELD", "DOUBLE_FIELD", DOUBLE, "DOUBLE PRECISION", supportsFloatBinaryPrecision ? 53 : 15, 0, defaultSchema, TABLE_NAME, columnNullable, true, true),
+                create(9, "java.math.BigDecimal", 5, "SMALLINT_NUMERIC", "SMALLINT_NUMERIC", NUMERIC, "NUMERIC", 3, 1, defaultSchema, TABLE_NAME, columnNullable, true, true),
+                create(10, "java.math.BigDecimal", 5, "INTEGER_DECIMAL_1", "INTEGER_DECIMAL_1", DECIMAL, "DECIMAL", 3, 1, defaultSchema, TABLE_NAME, columnNullable, true, true),
+                create(11, "java.math.BigDecimal", 7, "INTEGER_NUMERIC", "INTEGER_NUMERIC", NUMERIC, "NUMERIC", 5, 2, defaultSchema, TABLE_NAME, columnNullable, true, true),
+                create(12, "java.math.BigDecimal", 11, "INTEGER_DECIMAL_2", "INTEGER_DECIMAL_2", DECIMAL, "DECIMAL", 9, 3, defaultSchema, TABLE_NAME, columnNullable, true, true),
+                create(13, "java.math.BigDecimal", 12, "BIGINT_NUMERIC", "BIGINT_NUMERIC", NUMERIC, "NUMERIC", 10, 4, defaultSchema, TABLE_NAME, columnNullable, true, true),
+                create(14, "java.math.BigDecimal", 20, "BIGINT_DECIMAL", "BIGINT_DECIMAL", DECIMAL, "DECIMAL", 18, 9, defaultSchema, TABLE_NAME, columnNullable, true, true),
+                create(15, "java.sql.Date", 10, "DATE_FIELD", "DATE_FIELD", DATE, "DATE", 10, 0, defaultSchema, TABLE_NAME, columnNullable, true, false),
+                create(16, "java.sql.Time", 8, "TIME_FIELD", "TIME_FIELD", TIME, "TIME", 8, 0, defaultSchema, TABLE_NAME, columnNullable, true, false),
+                create(17, "java.sql.Timestamp", 19, "TIMESTAMP_FIELD", "TIMESTAMP_FIELD", TIMESTAMP, "TIMESTAMP", 19, 0, defaultSchema, TABLE_NAME, columnNullable, true, false),
+                create(18, "[B", 0, "BLOB_FIELD", "BLOB_FIELD", LONGVARBINARY, "BLOB SUB_TYPE BINARY", 0, 0, defaultSchema, TABLE_NAME, columnNullable, false, false),
+                create(19, "java.lang.String", 0, "BLOB_TEXT_FIELD", "BLOB_TEXT_FIELD", LONGVARCHAR, "BLOB SUB_TYPE TEXT", 0, 0, defaultSchema, TABLE_NAME, columnNullable, false, false),
+                create(20, "java.sql.Blob", 0, "BLOB_MINUS_ONE", "BLOB_MINUS_ONE", BLOB, "BLOB SUB_TYPE -1", 0, 0, defaultSchema, TABLE_NAME, columnNullable, false, false)
         ));
         final FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         if (supportInfo.supportsBoolean()) {
-            testData.add(create(testData.size() + 1, "java.lang.Boolean", 5, "BOOLEAN_FIELD", "BOOLEAN_FIELD", BOOLEAN, "BOOLEAN", 1, 0, TABLE_NAME, columnNullable, true, false));
+            testData.add(create(testData.size() + 1, "java.lang.Boolean", 5, "BOOLEAN_FIELD", "BOOLEAN_FIELD", BOOLEAN, "BOOLEAN", 1, 0, defaultSchema, TABLE_NAME, columnNullable, true, false));
         }
         if (supportInfo.supportsDecfloat()) {
-            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 23, "DECFLOAT16_FIELD", "DECFLOAT16_FIELD", JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 16, 0, TABLE_NAME, columnNullable, true, true));
-            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 42, "DECFLOAT34_FIELD", "DECFLOAT34_FIELD", JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 34, 0, TABLE_NAME, columnNullable, true, true));
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 23, "DECFLOAT16_FIELD", "DECFLOAT16_FIELD", JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 16, 0, defaultSchema, TABLE_NAME, columnNullable, true, true));
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 42, "DECFLOAT34_FIELD", "DECFLOAT34_FIELD", JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 34, 0, defaultSchema, TABLE_NAME, columnNullable, true, true));
         }
         if (supportInfo.supportsDecimalPrecision(38)) {
-            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 27, "COL_NUMERIC25_20", "COL_NUMERIC25_20", NUMERIC, "NUMERIC", 25, 20, TABLE_NAME, columnNullable, true, true));
-            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 32, "COL_DECIMAL30_5", "COL_DECIMAL30_5", DECIMAL, "DECIMAL", 30, 5, TABLE_NAME, columnNullable, true, true));
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 27, "COL_NUMERIC25_20", "COL_NUMERIC25_20", NUMERIC, "NUMERIC", 25, 20, defaultSchema, TABLE_NAME, columnNullable, true, true));
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 32, "COL_DECIMAL30_5", "COL_DECIMAL30_5", DECIMAL, "DECIMAL", 30, 5, defaultSchema, TABLE_NAME, columnNullable, true, true));
         }
         if (supportInfo.supportsTimeZones()) {
-            testData.add(create(testData.size() + 1, "java.time.OffsetTime", 19, "COL_TIMETZ", "COL_TIMETZ", TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, TABLE_NAME, columnNullable, true, false));
-            testData.add(create(testData.size() + 1, "java.time.OffsetDateTime", 30, "COL_TIMESTAMPTZ", "COL_TIMESTAMPTZ", TIMESTAMP_WITH_TIMEZONE, "TIMESTAMP WITH TIME ZONE", 30, 0, TABLE_NAME, columnNullable, true, false));
+            testData.add(create(testData.size() + 1, "java.time.OffsetTime", 19, "COL_TIMETZ", "COL_TIMETZ", TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, defaultSchema, TABLE_NAME, columnNullable, true, false));
+            testData.add(create(testData.size() + 1, "java.time.OffsetDateTime", 30, "COL_TIMESTAMPTZ", "COL_TIMESTAMPTZ", TIMESTAMP_WITH_TIMEZONE, "TIMESTAMP WITH TIME ZONE", 30, 0, defaultSchema, TABLE_NAME, columnNullable, true, false));
         }
         if (supportInfo.supportsInt128()) {
-            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 40, "COL_INT128", "COL_INT128", NUMERIC, "INT128", 38, 0, TABLE_NAME, columnNullable, true, true));
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 40, "COL_INT128", "COL_INT128", NUMERIC, "INT128", 38, 0, defaultSchema, TABLE_NAME, columnNullable, true, true));
         }
+        testData.add(create(testData.size() + 1, "java.lang.Integer", 11, "SECONDARY_ALIASED", "COLUMN_FROM_SECONDARY", INTEGER, "INTEGER", 10, 0, ifSchemaElse(OTHER_SCHEMA, ""), SECONDARY_TABLE_NAME, columnNullable, true, true));
 
         return testData.stream();
     }
@@ -258,8 +280,8 @@ class FBResultSetMetaDataParametrizedTest {
 
     @ParameterizedTest(name = "Index {0} ({2})")
     @MethodSource("testData")
-    void testGetSchemaName(Integer columnIndex, ResultSetMetaDataInfo ignored1, String ignored2) throws Exception {
-        assertEquals(supportInfo.ifSchemaElse("PUBLIC", ""), rsmd.getSchemaName(columnIndex), "getSchemaName");
+    void testGetSchemaName(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored2) throws Exception {
+        assertEquals(expectedMetaData.schemaName, rsmd.getSchemaName(columnIndex), "getSchemaName");
     }
 
     @ParameterizedTest(name = "Index {0} ({2})")
@@ -327,16 +349,15 @@ class FBResultSetMetaDataParametrizedTest {
 
     @SuppressWarnings("SameParameterValue")
     private static Arguments create(int index, String className, int displaySize, String label, String name, int type,
-            String typeName, int precision, int scale, String tableName, int nullable, boolean searchable,
-            boolean signed) {
+            String typeName, int precision, int scale, String schemaName, String tableName, int nullable,
+            boolean searchable, boolean signed) {
         return Arguments.of(index,
                 new ResultSetMetaDataInfo(className, displaySize, label, name, type, typeName, precision, scale,
-                        tableName, nullable, searchable, signed),
-                label);
+                        schemaName, tableName, nullable, searchable, signed), label);
     }
 
     private record ResultSetMetaDataInfo(
             String className, int displaySize, String label, String name, int type, String typeName, int precision,
-            int scale, String tableName, int nullable, boolean searchable, boolean signed) {
+            int scale, String schemaName, String tableName, int nullable, boolean searchable, boolean signed) {
     }
 }
