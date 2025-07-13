@@ -274,13 +274,21 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     /**
      * A composite key for internal field mapping structures.
      *
-     * @param schema schema ({@code null} if schemaless, i.e. Firebird 5.0 and older)
+     * @param schema
+     *         schema ({@code ""} if schemaless, i.e. Firebird 5.0 and older; {@code null} is converted to empty string)
      * @param relationName
      *         relation name
      * @param fieldName
      *         field name
      */
     protected record FieldKey(String schema, String relationName, String fieldName) {
+
+        protected FieldKey {
+            if (schema == null) {
+                schema = "";
+            }
+        }
+
         public FieldKey(FieldDescriptor fieldDescriptor) {
             this(fieldDescriptor.getOriginalSchema(), fieldDescriptor.getOriginalTableName(),
                     fieldDescriptor.getOriginalName());

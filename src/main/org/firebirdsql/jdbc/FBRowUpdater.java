@@ -11,6 +11,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
+import org.firebirdsql.jaybird.util.QualifiedName;
 import org.firebirdsql.jaybird.util.UncheckedSQLException;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
@@ -21,10 +22,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.StreamSupport;
 
-import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE;
 
 /**
@@ -69,7 +68,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
 
     private static final byte[][] EMPTY_2D_BYTES = new byte[0][];
 
-    private final String tableName;
+    private final QualifiedName tableName;
     private final FBObjectListener.ResultSetListener rsListener;
     private final GDSHelper gdsHelper;
     private final RowDescriptor rowDescriptor;
@@ -87,12 +86,12 @@ final class FBRowUpdater implements FirebirdRowUpdater {
 
     FBRowUpdater(FBConnection connection, RowDescriptor rowDescriptor, boolean cached,
             FBObjectListener.ResultSetListener rsListener) throws SQLException {
-        tableName = requireSingleTableName(rowDescriptor);
+        quoteStrategy = connection.getQuoteStrategy();
+        tableName = requireSingleTable(rowDescriptor, quoteStrategy);
         keyColumns = deriveKeyColumns(tableName, rowDescriptor, connection.getMetaData());
 
         this.rsListener = rsListener;
         gdsHelper = connection.getGDSHelper();
-        quoteStrategy = connection.getQuoteStrategy();
 
         fields = createFields(rowDescriptor, cached);
         newRow = rowDescriptor.createDefaultFieldValues();
@@ -119,30 +118,34 @@ final class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     /**
-     * Returns the single table name referenced by {@code rowDescriptor}, or throws an exception if there are no or
-     * multiple table names.
+     * Returns the single table name (including schema if supported) referenced by {@code rowDescriptor}, or throws
+     * an exception if there are multiple tables, or derived columns (columns without a relation).
      *
      * @param rowDescriptor
      *         row descriptor
-     * @return non-null table name
+     * @return non-null table identifier chain
      * @throws SQLException
-     *         if {@code rowDescriptor} references multiple table names or no table names at all
+     *         if {@code rowDescriptor} references multiple tables or has derived columns
      */
-    private static String requireSingleTableName(RowDescriptor rowDescriptor) throws SQLException {
-        // find the table name (there can be only one table per updatable result set)
-        String tableName = null;
+    private static QualifiedName requireSingleTable(RowDescriptor rowDescriptor, QuoteStrategy quoteStrategy)
+            throws SQLException {
+        // find the tableName (there can be only one tableName per updatable result set)
+        QualifiedName tableName = null;
         for (FieldDescriptor fieldDescriptor : rowDescriptor) {
-            // TODO This will not detect derived columns in the prefix of the select list
+            var currentTable = QualifiedName.of(fieldDescriptor).orElse(null);
+            if (currentTable == null) {
+                // No table => derived column => not updatable
+                throw new FBResultSetNotUpdatableException(
+                        "Underlying result set has derived columns (without a relation)");
+            }
             if (tableName == null) {
-                tableName = fieldDescriptor.getOriginalTableName();
-            } else if (!Objects.equals(tableName, fieldDescriptor.getOriginalTableName())) {
+                tableName = currentTable;
+            } else if (!tableName.equals(currentTable)) {
+                // Different table => not updatable
                 throw new FBResultSetNotUpdatableException(
                         "Underlying result set references at least two relations: %s and %s."
-                                .formatted(tableName, fieldDescriptor.getOriginalTableName()));
+                                .formatted(tableName.toString(quoteStrategy), currentTable.toString(quoteStrategy)));
             }
-        }
-        if (isNullOrEmpty(tableName)) {
-            throw new FBResultSetNotUpdatableException("Underlying result set references no relations");
         }
         return tableName;
     }
@@ -217,10 +220,10 @@ final class FBRowUpdater implements FirebirdRowUpdater {
      * @throws SQLException
      *         for errors looking up the best row identifier
      */
-    private static List<FieldDescriptor> deriveKeyColumns(String tableName, RowDescriptor rowDescriptor,
+    private static List<FieldDescriptor> deriveKeyColumns(QualifiedName table, RowDescriptor rowDescriptor,
             DatabaseMetaData dbmd) throws SQLException {
         // first try best row identifier
-        List<FieldDescriptor> keyColumns = keyColumnsOfBestRowIdentifier( tableName, rowDescriptor, dbmd);
+        List<FieldDescriptor> keyColumns = keyColumnsOfBestRowIdentifier(table, rowDescriptor, dbmd);
         if (keyColumns.isEmpty()) {
             // best row identifier not available or not fully matched, fallback to RDB$DB_KEY
             // NOTE: fallback is updatable, but may not be insertable (e.g. if missing PK column(s) are not generated)!
@@ -248,11 +251,10 @@ final class FBRowUpdater implements FirebirdRowUpdater {
      * @throws SQLException
      *         for errors looking up the best row identifier
      */
-    private static List<FieldDescriptor> keyColumnsOfBestRowIdentifier(String tableName, RowDescriptor rowDescriptor,
-            DatabaseMetaData dbmd) throws SQLException {
-        // TODO Add schema support
-        try (ResultSet bestRowIdentifier = dbmd
-                .getBestRowIdentifier("", null, tableName, DatabaseMetaData.bestRowTransaction, true)) {
+    private static List<FieldDescriptor> keyColumnsOfBestRowIdentifier(QualifiedName table,
+            RowDescriptor rowDescriptor, DatabaseMetaData dbmd) throws SQLException {
+        try (ResultSet bestRowIdentifier = dbmd.getBestRowIdentifier(
+                "", table.schema(), table.object(), DatabaseMetaData.bestRowTransaction, true)) {
             int bestRowIdentifierColumnCount = 0;
             List<FieldDescriptor> keyColumns = new ArrayList<>();
             while (bestRowIdentifier.next()) {
@@ -326,7 +328,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         // TODO raise exception if there are no updated columns, or do nothing?
         var sb = new StringBuilder(EST_STATEMENT_SIZE + newRow.initializedCount() * EST_COLUMN_SIZE)
                 .append("update ");
-        quoteStrategy.appendQuoted(tableName, sb).append(" set ");
+        tableName.append(sb, quoteStrategy).append(" set ");
 
         boolean first = true;
         for (FieldDescriptor fieldDescriptor : rowDescriptor) {
@@ -349,7 +351,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
 
     private String buildDeleteStatement() {
         var sb = new StringBuilder(EST_STATEMENT_SIZE).append("delete from ");
-        quoteStrategy.appendQuoted(tableName, sb).append('\n');
+        tableName.append(sb, quoteStrategy).append('\n');
         appendWhereClause(sb);
 
         return sb.toString();
@@ -377,9 +379,9 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         }
 
         // 27 = length of appended literals + 2 quote characters
-        var sb = new StringBuilder(27 + tableName.length() + columns.length() + params.length()).append("insert into ");
-        quoteStrategy.appendQuoted(tableName, sb)
-                .append(" (").append(columns).append(") values (").append(params).append(')');
+        var sb = new StringBuilder(27 + tableName.estimatedLength() + columns.length() + params.length())
+                .append("insert into ");
+        tableName.append(sb,quoteStrategy).append(" (").append(columns).append(") values (").append(params).append(')');
 
         return sb.toString();
     }
@@ -403,9 +405,9 @@ final class FBRowUpdater implements FirebirdRowUpdater {
             }
         }
 
-        var sb = new StringBuilder(EST_STATEMENT_SIZE + columns.length())
+        var sb = new StringBuilder(EST_STATEMENT_SIZE + columns.length() + tableName.estimatedLength())
                 .append("select ").append(columns).append("\nfrom ");
-        quoteStrategy.appendQuoted(tableName, sb).append('\n');
+        tableName.append(sb, quoteStrategy).append('\n');
         appendWhereClause(sb);
         return sb.toString();
     }
