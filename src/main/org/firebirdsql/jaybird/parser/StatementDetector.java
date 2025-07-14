@@ -27,6 +27,8 @@ import static org.firebirdsql.jaybird.parser.CharSequenceComparison.caseInsensit
 @InternalApi
 public final class StatementDetector implements TokenVisitor {
 
+    // TODO Add schema support: identify (optional) schema
+
     private static final StateAfterStart INITIAL_OTHER =
             new StateAfterStart(ParserState.OTHER, LocalStatementType.OTHER);
     private static final Map<CharSequence, StateAfterStart> NEXT_AFTER_START;

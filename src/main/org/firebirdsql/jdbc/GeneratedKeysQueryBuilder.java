@@ -23,6 +23,8 @@ import java.util.*;
  */
 final class GeneratedKeysQueryBuilder {
 
+    // TODO Add schema support: parse schema from query, and find a way to identify table if unqualified (needed for
+    //  mapColumnNamesByIndex)
     // TODO Add caching for column info
 
     private static final System.Logger logger = System.getLogger(GeneratedKeysQueryBuilder.class.getName());
