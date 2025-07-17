@@ -4,18 +4,20 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -25,6 +27,7 @@ import java.util.Map;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,28 +39,42 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class FBDatabaseMetaDataColumnPrivilegesTest {
 
-    // TODO Add schema support: tests involving other schema
-
     private static final String SYSDBA = "SYSDBA";
     private static final String USER1 = "USER1";
     private static final String user2 = getDefaultSupportInfo().supportsCaseSensitiveUserNames() ? "user2" : "USER2";
     private static final String PUBLIC = "PUBLIC";
 
     @RegisterExtension
-    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
-            "create table TBL1 (COL1 integer, COL2 varchar(50), \"val3\" varchar(50))",
-            "create table \"tbl2\" (COL1 integer, COL2 varchar(50), \"val3\" varchar(50))",
-            "grant all on TBL1 to USER1",
-            "grant select on TBL1 to PUBLIC",
-            "grant update (COL1, \"val3\") on TBL1 to \"user2\"",
-            "grant select on \"tbl2\" to \"user2\" with grant option",
-            "grant references (COL1) on \"tbl2\" to USER1");
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase =
+            UsesDatabaseExtension.usesDatabaseForAll(dbInitStatements());
 
     private static final MetadataResultSetDefinition getColumnPrivilegesDefinition =
             new MetadataResultSetDefinition(ColumnPrivilegesMetadata.class);
 
     private static Connection con;
     private static DatabaseMetaData dbmd;
+
+    private static List<String> dbInitStatements() {
+        var statements = new ArrayList<>(Arrays.asList(
+                "create table TBL1 (COL1 integer, COL2 varchar(50), \"val3\" varchar(50))",
+                "create table \"tbl2\" (COL1 integer, COL2 varchar(50), \"val3\" varchar(50))",
+                "grant all on TBL1 to USER1",
+                "grant select on TBL1 to PUBLIC",
+                "grant update (COL1, \"val3\") on TBL1 to \"user2\"",
+                "grant select on \"tbl2\" to \"user2\" with grant option",
+                "grant references (COL1) on \"tbl2\" to USER1"
+        ));
+        if (getDefaultSupportInfo().supportsSchemas()) {
+            statements.addAll(Arrays.asList(
+                    "create schema OTHER_SCHEMA",
+                    "create table OTHER_SCHEMA.TBL3 (COL1 integer, COL2 varchar(50), \"val3\" varchar(50))",
+                    "grant select on OTHER_SCHEMA.TBL3 to PUBLIC",
+                    "grant update on OTHER_SCHEMA.TBL3 to USER1"
+            ));
+        }
+
+        return statements;
+    }
 
     @BeforeAll
     static void setupAll() throws SQLException {
@@ -88,9 +105,14 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = "%")
-    @NullSource
-    void testColumnPrivileges_TBL1_all(String allPattern) throws Exception {
+    @CsvSource(useHeadersInDisplayName = true, nullValues = { "<NIL>" }, textBlock = """
+            schemaNull, columNameAllPattern
+            false,      %
+            false,      <NIL>
+            true,       %
+            true,       <NIL>
+            """)
+    void testColumnPrivileges_TBL1_all(boolean schemaNull, String columnNameAllPattern) throws Exception {
         List<Map<ColumnPrivilegesMetadata, Object>> rules = Arrays.asList(
                 createRule("TBL1", "COL1", SYSDBA, true, "DELETE"),
                 createRule("TBL1", "COL1", USER1, false, "DELETE"),
@@ -128,13 +150,13 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
                 createRule("TBL1", "val3", USER1, false, "UPDATE"),
                 createRule("TBL1", "val3", user2, false, "UPDATE"));
 
-        validateExpectedColumnPrivileges(ifSchemaElse("PUBLIC", ""), "TBL1", allPattern, rules);
-        // schema = null should also find it:
-        validateExpectedColumnPrivileges(null, "TBL1", allPattern, rules);
+        validateExpectedColumnPrivileges(schemaNull ? null : ifSchemaElse("PUBLIC", ""), "TBL1", columnNameAllPattern,
+                rules);
     }
 
-    @Test
-    void testColumnPrivileges_TBL1_COL_wildcard() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testColumnPrivileges_TBL1_COL_wildcard(boolean schemaNull) throws Exception {
         List<Map<ColumnPrivilegesMetadata, Object>> rules = Arrays.asList(
                 createRule("TBL1", "COL1", SYSDBA, true, "DELETE"),
                 createRule("TBL1", "COL1", USER1, false, "DELETE"),
@@ -160,13 +182,12 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
                 createRule("TBL1", "COL2", SYSDBA, true, "UPDATE"),
                 createRule("TBL1", "COL2", USER1, false, "UPDATE"));
 
-        validateExpectedColumnPrivileges(ifSchemaElse("PUBLIC", ""), "TBL1", "COL%", rules);
-        // schema = null should also find it:
-        validateExpectedColumnPrivileges(null, "TBL1", "COL%", rules);
+        validateExpectedColumnPrivileges(schemaNull ? null : ifSchemaElse("PUBLIC", ""), "TBL1", "COL%", rules);
     }
 
-    @Test
-    void testColumnPrivileges_tbl2_all() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testColumnPrivileges_tbl2_all(boolean schemaNull) throws Exception {
         List<Map<ColumnPrivilegesMetadata, Object>> rules = Arrays.asList(
                 createRule("tbl2", "COL1", SYSDBA, true, "DELETE"),
                 createRule("tbl2", "COL1", SYSDBA, true, "INSERT"),
@@ -188,7 +209,45 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
                 createRule("tbl2", "val3", user2, true, "SELECT"),
                 createRule("tbl2", "val3", SYSDBA, true, "UPDATE"));
 
-        validateExpectedColumnPrivileges(ifSchemaElse("PUBLIC", ""), "tbl2", "%", rules);
+        validateExpectedColumnPrivileges(schemaNull ? null : ifSchemaElse("PUBLIC", ""), "tbl2", "%", rules);
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = { "<NIL>" }, textBlock = """
+            schemaNull, columNameAllPattern
+            false,      %
+            false,      <NIL>
+            true,       %
+            true,       <NIL>
+            """)
+    void testColumnPrivileges_other_schema_tbl2_all(boolean schemaNull, String columnNameAllPattern) throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        var rules = Arrays.asList(
+                createRule("OTHER_SCHEMA", "TBL3", "COL1", SYSDBA, true, "DELETE"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL1", SYSDBA, true, "INSERT"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL1", SYSDBA, true, "REFERENCES"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL1", PUBLIC, false, "SELECT"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL1", SYSDBA, true, "SELECT"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL1", SYSDBA, true, "UPDATE"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL1", USER1, false, "UPDATE"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL2", SYSDBA, true, "DELETE"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL2", SYSDBA, true, "INSERT"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL2", SYSDBA, true, "REFERENCES"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL2", PUBLIC, false, "SELECT"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL2", SYSDBA, true, "SELECT"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL2", SYSDBA, true, "UPDATE"),
+                createRule("OTHER_SCHEMA", "TBL3", "COL2", USER1, false, "UPDATE"),
+                createRule("OTHER_SCHEMA", "TBL3", "val3", SYSDBA, true, "DELETE"),
+                createRule("OTHER_SCHEMA", "TBL3", "val3", SYSDBA, true, "INSERT"),
+                createRule("OTHER_SCHEMA", "TBL3", "val3", SYSDBA, true, "REFERENCES"),
+                createRule("OTHER_SCHEMA", "TBL3", "val3", PUBLIC, false, "SELECT"),
+                createRule("OTHER_SCHEMA", "TBL3", "val3", SYSDBA, true, "SELECT"),
+                createRule("OTHER_SCHEMA", "TBL3", "val3", SYSDBA, true, "UPDATE"),
+                createRule("OTHER_SCHEMA", "TBL3", "val3", USER1, false, "UPDATE")
+        );
+
+        validateExpectedColumnPrivileges(schemaNull ? null : "OTHER_SCHEMA", "TBL3", columnNameAllPattern,
+                rules);
     }
 
     private Map<ColumnPrivilegesMetadata, Object> createRule(String table, String columnName, String grantee,

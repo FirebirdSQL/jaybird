@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2023-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.util;
 
@@ -87,6 +87,14 @@ class CollectionUtilsTest {
         String item2 = "item2";
 
         assertEquals(item2, CollectionUtils.getLast(List.of(item1, item2)));
+    }
+
+    @Test
+    void concat() {
+        var list1 = List.of("item1", "item2");
+        var list2 = List.of("item3", "item4");
+
+        assertEquals(List.of("item1", "item2", "item3", "item4"), CollectionUtils.concat(list1, list2));
     }
 
     static Stream<Arguments> listFactories() {
