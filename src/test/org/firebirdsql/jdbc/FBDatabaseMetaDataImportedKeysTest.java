@@ -8,10 +8,12 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.ResultSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 
 /**
@@ -21,8 +23,6 @@ import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
  */
 class FBDatabaseMetaDataImportedKeysTest extends FBDatabaseMetaDataAbstractKeysTest {
 
-    // TODO Add schema support: tests involving other schema
-
     @Test
     void testExportedKeysMetaDataColumns() throws Exception {
         try (ResultSet importedKeys = dbmd.getImportedKeys(null, null, "doesnotexit")) {
@@ -30,7 +30,7 @@ class FBDatabaseMetaDataImportedKeysTest extends FBDatabaseMetaDataAbstractKeysT
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "({0}, {1})")
     @MethodSource
     void testImportedKeys(String schema, String table, List<Map<KeysMetaData, Object>> expectedKeys) throws Exception {
         try (ResultSet importedKeys = dbmd.getImportedKeys(null, schema, table)) {
@@ -39,15 +39,23 @@ class FBDatabaseMetaDataImportedKeysTest extends FBDatabaseMetaDataAbstractKeysT
     }
 
     static Stream<Arguments> testImportedKeys() {
-        return Stream.of(
+        var generalArguments = Stream.of(
                 importedKeysTestCase("TABLE_1", table1Fks()),
+                importedKeysTestCase(null, "TABLE_1", table1Fks()),
                 importedKeysTestCase("doesnotexist", List.of()),
                 importedKeysTestCase("TABLE_2", table2Fks()),
+                importedKeysTestCase(null, "TABLE_2", table2Fks()),
                 importedKeysTestCase("TABLE_3", table3Fks()),
                 importedKeysTestCase("TABLE_4", table4Fks()),
                 importedKeysTestCase("TABLE_5", table5Fks()),
                 importedKeysTestCase("TABLE_6", table6Fks()),
-                importedKeysTestCase("TABLE_7", table7Fks()));
+                importedKeysTestCase("TABLE_7", ifSchemaElse(table7to8Fks(), List.of()), table7to6Fks()));
+        if (!getDefaultSupportInfo().supportsSchemas()) {
+            return generalArguments;
+        }
+        return Stream.concat(generalArguments, Stream.of(
+                importedKeysTestCase("OTHER_SCHEMA", "TABLE_8", table8Fks()),
+                importedKeysTestCase(null, "TABLE_8", table8Fks())));
     }
 
     private static Arguments importedKeysTestCase(String table, List<Map<KeysMetaData, Object>> expectedKeys) {
@@ -57,6 +65,19 @@ class FBDatabaseMetaDataImportedKeysTest extends FBDatabaseMetaDataAbstractKeysT
     private static Arguments importedKeysTestCase(String schema, String table,
             List<Map<KeysMetaData, Object>> expectedKeys) {
         return Arguments.of(schema, table, expectedKeys);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    @SafeVarargs
+    private static Arguments importedKeysTestCase(String table, List<Map<KeysMetaData, Object>>... expectedKeys) {
+        return importedKeysTestCase(ifSchemaElse("PUBLIC", ""), table, expectedKeys);
+    }
+
+    @SafeVarargs
+    private static Arguments importedKeysTestCase(String schema, String table,
+            List<Map<KeysMetaData, Object>>... expectedKeys) {
+        var combinedExpectedKeys = Stream.of(expectedKeys).flatMap(Collection::stream).toList();
+        return importedKeysTestCase(schema, table, combinedExpectedKeys);
     }
 
 }

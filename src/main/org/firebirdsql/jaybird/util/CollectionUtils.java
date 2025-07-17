@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2023-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.util;
 
@@ -67,6 +67,24 @@ public final class CollectionUtils {
     public static <T extends @Nullable Object> @Nullable T getLast(final List<T> list) {
         int size = list.size();
         return size > 0 ? list.get(size - 1) : null;
+    }
+
+    /**
+     * Concatenates two lists to a new modifiable list.
+     *
+     * @param list1
+     *         list 1
+     * @param list2
+     *         list 2
+     * @param <T>
+     *         type parameter of {@code list1}, and parent type parameter of {@code list2}
+     * @return concatenation of {@code list1} and {@code list2}
+     */
+    public static <T> List<T> concat(List<T> list1, List<? extends T> list2) {
+        var newList = new ArrayList<T>(list1.size() + list2.size());
+        newList.addAll(list1);
+        newList.addAll(list2);
+        return newList;
     }
 
 }
