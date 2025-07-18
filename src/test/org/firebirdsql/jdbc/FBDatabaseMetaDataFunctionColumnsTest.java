@@ -5,7 +5,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.util.CollectionUtils;
-import org.firebirdsql.jaybird.util.QualifiedName;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -373,9 +373,9 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         props.setProperty(PropertyNames.useCatalogAsPackage, "true");
         try (var connection = DriverManager.getConnection(getUrl(), props)) {
             dbmd = connection.getMetaData();
-            List<Map<FunctionColumnMetaData, Object>> expectedColumns = withCatalog("WITH$FUNCTION",
-                    withSpecificName(ifSchemaElse("\"PUBLIC\".", "") + "\"WITH$FUNCTION\".\"IN$PACKAGE\"",
-                            List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM1", 1, 10, 0, true))));
+            List<Map<FunctionColumnMetaData, Object>> expectedColumns = withCatalog("WITH$FUNCTION", withSpecificName(
+                    ObjectReference.of(ifSchemaElse("PUBLIC", ""), "WITH$FUNCTION", "IN$PACKAGE").toString(),
+                    List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM1", 1, 10, 0, true))));
             validateExpectedFunctionColumns(catalog, "IN$PACKAGE", "PARAM1", expectedColumns);
         }
     }
@@ -570,8 +570,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
             List<Map<FunctionColumnMetaData, Object>> rules) {
         for (Map<FunctionColumnMetaData, Object> rowRule : rules) {
             String functionName = (String) rowRule.get(FunctionColumnMetaData.FUNCTION_NAME);
-            rowRule.put(FunctionColumnMetaData.SPECIFIC_NAME,
-                    new QualifiedName(schema, functionName).toString(QuoteStrategy.DIALECT_3));
+            rowRule.put(FunctionColumnMetaData.SPECIFIC_NAME, ObjectReference.of(schema, functionName).toString());
             rowRule.put(FunctionColumnMetaData.FUNCTION_SCHEM, schema);
         }
         return rules;
@@ -582,7 +581,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         Map<FunctionColumnMetaData, Object> rules = getDefaultValidationRules();
         rules.put(FunctionColumnMetaData.FUNCTION_NAME, functionName);
         rules.put(FunctionColumnMetaData.SPECIFIC_NAME, ifSchemaElse(
-                new QualifiedName("PUBLIC", functionName).toString(QuoteStrategy.DIALECT_3), functionName));
+                ObjectReference.of("PUBLIC", functionName).toString(), functionName));
         rules.put(FunctionColumnMetaData.COLUMN_NAME, columnName);
         rules.put(FunctionColumnMetaData.ORDINAL_POSITION, ordinalPosition);
         if (nullable) {
