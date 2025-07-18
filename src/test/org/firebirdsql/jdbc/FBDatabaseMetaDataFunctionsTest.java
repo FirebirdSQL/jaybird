@@ -30,6 +30,7 @@ import java.util.Set;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -192,6 +193,7 @@ class FBDatabaseMetaDataFunctionsTest {
             """)
     void testFunctionMetadata_everything_ofOtherSchema(String schemaPattern, String functionNamePattern)
             throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
         var expectedFunctions = List.of(getOtherSchemaPsqlExample(), getOtherSchemaPsqlExample2());
         validateExpectedFunctions(null, schemaPattern, functionNamePattern, expectedFunctions);
     }
