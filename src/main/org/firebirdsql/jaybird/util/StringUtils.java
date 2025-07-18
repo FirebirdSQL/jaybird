@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.util;
 
@@ -40,11 +40,23 @@ public final class StringUtils {
      *
      * @param value
      *         value to test
-     * @return {@code true} if {@code value} is {@code null} or emoty, {@code false} for non-empty strings
+     * @return {@code true} if {@code value} is {@code null} or empty, {@code false} for non-empty strings
      * @since 6
      */
     public static boolean isNullOrEmpty(@Nullable String value) {
         return value == null || value.isEmpty();
+    }
+
+    /**
+     * Checks if {@code value} is {@code null} or blank.
+     *
+     * @param value
+     *         value to test
+     * @return {@code true} if {@code value} is {@code null} or blank, {@code false} for non-blank strings
+     * @since 6
+     */
+    public static boolean isNullOrBlank(@Nullable String value) {
+        return value == null || value.isBlank();
     }
 
     /**

@@ -10,8 +10,8 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
-import org.firebirdsql.jaybird.util.QualifiedName;
 import org.firebirdsql.jaybird.util.UncheckedSQLException;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
@@ -68,7 +68,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
 
     private static final byte[][] EMPTY_2D_BYTES = new byte[0][];
 
-    private final QualifiedName tableName;
+    private final ObjectReference tableName;
     private final FBObjectListener.ResultSetListener rsListener;
     private final GDSHelper gdsHelper;
     private final RowDescriptor rowDescriptor;
@@ -127,12 +127,12 @@ final class FBRowUpdater implements FirebirdRowUpdater {
      * @throws SQLException
      *         if {@code rowDescriptor} references multiple tables or has derived columns
      */
-    private static QualifiedName requireSingleTable(RowDescriptor rowDescriptor, QuoteStrategy quoteStrategy)
+    private static ObjectReference requireSingleTable(RowDescriptor rowDescriptor, QuoteStrategy quoteStrategy)
             throws SQLException {
         // find the tableName (there can be only one tableName per updatable result set)
-        QualifiedName tableName = null;
+        ObjectReference tableName = null;
         for (FieldDescriptor fieldDescriptor : rowDescriptor) {
-            var currentTable = QualifiedName.of(fieldDescriptor).orElse(null);
+            var currentTable = ObjectReference.ofTable(fieldDescriptor).orElse(null);
             if (currentTable == null) {
                 // No table => derived column => not updatable
                 throw new FBResultSetNotUpdatableException(
@@ -220,7 +220,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
      * @throws SQLException
      *         for errors looking up the best row identifier
      */
-    private static List<FieldDescriptor> deriveKeyColumns(QualifiedName table, RowDescriptor rowDescriptor,
+    private static List<FieldDescriptor> deriveKeyColumns(ObjectReference table, RowDescriptor rowDescriptor,
             DatabaseMetaData dbmd) throws SQLException {
         // first try best row identifier
         List<FieldDescriptor> keyColumns = keyColumnsOfBestRowIdentifier(table, rowDescriptor, dbmd);
@@ -251,10 +251,22 @@ final class FBRowUpdater implements FirebirdRowUpdater {
      * @throws SQLException
      *         for errors looking up the best row identifier
      */
-    private static List<FieldDescriptor> keyColumnsOfBestRowIdentifier(QualifiedName table,
+    private static List<FieldDescriptor> keyColumnsOfBestRowIdentifier(ObjectReference table,
             RowDescriptor rowDescriptor, DatabaseMetaData dbmd) throws SQLException {
+        // Method local wrapper to extract schema and table name from an ObjectReference
+        // NOTE: We're assuming, but not verifying, a size of 1 or 2.
+        record TableRef(ObjectReference ref) {
+            String schema() {
+                return ref.size() == 1 ? "" : ref.first().name();
+            }
+
+            String tableName() {
+                return ref.size() == 1 ? ref.first().name() : ref.last().name();
+            }
+        }
+        TableRef tableRef = new TableRef(table);
         try (ResultSet bestRowIdentifier = dbmd.getBestRowIdentifier(
-                "", table.schema(), table.object(), DatabaseMetaData.bestRowTransaction, true)) {
+                "", tableRef.schema(), tableRef.tableName(), DatabaseMetaData.bestRowTransaction, true)) {
             int bestRowIdentifierColumnCount = 0;
             List<FieldDescriptor> keyColumns = new ArrayList<>();
             while (bestRowIdentifier.next()) {
@@ -378,10 +390,11 @@ final class FBRowUpdater implements FirebirdRowUpdater {
             params.append('?');
         }
 
-        // 27 = length of appended literals + 2 quote characters
-        var sb = new StringBuilder(27 + tableName.estimatedLength() + columns.length() + params.length())
+        // 25 = length of appended literals, 32 = guesstimate for (schema +) table
+        var sb = new StringBuilder(25 + 32 + columns.length() + params.length())
                 .append("insert into ");
-        tableName.append(sb,quoteStrategy).append(" (").append(columns).append(") values (").append(params).append(')');
+        tableName.append(sb, quoteStrategy)
+                .append(" (").append(columns).append(") values (").append(params).append(')');
 
         return sb.toString();
     }
@@ -405,7 +418,8 @@ final class FBRowUpdater implements FirebirdRowUpdater {
             }
         }
 
-        var sb = new StringBuilder(EST_STATEMENT_SIZE + columns.length() + tableName.estimatedLength())
+        // 32 = guesstimate for (schema +) table
+        var sb = new StringBuilder(EST_STATEMENT_SIZE + columns.length() + 32)
                 .append("select ").append(columns).append("\nfrom ");
         tableName.append(sb, quoteStrategy).append('\n');
         appendWhereClause(sb);

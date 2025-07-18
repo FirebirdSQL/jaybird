@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.stream.Stream;
 
 /**
  * Helper class for collections
@@ -84,6 +85,32 @@ public final class CollectionUtils {
         var newList = new ArrayList<T>(list1.size() + list2.size());
         newList.addAll(list1);
         newList.addAll(list2);
+        return newList;
+    }
+
+    /**
+     * Concatenates two or more lists to a new modifiable list.
+     * <p>
+     * If there are no lists in {@code otherLists}, it will return a new list, with the contents of {@code list1}.
+     * </p>
+     *
+     * @param list1
+     *         list 1
+     * @param otherLists
+     *         other lists
+     * @param <T>
+     *         type parameter of {@code list1}, and parent type parameter of lists in {@code otherLists}
+     * @return concatenation of {@code list1} and {@code otherLists}
+     * @see #concat(List, List)
+     */
+    @SafeVarargs
+    public static <T> List<T> concat(List<T> list1, List<? extends T>... otherLists) {
+        int listsSize = list1.size() + Stream.of(otherLists).mapToInt(List::size).sum();
+        var newList = new ArrayList<T>(listsSize);
+        newList.addAll(list1);
+        for (var list : otherLists) {
+            newList.addAll(list);
+        }
         return newList;
     }
 

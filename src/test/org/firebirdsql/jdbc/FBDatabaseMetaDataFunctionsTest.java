@@ -4,7 +4,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jaybird.props.PropertyNames;
-import org.firebirdsql.jaybird.util.QualifiedName;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -339,7 +339,7 @@ class FBDatabaseMetaDataFunctionsTest {
         }
         rules.put(FunctionMetaData.FUNCTION_NAME, "PSQL$EXAMPLE");
         rules.put(FunctionMetaData.SPECIFIC_NAME, ifSchemaElse(
-                new QualifiedName("PUBLIC", "PSQL$EXAMPLE").toString(QuoteStrategy.DIALECT_3), "PSQL$EXAMPLE"));
+                ObjectReference.of("PUBLIC", "PSQL$EXAMPLE").toString(), "PSQL$EXAMPLE"));
         if (supportsComments) {
             rules.put(FunctionMetaData.REMARKS, "Comment on PSQL$EXAMPLE");
         }
@@ -362,8 +362,7 @@ class FBDatabaseMetaDataFunctionsTest {
         }
         rules.put(FunctionMetaData.FUNCTION_SCHEM, "OTHER_SCHEMA");
         rules.put(FunctionMetaData.FUNCTION_NAME, "PSQL$EXAMPLE");
-        rules.put(FunctionMetaData.SPECIFIC_NAME,
-                new QualifiedName("OTHER_SCHEMA", "PSQL$EXAMPLE").toString(QuoteStrategy.DIALECT_3));
+        rules.put(FunctionMetaData.SPECIFIC_NAME, ObjectReference.of("OTHER_SCHEMA", "PSQL$EXAMPLE").toString());
         rules.put(FunctionMetaData.JB_FUNCTION_SOURCE, """
                 begin
                   return cast(x as varchar(50));
@@ -383,8 +382,7 @@ class FBDatabaseMetaDataFunctionsTest {
         }
         rules.put(FunctionMetaData.FUNCTION_SCHEM, "OTHER_SCHEMA");
         rules.put(FunctionMetaData.FUNCTION_NAME, "PSQL$EXAMPLE2");
-        rules.put(FunctionMetaData.SPECIFIC_NAME,
-                new QualifiedName("OTHER_SCHEMA", "PSQL$EXAMPLE2").toString(QuoteStrategy.DIALECT_3));
+        rules.put(FunctionMetaData.SPECIFIC_NAME, ObjectReference.of("OTHER_SCHEMA", "PSQL$EXAMPLE2").toString());
         rules.put(FunctionMetaData.JB_FUNCTION_SOURCE, """
                 begin
                   return X+1;
@@ -405,7 +403,7 @@ class FBDatabaseMetaDataFunctionsTest {
         }
         rules.put(FunctionMetaData.FUNCTION_NAME, "UDF$EXAMPLE");
         rules.put(FunctionMetaData.SPECIFIC_NAME, ifSchemaElse(
-                new QualifiedName("PUBLIC", "UDF$EXAMPLE").toString(QuoteStrategy.DIALECT_3), "UDF$EXAMPLE"));
+                ObjectReference.of("PUBLIC", "UDF$EXAMPLE").toString(), "UDF$EXAMPLE"));
         if (supportsComments) {
             rules.put(FunctionMetaData.REMARKS, "Comment on UDF$EXAMPLE");
         }
@@ -419,7 +417,8 @@ class FBDatabaseMetaDataFunctionsTest {
         Map<FunctionMetaData, Object> rules = getDefaultValidationRules();
         rules.put(FunctionMetaData.FUNCTION_CAT, "WITH$FUNCTION");
         rules.put(FunctionMetaData.FUNCTION_NAME, "IN$PACKAGE");
-        rules.put(FunctionMetaData.SPECIFIC_NAME, ifSchemaElse("\"PUBLIC\".", "") + "\"WITH$FUNCTION\".\"IN$PACKAGE\"");
+        rules.put(FunctionMetaData.SPECIFIC_NAME,
+                ObjectReference.of(ifSchemaElse("PUBLIC", ""), "WITH$FUNCTION", "IN$PACKAGE").toString());
         // Stored with package
         rules.put(FunctionMetaData.JB_FUNCTION_SOURCE, null);
         rules.put(FunctionMetaData.JB_FUNCTION_KIND, "PSQL");

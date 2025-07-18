@@ -18,6 +18,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -90,11 +91,30 @@ class CollectionUtilsTest {
     }
 
     @Test
-    void concat() {
+    void concat_oneList() {
+        var list1 = List.of("item1", "item2");
+
+        List<String> concatList = CollectionUtils.concat(list1);
+        assertEquals(list1, concatList);
+        assertNotSame(list1, concatList, "Expected a different instance");
+    }
+
+    @Test
+    void concat_twoLists() {
         var list1 = List.of("item1", "item2");
         var list2 = List.of("item3", "item4");
 
         assertEquals(List.of("item1", "item2", "item3", "item4"), CollectionUtils.concat(list1, list2));
+    }
+
+    @Test
+    void concat_threeLists() {
+        var list1 = List.of("item1", "item2");
+        var list2 = List.of("item3", "item4");
+        var list3 = List.of("item5", "item6");
+
+        assertEquals(List.of("item1", "item2", "item3", "item4", "item5", "item6"),
+                CollectionUtils.concat(list1, list2, list3));
     }
 
     static Stream<Arguments> listFactories() {
