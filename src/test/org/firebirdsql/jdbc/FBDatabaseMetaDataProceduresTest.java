@@ -4,6 +4,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -27,6 +30,7 @@ import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForCon
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -37,8 +41,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataProceduresTest {
-
-    // TODO Add schema support: tests involving other schema
 
     private static final String CREATE_NORMAL_PROC_NO_RETURN = """
             CREATE PROCEDURE normal_proc_no_return
@@ -89,6 +91,17 @@ class FBDatabaseMetaDataProceduresTest {
               end
             end""";
 
+    private static final String CREATE_OTHER_SCHEMA = "create schema OTHER_SCHEMA";
+
+    private static final String CREATE_OTHER_SCHEMA_PROC_NO_RETURN = """
+            create procedure OTHER_SCHEMA.PROC_NO_RETURN
+             ( PARAM1 varchar(100))
+            as
+            declare variable DUMMY integer;
+            begin
+              DUMMY = 1 + 1;
+            end""";
+
     private static final MetadataResultSetDefinition getProceduresDefinition =
             new MetadataResultSetDefinition(ProcedureMetaData.class);
 
@@ -121,6 +134,9 @@ class FBDatabaseMetaDataProceduresTest {
     private static List<String> getCreateStatements() {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         var createDDL = new ArrayList<String>();
+        if (supportInfo.supportsSchemas()) {
+            createDDL.add(CREATE_OTHER_SCHEMA);
+        }
         for (ProcedureTestData testData : ProcedureTestData.values()) {
             if (testData.include(supportInfo)) {
                 createDDL.addAll(testData.getCreateDDL());
@@ -140,72 +156,70 @@ class FBDatabaseMetaDataProceduresTest {
         }
     }
 
-    /**
-     * Tests getProcedures() with procedureName null, expecting all procedures to be returned.
-     */
-    @Test
-    void testProcedureMetaData_all_procedureName_null() throws Exception {
-        validateProcedureMetaData_everything(null);
-    }
-
-    /**
-     * Tests getProcedures() with procedureName all pattern (%), expecting all procedures to be returned.
-     */
-    @Test
-    void testProcedureMetaData_all_procedureName_allPattern() throws Exception {
-        validateProcedureMetaData_everything("%");
-    }
-
-    private void validateProcedureMetaData_everything(String procedureNamePattern) throws Exception {
-        ResultSet procedures = dbmd.getProcedures(null, null, procedureNamePattern);
-        var expectedProcedures = List.of(
-                ProcedureTestData.NORMAL_PROC_NO_RETURN, 
-                ProcedureTestData.NORMAL_PROC_WITH_RETURN, 
-                ProcedureTestData.QUOTED_PROC_NO_RETURN);
-        try {
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = "<NIL>", textBlock = """
+            schemaPattern, procedureNamePattern
+            <NIL>,         <NIL>
+            %,             <NIL>
+            <NIL>,         %
+            %,             %
+            """)
+    void testProcedureMetaData_all(String schemaPattern, String procedureNamePattern)
+            throws Exception {
+        var expectedProcedures = new ArrayList<ProcedureTestData>();
+        if (getDefaultSupportInfo().supportsSchemas()) {
+            expectedProcedures.add(ProcedureTestData.OTHER_SCHEMA_PROC_NO_RETURN);
+        }
+        expectedProcedures.addAll(List.of(
+                ProcedureTestData.NORMAL_PROC_NO_RETURN,
+                ProcedureTestData.NORMAL_PROC_WITH_RETURN,
+                ProcedureTestData.QUOTED_PROC_NO_RETURN));
+        try (ResultSet procedures = dbmd.getProcedures(null, schemaPattern, procedureNamePattern)) {
             validateProcedures(procedures, expectedProcedures);
-        } finally {
-            closeQuietly(procedures);
         }
     }
     
     /**
      * Tests getProcedures with specific procedure name, expecting only that specific procedure to be returned.
      */
-    @Test
-    void testProcedureMetaData_specificProcedure() throws Exception {
-        var expectedProcedures = List.of(ProcedureTestData.NORMAL_PROC_WITH_RETURN);
-        ResultSet procedures = dbmd.getProcedures(null, null, expectedProcedures.get(0).getName());
-        validateProcedures(procedures, expectedProcedures);
+    @ParameterizedTest
+    @EnumSource(value = ProcedureTestData.class, names = { "NORMAL_PROC_WITH_RETURN", "NORMAL_PROC_NO_RETURN",
+            "QUOTED_PROC_NO_RETURN", "OTHER_SCHEMA_PROC_NO_RETURN" })
+    void testProcedureMetaData_specificProcedure(ProcedureTestData expectedProcedure) throws Exception {
+        assumeTrue(expectedProcedure.include(getDefaultSupportInfo()),
+                expectedProcedure + " requires unsupported feature");
+        ResultSet procedures = dbmd.getProcedures(null, expectedProcedure.getSchema(), expectedProcedure.getName());
+        validateProcedures(procedures, List.of(expectedProcedure));
     }
     
-    /**
-     * Tests getProcedures with specific procedure name (quoted), expecting only that specific procedure to be returned.
-     */
-    @Test
-    void testProcedureMetaData_specificProcedureQuoted() throws Exception {
-        var expectedProcedures = List.of(ProcedureTestData.QUOTED_PROC_NO_RETURN);
-        ResultSet procedures = dbmd.getProcedures(null, null, expectedProcedures.get(0).getName());
-        validateProcedures(procedures, expectedProcedures);
-    }
-
-    @Test
-    void testProcedureMetaData_useCatalogAsPackage_everything() throws Exception {
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = "<NIL>", textBlock = """
+            schemaPattern, procedureNamePattern
+            <NIL>,         <NIL>
+            %,             <NIL>
+            <NIL>,         %
+            %,             %
+            """)
+    void testProcedureMetaData_useCatalogAsPackage_everything(String schemaPattern, String procedureNamePattern)
+            throws Exception {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+
+        var expectedProcedures = new ArrayList<ProcedureTestData>();
+        if (supportInfo.supportsSchemas()) {
+            expectedProcedures.add(ProcedureTestData.OTHER_SCHEMA_PROC_NO_RETURN);
+        }
+        expectedProcedures.addAll(List.of(
+                ProcedureTestData.NORMAL_PROC_NO_RETURN,
+                ProcedureTestData.NORMAL_PROC_WITH_RETURN,
+                ProcedureTestData.QUOTED_PROC_NO_RETURN,
+                ProcedureTestData.PROCEDURE_IN_PACKAGE));
+
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty(PropertyNames.useCatalogAsPackage, "true");
         try (var connection = DriverManager.getConnection(getUrl(), props)) {
             dbmd = connection.getMetaData();
-
-            var expectedProcedures = List.of(
-                    ProcedureTestData.NORMAL_PROC_NO_RETURN,
-                    ProcedureTestData.NORMAL_PROC_WITH_RETURN,
-                    ProcedureTestData.QUOTED_PROC_NO_RETURN,
-                    ProcedureTestData.PROCEDURE_IN_PACKAGE);
-
-            ResultSet procedures = dbmd.getProcedures(null, null, null);
-
+            ResultSet procedures = dbmd.getProcedures(null, schemaPattern, procedureNamePattern);
             validateProcedures(procedures, expectedProcedures,
                     FBDatabaseMetaDataProceduresTest::modifyForUseCatalogAsPackage);
         }
@@ -253,15 +267,20 @@ class FBDatabaseMetaDataProceduresTest {
     void testProcedureMetaData_useCatalogAsPackage_nonPackagedOnly() throws Exception {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         assumeTrue(supportInfo.supportsPackages(), "Test requires package support");
+
+        var expectedProcedures = new ArrayList<ProcedureTestData>();
+        if (supportInfo.supportsSchemas()) {
+            expectedProcedures.add(ProcedureTestData.OTHER_SCHEMA_PROC_NO_RETURN);
+        }
+        expectedProcedures.addAll(List.of(
+                ProcedureTestData.NORMAL_PROC_NO_RETURN,
+                ProcedureTestData.NORMAL_PROC_WITH_RETURN,
+                ProcedureTestData.QUOTED_PROC_NO_RETURN));
+
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty(PropertyNames.useCatalogAsPackage, "true");
         try (var connection = DriverManager.getConnection(getUrl(), props)) {
             dbmd = connection.getMetaData();
-
-            var expectedProcedures = List.of(
-                    ProcedureTestData.NORMAL_PROC_NO_RETURN,
-                    ProcedureTestData.NORMAL_PROC_WITH_RETURN,
-                    ProcedureTestData.QUOTED_PROC_NO_RETURN);
 
             ResultSet procedures = dbmd.getProcedures("", null, null);
 
@@ -269,7 +288,25 @@ class FBDatabaseMetaDataProceduresTest {
                     FBDatabaseMetaDataProceduresTest::modifyForUseCatalogAsPackage);
         }
     }
-    
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = "<NIL>", textBlock = """
+            schemaPattern,  procedureNamePattern
+            OTHER_SCHEMA,   <NIL>
+            OTHER\\_SCHEMA, %
+            OTHER%,         %
+            # NOTE: This case assumes all procedures in OTHER_SCHEMA start with PROC_
+            OTHER\\_SCHEMA, PROC\\_%
+            """)
+    void testProcedureMetaData_otherSchema_all(String schemaPattern, String procedureNamePattern) throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        var expectedProcedures = List.of(ProcedureTestData.OTHER_SCHEMA_PROC_NO_RETURN);
+
+        try (var procedures = dbmd.getProcedures(null, schemaPattern, procedureNamePattern)) {
+            validateProcedures(procedures, expectedProcedures);
+        }
+    }
+
     // TODO Add tests for more complex patterns
 
     /**
@@ -374,13 +411,13 @@ class FBDatabaseMetaDataProceduresTest {
     }
 
     private enum ProcedureTestData {
-        NORMAL_PROC_NO_RETURN("normal_proc_no_return", List.of(CREATE_NORMAL_PROC_NO_RETURN)) {
+        NORMAL_PROC_NO_RETURN("NORMAL_PROC_NO_RETURN", List.of(CREATE_NORMAL_PROC_NO_RETURN)) {
             @Override
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "NORMAL_PROC_NO_RETURN");
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureNoResult);
-                rules.put(ProcedureMetaData.SPECIFIC_NAME,
-                        ifSchemaElse("\"PUBLIC\".\"NORMAL_PROC_NO_RETURN\"", "NORMAL_PROC_NO_RETURN"));
+                rules.put(ProcedureMetaData.SPECIFIC_NAME, ifSchemaElse(
+                        ObjectReference.of("PUBLIC", "NORMAL_PROC_NO_RETURN").toString(), "NORMAL_PROC_NO_RETURN"));
                 return rules;
             }
         },
@@ -391,8 +428,8 @@ class FBDatabaseMetaDataProceduresTest {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "NORMAL_PROC_WITH_RETURN");
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureReturnsResult);
                 rules.put(ProcedureMetaData.REMARKS, "Some comment");
-                rules.put(ProcedureMetaData.SPECIFIC_NAME,
-                        ifSchemaElse("\"PUBLIC\".\"NORMAL_PROC_WITH_RETURN\"", "NORMAL_PROC_WITH_RETURN"));
+                rules.put(ProcedureMetaData.SPECIFIC_NAME, ifSchemaElse(
+                        ObjectReference.of("PUBLIC", "NORMAL_PROC_WITH_RETURN").toString(), "NORMAL_PROC_WITH_RETURN"));
                 return rules;
             }
 
@@ -402,8 +439,8 @@ class FBDatabaseMetaDataProceduresTest {
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "quoted_proc_no_return");
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureNoResult);
-                rules.put(ProcedureMetaData.SPECIFIC_NAME,
-                        ifSchemaElse("\"PUBLIC\".\"quoted_proc_no_return\"", "quoted_proc_no_return"));
+                rules.put(ProcedureMetaData.SPECIFIC_NAME, ifSchemaElse(
+                        ObjectReference.of("PUBLIC", "quoted_proc_no_return").toString(), "quoted_proc_no_return"));
                 return rules;
             }
         },
@@ -414,8 +451,8 @@ class FBDatabaseMetaDataProceduresTest {
                 rules.put(ProcedureMetaData.PROCEDURE_CAT, "WITH$PROCEDURE");
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "IN$PACKAGE");
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureReturnsResult);
-                rules.put(ProcedureMetaData.SPECIFIC_NAME, ifSchemaElse(
-                        "\"PUBLIC\".\"WITH$PROCEDURE\".\"IN$PACKAGE\"", "\"WITH$PROCEDURE\".\"IN$PACKAGE\""));
+                rules.put(ProcedureMetaData.SPECIFIC_NAME,
+                        ObjectReference.of(ifSchemaElse("PUBLIC", ""), "WITH$PROCEDURE", "IN$PACKAGE").toString());
                 return rules;
             }
 
@@ -428,18 +465,48 @@ class FBDatabaseMetaDataProceduresTest {
             boolean isInPackage() {
                 return true;
             }
-        };
+        },
+        OTHER_SCHEMA_PROC_NO_RETURN("OTHER_SCHEMA", "PROC_NO_RETURN", List.of(CREATE_OTHER_SCHEMA_PROC_NO_RETURN)) {
+            @Override
+            Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
+                rules.put(ProcedureMetaData.PROCEDURE_SCHEM, "OTHER_SCHEMA");
+                rules.put(ProcedureMetaData.PROCEDURE_NAME, "PROC_NO_RETURN");
+                rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureNoResult);
+                rules.put(ProcedureMetaData.SPECIFIC_NAME,
+                        ObjectReference.of("OTHER_SCHEMA", "PROC_NO_RETURN").toString());
+                return rules;
+            }
 
+            @Override
+            boolean include(FirebirdSupportInfo supportInfo) {
+                return supportInfo.supportsSchemas();
+            }
+        },
+        ;
+
+        private final String schema;
         private final String originalProcedureName;
         private final List<String> createDDL;
 
         ProcedureTestData(String originalProcedureName, List<String> createDDL) {
+            this(ifSchemaElse("PUBLIC", ""), originalProcedureName, createDDL);
+        }
+
+        ProcedureTestData(String schema, String originalProcedureName, List<String> createDDL) {
+            this.schema = schema;
             this.originalProcedureName = originalProcedureName;
             this.createDDL = createDDL;
         }
 
         /**
-         * @return Name of the procedure in as defined in the DDL script (including case).
+         * @return name of the schema (as stored in the metadata)
+         */
+        String getSchema() {
+            return schema;
+        }
+
+        /**
+         * @return name of the procedure (as stored in the metadata)
          */
         String getName() {
             return originalProcedureName;

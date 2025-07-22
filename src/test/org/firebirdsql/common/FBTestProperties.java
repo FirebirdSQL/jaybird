@@ -382,6 +382,21 @@ public final class FBTestProperties {
         return getDefaultSupportInfo().ifSchemaElse(forSchema, withoutSchema);
     }
 
+    /**
+     * Helper method that replaces {@code "PUBLIC"} with {@code ""} if schemas are not supported.
+     *
+     * @param schemaName
+     *         schema name
+     * @return {@code schemaName}, or &mdash; if {@code schemaName} is {@code "PUBLIC"} and schemas are not supported
+     * &mdash; {@code ""}
+     */
+    public static String resolveSchema(String schemaName) {
+        if (!getDefaultSupportInfo().supportsSchemas() && "PUBLIC".equals(schemaName)) {
+            return "";
+        }
+        return schemaName;
+    }
+
     private FBTestProperties() {
         // No instantiation
     }
