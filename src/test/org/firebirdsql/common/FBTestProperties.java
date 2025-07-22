@@ -383,15 +383,16 @@ public final class FBTestProperties {
     }
 
     /**
-     * Helper method that replaces {@code "PUBLIC"} with {@code ""} if schemas are not supported.
+     * Helper method that replaces {@code "PUBLIC"} or {@code "SYSTEM"} with {@code ""} if schemas are not supported.
      *
      * @param schemaName
      *         schema name
-     * @return {@code schemaName}, or &mdash; if {@code schemaName} is {@code "PUBLIC"} and schemas are not supported
-     * &mdash; {@code ""}
+     * @return {@code schemaName}, or &mdash; if {@code schemaName} is {@code "PUBLIC"} or {@code "SYSTEM"} and schemas
+     * are not supported &mdash; {@code ""}
      */
     public static String resolveSchema(String schemaName) {
-        if (!getDefaultSupportInfo().supportsSchemas() && "PUBLIC".equals(schemaName)) {
+        if (!getDefaultSupportInfo().supportsSchemas()
+                && ("PUBLIC".equals(schemaName) || "SYSTEM".equals(schemaName))) {
             return "";
         }
         return schemaName;
