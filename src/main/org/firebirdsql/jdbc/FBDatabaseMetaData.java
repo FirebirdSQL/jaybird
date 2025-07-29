@@ -1259,6 +1259,29 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     @Override
+    public Optional<String> findTableSchema(String tableName) throws SQLException {
+        if (!supportsSchemasInDataManipulation()) return Optional.of("");
+        final String findSchema = """
+                with SEARCH_PATH as (
+                  select row_number() over() as PRIO, NAME as SCHEMA_NAME
+                  from SYSTEM.RDB$SQL.PARSE_UNQUALIFIED_NAMES(rdb$get_context('SYSTEM', 'SEARCH_PATH'))
+                )
+                select r.RDB$SCHEMA_NAME
+                from RDB$RELATIONS as r
+                inner join SEARCH_PATH s on r.RDB$SCHEMA_NAME = s.SCHEMA_NAME and r.RDB$RELATION_NAME = ?
+                order by s.PRIO
+                fetch first row only""";
+
+        var metadataQuery = new DbMetadataMediator.MetadataQuery(findSchema, List.of(tableName));
+        try (ResultSet rs = getDbMetadataMediator().performMetaDataQuery(metadataQuery)) {
+            if (rs.next()) {
+                return Optional.of(rs.getString(1));
+            }
+            return Optional.empty();
+        }
+    }
+
+    @Override
     public ResultSet getSchemas() throws SQLException {
         return getSchemas(null, null);
     }
