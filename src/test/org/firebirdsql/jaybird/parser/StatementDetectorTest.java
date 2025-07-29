@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -28,13 +28,15 @@ class StatementDetectorTest {
     @ParameterizedTest
     @MethodSource("detectionCases")
     void testDetection(boolean detectReturning, String statement, LocalStatementType expectedType,
-            Token expectedTableNameToken, boolean expectedReturningDetected, boolean expectedParserCompleted) {
+            Token expectedSchemaToken, Token expectedTableNameToken, boolean expectedReturningDetected,
+            boolean expectedParserCompleted) {
         detector = new StatementDetector(detectReturning);
         SqlParser parser = parserFor(statement);
 
         parser.parse();
 
         assertThat(detector.getStatementType()).describedAs("statementType").isEqualTo(expectedType);
+        assertThat(detector.getSchemaToken()).describedAs("schemaToken").isEqualTo(expectedSchemaToken);
         assertThat(detector.getTableNameToken()).describedAs("tableNameToken").isEqualTo(expectedTableNameToken);
         assertThat(detector.returningClauseDetected())
                 .describedAs("returningClauseDetected").isEqualTo(expectedReturningDetected);
@@ -80,6 +82,15 @@ class StatementDetectorTest {
                         LocalStatementType.INSERT, new GenericToken(12, "sometable"), true, true),
                 detectReturning("INSERT INTO TABLE_WITH_TRIGGER(TEXT) VALUES ('Some text to insert') RETURNING *",
                         LocalStatementType.INSERT, new GenericToken(12, "TABLE_WITH_TRIGGER"), true, true),
+                detectReturning("insert into other_schema.sometable (id, column1, column2) values (?, ?, ?)",
+                        LocalStatementType.INSERT, new GenericToken(12, "other_schema"),
+                        new GenericToken(25, "sometable"), false, true),
+                detectReturning("insert into other_schema.\"sometable\" values (1, 2) returning id1, id2",
+                        LocalStatementType.INSERT, new GenericToken(12, "other_schema"),
+                        new QuotedIdentifierToken(25, "\"sometable\""), true, true),
+                noDetect("insert into other_schema.\"sometable\" values (1, 2) returning id1, id2",
+                        LocalStatementType.INSERT, new GenericToken(12, "other_schema"),
+                        new QuotedIdentifierToken(25, "\"sometable\""), false),
 
                 // delete
                 detectReturning("delete from sometable",
@@ -91,6 +102,15 @@ class StatementDetectorTest {
                         LocalStatementType.DELETE, new GenericToken(12, "sometable"), false),
                 detectReturning("delete from sometable as somealias where somealias.foo = 'bar'",
                         LocalStatementType.DELETE, new GenericToken(12, "sometable"), false, true),
+                detectReturning("delete from \"OTHER_SCHEMA\".\"sometable\"",
+                        LocalStatementType.DELETE, new QuotedIdentifierToken(12, "\"OTHER_SCHEMA\""),
+                        new QuotedIdentifierToken(27, "\"sometable\""), false, true),
+                detectReturning("delete from \"OTHER_SCHEMA\".\"sometable\" returning column1",
+                        LocalStatementType.DELETE, new QuotedIdentifierToken(12, "\"OTHER_SCHEMA\""),
+                        new QuotedIdentifierToken(27, "\"sometable\""), true, true),
+                detectReturning("delete from \"OTHER_SCHEMA\".\"sometable\" as \"x\" returning column1",
+                        LocalStatementType.DELETE, new QuotedIdentifierToken(12, "\"OTHER_SCHEMA\""),
+                        new QuotedIdentifierToken(27, "\"sometable\""), true, true),
 
                 // update
                 detectReturning("update \"sometable\" set column1 = 1, column2 = column2 + 1 where x = y",
@@ -105,6 +125,9 @@ class StatementDetectorTest {
                         LocalStatementType.UPDATE, new GenericToken(7, "sometable"), true, true),
                 detectReturning("update sometable \"withalias\" set column1 = 1 returning (id + 1) as foo",
                         LocalStatementType.UPDATE, new GenericToken(7, "sometable"), true, true),
+                detectReturning("update PUBLIC.sometable set column1 = 2 returning calculated_column",
+                        LocalStatementType.UPDATE, new GenericToken(7, "PUBLIC"), new GenericToken(14, "sometable"),
+                        true, true),
 
                 // update or insert
                 detectReturning("update or insert into sometable (id, column1, column2) values (?, ?, (? * 2)) matching (id)",
@@ -209,26 +232,45 @@ class StatementDetectorTest {
         );
     }
 
-    @SuppressWarnings("SameParameterValue")
+    private static Arguments detectReturning(String statement, LocalStatementType expectedType,
+            boolean expectedParserCompleted) {
+        return detectReturning(statement, expectedType, null, false, expectedParserCompleted);
+    }
+
     private static Arguments detectReturning(String statement, LocalStatementType expectedType,
             Token expectedTableNameToken, boolean expectedReturningDetected, boolean expectedParserCompleted) {
-        return arguments(true, statement, expectedType, expectedTableNameToken, expectedReturningDetected,
+        return detectReturning(statement, expectedType, null, expectedTableNameToken, expectedReturningDetected,
                 expectedParserCompleted);
     }
 
     private static Arguments detectReturning(String statement, LocalStatementType expectedType,
+            Token expectedSchemaToken, Token expectedTableNameToken, boolean expectedReturningDetected,
             boolean expectedParserCompleted) {
-        return arguments(true, statement, expectedType, null, false, expectedParserCompleted);
-    }
-
-    private static Arguments noDetect(String statement, LocalStatementType expectedType, Token expectedTableNameToken,
-            boolean expectedParserCompleted) {
-        return arguments(false, statement, expectedType, expectedTableNameToken, false, expectedParserCompleted);
+        return testCase(true, statement, expectedType, expectedSchemaToken, expectedTableNameToken,
+                expectedReturningDetected, expectedParserCompleted);
     }
 
     private static Arguments noDetect(String statement, LocalStatementType expectedType,
             boolean expectedParserCompleted) {
-        return arguments(false, statement, expectedType, null, false, expectedParserCompleted);
+        return noDetect(statement, expectedType, null, null, expectedParserCompleted);
+    }
+
+    private static Arguments noDetect(String statement, LocalStatementType expectedType, Token expectedTableNameToken,
+            boolean expectedParserCompleted) {
+        return noDetect(statement, expectedType, null, expectedTableNameToken, expectedParserCompleted);
+    }
+
+    private static Arguments noDetect(String statement, LocalStatementType expectedType, Token expectedSchemaToken,
+            Token expectedTableNameToken, boolean expectedParserCompleted) {
+        return testCase(false, statement, expectedType, expectedSchemaToken, expectedTableNameToken, false,
+                expectedParserCompleted);
+    }
+
+    private static Arguments testCase(boolean detectReturning, String statement, LocalStatementType expectedType,
+            Token expectedSchemaToken, Token expectedTableNameToken, boolean expectedReturningDetected,
+            boolean expectedParserCompleted) {
+        return arguments(detectReturning, statement, expectedType, expectedSchemaToken, expectedTableNameToken,
+                expectedReturningDetected, expectedParserCompleted);
     }
 
     private SqlParser parserFor(String statementText) {

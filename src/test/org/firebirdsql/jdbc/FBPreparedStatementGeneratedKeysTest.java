@@ -6,14 +6,18 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.*;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.FbAssumptions.assumeServerBatchSupport;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
@@ -37,6 +41,8 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 
     private static final String TEXT_VALUE = "Some text to insert";
     private static final String TEST_INSERT_QUERY = "INSERT INTO TABLE_WITH_TRIGGER(TEXT) VALUES (?)";
+    private static final String TEST_INSERT_QUERY_WITH_SCHEMA =
+            "INSERT INTO PUBLIC.TABLE_WITH_TRIGGER(TEXT) VALUES (?)";
 
     /**
      * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int)} with value {@link Statement#NO_GENERATED_KEYS}.
@@ -44,9 +50,10 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: INSERT statement type and empty generatedKeys result set.
      * </p>
      */
-    @Test
-    void testPrepare_INSERT_noGeneratedKeys() throws Exception {
-        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.NO_GENERATED_KEYS)) {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testPrepare_INSERT_noGeneratedKeys(boolean withSchema) throws Exception {
+        try (var stmt = con.prepareStatement(testInsertQuery(withSchema), Statement.NO_GENERATED_KEYS)) {
             assertEquals(FirebirdPreparedStatement.TYPE_INSERT, ((FirebirdPreparedStatement) stmt).getStatementType());
 
             stmt.setString(1, TEXT_VALUE);
@@ -67,15 +74,20 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
         }
     }
 
+    private static String testInsertQuery(boolean withSchema) {
+        return withSchema ? TEST_INSERT_QUERY_WITH_SCHEMA : TEST_INSERT_QUERY;
+    }
+
     /**
      * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int)} with {@link Statement#RETURN_GENERATED_KEYS}.
      * <p>
      * Expected: TYPE_EXEC_PROCEDURE statement type, all columns of table returned, single row result set
      * </p>
      */
-    @Test
-    void testPrepare_INSERT_returnGeneratedKeys() throws Exception {
-        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testPrepare_INSERT_returnGeneratedKeys(boolean withSchema) throws Exception {
+        try (var stmt = con.prepareStatement(testInsertQuery(withSchema), Statement.RETURN_GENERATED_KEYS)) {
             assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
             stmt.setString(1, TEXT_VALUE);
@@ -102,11 +114,12 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
     }
 
     /**
-     * The same test as {@link #testPrepare_INSERT_returnGeneratedKeys()}, but with {@code executeUpdate}.
+     * The same test as {@link #testPrepare_INSERT_returnGeneratedKeys(boolean)}, but with {@code executeUpdate}.
      */
-    @Test
-    void testPrepare_INSERT_returnGeneratedKeys_executeUpdate() throws Exception {
-        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testPrepare_INSERT_returnGeneratedKeys_executeUpdate(boolean withSchema) throws Exception {
+        try (var stmt = con.prepareStatement(testInsertQuery(withSchema), Statement.RETURN_GENERATED_KEYS)) {
             assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
             stmt.setString(1, TEXT_VALUE);
@@ -243,7 +256,7 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 
     /**
      * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int)} with
-     * {@link Statement#RETURN_GENERATED_KEYS} with an INSERT for a non existent table.
+     * {@link Statement#RETURN_GENERATED_KEYS} with an INSERT for a non-existent table.
      * <p>
      * Expected: SQLException Table unknown
      * </p>
@@ -272,9 +285,10 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: TYPE_EXEC_PROCEDURE statement type, single row result set with only the specified column.
      * </p>
      */
-    @Test
-    void testPrepare_INSERT_columnIndexes() throws Exception {
-        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new int[] { 1 })) {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testPrepare_INSERT_columnIndexes(boolean withSchema) throws Exception {
+        try (var stmt = con.prepareStatement(testInsertQuery(withSchema), new int[] { 1 })) {
             assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
             stmt.setString(1, TEXT_VALUE);
@@ -304,9 +318,10 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: TYPE_EXEC_PROCEDURE statement type, single row result set with only the specified columns
      * </p>
      */
-    @Test
-    void testPrepare_INSERT_columnIndexes_quotedColumn() throws Exception {
-        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new int[] { 1, 3 })) {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testPrepare_INSERT_columnIndexes_quotedColumn(boolean withSchema) throws Exception {
+        try (var stmt = con.prepareStatement(testInsertQuery(withSchema), new int[] { 1, 3 })) {
             assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
             stmt.setString(1, TEXT_VALUE);
@@ -332,6 +347,47 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
         }
     }
 
+    @SuppressWarnings("SqlSourceToSinkFlow")
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = "<NIL>", textBlock = """
+            searchPath,            expectedSuffix
+            <NIL>,                 _IN_PUBLIC
+            'PUBLIC,OTHER_SCHEMA', _IN_PUBLIC
+            'OTHER_SCHEMA,PUBLIC', _IN_OTHER_SCHEMA
+            """)
+    void testINSERT_schemalessTable_columnIndexes_schemaSearchPath(String searchPath, String expectedSuffix)
+            throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        try (var stmt = con.createStatement()) {
+            if (searchPath != null) {
+                stmt.execute("set search_path to " + searchPath);
+            }
+        }
+
+        try (var stmt = con.prepareStatement("insert into SAME_NAME default values", new int[] { 1, 2 })) {
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+            var metaData = stmt.getMetaData();
+            assertEquals("ID" + expectedSuffix, metaData.getColumnLabel(1), "Unexpected name column 1");
+            assertEquals("TEXT" + expectedSuffix, metaData.getColumnLabel(2), "Unexpected name column 2");
+        }
+    }
+
+    @Test
+    void testINSERT_schemalessTable_columnIndex_tableNotOnSearchPath() throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        try (var stmt = con.createStatement()) {
+            stmt.execute("set search_path to SYSTEM");
+        }
+
+        var exception = assertThrows(SQLNonTransientException.class,
+                () -> con.prepareStatement("insert into SAME_NAME default values", new int[] { 1, 2 }));
+        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound,
+                "\"SAME_NAME\"", "schemaless table not on the search path"));
+    }
+
+    // The prepareStatement(String, int[]) variants are the only ones that have special handling for schemaless tables
+    // We consider testing through prepareStatement without executing sufficient to cover it
+
     // Other combination for execute(String, int[]) already covered in TestGeneratedKeysQuery
 
     /**
@@ -340,9 +396,10 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: single row result set with only the specified column.
      * </p>
      */
-    @Test
-    void testPrepare_INSERT_columnNames() throws Exception {
-        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new String[] { "ID" })) {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testPrepare_INSERT_columnNames(boolean withSchema) throws Exception {
+        try (var stmt = con.prepareStatement(testInsertQuery(withSchema), new String[] { "ID" })) {
             assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
             stmt.setString(1, TEXT_VALUE);
@@ -372,10 +429,11 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: SQLException for Column unknown.
      * </p>
      */
-    @Test
-    void testPrepare_INSERT_columnNames_nonExistentColumn() {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testPrepare_INSERT_columnNames_nonExistentColumn(boolean withSchema) {
         SQLException exception = assertThrows(SQLException.class,
-                () -> con.prepareStatement(TEST_INSERT_QUERY, new String[] { "ID", "NON_EXISTENT" }));
+                () -> con.prepareStatement(testInsertQuery(withSchema), new String[] { "ID", "NON_EXISTENT" }));
         assertThat(exception, allOf(
                 errorCode(equalTo(ISCConstants.isc_dsql_field_err)),
                 sqlState(equalTo("42S22")),
