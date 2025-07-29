@@ -4,11 +4,16 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.*;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
@@ -30,6 +35,8 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
     private static final String TEXT_VALUE = "Some text to insert";
     private static final String TEST_INSERT_QUERY =
             "INSERT INTO TABLE_WITH_TRIGGER(TEXT) VALUES ('" + TEXT_VALUE + "')";
+    private static final String TEST_INSERT_QUERY_WITH_SCHEMA =
+            "INSERT INTO PUBLIC.TABLE_WITH_TRIGGER(TEXT) VALUES ('" + TEXT_VALUE + "')";
     private static final String TEST_UPDATE_OR_INSERT =
             "UPDATE OR INSERT INTO TABLE_WITH_TRIGGER(ID, TEXT) VALUES (1, '" + TEXT_VALUE + "') MATCHING (ID)";
 
@@ -39,14 +46,15 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: empty generatedKeys result set.
      * </p>
      */
-    @Test
-    void testExecute_INSERT_noGeneratedKeys() throws Exception {
-        try (Statement stmt = con.createStatement()) {
-            boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY, Statement.NO_GENERATED_KEYS);
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testExecute_INSERT_noGeneratedKeys(boolean withSchema) throws Exception {
+        try (var stmt = con.createStatement()) {
+            boolean producedResultSet = stmt.execute(testInsertQuery(withSchema), Statement.NO_GENERATED_KEYS);
             assertFalse(producedResultSet,
                     "Expected execute to report false (no result set) for INSERT without generated keys returned");
 
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
+            try (var rs = stmt.getGeneratedKeys()) {
                 assertNotNull(rs, "Expected a non-null result set from getGeneratedKeys");
 
                 assertEquals(1, stmt.getUpdateCount(), "Update count should be directly available");
@@ -60,16 +68,21 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
         }
     }
 
+    private static String testInsertQuery(boolean withSchema) {
+        return withSchema ? TEST_INSERT_QUERY_WITH_SCHEMA : TEST_INSERT_QUERY;
+    }
+
     /**
      * Test {@link FBStatement#executeUpdate(String, int)} with {@link Statement#NO_GENERATED_KEYS}.
      * <p>
      * Expected: empty generatedKeys result set.
      * </p>
      */
-    @Test
-    void testExecuteUpdate_INSERT_noGeneratedKeys() throws Exception {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testExecuteUpdate_INSERT_noGeneratedKeys(boolean withSchema) throws Exception {
         try (Statement stmt = con.createStatement()) {
-            int updateCount = stmt.executeUpdate(TEST_INSERT_QUERY, Statement.NO_GENERATED_KEYS);
+            int updateCount = stmt.executeUpdate(testInsertQuery(withSchema), Statement.NO_GENERATED_KEYS);
             assertEquals(1, updateCount, "Expected update count of 1");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -89,10 +102,11 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: all columns of table returned, single row result set
      * </p>
      */
-    @Test
-    void testExecute_INSERT_returnGeneratedKeys() throws Exception {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testExecute_INSERT_returnGeneratedKeys(boolean withSchema) throws Exception {
         try (Statement stmt = con.createStatement()) {
-            boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
+            boolean producedResultSet = stmt.execute(testInsertQuery(withSchema), Statement.RETURN_GENERATED_KEYS);
             assertFalse(producedResultSet,
                     "Expected execute to report false (has no result set) for INSERT with generated keys returned");
 
@@ -163,10 +177,11 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: all columns of table returned, single row result set
      * </p>
      */
-    @Test
-    void testExecuteUpdate_INSERT_returnGeneratedKeys() throws Exception {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testExecuteUpdate_INSERT_returnGeneratedKeys(boolean withSchema) throws Exception {
         try (Statement stmt = con.createStatement()) {
-            int updateCount = stmt.executeUpdate(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
+            int updateCount = stmt.executeUpdate(testInsertQuery(withSchema), Statement.RETURN_GENERATED_KEYS);
             assertEquals(1, updateCount, "Expected update count");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -282,7 +297,7 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 
     /**
      * Test for {@link FBStatement#execute(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT for
-     * a non existent table.
+     * a non-existent table.
      * <p>
      * Expected: SQLException Table unknown
      * </p>
@@ -314,10 +329,11 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: single row result set with only the specified column.
      * </p>
      */
-    @Test
-    void testExecute_INSERT_columnIndexes() throws Exception {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testExecute_INSERT_columnIndexes(boolean withSchema) throws Exception {
         try (Statement stmt = con.createStatement()) {
-            boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY, new int[] { 1 });
+            boolean producedResultSet = stmt.execute(testInsertQuery(withSchema), new int[] { 1 });
             assertFalse(producedResultSet,
                     "Expected execute to report false (has no result set) for INSERT with generated keys returned");
 
@@ -344,10 +360,11 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: single row result set with only the specified column.
      * </p>
      */
-    @Test
-    void testExecuteUpdate_INSERT_columnIndexes() throws Exception {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testExecuteUpdate_INSERT_columnIndexes(boolean withSchema) throws Exception {
         try (Statement stmt = con.createStatement()) {
-            int updateCount = stmt.executeUpdate(TEST_INSERT_QUERY, new int[] { 1 });
+            int updateCount = stmt.executeUpdate(testInsertQuery(withSchema), new int[] { 1 });
             assertEquals(1, updateCount, "Expected update count");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -371,10 +388,11 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: single row result set with only the specified columns.
      * </p>
      */
-    @Test
-    void testExecute_INSERT_columnIndexes_quotedColumn() throws Exception {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testExecute_INSERT_columnIndexes_quotedColumn(boolean withSchema) throws Exception {
         try (Statement stmt = con.createStatement()) {
-            boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY, new int[] { 1, 3 });
+            boolean producedResultSet = stmt.execute(testInsertQuery(withSchema), new int[] { 1, 3 });
             assertFalse(producedResultSet,
                     "Expected execute to report false (has no result set) for INSERT with generated keys returned");
 
@@ -404,10 +422,11 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: single row result set with only the specified columns.
      * </p>
      */
-    @Test
-    void testExecuteUpdate_INSERT_columnIndexes_quotedColumn() throws Exception {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testExecuteUpdate_INSERT_columnIndexes_quotedColumn(boolean withSchema) throws Exception {
         try (Statement stmt = con.createStatement()) {
-            int updateCount = stmt.executeUpdate(TEST_INSERT_QUERY, new int[] { 1, 3 });
+            int updateCount = stmt.executeUpdate(testInsertQuery(withSchema), new int[] { 1, 3 });
             assertEquals(1, updateCount, "Expected update count");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -426,6 +445,48 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
         }
     }
 
+    @SuppressWarnings("SqlSourceToSinkFlow")
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = "<NIL>", textBlock = """
+            searchPath,            expectedSuffix
+            <NIL>,                 _IN_PUBLIC
+            'PUBLIC,OTHER_SCHEMA', _IN_PUBLIC
+            'OTHER_SCHEMA,PUBLIC', _IN_OTHER_SCHEMA
+            """)
+    void testINSERT_schemalessTable_columnIndexes_schemaSearchPath(String searchPath, String expectedSuffix)
+            throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        try (var stmt = con.createStatement()) {
+            if (searchPath != null) {
+                stmt.execute("set search_path to " + searchPath);
+            }
+
+            stmt.execute("insert into SAME_NAME default values", new int[] { 1, 2 });
+
+            var rs = stmt.getGeneratedKeys();
+            assertNotNull(rs, "Expected a non-null result set from getGeneratedKeys");
+            var metaData = rs.getMetaData();
+            assertEquals("ID" + expectedSuffix, metaData.getColumnLabel(1), "Unexpected name column 1");
+            assertEquals("TEXT" + expectedSuffix, metaData.getColumnLabel(2), "Unexpected name column 2");
+        }
+    }
+
+    @Test
+    void testINSERT_schemalessTable_columnIndex_tableNotOnSearchPath() throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        try (var stmt = con.createStatement()) {
+            stmt.execute("set search_path to SYSTEM");
+
+            var exception = assertThrows(SQLNonTransientException.class,
+                    () -> stmt.execute("insert into SAME_NAME default values", new int[] { 1, 2 }));
+            assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound,
+                    "\"SAME_NAME\"", "schemaless table not on the search path"));
+        }
+    }
+
+    // The executeXXX(String, int[]) variants are the only ones that have special handling for schemaless tables
+    // We consider testing through execute sufficient to cover the other methods as well
+
     // Other combination for execute(String, int[]) already covered in TestGeneratedKeysQuery
 
     /**
@@ -434,10 +495,11 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: single row result set with only the specified column.
      * </p>
      */
-    @Test
-    void testExecute_INSERT_columnNames() throws Exception {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testExecute_INSERT_columnNames(boolean withSchema) throws Exception {
         try (Statement stmt = con.createStatement()) {
-            boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY, new String[] { "ID" });
+            boolean producedResultSet = stmt.execute(testInsertQuery(withSchema), new String[] { "ID" });
             assertFalse(producedResultSet,
                     "Expected execute to report false (has no result set) for INSERT with generated keys returned");
 
@@ -464,10 +526,11 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: single row result set with only the specified column.
      * </p>
      */
-    @Test
-    void testExecuteUpdate_INSERT_columnNames() throws Exception {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testExecuteUpdate_INSERT_columnNames(boolean withSchema) throws Exception {
         try (Statement stmt = con.createStatement()) {
-            int updateCount = stmt.executeUpdate(TEST_INSERT_QUERY, new String[] { "ID" });
+            int updateCount = stmt.executeUpdate(testInsertQuery(withSchema), new String[] { "ID" });
             assertEquals(1, updateCount, "Expected update count");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -491,11 +554,12 @@ class FBStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
      * Expected: SQLException for Column unknown.
      * </p>
      */
-    @Test
-    void testExecute_INSERT_columnNames_nonExistentColumn() throws Exception {
+    @ParameterizedTest
+    @MethodSource("withOrWithoutSchema")
+    void testExecute_INSERT_columnNames_nonExistentColumn(boolean withSchema) throws Exception {
         try (Statement stmt = con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class,
-                    () -> stmt.execute(TEST_INSERT_QUERY, new String[] { "ID", "NON_EXISTENT" }));
+                    () -> stmt.execute(testInsertQuery(withSchema), new String[] { "ID", "NON_EXISTENT" }));
             assertThat(exception, allOf(
                     errorCode(equalTo(ISCConstants.isc_dsql_field_err)),
                     sqlState(equalTo("42S22")),
