@@ -42,6 +42,9 @@ SPDX-License-Identifier: LicenseRef-PDL-1.0
 [#jaybird-6]
 ==== Jaybird 6
 
+Jaybird 6 requires Java 17 or higher.
+For older Java versions (Java and higher), use <<jaybird-5>>.
+
 Jaybird 6 is available on Maven Central:
 
 [horizontal.compact]
@@ -91,6 +94,8 @@ To enable the "`ChaCha64`" wire encryption support for pure Java connections, yo
 [#jaybird-5]
 ==== Jaybird 5
 
+Unless you need to use Java 8 or Java 11, we recommend upgrading to <<jaybird-6>>.
+
 Jaybird 5 is available on Maven Central:
 
 [horizontal.compact]
@@ -127,7 +132,7 @@ If you want to use Type 2 support (native or embedded), you need to explicitly i
 ==== Jaybird 4
 
 Jaybird 4 is end-of-life and will receive no further updates.
-We recommend upgrading to <<jaybird-5>>.
+We recommend upgrading to <<jaybird-6>>.
 
 ////
 // Stop showing Jaybird 4 Maven info, but keep available for now
@@ -195,7 +200,7 @@ If you want to use Type 2 support (native, local or embedded), you need to expli
 +++<a name="jaybird-3.0">++++++</a>+++
 
 Jaybird 3 is end-of-life and will receive no further updates.
-We recommend upgrading to <<jaybird-5>>.
+We recommend upgrading to <<jaybird-6>>.
 
 ////
 // Stop showing Jaybird 3 Maven info, but keep available for now
@@ -260,7 +265,7 @@ If you want to use Type 2 support (native, local or embedded), you need to  expl
 ==== Jaybird 2.2
 
 Jaybird 2.2 is end-of-life and will receive no further updates.
-We recommend upgrading to <<jaybird-5>>.
+We recommend upgrading to <<jaybird-6>>.
 
 ////
 // Stop showing Jaybird 2.2 Maven info, but keep available for now
@@ -293,7 +298,7 @@ When deploying to a JavaEE environment, exclude the `javax.resource connector-ap
 
 Jaybird can be downloaded from the Firebird website, under Downloads, https://firebirdsql.org/en/jdbc-driver/[JDBC Driver].
 
-Alternatively, you can go directly to GitHub and download Jaybird from the https://github.com/FirebirdSQL/jaybird/releases[jaybird releases].
+Alternatively, you can go directly to GitHub and download Jaybird from the https://github.com/FirebirdSQL/jaybird/releases[Jaybird releases].
 
 [#where-can-i-get-the-sourcecode]
 == Where can I get the sourcecode?
@@ -472,7 +477,7 @@ Instead, we recommend building a webservice (e.g. REST-based) to mediate between
 Apart from this FAQ, you can get additional information from:
 
 * https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html[Jaybird JDBC Driver Java Programmer's Manual] (HTML, https://firebirdsql.github.io/jaybird-manual/jaybird_manual.pdf[PDF version]) (covers Jaybird 4 and higher)
-* https://www.firebirdsql.org/en/jdbc-driver/[Firebird website: Downloads, Connectivity, JDBC Driver]
+* https://firebirdsql.org/en/jdbc-driver/[Firebird website: Downloads, Connectivity, JDBC Driver]
 * https://firebirdsql.org/en/devel-jdbc-driver/[Firebird website: Development, JDBC Driver]
 * https://github.com/FirebirdSQL/jaybird/wiki/[Jaybird wiki]
 
@@ -729,7 +734,7 @@ It requires support on both client and server side.
 
 Java support for "TCP Loopback Fast Path" was introduced in Java 8 update 60, it can be enabled by specifying the system property `jdk.net.useFastTcpLoopback` with value `true` (e.g. specify `-Djdk.net.useFastTcpLoopback=true` in your Java commandline).
 
-Unfortunately, Java only has an 'all-or-nothing' support for the "`TCP Loopback Fast Path`", so Jaybird cannot enable this for you: you must specify this  property on JVM startup.
+Unfortunately, Java only has an 'all-or-nothing' support for the "`TCP Loopback Fast Path`", so Jaybird cannot enable this for you: you must specify this property on JVM startup.
 On the other hand, this has the benefit that this works for all Jaybird versions, as long as you use Java 8 update 60 or higher (and Firebird 3.0.2 or higher, but before 5.0.0).
 
 [#common-connection-errors]
