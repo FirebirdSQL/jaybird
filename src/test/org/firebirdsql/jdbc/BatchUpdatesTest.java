@@ -34,6 +34,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import java.util.stream.IntStream;
 
@@ -42,6 +43,9 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.FbAssumptions.assumeServerBatchSupport;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertRowEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -396,6 +400,36 @@ class BatchUpdatesTest {
             }
 
             connection.commit();
+        }
+    }
+
+    /**
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/888">#888</a>.
+     */
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
+    void testBatchMultipleEmptyStringsInBlob(boolean useServerBatch) throws Exception {
+        try (var connection = createConnection(useServerBatch);
+             var stmt = connection.createStatement()) {
+            stmt.execute(RECREATE_BATCH_UPDATES_TABLE);
+            connection.setAutoCommit(false);
+            try (var ps = connection.prepareStatement("INSERT INTO batch_updates(id, clob_value) VALUES (?, ?)")) {
+                ps.setInt(1, 1);
+                ps.setString(2, "");
+                ps.addBatch();
+                ps.setInt(1, 2);
+                ps.setString(2, "");
+                ps.addBatch();
+                assertDoesNotThrow(ps::executeBatch);
+            }
+
+            try (var rs = stmt.executeQuery("select ID, CLOB_VALUE from BATCH_UPDATES order by ID")) {
+                assertNextRow(rs);
+                assertRowEquals(rs, List.of(1, ""));
+                assertNextRow(rs);
+                assertRowEquals(rs, List.of(2, ""));
+                assertNoNextRow(rs);
+            }
         }
     }
 

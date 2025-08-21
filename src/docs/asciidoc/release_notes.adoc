@@ -42,6 +42,7 @@ The following was fixed or changed since Jaybird 6.0.2:
 A large amount (>= 64) of statement closes (or cleanup of leaked statements) without interleaving other server operations could cause a connection to Firebird 4.0 or higher to hang.
 This could also hang the cleaner thread used for closing leaked statements.
 * Fixed: `ResultSet` move incorrectly closes input `Clob` (https://github.com/FirebirdSQL/jaybird/issues/880[#880])
+* Fixed: Batch execution with multiple empty strings resulted in error _"Repeated blob id 0:0 in registerBlob()"_ (https://github.com/FirebirdSQL/jaybird/issues/888[#888])
 
 === Jaybird 6.0.2
 
