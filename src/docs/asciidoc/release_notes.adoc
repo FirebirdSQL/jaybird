@@ -8,7 +8,7 @@
 :toc: left
 :icons: font
 :sectnums:
-:bc-version: 1.80
+:bc-version: 1.81
 :jna-version: 5.17.0
 :jaybird-fbclient-version: 5.0.2.0
 :firebird-java: https://groups.google.com/g/firebird-java
@@ -43,6 +43,7 @@ A large amount (>= 64) of statement closes (or cleanup of leaked statements) wit
 This could also hang the cleaner thread used for closing leaked statements.
 * Fixed: `ResultSet` move incorrectly closes input `Clob` (https://github.com/FirebirdSQL/jaybird/issues/880[#880])
 * Fixed: Batch execution with multiple empty strings resulted in error _"Repeated blob id 0:0 in registerBlob()"_ (https://github.com/FirebirdSQL/jaybird/issues/888[#888])
+* Dependency update: updated `org.bouncycastle:bcprov-jdk18on` from 1.80 to 1.81 (used by `chacha64-plugin`) (https://github.com/FirebirdSQL/jaybird/issues/889[#889])
 
 === Jaybird 6.0.2
 
