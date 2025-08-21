@@ -35,7 +35,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 import java.util.stream.IntStream;
 
@@ -383,9 +382,9 @@ class BatchUpdatesTest {
 
             try (ResultSet rs = stmt.executeQuery("select ID, CLOB_VALUE from BATCH_UPDATES order by ID")) {
                 assertNextRow(rs);
-                assertRowEquals(rs, List.of(1, ""));
+                assertRowEquals(rs, Arrays.asList(1, ""));
                 assertNextRow(rs);
-                assertRowEquals(rs, List.of(2, ""));
+                assertRowEquals(rs, Arrays.asList(2, ""));
                 assertNoNextRow(rs);
             }
         }
