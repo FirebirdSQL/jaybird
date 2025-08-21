@@ -25,8 +25,10 @@ import org.firebirdsql.gds.ng.wire.version13.V13Statement;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_batch_cancel;
@@ -154,10 +156,14 @@ public class V16Statement extends V13Statement {
         List<Integer> blobPositions = blobPositions(parameterDescriptor);
         if (blobPositions.isEmpty()) return;
         FbWireDatabase db = getDatabase();
+        var blobsRegistered = new HashSet<>((int) (rowValues.size() * blobPositions.size() / 0.75f + 1));
         for (RowValue rowValue : rowValues) {
             for (int position : blobPositions) {
                 byte[] fieldData = rowValue.getFieldData(position);
                 if (fieldData == null) continue;
+                // Do not register a blob multiple times
+                if (!blobsRegistered.add(toLong(fieldData))) continue;
+
                 xdrOut.writeInt(WireProtocolConstants.op_batch_regblob);
                 xdrOut.writeInt(getHandle()); // p_batch_statement
                 // register as itself
@@ -167,6 +173,12 @@ public class V16Statement extends V13Statement {
             }
         }
         xdrOut.flush();
+    }
+
+    // This is not necessarily the correct endianness, we just want the id bytes expressed as a long.
+    private static long toLong(byte[] bytes) {
+        assert bytes.length == 8 : "expected 8 bytes";
+        return ByteBuffer.wrap(bytes).getLong();
     }
 
     private List<Integer> blobPositions(RowDescriptor parameterDescriptor) {
