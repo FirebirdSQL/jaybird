@@ -193,10 +193,10 @@ Feedback can be sent to the {firebird-java}[Firebird-java mailing list] or repor
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 3.0.12, Firebird 4.0.5, Firebird 5.0.2, and recent snapshots of Firebird 5.0.3 and Firebird 6.0, but should also support other Firebird versions from 3.0 and up.
+Jaybird {version_wo_target} was tested against Firebird 3.0.13, Firebird 4.0.6, and Firebird 5.0.3, but should also support other Firebird versions from 3.0 and up.
 Firebird 2.5 and older are not supported.
 
-Firebird 6.0 is currently also not considered supported (see also <<firebird-support>> in <<whats-new-in-jaybird-6>>).
+Firebird 6.0 is currently not considered supported (see also <<firebird-support>> in <<whats-new-in-jaybird-6>>).
 
 Jaybird 6 will -- by default -- not connect to Firebird 2.5 or older.
 See also <<unsupported-protocol>>.
@@ -206,15 +206,15 @@ This driver does not support InterBase.
 [#supported-java-versions]
 === Supported Java versions
 
-Jaybird 6 supports Java 17 and higher (JDBC 4.3).
+Jaybird 6 supports Java 17 and higher (JDBC 4.3/JDBC 4.4).
 Support for earlier Java versions has been dropped.
 
-Given the limited support period for Java 9 and higher versions, we limit support to Java 17, the most recent LTS version after Java 17, and the latest Java release.
+Given the limited support period for Java 17 and higher versions, we limit support to Java 17, Java 21, and the latest Java release.
 Currently, that means we support Java 17, Java 21, and Java 24.
 
 [NOTE]
 ====
-Jaybird 5 will serve as a "`long-term support`" version for Java 8 and 11, with maintenance releases at least until the release of Jaybird 7.
+Jaybird 5 serves as a "`long-term support`" version for Java 8 and Java 11, with maintenance releases at least until the release of Jaybird 7.
 ====
 
 Jaybird 6 provides libraries compiled for Java 17.
@@ -527,7 +527,7 @@ Jaybird 6 supports Firebird 3.0, Firebird 4.0, and Firebird 5.0.
 .No promises on Firebird 6.0 support
 [WARNING]
 ====
-Firebird 6.0 is still in its early stages of development, and is expected to include changes -- like schema support -- that may impact Jaybird.
+Firebird 6.0 is still in development, and includes changes -- like schema support -- that impact Jaybird.
 
 As a result -- at this time -- we make no promises on the support for Firebird 6.0 by Jaybird 6.
 We may delay support for Firebird 6.0 until Jaybird 7, or we may improve support during maintenance releases of Jaybird 6.
