@@ -1282,11 +1282,14 @@ public class FBConnection implements FirebirdConnection {
     }
 
     @Override
-    @SuppressWarnings("java:S1141")
+    @SuppressWarnings({ "java:S1141", "removal" })
     public void abort(Executor executor) throws SQLException {
         // NOTE: None of these operations are performed under lock (except maybe very late in the cleanup)
         if (isClosed()) return;
-        PERMISSION_CALL_ABORT.checkGuard(this);
+        var sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(PERMISSION_CALL_ABORT);
+        }
         if (executor == null) {
             throw FbExceptionBuilder.toException(jb_invalidExecutor);
         }
@@ -1328,9 +1331,13 @@ public class FBConnection implements FirebirdConnection {
         });
     }
 
+    @SuppressWarnings("removal")
     @Override
     public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
-        PERMISSION_SET_NETWORK_TIMEOUT.checkGuard(this);
+        var sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(PERMISSION_SET_NETWORK_TIMEOUT);
+        }
         if (executor == null) {
             throw FbExceptionBuilder.toException(jb_invalidExecutor);
         }
