@@ -66,8 +66,12 @@ public final class OperationMonitor {
      *         If a security manager is installed and the calling code does not have permission {@code
      *         "org.firebirdsql.jaybird.initOperationAware"}
      */
+    @SuppressWarnings("removal")
     public static void initOperationAware(OperationAware operationAware) {
-        PERMISSION_INIT_OPERATION_AWARE.checkGuard(OperationMonitor.class);
+        var sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(PERMISSION_INIT_OPERATION_AWARE);
+        }
         instance.set(operationAware != null
                 ? operationAware
                 : NoOpOperationAware.INSTANCE);
