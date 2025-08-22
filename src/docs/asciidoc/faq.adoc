@@ -306,7 +306,7 @@ Alternatively, you can go directly to GitHub and download Jaybird from the https
 All Jaybird distribution zips contain a `jaybird-<version>-sources.zip` with the sources used for that specific version.
 The Maven Central repository also has the `jaybird-<version>-sources.zip`, and your IDE will generally offer to download it for you if you navigate to any Jaybird class.
 
-The full Jaybird sources are available from GitHub in the jaybird repository, {jaybird-repo}.
+The full Jaybird sources are available from GitHub in the Jaybird repository, {jaybird-repo}.
 Each release is tagged in the repository.
 
 [#how-is-jaybird-licensed]
@@ -350,7 +350,7 @@ Jaybird 5 is the last version to support Java 8 and Java 11, support has been dr
 
 [NOTE]
 ====
-Jaybird 5 will serve as a form of long-term support for Java 8 and Java 11, with maintenance releases guaranteed at least until the release of Jaybird 7.
+Jaybird 5 serves as a "`long-term support`" version for Java 8 and Java 11, with maintenance releases at least until the release of Jaybird 7.
 
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-03-java-17-minimum-version.md[jdp-2022-03: Java 17 minimum version].
 ====
@@ -363,8 +363,10 @@ Jaybird 4 supports Java 7, Java 8, Java 11, Java 17 and Java 21.
 Support for Java 9 and higher is limited to Java 11, Java 17 and Java 21.
 
 Jaybird 4 is the last version to support Java 7, support was dropped with Jaybird 5.
-Jaybird 4.0.10 is the last release of Jaybird 4, and is end-of-life.
-We recommend upgrading to Jaybird 5.
+Jaybird 4.0.10 is the last release of Jaybird 4.
+
+Jaybird 4 is end-of-life.
+We recommend upgrading to Jaybird 6.
 
 [#java-jaybird-3-0]
 [discrete]
@@ -372,16 +374,20 @@ We recommend upgrading to Jaybird 5.
 
 Jaybird 3 supports Java 7 and Java 8 and has basic support for Java 9 and higher using the Java 8 version of the driver.
 Support for Java 9 and higher is limited to Java 11 and 17, but in practice Jaybird should work on all Java 9+ versions upto Java 17footnote:[versions after Java 17 have not been tested].
-Jaybird 3.0.12 is the last release of Jaybird 3, and is end-of-life.
-We recommend upgrading to Jaybird 5.
+Jaybird 3.0.12 is the last release of Jaybird 3.
+
+Jaybird 3 is end-of-life.
+We recommend upgrading to Jaybird 6.
 
 [#java-jaybird-2-2]
 [discrete]
 === Jaybird 2.2
 
 Jaybird 2.2 supports Java 6, Java 7 and Java 8.
-Jaybird 2.2.15 is that last release of Jaybird 2.2, and is end-of-life.
-We recommend upgrading to Jaybird 5.
+Jaybird 2.2.15 is the last release of Jaybird 2.2.
+
+Jaybird 2.2 is end-of-life.
+We recommend upgrading to Jaybird 6.
 
 Jaybird 2.2.4 added basic support for Java 8 (JDBC 4.2), although not all JDBC 4.2 features are supported or fully implemented.
 
@@ -416,6 +422,15 @@ To ensure a stable module name, Jaybird 5 and older, since versions 2.2.14 and 3
 
 Jaybird 6 supports Firebird 3.0, Firebird 4.0, and Firebird 5.0.
 
+.No promises on Firebird 6.0 support
+[WARNING#firebird-jaybird-6-fb6]
+====
+Firebird 6.0 is still in development, and includes changes -- like schema support -- that impact Jaybird.
+
+As a result -- at this time -- we make no promises on the support for Firebird 6.0 by Jaybird 6.
+We may delay support for Firebird 6.0 until Jaybird 7, or we may improve support during maintenance releases of Jaybird 6.
+====
+
 By default, Jaybird 6 -- using the pure Java protocol -- will not connect to Firebird 2.5 and older.
 See <<connection-rejected-by-remote-interface-335544421>> for a workaround.
 
@@ -424,6 +439,15 @@ See <<connection-rejected-by-remote-interface-335544421>> for a workaround.
 === Jaybird 5
 
 Jaybird 5 supports Firebird 2.5, Firebird 3.0, Firebird 4.0, and Firebird 5.0.
+
+.No promises on Firebird 6.0 support
+[WARNING#firebird-jaybird-5-fb6]
+====
+Firebird 6.0 is still in development, and includes changes -- like schema support -- that impact Jaybird.
+
+As a result -- at this time -- we make no promises on the support for Firebird 6.0 by Jaybird 5.
+We may delay support for Firebird 6.0 until Jaybird 7, or we may improve support during maintenance releases of Jaybird 5 and/or Jaybird 6.
+====
 
 Jaybird 5 is the last version to support Firebird 2.5.
 
@@ -525,7 +549,7 @@ You can report bugs in the Jaybird bug tracker, {issues}.
 When reporting bugs, please provide a minimal, but complete reproduction, including databases and sourcecode to reproduce the problem.
 Patches to fix bugs are also appreciated.
 Make sure the patch is against a recent master version of the code.
-You can also fork the {jaybird-repo}[jaybird repository] and create pull requests.
+You can also fork the {jaybird-repo}[Jaybird repository] and create pull requests.
 
 [#connecting-to-firebird]
 = Connecting to Firebird
@@ -580,7 +604,7 @@ Jaybird 4 and higher also support:
 
 [NOTE]
 ====
-This URL format is deprecated with jaybird 5 and was removed in Jaybird 6.
+This URL format is deprecated with Jaybird 5 and was removed in Jaybird 6.
 As a replacement, use the "`Firebird External`" option in LibreOffice Base.
 
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal].
@@ -943,7 +967,7 @@ Jaybird itself no longer provides connection pooling.
 Earlier versions had a `DataSource` implementation with connection pooling, but this implementation had severe bugs.
 This implementation (and all other classes in `org.firebirdsql.pool`) was deprecated in Jaybird 2.2 and dropped in Jaybird 3.
 
-Jaybird provides a basic `DataSource` implementation and a `ConnectionPoolDataSource` implementation.
+Jaybird provides a basic `DataSource`, an `XADataSource`, and a `ConnectionPoolDataSource` implementation.
 Contrary to its name, the latter *does not provide a connection pool*, but is intended to be used by a connection pool (as implemented in an application server) to create connections _for_ a connection pool.
 
 If your application is built on a Java EE/Jakarta EE application server, we suggest you use the connection pooling provided by the application server using the `javax.sql.ConnectionPoolDataSource` implementation `org.firebirdsql.ds.FBConnectionPoolDataSource`, or using the `javax.sql.XADataSource` implementation `org.firebirdsql.ds.FBXADataSource`.
