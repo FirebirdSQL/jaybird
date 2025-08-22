@@ -317,26 +317,28 @@ Feedback can be sent to the https://groups.google.com/g/firebird-java[Firebird-j
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.12, 4.0.5, 5.0.2, and a recent snapshot of 5.0.3, but should also support other Firebird versions from 2.5 and up.
+Jaybird {version_wo_target} was tested against Firebird 2.5.9, Firebird 3.0.13, Firebird 4.0.6, and Firebird 5.0.3, but should also support other Firebird versions from 2.5 and up.
+
+Firebird 6.0 is currently not considered supported (see also <<firebird-support>> in <<whats-new-in-jaybird-5>>).
 
 This driver does not support InterBase servers due to Firebird-specific changes in the protocol and database attachment parameters that are sent to the server.
 
 [#supported-java-versions]
 === Supported Java versions
 
-Jaybird 5 supports Java 8 (JDBC 4.2), and Java 9 and higher (JDBC 4.3).
+Jaybird 5 supports Java 8 (JDBC 4.2), and Java 9 and higher (JDBC 4.3/JDBC 4.4).
 Support for earlier Java versions has been dropped.
 
-Given the limited support period for Java 9 and higher versions, we limit support to Java 8, 11, 17, 21 and the latest Java release.
-Currently, that means we support Java 8, 11, 17, 21, and 24.
+Given the limited support period for Java 9 and higher versions, we limit support to Java 8, Java 11, Java 17, Java 21 and the latest Java release.
+Currently, that means we support Java 8, Java 11, Java 17, Java 21, and Java 24.
 
 [NOTE]
 ====
-Jaybird 5 is the last version to support Java 8 and 11.
+Jaybird 5 is the last version to support Java 8 and Java 11.
 Jaybird 6 uses Java 17 as the baseline (minimum) version.
 We highly recommend upgrading to Java 17 or higher.
 
-Jaybird 5 will serve as a "`long-term support`" version for Java 8 and 11, with maintenance releases at least until the release of Jaybird 7.
+Jaybird 5 serves as a "`long-term support`" version for Java 8 and Java 11, with maintenance releases at least until the release of Jaybird 7.
 ====
 
 Jaybird 5 provides libraries for Java 8 and Java 11.
@@ -523,7 +525,16 @@ Jaybird 5 is the last version to support Java versions earlier than Java 17.
 [#firebird-support]
 === Firebird support
 
-Jaybird 5 supports Firebird version 2.5, 3.0, 4.0, and 5.0.
+Jaybird 5 supports Firebird 2.5, Firebird 3.0, Firebird 4.0, and Firebird 5.0.
+
+.No promises on Firebird 6.0 support
+[WARNING]
+====
+Firebird 6.0 is still in development, and includes changes -- like schema support -- that impact Jaybird.
+
+As a result -- at this time -- we make no promises on the support for Firebird 6.0 by Jaybird 5.
+We may delay support for Firebird 6.0 until Jaybird 7, or we may improve support during maintenance releases of Jaybird 5 and/or Jaybird 6.
+====
 
 Jaybird 5 is the last version to support Firebird 2.5.
 
