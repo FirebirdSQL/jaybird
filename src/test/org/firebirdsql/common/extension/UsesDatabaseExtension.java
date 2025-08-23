@@ -11,9 +11,10 @@ import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Collections.emptyList;
 import static org.firebirdsql.common.FBTestProperties.createFBManager;
@@ -40,7 +41,7 @@ public abstract class UsesDatabaseExtension {
     private final boolean initialCreate;
     private FBManager fbManager = null;
     private final List<String> initStatements;
-    private final List<String> databasesToDrop = new ArrayList<>();
+    private final Set<String> databasesToDrop = new HashSet<>();
 
     private UsesDatabaseExtension(boolean initialCreate) {
         this(initialCreate, emptyList());
@@ -72,6 +73,7 @@ public abstract class UsesDatabaseExtension {
         } catch (Exception e){
             System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "Exception dropping DBs", e);
         } finally {
+            databasesToDrop.clear();
             try {
                 if (!(fbManager == null || fbManager.getState().equals("Stopped"))) {
                     fbManager.stop();

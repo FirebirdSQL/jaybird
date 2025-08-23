@@ -8,7 +8,7 @@
  SPDX-FileCopyrightText: Copyright 2005 Michael Romankiewicz
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -764,12 +764,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * {@inheritDoc}
      *
-     * @return the vendor term, always {@code null} because schemas are not supported by database server (see JDBC CTS
-     * for details).
+     * @return the vendor term; for Firebird 5.0 and older always {@code null} because schemas are not supported
      */
     @Override
     public String getSchemaTerm() throws SQLException {
-        return null;
+        return firebirdSupportInfo.supportsSchemas() ? "SCHEMA" : null;
     }
 
     @Override
@@ -814,27 +813,27 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public boolean supportsSchemasInDataManipulation() throws SQLException {
-        return false;
+        return firebirdSupportInfo.supportsSchemas();
     }
 
     @Override
     public boolean supportsSchemasInProcedureCalls() throws SQLException {
-        return false;
+        return firebirdSupportInfo.supportsSchemas();
     }
 
     @Override
     public boolean supportsSchemasInTableDefinitions() throws SQLException {
-        return false;
+        return firebirdSupportInfo.supportsSchemas();
     }
 
     @Override
     public boolean supportsSchemasInIndexDefinitions() throws SQLException {
-        return false;
+        return firebirdSupportInfo.supportsSchemas();
     }
 
     @Override
     public boolean supportsSchemasInPrivilegeDefinitions() throws SQLException {
-        return false;
+        return firebirdSupportInfo.supportsSchemas();
     }
 
     /**
@@ -1031,7 +1030,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public int getMaxSchemaNameLength() throws SQLException {
-        return 0; //No schemas
+        return firebirdSupportInfo.supportsSchemas() ? getMaxObjectNameLength() : 0;
     }
 
     /**
@@ -1204,7 +1203,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
             throws SQLException {
-        return GetProcedures.create(getDbMetadataMediator()).getProcedures(catalog, procedureNamePattern);
+        return GetProcedures.create(getDbMetadataMediator())
+                .getProcedures(catalog, schemaPattern, procedureNamePattern);
     }
 
     /**
@@ -1230,7 +1230,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
             String columnNamePattern) throws SQLException {
         return GetProcedureColumns.create(getDbMetadataMediator())
-                .getProcedureColumns(catalog, procedureNamePattern, columnNamePattern);
+                .getProcedureColumns(catalog, schemaPattern, procedureNamePattern, columnNamePattern);
     }
 
     public static final String TABLE = "TABLE";
@@ -1251,7 +1251,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
             throws SQLException {
-        return createGetTablesInstance().getTables(tableNamePattern, types);
+        return createGetTablesInstance().getTables(schemaPattern, tableNamePattern, types);
     }
 
     private GetTables createGetTablesInstance() {
@@ -1259,15 +1259,44 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     @Override
+    public Optional<String> findTableSchema(String tableName) throws SQLException {
+        if (!supportsSchemasInDataManipulation()) return Optional.of("");
+        final String findSchema = """
+                with SEARCH_PATH as (
+                  select row_number() over() as PRIO, NAME as SCHEMA_NAME
+                  from SYSTEM.RDB$SQL.PARSE_UNQUALIFIED_NAMES(rdb$get_context('SYSTEM', 'SEARCH_PATH'))
+                )
+                select r.RDB$SCHEMA_NAME
+                from RDB$RELATIONS as r
+                inner join SEARCH_PATH s on r.RDB$SCHEMA_NAME = s.SCHEMA_NAME and r.RDB$RELATION_NAME = ?
+                order by s.PRIO
+                fetch first row only""";
+
+        var metadataQuery = new DbMetadataMediator.MetadataQuery(findSchema, List.of(tableName));
+        try (ResultSet rs = getDbMetadataMediator().performMetaDataQuery(metadataQuery)) {
+            if (rs.next()) {
+                return Optional.of(rs.getString(1));
+            }
+            return Optional.empty();
+        }
+    }
+
+    @Override
     public ResultSet getSchemas() throws SQLException {
         return getSchemas(null, null);
+    }
+
+    @Override
+    public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
+        return GetSchemas.create(getDbMetadataMediator()).getSchemas(catalog, schemaPattern);
     }
 
     /**
      * {@inheritDoc}
      * <p>
      * When {@code useCatalogAsPackage = true} and packages are supported, this method will return the package names in
-     * column {@code TABLE_CAT}.
+     * column {@code TABLE_CAT}. In Firebird 6.0, packages are schema-bound, so finding procedures or functions in a
+     * package may require you to search in a specific schema, or in all schemas.
      * </p>>
      */
     @Override
@@ -1314,17 +1343,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
             throws SQLException {
-        return GetColumns.create(getDbMetadataMediator()).getColumns(tableNamePattern, columnNamePattern);
+        return GetColumns.create(getDbMetadataMediator())
+                .getColumns(schemaPattern, tableNamePattern, columnNamePattern);
     }
 
     /**
      * {@inheritDoc}
      *
      * <p>
-     * Jaybird defines an additional column:
+     * Jaybird defines these additional columns:
      * <ol start="9">
      * <li><b>JB_GRANTEE_TYPE</b> String  =&gt; Object type of {@code GRANTEE} (<b>NOTE: Jaybird specific column;
      * retrieve by name!</b>).</li>
+     * <li><b>JB_GRANTEE_SCHEMA</b> String =&gt; Schema of {@code GRANTEE} if it's a schema-bound object (<b>NOTE:
+     * Jaybird specific column; retrieve by name!</b>).</li>
      * </ol>
      * </p>
      * <p>
@@ -1332,24 +1364,32 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      * <p>
      * <b>NOTE:</b> This implementation returns <b>all</b> privileges, not just applicable to the current user. It is
-     * unclear if this complies with the JDBC requirements. This may change in the future to only return only privileges
+     * unclear if this complies with the JDBC requirements. This may change in the future to only return privileges
      * applicable to the current user, user {@code PUBLIC} and &mdash; maybe &mdash; active roles.
+     * </p>
+     * <p>
+     * Contrary to specified in the JDBC API, the result set is ordered by {@code TABLE_SCHEM}, {@code COLUMN_NAME},
+     * {@code PRIVILEGE}, and {@code GRANTEE} (JDBC specifies ordering by {@code COLUMN_NAME} and {@code PRIVILEGE}).
+     * This only makes a difference when specifying {@code null} for {@code schema} (search all schemas) and there are
+     * multiples tables with the same {@code name}.
      * </p>
      */
     @Override
     public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern)
             throws SQLException {
-        return GetColumnPrivileges.create(getDbMetadataMediator()).getColumnPrivileges(table, columnNamePattern);
+        return GetColumnPrivileges.create(getDbMetadataMediator()).getColumnPrivileges(schema, table, columnNamePattern);
     }
 
     /**
      * {@inheritDoc}
      *
      * <p>
-     * Jaybird defines an additional column:
+     * Jaybird defines these additional columns:
      * <ol start="8">
      * <li><b>JB_GRANTEE_TYPE</b> String  =&gt; Object type of {@code GRANTEE} (<b>NOTE: Jaybird specific column;
      * retrieve by name!</b>).</li>
+     * <li><b>JB_GRANTEE_SCHEMA</b> String =&gt; Schema of {@code GRANTEE} if it's a schema-bound object (<b>NOTE:
+     * Jaybird specific column; retrieve by name!</b>).</li>
      * </ol>
      * </p>
      * <p>
@@ -1361,19 +1401,24 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getTablePrivileges(String catalog, String schemaPattern, String tableNamePattern)
             throws SQLException {
-        return GetTablePrivileges.create(getDbMetadataMediator()).getTablePrivileges(tableNamePattern);
+        return GetTablePrivileges.create(getDbMetadataMediator()).getTablePrivileges(schemaPattern, tableNamePattern);
     }
 
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird considers the primary key (scoped as {@code bestRowSession} as the best identifier for all scopes.
-     * Pseudo column {@code RDB$DB_KEY} (scoped as {@code bestRowTransaction} is considered the second-best alternative
+     * Jaybird considers the primary key (scoped as {@code bestRowSession}) as the best identifier for all scopes.
+     * Pseudo column {@code RDB$DB_KEY} (scoped as {@code bestRowTransaction}) is considered the second-best alternative
      * for scopes {@code bestRowTemporary} and {@code bestRowTransaction} if {@code table} has no primary key.
      * </p>
      * <p>
      * Jaybird currently considers {@code RDB$DB_KEY} to be {@link DatabaseMetaData#bestRowTransaction} even if the
      * dbkey_scope is set to 1 (session). This may change in the future. See also {@link #getRowIdLifetime()}.
+     * </p>
+     * <p>
+     * On Firebird 6.0 and higher, passing {@code null} for {@code schema} will return columns of <strong>all</strong>
+     * tables with name {@code name}. It is recommended to <em>always</em> specify a non-{@code null} {@code schema} on
+     * Firebird 6.0 and higher.
      * </p>
      */
     @Override
@@ -1411,7 +1456,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
-        return GetPrimaryKeys.create(getDbMetadataMediator()).getPrimaryKeys(table);
+        return GetPrimaryKeys.create(getDbMetadataMediator()).getPrimaryKeys(schema, table);
     }
 
     /**
@@ -1426,7 +1471,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
-        return GetImportedKeys.create(getDbMetadataMediator()).getImportedKeys(table);
+        return GetImportedKeys.create(getDbMetadataMediator()).getImportedKeys(schema, table);
     }
 
     /**
@@ -1441,7 +1486,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
-        return GetExportedKeys.create(getDbMetadataMediator()).getExportedKeys(table);
+        return GetExportedKeys.create(getDbMetadataMediator()).getExportedKeys(schema, table);
     }
 
     /**
@@ -1456,9 +1501,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public ResultSet getCrossReference(
-            String primaryCatalog, String primarySchema, String primaryTable,
+            String parentCatalog, String parentSchema, String parentTable,
             String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
-        return GetCrossReference.create(getDbMetadataMediator()).getCrossReference(primaryTable, foreignTable);
+        return GetCrossReference.create(getDbMetadataMediator())
+                .getCrossReference(parentSchema, parentTable, foreignSchema, foreignTable);
     }
 
     @Override
@@ -1479,7 +1525,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate)
             throws SQLException {
-        return GetIndexInfo.create(getDbMetadataMediator()).getIndexInfo(table, unique, approximate);
+        return GetIndexInfo.create(getDbMetadataMediator()).getIndexInfo(schema, table, unique, approximate);
     }
 
     @Override
@@ -1724,7 +1770,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
             String columnNamePattern) throws SQLException {
         return GetFunctionColumns.create(getDbMetadataMediator())
-                .getFunctionColumns(catalog, functionNamePattern, columnNamePattern);
+                .getFunctionColumns(catalog, schemaPattern, functionNamePattern, columnNamePattern);
     }
 
     /**
@@ -1762,12 +1808,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
             throws SQLException {
-        return GetFunctions.create(getDbMetadataMediator()).getFunctions(catalog, functionNamePattern);
-    }
-
-    @Override
-    public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
-        return GetSchemas.create(getDbMetadataMediator()).getSchemas();
+        return GetFunctions.create(getDbMetadataMediator()).getFunctions(catalog, schemaPattern, functionNamePattern);
     }
 
     @Override
@@ -1804,7 +1845,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
             String columnNamePattern) throws SQLException {
-        return GetPseudoColumns.create(getDbMetadataMediator()).getPseudoColumns(tableNamePattern, columnNamePattern);
+        return GetPseudoColumns.create(getDbMetadataMediator())
+                .getPseudoColumns(schemaPattern, tableNamePattern, columnNamePattern);
     }
 
     @Override
@@ -1815,42 +1857,72 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public String getProcedureSourceCode(String procedureName) throws SQLException {
-        String sResult = null;
-        String sql = "Select RDB$PROCEDURE_SOURCE From RDB$PROCEDURES Where "
-                + "RDB$PROCEDURE_NAME = ?";
-        List<String> params = new ArrayList<>();
-        params.add(procedureName);
-        try (ResultSet rs = doQuery(sql, params)) {
-            if (rs.next()) sResult = rs.getString(1);
-        }
+        return getProcedureSourceCode(null, procedureName);
+    }
 
-        return sResult;
+    @Override
+    public String getProcedureSourceCode(String schema, String procedureName) throws SQLException {
+        return getSourceCode(schema, procedureName, SourceObjectType.PROCEDURE);
     }
 
     @Override
     public String getTriggerSourceCode(String triggerName) throws SQLException {
-        String sResult = null;
-        String sql = "Select RDB$TRIGGER_SOURCE From RDB$TRIGGERS Where RDB$TRIGGER_NAME = ?";
-        List<String> params = new ArrayList<>();
-        params.add(triggerName);
-        try (ResultSet rs = doQuery(sql, params)) {
-            if (rs.next()) sResult = rs.getString(1);
-        }
+        return getTriggerSourceCode(null, triggerName);
+    }
 
-        return sResult;
+    @Override
+    public String getTriggerSourceCode(String schema, String triggerName) throws SQLException {
+        return getSourceCode(schema, triggerName, SourceObjectType.TRIGGER);
     }
 
     @Override
     public String getViewSourceCode(String viewName) throws SQLException {
-        String sResult = null;
-        String sql = "Select RDB$VIEW_SOURCE From RDB$RELATIONS Where RDB$RELATION_NAME = ?";
-        List<String> params = new ArrayList<>();
-        params.add(viewName);
-        try (ResultSet rs = doQuery(sql, params)) {
-            if (rs.next()) sResult = rs.getString(1);
+        return getViewSourceCode(null, viewName);
+    }
+
+    @Override
+    public String getViewSourceCode(String schema, String viewName) throws SQLException {
+        return getSourceCode(schema, viewName, SourceObjectType.VIEW);
+    }
+
+    private enum SourceObjectType {
+        PROCEDURE("RDB$PROCEDURES", "RDB$PROCEDURE_SOURCE", "RDB$PROCEDURE_NAME"),
+        TRIGGER("RDB$TRIGGERS", "RDB$TRIGGER_SOUCE", "RDB$TRIGGER_NAME"),
+        VIEW("RDB$RELATIONS", "RDB$VIEW_SOURCE", "RDB$RELATION_NAME"),
+        ;
+
+        private final String tableName;
+        private final String objectSourceColumn;
+        private final String objectNameColumn;
+
+        SourceObjectType(String tableName, String objectSourceColumn, String objectNameColumn) {
+            this.tableName = tableName;
+            this.objectSourceColumn = objectSourceColumn;
+            this.objectNameColumn = objectNameColumn;
         }
 
-        return sResult;
+        List<Clause> toClauses(boolean supportsSchemas, String schema, String objectName) {
+            var objectNameClause = Clause.equalsClause(objectNameColumn, objectName);
+            return schema != null && supportsSchemas
+                    ? List.of(Clause.equalsClause("RDB$SCHEMA_NAME", schema), objectNameClause)
+                    : List.of(objectNameClause);
+        }
+
+        String toQuery(boolean supportsSchemas, List<Clause> clauses) {
+            return "select " + objectSourceColumn + " from " + (supportsSchemas ? "SYSTEM." : "") + tableName
+                    + " where " + Clause.conjunction(clauses);
+        }
+
+    }
+
+    private String getSourceCode(String schema, String objectName, SourceObjectType objectType) throws SQLException {
+        final boolean supportsSchemas = firebirdSupportInfo.supportsSchemas();
+        var clauses = objectType.toClauses(supportsSchemas, schema, objectName);
+        String sql = objectType.toQuery(supportsSchemas, clauses);
+        try (ResultSet rs = doQuery(sql, Clause.parameters(clauses))) {
+            if (rs.next()) return rs.getString(1);
+        }
+        return null;
     }
 
     protected static byte[] getBytes(String value) {

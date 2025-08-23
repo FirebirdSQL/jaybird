@@ -4,6 +4,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 
@@ -15,7 +16,9 @@ import java.sql.SQLException;
  * </p>
  */
 @InternalApi
-public interface StoredProcedureMetaData {
+@NullMarked
+sealed interface StoredProcedureMetaData
+        permits DefaultCallableStatementMetaData, DummyCallableStatementMetaData {
 
     /**
      * Determine if the "selectability" of procedures is available. 

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2018-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.fields;
 
@@ -8,8 +8,6 @@ import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,15 +18,10 @@ class RowValueTest {
     private static final DatatypeCoder datatypeCoder =
             DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
     private static final RowDescriptor EMPTY_ROW_DESCRIPTOR = RowDescriptor.empty(datatypeCoder);
-    private static final List<FieldDescriptor> TEST_FIELD_DESCRIPTORS;
-    static {
-        List<FieldDescriptor> fields = new ArrayList<>();
-        fields.add(new FieldDescriptor(0, datatypeCoder, 1, 1, 1, 1, "A", "1", "1", "1", "1"));
-        fields.add(new FieldDescriptor(1, datatypeCoder, 2, 2, 2, 2, "B", "2", "2", "2", "2"));
-        fields.add(new FieldDescriptor(2, datatypeCoder, 3, 3, 3, 3, "C", "3", "3", "3", "3"));
-
-        TEST_FIELD_DESCRIPTORS = Collections.unmodifiableList(fields);
-    }
+    private static final List<FieldDescriptor> TEST_FIELD_DESCRIPTORS = List.of(
+            new FieldDescriptor(0, datatypeCoder, 1, 1, 1, 1, "A", "1", "1", "1", "1", "1"),
+            new FieldDescriptor(1, datatypeCoder, 2, 2, 2, 2, "B", "2", "2", "2", "2", "2"),
+            new FieldDescriptor(2, datatypeCoder, 3, 3, 3, 3, "C", "3", "3", "3", "3", "3"));
 
     @Test
     void testDefaultFor_emptyRowDescriptor_returns_EMPTY_ROW_VALUE() {

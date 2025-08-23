@@ -135,7 +135,9 @@ public final class FBTestProperties {
      */
     public static Properties getPropertiesForConnection(String k1, String v1) {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(k1, v1);
+        if (v1 != null) {
+            props.setProperty(k1, v1);
+        }
         return props;
     }
 
@@ -364,6 +366,36 @@ public final class FBTestProperties {
         } finally {
             fbManager.stop();
         }
+    }
+
+    /**
+     * If schema support is available, returns {@code forSchema}, otherwise returns {@code withoutSchema}.
+     *
+     * @param forSchema
+     *         value to return when schema support is available
+     * @param withoutSchema
+     *         value to return when schema support is not available
+     * @return {@code forSchema} if schema support is available, otherwise {@code withoutSchema}
+     * @see FirebirdSupportInfo#ifSchemaElse(Object, Object)
+     */
+    public static <T> T ifSchemaElse(T forSchema, T withoutSchema) {
+        return getDefaultSupportInfo().ifSchemaElse(forSchema, withoutSchema);
+    }
+
+    /**
+     * Helper method that replaces {@code "PUBLIC"} or {@code "SYSTEM"} with {@code ""} if schemas are not supported.
+     *
+     * @param schemaName
+     *         schema name
+     * @return {@code schemaName}, or &mdash; if {@code schemaName} is {@code "PUBLIC"} or {@code "SYSTEM"} and schemas
+     * are not supported &mdash; {@code ""}
+     */
+    public static String resolveSchema(String schemaName) {
+        if (!getDefaultSupportInfo().supportsSchemas()
+                && ("PUBLIC".equals(schemaName) || "SYSTEM".equals(schemaName))) {
+            return "";
+        }
+        return schemaName;
     }
 
     private FBTestProperties() {
