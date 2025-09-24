@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DataGenerator;
+import org.firebirdsql.common.extension.DatabaseUserExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
@@ -49,6 +50,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
@@ -72,6 +74,8 @@ class FBPreparedStatementTest {
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
+    @RegisterExtension
+    final DatabaseUserExtension databaseUsers = DatabaseUserExtension.withDatabaseUser();
 
     private static final String DROP_GENERATOR = "DROP GENERATOR test_generator";
     private static final String CREATE_GENERATOR = "CREATE GENERATOR test_generator";
@@ -1528,6 +1532,55 @@ class FBPreparedStatementTest {
             var rs = stmt.executeQuery("select field2 from testtab");
             assertNextRow(rs);
             assertRowEquals(rs, List.of(sourceValue.substring(0, usedLength)));
+        }
+    }
+
+    /**
+     * Prepare a statement where the info size exceeds 32KiB.
+     * <p>
+     * Rationale: <a href="https://github.com/FirebirdSQL/jaybird/issues/894">#894</a>
+     * </p>
+     */
+    @Test
+    void prepareStatementWithInfoExceeding32K() throws Exception {
+        final String owner = "U234567890123456789012345678901";
+        databaseUsers.createUser(owner, owner,
+                getDefaultSupportInfo().supportsAuthenticationPlugin("Srp") ? "Srp" : null);
+        if (getDefaultSupportInfo().isVersionEqualOrAbove(3, 0)) {
+            try (var stmt = con.createStatement()) {
+                stmt.execute("grant create table to user " + owner);
+            }
+        }
+        // On Firebird 3+, this results in an info response of ~256KiB;
+        // on Firebird 2.5 it requires multiple round trips
+        final int columnCount = 1500;
+        try (var connection = getConnectionViaDriverManager(Map.of("user", owner, "password", owner))) {
+            final String tableName = "T234567890123456789012345678901";
+            try (var stmt = connection.createStatement()) {
+                var sb = new StringBuilder(50 + columnCount * 41);
+                sb.append("create table ").append(tableName).append('(');
+                IntStream.rangeClosed(1, columnCount).forEach(idx ->
+                        sb.append(String.format("C%030d smallint,", idx)));
+                // remove last comma
+                sb.setLength(sb.length() - 1);
+                sb.append(')');
+                stmt.execute(sb.toString());
+            }
+
+            try (var pstmt = connection.prepareStatement("select * from " + tableName)) {
+                ResultSetMetaData rsmd = pstmt.getMetaData();
+                assertEquals(columnCount, rsmd.getColumnCount(), "columnCount");
+                IntStream.rangeClosed(1, columnCount).forEach(idx -> {
+                    try {
+                        assertEquals(tableName, rsmd.getTableName(idx), "tableName");
+                        final String expectedName = String.format("C%030d", idx);
+                        assertEquals(expectedName, rsmd.getColumnName(idx), "columnName");
+                        assertEquals(expectedName, rsmd.getColumnLabel(idx), "columnLabel");
+                    } catch (SQLException e) {
+                        fail(e);
+                    }
+                });
+            }
         }
     }
 

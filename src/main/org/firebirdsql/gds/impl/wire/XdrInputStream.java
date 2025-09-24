@@ -100,7 +100,13 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
      *         if an error occurs while reading from the underlying input stream
      */
     public byte[] readBuffer() throws IOException {
-        return readBuffer(readInt());
+        return readBuffer(fixupLength(readInt()));
+    }
+
+    private static int fixupLength(int len) {
+        // Older Firebird versions may return a 32-bit value that is a sign-extended 16-bit value.
+        // Firebird does something similar in remote/protocol.cpp (xdr_cstring_with_limit).
+        return len >>> 16 == 0xFFFF ? len & 0xFFFF : len;
     }
 
     /**
