@@ -1563,7 +1563,8 @@ class FBPreparedStatementTest {
     @Test
     void prepareStatementWithInfoExceeding32K() throws Exception {
         final String owner = "U234567890123456789012345678901";
-        databaseUsers.createUser(owner, owner);
+        databaseUsers.createUser(owner, owner,
+                getDefaultSupportInfo().supportsAuthenticationPlugin("Srp") ? "Srp" : null);
         if (getDefaultSupportInfo().isVersionEqualOrAbove(3, 0)) {
             try (Statement stmt = con.createStatement()) {
                 stmt.execute("grant create table to user " + owner);
