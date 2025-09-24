@@ -29,6 +29,18 @@ Changes per Jaybird 5 release.
 See also <<whats-new-in-jaybird-5>>.
 For known issues, consult <<known-issues>>.
 
+[#jaybird-5-0-10-changelog]
+=== Jaybird 5.0.10
+
+The following has been changed or fixed since Jaybird 5.0.9:
+
+* Fixed: Negative buffer size on Firebird 2.5 if information response is 32KiB or greater (https://github.com/FirebirdSQL/jaybird/issues/894[#894])
++
+The error occurs when preparing or executing statements with a lot of columns, especially select statements with columns that have long names and/or aliases for columns, tables and table owners.
+Symptoms include unexpected closed connections, and errors like "`__Unsupported or unexpected operation code <number> in processOperation__`" (with varying numbers) and "`__java.lang.NegativeArraySizeException: -1__`" (and other negative numbers).
++
+Only Firebird 2.5 is affected.
+
 [#jaybird-5-0-9-changelog]
 === Jaybird 5.0.9
 
