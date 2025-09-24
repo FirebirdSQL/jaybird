@@ -3,7 +3,7 @@ Jaybird is a JDBC driver suite to connect to Firebird database servers.
 
 [![Build Status](https://github.com/FirebirdSQL/jaybird/actions/workflows/build-only.yml/badge.svg?branch=Branch_5_0)](https://github.com/FirebirdSQL/jaybird/actions?query=branch%3ABranch_5_0+workflow%3Abuild-only)
 [![Build Status](https://github.com/FirebirdSQL/jaybird/actions/workflows/run-tests.yml/badge.svg?branch=Branch_5_0)](https://github.com/FirebirdSQL/jaybird/actions?query=branch%3ABranch_5_0+workflow%3Arun-tests)
-[![MavenCentral](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql.jdbc/jaybird/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql.jdbc/jaybird/)
+[![MavenCentral](https://maven-badges.sml.io/sonatype-central/org.firebirdsql.jdbc/jaybird/badge.svg)](https://maven-badges.sml.io/sonatype-central/org.firebirdsql.jdbc/jaybird/)
 
 ## Reporting bugs or improvements
 
