@@ -9,7 +9,7 @@
 :icons: font
 :jaybird6-full-version: 6.0.3
 :jaybird6-jna-version: 5.17.0
-:jaybird5-full-version: 5.0.9
+:jaybird5-full-version: 5.0.10
 :jaybird5-template-version: {jaybird5-full-version}.<java>
 :jaybird5-example-version: {jaybird5-full-version}.java11
 :jaybird5-jna-version: 5.17.0
