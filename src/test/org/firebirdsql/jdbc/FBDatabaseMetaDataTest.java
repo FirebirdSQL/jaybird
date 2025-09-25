@@ -2,13 +2,14 @@
  SPDX-FileCopyrightText: Copyright 2001-2002 David Jencks
  SPDX-FileCopyrightText: Copyright 2002-2010 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
- SPDX-FileCopyrightText: Copyright 2011-2023 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -612,40 +613,6 @@ class FBDatabaseMetaDataTest {
     }
 
     @Test
-    void testGetBestRowIdentifier() throws Exception {
-        createTable("best_row_pk");
-        createTable("best_row_no_pk", null);
-
-        for (int scope : new int[] { DatabaseMetaData.bestRowTemporary, DatabaseMetaData.bestRowTransaction,
-                DatabaseMetaData.bestRowTransaction }) {
-            try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_PK", scope, true)) {
-                assertTrue(rs.next(), "Should have rows");
-                assertEquals("C1", rs.getString(2), "Column name should be C1");
-                assertEquals("INTEGER", rs.getString(4), "Column type should be INTEGER");
-                assertEquals(DatabaseMetaData.bestRowSession, rs.getInt(1), "Scope should be bestRowSession");
-                assertEquals(DatabaseMetaData.bestRowNotPseudo, rs.getInt(8),
-                        "Pseudo column should be bestRowNotPseudo");
-                assertFalse(rs.next(), "Should have only one row");
-            }
-        }
-
-        for (int scope : new int[] { DatabaseMetaData.bestRowTemporary, DatabaseMetaData.bestRowTransaction }) {
-            try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_NO_PK", scope, true)) {
-                assertTrue(rs.next(), "Should have rows");
-                assertEquals("RDB$DB_KEY", rs.getString(2), "Column name should be RDB$DB_KEY");
-                assertEquals(DatabaseMetaData.bestRowTransaction, rs.getInt(1), "Scope should be bestRowTransaction");
-                assertEquals(DatabaseMetaData.bestRowPseudo, rs.getInt(8),
-                        "Pseudo column should be bestRowPseudo");
-                assertFalse(rs.next(), "Should have only one row");
-            }
-        }
-
-        try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_NO_PK", DatabaseMetaData.bestRowSession, true)) {
-            assertFalse(rs.next(), "Should have no rows");
-        }
-    }
-
-    @Test
     void testGetVersionColumns() throws Exception {
         ResultSet rs = dmd.getVersionColumns(null, null, null);
 
@@ -807,6 +774,32 @@ class FBDatabaseMetaDataTest {
             DatabaseMetaData md = connection.getMetaData();
             assertEquals(expectedIdentifierQuote, md.getIdentifierQuoteString());
         }
+    }
+
+    @Test
+    void testGetSchemaTerm() throws Exception {
+        final String expected = getDefaultSupportInfo().supportsSchemas() ? "SCHEMA" : null;
+        assertEquals(expected, dmd.getSchemaTerm(), "schemaTerm");
+    }
+
+    @Test
+    void testGetMaxSchemaNameLength() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        final int expected = getDefaultSupportInfo().supportsSchemas()
+                ? supportInfo.maxIdentifierLengthCharacters() : 0;
+        assertEquals(expected, dmd.getMaxSchemaNameLength(), "maxSchemaNameLength");
+    }
+
+    @Test
+    void testSupportsSchemasInXXX() {
+        final boolean expected = getDefaultSupportInfo().supportsSchemas();
+        assertAll(
+                () -> assertEquals(expected, dmd.supportsSchemasInDataManipulation(), "DataManipulation"),
+                () -> assertEquals(expected, dmd.supportsSchemasInIndexDefinitions(), "IndexDefinitions"),
+                () -> assertEquals(expected, dmd.supportsSchemasInPrivilegeDefinitions(), "PrivilegeDefinitions"),
+                () -> assertEquals(expected, dmd.supportsSchemasInProcedureCalls(), "ProcedureCalls"),
+                () -> assertEquals(expected, dmd.supportsSchemasInTableDefinitions(), "TableDefinitions")
+        );
     }
 
     @SuppressWarnings("SameParameterValue")

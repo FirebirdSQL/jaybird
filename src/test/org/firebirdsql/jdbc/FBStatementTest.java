@@ -402,7 +402,9 @@ class FBStatementTest {
 
             SQLException exception = assertThrows(SQLException.class, () -> stmt.executeQuery(testQuery));
             assertThat(exception, allOf(
-                    message(containsString("Column unknown; {FN")),
+                    anyOf(
+                            message(containsString("Column unknown; {FN")),
+                            message(containsString("Column unknown; \"{FN\""))),
                     sqlStateEquals("42S22")));
         }
     }
@@ -1076,7 +1078,9 @@ class FBStatementTest {
                     end
                     """));
             assertThat(sqle, message(allOf(
-                    startsWith("exception 1; EX_PARAM; something wrong in PARAMETER_1"),
+                    anyOf(
+                            startsWith("exception 1; EX_PARAM; something wrong in PARAMETER_1"),
+                            startsWith("exception 1; \"PUBLIC\".\"EX_PARAM\"; something wrong in PARAMETER_1")),
                     // The exception parameter value should not be repeated after the formatted message
                     not(containsString("something wrong in PARAMETER_1; PARAMETER_1")))));
         }

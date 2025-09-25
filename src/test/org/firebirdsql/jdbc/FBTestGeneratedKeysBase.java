@@ -9,11 +9,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.provider.Arguments;
 
 import java.sql.Connection;
-import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 
 /**
  * Test base for tests of retrieval of auto generated keys.
@@ -39,6 +43,17 @@ abstract class FBTestGeneratedKeysBase {
              "quote_column" INTEGER DEFAULT 2,
              CONSTRAINT PK_TABLE_WITH_TRIGGER_1 PRIMARY KEY (ID)
             )""";
+    private static final String CREATE_OTHER_SCHEMA = "create schema OTHER_SCHEMA";
+    private static final String CREATE_TABLE_SAME_NAME_PUBLIC = """
+            create table PUBLIC.SAME_NAME (
+              ID_IN_PUBLIC integer generated always as identity constraint PK_SAME_NAME primary key,
+              TEXT_IN_PUBLIC varchar(200)
+            )""";
+    private static final String CREATE_TABLE_SAME_NAME_OTHER_SCHEMA = """
+            create table OTHER_SCHEMA.SAME_NAME (
+              ID_IN_OTHER_SCHEMA integer generated always as identity constraint PK_SAME_NAME primary key,
+              TEXT_IN_OTHER_SCHEMA varchar(200)
+            )""";
     private static final String CREATE_SEQUENCE = "CREATE GENERATOR GEN_TABLE_WITH_TRIGGER_ID";
     private static final String INIT_SEQUENCE = "SET GENERATOR GEN_TABLE_WITH_TRIGGER_ID TO 512";
     private static final String CREATE_TRIGGER = """
@@ -61,18 +76,36 @@ abstract class FBTestGeneratedKeysBase {
 
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
-            CREATE_TABLE,
-            CREATE_SEQUENCE,
-            CREATE_TRIGGER);
+            getDbInitStatements());
 
     Connection con;
+
+    private static List<String> getDbInitStatements() {
+        var stmts = new ArrayList<>(List.of(
+                CREATE_TABLE,
+                CREATE_SEQUENCE,
+                CREATE_TRIGGER));
+        if (getDefaultSupportInfo().supportsSchemas()) {
+            stmts.addAll(List.of(
+                    CREATE_OTHER_SCHEMA,
+                    CREATE_TABLE_SAME_NAME_PUBLIC,
+                    CREATE_TABLE_SAME_NAME_OTHER_SCHEMA
+            ));
+        }
+
+        return stmts;
+    }
 
     @BeforeEach
     void setUp() throws Exception {
         con = getConnectionViaDriverManager();
-        try (Statement stmt = con.createStatement()) {
+        try (var stmt = con.createStatement()) {
             stmt.execute("delete from TABLE_WITH_TRIGGER");
             stmt.execute(INIT_SEQUENCE);
+            if (getDefaultSupportInfo().supportsSchemas()) {
+                // Reset schema search path
+                stmt.execute("ALTER SESSION RESET");
+            }
         }
     }
 
@@ -80,4 +113,12 @@ abstract class FBTestGeneratedKeysBase {
     void tearDown() throws Exception {
         con.close();
     }
+
+    static Stream<Arguments> withOrWithoutSchema() {
+        if (getDefaultSupportInfo().supportsSchemas()) {
+            return Stream.of(Arguments.of(true), Arguments.of(false));
+        }
+        return Stream.of(Arguments.of(false));
+    }
+
 }

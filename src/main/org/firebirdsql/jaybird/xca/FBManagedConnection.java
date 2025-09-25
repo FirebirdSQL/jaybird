@@ -6,7 +6,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2006 Ludovic Orban
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jaybird.xca;
@@ -1383,12 +1383,48 @@ public final class FBManagedConnection implements ExceptionListener {
         String recoveryQueryParameterized();
 
         static XidQueries forVersion(GDSServerVersion version) {
-            if (version.isEqualOrAbove(3, 0)) {
+            if (version.isEqualOrAbove(6)) {
+                return XidQueriesFB60.INSTANCE;
+            } else if (version.isEqualOrAbove(3)) {
                 return XidQueriesFB30.INSTANCE;
             } else if (version.isEqualOrAbove(2, 5)) {
                 return XidQueriesFB25.INSTANCE;
             }
             return XidQueriesFB21.INSTANCE;
+        }
+    }
+
+    /**
+     * Relatively efficient XID queries that work with Firebird 6.0 and higher.
+     */
+    private static final class XidQueriesFB60 implements XidQueries {
+
+        static final XidQueriesFB60 INSTANCE = new XidQueriesFB60();
+        // We're no longer casting RDB$TRANSACTION_DESCRIPTION, as it will benefit from inline blobs
+        private static final String FIND_TRANSACTION_FRAGMENT =
+                "select RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION from SYSTEM.RDB$TRANSACTIONS\n";
+
+        @Override
+        public String forgetFindQuery() {
+            return FIND_TRANSACTION_FRAGMENT + """
+                    where RDB$TRANSACTION_STATE in (2, 3)"
+                    and RDB$TRANSACTION_DESCRIPTION starting with x'0105'""";
+        }
+
+        @Override
+        public String forgetDelete() {
+            return "delete from SYSTEM.RDB$TRANSACTIONS where RDB$TRANSACTION_ID = ";
+        }
+
+        @Override
+        public String recoveryQuery() {
+            return FIND_TRANSACTION_FRAGMENT + "where RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
+        }
+
+        @Override
+        public String recoveryQueryParameterized() {
+            return FIND_TRANSACTION_FRAGMENT
+                    + "where RDB$TRANSACTION_DESCRIPTION = cast(? AS varchar(32764) character set octets)";
         }
     }
 

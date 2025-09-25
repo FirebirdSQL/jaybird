@@ -6,7 +6,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
  SPDX-FileCopyrightText: Copyright 2005-2006 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -265,22 +265,33 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      * Stores additional information about fields in a database.
      */
     protected record ExtendedFieldInfo(FieldKey fieldKey, int fieldPrecision, boolean autoIncrement) {
-        public ExtendedFieldInfo(String relationName, String fieldName, int precision, boolean autoIncrement) {
-            this(new FieldKey(relationName, fieldName), precision, autoIncrement);
+        public ExtendedFieldInfo(String schema, String relationName, String fieldName, int precision,
+                boolean autoIncrement) {
+            this(new FieldKey(schema, relationName, fieldName), precision, autoIncrement);
         }
     }
 
     /**
      * A composite key for internal field mapping structures.
      *
+     * @param schema
+     *         schema ({@code ""} if schemaless, i.e. Firebird 5.0 and older; {@code null} is converted to empty string)
      * @param relationName
      *         relation name
      * @param fieldName
      *         field name
      */
-    protected record FieldKey(String relationName, String fieldName) {
+    protected record FieldKey(String schema, String relationName, String fieldName) {
+
+        protected FieldKey {
+            if (schema == null) {
+                schema = "";
+            }
+        }
+
         public FieldKey(FieldDescriptor fieldDescriptor) {
-            this(fieldDescriptor.getOriginalTableName(), fieldDescriptor.getOriginalName());
+            this(fieldDescriptor.getOriginalSchema(), fieldDescriptor.getOriginalTableName(),
+                    fieldDescriptor.getOriginalName());
         }
     }
 }

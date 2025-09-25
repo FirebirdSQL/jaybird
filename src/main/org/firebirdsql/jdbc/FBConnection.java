@@ -4,7 +4,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
  SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2016 Adriano dos Santos Fernandes
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -86,6 +86,7 @@ public class FBConnection implements FirebirdConnection {
     private StoredProcedureMetaData storedProcedureMetaData;
     private GeneratedKeysSupport generatedKeysSupport;
     private ClientInfoProvider clientInfoProvider;
+    private SchemaChanger schemaChanger;
     private boolean readOnly;
 
     /**
@@ -577,7 +578,7 @@ public class FBConnection implements FirebirdConnection {
     }
 
     @Override
-    public DatabaseMetaData getMetaData() throws SQLException {
+    public FirebirdDatabaseMetaData getMetaData() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (metaData == null)
@@ -1058,25 +1059,69 @@ public class FBConnection implements FirebirdConnection {
     /**
      * {@inheritDoc}
      * <p>
-     * Implementation ignores calls to this method as schemas are not supported.
+     * Schemas are supported on Firebird 6.0 and higher. On older Firebird versions, this method is silently ignored,
+     * except for a connection validity check. Contrary to specified in the JDBC API, calling this method
+     * <strong>will affect</strong> previously created {@link Statement} objects, and <strong>may affect</strong>
+     * previously created {@link CallableStatement} objects. That is because the current search path is applied when
+     * preparing a statement (which for {@code Statement} happens on execute, and for {@code CallableStatement} may be
+     * delayed until execute).
      * </p>
+     * <p>
+     * This method modifies the search path of the connection by adding the specified {@code schema} as the first
+     * schema. This method does not check if the specified schema exists, so it may not actually change the current
+     * schema. Interleaving calls to this method with explicit execution of {@code SET SEARCH_PATH TO ...} may lead to
+     * undefined behaviour.
+     * </p>
+     *
+     * @param schema
+     *         correctly capitalized schema name, without quotes, {@code null} or blank is not allowed <em>if</em>
+     *         schemas are supported
      */
     @Override
     public void setSchema(String schema) throws SQLException {
-        // Ignore: no schema support
-        checkValidity();
+        try (var ignored = withLock()) {
+            checkValidity();
+            getSchemaChanger().setSchema(schema);
+        }
     }
 
     /**
      * {@inheritDoc}
+     * <p>
+     * Schemas are supported on Firebird 6.0 and higher. The current schema is the value of {@code CURRENT_SCHEMA},
+     * which reports the first <em>valid</em> schema of the search path.
+     * </p>
      *
-     * @return Always {@code null} as schemas ar not supported
+     * @return the current schema, on Firebird 5.0 and older always {@code null} as schemas ar not supported
      */
     @Override
-    @SuppressWarnings("java:S4144")
-    public String getSchema() throws SQLException {
-        checkValidity();
-        return null;
+    public final String getSchema() throws SQLException {
+        return getSchemaInfo().schema();
+    }
+
+    @Override
+    public final String getSearchPath() throws SQLException {
+        return getSchemaInfo().searchPath();
+    }
+
+    @Override
+    public final List<String> getSearchPathList() throws SQLException {
+        return getSchemaInfo().toSearchPathList();
+    }
+
+    private SchemaChanger.SchemaInfo getSchemaInfo() throws SQLException {
+        try (var ignored = withLock()) {
+            return getSchemaChanger().getCurrentSchemaInfo();
+        }
+    }
+
+    private SchemaChanger getSchemaChanger() throws SQLException {
+        try (var ignored = withLock()) {
+            checkValidity();
+            SchemaChanger schemaChanger = this.schemaChanger;
+            if (schemaChanger != null) return schemaChanger;
+            return this.schemaChanger = SchemaChanger.createInstance(this);
+        }
     }
 
     public void addWarning(SQLWarning warning) {
@@ -1380,7 +1425,7 @@ public class FBConnection implements FirebirdConnection {
     GeneratedKeysSupport getGeneratedKeysSupport() throws SQLException {
         if (generatedKeysSupport == null) {
             generatedKeysSupport = GeneratedKeysSupportFactory
-                    .createFor(getGeneratedKeysEnabled(), (FirebirdDatabaseMetaData) getMetaData());
+                    .createFor(getGeneratedKeysEnabled(), getMetaData());
         }
         return generatedKeysSupport;
     }
