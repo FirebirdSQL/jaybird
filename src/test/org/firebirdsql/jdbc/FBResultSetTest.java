@@ -630,14 +630,20 @@ class FBResultSetTest {
             executeCreateTable(connection, CREATE_TABLE_STATEMENT);
             executeCreateTable(connection, CREATE_TABLE_STATEMENT2);
 
-            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
-                 var rs = stmt.executeQuery("select * from test_table t1 left join test_table2 t2 on t1.id = t2.id")) {
-                assertThat(stmt.getWarnings(), allOf(
-                        notNullValue(),
-                        fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
+            assertDowngradeToReadOnly(connection,
+                    "select * from test_table t1 left join test_table2 t2 on t1.id = t2.id");
+        }
+    }
 
-                assertEquals(CONCUR_READ_ONLY, rs.getConcurrency(), "Expected downgrade to CONCUR_READ_ONLY");
-            }
+    private static void assertDowngradeToReadOnly(Connection connection, String statementText)
+            throws SQLException {
+        try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+             var rs = stmt.executeQuery(statementText)) {
+            assertThat(stmt.getWarnings(), allOf(
+                    notNullValue(),
+                    fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
+
+            assertEquals(CONCUR_READ_ONLY, rs.getConcurrency(), "Expected downgrade to CONCUR_READ_ONLY");
         }
     }
 
@@ -652,14 +658,8 @@ class FBResultSetTest {
     void testUpdatableStatementPrefixPK_downgradeToReadOnly(String scrollableCursorPropertyValue) throws Exception {
         try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
             executeCreateTable(connection, CREATE_WITH_COMPOSITE_PK);
-            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
-                 var rs = stmt.executeQuery("select id1, val from WITH_COMPOSITE_PK")) {
-                assertThat(stmt.getWarnings(), allOf(
-                        notNullValue(),
-                        fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
 
-                assertEquals(CONCUR_READ_ONLY, rs.getConcurrency(), "Expected downgrade to CONCUR_READ_ONLY");
-            }
+            assertDowngradeToReadOnly(connection, "select id1, val from WITH_COMPOSITE_PK");
         }
     }
 
@@ -674,14 +674,38 @@ class FBResultSetTest {
     void testUpdatableStatementSuffixPK_downgradeToReadOnly(String scrollableCursorPropertyValue) throws Exception {
         try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
             executeCreateTable(connection, CREATE_WITH_COMPOSITE_PK);
-            try (var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
-                 var rs = stmt.executeQuery("select id2, val from WITH_COMPOSITE_PK")) {
-                assertThat(stmt.getWarnings(), allOf(
-                        notNullValue(),
-                        fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
 
-                assertEquals(CONCUR_READ_ONLY, rs.getConcurrency(), "Expected downgrade to CONCUR_READ_ONLY");
-            }
+            assertDowngradeToReadOnly(connection, "select id2, val from WITH_COMPOSITE_PK");
+        }
+    }
+
+    /**
+     * Tests if a statement that contains columns not directly referencing table columns <em>before</em> those that do,
+     * will be downgraded to read-only.
+     */
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableStatementSuffixExpression_downgradeToReadOnly(String scrollableCursorPropertyValue)
+            throws Exception {
+        try (var connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            assertDowngradeToReadOnly(connection, "select id + 1, id, str from test_table");
+        }
+    }
+
+    /**
+     * Tests if a statement that contains columns not directly referencing table columns <em>after</em> at least one
+     * that does, will be downgraded to read-only.
+     */
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableStatementPrefixExpression_downgradeToReadOnly(String scrollableCursorPropertyValue)
+            throws Exception {
+        try (var connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            assertDowngradeToReadOnly(connection, "select id, str, id + 1 from test_table");
         }
     }
 

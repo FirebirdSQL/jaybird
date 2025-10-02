@@ -1,12 +1,14 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
+import org.firebirdsql.jaybird.util.StringDeduplicator;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
@@ -21,9 +23,11 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor.StatementInfo> {
 
     private static final System.Logger log = System.getLogger(StatementInfoProcessor.class.getName());
+    private static final List<String> DEDUPLICATOR_PRESET = List.of("SYSTEM", "PUBLIC", "SYSDBA");
 
     private final AbstractFbStatement statement;
     private final FbDatabase database;
+    private final StringDeduplicator stringDeduplicator = StringDeduplicator.of(DEDUPLICATOR_PRESET);
 
     /**
      * Creates an instance of this class.
@@ -85,10 +89,8 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
                 newInfoItems[newIndex++] = 2; // size of short
                 newInfoItems[newIndex++] = (byte) (descriptorIndex & 0xFF);
                 newInfoItems[newIndex++] = (byte) (descriptorIndex >> 8);
-                newInfoItems[newIndex++] = infoItem;
-            } else {
-                newInfoItems[newIndex++] = infoItem;
             }
+            newInfoItems[newIndex++] = infoItem;
         }
         assert newIndex == newInfoItems.length : "newInfoItems size too long";
         // Doubling request buffer up to the maximum
@@ -166,6 +168,10 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
                 rdb.setFieldName(readStringValue(info));
                 break;
 
+            case ISCConstants.isc_info_sql_relation_schema:
+                rdb.setOriginalSchema(readStringValue(info));
+                break;
+
             case ISCConstants.isc_info_sql_relation:
                 rdb.setOriginalTableName(readStringValue(info));
                 break;
@@ -208,10 +214,11 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
     private String readStringValue(StatementInfo info) {
         int len = iscVaxInteger2(info.buffer, info.currentIndex);
         info.currentIndex += 2;
+        if (len == 0) return "";
         // TODO Is it correct to use the connection encoding here, or should we use UTF-8 always?
         String value = database.getEncoding().decodeFromCharset(info.buffer, info.currentIndex, len);
         info.currentIndex += len;
-        return value;
+        return stringDeduplicator.get(value);
     }
 
     /**

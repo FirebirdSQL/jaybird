@@ -164,18 +164,19 @@ public abstract class AbstractStatementTest {
         assertNotNull(fields, "Fields");
         final FirebirdSupportInfo supportInfo = supportInfoFor(db);
         final int metadataCharSetId = supportInfo.reportedMetadataCharacterSetId();
+        final String schema = ifSchemaElse("SYSTEM", null);
         var expectedFields = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_BLOB | 1, 1,
                         supportInfo.reportsBlobCharSetInDescriptor() ? metadataCharSetId : 0, 8, "Description", null,
-                        "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
+                        "RDB$DESCRIPTION", schema, "RDB$DATABASE", "SYSDBA"),
                 new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
-                        "RDB$RELATION_ID", null, "RDB$RELATION_ID", "RDB$DATABASE", "SYSDBA"),
+                        "RDB$RELATION_ID", null, "RDB$RELATION_ID", schema, "RDB$DATABASE", "SYSDBA"),
                 new FieldDescriptor(2, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
                         supportInfo.maxReportedIdentifierLengthBytes(), "RDB$SECURITY_CLASS", null,
-                        "RDB$SECURITY_CLASS", "RDB$DATABASE", "SYSDBA"),
+                        "RDB$SECURITY_CLASS", schema, "RDB$DATABASE", "SYSDBA"),
                 new FieldDescriptor(3, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
                         supportInfo.maxReportedIdentifierLengthBytes(), "RDB$CHARACTER_SET_NAME", null,
-                        "RDB$CHARACTER_SET_NAME", "RDB$DATABASE", "SYSDBA")
+                        "RDB$CHARACTER_SET_NAME", schema, "RDB$DATABASE", "SYSDBA")
         );
         assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
         assertNotNull(statement.getParameterDescriptor(), "Parameters");
@@ -230,18 +231,16 @@ public abstract class AbstractStatementTest {
         var expectedFields = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
                         supportInfo.maxReportedIdentifierLengthBytes(), "RDB$CHARACTER_SET_NAME",
-                        supportsTableAlias ? "A" : null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS", "SYSDBA")
+                        supportsTableAlias ? "A" : null, "RDB$CHARACTER_SET_NAME", ifSchemaElse("SYSTEM", null),
+                        "RDB$CHARACTER_SETS", "SYSDBA")
         );
         assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull(parameters, "Parameters");
         var expectedParameters = List.of(
-                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
-                        null, null, null, null, null),
-                new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
-                        null, null, null, null, null)
-        );
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2),
+                new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2));
         assertEquals(expectedParameters, parameters.getFieldDescriptors(), "Unexpected values for parameters");
     }
 
@@ -291,16 +290,14 @@ public abstract class AbstractStatementTest {
         assertNotNull(fields, "Fields");
         var expectedFields = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
-                        "OUTVALUE", "INCREMENT", "SYSDBA")
+                        "OUTVALUE", ifSchemaElse("PUBLIC", null), "INCREMENT", "SYSDBA")
         );
         assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull(parameters, "Parameters");
         var expectedParameters = List.of(
-                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
-                        null, null)
-        );
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4));
         assertEquals(expectedParameters, parameters.getFieldDescriptors(), "Unexpected values for parameters");
     }
 
@@ -336,18 +333,15 @@ public abstract class AbstractStatementTest {
         assertNotNull(fields, "Fields");
         var expectedFields = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
-                        "OUTVALUE", "RANGE", "SYSDBA")
+                        "OUTVALUE", ifSchemaElse("PUBLIC", null), "RANGE", "SYSDBA")
         );
         assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull(parameters, "Parameters");
         var expectedParameters = List.of(
-                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
-                        null, null),
-                new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
-                        null, null)
-        );
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4),
+                new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4));
         assertEquals(expectedParameters, parameters.getFieldDescriptors(), "Unexpected values for parameters");
     }
 
@@ -365,16 +359,14 @@ public abstract class AbstractStatementTest {
         assertNotNull(fields, "Fields");
         var expectedFields = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "THEKEY", null,
-                        "THEKEY", "KEYVALUE", "SYSDBA")
+                        "THEKEY", ifSchemaElse("PUBLIC", null), "KEYVALUE", "SYSDBA")
         );
         assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull(parameters, "Parameters");
         var expectedParameters = List.of(
-                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 0, 0, 5, null, null,
-                        null, null, null)
-        );
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 0, 0, 5));
         assertEquals(expectedParameters, parameters.getFieldDescriptors(), "Unexpected values for parameters");
     }
 
@@ -385,7 +377,11 @@ public abstract class AbstractStatementTest {
 
         String executionPlan = statement.getExecutionPlan();
 
-        assertEquals("PLAN (RDB$DATABASE NATURAL)", executionPlan, "Unexpected plan for prepared statement");
+        String expected = getDefaultSupportInfo().supportsSchemas()
+                ? "PLAN (\"SYSTEM\".\"RDB$DATABASE\" NATURAL)"
+                : "PLAN (RDB$DATABASE NATURAL)";
+
+        assertEquals(expected, executionPlan, "Unexpected plan for prepared statement");
     }
 
     @Test
@@ -428,9 +424,17 @@ public abstract class AbstractStatementTest {
 
         String executionPlan = statement.getExplainedExecutionPlan();
 
-        assertEquals("""
-                Select Expression
-                    -> Table "RDB$DATABASE" Full Scan""", executionPlan, "Unexpected plan for prepared statement");
+        //@formatter:off
+        String expected = getDefaultSupportInfo().supportsSchemas()
+                ? """
+                  Select Expression
+                      -> Table "SYSTEM"."RDB$DATABASE" Full Scan"""
+                : """
+                  Select Expression
+                      -> Table "RDB$DATABASE" Full Scan""";
+        //@formatter:on
+
+        assertEquals(expected, executionPlan, "Unexpected plan for prepared statement");
     }
 
     @Test
@@ -742,20 +746,19 @@ public abstract class AbstractStatementTest {
 
         final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull(fields, "Fields");
+        final String schema = ifSchemaElse("PUBLIC", null);
         var expectedFields = List.of(
                 new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
-                        0, 40, column1, null, column1, tableName, "SYSDBA"),
+                        0, 40, column1, null, column1, schema, tableName, "SYSDBA"),
                 new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
-                        0, 80, column2, null, column2, tableName, "SYSDBA")
+                        0, 80, column2, null, column2, schema, tableName, "SYSDBA")
         );
         assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
         RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull(parameters, "Parameters");
 
         var expectedParameters = List.of(
-                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4, 0, 40, null, null, null,
-                        null, null)
-        );
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4, 0, 40));
         assertEquals(expectedParameters, parameters.getFieldDescriptors(), "Unexpected values for parameters");
     }
 
