@@ -3,7 +3,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -27,8 +26,8 @@ import java.util.Map;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
-import static org.firebirdsql.common.FbAssumptions.assumeFeatureMissing;
+import static org.firebirdsql.common.FbAssumptions.assumeNoSchemaSupport;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
 
@@ -98,7 +97,7 @@ class FBDatabaseMetaDataSchemasTest {
 
     @Test
     void getSchemas_noSchemaSupport_noRows() throws Exception {
-        requireNoSchemaSupport();
+        assumeNoSchemaSupport();
         ResultSet schemas = dbmd.getSchemas();
         assertNoNextRow(schemas);
     }
@@ -107,7 +106,7 @@ class FBDatabaseMetaDataSchemasTest {
     @NullSource
     @ValueSource(strings = "%")
     void getSchemas_string_string_noSchemaSupport_noRows(String schemaPattern) throws Exception {
-        requireNoSchemaSupport();
+        assumeNoSchemaSupport();
         validateSchemaMetaDataNoRow(null, schemaPattern);
     }
 
@@ -119,7 +118,7 @@ class FBDatabaseMetaDataSchemasTest {
 
     @Test
     void getSchemas_schemaSupport_defaults() throws Exception {
-        requireSchemaSupport();
+        assumeSchemaSupport();
         try (ResultSet schemas = dbmd.getSchemas()) {
             // calling getSchemas() is equivalent to calling getSchemas(null, null)
             validateSchemaMetaData(null, schemas, DEFAULT_SCHEMAS);
@@ -130,7 +129,7 @@ class FBDatabaseMetaDataSchemasTest {
     @NullSource
     @ValueSource(strings = "%")
     void getSchemas_string_string_schemaSupport_defaults(String schemaPattern) throws Exception {
-        requireSchemaSupport();
+        assumeSchemaSupport();
         validateSchemaMetaData(null, schemaPattern, List.of("PUBLIC", "SYSTEM"));
     }
 
@@ -146,14 +145,14 @@ class FBDatabaseMetaDataSchemasTest {
             """)
     void getSchemas_string_string_schemaSupport_singleSchemaExpected(String schemaPattern, String expectedSchemaName)
             throws Exception {
-        requireSchemaSupport();
+        assumeSchemaSupport();
         validateSchemaMetaData(null, schemaPattern, List.of(expectedSchemaName));
     }
 
     @ParameterizedTest
     @NullAndEmptySource
     void getSchemas_string_string_schemaSupport_catalogNullOrEmpty_defaults(String catalog) throws Exception {
-        requireSchemaSupport();
+        assumeSchemaSupport();
         validateSchemaMetaData(catalog, "%", DEFAULT_SCHEMAS);
     }
 
@@ -165,7 +164,7 @@ class FBDatabaseMetaDataSchemasTest {
 
     @Test
     void getSchema_string_string_schemaSupport_returnsUserDefinedSchemas() throws Exception {
-        requireSchemaSupport();
+        assumeSchemaSupport();
         try (var stmt = con.createStatement()) {
             con.setAutoCommit(false);
             for (String schema : List.of("ABC", "QRS", "TUV")) {
@@ -175,14 +174,6 @@ class FBDatabaseMetaDataSchemasTest {
             con.setAutoCommit(true);
         }
         validateSchemaMetaData("", "%", List.of("ABC", "PUBLIC", "QRS", "SYSTEM", "TUV"));
-    }
-
-    private static void requireNoSchemaSupport() {
-        assumeFeatureMissing(FirebirdSupportInfo::supportsSchemas, "Test requires no schema support");
-    }
-
-    private static void requireSchemaSupport() {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
     }
 
     /**

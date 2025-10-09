@@ -1,8 +1,9 @@
 // SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.InternalApi;
 import org.jspecify.annotations.NullMarked;
 
@@ -17,31 +18,35 @@ import java.sql.SQLException;
  */
 @InternalApi
 @NullMarked
-sealed interface StoredProcedureMetaData
-        permits DefaultCallableStatementMetaData, DummyCallableStatementMetaData {
+public sealed interface StoredProcedureMetaData
+        permits DummyStoredProcedureMetaData, PackageAwareStoredProcedureMetaData, SchemaAwareStoredProcedureMetaData {
 
     /**
-     * Determine if the "selectability" of procedures is available. 
-     * This functionality is only available starting from Firebird 2.1, 
-     * and only with databases created by that version or later.
-     * 
-     * @return {@code true} if selectability information is available,  {@code false} otherwise
-     */
-    boolean canGetSelectableInformation();
-    
-    /**
-     * Retrieve whether a given stored procedure is selectable.
+     * Determines the selectability of a stored procedure and records it on {@code procedureCall}.
      * <p>
-     * A selectable procedure is one that can return multiple rows of results (i.e. it uses a {@code SUSPEND}
-     * statement).
+     * On Firebird 6.0 and higher, if the procedure call has ambiguous scope or an unknown schema, the resolved stored
+     * procedure will be recorded and the ambiguity removed. We try to replicate the Firebird rules for resolving
+     * ambiguity, but it is possible that we diverge. By recording the procedure we resolved, we ensure the executed
+     * stored procedure is at least consistent with our decision, and ensure that changes to the search path do not
+     * change which procedure is executed. Our implementation of callable statement may internally prepare multiple
+     * times over the lifetime of the statement object, while JDBC requires stable schema resolution after
+     * {@code prepareCall}.
      * </p>
-     * 
-     * @param procedureName 
-     *      The name of the procedure for which selectability information is to be retrieved
-     * @return
-     *      {@code true} if the procedure is selectable, {@code false} otherwise
-     * @throws SQLException If no selectability information is available
+     * <p>
+     * On Firebird versions that do not have selectability information, this will not perform any attempt to resolve
+     * selectability. If the procedure cannot be found, it will also be returned as-is, but will then likely fail at
+     * execute (or other operations which perform an internal prepare).
+     * </p>
+     * <p>
+     * Implementations may call {@link FBProcedureCall#setObjectReference(ObjectReference)} if not already set, but
+     * are <em>not required</em> to do so.
+     * </p>
+     *
+     * @param procedureCall
+     *         procedure call information to update
+     * @throws SQLException
+     *         for failures to query database metadata
      */
-    boolean isSelectable(String procedureName) throws SQLException;
+    void updateSelectability(FBProcedureCall procedureCall) throws SQLException;
     
 }

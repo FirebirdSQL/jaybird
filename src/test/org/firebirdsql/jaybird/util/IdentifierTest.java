@@ -7,6 +7,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -145,6 +146,15 @@ class IdentifierTest {
 
         assertEquals(new IdentifierChain(List.of(identifier1, identifier2, identifier3)), identifier1.resolve(chain),
                 "resolve");
+    }
+
+    @ParameterizedTest
+    @EnumSource(Identifier.Scope.class)
+    void toString_includesScopeIdentifierSCHEMAorPACKAGE(Identifier.Scope scope) {
+        String expected = "\"EXAMPLE_1\"" + (scope != Identifier.Scope.UNKNOWN ? "%" + scope : "");
+        var identifier = new Identifier("EXAMPLE_1", scope);
+
+        assertEquals(expected, identifier.toString());
     }
 
 }

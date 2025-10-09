@@ -68,10 +68,47 @@ public sealed abstract class ObjectReference permits Identifier, IdentifierChain
     public static ObjectReference of(List<@Nullable String> names) {
         //noinspection DataFlowIssue : Identifier(String) is @NonNull, and produce an IllegalArgumentException for null
         List<Identifier> nameList = names.stream().dropWhile(StringUtils::isNullOrEmpty).map(Identifier::new).toList();
-        if (nameList.size() == 1) {
-            return nameList.get(0);
-        }
-        return new IdentifierChain(nameList);
+        return ofIdentifiers(nameList);
+    }
+
+    /**
+     * Creates an object reference from a list of identifiers.
+     * <p>
+     * If a single identifier is passed, it will return that identifier.
+     * </p>
+     * <p>
+     * Be careful when combining identifiers with a scope other than {@link Identifier.Scope#UNKNOWN}; this method does
+     * not check if the combination is syntactically allowed by Firebird.
+     * </p>
+     *
+     * @param identifiers
+     *         list of identifiers
+     * @return an object reference
+     * @throws IllegalArgumentException
+     *         if {@code identifiers} is empty
+     */
+    public static ObjectReference ofIdentifiers(Identifier... identifiers) {
+        return ofIdentifiers(List.of(identifiers));
+    }
+
+    /**
+     * Creates an object reference from a list of identifiers.
+     * <p>
+     * If {@code identifiers} is a singleton list, it will return the first entry of the list.
+     * </p>
+     * <p>
+     * Be careful when combining identifiers with a scope other than {@link Identifier.Scope#UNKNOWN}; this method does
+     * not check if the combination is syntactically allowed by Firebird.
+     * </p>
+     *
+     * @param identifiers
+     *         list of identifiers
+     * @return an object reference
+     * @throws IllegalArgumentException
+     *         if {@code identifiers} is empty
+     */
+    public static ObjectReference ofIdentifiers(List<Identifier> identifiers) {
+        return identifiers.size() == 1 ? identifiers.get(0) : new IdentifierChain(identifiers);
     }
 
     /**
@@ -110,10 +147,16 @@ public sealed abstract class ObjectReference permits Identifier, IdentifierChain
      */
     public abstract Identifier at(int index);
 
+    /**
+     * @return first identifier in this object reference
+     */
     public Identifier first() {
         return at(0);
     }
 
+    /**
+     * @return last identifier in this object reference
+     */
     public Identifier last() {
         return at(size() - 1);
     }

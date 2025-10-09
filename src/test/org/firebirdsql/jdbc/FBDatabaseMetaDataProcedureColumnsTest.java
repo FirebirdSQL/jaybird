@@ -27,7 +27,7 @@ import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.FBTestProperties.resolveSchema;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.jdbc.FBDatabaseMetaDataProceduresTest.isIgnoredProcedure;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
@@ -419,7 +419,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
             """)
     void testProcedureColumns_otherSchemaProcWithReturn_all(String schemaPattern, String procedureNamePattern,
             String columnNamePattern) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         var expectedColumns = getOtherSchemaProcWithReturn_allColumns();
 
         ResultSet procedureColumns = dbmd

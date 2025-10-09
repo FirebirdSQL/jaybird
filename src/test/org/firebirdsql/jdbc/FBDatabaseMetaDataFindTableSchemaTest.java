@@ -3,7 +3,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,8 +21,8 @@ import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
-import static org.firebirdsql.common.FbAssumptions.assumeFeatureMissing;
+import static org.firebirdsql.common.FbAssumptions.assumeNoSchemaSupport;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -86,7 +85,7 @@ class FBDatabaseMetaDataFindTableSchemaTest {
     @ParameterizedTest
     @ValueSource(strings = { "TABLE_ONE", "table_two", "RDB$RELATIONS", "DOES_NOT_EXIST" })
     void findSchema_noTableSchemaSupport(String tableName) throws Exception {
-        assumeFeatureMissing(FirebirdSupportInfo::supportsSchemas, "Test requires no schema support");
+        assumeNoSchemaSupport();
 
         Optional<String> schemaOpt = dbmd.findTableSchema(tableName);
         assertThat("expected schema empty string (no schema support)", schemaOpt, is(optionalWithValue("")));
@@ -113,7 +112,7 @@ class FBDatabaseMetaDataFindTableSchemaTest {
             DOES_NOT_EXIST, 'OTHER_SCHEMA,PUBLIC', #NOT_FOUND#
             """)
     void findSchema_Table_schemaSupport(String tableName, String searchPath, String expectedSchema) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         if (searchPath != null) {
             try (var stmt = connection.createStatement()) {
                 stmt.execute("set search_path to " + searchPath);

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import static org.firebirdsql.common.matchers.ComparableMatcherFactory.compares;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for {@link OdsVersion}.
@@ -33,6 +34,10 @@ class OdsVersionTest {
             13,    0
             13,    1
             13,    2
+            # minimum allowed
+            0,     0
+            # maximum allowed
+            65535, 65535
             """)
     void odsVersionReturnedByOf(int major, int minor) {
         var odsVersion = OdsVersion.of(major, minor);
@@ -91,6 +96,20 @@ class OdsVersionTest {
             """)
     void compareTo(int op1Major, int op1Minor, String expectedComparison, int op2Major, int op2Minor) {
         assertThat(OdsVersion.of(op1Major, op1Minor), compares(expectedComparison, OdsVersion.of(op2Major, op2Minor)));
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            major, minor
+            -1,    0
+            0,     -1
+            -1,    -1
+            65536, 0
+            0,     65536
+            65536, 65536
+            """)
+    void of_outOfRangeMajorMinor(int major, int minor) {
+        assertThrows(IllegalArgumentException.class, () -> OdsVersion.of(major, minor));
     }
 
     private static String keyAsString(int key) {

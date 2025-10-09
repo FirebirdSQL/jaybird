@@ -142,13 +142,15 @@ public final class GDSHelper {
 
     // for DatabaseMetaData.
 
+    // TODO Consider removing some of these methods by pushing them down into FBDatabaseMetaData
+
     /**
      * Get the name of the database product that we're connected to.
      *
      * @return The database product name (i.e. Firebird or Interbase)
      */
     public String getDatabaseProductName() {
-        return database.getServerVersion().getServerName();
+        return getServerVersion().getServerName();
     }
 
     /**
@@ -157,7 +159,7 @@ public final class GDSHelper {
      * @return the database product version
      */
     public String getDatabaseProductVersion() {
-        return database.getServerVersion().getFullVersion();
+        return getServerVersion().getFullVersion();
     }
 
     /**
@@ -166,7 +168,7 @@ public final class GDSHelper {
      * @return The major version number of the database
      */
     public int getDatabaseProductMajorVersion() {
-        return database.getServerVersion().getMajorVersion();
+        return getServerVersion().getMajorVersion();
     }
 
     /**
@@ -175,7 +177,7 @@ public final class GDSHelper {
      * @return The minor version number of the database
      */
     public int getDatabaseProductMinorVersion() {
-        return database.getServerVersion().getMinorVersion();
+        return getServerVersion().getMinorVersion();
     }
 
     /**
@@ -199,6 +201,15 @@ public final class GDSHelper {
             return getDatabaseProductMinorVersion() - minor;
         }
         return differenceMajor;
+    }
+
+    /**
+     * Get the server version.
+     *
+     * @return server version
+     */
+    public GDSServerVersion getServerVersion() {
+        return database.getServerVersion();
     }
 
     /**

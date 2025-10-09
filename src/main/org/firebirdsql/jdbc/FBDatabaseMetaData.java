@@ -16,6 +16,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -1185,6 +1186,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      *
      * <p>
+     * Jaybird defines these additional columns:
+     * <ol start="10">
+     * <li><b>JB_PROCEDURE_TYPE</b> Short =&gt; type of procedure ({@code RDB$PROCEDURES.RDB$PROCEDURE_TYPE}):
+     *   <ul>
+     *       <li>{@link #jbProcedureTypeUnknown} ({@code 0}) &mdash; unknown</li>
+     *       <li>{@link #jbProcedureTypeSelectable} ({@code 1}) &mdash; selectable</li>
+     *       <li>{@link #jbProcedureTypeExecutable} ({@code 2}) &mdash; executable</li>
+     *   </ul>
+     * </li>
+     * </ol>
+     * </p>
+     * <p>
      * By default, this method does not return procedures defined in packages. To also return procedures in packages,
      * set connection property {@code useCatalogAsPackage} to {@code true}. When enabled, this method has the following
      * differences in behaviour:
@@ -1371,7 +1384,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * Contrary to specified in the JDBC API, the result set is ordered by {@code TABLE_SCHEM}, {@code COLUMN_NAME},
      * {@code PRIVILEGE}, and {@code GRANTEE} (JDBC specifies ordering by {@code COLUMN_NAME} and {@code PRIVILEGE}).
      * This only makes a difference when specifying {@code null} for {@code schema} (search all schemas) and there are
-     * multiples tables with the same {@code name}.
+     * multiples tables with the same name {@code table}.
      * </p>
      */
     @Override
@@ -1394,7 +1407,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      * <p>
      * <b>NOTE:</b> This implementation returns <b>all</b> privileges, not just applicable to the current user. It is
-     * unclear if this complies with the JDBC requirements. This may change in the future to only return only privileges
+     * unclear if this complies with the JDBC requirements. This may change in the future to only return privileges
      * applicable to the current user, user {@code PUBLIC} and &mdash; maybe &mdash; active roles.
      * </p>
      */
@@ -1684,23 +1697,23 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     @Override
+    public GDSServerVersion getServerVersion() throws SQLException {
+        return gdsHelper.getServerVersion();
+    }
+
+    @Override
     public int getDatabaseMajorVersion() throws SQLException {
-        return gdsHelper.getDatabaseProductMajorVersion();
+        return getServerVersion().major();
     }
 
     @Override
     public int getDatabaseMinorVersion() throws SQLException {
-        return gdsHelper.getDatabaseProductMinorVersion();
+        return getServerVersion().minor();
     }
 
     @Override
-    public int getOdsMajorVersion() throws SQLException {
-        return gdsHelper.getCurrentDatabase().getOdsMajor();
-    }
-
-    @Override
-    public int getOdsMinorVersion() throws SQLException {
-        return gdsHelper.getCurrentDatabase().getOdsMinor();
+    public OdsVersion getOdsVersion() throws SQLException {
+        return gdsHelper.getCurrentDatabase().getOdsVersion();
     }
 
     @Override

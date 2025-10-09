@@ -36,7 +36,7 @@ public final class SearchPathExtractor implements TokenVisitor {
         if (isPreviousTokenSeparator()) {
             if (token instanceof QuotedIdentifierToken quotedIdentifier) {
                 identifiers.add(quotedIdentifier.name());
-            } else if (token instanceof GenericToken identifier) {
+            } else if (token instanceof GenericToken identifier && identifier.isValidIdentifier()) {
                 // Firebird returns the search path with quoted identifiers, but this offers extra flexibility if needed
                 identifiers.add(identifier.text().toUpperCase(Locale.ROOT));
             } else {

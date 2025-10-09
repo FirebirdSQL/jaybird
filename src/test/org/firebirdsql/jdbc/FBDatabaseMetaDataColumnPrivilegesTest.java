@@ -4,7 +4,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,7 @@ import java.util.Map;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -221,7 +220,7 @@ class FBDatabaseMetaDataColumnPrivilegesTest {
             true,       <NIL>
             """)
     void testColumnPrivileges_other_schema_tbl2_all(boolean schemaNull, String columnNameAllPattern) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         var rules = Arrays.asList(
                 createRule("OTHER_SCHEMA", "TBL3", "COL1", SYSDBA, true, "DELETE"),
                 createRule("OTHER_SCHEMA", "TBL3", "COL1", SYSDBA, true, "INSERT"),

@@ -3,7 +3,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.util.FirebirdSupportInfo;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,7 +25,7 @@ import static java.util.Collections.unmodifiableMap;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
 
@@ -164,7 +163,7 @@ class FBDatabaseMetaDataPrimaryKeysTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void schemaNamedSingleColumnPk(boolean limitToSchema) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         validateExpectedPrimaryKeys(limitToSchema ? "OTHER_SCHEMA" : null, "SCHEMA_NAMED_SINGLE_COLUMN_PK",
                 List.of(createPrimaryKeysRow("OTHER_SCHEMA", "SCHEMA_NAMED_SINGLE_COLUMN_PK", "ID", 1, "PK_NAMED_7", "PK_NAMED_7")));
     }

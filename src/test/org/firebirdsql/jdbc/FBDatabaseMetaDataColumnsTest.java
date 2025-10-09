@@ -18,7 +18,7 @@ import java.util.*;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -766,7 +766,7 @@ class FBDatabaseMetaDataColumnsTest {
 
     @Test
     void testOtherSchemaTable() throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
 
         List<Map<ColumnMetaData, Object>> validationRules = new ArrayList<>();
         Map<ColumnMetaData, Object> idRules = getDefaultValueValidationRules();

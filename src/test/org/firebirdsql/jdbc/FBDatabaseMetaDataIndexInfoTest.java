@@ -30,7 +30,7 @@ import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForCon
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -283,7 +283,7 @@ class FBDatabaseMetaDataIndexInfoTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void testIndexInfo_table3_all(boolean limitToSchema) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         String schema = "OTHER_SCHEMA";
         String tableName = "INDEX_TEST_TABLE_3";
         var expectedIndexInfo = List.of(

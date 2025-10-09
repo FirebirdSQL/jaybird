@@ -30,7 +30,7 @@ import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForCon
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -299,7 +299,7 @@ class FBDatabaseMetaDataProceduresTest {
             OTHER\\_SCHEMA, PROC\\_%
             """)
     void testProcedureMetaData_otherSchema_all(String schemaPattern, String procedureNamePattern) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         var expectedProcedures = List.of(ProcedureTestData.OTHER_SCHEMA_PROC_NO_RETURN);
 
         try (var procedures = dbmd.getProcedures(null, schemaPattern, procedureNamePattern)) {

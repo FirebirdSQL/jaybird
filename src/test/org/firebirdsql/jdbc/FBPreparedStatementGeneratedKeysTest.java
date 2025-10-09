@@ -6,7 +6,6 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.jaybird.props.PropertyNames;
-import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -17,7 +16,7 @@ import java.sql.*;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.FbAssumptions.assumeServerBatchSupport;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
@@ -357,7 +356,7 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
             """)
     void testINSERT_schemalessTable_columnIndexes_schemaSearchPath(String searchPath, String expectedSuffix)
             throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         try (var stmt = con.createStatement()) {
             if (searchPath != null) {
                 stmt.execute("set search_path to " + searchPath);
@@ -374,7 +373,7 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 
     @Test
     void testINSERT_schemalessTable_columnIndex_tableNotOnSearchPath() throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         try (var stmt = con.createStatement()) {
             stmt.execute("set search_path to SYSTEM");
         }

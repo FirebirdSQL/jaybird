@@ -1,26 +1,33 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.AbstractVersion;
+import org.jspecify.annotations.NullMarked;
+
+import java.io.Serial;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Value class representing the Firebird On-Disk Structure (ODS) version.
+ * <p>
+ * Implementation limit: {@code major} and {@code minor} must be between 0 and 0xFFFF (65535).
+ * </p>
  *
  * @author Mark Rotteveel
  * @since 6
  */
-public final class OdsVersion implements Comparable<OdsVersion> {
+@NullMarked
+public final class OdsVersion extends AbstractVersion {
+
+    @Serial
+    private static final long serialVersionUID = 4152662579163138758L;
 
     private static final Map<Integer, OdsVersion> ODS_VERSION_CACHE = new ConcurrentHashMap<>();
 
-    private final int major;
-    private final int minor;
-
     private OdsVersion(int major, int minor) {
-        this.major = major;
-        this.minor = minor;
+        super(major, minor);
     }
 
     /**
@@ -33,6 +40,9 @@ public final class OdsVersion implements Comparable<OdsVersion> {
      * @return ODS version instance
      */
     public static OdsVersion of(int major, int minor) {
+        if ((major & 0xFFFF) != major || (minor & 0xFFFF) != minor) {
+            throw new IllegalArgumentException("Implementation limit for major or minor exceeded");
+        }
         return ODS_VERSION_CACHE.computeIfAbsent(key(major, minor), ignored -> new OdsVersion(major, minor));
     }
 
@@ -51,20 +61,6 @@ public final class OdsVersion implements Comparable<OdsVersion> {
     }
 
     /**
-     * @return ODS major version
-     */
-    public int major() {
-        return major;
-    }
-
-    /**
-     * @return ODS minor version
-     */
-    public int minor() {
-        return minor;
-    }
-
-    /**
      * Returns a - possibly cached - instance with the specified major version and the minor version of this instance.
      *
      * @param major
@@ -72,7 +68,7 @@ public final class OdsVersion implements Comparable<OdsVersion> {
      * @return instance with value of parameter {@code major} and {@link #minor()} of this instance
      */
     public OdsVersion withMajor(int major) {
-        return this.major != major ? of(major, minor) : this;
+        return major() != major ? of(major, minor()) : this;
     }
 
     /**
@@ -83,32 +79,18 @@ public final class OdsVersion implements Comparable<OdsVersion> {
      * @return instance with {@link #major()} of this instance and value of parameter {@code minor}
      */
     public OdsVersion withMinor(int minor) {
-        return this.minor != minor ? of(major, minor) : this;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        return obj instanceof OdsVersion that
-               && this.major == that.major
-               && this.minor == that.minor;
+        return minor() != minor ? of(major(), minor) : this;
     }
 
     @Override
     public int hashCode() {
-        return key(major, minor);
+        return key(major(), minor());
     }
 
-    @Override
-    public String toString() {
-        return major + "." + minor;
+    @Serial
+    private Object readResolve() {
+        // Return cached variant
+        return of(major(), minor());
     }
 
-    @Override
-    public int compareTo(OdsVersion o) {
-        int majorDiff = Integer.compare(this.major, o.major);
-        if (majorDiff != 0) return majorDiff;
-        return Integer.compare(this.minor, o.minor);
-    }
-    
 }

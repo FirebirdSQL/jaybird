@@ -5,18 +5,41 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.ng.OdsVersion;
+import org.firebirdsql.util.InternalApi;
+
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Optional;
 
 /**
- * Extension of {@link DatabaseMetaData} interface providing access to Firebird
- * specific features.
+ * Extension of {@link DatabaseMetaData} interface providing access to Firebird specific features.
  *
  * @author Michael Romankiewicz
+ * @author Mark Rotteveel
  */
 @SuppressWarnings("unused")
 public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
+
+    // TODO Add schema support: remove/deprecate getProcedureSourceCode(String) and remove new alternative with schema,
+    //  and instead add a column to getProcedures(..)
+
+    /**
+     * Firebird procedure type is unknown (value of column {@code JB_PROCEDURE_TYPE} of
+     * {@link #getProcedures(String, String, String)})
+     */
+    int jbProcedureTypeUnknown = 0;
+    /**
+     * Firebird procedure type is selectable (value of column {@code JB_PROCEDURE_TYPE} of
+     * {@link #getProcedures(String, String, String)})
+     */
+    int jbProcedureTypeSelectable = 1;
+    /**
+     * Firebird procedure type is executable (value of column {@code JB_PROCEDURE_TYPE} of
+     * {@link #getProcedures(String, String, String)})
+     */
+    int jbProcedureTypeExecutable = 2;
 
     /**
      * Get the source of a stored procedure.
@@ -107,13 +130,24 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
     String getViewSourceCode(String schema, String viewName) throws SQLException;
 
     /**
+     * Get the Firebird server version.
+     *
+     * @return server version object
+     * @throws SQLException
+     *         if a database access error occurs
+     */
+    GDSServerVersion getServerVersion() throws SQLException;
+
+    /**
      * Get the major version of the ODS (On-Disk Structure) of the database.
      *
      * @return The major version number of the database itself
      * @throws SQLException
      *         if a database access error occurs
      */
-    int getOdsMajorVersion() throws SQLException;
+    default int getOdsMajorVersion() throws SQLException {
+        return getOdsVersion().major();
+    }
 
     /**
      * Get the minor version of the ODS (On-Disk Structure) of the database.
@@ -122,7 +156,24 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @throws SQLException
      *         if a database access error occurs
      */
-    int getOdsMinorVersion() throws SQLException;
+    default int getOdsMinorVersion() throws SQLException {
+        return getOdsVersion().major();
+    }
+
+    /**
+     * Get the ODS (On-Disk Structure) version of the database.
+     * <p>
+     * This method is marked internal API as {@link OdsVersion} is internal API. We don't expect this method to be
+     * removed, nor the API of {@code OdsVersion} to radically change in future versions.
+     * </p>
+     *
+     * @return ODS version object
+     * @throws SQLException
+     *         if a database access error occurs
+     * @since 7
+     */
+    @InternalApi
+    OdsVersion getOdsVersion() throws SQLException;
 
     /**
      * Get the dialect of the database.

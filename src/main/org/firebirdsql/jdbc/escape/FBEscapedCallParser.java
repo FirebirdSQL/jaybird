@@ -1,17 +1,26 @@
 /*
  SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc.escape;
 
+import org.firebirdsql.jaybird.parser.FirebirdReservedWords;
+import org.firebirdsql.jaybird.parser.ObjectReferenceExtractor;
+import org.firebirdsql.jaybird.parser.ReservedWords;
+import org.firebirdsql.jaybird.parser.SqlParser;
+import org.firebirdsql.gds.AbstractVersion;
+import org.firebirdsql.jaybird.util.BasicVersion;
+import org.firebirdsql.jaybird.util.Identifier;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.jdbc.FBProcedureCall;
 import org.firebirdsql.jdbc.FBProcedureParam;
 import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_SYNTAX_ERROR;
 import static org.firebirdsql.jdbc.escape.FBEscapedCallParser.ParserState.*;
 
 /**
@@ -25,6 +34,9 @@ public final class FBEscapedCallParser {
 
     private static final int INITIAL_CAPACITY = 32;
 
+    private final FBEscapedParser escapedParser;
+    private final SyntaxVersion syntaxVersion;
+
     private ParserState state = NORMAL_STATE;
 
     private boolean isNameProcessed;
@@ -35,6 +47,18 @@ public final class FBEscapedCallParser {
     private int openBraceCount;
 
     private FBProcedureCall procedureCall = new FBProcedureCall();
+
+    /**
+     * Creates an escaped call parser using {@code escapedParser}.
+     *
+     * @param escapedParser
+     *         escaped parser
+     * @since 7
+     */
+    public FBEscapedCallParser(FBEscapedParser escapedParser) {
+        this.escapedParser = escapedParser;
+        syntaxVersion = SyntaxVersion.of(escapedParser.firebirdVersion());
+    }
 
     /**
      * Test the character to be the state switching character and switches the state if necessary.
@@ -212,7 +236,7 @@ public final class FBEscapedCallParser {
                         throw new FBSQLParseException("Procedure name is empty.");
                     }
 
-                    procedureCall.setName(buffer.toString().trim());
+                    processName(buffer.toString().trim());
                     isNameProcessed = true;
                     buffer.setLength(0);
                 } else {
@@ -285,7 +309,7 @@ public final class FBEscapedCallParser {
 
         // if there's something in the buffer, treat it as last param
         if (null == procedureCall.getName() && !isNameProcessed) {
-            procedureCall.setName(value);
+            processName(value);
         } else {
             FBProcedureParam callParam = procedureCall.addParam(paramPosition, value);
 
@@ -298,6 +322,10 @@ public final class FBEscapedCallParser {
         return procedureCall;
     }
 
+    private void processName(String nameToken) throws FBSQLParseException {
+        syntaxVersion.parseName(nameToken, procedureCall);
+    }
+
     /**
      * Process token. This method detects procedure call keywords and sets appropriate flags. Also, it detects
      * procedure name and sets appropriate field in the procedure call object.
@@ -306,7 +334,7 @@ public final class FBEscapedCallParser {
      *         token to process.
      * @return {@code true} if token was understood and processed.
      */
-    boolean processToken(String token) {
+    boolean processToken(String token) throws FBSQLParseException {
         if ("EXECUTE".equalsIgnoreCase(token) &&
                 !isExecuteWordProcessed && !isProcedureWordProcessed && !isNameProcessed) {
             isExecuteWordProcessed = true;
@@ -325,7 +353,7 @@ public final class FBEscapedCallParser {
         }
 
         if ((isCallWordProcessed || (isExecuteWordProcessed && isProcedureWordProcessed)) && !isNameProcessed) {
-            procedureCall.setName(token);
+            processName(token);
             isNameProcessed = true;
             return true;
         }
@@ -343,7 +371,7 @@ public final class FBEscapedCallParser {
      *         if parameter cannot be correctly parsed
      */
     String processParam(String param) throws SQLException {
-        return FBEscapedParser.toNativeSql(param);
+        return escapedParser.toNative(param);
     }
 
     /**
@@ -358,6 +386,172 @@ public final class FBEscapedCallParser {
         CURLY_BRACE_STATE,
         SPACE_STATE,
         COMMA_STATE,
+    }
+
+    /**
+     * Stored procedure syntax to process.
+     * <p>
+     * In contexts where the version is unknown, it is usually best to use the latest.
+     * </p>
+     *
+     * @since 7
+     */
+    public enum SyntaxVersion {
+        FIREBIRD_1_0(1, 0) {
+            @Override
+            void processObjectReference(ObjectReference objectReference, FBProcedureCall procedureCall) {
+                procedureCall.setSchema(FBProcedureCall.NO_SCHEMA);
+                procedureCall.setPackage(FBProcedureCall.NO_PACKAGE);
+                if (objectReference.size() == 1) {
+                    procedureCall.setName(objectReference.last().name());
+                }
+                // else we'll use the default initialization to the original name
+            }
+        },
+        FIREBIRD_3_0(3, 0) {
+            @Override
+            void processObjectReference(ObjectReference objectReference, FBProcedureCall procedureCall) {
+                procedureCall.setSchema(FBProcedureCall.NO_SCHEMA);
+                switch (objectReference.size()) {
+                case 1 -> {
+                    // no package
+                    procedureCall.setPackage(FBProcedureCall.NO_PACKAGE);
+                    procedureCall.setName(objectReference.last().name());
+                }
+                case 2 -> {
+                    procedureCall.setPackage(objectReference.first().name());
+                    procedureCall.setName(objectReference.last().name());
+                }
+                // Give up and use name as-is (this will likely fail later)
+                default -> {
+                    // nothing to do (use default initialization)
+                }
+                }
+            }
+        },
+        FIREBIRD_6_0(6, 0) {
+            @Override
+            void processObjectReference(ObjectReference objectReference, FBProcedureCall procedureCall) {
+                switch (objectReference.size()) {
+                case 1 -> {
+                    // no package
+                    procedureCall.setPackage(FBProcedureCall.NO_PACKAGE);
+                    procedureCall.setName(objectReference.last().name());
+                }
+                case 2 -> {
+                    Identifier first = objectReference.first();
+                    procedureCall.setName(objectReference.last().name());
+                    switch (first.scope()) {
+                    case UNKNOWN -> {
+                        // assume schema, no package
+                        procedureCall.setSchema(first.name());
+                        procedureCall.setPackage(FBProcedureCall.NO_PACKAGE);
+                        // signal that we might be wrong
+                        procedureCall.setAmbiguousScope(true);
+                    }
+                    case SCHEMA -> {
+                        procedureCall.setSchema(first.name());
+                        procedureCall.setPackage(FBProcedureCall.NO_PACKAGE);
+                    }
+                    case PACKAGE -> procedureCall.setPackage(first.name());
+                    }
+                }
+                case 3 -> {
+                    procedureCall.setSchema(objectReference.first().name());
+                    procedureCall.setPackage(objectReference.at(1).name());
+                    procedureCall.setName(objectReference.last().name());
+                }
+                // Give up and use name as-is (this will likely fail later)
+                default -> {
+                    // nothing to do (use default initialization)
+                }
+                }
+            }
+        },
+        ;
+
+        private final BasicVersion firebirdVersion;
+
+        SyntaxVersion(int major, int minor) {
+            firebirdVersion = BasicVersion.of(major, minor);
+        }
+
+        /**
+         * @return the earliest firebird version corresponding to this syntax version
+         */
+        @SuppressWarnings("unused")
+        public BasicVersion firebirdVersion() {
+            return firebirdVersion;
+        }
+
+        public static SyntaxVersion of(AbstractVersion version) {
+            return of(version.major());
+        }
+
+        public static SyntaxVersion of(int majorVersion) {
+            if (majorVersion >= 6) {
+                return FIREBIRD_6_0;
+            } else if (majorVersion >= 3) {
+                return FIREBIRD_3_0;
+            } else {
+                return FIREBIRD_1_0;
+            }
+        }
+
+        public static SyntaxVersion latest() {
+            return FIREBIRD_6_0;
+        }
+
+        /**
+         * Parses name to {@code procedureCall}.
+         * <p>
+         * Depending on the version, it might consider name to be simply the procedure name (after removing quotes), for
+         * newer versions, it will parse out the package and/or schema name.
+         * </p>
+         *
+         * @param name
+         *         name to parse
+         * @param procedureCall
+         *         procedure call to populate
+         */
+        public void parseName(String name, FBProcedureCall procedureCall) throws FBSQLParseException {
+            defaultInit(procedureCall, name);
+            ObjectReference objectReference = parse(name);
+            procedureCall.setObjectReference(objectReference);
+            processObjectReference(objectReference, procedureCall);
+        }
+
+        private void defaultInit(FBProcedureCall procedureCall, String name) {
+            // schema unknown
+            procedureCall.setSchema(null);
+            // we don't know if it should have a package
+            procedureCall.setPackage(null);
+            // fallback to unparsed name
+            procedureCall.setName(name);
+            procedureCall.setObjectReference(null);
+            procedureCall.setAmbiguousScope(false);
+        }
+
+        abstract void processObjectReference(ObjectReference objectReference, FBProcedureCall procedureCall);
+
+        ReservedWords reservedWords() {
+            return FirebirdReservedWords.latest();
+        }
+
+        ObjectReference parse(String name) throws FBSQLParseException {
+            try {
+                var detector = new ObjectReferenceExtractor();
+                SqlParser.withReservedWords(reservedWords())
+                        .withVisitor(detector)
+                        .of(name)
+                        .parse();
+                return detector.toObjectReference();
+            } catch (IllegalStateException e) {
+                throw new FBSQLParseException("Unable to extract object reference from '" + name + '\'',
+                        SQL_STATE_SYNTAX_ERROR, e);
+            }
+        }
+
     }
 
 }

@@ -6,6 +6,7 @@ import org.firebirdsql.jdbc.QuoteStrategy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
@@ -161,6 +162,16 @@ class IdentifierChainTest {
         var identifier3 = allIdentifiers.get(2);
 
         assertEquals(new IdentifierChain(allIdentifiers), chain.resolve(identifier3), "resolve");
+    }
+
+    @ParameterizedTest
+    @EnumSource(Identifier.Scope.class)
+    void toString_includesScopeIdentifierSCHEMAorPACKAGE(Identifier.Scope scope) {
+        String expected = "\"ONE\"" + (scope != Identifier.Scope.UNKNOWN ? "%" + scope : "") + ".\"TWO\"";
+
+        var chain = new IdentifierChain(List.of(new Identifier("ONE", scope), new Identifier("TWO")));
+
+        assertEquals(expected, chain.toString());
     }
 
     private static List<Identifier> toIdentifiers(String nameList) {

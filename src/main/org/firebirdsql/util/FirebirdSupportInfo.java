@@ -13,6 +13,7 @@ import org.firebirdsql.gds.ng.wire.auth.srp.Srp512AuthenticationPluginSpi;
 import org.firebirdsql.gds.ng.wire.auth.srp.SrpAuthenticationPluginSpi;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.PageSizeConstants;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -804,7 +805,7 @@ public final class FirebirdSupportInfo {
      *         value to return when schema support is not available
      * @return {@code forSchema} if schema support is available, otherwise {@code withoutSchema}
      */
-    public <T> T ifSchemaElse(T forSchema, T withoutSchema) {
+    public <T extends @Nullable Object> T ifSchemaElse(T forSchema, T withoutSchema) {
         return supportsSchemas() ? forSchema : withoutSchema;
     }
 

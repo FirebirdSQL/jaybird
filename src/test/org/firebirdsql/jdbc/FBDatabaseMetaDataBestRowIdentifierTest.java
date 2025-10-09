@@ -3,7 +3,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,7 @@ import java.util.Map;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
 
@@ -119,7 +118,7 @@ class FBDatabaseMetaDataBestRowIdentifierTest {
 
     @Test
     void testGetBestRowIdentifier_otherSchema() throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         for (int scope : new int[] { DatabaseMetaData.bestRowTemporary, DatabaseMetaData.bestRowTransaction,
                 DatabaseMetaData.bestRowSession }) {
             try (ResultSet rs = dbmd.getBestRowIdentifier("", "OTHER_SCHEMA", "BEST_ROW_PK", scope, true)) {
@@ -130,7 +129,7 @@ class FBDatabaseMetaDataBestRowIdentifierTest {
 
     @Test
     void testGetBestRowIdentifier_allSchemas() throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         /* JDBC specifies that "null means that the schema name should not be used to narrow the search". This seems
         like useless behaviour to me for this method (you don't know to which table the columns are actually referring),
         but let's verify it (our implementation returns the columns of all tables with the same name, ordered by schema

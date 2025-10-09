@@ -16,6 +16,7 @@ import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
+import org.firebirdsql.jaybird.util.BasicVersion;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
@@ -23,6 +24,7 @@ import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBServiceManager;
 import org.firebirdsql.management.ServiceManager;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.sql.DriverManager;
@@ -378,7 +380,7 @@ public final class FBTestProperties {
      * @return {@code forSchema} if schema support is available, otherwise {@code withoutSchema}
      * @see FirebirdSupportInfo#ifSchemaElse(Object, Object)
      */
-    public static <T> T ifSchemaElse(T forSchema, T withoutSchema) {
+    public static <T extends @Nullable Object> T ifSchemaElse(T forSchema, T withoutSchema) {
         return getDefaultSupportInfo().ifSchemaElse(forSchema, withoutSchema);
     }
 
@@ -396,6 +398,14 @@ public final class FBTestProperties {
             return "";
         }
         return schemaName;
+    }
+
+    public static BasicVersion minimumVersionSupported() {
+        return BasicVersion.of(3);
+    }
+
+    public static BasicVersion maximumVersionSupported() {
+        return BasicVersion.of(6);
     }
 
     private FBTestProperties() {

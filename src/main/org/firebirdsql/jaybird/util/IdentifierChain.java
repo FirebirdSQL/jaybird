@@ -81,7 +81,7 @@ final class IdentifierChain extends ObjectReference {
         for (Identifier identifier : identifiers) {
             hashCode = 31 * hashCode + identifier.name().hashCode();
         }
-        // Clear sign bit to avoid -1 (and any other negative value)
+        // Clear sign bit to avoid -1 (and any other negative value) as it's used as a "not cached" marker
         return this.hashCode = hashCode & 0x7FFF_FFFF;
     }
 

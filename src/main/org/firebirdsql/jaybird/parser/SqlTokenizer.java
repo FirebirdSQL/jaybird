@@ -162,6 +162,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
             yield new PeriodToken(start);
         }
         case '+',
+                '%', // Firebird 6.0 scope specifier
                 '*', // Can also signify 'all' (as in select * or select alias.*)
                 '=' -> new OperatorToken(start, src, start, pos);
         case '-' -> {
@@ -514,7 +515,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     private static boolean isNormalTokenBoundary(int c) {
         return switch (c) {
             case EOF, '\t', '\n', '\r', ' ', '(', ')', '{', '}', '[', ']', '\'', '"', ':', ';', '.', ',', '+', '-', '/',
-                 '*', '=', '>', '<', '~', '^', '!', '?' -> true;
+                 '*', '=', '>', '<', '~', '^', '!', '?', '%' -> true;
             default -> false;
         };
     }

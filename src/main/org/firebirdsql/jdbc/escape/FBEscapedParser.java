@@ -2,12 +2,15 @@
  SPDX-FileCopyrightText: Copyright 2001-2002 David Jencks
  SPDX-FileCopyrightText: Copyright 2002-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2003 Blas Rodriguez Somoza
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc.escape;
 
+import org.firebirdsql.gds.ng.OdsVersion;
+import org.firebirdsql.gds.AbstractVersion;
 import org.firebirdsql.jdbc.FBProcedureCall;
+import org.firebirdsql.jdbc.QuoteStrategy;
 import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
@@ -18,10 +21,14 @@ import java.util.regex.Pattern;
 
 /**
  * The class {@code FBEscapedParser} parses the SQL and converts escaped syntax to native form.
+ * <p>
+ * The parser itself is stateless, the only state this class has is the version and quote strategy to apply.
+ * </p>
  *
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
+@SuppressWarnings("ClassCanBeRecord")
 @InternalApi
 public final class FBEscapedParser {
 
@@ -47,20 +54,50 @@ public final class FBEscapedParser {
      * the escape introducers.
      */
     private static final Pattern CHECK_ESCAPE_PATTERN = Pattern.compile(
-            "\\{(?:(?:\\?\\s*=\\s*)?call|d|ts?|escape|fn|oj|limit)\\s",
-            Pattern.CASE_INSENSITIVE);
+            "\\{(?:(?:\\?\\s*=\\s*)?call|d|ts?|escape|fn|oj|limit)\\s", Pattern.CASE_INSENSITIVE);
 
     private static final String LIMIT_OFFSET_CLAUSE = " offset ";
 
-    private FBEscapedParser() {
-        // No instances
+    private final AbstractVersion firebirdVersion;
+    private final QuoteStrategy quoteStrategy;
+
+    private FBEscapedParser(AbstractVersion firebirdVersion, QuoteStrategy quoteStrategy) {
+        this.firebirdVersion = firebirdVersion;
+        this.quoteStrategy = quoteStrategy;
+    }
+
+    /**
+     * Get an instance of the escape parser for the specified Firebird version and quote strategy.
+     * <p>
+     * The implementation may substitute the passed {@code firebirdVersion} with
+     * a {@link org.firebirdsql.jaybird.util.BasicVersion} with the same {@code major.minor}.
+     * </p>
+     *
+     * @param firebirdVersion
+     *         firebird version
+     * @param quoteStrategy
+     *         quote strategy
+     * @since 7
+     */
+    public static FBEscapedParser of(AbstractVersion firebirdVersion, QuoteStrategy quoteStrategy) {
+        assert !(firebirdVersion instanceof OdsVersion) : "Do not pass OdsVersion to FBEscapedParser.of(...)";
+        return new FBEscapedParser(firebirdVersion, quoteStrategy);
+    }
+
+    AbstractVersion firebirdVersion() {
+        return firebirdVersion;
+    }
+
+    @SuppressWarnings("unused")
+    QuoteStrategy quoteStrategy() {
+        return quoteStrategy;
     }
 
     /**
      * Check if the target SQL contains at least one of the escaped syntax commands. This method performs a simple regex
      * match, so it may report that SQL contains escaped syntax when the <code>"&#123;"</code> is followed by
      * the escaped syntax command in regular string constants that are passed as parameters. In this case
-     * {@link #parse(String)} will perform complete SQL parsing.
+     * {@link #toNative(String)} will perform complete SQL parsing.
      *
      * @param sql
      *         to test
@@ -75,25 +112,16 @@ public final class FBEscapedParser {
      *
      * @param sql
      *         to parse
-     * @return native form of the {@code sql}.
-     */
-    public static String toNativeSql(String sql) throws SQLException {
-        return parse(sql);
-    }
-
-    /**
-     * Converts escaped parts in {@code sql} to native representation.
-     *
-     * @param sql
-     *         to parse
-     * @return native form of the {@code sql}.
+     * @return native form of {@code sql}
+     * @since 7
      */
     @SuppressWarnings("java:S127")
-    public static String parse(final String sql) throws SQLException {
+    public String toNative(String sql) throws SQLException {
         if (!checkForEscapes(sql)) return sql;
 
         ParserState state = ParserState.INITIAL_STATE;
-        // Note initialising to 8 as that is the minimum size in Oracle Java, and we (usually) need less than the default of 16
+        // Note initialising to 8 as that was the minimum size in Oracle Java at some point, and we (usually) need less
+        // than the default of 16
         final var bufferStack = new ArrayDeque<StringBuilder>(8);
         final int sqlLength = sql.length();
         var buffer = new StringBuilder(sqlLength);
@@ -192,7 +220,7 @@ public final class FBEscapedParser {
      * @param escaped
      *         the part of escaped SQL between the '{' and '}'.
      */
-    private static void escapeToNative(final StringBuilder target, final String escaped) throws SQLException {
+    private void escapeToNative(final StringBuilder target, final String escaped) throws SQLException {
         final StringBuilder keyword = new StringBuilder();
         final StringBuilder payload = new StringBuilder(Math.max(16, escaped.length()));
 
@@ -268,11 +296,11 @@ public final class FBEscapedParser {
      *         part of {call proc_name(...)} without curly braces and "call"
      *         word.
      */
-    private static void convertProcedureCall(final StringBuilder target, final String procedureCall) throws SQLException {
-        FBEscapedCallParser tempParser = new FBEscapedCallParser();
+    private void convertProcedureCall(final StringBuilder target, final String procedureCall) throws SQLException {
+        var tempParser = new FBEscapedCallParser(this);
         FBProcedureCall call = tempParser.parseCall(procedureCall);
         call.checkParameters();
-        target.append(call.getSQL(false));
+        target.append(call.getSQL(quoteStrategy));
     }
 
     /**
@@ -315,6 +343,7 @@ public final class FBEscapedParser {
      */
     private static void convertLimitString(final StringBuilder target, final CharSequence limitClause)
             throws FBSQLParseException {
+        // TODO Now the parser has version information, consider transforming to OFFSET ... FETCH ... syntax if supported
         final String limitEscape = limitClause.toString().toLowerCase(Locale.ROOT);
         final int offsetStart = limitEscape.indexOf(LIMIT_OFFSET_CLAUSE);
         if (offsetStart == -1) {

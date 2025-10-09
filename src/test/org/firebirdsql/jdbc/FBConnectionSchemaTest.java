@@ -6,7 +6,6 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension.UsesDatabaseForAll;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.util.SearchPathHelper;
-import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,8 +21,8 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
-import static org.firebirdsql.common.FbAssumptions.assumeFeatureMissing;
+import static org.firebirdsql.common.FbAssumptions.assumeNoSchemaSupport;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
@@ -213,11 +212,4 @@ class FBConnectionSchemaTest {
         }
     }
 
-    private static void assumeSchemaSupport() {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test expects schema support");
-    }
-
-    private static void assumeNoSchemaSupport() {
-        assumeFeatureMissing(FirebirdSupportInfo::supportsSchemas, "Test expects no schema support");
-    }
 }

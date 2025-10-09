@@ -161,8 +161,8 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     /**
      * {@inheritDoc}
      * 
-     * @return Schema of table, empty string ({@code ""}) if schemaless, e.g. always on Firebird 5.0 and older, or if
-     * the column has no backing table
+     * @return schema of table, empty string ({@code ""}) if schemaless (i.e. always on Firebird 5.0 and older), or if
+     * the column has no known backing table
      */
     @Override
     public String getSchemaName(int column) throws SQLException {
@@ -173,7 +173,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
      * {@inheritDoc}
      * <p>
      * <b>NOTE</b> For {@code NUMERIC} and {@code DECIMAL} we attempt to retrieve the exact precision from the metadata,
-     * if this is not possible (eg the column is dynamically defined in the query), the reported precision is
+     * if this is not possible (e.g. the column is dynamically defined in the query), the reported precision is
      * the maximum precision allowed by the underlying storage data type.
      * </p>
      */

@@ -36,7 +36,7 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
     private static final String COLUMN_SCHEMA_NAME = "RDB$SCHEMA_NAME";
     private static final String COLUMN_PACKAGE_NAME = "RDB$PACKAGE_NAME";
     
-    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(9)
+    private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(10)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", PROCEDURES).addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", PROCEDURES).addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_NAME", PROCEDURES).addField()
@@ -48,6 +48,7 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
             .at(7).simple(SQL_SHORT, 0, "PROCEDURE_TYPE", PROCEDURES).addField()
             // space for quoted package name, ".", quoted procedure name (assuming no double quotes in name)
             .at(8).simple(SQL_VARYING, 2 * OBJECT_NAME_LENGTH + 5, "SPECIFIC_NAME", PROCEDURES).addField()
+            .at(9).simple(SQL_SHORT, 0, "JB_PROCEDURE_TYPE", PROCEDURES).addField()
             .toRowDescriptor();
 
     private GetProcedures(DbMetadataMediator mediator) {
@@ -79,6 +80,7 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
                 .at(6).setString(rs.getString("REMARKS"))
                 .at(7).setShort(rs.getShort("PROCEDURE_TYPE") == 0 ? procedureNoResult : procedureReturnsResult)
                 .at(8).setString(toSpecificName(catalog, schema, procedureName))
+                .at(9).setShort(rs.getShort("JB_PROCEDURE_TYPE"))
                 .toRowValue(true);
     }
 
@@ -92,7 +94,7 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
                 return FB6CatalogAsPackage.createInstance(mediator);
             }
             return FB6.createInstance(mediator);
-        }else if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
+        } else if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
             if (mediator.isUseCatalogAsPackage()) {
                 return FB3CatalogAsPackage.createInstance(mediator);
             }
@@ -111,7 +113,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
                   cast(null as char(1)) as PROCEDURE_SCHEM,
                   RDB$PROCEDURE_NAME as PROCEDURE_NAME,
                   RDB$DESCRIPTION as REMARKS,
-                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
+                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE,
+                  RDB$PROCEDURE_TYPE as JB_PROCEDURE_TYPE
                 from RDB$PROCEDURES""";
 
         private static final String GET_PROCEDURES_ORDER_BY_2_5 = "\norder by RDB$PROCEDURE_NAME";
@@ -142,7 +145,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
                   null as PROCEDURE_SCHEM,
                   trim(trailing from RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
                   RDB$DESCRIPTION as REMARKS,
-                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
+                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE,
+                  RDB$PROCEDURE_TYPE as JB_PROCEDURE_TYPE
                 from RDB$PROCEDURES
                 where RDB$PACKAGE_NAME is null""";
 
@@ -175,7 +179,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
                   null as PROCEDURE_SCHEM,
                   trim(trailing from RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
                   RDB$DESCRIPTION as REMARKS,
-                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
+                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE,
+                  RDB$PROCEDURE_TYPE as JB_PROCEDURE_TYPE
                 from RDB$PROCEDURES""";
 
         private static final String GET_PROCEDURES_ORDER_BY_3_W_PKG =
@@ -222,7 +227,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
                   trim(trailing from RDB$SCHEMA_NAME) as PROCEDURE_SCHEM,
                   trim(trailing from RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
                   RDB$DESCRIPTION as REMARKS,
-                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
+                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE,
+                  RDB$PROCEDURE_TYPE as JB_PROCEDURE_TYPE
                 from SYSTEM.RDB$PROCEDURES
                 where RDB$PACKAGE_NAME is null""";
 
@@ -261,7 +267,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
                   trim(trailing from RDB$SCHEMA_NAME) as PROCEDURE_SCHEM,
                   trim(trailing from RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
                   RDB$DESCRIPTION as REMARKS,
-                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE
+                  RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE,
+                  RDB$PROCEDURE_TYPE as JB_PROCEDURE_TYPE
                 from SYSTEM.RDB$PROCEDURES""";
 
         private static final String GET_PROCEDURES_ORDER_BY_6_W_PKG =

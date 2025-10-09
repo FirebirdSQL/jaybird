@@ -336,8 +336,20 @@ public class FBConnection implements FirebirdConnection {
     public String nativeSQL(String sql) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            return FBEscapedParser.toNativeSql(sql);
+            return getEscapedParser().toNative(sql);
         }
+    }
+
+    /**
+     * Get an {@link FBEscapedParser} for this connection.
+     *
+     * @return an {@link FBEscapedParser} configured for the version and dialect of this connection
+     * @throws SQLException if the connection is closed
+     * @since 7
+     */
+    FBEscapedParser getEscapedParser() throws SQLException {
+        // We're not caching it, as it has no real state and is cheap to create
+        return FBEscapedParser.of(getGDSHelper().getServerVersion(), getQuoteStrategy());
     }
 
     @Override
@@ -872,6 +884,8 @@ public class FBConnection implements FirebirdConnection {
                 rsBehavior = rsBehavior.withReadOnly();
             }
 
+            // TODO Maybe we should move creation and retention of the StoredProcedureMetaData to FBDatabaseMetaData,
+            //  then we can also clear the cached selectability info if FBDatabaseMetaData.close() is called.
             if (storedProcedureMetaData == null) {
                 storedProcedureMetaData = StoredProcedureMetaDataFactory.getInstance(this);
             }

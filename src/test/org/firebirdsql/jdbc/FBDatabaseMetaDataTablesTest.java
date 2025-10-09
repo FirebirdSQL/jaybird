@@ -24,7 +24,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.FBTestProperties.resolveSchema;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -416,7 +416,7 @@ class FBDatabaseMetaDataTablesTest {
     @NullSource
     @ValueSource(strings = { "%", "OTHER_SCHEMA", "OTHER\\_SCHEMA", "OTHER%" })
     void testTableMetaData_OtherSchemaNormalTable_typesTABLE(String schemaPattern) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
         validationRules.put(TableMetaData.TABLE_SCHEM, "OTHER_SCHEMA");

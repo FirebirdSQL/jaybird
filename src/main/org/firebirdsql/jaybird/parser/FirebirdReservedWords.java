@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -40,12 +40,12 @@ public enum FirebirdReservedWords implements ReservedWords {
             "RDB$SYSTEM_PRIVILEGE", "REAL", "RECORD_VERSION", "RECREATE", "RECURSIVE", "REFERENCES", "REGR_AVGX",
             "REGR_AVGY", "REGR_COUNT", "REGR_INTERCEPT", "REGR_R2", "REGR_SLOPE", "REGR_SXX", "REGR_SXY", "REGR_SYY",
             "RELEASE", "RESETTING", "RETURN", "RETURNING_VALUES", "RETURNS", "REVOKE", "RIGHT", "ROLLBACK", "ROW",
-            "ROWS", "ROW_COUNT", "SAVEPOINT", "SCROLL", "SECOND", "SELECT", "SENSITIVE", "SET", "SIMILAR", "SMALLINT",
-            "SOME", "SQLCODE", "SQLSTATE", "START", "STDDEV_POP", "STDDEV_SAMP", "SUM", "TABLE", "THEN", "TIME",
-            "TIMESTAMP", "TIMEZONE_HOUR", "TIMEZONE_MINUTE", "TO", "TRAILING", "TRIGGER", "TRIM", "TRUE", "UNBOUNDED",
-            "UNION", "UNIQUE", "UNKNOWN", "UPDATE", "UPDATING", "UPPER", "USER", "USING", "VALUE", "VALUES",
-            "VARBINARY", "VARCHAR", "VARIABLE", "VARYING", "VAR_POP", "VAR_SAMP", "VIEW", "WHEN", "WHERE", "WHILE",
-            "WINDOW", "WITH", "WITHOUT", "YEAR"),
+            "ROWS", "ROW_COUNT", "SAVEPOINT", "SCHEMA", "SCROLL", "SECOND", "SELECT", "SENSITIVE", "SET", "SIMILAR",
+            "SMALLINT", "SOME", "SQLCODE", "SQLSTATE", "START", "STDDEV_POP", "STDDEV_SAMP", "SUM", "TABLE", "THEN",
+            "TIME", "TIMESTAMP", "TIMEZONE_HOUR", "TIMEZONE_MINUTE", "TO", "TRAILING", "TRIGGER", "TRIM", "TRUE",
+            "UNBOUNDED", "UNION", "UNIQUE", "UNKNOWN", "UPDATE", "UPDATING", "UPPER", "USER", "USING", "VALUE",
+            "VALUES", "VARBINARY", "VARCHAR", "VARIABLE", "VARYING", "VAR_POP", "VAR_SAMP", "VIEW", "WHEN", "WHERE",
+            "WHILE", "WINDOW", "WITH", "WITHOUT", "YEAR"),
     ;
 
     private final Set<CharSequence> reservedWords;

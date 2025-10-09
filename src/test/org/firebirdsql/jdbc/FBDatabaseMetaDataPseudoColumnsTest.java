@@ -3,7 +3,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -19,7 +18,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.FBTestProperties.resolveSchema;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -302,7 +301,7 @@ class FBDatabaseMetaDataPseudoColumnsTest {
     @NullSource
     @ValueSource(strings = { "%", "OTHER_SCHEMA", "OTHER\\_SCHEMA", "OTHER%" })
     void testOtherSchemaNormalTable2_allPseudoColumns(String schemaPattern) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         List<Map<PseudoColumnMetaData, Object>> validationRules =
                 createStandardValidationRules("OTHER_SCHEMA", NORMAL_TABLE3_NAME, "NO");
 

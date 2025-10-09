@@ -25,7 +25,7 @@ import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForCon
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.jdbc.FBDatabaseMetaDataFunctionsTest.isIgnoredFunction;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
@@ -263,7 +263,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
     void testFunctionColumnMetaData_otherSchema_functionNamePatternAll(String functionNamePattern) throws Exception {
         // For 4.0 and older, we ignore the schemaPattern, so we need to skip this test, as the query would return
         // functions (the "default schema" functions) instead of no functions
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         validateExpectedFunctionColumns("", "OTHER_SCHEMA", functionNamePattern, "%",
                 getOtherSchemaAllNonPackagedFunctionColumns());
     }

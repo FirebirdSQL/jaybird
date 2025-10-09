@@ -4,7 +4,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.FBTestProperties.resolveSchema;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -170,7 +169,7 @@ class FBDatabaseMetaDataTablePrivilegesTest {
             OTHER_SCHEMA,   TBL_
             """)
     void testColumnPrivileges_otherSchemaTBL3_all(String schemaPattern, String tableNamePattern) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         List<Map<TablePrivilegesMetadata, Object>> rules = getTBL3_all();
 
         validateExpectedColumnPrivileges(schemaPattern, tableNamePattern, rules);
@@ -232,7 +231,7 @@ class FBDatabaseMetaDataTablePrivilegesTest {
             OTHER%,         <NIL>
             """)
     void testColumnPrivileges_otherSchema_all(String schemaPattern, String tableNamePattern) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         List<Map<TablePrivilegesMetadata, Object>> rules = getTBL3_all();
 
         validateExpectedColumnPrivileges(schemaPattern, tableNamePattern, rules);

@@ -42,6 +42,11 @@ This is done -- with some exceptions -- at prepare time.
 * Gbak has additional options to include/exclude (skip) schema data in backup or restore, similar to existing options to include/exclude tables
 * Gstat has additional options to specify a schema for operations involving tables
 * For validation, `val_sch_incl` and `val_sch_excl` (I don't think we use the equivalent,`val_tab_incl`/`val_tab_excl` in Jaybird, so might not be relevant)
+* Stored procedure resolution:
+** Unqualified stored procedures (`<name>`) are searched on the search path
+** Qualified stored procedures (`<schema-or-package>.<name>`) are first located by schema and name, and if not found, searched on the search path by package and name.
+** Scope-specified stored procedures are either only located by schema (`<schema>%SCHEMA.<name>`) or only searched on the search path by package and name (`<package>%PACKAGE.<name>`), not both.
+** Fully-qualified packaged stored procedures (`<schema>.<package>.<name>`) are located by schema, package and name
 
 JDBC defines various methods, parameters, and return values or result set columns that are related to schemas.
 
@@ -72,14 +77,14 @@ On Firebird 5.0 and older, this will be silently ignored.
 * In internal queries in Jaybird, and fully qualified object names, we'll use the regular -- unquoted -- identifier `SYSTEM`, even though `SYSTEM` is a SQL:2023 reserved word, to preserve dialect 1 compatibility.
 * `Connection.getSchema()` will return the result of `select CURRENT_SCHEMA from SYSTEM.RDB$DATABASE`;
 the connection will not store this value
-* `Connection.setSchema(String)` will query the current search path, if not previously called, it will prepend the schema name to the search path, otherwise it will _replace_ the previously prepended schema name.
+* `Connection.setSchema(String)` will query the current search path, and if not previously called, it will prepend the schema name to the search path, otherwise it will _replace_ the previously prepended schema name.
 The schema name is stored _only_ for this replacement operation (i.e. it will not be returned by `getSchema`!)
 +
 ** The name must match exactly as is stored in the metadata (it is always case-sensitive!)
 ** Jaybird will take care of quoting, and will always quote on dialect 3
 ** Existence of the schema is **not** checked, so it is possible the current schema does not change with this operation, as `CURRENT_SCHEMA` reports the first _valid_ schema
 ** JDBC specifies that "`__Calling ``setSchema`` has no effect on previously created or prepared Statement objects.__`";
-Jaybird cannot honour this requirement for plain `Statement`, as schema resolution is on prepare time (which for plain `Statement` is on execute), and not always for `CallableStatement` (as the implementation may delay actual prepare until execution).
+Jaybird cannot honour this requirement for plain `Statement`, as schema resolution is on prepare time (which for plain `Statement` is on execute), and not always for `CallableStatement` (as the implementation may delay actual prepare until execution, though we do try to identify the procedure when the callable statement is created and use that to fully-qualify the procedure).
 * Request `isc_info_sql_relation_schema` after preparing a query, record it in `FieldDescriptor`, and return it were relevant for JDBC (e.g. `ResultSetMetaData.getSchemaName(int)`)
 ** For Firebird 5.0 and older, we need to ensure that JDBC methods continue to report the correct value (i.e. `""` for schema-less objects)
 * A Firebird 6.0 variant of the `DatabaseMetaData` and other internal metadata queries needs to be written to address at least the following things:
@@ -91,8 +96,15 @@ Jaybird cannot honour this requirement for plain `Statement`, as schema resoluti
 * `FirebirdConnection`
 ** Added method `String getSearchPath()` to obtain the search path as reported by `RBB$GET_CONTEXT('SYSTEM', 'SEARCH_PATH')`, or `null` if schemas are not supported
 ** Added method `List<String> getSearchPatList()` to obtain the search path as a list of unquoted object names, or empty list if schemas are not supported
+* `FBCallableStatement`
+** On creating the instance, the stored procedure is parsed and identified in the database metadata, including selectability, unless `ignoreProcedureType` is `true`
+*** Parsing of callable statements is changed to be able to identify schema, package and procedure, including scope specifiers
+** Jaybird emulates the lookup rules as used by Firebird, and -- if found -- records the identified procedure so subsequent internal prepares refer to the same procedure, even if the search path changes;
+this fulfills the JDBC requirements that a `CallableStatement` is not sensitive to current schema changes *if* Jaybird is able to identify the procedure, behaviour is undefined if the procedure was not found.
+** The API of `StoredProcedureMetaData` (internal API) is changed to not report selectability, but to update the `FBProcedureCall` instance with selectability and other information, like identified schema and/or package.
+** For qualified *and* unambiguous procedure reference, the selectability is cached *per connection*, for unqualified or ambiguous procedure reference, the lookup is performed on each `Connection.prepareCall`, to account for search path changes
+** Support for packages was missing in the handling of callable statements, and is added, also for older versions
 * TODO: Define effects for management API
-* TODO: Redesign retrieval of selectable procedure information (`StoredProcedureMetaDataFactory`) to be able to find stored procedures by schema
 * TODO: Add information to Jaybird manual
 
 Note to self: use `// TODO Add schema support` in places that you identify need to get/improve schema support, while working on schema support elsewhere

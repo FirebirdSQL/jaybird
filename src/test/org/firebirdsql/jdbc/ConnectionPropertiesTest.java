@@ -20,7 +20,7 @@ import java.util.Properties;
 import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -85,7 +85,7 @@ class ConnectionPropertiesTest {
     @MethodSource("searchPathTestCases")
     void testProperty_searchPath_onDriverManager(String searchPath, String expectedSearchPath, String expectedSchema,
             String expectedColumn) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         try (Connection connection = getConnectionViaDriverManager(PropertyNames.searchPath, searchPath)) {
             verifySearchPath(connection, expectedSearchPath, expectedSchema, expectedColumn);
         }
@@ -95,7 +95,7 @@ class ConnectionPropertiesTest {
     @MethodSource("searchPathTestCases")
     void testProperty_searchPath_onataSource(String searchPath, String expectedSearchPath, String expectedSchema,
             String expectedColumn) throws Exception {
-        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test requires schema support");
+        assumeSchemaSupport();
         FBSimpleDataSource ds = createDataSource();
 
         ds.setSearchPath(searchPath);
