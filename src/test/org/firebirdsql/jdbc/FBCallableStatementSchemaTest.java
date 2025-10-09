@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,6 +41,10 @@ class FBCallableStatementSchemaTest {
     }
 
     private static List<String> dbInitStatements() {
+        if (!getDefaultSupportInfo().supportsSchemas()) {
+            // UsesDatabaseForAll extension is registered before evaluation of requiresSchemaSupport
+            return List.of();
+        }
         return Stream.of(
                         Stream.of("T1", "T2", "T3").map(FBCallableStatementSchemaTest::createSchema),
                         Stream.of(
