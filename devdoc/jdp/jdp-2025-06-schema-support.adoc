@@ -6,7 +6,7 @@
 == Status
 
 * Draft
-* Proposed for: Jaybird 7, potential backport to Jaybird 6 and/or Jaybird 5
+* Proposed for: Jaybird 7, potential partial backport to Jaybird 5
 
 == Type
 
@@ -64,7 +64,11 @@ When Jaybird 7 is used on Firebird 5.0 or older, it will behave as before (no sc
 
 Further details can be found in <<consequences>>.
 
-Decision on backport to Jaybird 6 and/or Jaybird 5 is pending, and may be the subject of a separate JDP.
+Schema support will _not_ be backported to Jaybird 6 as the required changes are simply too large.
+It would mean that Jaybird 6 would contain most of Jaybird 7, and upgrading to a -- theoretical -- Jaybird 6.1 would have similar risks and compatibility issues as upgrading to Jaybird 7.
+
+Decision on a (partial) backport to Jaybird 5 -- as the "`long-term support`" version for Java 8 -- is still pending (e.g. as a Jaybird 5.1.x), and may be the subject of a separate JDP.
+We might only do that on demand and/or when someone is willing to sponsor the work.
 
 [#consequences]
 == Consequences
