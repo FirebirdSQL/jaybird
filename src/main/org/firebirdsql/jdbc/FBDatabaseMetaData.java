@@ -1195,6 +1195,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *       <li>{@link #jbProcedureTypeExecutable} ({@code 2}) &mdash; executable</li>
      *   </ul>
      * </li>
+     * <li><b>JB_PROCEDURE_SOURCE</b> String =&gt; source of the body of the stored procedure
+     * ({@code RDB$PROCEDURES.RDB$PROCEDURE_SOURCE}); {@code null} for procedures in a package</li>
      * </ol>
      * </p>
      * <p>
@@ -1209,8 +1211,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <li>Column {@code PROCEDURE_CAT} for normal procedures is empty string ({@code ""}) instead of {@code null},
      * for packaged procedures it is the package name</li>
      * <li>Column {@code SPECIFIC_NAME} for packaged procedures will report
-     * {@code <quoted-package-name>.<quoted-procedure-name>} (normal procedures will report the same as column
-     * {@code PROCEDURE_NAME}, the unquoted name)</li></li>
+     * {@code [<quoted-schema-name>.]<quoted-package-name>.<quoted-procedure-name>} (on Firebird 5.0 and older, normal
+     * procedures will report the same as column {@code PROCEDURE_NAME}, the unquoted name, on Firebird 6.0 and higher,
+     * {@code <quoted-schema-name>.<quoted-procedure-name>})</li>
      * </ul>
      */
     @Override
@@ -1870,12 +1873,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public String getProcedureSourceCode(String procedureName) throws SQLException {
-        return getProcedureSourceCode(null, procedureName);
-    }
-
-    @Override
-    public String getProcedureSourceCode(String schema, String procedureName) throws SQLException {
-        return getSourceCode(schema, procedureName, SourceObjectType.PROCEDURE);
+        return getSourceCode(null, procedureName, SourceObjectType.PROCEDURE);
     }
 
     @Override

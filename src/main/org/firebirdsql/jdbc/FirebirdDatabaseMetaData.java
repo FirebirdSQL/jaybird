@@ -22,29 +22,34 @@ import java.util.Optional;
 @SuppressWarnings("unused")
 public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
 
-    // TODO Add schema support: remove/deprecate getProcedureSourceCode(String) and remove new alternative with schema,
-    //  and instead add a column to getProcedures(..)
-
     /**
      * Firebird procedure type is unknown (value of column {@code JB_PROCEDURE_TYPE} of
      * {@link #getProcedures(String, String, String)})
+     *
+     * @since 7
      */
     int jbProcedureTypeUnknown = 0;
     /**
      * Firebird procedure type is selectable (value of column {@code JB_PROCEDURE_TYPE} of
      * {@link #getProcedures(String, String, String)})
+     *
+     * @since 7
      */
     int jbProcedureTypeSelectable = 1;
     /**
      * Firebird procedure type is executable (value of column {@code JB_PROCEDURE_TYPE} of
      * {@link #getProcedures(String, String, String)})
+     *
+     * @since 7
      */
     int jbProcedureTypeExecutable = 2;
 
     /**
      * Get the source of a stored procedure.
      * <p>
-     * On Firebird 6.0 and higher, it is recommended to use {@link #getProcedureSourceCode(String, String)} instead.
+     * <strong>WARNING</strong>: On Firebird 6.0 and higher, the sources returned are for the first procedure found
+     * (with an undefined schema order!), use {@link DatabaseMetaData#getProcedures(String, String, String)} instead
+     * (column {@code JB_PROCEDURE_SOURCE}).
      * </p>
      *
      * @param procedureName
@@ -52,29 +57,17 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @return source of the stored procedure
      * @throws SQLException
      *         if specified procedure cannot be found
-     * @see #getProcedureSourceCode(String, String)
+     * @deprecated use {@link DatabaseMetaData#getProcedures(String, String, String)}, column
+     * {@code JB_PROCEDURE_SOURCE}; there are currently no plans to remove this method
      */
+    @Deprecated(forRemoval = false, since = "7")
     String getProcedureSourceCode(String procedureName) throws SQLException;
-
-    /**
-     * Get the source of a stored procedure.
-     *
-     * @param schema
-     *         schema of the stored procedure ({@code null} drops the schema from the search; ignored on Firebird 5.0
-     *         and older)
-     * @param procedureName
-     *         name of the stored procedure
-     * @return source of the stored procedure
-     * @throws SQLException
-     *         if specified procedure cannot be found
-     * @since 7
-     */
-    String getProcedureSourceCode(String schema, String procedureName) throws SQLException;
 
     /**
      * Get the source of a trigger.
      * <p>
-     * On Firebird 6.0 and higher, it is recommended to use {@link #getTriggerSourceCode(String, String)} instead.
+     * <strong>WARNING</strong>: On Firebird 6.0 and higher, the sources returned are for the first trigger found
+     * (with an undefined schema order!), use {@link #getTriggerSourceCode(String, String)} instead.
      * </p>
      *
      * @param triggerName
@@ -104,6 +97,10 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * Get the source of a view.
      * <p>
      * On Firebird 6.0 and higher, it is recommended to use {@link #getViewSourceCode(String, String)} instead.
+     * </p>
+     * <p>
+     * <strong>WARNING</strong>: On Firebird 6.0 and higher, the sources returned are for the first view found
+     * (with an undefined schema order!), use {@link #getViewSourceCode(String, String)} instead
      * </p>
      *
      * @param viewName
