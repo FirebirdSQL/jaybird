@@ -24,8 +24,6 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  */
 public sealed class GetCatalogs extends AbstractMetadataMethod {
 
-    // TODO Add schema support: maybe add a custom column with a list of schema names for useCatalogsAsPackage?
-
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(1)
             .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLECATALOGS").addField()
             .toRowDescriptor();
