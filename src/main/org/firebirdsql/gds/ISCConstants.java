@@ -336,9 +336,13 @@ public interface ISCConstants {
     int isc_spb_sts_idx_pages	=	0x08;
     int isc_spb_sts_sys_relations = 0x10;
     int isc_spb_sts_record_versions = 0x20;
-    int isc_spb_sts_table       =   0x40;
+    // No longer a flag
+    //int isc_spb_sts_table     =   0x40;
     int isc_spb_sts_nocreation  =   0x80;
     int isc_spb_sts_encryption	=  0x100;
+
+    int isc_spb_sts_table = 64;
+    int isc_spb_sts_schema = 65;
 
     // Common, structural codes
 

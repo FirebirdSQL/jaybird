@@ -111,6 +111,10 @@ this fulfills the JDBC requirements that a `CallableStatement` is not sensitive 
 ** For qualified *and* unambiguous procedure reference, the selectability is cached *per connection*, for unqualified or ambiguous procedure reference, the lookup is performed on each `Connection.prepareCall`, to account for search path changes
 ** Support for packages was missing in the handling of callable statements, and is added, also for older versions
 * TODO: Define effects for management API
+** `StatisticsManager`
+*** `getTableStatistics` received an overload to also accept a list of schemas (`sts_schema`)
+** `FBTableStatisticsManager`/`TableStatistics`
+*** TODO: API and internals need to be redesigned to account for schemas
 * TODO: Add information to Jaybird manual
 
 Note to self: use `// TODO Add schema support` in places that you identify need to get/improve schema support, while working on schema support elsewhere
