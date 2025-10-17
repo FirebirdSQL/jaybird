@@ -7,7 +7,6 @@ import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Abstract version for {@code major.minor} version information.
@@ -78,7 +77,7 @@ public abstract class AbstractVersion implements Comparable<AbstractVersion>, Se
 
     @Override
     public int hashCode() {
-        return Objects.hash(major, minor);
+        return 31 * major + minor;
     }
 
     @Override

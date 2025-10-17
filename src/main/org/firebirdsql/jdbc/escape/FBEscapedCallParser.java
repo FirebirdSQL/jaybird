@@ -485,10 +485,15 @@ public final class FBEscapedCallParser {
         }
 
         public static SyntaxVersion of(AbstractVersion version) {
-            return of(version.major());
+            return of(version.major(), version.minor());
         }
 
         public static SyntaxVersion of(int majorVersion) {
+            return of(majorVersion, 0);
+        }
+
+        public static SyntaxVersion of(int majorVersion, @SuppressWarnings("unused") int minorVersion) {
+            // Currently no syntax versions where the minor matters
             if (majorVersion >= 6) {
                 return FIREBIRD_6_0;
             } else if (majorVersion >= 3) {

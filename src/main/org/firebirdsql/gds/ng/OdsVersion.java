@@ -82,11 +82,6 @@ public final class OdsVersion extends AbstractVersion {
         return minor() != minor ? of(major(), minor) : this;
     }
 
-    @Override
-    public int hashCode() {
-        return key(major(), minor());
-    }
-
     @Serial
     private Object readResolve() {
         // Return cached variant
