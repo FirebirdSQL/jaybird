@@ -110,11 +110,16 @@ this fulfills the JDBC requirements that a `CallableStatement` is not sensitive 
 ** The API of `StoredProcedureMetaData` (internal API) is changed to not report selectability, but to update the `FBProcedureCall` instance with selectability and other information, like identified schema and/or package.
 ** For qualified *and* unambiguous procedure reference, the selectability is cached *per connection*, for unqualified or ambiguous procedure reference, the lookup is performed on each `Connection.prepareCall`, to account for search path changes
 ** Support for packages was missing in the handling of callable statements, and is added, also for older versions
-* TODO: Define effects for management API
+* Effects for management API
 ** `StatisticsManager`
 *** `getTableStatistics` received an overload to also accept a list of schemas (`sts_schema`)
 ** `FBTableStatisticsManager`/`TableStatistics`
-*** TODO: API and internals need to be redesigned to account for schemas
+*** Internally `ObjectReference` is used for the table instead of a String
+*** The key of the map returned by `getTableStatistics()` is a qualified table reference (i.e. `{<table-name> | <quoted-schema>.<quoted-table-name>}`.
+For schemaless tables, the unquoted table name is used as the key for backwards compatibility when used against Firebird 5.0 and older.
+*** `TableStatistics` received two extra accessors:
+**** `schema()` with the schema, or empty string if schemaless (or not found)
+**** `tableReference()` with the qualified table reference (i.e. `[<quoted-schema>.]<quoted-table-name>` (contrary to the key of getTableStatistics, it's always quoted!))
 * TODO: Add information to Jaybird manual
 
 Note to self: use `// TODO Add schema support` in places that you identify need to get/improve schema support, while working on schema support elsewhere

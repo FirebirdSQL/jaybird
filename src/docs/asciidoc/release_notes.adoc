@@ -565,6 +565,14 @@ we recommend to always use `null` for `catalog`
 *** `getTableStatistics(String[] tableNames)` was changed to accept varargs (`getTableStatistics(String... tableNames)`)
 *** Added overload `getTableStatistics(List<String> tableNames)` with same behaviour as `getTableStatistics(String... tableNames)`
 *** Added overload `getTableStatistics(List<String> schemas, List<String> tableNames)` -- if `schemas` is non-empty, on Firebird 6.0 and higher, it will restrict the search for tables to the specified schemas
+* `FBTableStatisticsManager` (experimental feature)
+** For schema-bound tables, the key of the map returned by `getTableStatistics()` is a fully qualified and quoted table reference (i.e. `<quoted-schema>.<quoted-table-name>`).
+For schemaless tables (Firebird 5.0 and older, or tables that were not found), the key is still the unquoted `<table-name>`.
+** The static method `toTableReference(String schema, String tableName)` can be used to create a table reference in the same format as the key of the map returned by `getTableStatistics()`.
+The `schema` can be `null` or empty string for schemaless tables (i.e. Firebird 5.0 or older)
+** The `TableStatistics` object received additional accessors:
+*** `schema()` with the schema, or empty string for schemaless (Firebird 5.0 or older) or if the table was not found
+*** `tableReference()` with the fully qualified and quoted table reference (i.e. `[<quoted-schema>.]<quoted-table-name>`)
 
 // TODO add major changes
 
