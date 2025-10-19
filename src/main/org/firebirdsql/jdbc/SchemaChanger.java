@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrBlank;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
@@ -41,8 +42,19 @@ sealed abstract class SchemaChanger {
      * @throws SQLException
      *         for database access errors, or if {@code schema} is {@code null} or blank <em>if</em> schemas are
      *         supported
+     * @see #setSearchPath(String)
      */
     abstract void setSchema(String schema) throws SQLException;
+
+    /**
+     * Sets the search path, overriding any previously set current schema or search path.
+     *
+     * @param searchPath new search path to set (non-{@code null} and not blank, comma-separate, and quoted if needed)
+     * @throws java.sql.SQLFeatureNotSupportedException if schemas are not supported (Firebird 5.0 and older)
+     * @throws SQLException for database access errors, or if {@code searchPath} is {@code null} or blank
+     * @see #setSchema(String)
+     */
+    abstract void setSearchPath(String searchPath) throws SQLException;
 
     /**
      * Current schema and search path.
@@ -134,7 +146,7 @@ sealed abstract class SchemaChanger {
 
         @Override
         void setSchema(String schema) throws SQLException {
-            if (schema == null || schema.isBlank()) {
+            if (isNullOrBlank(schema)) {
                 // TODO externalize?
                 throw new SQLDataException("schema must be non-null and not blank",
                         SQLStateConstants.SQL_STATE_INVALID_USE_NULL);
@@ -166,13 +178,29 @@ sealed abstract class SchemaChanger {
                     newSearchPath.addAll(originalSearchPath);
                 }
 
-                //noinspection SqlSourceToSinkFlow
-                getStatement().execute("set search_path to "
-                        + SearchPathHelper.toSearchPath(newSearchPath, connection.getQuoteStrategy()));
+                setSearchPath0(SearchPathHelper.toSearchPath(newSearchPath, connection.getQuoteStrategy()));
                 schemaInfoAfterLastChange = getCurrentSchemaInfo();
                 lastSearchPath = List.copyOf(newSearchPath);
                 lastSchemaChange = schema;
             }
+        }
+
+        @Override
+        void setSearchPath(String searchPath) throws SQLException {
+            if (isNullOrBlank(searchPath)) {
+                // TODO externalize?
+                throw new SQLDataException("search path must have at least one schema",
+                        SQLStateConstants.SQL_STATE_INVALID_USE_NULL);
+            }
+            setSearchPath0(searchPath);
+            schemaInfoAfterLastChange = getCurrentSchemaInfo();
+            lastSearchPath = schemaInfoAfterLastChange.toSearchPathList();
+            // given this change was no explicit call to setSchema, clear it
+            lastSchemaChange = null;
+        }
+
+        private void setSearchPath0(String searchPath) throws SQLException {
+            getStatement().execute("set search_path to " + searchPath);
         }
     }
 
@@ -186,6 +214,11 @@ sealed abstract class SchemaChanger {
         @Override
         void setSchema(String schema) {
             // do nothing (not even validate the name)
+        }
+
+        @Override
+        void setSearchPath(String searchPath) throws SQLException {
+            throw new FBDriverNotCapableException("Schema support required for setSearchPath");
         }
 
         @Override

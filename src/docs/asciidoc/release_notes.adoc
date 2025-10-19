@@ -560,6 +560,8 @@ we recommend to always use `null` for `catalog`
 * `FirebirdConnection`/`FBConnection`
 ** Added method `String getSearchPath()` to obtain the search path as reported by `RBB$GET_CONTEXT('SYSTEM', 'SEARCH_PATH')`, or `null` if schemas are not supported
 ** Added method `List<String> getSearchPatList()` to obtain the search path as a list of unquoted object names, or empty list if schemas are not supported
+** Added methods `setSearchPath(String)` and `setSearchPathList(String...)/(List<String>)` where added to set the search path;
+these methods throw `SQLFeatureNotSupportedException` if schemas are not supported.
 * `StatisticsManager`
 ** `getTableStatistics`
 *** `getTableStatistics(String[] tableNames)` was changed to accept varargs (`getTableStatistics(String... tableNames)`)

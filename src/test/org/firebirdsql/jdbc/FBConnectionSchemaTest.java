@@ -4,6 +4,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension.UsesDatabaseForAll;
+import org.firebirdsql.common.matchers.SQLExceptionMatchers;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.util.SearchPathHelper;
 import org.junit.jupiter.api.Test;
@@ -17,15 +18,18 @@ import java.sql.Connection;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLDataException;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FbAssumptions.assumeNoSchemaSupport;
 import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -200,6 +204,97 @@ class FBConnectionSchemaTest {
             assertEquals(expectedSearchPath, connection.getSearchPath(), "searchPath");
             assertEquals(SearchPathHelper.parseSearchPath(expectedSearchPath), connection.getSearchPathList(),
                     "searchPathList");
+        }
+    }
+
+    @Test
+    void setSearchPath_noSchemaSupport_throwsFBDriverNotCapable() throws Exception {
+        assumeNoSchemaSupport();
+        try (var connection = getConnectionViaDriverManager()) {
+            assertThrows(FBDriverNotCapableException.class, () -> connection.setSearchPath("SYSTEM"));
+        }
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { " ", "  " })
+    void setSearchPath_schemaSupport_nullOrBlank_notAccepted(String searchPath) throws Exception {
+        assumeSchemaSupport();
+        try (var connection = getConnectionViaDriverManager()) {
+            var exception = assertThrows(SQLDataException.class, () -> connection.setSearchPath(searchPath));
+            assertThat(exception, message(startsWith("search path must have at least one schema")));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            searchPath,       expectedSearchPath
+            PUBLIC,           '"PUBLIC", "SYSTEM"'
+            'PUBLIC, SYSTEM', '"PUBLIC", "SYSTEM"'
+            public,           '"PUBLIC", "SYSTEM"'
+            "public",         '"public", "SYSTEM"'
+            SCHEMA_1,         '"SCHEMA_1", "SYSTEM"'
+            "case_sensitive", '"case_sensitive", "SYSTEM"'
+            # NOTE Unquoted!
+            case_sensitive,   '"CASE_SENSITIVE", "SYSTEM"'
+            'SCHEMA_1, "case_sensitive", SYSTEM, PUBLIC', '"SCHEMA_1", "case_sensitive", "SYSTEM", "PUBLIC"'
+            """)
+    void setSearchPath_schemaSupport(String searchPath, String expectedSearchPath) throws Exception {
+        assumeSchemaSupport();
+        try (var connection = getConnectionViaDriverManager()) {
+            connection.setSearchPath(searchPath);
+
+            assertEquals(expectedSearchPath, connection.getSearchPath(), "searchPath");
+        }
+    }
+
+    @Test
+    void setSearchPathList_stringArr_noSchemaSupport_throwsFBDriverNotCapable() throws Exception {
+        assumeNoSchemaSupport();
+        try (var connection = getConnectionViaDriverManager()) {
+            assertThrows(SQLFeatureNotSupportedException.class, () -> connection.setSearchPathList("SYSTEM"));
+        }
+    }
+
+    // As setSearchPathList(String...) goes through setSearchPathList(List<String>), we only tests through the latter
+
+    @Test
+    void setSearchPathList_stringList_noSchemaSupport_throwsFBDriverNotCapable() throws Exception {
+        assumeNoSchemaSupport();
+        try (var connection = getConnectionViaDriverManager()) {
+            assertThrows(SQLFeatureNotSupportedException.class, () -> connection.setSearchPathList(List.of("SYSTEM")));
+        }
+    }
+
+    @Test
+    void setSearchPathList_stringList_schemaSupport_empty_notAccepted() throws Exception {
+        assumeSchemaSupport();
+        try (var connection = getConnectionViaDriverManager()) {
+            var exception = assertThrows(SQLDataException.class, () -> connection.setSearchPathList(List.of()));
+            assertThat(exception, message(startsWith("search path must have at least one schema")));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            searchPath,       expectedSearchPath
+            PUBLIC,           '"PUBLIC", "SYSTEM"'
+            'PUBLIC, SYSTEM', '"PUBLIC", "SYSTEM"'
+            public,           '"PUBLIC", "SYSTEM"'
+            "public",         '"public", "SYSTEM"'
+            SCHEMA_1,         '"SCHEMA_1", "SYSTEM"'
+            "case_sensitive", '"case_sensitive", "SYSTEM"'
+            # NOTE Unquoted!
+            case_sensitive,   '"CASE_SENSITIVE", "SYSTEM"'
+            'SCHEMA_1, "case_sensitive", SYSTEM, PUBLIC', '"SCHEMA_1", "case_sensitive", "SYSTEM", "PUBLIC"'
+            """)
+    void setSearchPathList_stringList_schemaSupport(String searchPath, String expectedSearchPath) throws Exception {
+        assumeSchemaSupport();
+        try (var connection = getConnectionViaDriverManager()) {
+            List<String> searchPathList = SearchPathHelper.parseSearchPath(searchPath);
+            connection.setSearchPathList(searchPathList);
+
+            assertEquals(expectedSearchPath, connection.getSearchPath(), "searchPath");
         }
     }
 

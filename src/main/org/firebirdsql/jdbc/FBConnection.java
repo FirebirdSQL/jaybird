@@ -23,6 +23,7 @@ import org.firebirdsql.jaybird.parser.StatementDetector;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
+import org.firebirdsql.jaybird.util.SearchPathHelper;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
@@ -1119,8 +1120,18 @@ public class FBConnection implements FirebirdConnection {
     }
 
     @Override
+    public final void setSearchPath(String searchPath) throws SQLException {
+        getSchemaChanger().setSearchPath(searchPath);
+    }
+
+    @Override
     public final List<String> getSearchPathList() throws SQLException {
         return getSchemaInfo().toSearchPathList();
+    }
+
+    @Override
+    public void setSearchPathList(List<String> schemas) throws SQLException {
+        getSchemaChanger().setSearchPath(SearchPathHelper.toSearchPath(schemas, getQuoteStrategy()));
     }
 
     private SchemaChanger.SchemaInfo getSchemaInfo() throws SQLException {

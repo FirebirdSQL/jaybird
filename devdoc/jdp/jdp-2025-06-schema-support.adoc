@@ -79,14 +79,15 @@ The following changes are made to Jaybird to support schemas when connecting to 
 +
 On Firebird 5.0 and older, this will be silently ignored.
 * In internal queries in Jaybird, and fully qualified object names, we'll use the regular -- unquoted -- identifier `SYSTEM`, even though `SYSTEM` is a SQL:2023 reserved word, to preserve dialect 1 compatibility.
-* `Connection.getSchema()` will return the result of `select CURRENT_SCHEMA from SYSTEM.RDB$DATABASE`;
+* `Connection`
+** `getSchema()` will return the result of `select CURRENT_SCHEMA from SYSTEM.RDB$DATABASE`;
 the connection will not store this value
-* `Connection.setSchema(String)` will query the current search path, and if not previously called, it will prepend the schema name to the search path, otherwise it will _replace_ the previously prepended schema name.
+** `setSchema(String)` will query the current search path, and if not previously called, it will prepend the schema name to the search path, otherwise it will _replace_ the previously prepended schema name.
 The schema name is stored _only_ for this replacement operation (i.e. it will not be returned by `getSchema`!)
-** The name must match exactly as is stored in the metadata (it is always case-sensitive!)
-** Jaybird will take care of quoting, and will always quote on dialect 3
-** Existence of the schema is **not** checked, so it is possible the current schema does not change with this operation, as `CURRENT_SCHEMA` reports the first _valid_ schema
-** JDBC specifies that "`__Calling ``setSchema`` has no effect on previously created or prepared Statement objects.__`";
+*** The name must match exactly as is stored in the metadata (it is always case-sensitive!)
+*** Jaybird will take care of quoting, and will always quote on dialect 3
+*** Existence of the schema is **not** checked, so it is possible the current schema does not change with this operation, as `CURRENT_SCHEMA` reports the first _valid_ schema
+*** JDBC specifies that "`__Calling ``setSchema`` has no effect on previously created or prepared Statement objects.__`";
 Jaybird cannot honour this requirement for plain `Statement`, as schema resolution is on prepare time (which for plain `Statement` is on execute), and not always for `CallableStatement`, as the implementation may delay actual prepare until execution, though we do try to identify the procedure when the callable statement is created and use that to fully-qualify the procedure.
 * Request `isc_info_sql_relation_schema` after preparing a query, record it in `FieldDescriptor`, and return it were relevant for JDBC (e.g. `ResultSetMetaData.getSchemaName(int)`)
 ** For Firebird 5.0 and older, we need to ensure that JDBC methods continue to report the correct value (i.e. `""` for schema-less objects)
@@ -102,6 +103,7 @@ We considered adding a column that lists the schema(s) that contain the package 
 * `FirebirdConnection`
 ** Added method `String getSearchPath()` to obtain the search path as reported by `RBB$GET_CONTEXT('SYSTEM', 'SEARCH_PATH')`, or `null` if schemas are not supported
 ** Added method `List<String> getSearchPathList()` to obtain the search path as a list of unquoted object names, or empty list if schemas are not supported
+** Added methods `setSearchPath(String)` and `setSearchPathList` with overloads `(String...)` and `(List<String>)` to set the search path.
 * `FBCallableStatement`
 ** On creating the instance, the stored procedure is parsed and identified in the database metadata, including selectability, unless `ignoreProcedureType` is `true`
 *** Parsing of callable statements is changed to be able to identify schema, package and procedure name, including scope specifiers
