@@ -31,6 +31,7 @@ import javax.sql.PooledConnection;
 import javax.sql.StatementEventListener;
 
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.jaybird.xca.FatalErrorHelper;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 
@@ -156,47 +157,13 @@ public class FBPooledConnection implements PooledConnection {
     protected void fireConnectionError(SQLException ex) {
         SQLException currentException = ex;
         while (currentException != null) {
-            String sqlState = currentException.getSQLState();
-            if (isFatalState(sqlState)) {
+            if (FatalErrorHelper.isFatal(currentException)) {
                 fireFatalConnectionError(ex);
+                return;
             }
             currentException = ex.getNextException();
         }
     }
-
-    /**
-     * Decides if the given SQL state is a fatal connection error.
-     * 
-     * @param sqlState
-     *            SQL State value
-     * @return <code>true</code> if the SQL state is considered fatal
-     */
-    private boolean isFatalState(String sqlState) {
-        if (sqlState == null || sqlState.length() < 2) {
-            // No SQL State or no class specified, assume it's fatal
-            return true;
-        }
-        for (String fatalSqlStateClass : FATAL_SQL_STATE_CLASSES) {
-            if (sqlState.startsWith(fatalSqlStateClass)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static final String[] FATAL_SQL_STATE_CLASSES = {
-            // TODO double check firebird and Jaybird implementation for other states
-            "08", // Connection errors
-            "XX", // Internal errors
-            "01002", // Disconnect error
-            "01S00", // Invalid connection string attribute
-            "2D000", // Invalid transaction termination
-            "2E000", // Invalid connection name
-            "HY000", // General error (TODO: maybe too general?)
-            "HY001", // Memory allocation error
-            "HYT00", // Timeout expired
-            "HYT01", // Connection timeout expired
-    };
 
     /**
      * Helper method to fire the connectionClosed event.
