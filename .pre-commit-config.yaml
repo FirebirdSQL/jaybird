@@ -1,0 +1,3 @@
+# Jaybird 6 has no pre-commit checks
+# This file is to prevent blocking of commits when using git worktree
+repos: []
