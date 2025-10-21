@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import static java.lang.String.format;
+import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.util.Collections.emptyList;
 import static org.firebirdsql.gds.ISCConstants.SQL_BLOB;
@@ -276,12 +277,14 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         try {
             notifyStatementCompleted(success);
         } catch (SQLException e) {
+            log.log(DEBUG, "Statement completion failure by exception", e);
             if (originalException instanceof SQLException sqle) {
                 sqle.setNextException(e);
             } else {
                 originalException.addSuppressed(e);
             }
         } catch (RuntimeException e) {
+            log.log(DEBUG, "Statement completion failure by exception", e);
             originalException.addSuppressed(e);
         }
     }
