@@ -784,32 +784,37 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         RowDescriptor rowDescriptor = fbStatement.getParameterDescriptor();
         assert rowDescriptor != null : "RowDescriptor should not be null after prepare";
 
-        int fieldCount = rowDescriptor.getCount();
         fieldValues = rowDescriptor.createDefaultFieldValues();
-        fields = new FBField[fieldCount];
-
-        for (int i = 0; i < fieldCount; i++) {
-            final int fieldPosition = i;
-
-            FieldDataProvider dataProvider = new FieldDataProvider() {
-                public byte @Nullable [] getFieldData() {
-                    return fieldValues.getFieldData(fieldPosition);
-                }
-
-                public void setFieldData(byte @Nullable [] data) {
-                    fieldValues.setFieldData(fieldPosition, data);
-                }
-            };
-
-            // FIXME check if we can safely pass cached here
-            FBField field = FBField.createField(getParameterDescriptor(i + 1), dataProvider, gdsHelper, false);
-            if (field instanceof BlobListenableField blobListenableField) {
-                blobListenableField.setBlobListener(blobListener);
-            }
-            fields[i] = field;
-        }
+        fields = createFields(rowDescriptor.getCount());
 
         this.isExecuteProcedureStatement = fbStatement.getType() == StatementType.STORED_PROCEDURE;
+    }
+
+    private FBField[] createFields(final int fieldCount) throws SQLException {
+        var fields = new FBField[fieldCount];
+        for (int fieldPosition = 0; fieldPosition < fieldCount; fieldPosition++) {
+            fields[fieldPosition] = createField(fieldPosition);
+        }
+        return fields;
+    }
+
+    private FBField createField(final int fieldPosition) throws SQLException {
+        var dataProvider = new FieldDataProvider() {
+            public byte @Nullable [] getFieldData() {
+                return fieldValues.getFieldData(fieldPosition);
+            }
+
+            public void setFieldData(byte @Nullable [] data) {
+                fieldValues.setFieldData(fieldPosition, data);
+            }
+        };
+
+        // TODO check if we can safely pass cached here
+        var field = FBField.createField(getParameterDescriptor(fieldPosition + 1), dataProvider, gdsHelper, false);
+        if (field instanceof BlobListenableField blobListenableField) {
+            blobListenableField.setBlobListener(blobListener);
+        }
+        return field;
     }
 
     @Override
