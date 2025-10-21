@@ -32,7 +32,6 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -147,14 +146,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             try {
                 prepareFixedStatement(sql);
             } catch (Exception e) {
-                try {
-                    notifyStatementCompleted(false);
-                } catch (SQLException e2) {
-                    LoggerFactory.getLogger(getClass())
-                            .debug("Failed statement completion triggered by exception during statement prepare", e);
-                    e2.setNextException(e instanceof SQLException ? (SQLException) e : new SQLException(e));
-                    throw e2;
-                }
+                notifyStatementCompleted(false, e);
                 throw e;
             }
         }

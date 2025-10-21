@@ -306,12 +306,14 @@ public class FBStatement implements FirebirdStatement {
         try {
             notifyStatementCompleted(success);
         } catch (SQLException e) {
+            log.debug("Statement completion failure by exception", e);
             if (originalException instanceof SQLException) {
                 ((SQLException) originalException).setNextException(e);
             } else {
                 originalException.addSuppressed(e);
             }
         } catch (RuntimeException e) {
+            log.debug("Statement completion failure by exception", e);
             originalException.addSuppressed(e);
         }
     }
