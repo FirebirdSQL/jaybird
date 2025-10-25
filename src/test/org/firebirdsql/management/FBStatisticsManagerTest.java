@@ -12,16 +12,22 @@ import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -37,8 +43,8 @@ class FBStatisticsManagerTest {
     private OutputStream loggingStream;
 
     private static final String DEFAULT_TABLE = """
-            CREATE TABLE TEST (
-                 TESTVAL INTEGER NOT NULL
+            create table TEST (
+                 TESTVAL integer constraint PK_TEST primary key
             )""";
 
     @BeforeEach
@@ -103,12 +109,13 @@ class FBStatisticsManagerTest {
     @Test
     void testGetTableStatistics() throws SQLException {
         createTestTable();
-        statManager.getTableStatistics(new String[] { "TEST" });
+        statManager.getTableStatistics("TEST");
         String statistics = loggingStream.toString();
 
         assertThat(statistics)
                 .describedAs("The database page analysis must be in the statistics").contains("Data pages")
-                .describedAs("The table name must be in the statistics").contains("TEST");
+                .describedAs("The table name must be in the statistics").contains("TEST")
+                .describedAs("The (primary key) index must be in the statistics").contains("PK_TEST");
     }
 
     @Test
@@ -130,6 +137,69 @@ class FBStatisticsManagerTest {
             assertEquals(oldest + 1, databaseTransactionInfo.getOldestSnapshotTransaction(), "oldest snapshot");
             assertEquals(oldest + expectedNextOffset, databaseTransactionInfo.getNextTransaction(), "next");
             assertEquals(1, databaseTransactionInfo.getActiveTransactionCount(), "active");
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testGetTableStatistics_limitBySchema(List<String> schemas, List<String> tables, List<String> expectedTables,
+            List<String> unexpectedTables) throws Exception {
+        assumeSchemaSupport();
+        schemaTestSetup();
+        statManager.getTableStatistics(schemas, tables);
+        String statistics = loggingStream.toString();
+
+        assertThat(statistics)
+                .describedAs("The database page analysis must be in the statistics").contains("Data pages");
+        if (!expectedTables.isEmpty()) {
+            assertThat(statistics)
+                .describedAs("These table names must be in the statistics").contains(expectedTables);
+        }
+        if (!unexpectedTables.isEmpty()) {
+            assertThat(statistics)
+                .describedAs("These table names must not be in the statistics").doesNotContain(unexpectedTables);
+        }
+    }
+
+    static Stream<Arguments> testGetTableStatistics_limitBySchema() {
+        final List<String> empty = List.of();
+        return Stream.of(
+                Arguments.of(empty, empty,
+                        List.of("\"PUBLIC\".\"TBL1\"", "\"SCH1\".\"TBL1\"", "\"SCH1\".\"TBL2\"", "\"SCH2\".\"TBL2\"",
+                                "\"SCH2\".\"TBL2\""),
+                        empty),
+                Arguments.of(List.of("PUBLIC"), empty, List.of("\"PUBLIC\".\"TBL1\""), List.of("\"SCH1\".\"TBL1\"",
+                        "\"SCH1\".\"TBL2\"", "\"SCH2\".\"TBL2\"", "\"SCH2\".\"TBL2\"")),
+                Arguments.of(List.of("PUBLIC", "SCH2"), empty,
+                        List.of("\"PUBLIC\".\"TBL1\"", "\"SCH2\".\"TBL2\"", "\"SCH2\".\"TBL2\""),
+                        List.of("\"SCH1\".\"TBL1\"", "\"SCH1\".\"TBL2\"")),
+                Arguments.of(empty, List.of("TBL1"), List.of("\"PUBLIC\".\"TBL1\"", "\"SCH1\".\"TBL1\""),
+                        List.of("\"SCH1\".\"TBL2\"", "\"SCH2\".\"TBL2\"", "\"SCH2\".\"TBL2\"")),
+                Arguments.of(List.of("SCH1"), List.of("TBL1"), List.of("\"SCH1\".\"TBL1\""),
+                        List.of("\"PUBLIC\".\"TBL1\"", "\"SCH1\".\"TBL2\"", "\"SCH2\".\"TBL2\"", "\"SCH2\".\"TBL3\"")),
+                Arguments.of(List.of("SCH1", "SCH2"), List.of("TBL1"), List.of("\"SCH1\".\"TBL1\""),
+                        List.of("\"PUBLIC\".\"TBL1\"", "\"SCH1\".\"TBL2\"", "\"SCH2\".\"TBL2\"", "\"SCH2\".\"TBL3\"")),
+                Arguments.of(List.of("SCH1", "SCH2"), List.of("TBL1", "TBL3"),
+                        List.of("\"SCH1\".\"TBL1\"", "\"SCH2\".\"TBL3\""),
+                        List.of("\"PUBLIC\".\"TBL1\"", "\"SCH1\".\"TBL2\"", "\"SCH2\".\"TBL2\""))
+        );
+    }
+
+    private static void schemaTestSetup() throws SQLException {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            for (String sql : List.of(
+                    "create schema SCH1",
+                    "create schema SCH2",
+                    "create table PUBLIC.TBL1 (ID integer)",
+                    "create table SCH1.TBL1 (ID integer)",
+                    "create table SCH1.TBL2 (ID integer)",
+                    "create table SCH2.TBL2 (ID integer)",
+                    "create table SCH2.TBL3 (ID integer)")) {
+                stmt.execute(sql);
+            }
+            connection.commit();
         }
     }
 

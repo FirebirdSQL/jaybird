@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.impl;
 
+import org.firebirdsql.jaybird.util.BasicVersion;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -217,6 +220,16 @@ class GDSServerVersionTest {
         var version = GDSServerVersion.parseRawVersion(TEST_VERSION_30);
 
         assertEquals(List.of(TEST_VERSION_30), version.getRawVersions(), "rawVersions");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "WI-V1.5.2.4731 Firebird 1.5", "WI-V2.1.3.18185 Firebird 2.1", "WI-V2.5.8.1 Firebird 2.5" })
+    void testToBasicVersion(String versionString) throws Exception {
+        var serverVersion = GDSServerVersion.parseRawVersion(versionString);
+        BasicVersion basicVersion = serverVersion.toBasicVersion();
+
+        assertEquals(serverVersion.getMajorVersion(), basicVersion.major(), "major");
+        assertEquals(serverVersion.getMinorVersion(), basicVersion.minor(), "minor");
     }
 
 }

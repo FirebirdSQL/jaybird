@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2022-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
 
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.Volatile;
+import org.jspecify.annotations.NullMarked;
 
-import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ISCConstants.isc_info_backout_count;
 import static org.firebirdsql.gds.ISCConstants.isc_info_delete_count;
 import static org.firebirdsql.gds.ISCConstants.isc_info_expunge_count;
@@ -22,10 +23,11 @@ import static org.firebirdsql.gds.ISCConstants.isc_info_update_count;
  * @since 5
  */
 @SuppressWarnings("unused")
+@NullMarked
 @Volatile(reason = "Experimental")
 public final class TableStatistics {
 
-    private final String tableName;
+    private final ObjectReference table;
     private final long readSeqCount;
     private final long readIdxCount;
     private final long insertCount;
@@ -35,9 +37,9 @@ public final class TableStatistics {
     private final long purgeCount;
     private final long expungeCount;
 
-    private TableStatistics(String tableName, long readSeqCount, long readIdxCount, long insertCount, long updateCount,
-            long deleteCount, long backoutCount, long purgeCount, long expungeCount) {
-        this.tableName = requireNonNull(tableName, "tableName");
+    private TableStatistics(ObjectReference table, long readSeqCount, long readIdxCount, long insertCount,
+            long updateCount, long deleteCount, long backoutCount, long purgeCount, long expungeCount) {
+        this.table = table;
         this.readSeqCount = readSeqCount;
         this.readIdxCount = readIdxCount;
         this.insertCount = insertCount;
@@ -49,10 +51,46 @@ public final class TableStatistics {
     }
 
     /**
-     * @return table name
+     * @return table name (or {@code UNKNOWN_TABLE_ID_<table id>} if the table was not found)
+     * @see #tableReference()
      */
     public String tableName() {
-        return tableName;
+        return table.last().name();
+    }
+
+    /**
+     * @return schema of table (or empty string if schemaless or the table was not found)
+     * @see #tableReference()
+     * @since 7
+     */
+    public String schema() {
+        return table.size() == 2 ? table.first().name() : "";
+    }
+
+    /**
+     * The table reference.
+     * <p>
+     * Contrary to the key used for {@link FBTableStatisticsManager#getTableStatistics()}, the table name is always
+     * quoted, even for schemaless tables. If you want to derive a key for the table from an instance of this class, use
+     * {@link FBTableStatisticsManager#toKey(TableStatistics)}.
+     * </p>
+     *
+     * @return fully qualified and quoted table reference ({@code [<quoted-schema>.]<quoted-table-name>})
+     * @see #tableName()
+     * @see #schema()
+     * @see FBTableStatisticsManager#toKey(TableStatistics)
+     * @since 7
+     */
+    public String tableReference() {
+        return table.toString();
+    }
+
+    /**
+     * @return object reference of the table
+     * @since 7
+     */
+    ObjectReference table() {
+        return table;
     }
 
     /**
@@ -115,7 +153,7 @@ public final class TableStatistics {
     @Override
     public String toString() {
         return "TableStatistics{" +
-                "tableName='" + tableName + '\'' +
+                "table='" + table + '\'' +
                 ", readSeqCount=" + readSeqCount +
                 ", readIdxCount=" + readIdxCount +
                 ", insertCount=" + insertCount +
@@ -127,13 +165,13 @@ public final class TableStatistics {
                 '}';
     }
 
-    static TableStatisticsBuilder builder(String tableName) {
-        return new TableStatisticsBuilder(tableName);
+    static TableStatisticsBuilder builder(ObjectReference table) {
+        return new TableStatisticsBuilder(table);
     }
 
     static final class TableStatisticsBuilder {
 
-        private final String tableName;
+        private final ObjectReference table;
         private long readSeqCount;
         private long readIdxCount;
         private long insertCount;
@@ -143,8 +181,9 @@ public final class TableStatistics {
         private long purgeCount;
         private long expungeCount;
 
-        private TableStatisticsBuilder(String tableName) {
-            this.tableName = tableName;
+        private TableStatisticsBuilder(ObjectReference table) {
+            assert table.size() <= 2 : "table should be an object reference of at most two identifiers";
+            this.table = table;
         }
 
         void addStatistic(int statistic, long value) {
@@ -164,7 +203,7 @@ public final class TableStatistics {
         }
 
         TableStatistics toTableStatistics() {
-            return new TableStatistics(tableName, readSeqCount, readIdxCount, insertCount, updateCount, deleteCount,
+            return new TableStatistics(table, readSeqCount, readIdxCount, insertCount, updateCount, deleteCount,
                     backoutCount, purgeCount, expungeCount);
         }
 

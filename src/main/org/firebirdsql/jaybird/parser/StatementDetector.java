@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -14,8 +14,8 @@ import static org.firebirdsql.jaybird.parser.CharSequenceComparison.caseInsensit
  * Detects the type of statement, and - optionally - whether a DML statement has a {@code RETURNING} clause.
  * <p>
  * If the detected statement type is {@code UPDATE}, {@code DELETE}, {@code INSERT}, {@code UPDATE OR INSERT} and
- * {@code MERGE}, it identifies the affected table and - optionally - whether or not a {@code RETURNING} clause is
- * present (delegated to a {@link ReturningClauseDetector}).
+ * {@code MERGE}, it identifies the affected table and - optionally - if a {@code RETURNING} clause is present
+ * (delegated to a {@link ReturningClauseDetector}).
  * </p>
  * <p>
  * The types of statements detected are informed by the needs of Jaybird, and may change between point releases.
@@ -53,6 +53,7 @@ public final class StatementDetector implements TokenVisitor {
     private final boolean detectReturning;
     private LocalStatementType statementType = LocalStatementType.UNKNOWN;
     private ParserState parserState = ParserState.START;
+    private Token schemaToken;
     private Token tableNameToken;
     private ReturningClauseDetector returningClauseDetector;
 
@@ -103,10 +104,13 @@ public final class StatementDetector implements TokenVisitor {
         if (parserState.isFinalState()) {
             // We're not interested anymore
             visitorRegistrar.removeVisitor(this);
-        } else if (parserState == ParserState.FIND_RETURNING) {
-            // We're not interested anymore
-            visitorRegistrar.removeVisitor(this);
-            if (detectReturning) {
+        } else if (parserState == ParserState.FIND_RETURNING
+                || parserState == ParserState.FIND_SCHEMA_SEPARATOR_OR_RETURNING) {
+            if (parserState == ParserState.FIND_RETURNING) {
+                // We're not interested anymore
+                visitorRegistrar.removeVisitor(this);
+            }
+            if (detectReturning && returningClauseDetector == null) {
                 // Use ReturningClauseDetector to handle detection
                 returningClauseDetector = new ReturningClauseDetector();
                 visitorRegistrar.addVisitor(returningClauseDetector);
@@ -122,8 +126,7 @@ public final class StatementDetector implements TokenVisitor {
     }
 
     public StatementIdentification toStatementIdentification() {
-        return new StatementIdentification(statementType, tableNameToken != null ? tableNameToken.text() : null,
-                returningClauseDetected());
+        return new StatementIdentification(statementType, schemaToken, tableNameToken, returningClauseDetected());
     }
 
     boolean returningClauseDetected() {
@@ -137,6 +140,10 @@ public final class StatementDetector implements TokenVisitor {
         return statementType;
     }
 
+    Token getSchemaToken() {
+        return schemaToken;
+    }
+
     Token getTableNameToken() {
         return tableNameToken;
     }
@@ -147,6 +154,10 @@ public final class StatementDetector implements TokenVisitor {
             // clear any previously set table name
             setTableNameToken(null);
         }
+    }
+
+    private void setSchemaToken(Token schemaToken) {
+        this.schemaToken = schemaToken;
     }
 
     private void setTableNameToken(Token tableNameToken) {
@@ -215,8 +226,42 @@ public final class StatementDetector implements TokenVisitor {
             ParserState next(Token token, StatementDetector detector) {
                 if (token.isValidIdentifier()) {
                     detector.setTableNameToken(token);
+                    return DML_SCHEMA_SEPARATOR_OR_POSSIBLE_ALIAS;
+                }
+                return forceOther(detector);
+            }
+        },
+        // Shared by UPDATE, DELETE and MERGE
+        DML_SCHEMA_SEPARATOR_OR_POSSIBLE_ALIAS {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (token instanceof PeriodToken) {
+                    // What was detected as table, is actually the schema
+                    detector.setSchemaToken(detector.getTableNameToken());
+                    detector.setTableNameToken(null);
+                    return DML_SCHEMA_QUALIFIED_TABLE_NAME;
+                } else if (token.isValidIdentifier()) {
+                    // either alias or possibly returning clause
+                    return FIND_RETURNING;
+                } else if (token instanceof ReservedToken) {
+                    if (token.equalsIgnoreCase("AS")) {
+                        return DML_ALIAS;
+                    }
+                    return FIND_RETURNING;
+                }
+                // Unexpected or invalid token at this point
+                return forceOther(detector);
+            }
+        },
+        // Shared by UPDATE, DELETE and MERGE
+        DML_SCHEMA_QUALIFIED_TABLE_NAME {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (token.isValidIdentifier()) {
+                    detector.setTableNameToken(token);
                     return DML_POSSIBLE_ALIAS;
                 }
+                // Unexpected or invalid token at this point
                 return forceOther(detector);
             }
         },
@@ -261,7 +306,7 @@ public final class StatementDetector implements TokenVisitor {
             ParserState next(Token token, StatementDetector detector) {
                 if (token.isValidIdentifier()) {
                     detector.setTableNameToken(token);
-                    return FIND_RETURNING;
+                    return FIND_SCHEMA_SEPARATOR_OR_RETURNING;
                 }
                 // Syntax error
                 return forceOther(detector);
@@ -272,6 +317,29 @@ public final class StatementDetector implements TokenVisitor {
             ParserState next(Token token, StatementDetector detector) {
                 if (token instanceof ReservedToken && token.equalsIgnoreCase("INTO")) {
                     return DML_TARGET;
+                }
+                // Syntax error
+                return forceOther(detector);
+            }
+        },
+        FIND_SCHEMA_SEPARATOR_OR_RETURNING {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (token instanceof PeriodToken) {
+                    detector.setSchemaToken(detector.getTableNameToken());
+                    detector.setTableNameToken(null);
+                    return FIND_SCHEMA_QUALIFIED_TABLE_OR_RETURNING;
+                } else {
+                    return FIND_RETURNING;
+                }
+            }
+        },
+        FIND_SCHEMA_QUALIFIED_TABLE_OR_RETURNING {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                if (token.isValidIdentifier()) {
+                    detector.setTableNameToken(token);
+                    return FIND_RETURNING;
                 }
                 // Syntax error
                 return forceOther(detector);

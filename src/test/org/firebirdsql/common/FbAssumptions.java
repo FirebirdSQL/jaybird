@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common;
 
@@ -32,6 +32,14 @@ public final class FbAssumptions {
         assumeFeature(FirebirdSupportInfo::supportsServerBatch, "test requires server-side batch support");
         assumeThat("Server-side batch support only works with pure java connections",
                 FBTestProperties.GDS_TYPE, isPureJavaType());
+    }
+
+    public static void assumeSchemaSupport() {
+        assumeFeature(FirebirdSupportInfo::supportsSchemas, "Test expects schema support");
+    }
+
+    public static void assumeNoSchemaSupport() {
+        assumeFeatureMissing(FirebirdSupportInfo::supportsSchemas, "Test expects no schema support");
     }
 
     /**

@@ -1,15 +1,18 @@
 // SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.jaybird.util.SearchPathHelper;
 import org.firebirdsql.util.InternalApi;
 
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Extension of {@link Connection} interface providing access to Firebird specific features.
@@ -125,5 +128,85 @@ public interface FirebirdConnection extends Connection {
      * @since 6
      */
     void resetKnownClientInfoProperties();
+
+    /**
+     * Sets the search path as if executing {@code SET SEARCH_PATH TO ...}.
+     *
+     * @param searchPath
+     *         comma-separated search path (names must be correctly quoted &mdash; if needed)
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         if the server does not support schemas (Firebird 5.0 or older)
+     * @throws SQLException
+     *         if {@code schemas} is null or blank, or for database access errors
+     * @see #getSearchPath()
+     * @see #setSearchPathList(List)
+     * @see #setSchema(String)
+     * @since 7
+     */
+    void setSearchPath(String searchPath) throws SQLException;
+
+    /**
+     * Returns the schema search path.
+     *
+     * @return comma-separated list of quoted schema names of the search path, or {@code null} if schemas are not
+     * supported
+     * @throws SQLException
+     *         if the connections is closed, or for database access errors
+     * @see #setSearchPath(String)
+     * @see #getSearchPathList()
+     * @since 7
+     */
+    String getSearchPath() throws SQLException;
+
+    /**
+     * Sets the search path as if executing {@code SET SEARCH_PATH TO ...}.
+     *
+     * @param schemas
+     *         schemas to set as search path (names must be unquoted)
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         if the server does not support schemas (Firebird 5.0 or older)
+     * @throws SQLException
+     *         if {@code schemas} is empty, or for database access errors
+     * @see #setSearchPathList(List)
+     * @see #getSearchPathList()
+     * @see #setSearchPath(String)
+     * @see #setSchema(String)
+     * @since 7
+     */
+    default void setSearchPathList(String... schemas) throws SQLException {
+        setSearchPathList(Arrays.asList(schemas));
+    }
+
+    /**
+     * Sets the search path as if executing {@code SET SEARCH_PATH TO ...}.
+     *
+     * @param schemas
+     *         schemas to set as search path (names must be unquoted)
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         if the server does not support schemas (Firebird 5.0 or older)
+     * @throws SQLException
+     *         if {@code schemas} is empty, or for database access errors
+     * @see #setSearchPathList(List)
+     * @see #getSearchPathList()
+     * @see #setSearchPath(String)
+     * @see #setSchema(String)
+     * @since 7
+     */
+    void setSearchPathList(List<String> schemas) throws SQLException;
+
+    /**
+     * Returns the schema search path as a list of unquoted schema names.
+     *
+     * @return list of unquoted schema names, or an empty list if schemas are not supported
+     * @throws SQLException
+     *         if the connection is closed, or for database access errors
+     * @see #setSearchPathList(String...)
+     * @see #setSearchPathList(List)
+     * @see #getSearchPath()
+     * @since 7
+     */
+    default List<String> getSearchPathList() throws SQLException {
+        return SearchPathHelper.parseSearchPath(getSearchPath());
+    }
 
 }

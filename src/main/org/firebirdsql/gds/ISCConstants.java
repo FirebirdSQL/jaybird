@@ -336,9 +336,13 @@ public interface ISCConstants {
     int isc_spb_sts_idx_pages	=	0x08;
     int isc_spb_sts_sys_relations = 0x10;
     int isc_spb_sts_record_versions = 0x20;
-    int isc_spb_sts_table       =   0x40;
+    // No longer a flag
+    //int isc_spb_sts_table     =   0x40;
     int isc_spb_sts_nocreation  =   0x80;
     int isc_spb_sts_encryption	=  0x100;
+
+    int isc_spb_sts_table = 64;
+    int isc_spb_sts_schema = 65;
 
     // Common, structural codes
 
@@ -378,6 +382,9 @@ public interface ISCConstants {
     int isc_info_sql_stmt_timeout_user   = 28;
     int isc_info_sql_stmt_timeout_run    = 29;
     int isc_info_sql_stmt_blob_align     = 30;
+    int isc_info_sql_exec_path_blr_bytes = 31;
+    int isc_info_sql_exec_path_blr_text  = 32;
+    int isc_info_sql_relation_schema     = 33;
 
     // SQL information return values
 

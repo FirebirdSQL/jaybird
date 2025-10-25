@@ -6,7 +6,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
  SPDX-FileCopyrightText: Copyright 2005-2006 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 
+import static java.util.Objects.requireNonNullElseGet;
 import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 
 /**
@@ -160,18 +161,19 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     /**
      * {@inheritDoc}
      * 
-     * @return Always {@code ""} as schemas are not supported.
+     * @return schema of table, empty string ({@code ""}) if schemaless (i.e. always on Firebird 5.0 and older), or if
+     * the column has no known backing table
      */
     @Override
     public String getSchemaName(int column) throws SQLException {
-        return "";
+        return Objects.toString(getFieldDescriptor(column).getOriginalSchema(), "");
     }
 
     /**
      * {@inheritDoc}
      * <p>
      * <b>NOTE</b> For {@code NUMERIC} and {@code DECIMAL} we attempt to retrieve the exact precision from the metadata,
-     * if this is not possible (eg the column is dynamically defined in the query), the reported precision is
+     * if this is not possible (e.g. the column is dynamically defined in the query), the reported precision is
      * the maximum precision allowed by the underlying storage data type.
      * </p>
      */
@@ -187,16 +189,17 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
 
     @Override
     public String getTableName(int column) throws SQLException {
-        String result = getFieldDescriptor(column).getOriginalTableName();
-        if (result == null) result = "";
-        return result;
+        return getTableName(getFieldDescriptor(column));
+    }
+
+    private static String getTableName(FieldDescriptor fieldDescriptor) {
+        return Objects.toString(fieldDescriptor.getOriginalTableName(), "");
     }
 
     @Override
     public String getTableAlias(int column) throws SQLException {
-        String result = getFieldDescriptor(column).getTableAlias();
-        if (result == null) result = getTableName(column);
-        return result;
+        FieldDescriptor fieldDescriptor = getFieldDescriptor(column);
+        return requireNonNullElseGet(fieldDescriptor.getTableAlias(), () -> getTableName(fieldDescriptor));
     }
 
     /**
@@ -253,13 +256,15 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         return getFieldClassName(column);
     }
 
-    private static final int FIELD_INFO_RELATION_NAME = 1;
-    private static final int FIELD_INFO_FIELD_NAME = 2;
-    private static final int FIELD_INFO_FIELD_PRECISION = 3;
-    private static final int FIELD_INFO_FIELD_AUTO_INC = 4;
+    private static final int FIELD_INFO_SCHEMA_NAME = 1;
+    private static final int FIELD_INFO_RELATION_NAME = 2;
+    private static final int FIELD_INFO_FIELD_NAME = 3;
+    private static final int FIELD_INFO_FIELD_PRECISION = 4;
+    private static final int FIELD_INFO_FIELD_AUTO_INC = 5;
 
     private static final String GET_FIELD_INFO_25 = """
             select
+              cast(null as char(1)) as SCHEMA_NAME,
               RF.RDB$RELATION_NAME as RELATION_NAME,
               RF.RDB$FIELD_NAME as FIELD_NAME,
               F.RDB$FIELD_PRECISION as FIELD_PRECISION,
@@ -270,13 +275,26 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
 
     private static final String GET_FIELD_INFO_30 = """
             select
-              RF.RDB$RELATION_NAME as RELATION_NAME,
-              RF.RDB$FIELD_NAME as FIELD_NAME,
+              null as SCHEMA_NAME,
+              trim(trailing from RF.RDB$RELATION_NAME) as RELATION_NAME,
+              trim(trailing from RF.RDB$FIELD_NAME) as FIELD_NAME,
               F.RDB$FIELD_PRECISION as FIELD_PRECISION,
               RF.RDB$IDENTITY_TYPE is not null as FIELD_AUTO_INC
             from RDB$RELATION_FIELDS RF inner join RDB$FIELDS F
               on RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME
             where RF.RDB$FIELD_NAME = ? and RF.RDB$RELATION_NAME = ?""";
+
+    private static final String GET_FIELD_INFO_60 = """
+            select
+              trim(trailing from RF.RDB$SCHEMA_NAME) as SCHEMA_NAME,
+              trim(trailing from RF.RDB$RELATION_NAME) as RELATION_NAME,
+              trim(trailing from RF.RDB$FIELD_NAME) as FIELD_NAME,
+              F.RDB$FIELD_PRECISION as FIELD_PRECISION,
+              RF.RDB$IDENTITY_TYPE is not null as FIELD_AUTO_INC
+            from SYSTEM.RDB$RELATION_FIELDS RF
+            inner join SYSTEM.RDB$FIELDS F
+              on RF.RDB$FIELD_SOURCE_SCHEMA_NAME = F.RDB$SCHEMA_NAME and RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME
+            where RF.RDB$FIELD_NAME = ? and RF.RDB$SCHEMA_NAME = ? and RF.RDB$RELATION_NAME = ?""";
 
     // Apparently there is a limit in the UNION. It is necessary to split in several queries. Although the problem
     // reported with 93 UNION, use only 70.
@@ -292,9 +310,12 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         var result = new HashMap<FieldKey, ExtendedFieldInfo>();
         FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
         var params = new ArrayList<String>();
+        final boolean fb3OrHigher = metaData.getDatabaseMajorVersion() >= 3;
+        final boolean supportsSchemas = metaData.supportsSchemasInDataManipulation();
+        String getFieldInfoQuery = fb3OrHigher
+                ? (supportsSchemas ? GET_FIELD_INFO_60 : GET_FIELD_INFO_30)
+                : GET_FIELD_INFO_25;
         var sb = new StringBuilder();
-        boolean fb3OrHigher = metaData.getDatabaseMajorVersion() >= 3;
-        String getFieldInfoQuery = fb3OrHigher ? GET_FIELD_INFO_30 : GET_FIELD_INFO_25;
         while (currentColumn <= fieldCount) {
             params.clear();
             sb.setLength(0);
@@ -303,10 +324,15 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
                 FieldDescriptor fieldDescriptor = getFieldDescriptor(currentColumn);
                 if (!needsExtendedFieldInfo(fieldDescriptor, fb3OrHigher)) continue;
 
+                String schemaName = fieldDescriptor.getOriginalSchema();
                 String relationName = fieldDescriptor.getOriginalTableName();
                 String fieldName = fieldDescriptor.getOriginalName();
 
-                if (isNullOrEmpty(relationName) || isNullOrEmpty(fieldName)) continue;
+                if (isNullOrEmpty(relationName)
+                        || isNullOrEmpty(fieldName)
+                        || supportsSchemas && isNullOrEmpty(schemaName)) {
+                    continue;
+                }
 
                 if (unionCount != 0) {
                     sb.append("\nunion all\n");
@@ -314,6 +340,9 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
                 sb.append(getFieldInfoQuery);
 
                 params.add(fieldName);
+                if (supportsSchemas) {
+                    params.add(schemaName);
+                }
                 params.add(relationName);
 
                 unionCount++;
@@ -332,8 +361,9 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     }
 
     private static ExtendedFieldInfo extractExtendedFieldInfo(ResultSet rs) throws SQLException {
-        return new ExtendedFieldInfo(rs.getString(FIELD_INFO_RELATION_NAME), rs.getString(FIELD_INFO_FIELD_NAME),
-                rs.getInt(FIELD_INFO_FIELD_PRECISION), rs.getBoolean(FIELD_INFO_FIELD_AUTO_INC));
+        return new ExtendedFieldInfo(rs.getString(FIELD_INFO_SCHEMA_NAME), rs.getString(FIELD_INFO_RELATION_NAME),
+                rs.getString(FIELD_INFO_FIELD_NAME), rs.getInt(FIELD_INFO_FIELD_PRECISION),
+                rs.getBoolean(FIELD_INFO_FIELD_AUTO_INC));
     }
 
     /**
@@ -365,9 +395,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         DEFAULT {
             @Override
             String getColumnName(FieldDescriptor fieldDescriptor) {
-                return fieldDescriptor.getOriginalName() != null
-                        ? fieldDescriptor.getOriginalName()
-                        : getColumnLabel(fieldDescriptor);
+                return requireNonNullElseGet(fieldDescriptor.getOriginalName(), () -> getColumnLabel(fieldDescriptor));
             }
         },
         /**
