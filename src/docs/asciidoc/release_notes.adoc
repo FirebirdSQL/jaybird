@@ -516,6 +516,7 @@ Firebird 6.0 introduces schemas, and Jaybird 7 provides support for schemas as d
 Changes include:
 
 * Connection property `searchPath` sets the initial search path of the connection.
++
 The search path is the list of schemas that will be searched for schema-bound objects if they are not explicitly qualified with a schema name.
 The first _valid_ schema is the current schema of the connection.
 +
@@ -590,6 +591,61 @@ Jaybird 7 introduces some changes in compatibility and announces future breaking
 
 *The list might not be complete, if you notice a difference in behavior that is not listed, please {issues}[report it as bug^].*
 It might have been a change we forgot to document, but it could just as well be an implementation bug.
+
+[#compatibility-changes-schema]
+=== Potential compatibility issues due to schema support
+
+The implementation of schema support may cause compatibility issues.
+In general, these changes will only impact Jaybird when connecting to Firebird 6.0 or higher.
+
+We recommend looking over this section even if you currently do not use Firebird 6.0 or higher, so you can prepare your code to be ready for a future migration to Firebird 6.0.
+
+[#compatibility-changes-schema-dbmd-params]
+==== Parameters `schema` and `schemaPattern` in methods of `DatabaseMetaData`
+
+In previous versions, Jaybird ignored the `schema` and `schemaPattern` parameters of the `DatabaseMetaData` methods (usually the second parameter of `DatabaseMetaData.getXXX(...)` methods).
+In Jaybird 7, it no longer ignores these parameters when querying a Firebird 6.0 or higher database.
+
+If you currently pass the "`wrong`" value for these methods, especially `""` (empty string, i.e. only return schemaless objects), you may get no or fewer results than expected.
+
+[float]
+===== `schema`
+
+The `schema` parameter performs an exact, case-sensitive match on the schema name, unless it's `null` (i.e. don't filter by schema).
+
+If your code currently passes `""` (empty string), you need to either replace it with `null` (don't filter by schema), or the desired schema name.
+
+.`DatabaseMetaData` methods with `schema` parameter
+* `getBestRowIdentifier`
+* `getColumnPrivileges`
+* `getCrossReference` (parameters `parentSchema` and `foreignSchema`)
+* `getExportedKeys`
+* `getImportedKeys`
+* `getIndexInfo`
+* `getPrimaryKeys`
+* `getVersionColumns`
+
+(Unsupported metadata methods are not listed.)
+
+[float]
+===== `schemaPattern`
+
+The `schemaPattern` parameter performs a case-sensitive `LIKE` match on the schema name, unless it's `null` (i.e. don't filter by schema).
+
+If your code currently passes `""` (empty string), you need to either replace it with `null` (don't filter by schema), use `"%"` (match all schemas, effectively the same as passing `null`), or an appropriate `LIKE` pattern for the desired schemas.
+
+.`DatabaseMetaData` methods with `schemaPattern` parameter
+* `getColumns`
+* `getFunctionColumns`
+* `getFunctions`
+* `getProcedureColumns`
+* `getProcedures`
+* `getPseudoColumns`
+* `getSchemas`
+* `getTablePrivileges`
+* `getTables`
+
+(Unsupported metadata methods are not listed.)
 
 // TODO Document compatibility issues
 
