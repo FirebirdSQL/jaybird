@@ -27,8 +27,13 @@ import java.util.Set;
 
 import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.RegexMatcher.matchesRegex;
+import static org.firebirdsql.gds.ISCConstants.isc_dsql_drop_trigger_failed;
+import static org.firebirdsql.gds.ISCConstants.isc_dsql_table_not_found;
+import static org.firebirdsql.gds.ISCConstants.isc_dsql_view_not_found;
+import static org.firebirdsql.gds.ISCConstants.isc_no_meta_update;
 import static org.firebirdsql.jdbc.FBDatabaseMetaData.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.anyOf;
@@ -44,7 +49,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author David Jencks
  * @author Mark Rotteveel
- * @version 1.0
  */
 class FBDatabaseMetaDataTest {
 
@@ -800,6 +804,137 @@ class FBDatabaseMetaDataTest {
                 () -> assertEquals(expected, dmd.supportsSchemasInProcedureCalls(), "ProcedureCalls"),
                 () -> assertEquals(expected, dmd.supportsSchemasInTableDefinitions(), "TableDefinitions")
         );
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    void testGetProcedureSourceCode_String() throws SQLException {
+        var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+        assertNull(dbmd.getProcedureSourceCode("TEST_PROC_1"), "Expected no procedure source");
+
+        final String procedureBody = """
+                begin
+                  /* TEST_PROC_1 body */
+                end""";
+        try (var stmt = connection.createStatement()) {
+            stmt.execute("create procedure TEST_PROC_1 (VARIN integer) as " + procedureBody);
+        }
+
+        assertEquals(procedureBody, dbmd.getProcedureSourceCode("TEST_PROC_1"), "Procedure source");
+    }
+
+    @Test
+    void testGetTriggerSourceCode_String() throws SQLException {
+        var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+        assertNull(dbmd.getTriggerSourceCode("TEST_TRIG_1"), "Expected no trigger source");
+
+        final String triggerBody = """
+                as
+                begin
+                  /* TEST_TRIG_1 body */
+                end""";
+
+        try (var stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            try {
+                stmt.execute("create table TEST_1 (id integer)");
+                stmt.execute("create trigger TEST_TRIG_1 before insert on TEST_1 " + triggerBody);
+                connection.commit();
+
+                assertEquals(triggerBody, dbmd.getTriggerSourceCode("TEST_TRIG_1"), "Trigger source");
+            } finally {
+                DdlHelper.executeDDL(stmt, List.of("drop table TEST_1"), isc_no_meta_update, isc_dsql_table_not_found,
+                        isc_dsql_view_not_found, isc_dsql_drop_trigger_failed);
+            }
+        } finally {
+            connection.setAutoCommit(false);
+        }
+    }
+
+    @Test
+    void testGetTriggerSourceCode_String_String() throws SQLException {
+        assumeSchemaSupport();
+        var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+        assertNull(dbmd.getTriggerSourceCode("TEST_SCHEMA_1", "TEST_TRIG_1"), "Expected no trigger source");
+
+        final String triggerBody = """
+                as
+                begin
+                  /* TEST_SCHEMA_1.TEST_TRIG_1 body */
+                end""";
+
+        try (var stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            try {
+                stmt.execute("create schema TEST_SCHEMA_1");
+                stmt.execute("create table TEST_SCHEMA_1.TEST_1 (id integer)");
+                stmt.execute("create trigger TEST_TRIG_1 before insert on TEST_SCHEMA_1.TEST_1 " + triggerBody);
+                connection.commit();
+
+                assertEquals(triggerBody, dbmd.getTriggerSourceCode("TEST_SCHEMA_1", "TEST_TRIG_1"), "Trigger source");
+                assertEquals(triggerBody, dbmd.getTriggerSourceCode("TEST_TRIG_1"), "Trigger source");
+                assertNull(dbmd.getTriggerSourceCode("PUBLIC", "TEST_TRIG_1"), "Expected no trigger source");
+            } finally {
+                DdlHelper.executeDDL(stmt, List.of("drop table TEST_SCHEMA_1.TEST_1", "drop schema TEST_SCHEMA_1"),
+                        isc_no_meta_update, isc_dsql_table_not_found, isc_dsql_view_not_found,
+                        isc_dsql_drop_trigger_failed);
+                // TODO Add schema support: error code for drop schema failure?
+            }
+        } finally {
+            connection.setAutoCommit(true);
+        }
+
+
+    }
+
+    @Test
+    void testGetViewSourceCode_String() throws SQLException {
+        var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+        assertNull(dbmd.getViewSourceCode("TEST_VIEW_1"), "Expected no view source");
+
+        final String viewBody = """
+                select 'TEST_VIEW_1' as VIEW_NAME, 1 as SOME_COLUMN
+                from RDB$DATABASE""";
+        try (var stmt = connection.createStatement()) {
+            try {
+                stmt.execute("create view TEST_VIEW_1 as " + viewBody);
+
+                assertEquals(viewBody, dbmd.getViewSourceCode("TEST_VIEW_1"), "View source");
+            } finally {
+                DdlHelper.executeDDL(stmt, List.of("drop view TEST_VIEW_1"), isc_no_meta_update,
+                        isc_dsql_table_not_found, isc_dsql_view_not_found, isc_dsql_drop_trigger_failed);
+            }
+        }
+    }
+
+    @Test
+    void testGetViewSourceCode_String_String() throws SQLException {
+        assumeSchemaSupport();
+        var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+        assertNull(dbmd.getViewSourceCode("TEST_SCHEMA_1", "TEST_VIEW_1"), "Expected no view source");
+
+        final String viewBody = """
+                select 'TEST_SCHEMA_1' as VIEW_SCHEMA, 'TEST_VIEW_1' as VIEW_NAME, 1 as SOME_COLUMN
+                from RDB$DATABASE""";
+        try (var stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            try {
+                stmt.execute("create schema TEST_SCHEMA_1");
+                stmt.execute("create view TEST_SCHEMA_1.TEST_VIEW_1 as " + viewBody);
+                connection.commit();
+
+                assertEquals(viewBody, dbmd.getViewSourceCode("TEST_SCHEMA_1", "TEST_VIEW_1"), "View source");
+                assertEquals(viewBody, dbmd.getViewSourceCode("TEST_VIEW_1"), "View source");
+                assertNull(dbmd.getViewSourceCode("PUBLIC", "TEST_VIEW_1"), "Expected no view source");
+            } finally {
+                DdlHelper.executeDDL(stmt, List.of("drop view TEST_SCHEMA_1.TEST_VIEW_1", "drop schema TEST_SCHEMA_1"),
+                        isc_no_meta_update, isc_dsql_table_not_found, isc_dsql_view_not_found,
+                        isc_dsql_drop_trigger_failed);
+                // TODO Add schema support: error code for drop schema failure?
+            }
+        } finally {
+            connection.setAutoCommit(true);
+        }
     }
 
     @SuppressWarnings("SameParameterValue")

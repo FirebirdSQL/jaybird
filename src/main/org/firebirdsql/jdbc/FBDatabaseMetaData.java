@@ -1898,7 +1898,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private enum SourceObjectType {
         PROCEDURE("RDB$PROCEDURES", "RDB$PROCEDURE_SOURCE", "RDB$PROCEDURE_NAME"),
-        TRIGGER("RDB$TRIGGERS", "RDB$TRIGGER_SOUCE", "RDB$TRIGGER_NAME"),
+        TRIGGER("RDB$TRIGGERS", "RDB$TRIGGER_SOURCE", "RDB$TRIGGER_NAME"),
         VIEW("RDB$RELATIONS", "RDB$VIEW_SOURCE", "RDB$RELATION_NAME"),
         ;
 

@@ -582,6 +582,8 @@ The `schema` can be `null` or empty string for schemaless tables (i.e. Firebird 
 [#other-fixes-and-changes]
 === Other fixes and changes
 
+* Changed the documentation of `FirebirdDatabaseMetaData` methods `getProcedureSourceCode`, `getTriggerSourceCode` and `getViewSourceCode` that the object not being found is reported by a `null` value, not a `SQLException`.
+With this change, the documentation reflects the actual behaviour.
 * ...
 
 [#compatibility-changes]

@@ -54,9 +54,9 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      *
      * @param procedureName
      *         name of the stored procedure
-     * @return source of the stored procedure
+     * @return source of the stored procedure, or {@code null} if not found or if the source column is {@code NULL}
      * @throws SQLException
-     *         if specified procedure cannot be found
+     *         for database access errors
      * @deprecated use {@link DatabaseMetaData#getProcedures(String, String, String)}, column
      * {@code JB_PROCEDURE_SOURCE}; there are currently no plans to remove this method
      */
@@ -72,9 +72,9 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      *
      * @param triggerName
      *         name of the trigger
-     * @return source of the trigger
+     * @return source of the trigger, or {@code null} if not found or if the source column is {@code NULL}
      * @throws SQLException
-     *         if specified trigger cannot be found
+     *         for database access errors
      * @see #getTriggerSourceCode(String, String)
      */
     String getTriggerSourceCode(String triggerName) throws SQLException;
@@ -86,9 +86,9 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      *         schema of the trigger ({@code null} drops the schema from the search; ignored on Firebird 5.0 and older)
      * @param triggerName
      *         name of the trigger
-     * @return source of the trigger
+     * @return source of the trigger, or {@code null} if not found or if the source column is {@code NULL}
      * @throws SQLException
-     *         if specified trigger cannot be found
+     *         for database access errors
      * @since 7
      */
     String getTriggerSourceCode(String schema, String triggerName) throws SQLException;
@@ -105,9 +105,9 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      *
      * @param viewName
      *         name of the view
-     * @return source of the view
+     * @return source of the view, or {@code null} if not found or if the source column is {@code NULL}
      * @throws SQLException
-     *         if specified view cannot be found
+     *         for database access errors
      * @see #getViewSourceCode(String, String)
      */
     String getViewSourceCode(String viewName) throws SQLException;
@@ -119,9 +119,9 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      *         schema of the trigger ({@code null} drops the schema from the search; ignored on Firebird 5.0 and older)
      * @param viewName
      *         name of the view
-     * @return source of the view
+     * @return source of the view, or {@code null} if not found or if the source column is {@code NULL}
      * @throws SQLException
-     *         if specified view cannot be found
+     *         for database access errors
      * @since 7
      */
     String getViewSourceCode(String schema, String viewName) throws SQLException;
