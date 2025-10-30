@@ -103,8 +103,7 @@ final class SchemaAwareStoredProcedureMetaData implements StoredProcedureMetaDat
               on sp.RDB$SCHEMA_NAME = s.SCHEMA_NAME
             where sp.RDB$PACKAGE_NAME = ? and sp.RDB$PROCEDURE_NAME = ?
             order by 1
-            fetch first row only
-            """;
+            fetch first row only""";
 
     /**
      * Find a procedure on the search path, by package (optional) and name.
@@ -125,8 +124,7 @@ final class SchemaAwareStoredProcedureMetaData implements StoredProcedureMetaDat
               on sp.RDB$SCHEMA_NAME = s.SCHEMA_NAME
             where sp.RDB$PACKAGE_NAME is not distinct from nullif(?, '') and sp.RDB$PROCEDURE_NAME = ?
             order by 1
-            fetch first row only
-            """;
+            fetch first row only""";
 
     private static final System.Logger LOG = System.getLogger(SchemaAwareStoredProcedureMetaData.class.getName());
 

@@ -14,6 +14,7 @@ import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 /**
  * An identifier is an object reference consisting of a single name.
  *
+ * @author Mark Rotteveel
  * @since 7
  * @see ObjectReference
  */

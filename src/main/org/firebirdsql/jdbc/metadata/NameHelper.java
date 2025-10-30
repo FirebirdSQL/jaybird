@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
-import org.firebirdsql.jdbc.QuoteStrategy;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -19,12 +19,6 @@ final class NameHelper {
 
     private NameHelper() {
         // no instances
-    }
-
-    // TODO Remove once all metadata methods have been rewritten to support schemas
-    @Deprecated
-    static String toSpecificName(@Nullable String catalog, String routineName) {
-        return toSpecificName(catalog, null, routineName);
     }
 
     /**
@@ -62,27 +56,17 @@ final class NameHelper {
      * @param routineName
      *         name of the routine (procedure or function)
      * @return specific name
+     * @since 7
      */
     static String toSpecificName(@Nullable String catalog, @Nullable String schema, String routineName) {
         if (isNullOrEmpty(catalog) && isNullOrEmpty(schema)) {
+            // TODO Add schema support: consider quoting always for consistency
             return routineName;
-        }
-        var quoteStrategy = QuoteStrategy.DIALECT_3;
-        // 8: 6 quotes + 2 separators
-        var sb = new StringBuilder(length(catalog) + length(schema) + routineName.length() + 8);
-        if (!isNullOrEmpty(schema)) {
-            quoteStrategy.appendQuoted(schema, sb).append('.');
+        } else if (isNullOrEmpty(catalog)) {
+            return ObjectReference.of(schema, routineName).toString();
         }
         // this order assumes the catalog actually represents the package name
-        if (!isNullOrEmpty(catalog)) {
-            quoteStrategy.appendQuoted(catalog, sb).append('.');
-        }
-        quoteStrategy.appendQuoted(routineName, sb);
-        return sb.toString();
-    }
-
-    private static int length(@Nullable String value) {
-        return value != null ? value.length() : 0;
+        return ObjectReference.of(schema, catalog, routineName).toString();
     }
 
 }

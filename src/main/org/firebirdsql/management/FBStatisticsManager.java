@@ -108,7 +108,7 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
 
     @Override
     public void getTableStatistics(List<String> schemas, List<String> tableNames) throws SQLException {
-        try (var service = attachServiceManager()) {
+        try (FbService service = attachServiceManager()) {
             ServiceRequestBuffer srb;
             GDSServerVersion serverVersion = service.getServerVersion();
             if (serverVersion.isEqualOrAbove(3)) {
@@ -117,6 +117,8 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
                     schemas.forEach(schema -> srb.addArgument(isc_spb_sts_schema, schema));
                 }
                 tableNames.forEach(tableName -> srb.addArgument(isc_spb_sts_table, tableName));
+            } else if (tableNames.isEmpty()) {
+                srb = createStatsSRB(service, 0);
             } else {
                 srb = createStatsSRB(service, isc_spb_sts_table);
                 srb.addArgument(SpbItems.isc_spb_command_line, String.join(" ", tableNames));

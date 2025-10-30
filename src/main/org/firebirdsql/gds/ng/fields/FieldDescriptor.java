@@ -73,7 +73,8 @@ public final class FieldDescriptor {
     public FieldDescriptor(int position, DatatypeCoder datatypeCoder,
             int type, int subType, int scale, int length,
             String fieldName, String tableAlias,
-            String originalName, String originalSchema, String originalTableName, String ownerName) {
+            String originalName, String originalSchema, String originalTableName,
+            String ownerName) {
         this.position = position;
         this.datatypeCoder = datatypeCoderForType(datatypeCoder, type, subType, scale);
         this.type = type;

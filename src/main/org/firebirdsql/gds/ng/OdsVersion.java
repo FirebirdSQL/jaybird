@@ -41,7 +41,8 @@ public final class OdsVersion extends AbstractVersion {
      */
     public static OdsVersion of(int major, int minor) {
         if ((major & 0xFFFF) != major || (minor & 0xFFFF) != minor) {
-            throw new IllegalArgumentException("Implementation limit for major or minor exceeded");
+            throw new IllegalArgumentException(
+                    "Implementation limit for major or minor exceeded (must be between 0 and 65535)");
         }
         return ODS_VERSION_CACHE.computeIfAbsent(key(major, minor), ignored -> new OdsVersion(major, minor));
     }

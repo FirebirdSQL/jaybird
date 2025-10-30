@@ -11,6 +11,7 @@ import java.io.Serializable;
 /**
  * Abstract version for {@code major.minor} version information.
  *
+ * @author Mark Rotteveel
  * @since 7
  */
 public abstract class AbstractVersion implements Comparable<AbstractVersion>, Serializable {

@@ -1107,7 +1107,7 @@ public class FBConnection implements FirebirdConnection {
      * which reports the first <em>valid</em> schema of the search path.
      * </p>
      *
-     * @return the current schema, on Firebird 5.0 and older always {@code null} as schemas ar not supported
+     * @return the current schema; on Firebird 5.0 and older always {@code null} as schemas ar not supported
      */
     @Override
     public final String getSchema() throws SQLException {

@@ -4,7 +4,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension.UsesDatabaseForAll;
-import org.firebirdsql.common.matchers.SQLExceptionMatchers;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.util.SearchPathHelper;
 import org.junit.jupiter.api.Test;

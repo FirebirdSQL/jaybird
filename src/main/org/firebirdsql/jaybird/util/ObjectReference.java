@@ -19,6 +19,7 @@ import java.util.stream.Stream;
  * an {@link Identifier}, otherwise it is an identifier chain.
  * </p>
  *
+ * @author Mark Rotteveel
  * @since 7
  */
 public sealed abstract class ObjectReference permits Identifier, IdentifierChain {
@@ -162,7 +163,7 @@ public sealed abstract class ObjectReference permits Identifier, IdentifierChain
     }
 
     /**
-     * The name(s), quoted using {@code quoteStrategy}.
+     * The name(s), quoted using {@code quoteStrategy}, joined using a period ({@code .}).
      *
      * @param quoteStrategy
      *         quote strategy
@@ -171,7 +172,7 @@ public sealed abstract class ObjectReference permits Identifier, IdentifierChain
     public abstract String toString(QuoteStrategy quoteStrategy);
 
     /**
-     * Quoted name(s).
+     * Quoted name(s), joined using a period ({@code .}).
      *
      * @return quoted name(s) equivalent of {@link #toString(QuoteStrategy)} with {@link QuoteStrategy#DIALECT_3}
      */
@@ -181,7 +182,7 @@ public sealed abstract class ObjectReference permits Identifier, IdentifierChain
     }
 
     /**
-     * Appends name(s) to {@code sb} using {@code quoteStrategy}.
+     * Appends name(s), joined using a period ({@code .}), to {@code sb} using {@code quoteStrategy}.
      *
      * @param sb
      *         string builder to append to
@@ -224,7 +225,7 @@ public sealed abstract class ObjectReference permits Identifier, IdentifierChain
      * {@inheritDoc}
      * <p>
      * Implementation note: Subclasses need to ensure consistency of equals for logically equivalent references in
-     * different types (e.g. an Identifier and an IdentifierChain with a single Identifier).
+     * different types (e.g. an {@link Identifier} and an identifier chain with a single {@code Identifier}).
      * </p>
      */
     @Override
@@ -236,7 +237,7 @@ public sealed abstract class ObjectReference permits Identifier, IdentifierChain
      * {@inheritDoc}
      * <p>
      * Implementation note: Subclasses need to ensure consistency of hashCode for logically equivalent references in
-     * different types (e.g. an Identifier and an IdentifierChain with a single Identifier).
+     * different types (e.g. an {@link Identifier} and an identifier chain with a single {@code Identifier}).
      * </p>
      */
     @Override

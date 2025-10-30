@@ -170,7 +170,7 @@ final class ClientInfoProvider {
         QuoteStrategy quoteStrategy = connection.getQuoteStrategy();
         var sb = new StringBuilder("select ");
         renderGetValue(sb, property, quoteStrategy);
-        sb.append(" from ").append(hasSystemSchema() ? "SYSTEM.RDB$DATABASE" : "RDB$DATABASE");
+        sb.append(" from ").append(supportInfoFor(connection).ifSchemaElse("SYSTEM.RDB$DATABASE", "RDB$DATABASE"));
         try (var rs = getStatement().executeQuery(sb.toString())) {
             if (rs.next()) {
                 registerKnownProperty(property);
@@ -184,10 +184,6 @@ final class ClientInfoProvider {
             }
             throw e;
         }
-    }
-
-    private boolean hasSystemSchema() {
-        return supportInfoFor(connection).supportsSchemas();
     }
 
     private void renderGetValue(StringBuilder sb, ClientInfoProperty property, QuoteStrategy quoteStrategy) {

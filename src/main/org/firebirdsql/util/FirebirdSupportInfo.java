@@ -33,9 +33,9 @@ import static java.util.Objects.requireNonNull;
  * </p>
  *
  * @author Mark Rotteveel
- * @since 3.0
+ * @since 3
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unused", "ClassCanBeRecord" })
 public final class FirebirdSupportInfo {
 
     private static final int SUPPORTED_MIN_VERSION = 3;

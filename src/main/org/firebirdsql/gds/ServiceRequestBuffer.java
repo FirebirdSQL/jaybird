@@ -252,8 +252,8 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     /**
      * Repeatable buffer item for a table name for operation {@link #STATS_DATA_PAGES}.
      * <p>
-     * For backwards compatibility, it can also be used as a flag, with a space separated list of table names in buffer
-     * item {@link SpbItems#isc_spb_command_line}.
+     * For backwards compatibility, it can also be used as an options flag, with a space separated list of table names
+     * in buffer item {@link SpbItems#isc_spb_command_line}.
      * </p>
      */
     int STATS_TABLE                     = ISCConstants.isc_spb_sts_table;

@@ -13,6 +13,7 @@ import java.util.List;
 /**
  * Helpers for working with identifiers.
  *
+ * @author Mark Rotteveel
  * @since 7
  */
 public final class SearchPathHelper {

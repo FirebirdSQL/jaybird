@@ -21,6 +21,7 @@ import java.util.Locale;
  * the parser again.
  * </p>
  *
+ * @author Mark Rotteveel
  * @since 7
  */
 public final class ObjectReferenceExtractor implements TokenVisitor {
@@ -62,9 +63,9 @@ public final class ObjectReferenceExtractor implements TokenVisitor {
                     identifiers.add(new Identifier(oldIdentifier.name(), identifierScope));
                     this.previousTokenWasScopeSpecifierValue = true;
                 } else {
-                    // End of identifier chain, we're no longer interested
+                    // End of identifier chain, we're no longer interested.
                     // This is unexpected, but we're assuming future implementation of % as remainder or modular division
-                    // or some other kind of operator which would end the identifier chain
+                    // or some other kind of operator which would end the identifier chain.
                     visitorRegistrar.removeVisitor(this);
                     return;
                 }
@@ -98,9 +99,8 @@ public final class ObjectReferenceExtractor implements TokenVisitor {
     }
 
     private boolean isScopeSpecifierValue(Token token) {
-        // SCHEMA is a reserved word, PACKAGE is not
-        return token instanceof GenericToken && token.equalsIgnoreCase("PACKAGE")
-                || token instanceof ReservedToken && token.equalsIgnoreCase("SCHEMA");
+        // NOTE: SCHEMA is a reserved word, PACKAGE is not
+        return token.equalsIgnoreCase("PACKAGE") || token.equalsIgnoreCase("SCHEMA");
     }
 
     @Override

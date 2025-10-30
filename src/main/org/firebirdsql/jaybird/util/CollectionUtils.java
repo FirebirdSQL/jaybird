@@ -80,6 +80,7 @@ public final class CollectionUtils {
      * @param <T>
      *         type parameter of {@code list1}, and parent type parameter of {@code list2}
      * @return concatenation of {@code list1} and {@code list2}
+     * @since 7
      */
     public static <T> List<T> concat(List<T> list1, List<? extends T> list2) {
         var newList = new ArrayList<T>(list1.size() + list2.size());
@@ -102,6 +103,7 @@ public final class CollectionUtils {
      *         type parameter of {@code list1}, and parent type parameter of lists in {@code otherLists}
      * @return concatenation of {@code list1} and {@code otherLists}
      * @see #concat(List, List)
+     * @since 7
      */
     @SafeVarargs
     public static <T> List<T> concat(List<T> list1, List<? extends T>... otherLists) {

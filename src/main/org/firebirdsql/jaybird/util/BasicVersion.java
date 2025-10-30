@@ -9,6 +9,7 @@ import java.io.Serial;
 /**
  * Value class representing a version with {@code major.minor} version information.
  *
+ * @author Mark Rotteveel
  * @since 7
  */
 public final class BasicVersion extends AbstractVersion {

@@ -827,6 +827,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     /**
      * @return the initial search path of the connection, {@code null} if the server default search path is used
      * @see #setSearchPath(String)
+     * @since 7
      */
     default String getSearchPath() {
         return getProperty(PropertyNames.searchPath);
@@ -845,6 +846,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      *
      * @param searchPath
      *         list of comma-separated schema names
+     * @since 7
      */
     default void setSearchPath(String searchPath) {
         setProperty(PropertyNames.searchPath, searchPath);

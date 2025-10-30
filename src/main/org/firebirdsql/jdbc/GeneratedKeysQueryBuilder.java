@@ -24,6 +24,7 @@ import static org.firebirdsql.jdbc.metadata.MetadataPattern.escapeWildcards;
  * @author Mark Rotteveel
  * @since 4
  */
+@SuppressWarnings("ClassCanBeRecord")
 final class GeneratedKeysQueryBuilder {
 
     // TODO Add caching for column info

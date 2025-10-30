@@ -161,15 +161,14 @@ public interface StatisticsManager extends ServiceManager {
      * <p>
      * Invoking this method is equivalent to the behaviour of
      * {@code gstat -a [ -sch <schema> ]... [ -t <table name> ]...} on the commandline. For &mdash; unsupported &mdash;
-     * Firebird 2.5 and older, it's equivalent to {@code gstat -t <table name> [ <table name>... ]}.
+     * Firebird 2.5 and older, it's equivalent to {@code gstat -t <table name> [ <table name>... ]} or {@code gstat -a}
+     * when no tables are specified.
      * </p>
      *
      * @param schemaNames
      *         schemas to analyze; if empty, all schemas are analyzed (ignored on Firebird 5.0 or older)
      * @param tableNames
-     *         table names to analyze; if empty, all tables (restricted by {@code schemaNames}) are analyzed (on &mdash;
-     *         unsupported &mdash; Firebird 2.5 and older, this will result in an error as it will require at least one
-     *         table name)
+     *         table names to analyze; if empty, all tables (restricted by {@code schemaNames}) are analyzed
      * @throws SQLException
      *         if something went wrong (in current Firebird versions this includes when any of the tables cannot be
      *         found)

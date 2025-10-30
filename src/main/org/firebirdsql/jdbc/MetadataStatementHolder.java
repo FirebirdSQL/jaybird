@@ -19,6 +19,7 @@ import static java.util.Objects.requireNonNull;
  * but does not commit (not even in auto-commit).
  * </p>
  *
+ * @author Mark Rotteveel
  * @since 7
  */
 @InternalApi

@@ -15,6 +15,7 @@ import java.io.Serial;
  * it from methods that a user calls to obtain the result of a token visitor.
  * </p>
  *
+ * @author Mark Rotteveel
  * @since 7
  */
 public class UnexpectedTokenException extends IllegalStateException {

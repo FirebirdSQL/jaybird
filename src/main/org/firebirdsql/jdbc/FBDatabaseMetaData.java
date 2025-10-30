@@ -769,7 +769,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public String getSchemaTerm() throws SQLException {
-        return firebirdSupportInfo.supportsSchemas() ? "SCHEMA" : null;
+        return firebirdSupportInfo.ifSchemaElse("SCHEMA", null);
     }
 
     @Override
@@ -1369,7 +1369,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <p>
      * Jaybird defines these additional columns:
      * <ol start="9">
-     * <li><b>JB_GRANTEE_TYPE</b> String  =&gt; Object type of {@code GRANTEE} (<b>NOTE: Jaybird specific column;
+     * <li><b>JB_GRANTEE_TYPE</b> String =&gt; Object type of {@code GRANTEE} (<b>NOTE: Jaybird specific column;
      * retrieve by name!</b>).</li>
      * <li><b>JB_GRANTEE_SCHEMA</b> String =&gt; Schema of {@code GRANTEE} if it's a schema-bound object (<b>NOTE:
      * Jaybird specific column; retrieve by name!</b>).</li>
@@ -1402,7 +1402,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <p>
      * Jaybird defines these additional columns:
      * <ol start="8">
-     * <li><b>JB_GRANTEE_TYPE</b> String  =&gt; Object type of {@code GRANTEE} (<b>NOTE: Jaybird specific column;
+     * <li><b>JB_GRANTEE_TYPE</b> String =&gt; Object type of {@code GRANTEE} (<b>NOTE: Jaybird specific column;
      * retrieve by name!</b>).</li>
      * <li><b>JB_GRANTEE_SCHEMA</b> String =&gt; Schema of {@code GRANTEE} if it's a schema-bound object (<b>NOTE:
      * Jaybird specific column; retrieve by name!</b>).</li>

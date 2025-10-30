@@ -15,6 +15,9 @@ import java.util.Locale;
  * This visitor is written for the needs of {@link SearchPathHelper#parseSearchPath(String)}, and
  * may not be generally usable.
  * </p>
+ *
+ * @author Mark Rotteveel
+ * @since 7
  */
 public final class SearchPathExtractor implements TokenVisitor {
 
@@ -37,7 +40,8 @@ public final class SearchPathExtractor implements TokenVisitor {
             if (token instanceof QuotedIdentifierToken quotedIdentifier) {
                 identifiers.add(quotedIdentifier.name());
             } else if (token instanceof GenericToken identifier && identifier.isValidIdentifier()) {
-                // Firebird returns the search path with quoted identifiers, but this offers extra flexibility if needed
+                // Firebird returns the search path with quoted identifiers, but this way we can also parse unquoted
+                // values (e.g. user-provided)
                 identifiers.add(identifier.text().toUpperCase(Locale.ROOT));
             } else {
                 // Unexpected token, end parsing
@@ -68,7 +72,7 @@ public final class SearchPathExtractor implements TokenVisitor {
     }
 
     /**
-     * The extract search path list, or empty if not parsed or if the parsed text was not a valid search path list.
+     * The extracted search path list, or empty if not parsed or if the parsed text was not a valid search path list.
      *
      * @return immutable list of unquoted search path entries
      */

@@ -43,7 +43,8 @@ public final class StatementIdentification {
      * It reports the name normalized to its metadata storage representation.
      * </p>
      *
-     * @return Schema, {@code null} if the table was not qualified, or for {@code SELECT} and other non-DML statements
+     * @return schema, {@code null} if the table was not qualified, or for {@code SELECT} and other non-DML statements
+     * @since 7
      */
     public @Nullable String getSchema() {
         return schema;
@@ -55,7 +56,7 @@ public final class StatementIdentification {
      * It reports the name normalized to its metadata storage representation.
      * </p>
      *
-     * @return Table name, {@code null} for {@code SELECT} and other non-DML statements
+     * @return table name, {@code null} for {@code SELECT} and other non-DML statements
      */
     public @Nullable String getTableName() {
         return tableName;
@@ -78,13 +79,10 @@ public final class StatementIdentification {
      */
     private static @Nullable String normalizeObjectName(@Nullable Token objectToken) {
         if (objectToken == null) return null;
-        String objectName = objectToken.text().trim();
-        if (objectName.length() > 2
-                && objectName.charAt(0) == '"'
-                && objectName.charAt(objectName.length() - 1) == '"') {
-            return objectName.substring(1, objectName.length() - 1).replace("\"\"", "\"");
+        if (objectToken instanceof QuotedIdentifierToken quotedIdentifier) {
+            return quotedIdentifier.name();
         }
-        return objectName.toUpperCase(Locale.ROOT);
+        return objectToken.text().toUpperCase(Locale.ROOT);
     }
 
 }

@@ -53,7 +53,7 @@ public final class StringUtils {
      * @param value
      *         value to test
      * @return {@code true} if {@code value} is {@code null} or blank, {@code false} for non-blank strings
-     * @since 6
+     * @since 7
      */
     public static boolean isNullOrBlank(@Nullable String value) {
         return value == null || value.isBlank();

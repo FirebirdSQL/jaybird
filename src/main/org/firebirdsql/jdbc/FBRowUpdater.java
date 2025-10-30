@@ -68,7 +68,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
 
     private static final byte[][] EMPTY_2D_BYTES = new byte[0][];
 
-    private final ObjectReference tableName;
+    private final ObjectReference table;
     private final FBObjectListener.ResultSetListener rsListener;
     private final GDSHelper gdsHelper;
     private final RowDescriptor rowDescriptor;
@@ -87,8 +87,8 @@ final class FBRowUpdater implements FirebirdRowUpdater {
     FBRowUpdater(FBConnection connection, RowDescriptor rowDescriptor, boolean cached,
             FBObjectListener.ResultSetListener rsListener) throws SQLException {
         quoteStrategy = connection.getQuoteStrategy();
-        tableName = requireSingleTable(rowDescriptor, quoteStrategy);
-        keyColumns = deriveKeyColumns(tableName, rowDescriptor, connection.getMetaData());
+        table = requireSingleTable(rowDescriptor, quoteStrategy);
+        keyColumns = deriveKeyColumns(table, rowDescriptor, connection.getMetaData());
 
         this.rsListener = rsListener;
         gdsHelper = connection.getGDSHelper();
@@ -129,8 +129,8 @@ final class FBRowUpdater implements FirebirdRowUpdater {
      */
     private static ObjectReference requireSingleTable(RowDescriptor rowDescriptor, QuoteStrategy quoteStrategy)
             throws SQLException {
-        // find the tableName (there can be only one tableName per updatable result set)
-        ObjectReference tableName = null;
+        // find the table (there can be only one table per updatable result set)
+        ObjectReference table = null;
         for (FieldDescriptor fieldDescriptor : rowDescriptor) {
             var currentTable = ObjectReference.ofTable(fieldDescriptor).orElse(null);
             if (currentTable == null) {
@@ -138,16 +138,16 @@ final class FBRowUpdater implements FirebirdRowUpdater {
                 throw new FBResultSetNotUpdatableException(
                         "Underlying result set has derived columns (without a relation)");
             }
-            if (tableName == null) {
-                tableName = currentTable;
-            } else if (!tableName.equals(currentTable)) {
+            if (table == null) {
+                table = currentTable;
+            } else if (!table.equals(currentTable)) {
                 // Different table => not updatable
                 throw new FBResultSetNotUpdatableException(
                         "Underlying result set references at least two relations: %s and %s."
-                                .formatted(tableName.toString(quoteStrategy), currentTable.toString(quoteStrategy)));
+                                .formatted(table.toString(quoteStrategy), currentTable.toString(quoteStrategy)));
             }
         }
-        return tableName;
+        return table;
     }
 
     private void notifyExecutionStarted() throws SQLException {
@@ -340,7 +340,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         // TODO raise exception if there are no updated columns, or do nothing?
         var sb = new StringBuilder(EST_STATEMENT_SIZE + newRow.initializedCount() * EST_COLUMN_SIZE)
                 .append("update ");
-        tableName.append(sb, quoteStrategy).append(" set ");
+        table.append(sb, quoteStrategy).append(" set ");
 
         boolean first = true;
         for (FieldDescriptor fieldDescriptor : rowDescriptor) {
@@ -363,7 +363,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
 
     private String buildDeleteStatement() {
         var sb = new StringBuilder(EST_STATEMENT_SIZE).append("delete from ");
-        tableName.append(sb, quoteStrategy).append('\n');
+        table.append(sb, quoteStrategy).append('\n');
         appendWhereClause(sb);
 
         return sb.toString();
@@ -393,7 +393,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         // 25 = length of appended literals, 32 = guesstimate for (schema +) table
         var sb = new StringBuilder(25 + 32 + columns.length() + params.length())
                 .append("insert into ");
-        tableName.append(sb, quoteStrategy)
+        table.append(sb, quoteStrategy)
                 .append(" (").append(columns).append(") values (").append(params).append(')');
 
         return sb.toString();
@@ -421,7 +421,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         // 32 = guesstimate for (schema +) table
         var sb = new StringBuilder(EST_STATEMENT_SIZE + columns.length() + 32)
                 .append("select ").append(columns).append("\nfrom ");
-        tableName.append(sb, quoteStrategy).append('\n');
+        table.append(sb, quoteStrategy).append('\n');
         appendWhereClause(sb);
         return sb.toString();
     }

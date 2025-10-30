@@ -49,9 +49,12 @@ sealed abstract class SchemaChanger {
     /**
      * Sets the search path, overriding any previously set current schema or search path.
      *
-     * @param searchPath new search path to set (non-{@code null} and not blank, comma-separate, and quoted if needed)
-     * @throws java.sql.SQLFeatureNotSupportedException if schemas are not supported (Firebird 5.0 and older)
-     * @throws SQLException for database access errors, or if {@code searchPath} is {@code null} or blank
+     * @param searchPath
+     *         new search path to set (non-{@code null} and not blank, comma-separate, and quoted if needed)
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         if schemas are not supported (Firebird 5.0 and older)
+     * @throws SQLException
+     *         for database access errors, or if {@code searchPath} is {@code null} or blank
      * @see #setSchema(String)
      */
     abstract void setSearchPath(String searchPath) throws SQLException;

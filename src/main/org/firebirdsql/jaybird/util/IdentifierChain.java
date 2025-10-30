@@ -17,6 +17,7 @@ import java.util.stream.Stream;
  * {@link ObjectReference#of(List)}.
  * </p>
  *
+ * @author Mark Rotteveel
  * @since 7
  * @see ObjectReference
  */
