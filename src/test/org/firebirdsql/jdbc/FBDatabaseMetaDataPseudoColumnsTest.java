@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2018-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -7,63 +7,68 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.*;
 import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+import static org.firebirdsql.common.FBTestProperties.resolveSchema;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class FBDatabaseMetaDataPseudoColumnsTest {
 
-    //@formatter:off
     private static final String NORMAL_TABLE_NAME = "NORMAL_TABLE";
-    private static final String CREATE_NORMAL_TABLE = "create table " + NORMAL_TABLE_NAME + " ( "
-            + " ID integer primary key"
-            + ")";
-    private static final String NORMAL_TABLE2_NAME = "NORMAL_TABLE2";
-    private static final String CREATE_NORMAL_TABLE2 = "create table " + NORMAL_TABLE2_NAME + " ( "
-            + " ID integer primary key"
-            + ")";
+    private static final String CREATE_NORMAL_TABLE = """
+            create table NORMAL_TABLE (
+              ID integer primary key
+            )""";
+    private static final String CREATE_NORMAL_TABLE2 = """
+            create table NORMAL_TABLE2 (
+              ID integer primary key
+            )""";
     private static final String SINGLE_VIEW_NAME = "SINGLE_VIEW";
     private static final String CREATE_SINGLE_VIEW =
-            "create view " + SINGLE_VIEW_NAME + " as select id from " + NORMAL_TABLE_NAME;
+            "create view SINGLE_VIEW as select id from NORMAL_TABLE";
     private static final String MULTI_VIEW_NAME = "MULTI_VIEW";
-    private static final String CREATE_MULTI_VIEW = "create view " + MULTI_VIEW_NAME + " as "
-            + "select a.id as id1, b.id as id2 "
-            + "from " + NORMAL_TABLE_NAME + " as a, " + NORMAL_TABLE2_NAME + " as b";
+    private static final String CREATE_MULTI_VIEW =
+            "create view MULTI_VIEW as select a.id as id1, b.id as id2 from NORMAL_TABLE as a, NORMAL_TABLE2 as b";
     private static final String EXTERNAL_TABLE_NAME = "EXTERNAL_TABLE";
-    private static final String CREATE_EXTERNAL_TABLE = "create table " + EXTERNAL_TABLE_NAME
-            + " external file 'test_external_tbl.dat' ( "
-            + " ID integer not null"
-            + ")";
+    private static final String CREATE_EXTERNAL_TABLE = """
+            create table EXTERNAL_TABLE
+             external file 'test_external_tbl.dat' (
+              ID integer not null
+            )""";
     private static final String GTT_PRESERVE_NAME = "GTT_PRESERVE";
-    private static final String CREATE_GTT_PRESERVE = "create global temporary table " + GTT_PRESERVE_NAME + " ("
-            + " ID integer primary key"
-            + ") "
-            + " on commit preserve rows ";
+    private static final String CREATE_GTT_PRESERVE = """
+            create global temporary table GTT_PRESERVE (
+              ID integer primary key
+            ) on commit preserve rows""";
     private static final String GTT_DELETE_NAME = "GTT_DELETE";
-    private static final String CREATE_GTT_DELETE = "create global temporary table " + GTT_DELETE_NAME + " ("
-            + " ID integer primary key"
-            + ") "
-            + " on commit delete rows ";
-    //@formatter:on
+    private static final String CREATE_GTT_DELETE = """
+            create global temporary table GTT_DELETE (
+             ID integer primary key
+            ) on commit delete rows""";
+    private static final String CREATE_OTHER_SCHEMA = "create schema OTHER_SCHEMA";
+    private static final String NORMAL_TABLE3_NAME = "NORMAL_TABLE3";
+    private static final String CREATE_OTHER_SCHEMA_NORMAL_TABLE3 = """
+            create table OTHER_SCHEMA.NORMAL_TABLE3 (
+              ID integer primary key
+            )""";
 
     private static final MetadataResultSetDefinition getPseudoColumnsDefinition =
             new MetadataResultSetDefinition(PseudoColumnMetaData.class);
 
     @RegisterExtension
-    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
-            CREATE_NORMAL_TABLE,
-            CREATE_NORMAL_TABLE2,
-            CREATE_SINGLE_VIEW,
-            CREATE_MULTI_VIEW,
-            CREATE_EXTERNAL_TABLE,
-            CREATE_GTT_PRESERVE,
-            CREATE_GTT_DELETE);
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase =
+            UsesDatabaseExtension.usesDatabaseForAll(getDbInitStatements());
 
     private static final boolean supportsRecordVersion = getDefaultSupportInfo()
             .supportsRecordVersionPseudoColumn();
@@ -75,6 +80,24 @@ class FBDatabaseMetaDataPseudoColumnsTest {
     static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
         dbmd = con.getMetaData();
+    }
+
+    private static List<String> getDbInitStatements() {
+        var statements = new ArrayList<>(List.of(
+                CREATE_NORMAL_TABLE,
+                CREATE_NORMAL_TABLE2,
+                CREATE_SINGLE_VIEW,
+                CREATE_MULTI_VIEW,
+                CREATE_EXTERNAL_TABLE,
+                CREATE_GTT_PRESERVE,
+                CREATE_GTT_DELETE));
+        if (getDefaultSupportInfo().supportsSchemas()) {
+            statements.addAll(List.of(
+                    CREATE_OTHER_SCHEMA,
+                    CREATE_OTHER_SCHEMA_NORMAL_TABLE3));
+        }
+
+        return statements;
     }
 
     @AfterAll
@@ -97,12 +120,14 @@ class FBDatabaseMetaDataPseudoColumnsTest {
         }
     }
 
-    @Test
-    void testNormalTable_allPseudoColumns() throws Exception {
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = { "%", "PUBLIC" })
+    void testNormalTable_allPseudoColumns(String schemaPattern) throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules =
                 createStandardValidationRules(NORMAL_TABLE_NAME, "NO");
 
-        ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, NORMAL_TABLE_NAME, "%");
+        ResultSet pseudoColumns = dbmd.getPseudoColumns(null, resolveSchema(schemaPattern), NORMAL_TABLE_NAME, "%");
         validate(pseudoColumns, validationRules);
     }
 
@@ -136,7 +161,8 @@ class FBDatabaseMetaDataPseudoColumnsTest {
     @Test
     void testMonitoringTable_allPseudoColumns() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test requires monitoring tables");
-        List<Map<PseudoColumnMetaData, Object>> validationRules = createStandardValidationRules("MON$DATABASE", "YES");
+        List<Map<PseudoColumnMetaData, Object>> validationRules =
+                createStandardValidationRules(ifSchemaElse("SYSTEM", null), "MON$DATABASE", "YES");
 
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, "MON$DATABASE", "%");
         validate(pseudoColumns, validationRules);
@@ -249,8 +275,9 @@ class FBDatabaseMetaDataPseudoColumnsTest {
                 tableCount += 1;
             }
 
-            // System tables + the 7 tables created for this test
-            assertEquals(getDefaultSupportInfo().getSystemTableCount() + 7, tableCount,
+            // System tables + the tables created for this test
+            int testTableCount = getDefaultSupportInfo().supportsSchemas() ? 8 : 7;
+            assertEquals(getDefaultSupportInfo().getSystemTableCount() + testTableCount, tableCount,
                     "Unexpected number of pseudo columns");
         }
     }
@@ -263,18 +290,36 @@ class FBDatabaseMetaDataPseudoColumnsTest {
                 tableCount += 1;
             }
 
-            // System tables + the 7 tables created for this test
-            assertEquals(getDefaultSupportInfo().getSystemTableCount() + 7, tableCount,
+            // System tables + the tables created for this test
+            int testTableCount = getDefaultSupportInfo().supportsSchemas() ? 8 : 7;
+            assertEquals(getDefaultSupportInfo().getSystemTableCount() + testTableCount, tableCount,
                     "Unexpected number of pseudo columns");
         }
     }
 
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = { "%", "OTHER_SCHEMA", "OTHER\\_SCHEMA", "OTHER%" })
+    void testOtherSchemaNormalTable2_allPseudoColumns(String schemaPattern) throws Exception {
+        assumeSchemaSupport();
+        List<Map<PseudoColumnMetaData, Object>> validationRules =
+                createStandardValidationRules("OTHER_SCHEMA", NORMAL_TABLE3_NAME, "NO");
+
+        ResultSet pseudoColumns = dbmd.getPseudoColumns(null, schemaPattern, NORMAL_TABLE3_NAME, "%");
+        validate(pseudoColumns, validationRules);
+    }
+
     private List<Map<PseudoColumnMetaData, Object>> createStandardValidationRules(String tableName,
             String recordVersionNullable) {
+        return createStandardValidationRules(ifSchemaElse("PUBLIC", null), tableName, recordVersionNullable);
+    }
+
+    private List<Map<PseudoColumnMetaData, Object>> createStandardValidationRules(String schema, String tableName,
+            String recordVersionNullable) {
         List<Map<PseudoColumnMetaData, Object>> validationRules = new ArrayList<>();
-        validationRules.add(createDbkeyValidationRules(tableName, 8));
+        validationRules.add(createDbkeyValidationRules(schema, tableName, 8));
         if (supportsRecordVersion) {
-            validationRules.add(createRecordVersionValidationRules(tableName, recordVersionNullable));
+            validationRules.add(createRecordVersionValidationRules(schema, tableName, recordVersionNullable));
         }
         return validationRules;
     }
@@ -301,7 +346,7 @@ class FBDatabaseMetaDataPseudoColumnsTest {
     static {
         Map<PseudoColumnMetaData, Object> defaults = new EnumMap<>(PseudoColumnMetaData.class);
         defaults.put(PseudoColumnMetaData.TABLE_CAT, null);
-        defaults.put(PseudoColumnMetaData.TABLE_SCHEM, null);
+        defaults.put(PseudoColumnMetaData.TABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(PseudoColumnMetaData.DECIMAL_DIGITS, null);
         defaults.put(PseudoColumnMetaData.NUM_PREC_RADIX, 10);
         defaults.put(PseudoColumnMetaData.COLUMN_USAGE, PseudoColumnUsage.NO_USAGE_RESTRICTIONS.name());
@@ -317,7 +362,13 @@ class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     private Map<PseudoColumnMetaData, Object> createDbkeyValidationRules(String tableName, int expectedDbKeyLength) {
+        return createDbkeyValidationRules(ifSchemaElse("PUBLIC", null), tableName, expectedDbKeyLength);
+    }
+
+    private Map<PseudoColumnMetaData, Object> createDbkeyValidationRules(String schema, String tableName,
+            int expectedDbKeyLength) {
         Map<PseudoColumnMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(PseudoColumnMetaData.TABLE_SCHEM, schema);
         rules.put(PseudoColumnMetaData.TABLE_NAME, tableName);
         rules.put(PseudoColumnMetaData.COLUMN_NAME, "RDB$DB_KEY");
         rules.put(PseudoColumnMetaData.DATA_TYPE, Types.ROWID);
@@ -327,8 +378,15 @@ class FBDatabaseMetaDataPseudoColumnsTest {
         return rules;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private Map<PseudoColumnMetaData, Object> createRecordVersionValidationRules(String tableName, String nullable) {
+        return createRecordVersionValidationRules(ifSchemaElse("PUBLIC", null), tableName, nullable);
+    }
+
+    private Map<PseudoColumnMetaData, Object> createRecordVersionValidationRules(String schema, String tableName,
+            String nullable) {
         Map<PseudoColumnMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(PseudoColumnMetaData.TABLE_SCHEM, schema);
         rules.put(PseudoColumnMetaData.TABLE_NAME, tableName);
         rules.put(PseudoColumnMetaData.COLUMN_NAME, "RDB$RECORD_VERSION");
         rules.put(PseudoColumnMetaData.DATA_TYPE, Types.BIGINT);

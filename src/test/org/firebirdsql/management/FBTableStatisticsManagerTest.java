@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
 
@@ -9,6 +9,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -19,6 +21,7 @@ import java.sql.Statement;
 import java.util.Map;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,6 +31,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -56,15 +60,19 @@ class FBTableStatisticsManagerTest {
     void testTableStatistics() throws SQLException {
         try (FBTableStatisticsManager statsMan = FBTableStatisticsManager.of(connection);
              Statement stmt = connection.createStatement()) {
+            final String key = ifSchemaElse("\"PUBLIC\".\"TEST_TABLE\"", "TEST_TABLE");
+            final String tableReference = ifSchemaElse("\"PUBLIC\".\"TEST_TABLE\"", "\"TEST_TABLE\"");
             assertThat("Expected no statistics for TEST_TABLE",
-                    statsMan.getTableStatistics(), not(hasKey("TEST_TABLE")));
+                    statsMan.getTableStatistics(), not(hasKey(key)));
 
             stmt.execute("insert into TEST_TABLE(INT_VAL) values (1)");
 
             Map<String, TableStatistics> statsAfterInsert = statsMan.getTableStatistics();
-            assertThat("Expected statistics for TEST_TABLE", statsAfterInsert, hasKey("TEST_TABLE"));
-            TableStatistics testTableAfterInsert = statsAfterInsert.get("TEST_TABLE");
+            assertThat("Expected statistics for TEST_TABLE", statsAfterInsert, hasKey(key));
+            TableStatistics testTableAfterInsert = statsAfterInsert.get(key);
             assertEquals("TEST_TABLE", testTableAfterInsert.tableName(), "tableName");
+            assertEquals(ifSchemaElse("PUBLIC", ""), testTableAfterInsert.schema(), "schema");
+            assertEquals(tableReference, testTableAfterInsert.tableReference(), "tableReference");
             assertEquals(1, testTableAfterInsert.insertCount(), "Expected one insert");
 
             try (ResultSet rs = stmt.executeQuery("select * from TEST_TABLE")) {
@@ -72,8 +80,10 @@ class FBTableStatisticsManagerTest {
             }
 
             Map<String, TableStatistics> statsAfterSelect = statsMan.getTableStatistics();
-            TableStatistics testTableAfterSelect = statsAfterSelect.get("TEST_TABLE");
+            TableStatistics testTableAfterSelect = statsAfterSelect.get(key);
             assertEquals("TEST_TABLE", testTableAfterSelect.tableName(), "tableName");
+            assertEquals(ifSchemaElse("PUBLIC", ""), testTableAfterInsert.schema(), "schema");
+            assertEquals(tableReference, testTableAfterInsert.tableReference(), "tableReference");
             assertEquals(1, testTableAfterSelect.insertCount(), "Expected one insert");
             assertEquals(1, testTableAfterSelect.readSeqCount(), "Expected one sequential read");
         }
@@ -118,9 +128,10 @@ class FBTableStatisticsManagerTest {
     @Test
     void testTableStatistics_reduceTableCount_multipleInstances() throws SQLException {
         try (Statement stmt = connection.createStatement()) {
+            final String key = ifSchemaElse("\"PUBLIC\".\"TEST_TABLE\"", "TEST_TABLE");
             try (FBTableStatisticsManager statsMan = FBTableStatisticsManager.of(connection)) {
                 assertThat("Expected no statistics for TEST_TABLE",
-                        statsMan.getTableStatistics(), not(hasKey("TEST_TABLE")));
+                        statsMan.getTableStatistics(), not(hasKey(key)));
 
                 stmt.execute("insert into TEST_TABLE(INT_VAL) values (1)");
 
@@ -129,7 +140,7 @@ class FBTableStatisticsManagerTest {
                 }
 
                 Map<String, TableStatistics> statsAfterSelect = statsMan.getTableStatistics();
-                statsAfterSelect.get("TEST_TABLE");
+                assertNotNull(statsAfterSelect.get(key), "statsAfterSelect for TEST_TABLE");
             }
 
             stmt.execute("drop table TEST_TABLE");
@@ -140,6 +151,17 @@ class FBTableStatisticsManagerTest {
                         statsAfterDrop, hasKey(startsWith("UNKNOWN_TABLE_ID_")));
             }
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = "<NIL>", textBlock = """
+            <NIL>,   TABLE1, TABLE1
+            '',      TABLE1, TABLE1
+            SCHEMA1, TABLE1, "SCHEMA1"."TABLE1"
+            """)
+    void testToKey(String schema, String tableName, String expectedTableReference) {
+        assertEquals(expectedTableReference, FBTableStatisticsManager.toKey(schema, tableName),
+                "tableReference");
     }
 
 }

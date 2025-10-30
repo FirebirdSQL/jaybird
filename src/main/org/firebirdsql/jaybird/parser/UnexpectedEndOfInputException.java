@@ -4,6 +4,8 @@ package org.firebirdsql.jaybird.parser;
 
 import org.firebirdsql.util.InternalApi;
 
+import java.io.Serial;
+
 /**
  * Thrown when the tokenizer required a character, but instead the end of input was reached.
  *
@@ -13,6 +15,7 @@ import org.firebirdsql.util.InternalApi;
 @InternalApi
 public class UnexpectedEndOfInputException extends RuntimeException {
 
+    @Serial
     private static final long serialVersionUID = 5393338512797009183L;
 
     public UnexpectedEndOfInputException(String message) {

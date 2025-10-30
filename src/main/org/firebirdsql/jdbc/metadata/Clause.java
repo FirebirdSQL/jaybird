@@ -51,7 +51,7 @@ public final class Clause {
      *         value for equals condition
      * @return clause for a SQL equals ({@code =}) condition
      */
-    static Clause equalsClause(String columnName, String value) {
+    public static Clause equalsClause(String columnName, String value) {
         return new Clause(columnName, MetadataPattern.equalsCondition(value));
     }
 

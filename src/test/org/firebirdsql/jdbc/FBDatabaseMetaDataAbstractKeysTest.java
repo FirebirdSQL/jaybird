@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -19,8 +20,11 @@ import java.util.Map;
 
 import static java.util.Collections.unmodifiableMap;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
+import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 
 /**
  * Base test class for subclasses of {@code org.firebirdsql.jdbc.metadata.AbstractKeysMethod}.
@@ -33,65 +37,85 @@ abstract class FBDatabaseMetaDataAbstractKeysTest {
     private static final String UNNAMED_PK_INDEX_PREFIX = "RDB$PRIMARY";
     private static final String UNNAMED_FK_INDEX_PREFIX = "RDB$FOREIGN";
 
-    //@formatter:off
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
-            """
-            create table TABLE_1 (
-              ID integer constraint PK_TABLE_1 primary key
-            )""",
-            """
-            create table TABLE_2 (
-              ID1 integer not null,
-              ID2 integer not null,
-              TABLE_1_ID integer constraint FK_TABLE_2_TO_1 references TABLE_1 (ID),
-              constraint PK_TABLE_2 unique (ID1, ID2) using index ALT_INDEX_NAME_2
-            )""",
-            """
-            create table TABLE_3 (
-              ID integer constraint PK_TABLE_3 primary key using index ALT_INDEX_NAME_3,
-              TABLE_2_ID1 integer,
-              TABLE_2_ID2 integer,
-              constraint FK_TABLE_3_TO_2 foreign key (TABLE_2_ID1, TABLE_2_ID2) references TABLE_2 (ID1, ID2)
-                on delete cascade on update set default
-            )""",
-            """
-            create table TABLE_4 (
-              ID integer primary key using index ALT_INDEX_NAME_4,
-              TABLE_2_ID1 integer,
-              TABLE_2_ID2 integer,
-              constraint FK_TABLE_4_TO_2 foreign key (TABLE_2_ID1, TABLE_2_ID2) references TABLE_2 (ID1, ID2)
-                on delete set default on update set null
-            )""",
-            """
-            create table TABLE_5 (
-              ID integer primary key,
-              TABLE_2_ID1 integer,
-              TABLE_2_ID2 integer,
-              foreign key (TABLE_2_ID1, TABLE_2_ID2) references TABLE_2 (ID1, ID2)
-                on delete set null on update no action using index ALT_INDEX_NAME_5
-            )""",
-            """
-            create table TABLE_6 (
-              ID integer primary key,
-              TABLE_2_ID1 integer,
-              TABLE_2_ID2 integer,
-              foreign key (TABLE_2_ID1, TABLE_2_ID2) references TABLE_2 (ID1, ID2)
-                on delete no action on update cascade
-            )""",
-            """
-            create table TABLE_7 (
-              ID integer primary key,
-              TABLE_6_ID integer constraint FK_TABLE_7_TO_6 references TABLE_6 (ID) on update cascade
-            )"""
-    );
-    //@formatter:on
+            dbInitStatements());
 
     protected static final MetadataResultSetDefinition keysDefinition =
             new MetadataResultSetDefinition(KeysMetaData.class);
 
     protected static Connection con;
     protected static DatabaseMetaData dbmd;
+
+    private static List<String> dbInitStatements() {
+        var statements = new ArrayList<>(Arrays.asList(
+                """
+                create table TABLE_1 (
+                  ID integer constraint PK_TABLE_1 primary key
+                )""",
+                """
+                create table TABLE_2 (
+                  ID1 integer not null,
+                  ID2 integer not null,
+                  TABLE_1_ID integer constraint FK_TABLE_2_TO_1 references TABLE_1 (ID),
+                  constraint PK_TABLE_2 unique (ID1, ID2) using index ALT_INDEX_NAME_2
+                )""",
+                """
+                create table TABLE_3 (
+                  ID integer constraint PK_TABLE_3 primary key using index ALT_INDEX_NAME_3,
+                  TABLE_2_ID1 integer,
+                  TABLE_2_ID2 integer,
+                  constraint FK_TABLE_3_TO_2 foreign key (TABLE_2_ID1, TABLE_2_ID2) references TABLE_2 (ID1, ID2)
+                    on delete cascade on update set default
+                )""",
+                """
+                create table TABLE_4 (
+                  ID integer primary key using index ALT_INDEX_NAME_4,
+                  TABLE_2_ID1 integer,
+                  TABLE_2_ID2 integer,
+                  constraint FK_TABLE_4_TO_2 foreign key (TABLE_2_ID1, TABLE_2_ID2) references TABLE_2 (ID1, ID2)
+                    on delete set default on update set null
+                )""",
+                """
+                create table TABLE_5 (
+                  ID integer primary key,
+                  TABLE_2_ID1 integer,
+                  TABLE_2_ID2 integer,
+                  foreign key (TABLE_2_ID1, TABLE_2_ID2) references TABLE_2 (ID1, ID2)
+                    on delete set null on update no action using index ALT_INDEX_NAME_5
+                )""",
+                """
+                create table TABLE_6 (
+                  ID integer primary key,
+                  TABLE_2_ID1 integer,
+                  TABLE_2_ID2 integer,
+                  foreign key (TABLE_2_ID1, TABLE_2_ID2) references TABLE_2 (ID1, ID2)
+                    on delete no action on update cascade
+                )"""
+        ));
+        if (!getDefaultSupportInfo().supportsSchemas()) {
+            statements.add("""
+                create table TABLE_7 (
+                  ID integer primary key,
+                  TABLE_6_ID integer constraint FK_TABLE_7_TO_6 references TABLE_6 (ID) on update cascade
+                )""");
+        } else {
+            statements.add("create schema OTHER_SCHEMA");
+            statements.add("""
+                    create table OTHER_SCHEMA.TABLE_8 (
+                      ID integer primary key,
+                      TABLE_1_ID integer constraint FK_TABLE_8_TO_1 references PUBLIC.TABLE_1 (ID)
+                    )""");
+            statements.add("""
+                create table TABLE_7 (
+                  ID integer primary key,
+                  TABLE_6_ID integer constraint FK_TABLE_7_TO_6 references TABLE_6 (ID) on update cascade,
+                  TABLE_8_ID integer constraint FK_TABLE_7_TO_8 references OTHER_SCHEMA.TABLE_8 (ID) on delete cascade
+                )""");
+        }
+
+        return statements;
+    }
 
     @BeforeAll
     static void setupAll() throws SQLException {
@@ -161,11 +185,24 @@ abstract class FBDatabaseMetaDataAbstractKeysTest {
                         UNNAMED_CONSTRAINT_PREFIX, "ALT_INDEX_NAME_2", UNNAMED_FK_INDEX_PREFIX));
     }
 
-    protected static List<Map<KeysMetaData, Object>> table7Fks() {
+    protected static List<Map<KeysMetaData, Object>> table7to6Fks() {
         return List.of(
                 createKeysTestData("TABLE_6", "ID", "TABLE_7", "TABLE_6_ID", 1, DatabaseMetaData.importedKeyCascade,
                         DatabaseMetaData.importedKeyNoAction, UNNAMED_CONSTRAINT_PREFIX, "FK_TABLE_7_TO_6",
                         UNNAMED_PK_INDEX_PREFIX, "FK_TABLE_7_TO_6"));
+    }
+
+    protected static List<Map<KeysMetaData, Object>> table7to8Fks() {
+        return List.of(createKeysTestData("OTHER_SCHEMA", "TABLE_8", "ID", "PUBLIC", "TABLE_7", "TABLE_8_ID", 1,
+                DatabaseMetaData.importedKeyNoAction, DatabaseMetaData.importedKeyCascade,
+                UNNAMED_CONSTRAINT_PREFIX, "FK_TABLE_7_TO_8", UNNAMED_PK_INDEX_PREFIX, "FK_TABLE_7_TO_8"));
+    }
+
+    protected static List<Map<KeysMetaData, Object>> table8Fks() {
+        return List.of(
+                createKeysTestData("PUBLIC", "TABLE_1", "ID", "OTHER_SCHEMA", "TABLE_8", "TABLE_1_ID", 1,
+                        DatabaseMetaData.importedKeyNoAction, DatabaseMetaData.importedKeyNoAction,
+                        "PK_TABLE_1", "FK_TABLE_8_TO_1", "PK_TABLE_1", "FK_TABLE_8_TO_1"));
     }
 
     protected void validateExpectedKeys(ResultSet keys, List<Map<KeysMetaData, Object>> expectedKeys)
@@ -180,9 +217,18 @@ abstract class FBDatabaseMetaDataAbstractKeysTest {
     protected static Map<KeysMetaData, Object> createKeysTestData(String pkTable, String pkColumn, String fkTable,
             String fkColumn, int keySeq, int updateRule, int deleteRule, String pkName, String fkName,
             String pkIndexName, String fkIndexName) {
+        return createKeysTestData(ifSchemaElse("PUBLIC", null), pkTable, pkColumn, ifSchemaElse("PUBLIC", null),
+                fkTable, fkColumn, keySeq, updateRule, deleteRule, pkName, fkName, pkIndexName, fkIndexName);
+    }
+
+    protected static Map<KeysMetaData, Object> createKeysTestData(String pkSchema, String pkTable, String pkColumn,
+            String fkSchema, String fkTable, String fkColumn, int keySeq, int updateRule, int deleteRule,
+            String pkName, String fkName, String pkIndexName, String fkIndexName) {
         Map<KeysMetaData, Object> rules = getDefaultValidationRules();
+        rules.put(KeysMetaData.PKTABLE_SCHEM, trimToNull(pkSchema));
         rules.put(KeysMetaData.PKTABLE_NAME, pkTable);
         rules.put(KeysMetaData.PKCOLUMN_NAME, pkColumn);
+        rules.put(KeysMetaData.FKTABLE_SCHEM, trimToNull(fkSchema));
         rules.put(KeysMetaData.FKTABLE_NAME, fkTable);
         rules.put(KeysMetaData.FKCOLUMN_NAME, fkColumn);
         rules.put(KeysMetaData.KEY_SEQ, (short) keySeq);
@@ -207,6 +253,8 @@ abstract class FBDatabaseMetaDataAbstractKeysTest {
     static {
         var defaults = new EnumMap<>(KeysMetaData.class);
         Arrays.stream(KeysMetaData.values()).forEach(key -> defaults.put(key, null));
+        defaults.put(KeysMetaData.PKTABLE_SCHEM, ifSchemaElse("PUBLIC", null));
+        defaults.put(KeysMetaData.FKTABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(KeysMetaData.UPDATE_RULE, DatabaseMetaData.importedKeyNoAction);
         defaults.put(KeysMetaData.DELETE_RULE, DatabaseMetaData.importedKeyNoAction);
         defaults.put(KeysMetaData.DEFERRABILITY, DatabaseMetaData.importedKeyNotDeferrable);

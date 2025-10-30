@@ -69,6 +69,7 @@ public final class PropertyNames {
     public static final String asyncFetch = "asyncFetch";
     public static final String maxInlineBlobSize = "maxInlineBlobSize";
     public static final String maxBlobCacheSize = "maxBlobCacheSize";
+    public static final String searchPath = "searchPath";
 
     // service connection
     public static final String expectedDb = "expectedDb";

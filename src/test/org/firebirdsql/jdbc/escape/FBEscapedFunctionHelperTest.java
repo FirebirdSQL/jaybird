@@ -1,8 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2003-2004 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2012-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.escape;
 
+import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.jdbc.QuoteStrategy;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
@@ -41,7 +43,8 @@ class FBEscapedFunctionHelperTest {
 
     @Test
     void testEscapedFunctionCall() throws SQLException {
-        String ucaseTest = FBEscapedParser.toNativeSql(UCASE_FUNCTION_CALL);
+        String ucaseTest = FBEscapedParser.of(FBTestProperties.minimumVersionSupported(), QuoteStrategy.DIALECT_3)
+                .toNative(UCASE_FUNCTION_CALL);
 
         assertEquals(UCASE_FUNCTION_TEST, ucaseTest, "ucase function parsing should be correct");
     }

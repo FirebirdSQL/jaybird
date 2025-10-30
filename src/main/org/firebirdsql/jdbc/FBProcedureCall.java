@@ -1,10 +1,11 @@
 // SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2005-2006 Steven Jardine
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.jaybird.util.CollectionUtils;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.InternalApi;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -14,11 +15,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrBlank;
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 import static org.firebirdsql.jdbc.SQLStateConstants.*;
 
 /**
- * Represents procedure call.
+ * Represents a procedure call.
  * <p>
  * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
  * </p>
@@ -30,15 +34,30 @@ public class FBProcedureCall {
     private static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE ";
     private static final String NATIVE_SELECT_COMMAND = "SELECT * FROM ";
 
+    public static final String NO_SCHEMA = "";
+    public static final String NO_PACKAGE = "";
+
+    private @Nullable String schema;
+    private @Nullable String pkg;
     private @Nullable String name;
-    private List<@Nullable FBProcedureParam> inputParams = new ArrayList<>();
-    private List<@Nullable FBProcedureParam> outputParams = new ArrayList<>();
+    private boolean ambiguousScope;
+    private boolean selectable;
+    private @Nullable ObjectReference objectReference;
+    private final List<@Nullable FBProcedureParam> inputParams;
+    private final List<@Nullable FBProcedureParam> outputParams;
 
     public FBProcedureCall() {
+        inputParams = new ArrayList<>();
+        outputParams = new ArrayList<>();
     }
 
     private FBProcedureCall(FBProcedureCall source) {
+        schema = source.schema;
+        pkg = source.pkg;
         name = source.name;
+        ambiguousScope = source.ambiguousScope;
+        selectable = source.selectable;
+        objectReference = source.objectReference;
         inputParams = cloneParameters(source.inputParams);
         outputParams = cloneParameters(source.outputParams);
     }
@@ -48,7 +67,7 @@ public class FBProcedureCall {
     }
 
     private static List<@Nullable FBProcedureParam> cloneParameters(final List<@Nullable FBProcedureParam> parameters) {
-        final List<@Nullable FBProcedureParam> clonedParameters = new ArrayList<>(parameters.size());
+        final var clonedParameters = new ArrayList<@Nullable FBProcedureParam>(parameters.size());
         for (FBProcedureParam param : parameters) {
             clonedParameters.add(param != null ? (FBProcedureParam) param.clone() : null);
         }
@@ -56,21 +75,154 @@ public class FBProcedureCall {
     }
 
     /**
+     * Get the schema of the procedure.
+     *
+     * @return name of the schema, {@code ""} (empty string) if no schema, or {@code null} if schema is not known
+     * @see #isAmbiguousScope()
+     * @since 7
+     */
+    public @Nullable String getSchema() {
+        return schema;
+    }
+
+    /**
+     * Set schema of the procedure, case must match as stored in metadata tables.
+     *
+     * @param schema
+     *         name of the schema, {@code ""} (empty string) if no schema, or {@code null} if schema is not known
+     * @see #isAmbiguousScope()
+     * @since 7
+     */
+    public void setSchema(@Nullable String schema) {
+        this.schema = schema;
+    }
+
+    /**
+     * Get the package of the procedure.
+     *
+     * @return name of the package, {@code ""} (empty string) if no package, or {@code null} if package is not known
+     * @see #isAmbiguousScope()
+     * @since 7
+     */
+    public @Nullable String getPackage() {
+        return pkg;
+    }
+
+    /**
+     * Set package of the procedure, case must match as stored in metadata tables.
+     *
+     * @param pkg
+     *         name of the package, {@code ""} (empty string) if no package, or {@code null} if package is not known
+     * @see #isAmbiguousScope()
+     * @since 7
+     */
+    public void setPackage(@Nullable String pkg) {
+        this.pkg = pkg;
+    }
+
+    /**
      * Get the name of the procedure to be called.
      *
-     * @return The procedure name
+     * @return procedure name
      */
     public @Nullable String getName() {
         return name;
     }
 
     /**
-     * Set the name of the procedure to be called.
+     * Set the name of the procedure to be called, case must match as stored in metadata tables.
      *
-     * @param name The name of the procedure
+     * @param name
+     *         name of the procedure
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * @return {@code true} if there might be a scope ambiguity (value of {@code schema} might be the package, with
+     * unknown schema)
+     */
+    public boolean isAmbiguousScope() {
+        return ambiguousScope;
+    }
+
+    /**
+     * Marks this procedure call to have ambiguous scope (value of {@code schema} might be the package, with unknown
+     * schema).
+     *
+     * @param ambiguousScope
+     *         {@code true} if ambiguous scope, {@code false} if not
+     */
+    public void setAmbiguousScope(boolean ambiguousScope) {
+        this.ambiguousScope = ambiguousScope;
+    }
+
+    /**
+     * @return {@code true} if selectable, {@code false} if executable, or if selectability hasn't been resolved yet
+     */
+    public boolean isSelectable() {
+        return selectable;
+    }
+
+    /**
+     * Sets selectability of the procedure
+     *
+     * @param selectable
+     *         {@code true} marks as selectable, {@code false} as executable
+     */
+    public void setSelectable(boolean selectable) {
+        this.selectable = selectable;
+    }
+
+    /**
+     * Get the object reference that is explicitly stored on this procedure call.
+     *
+     * @return object reference, or empty if no object reference was explicitly set
+     * @see #deriveObjectReference()
+     * @since 7
+     */
+    public Optional<ObjectReference> getObjectReference() {
+        return Optional.ofNullable(objectReference);
+    }
+
+    /**
+     * Set the object reference of the procedure.
+     *
+     * @param objectReference
+     *         object reference (or {@code null} to clear)
+     */
+    public void setObjectReference(@Nullable ObjectReference objectReference) {
+        this.objectReference = objectReference;
+    }
+
+    /**
+     * Derive the object reference for this procedure call.
+     * <p>
+     * This method will either return the explicitly stored object reference (see {@link #getObjectReference()}), or
+     * otherwise derive it from the current values of {@code schema}, {@code pkg} and {@code name}.
+     * </p>
+     * <p>
+     * The derived object reference is <em>not</em> stored in this instance. If that is needed, it must be done
+     * explicitly by the caller.
+     * </p>
+     *
+     * @return derived object reference
+     * @throws IllegalStateException
+     *         if {@code name} is {@code null} or blank
+     * @see #getObjectReference()
+     * @since 7
+     */
+    public ObjectReference deriveObjectReference() {
+        return getObjectReference().orElseGet(() -> {
+            if (isNullOrBlank(name)) {
+                throw new IllegalStateException("Property name is null, cannot derive object reference");
+            } else if (isNullOrEmpty(pkg)) {
+                return ObjectReference.of(schema, name);
+            } else {
+                return ObjectReference.of(schema, pkg, name);
+            }
+        });
     }
 
     /**
@@ -263,14 +415,9 @@ public class FBProcedureCall {
         param.setType(type);
     }
 
-    /**
-     * Get native SQL for the specified procedure call.
-     *
-     * @return native SQL that can be executed by the database server.
-     */
-    public String getSQL(boolean select) throws SQLException {
-        StringBuilder sb = new StringBuilder(select ? NATIVE_SELECT_COMMAND : NATIVE_CALL_COMMAND);
-        sb.append(name);
+    public String getSQL(QuoteStrategy quoteStrategy) {
+        var sb = new StringBuilder(selectable ? NATIVE_SELECT_COMMAND : NATIVE_CALL_COMMAND);
+        deriveObjectReference().append(sb, quoteStrategy);
 
         boolean firstParam = true;
         sb.append('(');
@@ -315,21 +462,46 @@ public class FBProcedureCall {
     }
 
     /**
-     * Check if <code>obj</code> is equal to this instance.
+     * Check if {@code obj} is equal to this instance.
+     * <p>
+     * The fields {@code objectReference} and {@code ambiguousScope} are not considered for equality.
+     * </p>
      *
-     * @return <code>true</code> iff <code>obj</code> is instance of this class
-     * representing the same procedure with the same parameters.
+     * @return {@code true} if {@code obj}is instance of this class representing the same procedure with the same
+     * parameters
      */
     public boolean equals(Object obj) {
         if (obj == this) return true;
         return obj instanceof FBProcedureCall other
                 && Objects.equals(name, other.name)
+                && Objects.equals(schema, other.schema)
+                && Objects.equals(pkg, other.pkg)
                 && inputParams.equals(other.inputParams)
                 && outputParams.equals(other.outputParams);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The fields {@code objectReference} and {@code ambiguousScope} are not considered for the hashcode.
+     * </p>
+     */
     public int hashCode() {
-        return Objects.hash(name, inputParams, outputParams);
+        return Objects.hash(schema, pkg, name, inputParams, outputParams);
+    }
+
+    @Override
+    public String toString() {
+        return "FBProcedureCall{" +
+                "schema='" + schema + '\'' +
+                ", pkg='" + pkg + '\'' +
+                ", name='" + name + '\'' +
+                ", ambiguousScope=" + ambiguousScope +
+                ", selectable=" + selectable +
+                ", objectReference=" + objectReference +
+                ", inputParams=" + inputParams +
+                ", outputParams=" + outputParams +
+                '}';
     }
 
     /**

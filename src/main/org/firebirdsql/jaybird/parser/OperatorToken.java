@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -7,7 +7,8 @@ package org.firebirdsql.jaybird.parser;
  * <p>
  * The term operator is taken very broadly, and includes mathematical operators ({@code + - / *}, boolean operators
  * ({@code and or is not} and comparison operators ({@code = <> > < >= <= != ~= ^= !< ~< ^< !> ~> ^>} and the prefix of
- * those operators ({@code ! ~ ^} if they appear individually in the statement (which is a syntax error in Firebird).
+ * those operators ({@code ! ~ ^} if they appear individually in the statement (which is a syntax error in Firebird),
+ * and the scope specifier ({@code %}).
  * </p>
  *
  * @author Mark Rotteveel
