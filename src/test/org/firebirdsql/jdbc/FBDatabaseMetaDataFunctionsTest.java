@@ -340,8 +340,7 @@ class FBDatabaseMetaDataFunctionsTest {
             rules.put(FunctionMetaData.FUNCTION_CAT, "");
         }
         rules.put(FunctionMetaData.FUNCTION_NAME, "PSQL$EXAMPLE");
-        rules.put(FunctionMetaData.SPECIFIC_NAME, ifSchemaElse(
-                ObjectReference.of("PUBLIC", "PSQL$EXAMPLE").toString(), "PSQL$EXAMPLE"));
+        rules.put(FunctionMetaData.SPECIFIC_NAME, "PSQL$EXAMPLE");
         if (supportsComments) {
             rules.put(FunctionMetaData.REMARKS, "Comment on PSQL$EXAMPLE");
         }
@@ -364,7 +363,7 @@ class FBDatabaseMetaDataFunctionsTest {
         }
         rules.put(FunctionMetaData.FUNCTION_SCHEM, "OTHER_SCHEMA");
         rules.put(FunctionMetaData.FUNCTION_NAME, "PSQL$EXAMPLE");
-        rules.put(FunctionMetaData.SPECIFIC_NAME, ObjectReference.of("OTHER_SCHEMA", "PSQL$EXAMPLE").toString());
+        rules.put(FunctionMetaData.SPECIFIC_NAME, "PSQL$EXAMPLE");
         rules.put(FunctionMetaData.JB_FUNCTION_SOURCE, """
                 begin
                   return cast(x as varchar(50));
@@ -384,7 +383,7 @@ class FBDatabaseMetaDataFunctionsTest {
         }
         rules.put(FunctionMetaData.FUNCTION_SCHEM, "OTHER_SCHEMA");
         rules.put(FunctionMetaData.FUNCTION_NAME, "PSQL$EXAMPLE2");
-        rules.put(FunctionMetaData.SPECIFIC_NAME, ObjectReference.of("OTHER_SCHEMA", "PSQL$EXAMPLE2").toString());
+        rules.put(FunctionMetaData.SPECIFIC_NAME, "PSQL$EXAMPLE2");
         rules.put(FunctionMetaData.JB_FUNCTION_SOURCE, """
                 begin
                   return X+1;
@@ -404,8 +403,7 @@ class FBDatabaseMetaDataFunctionsTest {
             rules.put(FunctionMetaData.FUNCTION_CAT, "");
         }
         rules.put(FunctionMetaData.FUNCTION_NAME, "UDF$EXAMPLE");
-        rules.put(FunctionMetaData.SPECIFIC_NAME, ifSchemaElse(
-                ObjectReference.of("PUBLIC", "UDF$EXAMPLE").toString(), "UDF$EXAMPLE"));
+        rules.put(FunctionMetaData.SPECIFIC_NAME, "UDF$EXAMPLE");
         if (supportsComments) {
             rules.put(FunctionMetaData.REMARKS, "Comment on UDF$EXAMPLE");
         }
@@ -419,8 +417,7 @@ class FBDatabaseMetaDataFunctionsTest {
         Map<FunctionMetaData, Object> rules = getDefaultValidationRules();
         rules.put(FunctionMetaData.FUNCTION_CAT, "WITH$FUNCTION");
         rules.put(FunctionMetaData.FUNCTION_NAME, "IN$PACKAGE");
-        rules.put(FunctionMetaData.SPECIFIC_NAME,
-                ObjectReference.of(ifSchemaElse("PUBLIC", ""), "WITH$FUNCTION", "IN$PACKAGE").toString());
+        rules.put(FunctionMetaData.SPECIFIC_NAME, ObjectReference.of("WITH$FUNCTION", "IN$PACKAGE").toString());
         // Stored with package
         rules.put(FunctionMetaData.JB_FUNCTION_SOURCE, null);
         rules.put(FunctionMetaData.JB_FUNCTION_KIND, "PSQL");

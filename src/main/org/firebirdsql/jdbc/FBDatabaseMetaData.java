@@ -1211,9 +1211,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <li>Column {@code PROCEDURE_CAT} for normal procedures is empty string ({@code ""}) instead of {@code null},
      * for packaged procedures it is the package name</li>
      * <li>Column {@code SPECIFIC_NAME} for packaged procedures will report
-     * {@code [<quoted-schema-name>.]<quoted-package-name>.<quoted-procedure-name>} (on Firebird 5.0 and older, normal
-     * procedures will report the same as column {@code PROCEDURE_NAME}, the unquoted name, on Firebird 6.0 and higher,
-     * {@code <quoted-schema-name>.<quoted-procedure-name>})</li>
+     * {@code <quoted-package-name>.<quoted-procedure-name>} (normal procedures will report the same as column
+     * {@code PROCEDURE_NAME}, the unquoted name)</li>
      * </ul>
      */
     @Override

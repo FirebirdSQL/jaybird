@@ -374,7 +374,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         try (var connection = DriverManager.getConnection(getUrl(), props)) {
             dbmd = connection.getMetaData();
             List<Map<FunctionColumnMetaData, Object>> expectedColumns = withCatalog("WITH$FUNCTION", withSpecificName(
-                    ObjectReference.of(ifSchemaElse("PUBLIC", ""), "WITH$FUNCTION", "IN$PACKAGE").toString(),
+                    ObjectReference.of("WITH$FUNCTION", "IN$PACKAGE").toString(),
                     List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM1", 1, 10, 0, true))));
             validateExpectedFunctionColumns(catalog, "IN$PACKAGE", "PARAM1", expectedColumns);
         }
@@ -536,7 +536,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
 
     private static List<Map<FunctionColumnMetaData, Object>> getWithFunctionInPackageColumns() {
         return withCatalog("WITH$FUNCTION",
-                withSpecificName(ifSchemaElse("\"PUBLIC\".", "") + "\"WITH$FUNCTION\".\"IN$PACKAGE\"",
+                withSpecificName("\"WITH$FUNCTION\".\"IN$PACKAGE\"",
                         List.of(
                                 withColumnTypeFunctionReturn(
                                         createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM_0", 0, 10, 0, true)),
@@ -569,8 +569,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
     private static List<Map<FunctionColumnMetaData, Object>> withSchema(String schema,
             List<Map<FunctionColumnMetaData, Object>> rules) {
         for (Map<FunctionColumnMetaData, Object> rowRule : rules) {
-            String functionName = (String) rowRule.get(FunctionColumnMetaData.FUNCTION_NAME);
-            rowRule.put(FunctionColumnMetaData.SPECIFIC_NAME, ObjectReference.of(schema, functionName).toString());
+            rowRule.put(FunctionColumnMetaData.SPECIFIC_NAME, rowRule.get(FunctionColumnMetaData.FUNCTION_NAME));
             rowRule.put(FunctionColumnMetaData.FUNCTION_SCHEM, schema);
         }
         return rules;
@@ -580,8 +579,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
             int ordinalPosition, boolean nullable) {
         Map<FunctionColumnMetaData, Object> rules = getDefaultValidationRules();
         rules.put(FunctionColumnMetaData.FUNCTION_NAME, functionName);
-        rules.put(FunctionColumnMetaData.SPECIFIC_NAME, ifSchemaElse(
-                ObjectReference.of("PUBLIC", functionName).toString(), functionName));
+        rules.put(FunctionColumnMetaData.SPECIFIC_NAME, functionName);
         rules.put(FunctionColumnMetaData.COLUMN_NAME, columnName);
         rules.put(FunctionColumnMetaData.ORDINAL_POSITION, ordinalPosition);
         if (nullable) {

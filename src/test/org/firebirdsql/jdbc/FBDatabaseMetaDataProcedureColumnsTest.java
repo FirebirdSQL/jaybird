@@ -363,7 +363,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
 
             List<Map<ProcedureColumnMetaData, Object>> expectedColumns =
                     withCatalog("WITH$PROCEDURE", withSpecificName(
-                            ObjectReference.of(ifSchemaElse("PUBLIC", ""), "WITH$PROCEDURE", "IN$PACKAGE").toString(),
+                            ObjectReference.of("WITH$PROCEDURE", "IN$PACKAGE").toString(),
                             List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "RETURN1", 1, 10, 0, true,
                                     DatabaseMetaData.procedureColumnOut))));
 
@@ -397,7 +397,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
 
     private static List<Map<ProcedureColumnMetaData, Object>> getInPackage_allColumns() {
         return withCatalog("WITH$PROCEDURE", withSpecificName(
-                ObjectReference.of(ifSchemaElse("PUBLIC", ""), "WITH$PROCEDURE", "IN$PACKAGE").toString(),
+                ObjectReference.of("WITH$PROCEDURE", "IN$PACKAGE").toString(),
                 // TODO Having result columns first might be against JDBC spec
                 // TODO Describing result columns as procedureColumnOut might be against JDBC spec
                 List.of(
@@ -465,7 +465,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
         Map<ProcedureColumnMetaData, Object> rules = getDefaultValueValidationRules();
         rules.put(ProcedureColumnMetaData.PROCEDURE_SCHEM, schema);
         rules.put(ProcedureColumnMetaData.PROCEDURE_NAME, procedureName);
-        rules.put(ProcedureColumnMetaData.SPECIFIC_NAME, getProcedureSpecificName(schema, procedureName));
+        rules.put(ProcedureColumnMetaData.SPECIFIC_NAME, procedureName);
         rules.put(ProcedureColumnMetaData.COLUMN_NAME, columnName);
         rules.put(ProcedureColumnMetaData.ORDINAL_POSITION, ordinalPosition);
         rules.put(ProcedureColumnMetaData.COLUMN_TYPE, columnType);
@@ -474,11 +474,6 @@ class FBDatabaseMetaDataProcedureColumnsTest {
             rules.put(ProcedureColumnMetaData.IS_NULLABLE, "NO");
         }
         return rules;
-    }
-
-    private static String getProcedureSpecificName(String schema, String procedureName) {
-        if (schema == null || schema.isEmpty()) return procedureName;
-        return ObjectReference.of(schema, procedureName).toString();
     }
 
     @SuppressWarnings("SameParameterValue")

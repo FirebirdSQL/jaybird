@@ -81,7 +81,7 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
                 .at(2).setString(procedureName)
                 .at(6).setString(rs.getString("REMARKS"))
                 .at(7).setShort(rs.getShort("PROCEDURE_TYPE") == 0 ? procedureNoResult : procedureReturnsResult)
-                .at(8).setString(toSpecificName(catalog, schema, procedureName))
+                .at(8).setString(toSpecificName(catalog, procedureName))
                 .at(9).setShort(rs.getShort("JB_PROCEDURE_TYPE"))
                 .at(10).setString(rs.getString("JB_PROCEDURE_SOURCE"))
                 .toRowValue(true);

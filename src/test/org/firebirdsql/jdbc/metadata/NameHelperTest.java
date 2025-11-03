@@ -10,17 +10,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class NameHelperTest {
 
     @ParameterizedTest
-    @CsvSource(useHeadersInDisplayName = true, textBlock = """
-            catalog,     schema, routineName,  expectedSpecificName
-            <null>,      <null>, ROUTINE,      ROUTINE
-            <null>,      PUBLIC, ROUTINE,      "PUBLIC"."ROUTINE"
-            PACKAGE,     <null>, ROUTINE,      "PACKAGE"."ROUTINE"
-            PACKAGE,     PUBLIC, ROUTINE,      "PUBLIC"."PACKAGE"."ROUTINE"
-            WITH"DOUBLE, <null>, DOUBLE"QUOTE, "WITH""DOUBLE"."DOUBLE""QUOTE"
-            WITH"DOUBLE, PUBLIC, DOUBLE"QUOTE, "PUBLIC"."WITH""DOUBLE"."DOUBLE""QUOTE"
-            """, nullValues = "<null>")
-    void testToSpecificName(String catalog, String schema, String routineName, String expectedResult) {
-        assertEquals(expectedResult, NameHelper.toSpecificName(catalog, schema, routineName));
+    @CsvSource(useHeadersInDisplayName = true, nullValues = "<null>", textBlock = """
+            catalog,     routineName,  expectedSpecificName
+            <null>,      ROUTINE,      ROUTINE
+            PACKAGE,     ROUTINE,      "PACKAGE"."ROUTINE"
+            WITH"DOUBLE, DOUBLE"QUOTE, "WITH""DOUBLE"."DOUBLE""QUOTE"
+            """)
+    void testToSpecificName(String catalog, String routineName, String expectedResult) {
+        assertEquals(expectedResult, NameHelper.toSpecificName(catalog, routineName));
     }
 
 }

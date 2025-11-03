@@ -127,7 +127,7 @@ public abstract sealed class GetProcedureColumns extends AbstractMetadataMethod 
                 .at(17).setInt(rs.getInt("PARAMETER_NUMBER"))
                 // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
                 .at(18).setString(nullFlag == 1 ? "NO" : "YES")
-                .at(19).setString(toSpecificName(catalog, schema, procedureName))
+                .at(19).setString(toSpecificName(catalog, procedureName))
                 .toRowValue(false);
     }
 

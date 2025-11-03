@@ -81,7 +81,7 @@ public abstract sealed class GetFunctions extends AbstractMetadataMethod {
                 .at(2).setString(functionName)
                 .at(3).setString(rs.getString("REMARKS"))
                 .at(4).setShort(functionNoTable)
-                .at(5).setString(toSpecificName(catalog, schema, functionName))
+                .at(5).setString(toSpecificName(catalog, functionName))
                 .at(6).setString(rs.getString("JB_FUNCTION_SOURCE"))
                 .at(7).setString(rs.getString("JB_FUNCTION_KIND"))
                 .at(8).setString(rs.getString("JB_MODULE_NAME"))

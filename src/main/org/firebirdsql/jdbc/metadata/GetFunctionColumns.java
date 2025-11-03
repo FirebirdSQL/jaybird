@@ -114,7 +114,7 @@ public abstract sealed class GetFunctionColumns extends AbstractMetadataMethod {
                 .at(13).setInt(typeMetadata.getCharOctetLength())
                 .at(14).setInt(ordinalPosition)
                 .at(15).setString(nullable ? "YES" : "NO")
-                .at(16).setString(toSpecificName(catalog, schema, functionName))
+                .at(16).setString(toSpecificName(catalog, functionName))
                 .toRowValue(false);
     }
 

@@ -345,8 +345,7 @@ class FBDatabaseMetaDataProceduresTest {
         final class Ignored {
             // Skipping procedures from system packages (when testing with useCatalogAsPackage=true)
             private static final List<String> PREFIXES_TO_IGNORE =
-                    List.of("\"SYSTEM\".\"RDB$", "\"RDB$BLOB_UTIL\".", "\"RDB$PROFILER\".", "\"RDB$TIME_ZONE_UTIL\".",
-                            "\"RDB$SQL\".");
+                    List.of("\"RDB$BLOB_UTIL\".", "\"RDB$PROFILER\".", "\"RDB$TIME_ZONE_UTIL\".", "\"RDB$SQL\".");
         }
         return Ignored.PREFIXES_TO_IGNORE.stream().anyMatch(specificName::startsWith);
     }
@@ -439,8 +438,7 @@ class FBDatabaseMetaDataProceduresTest {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "NORMAL_PROC_NO_RETURN");
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureNoResult);
                 rules.put(ProcedureMetaData.JB_PROCEDURE_TYPE, FirebirdDatabaseMetaData.jbProcedureTypeExecutable);
-                rules.put(ProcedureMetaData.SPECIFIC_NAME, ifSchemaElse(
-                        ObjectReference.of("PUBLIC", "NORMAL_PROC_NO_RETURN").toString(), "NORMAL_PROC_NO_RETURN"));
+                rules.put(ProcedureMetaData.SPECIFIC_NAME, "NORMAL_PROC_NO_RETURN");
                 rules.put(ProcedureMetaData.JB_PROCEDURE_SOURCE, extractBody(CREATE_NORMAL_PROC_NO_RETURN));
                 return rules;
             }
@@ -453,8 +451,7 @@ class FBDatabaseMetaDataProceduresTest {
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureReturnsResult);
                 rules.put(ProcedureMetaData.JB_PROCEDURE_TYPE, FirebirdDatabaseMetaData.jbProcedureTypeExecutable);
                 rules.put(ProcedureMetaData.REMARKS, "Some comment");
-                rules.put(ProcedureMetaData.SPECIFIC_NAME, ifSchemaElse(
-                        ObjectReference.of("PUBLIC", "NORMAL_PROC_WITH_RETURN").toString(), "NORMAL_PROC_WITH_RETURN"));
+                rules.put(ProcedureMetaData.SPECIFIC_NAME, "NORMAL_PROC_WITH_RETURN");
                 rules.put(ProcedureMetaData.JB_PROCEDURE_SOURCE, extractBody(CREATE_NORMAL_PROC_WITH_RETURN));
                 return rules;
             }
@@ -466,8 +463,7 @@ class FBDatabaseMetaDataProceduresTest {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "quoted_proc_no_return");
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureNoResult);
                 rules.put(ProcedureMetaData.JB_PROCEDURE_TYPE, FirebirdDatabaseMetaData.jbProcedureTypeExecutable);
-                rules.put(ProcedureMetaData.SPECIFIC_NAME, ifSchemaElse(
-                        ObjectReference.of("PUBLIC", "quoted_proc_no_return").toString(), "quoted_proc_no_return"));
+                rules.put(ProcedureMetaData.SPECIFIC_NAME, "quoted_proc_no_return");
                 rules.put(ProcedureMetaData.JB_PROCEDURE_SOURCE, extractBody(CREATE_QUOTED_PROC_NO_RETURN));
                 return rules;
             }
@@ -481,7 +477,7 @@ class FBDatabaseMetaDataProceduresTest {
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureReturnsResult);
                 rules.put(ProcedureMetaData.JB_PROCEDURE_TYPE, FirebirdDatabaseMetaData.jbProcedureTypeExecutable);
                 rules.put(ProcedureMetaData.SPECIFIC_NAME,
-                        ObjectReference.of(ifSchemaElse("PUBLIC", ""), "WITH$PROCEDURE", "IN$PACKAGE").toString());
+                        ObjectReference.of("WITH$PROCEDURE", "IN$PACKAGE").toString());
                 // No procedure body for packaged procedures
                 rules.put(ProcedureMetaData.JB_PROCEDURE_SOURCE, null);
                 return rules;
@@ -504,8 +500,7 @@ class FBDatabaseMetaDataProceduresTest {
                 rules.put(ProcedureMetaData.PROCEDURE_NAME, "PROC_NO_RETURN");
                 rules.put(ProcedureMetaData.PROCEDURE_TYPE, DatabaseMetaData.procedureNoResult);
                 rules.put(ProcedureMetaData.JB_PROCEDURE_TYPE, FirebirdDatabaseMetaData.jbProcedureTypeExecutable);
-                rules.put(ProcedureMetaData.SPECIFIC_NAME,
-                        ObjectReference.of("OTHER_SCHEMA", "PROC_NO_RETURN").toString());
+                rules.put(ProcedureMetaData.SPECIFIC_NAME, "PROC_NO_RETURN");
                 rules.put(ProcedureMetaData.JB_PROCEDURE_SOURCE, extractBody(CREATE_OTHER_SCHEMA_PROC_NO_RETURN));
                 return rules;
             }
