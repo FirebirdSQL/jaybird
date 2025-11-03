@@ -126,22 +126,11 @@ public final class GDSServerVersion extends AbstractVersion {
     }
 
     public @Nullable String getExtendedServerName() {
-        if (rawVersions.length < 2) {
-            return null;
-        } else if (rawVersions.length == 2) {
-            return rawVersions[1];
-        } else {
-            // Reserve additional space for connection information, etc. We could be more precise by summing the length
-            // of each version string from index 1 in the array, but this is good enough
-            var sb = new StringBuilder((rawVersions[1].length() + 50) * (rawVersions.length - 1));
-            for (int idx = 1; idx < rawVersions.length; idx++) {
-                if (idx > 1) {
-                    sb.append(',');
-                }
-                sb.append(rawVersions[idx]);
-            }
-            return sb.toString();
-        }
+        return switch (rawVersions.length) {
+            case 0, 1 -> null;
+            case 2 -> rawVersions[1];
+            default -> String.join(",", Arrays.asList(rawVersions).subList(1, rawVersions.length));
+        };
     }
 
     public String getFullVersion() {
@@ -194,19 +183,7 @@ public final class GDSServerVersion extends AbstractVersion {
     }
 
     public String toString() {
-        if (rawVersions.length == 1) {
-            return rawVersions[0];
-        }
-        // Reserve additional space for connection information, etc. We could be more precise by summing the length of
-        // each version string in the array, but this is good enough
-        var sb = new StringBuilder((rawVersions[0].length() + 50) * rawVersions.length);
-        int idx = 0;
-        sb.append(rawVersions[idx++]);
-        do {
-            sb.append(',');
-            sb.append(rawVersions[idx++]);
-        } while (idx < rawVersions.length);
-        return sb.toString();
+        return rawVersions.length == 1 ? rawVersions[0] : String.join(",", rawVersions);
     }
 
     /**
