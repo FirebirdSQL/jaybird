@@ -8,6 +8,7 @@ import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -114,15 +115,15 @@ public interface StatisticsManager extends ServiceManager {
     /**
      * Get the table statistics.
      * <p>
-     * For a more detailed description, see {@link #getTableStatistics(List, List)}.
+     * For a more detailed description, see {@link #getTableStatistics(Collection, Collection)}.
      * </p>
      *
      * @param tableNames
      *         table names to analyze
      * @throws SQLException
      *         if something went wrong
-     * @see #getTableStatistics(List)
-     * @see #getTableStatistics(List, List)
+     * @see #getTableStatistics(Collection)
+     * @see #getTableStatistics(Collection, Collection)
      */
     default void getTableStatistics(String... tableNames) throws SQLException {
         getTableStatistics(Arrays.asList(tableNames));
@@ -131,17 +132,17 @@ public interface StatisticsManager extends ServiceManager {
     /**
      * Get the table statistics.
      * <p>
-     * For a more detailed description, see {@link #getTableStatistics(List, List)}.
+     * For a more detailed description, see {@link #getTableStatistics(Collection, Collection)}.
      * </p>
      *
      * @param tableNames
      *         table names to analyze
      * @throws SQLException
      *         if something went wrong
-     * @see #getTableStatistics(List, List)
+     * @see #getTableStatistics(Collection, Collection)
      * @since 7
      */
-    default void getTableStatistics(List<String> tableNames) throws SQLException {
+    default void getTableStatistics(Collection<String> tableNames) throws SQLException {
         getTableStatistics(List.of(), tableNames);
     }
 
@@ -174,7 +175,7 @@ public interface StatisticsManager extends ServiceManager {
      *         found)
      * @since 7
      */
-    void getTableStatistics(List<String> schemaNames, List<String> tableNames) throws SQLException;
+    void getTableStatistics(Collection<String> schemaNames, Collection<String> tableNames) throws SQLException;
 
     /**
      * Get transaction information of the database specified in {@code database}.
