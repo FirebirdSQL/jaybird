@@ -30,6 +30,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.RegexMatcher.matchesRegex;
+import static org.firebirdsql.gds.ISCConstants.isc_dsql_drop_schema_failed;
 import static org.firebirdsql.gds.ISCConstants.isc_dsql_drop_trigger_failed;
 import static org.firebirdsql.gds.ISCConstants.isc_dsql_table_not_found;
 import static org.firebirdsql.gds.ISCConstants.isc_dsql_view_not_found;
@@ -877,8 +878,7 @@ class FBDatabaseMetaDataTest {
             } finally {
                 DdlHelper.executeDDL(stmt, List.of("drop table TEST_SCHEMA_1.TEST_1", "drop schema TEST_SCHEMA_1"),
                         isc_no_meta_update, isc_dsql_table_not_found, isc_dsql_view_not_found,
-                        isc_dsql_drop_trigger_failed);
-                // TODO Add schema support: error code for drop schema failure?
+                        isc_dsql_drop_trigger_failed, isc_dsql_drop_schema_failed);
             }
         } finally {
             connection.setAutoCommit(true);
@@ -929,8 +929,7 @@ class FBDatabaseMetaDataTest {
             } finally {
                 DdlHelper.executeDDL(stmt, List.of("drop view TEST_SCHEMA_1.TEST_VIEW_1", "drop schema TEST_SCHEMA_1"),
                         isc_no_meta_update, isc_dsql_table_not_found, isc_dsql_view_not_found,
-                        isc_dsql_drop_trigger_failed);
-                // TODO Add schema support: error code for drop schema failure?
+                        isc_dsql_drop_trigger_failed, isc_dsql_drop_schema_failed);
             }
         } finally {
             connection.setAutoCommit(true);
