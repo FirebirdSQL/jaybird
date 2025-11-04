@@ -529,7 +529,6 @@ If `SYSTEM` is not included, the server will automatically add it as the last sc
 use `null` or -- `schemaPattern` only -- `"%"` to match all schemas
 ** `getCatalogs` -- when `useCatalogAsPackage=true` -- returns all (distinct) package names over all schemas.
 Within the limitations and specification of the JDBC API, this method cannot be used to find out which schema(s) contain a specific package name.
-// TODO Maybe add a custom column with a list of schema names?
 ** `getColumnPrivileges` and `getTablePrivileges` received an additional column, `JB_GRANTEE_SCHEMA`, which is non-``null`` for grantees that are schema-bound (e.g. procedures).
 +
 As this is a non-standard column, we recommend to always retrieve it by name.
@@ -559,6 +558,12 @@ we recommend to always use `null` for `catalog`
 * `ResultSetMetaData`
 ** `getSchemaName` reports the schema if the column is backed by a table, otherwise empty string (`""`)
 * `FirebirdConnection`/`FBConnection`
+** `setSchema` will modify the search path by prepending the specified schema, or -- if `setSchema` was called previously -- replacing the previous value set.
++
+The schema is not checked for existence, and setting one will not result in an exception, see also note about `getSchema` below.
+** `getSchema()` reports the value of `CURRENT_SCHEMA`, which is the first valid (i.e. existing) schema on the search path.
++
+The value reported can change if a previously missing schema is created in the database.
 ** Added method `String getSearchPath()` to obtain the search path as reported by `RBB$GET_CONTEXT('SYSTEM', 'SEARCH_PATH')`, or `null` if schemas are not supported
 ** Added method `List<String> getSearchPatList()` to obtain the search path as a list of unquoted object names, or empty list if schemas are not supported
 ** Added methods `setSearchPath(String)` and `setSearchPathList(String...)/(List<String>)` to set the search path;
@@ -566,8 +571,9 @@ these methods throw `SQLFeatureNotSupportedException` if schemas are not support
 * `StatisticsManager`
 ** `getTableStatistics`
 *** `getTableStatistics(String[] tableNames)` was changed to accept varargs (`getTableStatistics(String... tableNames)`)
-*** Added overload `getTableStatistics(List<String> tableNames)` with same behaviour as `getTableStatistics(String... tableNames)`
-*** Added overload `getTableStatistics(List<String> schemas, List<String> tableNames)` -- if `schemas` is non-empty, on Firebird 6.0 and higher, it will restrict the search for tables to the specified schemas
+*** Added overload `getTableStatistics(Collection<String> tableNames)` with same behaviour as `getTableStatistics(String... tableNames)`
+*** Added overload `getTableStatistics(Collection<String> schemas, Collection<String> tableNames)` -- if `schemas` is non-empty, on Firebird 6.0 and higher, it will restrict the search for tables to the specified schemas;
+if `tableNames` is empty, and `schemas` is not, only the tables of the specified schemas will be reported
 * `FBTableStatisticsManager` (experimental feature)
 ** For schema-bound tables, the key of the map returned by `getTableStatistics()` is a fully qualified and quoted table reference (i.e. `<quoted-schema>.<quoted-table-name>`).
 For schemaless tables (Firebird 5.0 and older, or tables that were not found), the key is still the unquoted `<table-name>`.

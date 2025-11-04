@@ -5,8 +5,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 7, potential partial backport to Jaybird 5
+* Published: 2025-11-04
+* Implemented in: Jaybird 7
 
 == Type
 
@@ -52,11 +52,6 @@ JDBC defines various methods, parameters, and return values or result set column
 
 Jaybird 5 is the "`long-term support`" version for Java 8.
 
-[NOTE]
-====
-This document is in flux, and will be updated during implementation of the feature.
-====
-
 == Decision
 
 Jaybird 7 will implement schema support for Firebird 6.0.
@@ -67,8 +62,8 @@ Further details can be found in <<consequences>>.
 Schema support will _not_ be backported to Jaybird 6 as the required changes are simply too large.
 It would mean that Jaybird 6 would contain most of Jaybird 7, and upgrading to a -- theoretical -- Jaybird 6.1 would have similar risks and compatibility issues as upgrading to Jaybird 7.
 
-Decision on a (partial) backport to Jaybird 5 -- as the "`long-term support`" version for Java 8 -- is still pending (e.g. as a Jaybird 5.1.x), and may be the subject of a separate JDP.
-We might only do that on demand and/or when someone is willing to sponsor the work.
+Decision on a (partial) backport to Jaybird 5 -- as the "`long-term support`" version for Java 8 -- is pending (e.g. as a Jaybird 5.1.x), and if so, will be the subject of a separate JDP.
+We will only do that on demand and if someone is willing to sponsor the work.
 
 [#consequences]
 == Consequences
@@ -97,9 +92,11 @@ Jaybird cannot honour this requirement for plain `Statement`, as schema resoluti
 ** Include schema names in joins to ensure matching the right objects
 ** Allow searching for schema or schema pattern as specified in JDBC, or were needed for internal metadata queries
 ** `getCatalogs`;
-it is not possible to identify the schema(s) within the confines of JDBC.
+we currently use this to report package names if `useCatalogAsPackage=true`.
+It is not possible to identify the schema(s) of a package within the confines of JDBC.
 +
 We considered adding a column that lists the schema(s) that contain the package name, but we don't think it will see use in practice.
+If there is demand, this decision may be revisited.
 * `FirebirdConnection`
 ** Added method `String getSearchPath()` to obtain the search path as reported by `RBB$GET_CONTEXT('SYSTEM', 'SEARCH_PATH')`, or `null` if schemas are not supported
 ** Added method `List<String> getSearchPathList()` to obtain the search path as a list of unquoted object names, or empty list if schemas are not supported
@@ -111,10 +108,10 @@ We considered adding a column that lists the schema(s) that contain the package 
 this fulfills the JDBC requirements that a `CallableStatement` is not sensitive to current schema changes, but only *if* Jaybird is able to identify the procedure, behaviour is undefined if the procedure was not found.
 ** The API of `StoredProcedureMetaData` (internal API) is changed to not report selectability, but to update the `FBProcedureCall` instance with selectability and other information, like identified schema and/or package.
 ** For qualified *and* unambiguous procedure reference, the selectability is cached *per connection*, for unqualified or ambiguous procedure reference, the lookup is performed on each `Connection.prepareCall`, to account for search path changes
-** Support for packages was missing in the handling of callable statements, and is added, also for older versions
+** Support for packages was missing in the handling of callable statements, and is added, also for older Firebird versions
 * Effects for management API
 ** `StatisticsManager`
-*** `getTableStatistics` received an overload to also accept a list of schemas (`sts_schema`)
+*** `getTableStatistics` received an overload to also accept a collection of schemas (`sts_schema`)
 ** `FBTableStatisticsManager`/`TableStatistics`
 *** Internally `ObjectReference` is used for the table instead of a String
 *** The key of the map returned by `getTableStatistics()` is a qualified table reference (i.e. `{<table-name> | <quoted-schema>.<quoted-table-name>}`.
@@ -124,7 +121,7 @@ For schemaless tables, the unquoted table name is used as the key for backwards 
 **** `tableReference()` with the qualified table reference (i.e. `[<quoted-schema>.]<quoted-table-name>` (contrary to the key of getTableStatistics, it's always quoted!))
 * TODO: Add information to Jaybird manual
 
-Note to self: use `// TODO Add schema support` in places that you identify need to get/improve schema support, while working on schema support elsewhere
+// Note to self: use `// TODO Add schema support` in places that you identify need to get/improve schema support, while working on schema support elsewhere
 
 [appendix]
 == License Notice
