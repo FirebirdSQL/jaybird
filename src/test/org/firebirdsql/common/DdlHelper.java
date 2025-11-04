@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
@@ -17,7 +18,6 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  *
  * @author Mark Rotteveel
  */
-@SuppressWarnings("SqlSourceToSinkFlow")
 public final class DdlHelper {
 
     private DdlHelper() {
@@ -69,9 +69,7 @@ public final class DdlHelper {
      */
     public static void executeDDL(final Connection connection, final String sql, final int... ignoreErrors)
             throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
-            executeDDL(stmt, sql, ignoreErrors);
-        }
+        executeDDL(connection, List.of(sql), ignoreErrors);
     }
 
     /**
@@ -111,10 +109,7 @@ public final class DdlHelper {
      */
     public static void executeDDL(final Statement statement, final String sql, final int... ignoreErrors)
             throws SQLException {
-        if (ignoreErrors != null) {
-            Arrays.sort(ignoreErrors);
-        }
-        executeDDL0(statement, sql, ignoreErrors);
+        executeDDL(statement, List.of(sql), ignoreErrors);
     }
 
     /**
@@ -136,26 +131,41 @@ public final class DdlHelper {
         if (ignoreErrors != null) {
             Arrays.sort(ignoreErrors);
         }
-        for (String currentSql : sql) {
-            executeDDL0(statement, currentSql, ignoreErrors);
+        Connection connection = statement.getConnection();
+        final boolean autoCommitAtStart = connection.getAutoCommit();
+        if (autoCommitAtStart && sql.size() > 1) {
+            connection.setAutoCommit(false);
+        }
+        try {
+            for (String currentSql : sql) {
+                executeDDL0(statement, currentSql, ignoreErrors);
+            }
+            if (!autoCommitAtStart) {
+                connection.commit();
+            }
+        } finally {
+            // if we were not in auto commit at start and an exception occurred, the transaction will still be pending
+            if (autoCommitAtStart) {
+                connection.setAutoCommit(true);
+            }
         }
     }
 
     private static void executeDDL0(Statement statement, String sql, int[] ignoreErrors) throws SQLException {
         try {
             statement.execute(sql);
-        } catch (SQLException ex) {
+        } catch (SQLException e) {
             if (ignoreErrors == null || ignoreErrors.length == 0)
-                throw ex;
+                throw e;
 
-            for (Throwable current : ex) {
-                if (current instanceof SQLException
-                        && Arrays.binarySearch(ignoreErrors, ((SQLException) current).getErrorCode()) >= 0) {
+            for (Throwable current : e) {
+                if (current instanceof SQLException currentSqle
+                        && Arrays.binarySearch(ignoreErrors, currentSqle.getErrorCode()) >= 0) {
                     return;
                 }
             }
 
-            throw ex;
+            throw e;
         }
     }
 
