@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -17,13 +17,15 @@ import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
+import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for column related metadata.
- * 
+ *
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataColumnsTest {
@@ -33,58 +35,68 @@ class FBDatabaseMetaDataColumnsTest {
     private static final String CREATE_DOMAIN_WITH_DEFAULT =
             "CREATE DOMAIN DOMAIN_WITH_DEFAULT AS VARCHAR(100) DEFAULT 'this is a default'";
 
-    //@formatter:off
-    private static final String CREATE_COLUMN_METADATA_TEST_TABLE =
-            "CREATE TABLE " + TEST_TABLE + " (" +
-            "    col_integer INTEGER," + 
-            "    col_bigint BIGINT," + 
-            "    col_smallint SMALLINT," + 
-            "    col_double DOUBLE PRECISION," + 
-            "    col_float FLOAT," + 
-            "    col_dec18_2 DECIMAL(18,2)," +
-            "    col_dec18_0 DECIMAL(18,0)," +
-            "    col_dec7_3 DECIMAL(7,3)," +
-            "    col_dec7_0 DECIMAL(7,0)," +
-            "    col_dec4_3 DECIMAL(4,3), " +
-            "    col_dec4_0 DECIMAL(4,0), " +
-            "    col_num18_2 NUMERIC(18,2)," + 
-            "    col_num18_0 NUMERIC(18,0)," + 
-            "    col_num7_3 NUMERIC(7,3)," +
-            "    col_num7_0 NUMERIC(7,0)," +
-            "    col_num4_3 NUMERIC(4,3), " +
-            "    col_num4_0 NUMERIC(4,0), " +
-            "    col_date DATE," + 
-            "    col_time TIME," + 
-            "    col_timestamp TIMESTAMP," + 
-            "    col_char_10_utf8 CHAR(10) CHARACTER SET UTF8," + 
-            "    col_char_10_iso8859_1 CHAR(10) CHARACTER SET ISO8859_1," + 
-            "    col_char_10_octets CHAR(10) CHARACTER SET OCTETS," + 
-            "    col_varchar_10_utf8 VARCHAR(10) CHARACTER SET UTF8," + 
-            "    col_varchar_10_iso8859_1 VARCHAR(10) CHARACTER SET ISO8859_1," + 
-            "    col_varchar_10_octets VARCHAR(10) CHARACTER SET OCTETS," + 
-            "    col_blob_text_utf8 BLOB SUB_TYPE TEXT CHARACTER SET UTF8," + 
-            "    col_blob_text_iso8859_1 BLOB SUB_TYPE TEXT CHARACTER SET ISO8859_1," + 
-            "    col_blob_binary BLOB SUB_TYPE BINARY," +
-            "    col_integer_not_null INTEGER NOT NULL," + 
-            "    col_varchar_not_null VARCHAR(100) NOT NULL," +
-            "    col_integer_default_null INTEGER DEFAULT NULL," + 
-            "    col_integer_default_999 INTEGER DEFAULT 999," + 
-            "    col_varchar_default_null VARCHAR(100) DEFAULT NULL," + 
-            "    col_varchar_default_user VARCHAR(100) DEFAULT USER," + 
-            "    col_varchar_default_literal VARCHAR(100) DEFAULT 'literal'," + 
-            "    col_varchar_generated VARCHAR(200) COMPUTED BY (col_varchar_default_user || ' ' || col_varchar_default_literal)," +
-            "    col_domain_with_default DOMAIN_WITH_DEFAULT," +
-            "    col_domain_w_default_overridden DOMAIN_WITH_DEFAULT DEFAULT 'overridden default' " +
-            "    /* boolean */ " +
-            "    /* decfloat */ " +
-            "    /* extended numerics */ " +
-            "    /* time zone */ " +
-            "    /* int128 */ " +
-            ")";
-    //@formatter:on
+    private static final String CREATE_COLUMN_METADATA_TEST_TABLE = """
+            CREATE TABLE TEST_COLUMN_METADATA (
+              col_integer INTEGER,
+              col_bigint BIGINT,
+              col_smallint SMALLINT,
+              col_double DOUBLE PRECISION,
+              col_float FLOAT,
+              col_dec18_2 DECIMAL(18,2),
+              col_dec18_0 DECIMAL(18,0),
+              col_dec7_3 DECIMAL(7,3),
+              col_dec7_0 DECIMAL(7,0),
+              col_dec4_3 DECIMAL(4,3),
+              col_dec4_0 DECIMAL(4,0),
+              col_num18_2 NUMERIC(18,2),
+              col_num18_0 NUMERIC(18,0),
+              col_num7_3 NUMERIC(7,3),
+              col_num7_0 NUMERIC(7,0),
+              col_num4_3 NUMERIC(4,3),
+              col_num4_0 NUMERIC(4,0),
+              col_date DATE,
+              col_time TIME,
+              col_timestamp TIMESTAMP,
+              col_char_10_utf8 CHAR(10) CHARACTER SET UTF8,
+              col_char_10_iso8859_1 CHAR(10) CHARACTER SET ISO8859_1,
+              col_char_10_octets CHAR(10) CHARACTER SET OCTETS,
+              col_varchar_10_utf8 VARCHAR(10) CHARACTER SET UTF8,
+              col_varchar_10_iso8859_1 VARCHAR(10) CHARACTER SET ISO8859_1,
+              col_varchar_10_octets VARCHAR(10) CHARACTER SET OCTETS,
+              col_blob_text_utf8 BLOB SUB_TYPE TEXT CHARACTER SET UTF8,
+              col_blob_text_iso8859_1 BLOB SUB_TYPE TEXT CHARACTER SET ISO8859_1,
+              col_blob_binary BLOB SUB_TYPE BINARY,
+              col_integer_not_null INTEGER NOT NULL,
+              col_varchar_not_null VARCHAR(100) NOT NULL,
+              col_integer_default_null INTEGER DEFAULT NULL,
+              col_integer_default_999 INTEGER DEFAULT 999,
+              col_varchar_default_null VARCHAR(100) DEFAULT NULL,
+              col_varchar_default_user VARCHAR(100) DEFAULT USER,
+              col_varchar_default_literal VARCHAR(100) DEFAULT 'literal',
+              col_varchar_generated VARCHAR(200) COMPUTED BY (col_varchar_default_user || ' ' || col_varchar_default_literal),
+              col_domain_with_default DOMAIN_WITH_DEFAULT,
+              col_domain_w_default_overridden DOMAIN_WITH_DEFAULT DEFAULT 'overridden default'
+              /* boolean */
+              /* decfloat */
+              /* extended numerics */
+              /* time zone */
+              /* int128 */
+            )""";
 
     private static final String ADD_COMMENT_ON_COLUMN =
             "COMMENT ON COLUMN test_column_metadata.col_integer IS 'Some comment'";
+
+    private static final String OTHER_SCHEMA = "OTHER_SCHEMA";
+
+    private static final String CREATE_OTHER_SCHEMA = "create schema OTHER_SCHEMA";
+
+    private static final String OTHER_SCHEMA_TABLE = "OTHER_TABLE";
+
+    private static final String CREATE_OTHER_SCHEMA_TABLE = """
+            create table OTHER_SCHEMA.OTHER_TABLE (
+              ID integer constraint PK_OTHER_TABLE primary key,
+              COL2 varchar(50)
+            )""";
 
     private static final MetadataResultSetDefinition getColumnsDefinition =
             new MetadataResultSetDefinition(ColumnMetaData.class);
@@ -141,14 +153,19 @@ class FBDatabaseMetaDataColumnsTest {
             createTable = createTable.replace("/* int128 */",
                     ", col_int128 INT128");
         }
-
         statements.add(createTable);
+
         if (supportInfo.supportsComment()) {
             statements.add(ADD_COMMENT_ON_COLUMN);
         }
+        if (supportInfo.supportsSchemas()) {
+            statements.add(CREATE_OTHER_SCHEMA);
+            statements.add(CREATE_OTHER_SCHEMA_TABLE);
+        }
+
         return statements;
     }
-    
+
     /**
      * Tests the ordinal positions and types for the metadata columns of getColumns().
      */
@@ -175,7 +192,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 1);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
 
-        validate(TEST_TABLE, "COL_INTEGER", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_INTEGER", validationRules);
     }
 
     /**
@@ -193,7 +210,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
         validationRules.put(ColumnMetaData.COLUMN_DEF, "NULL");
 
-        validate(TEST_TABLE, "COL_INTEGER_DEFAULT_NULL", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_INTEGER_DEFAULT_NULL", validationRules);
     }
 
     /**
@@ -210,7 +227,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
         validationRules.put(ColumnMetaData.COLUMN_DEF, "999");
 
-        validate(TEST_TABLE, "COL_INTEGER_DEFAULT_999", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_INTEGER_DEFAULT_999", validationRules);
     }
 
     /**
@@ -229,7 +246,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.NULLABLE, DatabaseMetaData.columnNoNulls);
         validationRules.put(ColumnMetaData.IS_NULLABLE, "NO");
 
-        validate(TEST_TABLE, "COL_INTEGER_NOT_NULL", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_INTEGER_NOT_NULL", validationRules);
     }
 
     /**
@@ -247,7 +264,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 2);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
 
-        validate(TEST_TABLE, "COL_BIGINT", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_BIGINT", validationRules);
     }
 
     /**
@@ -264,7 +281,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 3);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
 
-        validate(TEST_TABLE, "COL_SMALLINT", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_SMALLINT", validationRules);
     }
 
     /**
@@ -281,7 +298,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.NUM_PREC_RADIX, supportsFloatBinaryPrecision ? 2 : 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 4);
 
-        validate(TEST_TABLE, "COL_DOUBLE", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_DOUBLE", validationRules);
     }
 
     /**
@@ -298,7 +315,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.NUM_PREC_RADIX, supportsFloatBinaryPrecision ? 2 : 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 5);
 
-        validate(TEST_TABLE, "COL_FLOAT", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_FLOAT", validationRules);
     }
 
     /**
@@ -326,7 +343,7 @@ class FBDatabaseMetaDataColumnsTest {
             validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
         }
 
-        validate(TEST_TABLE, columnName, validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, columnName, validationRules);
     }
 
     /**
@@ -354,7 +371,7 @@ class FBDatabaseMetaDataColumnsTest {
             validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
         }
 
-        validate(TEST_TABLE, columnName, validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, columnName, validationRules);
     }
 
     /**
@@ -370,7 +387,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 18);
 
-        validate(TEST_TABLE, "COL_DATE", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_DATE", validationRules);
     }
 
     /**
@@ -385,7 +402,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 13);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 19);
 
-        validate(TEST_TABLE, "COL_TIME", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_TIME", validationRules);
     }
 
     /**
@@ -400,7 +417,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 24);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 20);
 
-        validate(TEST_TABLE, "COL_TIMESTAMP", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_TIMESTAMP", validationRules);
     }
 
     /**
@@ -416,7 +433,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 21);
         validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 40);
 
-        validate(TEST_TABLE, "COL_CHAR_10_UTF8", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_CHAR_10_UTF8", validationRules);
     }
 
     /**
@@ -432,7 +449,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 22);
         validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 10);
 
-        validate(TEST_TABLE, "COL_CHAR_10_ISO8859_1", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_CHAR_10_ISO8859_1", validationRules);
     }
 
     /**
@@ -448,7 +465,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 23);
         validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 10);
 
-        validate(TEST_TABLE, "COL_CHAR_10_OCTETS", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_CHAR_10_OCTETS", validationRules);
     }
 
     /**
@@ -464,7 +481,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 24);
         validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 40);
 
-        validate(TEST_TABLE, "COL_VARCHAR_10_UTF8", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_VARCHAR_10_UTF8", validationRules);
     }
 
     /**
@@ -480,7 +497,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 25);
         validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 10);
 
-        validate(TEST_TABLE, "COL_VARCHAR_10_ISO8859_1", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_VARCHAR_10_ISO8859_1", validationRules);
     }
 
     /**
@@ -496,7 +513,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 26);
         validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 10);
 
-        validate(TEST_TABLE, "COL_VARCHAR_10_OCTETS", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_VARCHAR_10_OCTETS", validationRules);
     }
 
     /**
@@ -518,7 +535,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 100);
         validationRules.put(ColumnMetaData.COLUMN_DEF, expectedDefault);
 
-        validate(TEST_TABLE, columnName, validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, columnName, validationRules);
     }
 
     /**
@@ -534,7 +551,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 200);
         validationRules.put(ColumnMetaData.IS_GENERATEDCOLUMN, "YES");
 
-        validate(TEST_TABLE, "COL_VARCHAR_GENERATED", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_VARCHAR_GENERATED", validationRules);
     }
 
     /**
@@ -552,7 +569,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.NULLABLE, DatabaseMetaData.columnNoNulls);
         validationRules.put(ColumnMetaData.IS_NULLABLE, "NO");
 
-        validate(TEST_TABLE, "COL_VARCHAR_NOT_NULL", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_VARCHAR_NOT_NULL", validationRules);
     }
 
     /**
@@ -567,7 +584,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.COLUMN_SIZE, null);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 27);
 
-        validate(TEST_TABLE, "COL_BLOB_TEXT_UTF8", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_BLOB_TEXT_UTF8", validationRules);
     }
 
     /**
@@ -582,7 +599,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.COLUMN_SIZE, null);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 28);
 
-        validate(TEST_TABLE, "COL_BLOB_TEXT_ISO8859_1", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_BLOB_TEXT_ISO8859_1", validationRules);
     }
 
     /**
@@ -597,7 +614,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.COLUMN_SIZE, null);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 29);
 
-        validate(TEST_TABLE, "COL_BLOB_BINARY", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_BLOB_BINARY", validationRules);
     }
 
     /**
@@ -614,7 +631,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 100);
         validationRules.put(ColumnMetaData.COLUMN_DEF, "'this is a default'");
 
-        validate(TEST_TABLE, "COL_DOMAIN_WITH_DEFAULT", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_DOMAIN_WITH_DEFAULT", validationRules);
     }
 
     /**
@@ -631,7 +648,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 100);
         validationRules.put(ColumnMetaData.COLUMN_DEF, "'overridden default'");
 
-        validate(TEST_TABLE, "COL_DOMAIN_W_DEFAULT_OVERRIDDEN", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_DOMAIN_W_DEFAULT_OVERRIDDEN", validationRules);
     }
 
     @Test
@@ -644,7 +661,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 40);
         validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 2);
 
-        validate(TEST_TABLE, "COL_BOOLEAN", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_BOOLEAN", validationRules);
     }
 
     @Test
@@ -656,7 +673,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 16);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 41);
 
-        validate(TEST_TABLE, "COL_DECFLOAT16", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_DECFLOAT16", validationRules);
     }
 
     @Test
@@ -668,7 +685,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 34);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 42);
 
-        validate(TEST_TABLE, "COL_DECFLOAT34", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_DECFLOAT34", validationRules);
     }
 
     /**
@@ -686,7 +703,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 20);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 43);
 
-        validate(TEST_TABLE, "COL_NUMERIC25_20", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_NUMERIC25_20", validationRules);
     }
 
     /**
@@ -704,7 +721,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 5);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 44);
 
-        validate(TEST_TABLE, "COL_DECIMAL30_5", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_DECIMAL30_5", validationRules);
     }
 
     @Test
@@ -717,7 +734,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 19);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 45);
 
-        validate(TEST_TABLE, "COL_TIMETZ", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_TIMETZ", validationRules);
     }
 
     @Test
@@ -730,7 +747,7 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 30);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 46);
 
-        validate(TEST_TABLE, "COL_TIMESTAMPTZ", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_TIMESTAMPTZ", validationRules);
     }
 
     @Test
@@ -744,28 +761,79 @@ class FBDatabaseMetaDataColumnsTest {
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 47);
 
-        validate(TEST_TABLE, "COL_INT128", validationRules);
+        validate(ifSchemaElse("PUBLIC", ""), TEST_TABLE, "COL_INT128", validationRules);
     }
-    
+
+    @Test
+    void testOtherSchemaTable() throws Exception {
+        assumeSchemaSupport();
+
+        List<Map<ColumnMetaData, Object>> validationRules = new ArrayList<>();
+        Map<ColumnMetaData, Object> idRules = getDefaultValueValidationRules();
+        idRules.put(ColumnMetaData.TABLE_SCHEM, OTHER_SCHEMA);
+        idRules.put(ColumnMetaData.TABLE_NAME, OTHER_SCHEMA_TABLE);
+        idRules.put(ColumnMetaData.COLUMN_NAME, "ID");
+        idRules.put(ColumnMetaData.DATA_TYPE, Types.INTEGER);
+        idRules.put(ColumnMetaData.TYPE_NAME, "INTEGER");
+        idRules.put(ColumnMetaData.IS_NULLABLE, "NO");
+        idRules.put(ColumnMetaData.NULLABLE, DatabaseMetaData.columnNoNulls);
+        idRules.put(ColumnMetaData.COLUMN_SIZE, 10);
+        idRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
+        idRules.put(ColumnMetaData.ORDINAL_POSITION, 1);
+        idRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
+        validationRules.add(idRules);
+        Map<ColumnMetaData, Object> col2Rules = getDefaultValueValidationRules();
+        col2Rules.put(ColumnMetaData.TABLE_SCHEM, OTHER_SCHEMA);
+        col2Rules.put(ColumnMetaData.TABLE_NAME, OTHER_SCHEMA_TABLE);
+        col2Rules.put(ColumnMetaData.COLUMN_NAME, "COL2");
+        col2Rules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
+        col2Rules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
+        col2Rules.put(ColumnMetaData.COLUMN_SIZE, 50);
+        col2Rules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 50);
+        col2Rules.put(ColumnMetaData.ORDINAL_POSITION, 2);
+        validationRules.add(col2Rules);
+
+        validate(OTHER_SCHEMA, OTHER_SCHEMA_TABLE, "%", validationRules);
+    }
+
     // TODO: Add more extensive tests of patterns
 
     /**
      * Method to validate the column metadata for a single column of a table (does not support quoted identifiers).
-     * 
-     * @param tableName Name of the able
-     * @param columnName Name of the column
-     * @param validationRules Map of validationRules
+     *
+     * @param schema
+     *         Name of the schema
+     * @param tableName
+     *         Name of the table
+     * @param columnName
+     *         Name of the column
+     * @param validationRules
+     *         Map of validationRules
      */
     @SuppressWarnings("SameParameterValue")
-    private void validate(String tableName, String columnName, Map<ColumnMetaData, Object> validationRules) throws Exception {
+    private void validate(String schema, String tableName, String columnName,
+            Map<ColumnMetaData, Object> validationRules) throws Exception {
+        validationRules.put(ColumnMetaData.TABLE_SCHEM, trimToNull(schema));
         validationRules.put(ColumnMetaData.TABLE_NAME, tableName);
         validationRules.put(ColumnMetaData.COLUMN_NAME, columnName);
         getColumnsDefinition.checkValidationRulesComplete(validationRules);
 
-        try (ResultSet columns = dbmd.getColumns(null, null, tableName, columnName)) {
-            assertTrue(columns.next(), "Expected row in column metadata");
-            getColumnsDefinition.validateRowValues(columns, validationRules);
-            assertFalse(columns.next(), "Expected only one row in resultset");
+        validate(schema, tableName, columnName, List.of(validationRules));
+    }
+
+    private void validate(String schema, String tableName, String columnNamePattern,
+            List<Map<ColumnMetaData, Object>> expectedColumns) throws Exception {
+        try (ResultSet columns = dbmd.getColumns(null, schema, tableName, columnNamePattern)) {
+            int columnCount = 0;
+            while (columns.next()) {
+                if (columnCount < expectedColumns.size()) {
+                    Map<ColumnMetaData, Object> rules = expectedColumns.get(columnCount);
+                    getColumnsDefinition.checkValidationRulesComplete(rules);
+                    getColumnsDefinition.validateRowValues(columns, rules);
+                }
+                columnCount++;
+            }
+            assertEquals(expectedColumns.size(), columnCount, "Unexpected number of columns");
         }
     }
 
@@ -773,7 +841,7 @@ class FBDatabaseMetaDataColumnsTest {
     static {
         Map<ColumnMetaData, Object> defaults = new EnumMap<>(ColumnMetaData.class);
         defaults.put(ColumnMetaData.TABLE_CAT, null);
-        defaults.put(ColumnMetaData.TABLE_SCHEM, null);
+        defaults.put(ColumnMetaData.TABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(ColumnMetaData.BUFFER_LENGTH, null);
         defaults.put(ColumnMetaData.DECIMAL_DIGITS, null);
         defaults.put(ColumnMetaData.NUM_PREC_RADIX, 10);
@@ -799,34 +867,34 @@ class FBDatabaseMetaDataColumnsTest {
     private static Map<ColumnMetaData, Object> getDefaultValueValidationRules() {
         return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
-    
+
     /**
      * Columns defined for the getColumns() metadata.
      */
     private enum ColumnMetaData implements MetaDataInfo {
-        TABLE_CAT(1, String.class), 
-        TABLE_SCHEM(2, String.class), 
-        TABLE_NAME(3, String.class), 
-        COLUMN_NAME(4, String.class), 
-        DATA_TYPE(5, Integer.class), 
-        TYPE_NAME(6, String.class), 
-        COLUMN_SIZE(7, Integer.class), 
-        BUFFER_LENGTH(8, Integer.class), 
-        DECIMAL_DIGITS(9, Integer.class), 
-        NUM_PREC_RADIX(10, Integer.class), 
-        NULLABLE(11, Integer.class), 
-        REMARKS(12, String.class), 
-        COLUMN_DEF(13, String.class), 
-        SQL_DATA_TYPE(14, Integer.class), 
-        SQL_DATETIME_SUB(15, Integer.class), 
-        CHAR_OCTET_LENGTH(16, Integer.class), 
-        ORDINAL_POSITION(17, Integer.class), 
-        IS_NULLABLE(18, String.class), 
+        TABLE_CAT(1, String.class),
+        TABLE_SCHEM(2, String.class),
+        TABLE_NAME(3, String.class),
+        COLUMN_NAME(4, String.class),
+        DATA_TYPE(5, Integer.class),
+        TYPE_NAME(6, String.class),
+        COLUMN_SIZE(7, Integer.class),
+        BUFFER_LENGTH(8, Integer.class),
+        DECIMAL_DIGITS(9, Integer.class),
+        NUM_PREC_RADIX(10, Integer.class),
+        NULLABLE(11, Integer.class),
+        REMARKS(12, String.class),
+        COLUMN_DEF(13, String.class),
+        SQL_DATA_TYPE(14, Integer.class),
+        SQL_DATETIME_SUB(15, Integer.class),
+        CHAR_OCTET_LENGTH(16, Integer.class),
+        ORDINAL_POSITION(17, Integer.class),
+        IS_NULLABLE(18, String.class),
         SCOPE_CATALOG(19, String.class),
-        SCOPE_SCHEMA(20, String.class), 
-        SCOPE_TABLE(21, String.class), 
-        SOURCE_DATA_TYPE(22, Short.class), 
-        IS_AUTOINCREMENT(23, String.class), 
+        SCOPE_SCHEMA(20, String.class),
+        SCOPE_TABLE(21, String.class),
+        SOURCE_DATA_TYPE(22, Short.class),
+        IS_AUTOINCREMENT(23, String.class),
         IS_GENERATEDCOLUMN(24,String.class),
         JB_IS_IDENTITY(25,String.class),
         JB_IDENTITY_TYPE(26,String.class);

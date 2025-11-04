@@ -508,11 +508,88 @@ Artificial testing on local WiFi with small blobs (200 bytes) shows a 30,000-45,
 
 This optimization was backported to Jaybird 5.0.8 and Jaybird 6.0.2.
 
+[#schemas]
+=== Schema support
+
+Firebird 6.0 introduces schemas, and Jaybird 7 provides support for schemas as defined in the JDBC specification.
+
+Changes include:
+
+* Connection property `searchPath` sets the initial search path of the connection.
++
+The search path is the list of schemas that will be searched for schema-bound objects if they are not explicitly qualified with a schema name.
+The first _valid_ schema is the current schema of the connection.
++
+The value of `searchPath` is a comma-separated list of schema names.
+Schema names that are case-sensitive or otherwise non-regular identifiers, must be quoted.
+Unknown schema names are ignored.
+If `SYSTEM` is not included, the server will automatically add it as the last schema.
+* `DatabaseMetaData`
+** Methods accepting a `schema` (exact match if not `null`) or `schemaPattern` (`LIKE` match if not `null`) will return no rows for value empty (`++""++`) on Firebird 6.0 and higher;
+use `null` or -- `schemaPattern` only -- `"%"` to match all schemas
+** `getCatalogs` -- when `useCatalogAsPackage=true` -- returns all (distinct) package names over all schemas.
+Within the limitations and specification of the JDBC API, this method cannot be used to find out which schema(s) contain a specific package name.
+** `getColumnPrivileges` and `getTablePrivileges` received an additional column, `JB_GRANTEE_SCHEMA`, which is non-``null`` for grantees that are schema-bound (e.g. procedures).
++
+As this is a non-standard column, we recommend to always retrieve it by name.
+** `getProcedures` received two additional columns.
++
+As these are non-standard columns, we recommend to always retrieve them by name.
++
+*** `JB_PROCEDURE_TYPE` -- value of column `RDB$PROCEDURE_TYPE`
++
+For the possible values, the following constants were added to `FirebirdDatabaseMetaData`:
++
+**** `jbProcedureTypeUnknown` (`0`)
+**** `jbProcedureTypeSelectable` (`1`)
+**** `jbProcedureTypeExecutable` (`2`).
+*** `JB_PROCEDURE_SOURCE` -- value of column `RDB$PROCEDURE_SOURCE`: the body of the stored procedure;
+this column is `null` for procedures in a package.
+** `getProcedureSourceCode` is deprecated, the recommended replacement is `DatabaseMetaData.getProcedures(String, String, String)`, column `JB_PROCEDURE_SOURCE`.
+** `getTriggerSourceCode`/`getViewSourceCode` now also have an overload accepting the schema;
+the overloads without a `schema` parameter, or `schema` is `null` will return the source code of the first match found (schema order is undefined).
+This behaviour also applies for -- now deprecated -- `getProcedureSourceCode(String)`.
++
+The `schema` parameter is ignored on Firebird 5.0 and older.
+** `getSchemas()` returns all defined schemas
+** `getSchemas(String catalog, String schemaPattern)` returns all schemas matching the `LIKE` pattern `schemaPattern`, with the following caveats
+*** `catalog` non-empty will return no rows -- even if `useCatalogAsPackage` is `true`;
+we recommend to always use `null` for `catalog`
+* `ResultSetMetaData`
+** `getSchemaName` reports the schema if the column is backed by a table, otherwise empty string (`""`)
+* `FirebirdConnection`/`FBConnection`
+** `setSchema` will modify the search path by prepending the specified schema, or -- if `setSchema` was called previously -- replacing the previous value set.
++
+The schema is not checked for existence, and setting one will not result in an exception, see also note about `getSchema` below.
+** `getSchema()` reports the value of `CURRENT_SCHEMA`, which is the first valid (i.e. existing) schema on the search path.
++
+The value reported can change if a previously missing schema is created in the database.
+** Added method `String getSearchPath()` to obtain the search path as reported by `RBB$GET_CONTEXT('SYSTEM', 'SEARCH_PATH')`, or `null` if schemas are not supported
+** Added method `List<String> getSearchPatList()` to obtain the search path as a list of unquoted object names, or empty list if schemas are not supported
+** Added methods `setSearchPath(String)` and `setSearchPathList(String...)/(List<String>)` to set the search path;
+these methods throw `SQLFeatureNotSupportedException` if schemas are not supported.
+* `StatisticsManager`
+** `getTableStatistics`
+*** `getTableStatistics(String[] tableNames)` was changed to accept varargs (`getTableStatistics(String... tableNames)`)
+*** Added overload `getTableStatistics(Collection<String> tableNames)` with same behaviour as `getTableStatistics(String... tableNames)`
+*** Added overload `getTableStatistics(Collection<String> schemas, Collection<String> tableNames)` -- if `schemas` is non-empty, on Firebird 6.0 and higher, it will restrict the search for tables to the specified schemas;
+if `tableNames` is empty, and `schemas` is not, only the tables of the specified schemas will be reported
+* `FBTableStatisticsManager` (experimental feature)
+** For schema-bound tables, the key of the map returned by `getTableStatistics()` is a fully qualified and quoted table reference (i.e. `<quoted-schema>.<quoted-table-name>`).
+For schemaless tables (Firebird 5.0 and older, or tables that were not found), the key is still the unquoted `<table-name>`.
+** The static method `toKey(String schema, String tableName)` can be used to create a table reference in the same format as the key of the map returned by `getTableStatistics()`.
+The `schema` can be `null` or empty string for schemaless tables (i.e. Firebird 5.0 or older)
+** The `TableStatistics` object received additional accessors:
+*** `schema()` with the schema, or empty string for schemaless (Firebird 5.0 or older) or if the table was not found
+*** `tableReference()` with the fully qualified and quoted table reference (i.e. `[<quoted-schema>.]<quoted-table-name>`)
+
 // TODO add major changes
 
 [#other-fixes-and-changes]
 === Other fixes and changes
 
+* Changed the documentation of `FirebirdDatabaseMetaData` methods `getProcedureSourceCode`, `getTriggerSourceCode` and `getViewSourceCode` that the object not being found is reported by a `null` value, not a `SQLException`.
+With this change, the documentation reflects the actual behaviour.
 * ...
 
 [#compatibility-changes]
@@ -522,6 +599,61 @@ Jaybird 7 introduces some changes in compatibility and announces future breaking
 
 *The list might not be complete, if you notice a difference in behavior that is not listed, please {issues}[report it as bug^].*
 It might have been a change we forgot to document, but it could just as well be an implementation bug.
+
+[#compatibility-changes-schema]
+=== Potential compatibility issues due to schema support
+
+The implementation of schema support may cause compatibility issues.
+In general, these changes will only impact Jaybird when connecting to Firebird 6.0 or higher.
+
+We recommend looking over this section even if you currently do not use Firebird 6.0 or higher, so you can prepare your code to be ready for a future migration to Firebird 6.0.
+
+[#compatibility-changes-schema-dbmd-params]
+==== Parameters `schema` and `schemaPattern` in methods of `DatabaseMetaData`
+
+In previous versions, Jaybird ignored the `schema` and `schemaPattern` parameters of the `DatabaseMetaData` methods (usually the second parameter of `DatabaseMetaData.getXXX(...)` methods).
+In Jaybird 7, it no longer ignores these parameters when querying a Firebird 6.0 or higher database.
+
+If you currently pass the "`wrong`" value for these methods, especially `""` (empty string, i.e. only return schemaless objects), you may get no or fewer results than expected.
+
+[float]
+===== `schema`
+
+The `schema` parameter performs an exact, case-sensitive match on the schema name, unless it's `null` (i.e. don't filter by schema).
+
+If your code currently passes `""` (empty string), you need to either replace it with `null` (don't filter by schema), or the desired schema name.
+
+.`DatabaseMetaData` methods with `schema` parameter
+* `getBestRowIdentifier`
+* `getColumnPrivileges`
+* `getCrossReference` (parameters `parentSchema` and `foreignSchema`)
+* `getExportedKeys`
+* `getImportedKeys`
+* `getIndexInfo`
+* `getPrimaryKeys`
+* `getVersionColumns`
+
+(Unsupported metadata methods are not listed.)
+
+[float]
+===== `schemaPattern`
+
+The `schemaPattern` parameter performs a case-sensitive `LIKE` match on the schema name, unless it's `null` (i.e. don't filter by schema).
+
+If your code currently passes `""` (empty string), you need to either replace it with `null` (don't filter by schema), use `"%"` (match all schemas, effectively the same as passing `null`), or an appropriate `LIKE` pattern for the desired schemas.
+
+.`DatabaseMetaData` methods with `schemaPattern` parameter
+* `getColumns`
+* `getFunctionColumns`
+* `getFunctions`
+* `getProcedureColumns`
+* `getProcedures`
+* `getPseudoColumns`
+* `getSchemas`
+* `getTablePrivileges`
+* `getTables`
+
+(Unsupported metadata methods are not listed.)
 
 // TODO Document compatibility issues
 
@@ -654,7 +786,7 @@ If you are confronted with such a change, let us know on {firebird-java}[firebir
 
 The following changes might cause issues, though we think this is unlikely:
 
-// TODO Document unlikely breaking changes, or remove section
+// TODO Document unlikely breaking changes, or comment out this section
 
 [#breaking-changes-for-jaybird-8]
 === Breaking changes for Jaybird 8

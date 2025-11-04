@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2004-2005 Gabriel Reid
  SPDX-FileCopyrightText: Copyright 2005-2006 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 */
 package org.firebirdsql.management;
@@ -20,14 +20,15 @@ import org.firebirdsql.jdbc.FirebirdConnection;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
 
 /**
- * The <code>FBStatisticsManager</code> class is responsible for replicating the functionality of
- * the <code>gstat</code> command-line tool.
+ * The {@code FBStatisticsManager} class is responsible for replicating the functionality of
+ * the {@code gstat} command-line tool.
  * <p>
  * This functionality includes:
  * <ul>
@@ -48,27 +49,24 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
                     RECORD_VERSION_STATISTICS;
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on
-     * the default GDSType.
+     * Create a new instance of {@code FBMaintenanceManager} based on the default GDSType.
      */
     public FBStatisticsManager() {
-        super();
     }
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on
-     * a given GDSType.
+     * Create a new instance of {@code FBMaintenanceManager} based on a given GDSType.
      *
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
+    @SuppressWarnings("unused")
     public FBStatisticsManager(String gdsType) {
         super(gdsType);
     }
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on
-     * a given GDSType.
+     * Create a new instance of {@code FBMaintenanceManager} based on a given GDSType.
      *
      * @param gdsType
      *         The GDS implementation type to use
@@ -104,18 +102,22 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
         }
     }
 
-    public void getTableStatistics(String[] tableNames) throws SQLException {
-        // create space-separated list of tables
-        StringBuilder commandLine = new StringBuilder();
-        for (int i = 0; i < tableNames.length; i++) {
-            commandLine.append(tableNames[i]);
-            if (i < tableNames.length - 1)
-                commandLine.append(' ');
-        }
-
+    @Override
+    public void getTableStatistics(Collection<String> schemas, Collection<String> tableNames) throws SQLException {
         try (FbService service = attachServiceManager()) {
-            ServiceRequestBuffer srb = createStatsSRB(service, isc_spb_sts_table);
-            srb.addArgument(SpbItems.isc_spb_command_line, commandLine.toString());
+            ServiceRequestBuffer srb;
+            GDSServerVersion serverVersion = service.getServerVersion();
+            if (serverVersion.isEqualOrAbove(3) || tableNames.isEmpty()) {
+                srb = createDefaultStatsSRB(service);
+                if (serverVersion.isEqualOrAbove(6)) {
+                    schemas.forEach(schema -> srb.addArgument(isc_spb_sts_schema, schema));
+                }
+                tableNames.forEach(tableName -> srb.addArgument(isc_spb_sts_table, tableName));
+            } else {
+                // Handling of table list is different on older (unsupported) Firebird versions
+                srb = createStatsSRB(service, isc_spb_sts_table);
+                srb.addArgument(SpbItems.isc_spb_command_line, String.join(" ", tableNames));
+            }
             executeServicesOperation(service, srb);
         }
     }

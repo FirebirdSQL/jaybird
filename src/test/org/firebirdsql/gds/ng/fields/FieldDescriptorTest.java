@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2017-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2017-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.fields;
 
@@ -92,6 +92,6 @@ class FieldDescriptorTest {
     }
 
     private FieldDescriptor createFieldDescriptor(int type, int subType, int scale) {
-        return new FieldDescriptor(1, defaultDatatypeCoder, type, subType, scale, 8, "x", "t", "x", "t", "");
+        return new FieldDescriptor(1, defaultDatatypeCoder, type, subType, scale, 8, "x", "t", "x", "s", "t", "");
     }
 }

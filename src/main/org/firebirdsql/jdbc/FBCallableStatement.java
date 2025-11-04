@@ -6,7 +6,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2005-2006 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -50,27 +50,21 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     static final String SET_BY_STRING_NOT_SUPPORTED = "Setting parameters by name is not supported";
 
     private @Nullable FBResultSet singletonRs;
-
-    protected boolean selectableProcedure;
-
     protected FBProcedureCall procedureCall;
 
     protected FBCallableStatement(FBConnection connection, String sql, ResultSetBehavior rsBehavior,
             StoredProcedureMetaData storedProcMetaData, FBObjectListener.StatementListener statementListener,
             FBObjectListener.BlobListener blobListener) throws SQLException {
         super(connection, rsBehavior, statementListener, blobListener);
-        var parser = new FBEscapedCallParser();
+        var parser = new FBEscapedCallParser(connection.getEscapedParser());
 
         // here statement is parsed twice, once in c.nativeSQL(...)
         // and second time in parser.parseCall(...)... not nice, maybe
         // in the future should be fixed by calling FBEscapedParser for
         // each parameter in FBEscapedCallParser class
-        // TODO Might be unnecessary now FBEscapedParser processes nested escapes
+        // TODO nativeSQL call might be unnecessary now FBEscapedParser processes nested escapes
         procedureCall = parser.parseCall(nativeSQL(sql));
-
-        if (storedProcMetaData.canGetSelectableInformation()) {
-            setSelectabilityAutomatically(storedProcMetaData);
-        }
+        storedProcMetaData.updateSelectability(procedureCall);
     }
 
     @Override
@@ -87,7 +81,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             checkValidity();
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted(false);
-            prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
+            prepareProcedureCall();
             return new FBParameterMetaData(fbStatement.getParameterDescriptor(), connection);
         }
     }
@@ -119,7 +113,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             List<Long> results = new ArrayList<>(batchList.size());
             notifyStatementStarted();
             try {
-                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
+                prepareProcedureCall();
                 for (FBProcedureCall fbProcedureCall : batchList) {
                     procedureCall = fbProcedureCall;
                     results.add(executeSingleForBatch());
@@ -149,12 +143,12 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     @Override
     public void setSelectableProcedure(boolean selectableProcedure) {
-        this.selectableProcedure = selectableProcedure;
+        procedureCall.setSelectable(selectableProcedure);
     }
 
     @Override
     public boolean isSelectableProcedure() {
-        return selectableProcedure;
+        return procedureCall.isSelectable();
     }
 
     /**
@@ -189,6 +183,11 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         super.prepareFixedStatement(sql);
     }
 
+    protected void prepareProcedureCall() throws SQLException {
+        prepareFixedStatement(
+                procedureCall.getSQL(connection.getQuoteStrategy()));
+    }
+
     /**
      * {@inheritDoc}
      * <p>
@@ -203,7 +202,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         try (LockCloseable ignored = withLock()) {
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted(false);
-            prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
+            prepareProcedureCall();
         }
 
         return super.getMetaData();
@@ -216,7 +215,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             procedureCall.checkParameters();
             notifyStatementStarted();
             try {
-                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
+                prepareProcedureCall();
                 boolean hasResultSet = internalExecute(!isSelectableProcedure());
                 if (hasResultSet) {
                     setRequiredTypes();
@@ -239,7 +238,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             procedureCall.checkParameters();
             notifyStatementStarted();
             try {
-                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
+                prepareProcedureCall();
                 if (!internalExecute(!isSelectableProcedure())) {
                     throw queryProducedNoResultSet();
                 }
@@ -262,7 +261,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             procedureCall.checkParameters();
             notifyStatementStarted();
             try {
-                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
+                prepareProcedureCall();
 
                 /* R.Rokytskyy: JDBC CTS suite uses executeUpdate() together with output parameters, therefore we
                  * cannot throw exception if we want to pass the test suite.
@@ -1272,16 +1271,6 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         setInputParam(parameterIndex, x);
     }
 
-    /**
-     * Set the selectability of this stored procedure from RDB$PROCEDURE_TYPE.
-     *
-     * @throws SQLException If no selectability information is available
-     */
-    private void setSelectabilityAutomatically(StoredProcedureMetaData storedProcMetaData)
-            throws SQLException {
-        selectableProcedure = storedProcMetaData.isSelectable(procedureCall.getName());
-    }
-    
     /**
      * {@inheritDoc}
      * <p>

@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2024 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -29,9 +29,10 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  * @author Mark Rotteveel
  * @since 5
  */
-public abstract class GetPseudoColumns {
+public abstract sealed class GetPseudoColumns {
 
     private static final String PSEUDOCOLUMNS = "PSEUDOCOLUMNS";
+    public static final String COLUMN_SCHEMA_NAME = "RDB$SCHEMA_NAME";
     public static final String COLUMN_RELATION_NAME = "RDB$RELATION_NAME";
 
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(12)
@@ -62,7 +63,7 @@ public abstract class GetPseudoColumns {
         this.mediator = mediator;
     }
 
-    public ResultSet getPseudoColumns(String tableNamePattern, String columnNamePattern) throws SQLException {
+    public ResultSet getPseudoColumns(String schemaPattern, String tableNamePattern, String columnNamePattern) throws SQLException {
         if ("".equals(tableNamePattern) || "".equals(columnNamePattern)) {
             // Matching table and/or column not possible
             return createEmpty();
@@ -77,19 +78,22 @@ public abstract class GetPseudoColumns {
             return createEmpty();
         }
 
-        try (ResultSet rs = mediator.performMetaDataQuery(createGetPseudoColumnsQuery(tableNamePattern))) {
+        MetadataQuery metadataQuery = createGetPseudoColumnsQuery(schemaPattern, tableNamePattern);
+        try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
             if (!rs.next()) {
                 return createEmpty();
             }
 
-            List<RowValue> rows = new ArrayList<>();
-            RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
+            var rows = new ArrayList<RowValue>();
+            var valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
             do {
+                String schema = rs.getString(COLUMN_SCHEMA_NAME);
                 String tableName = rs.getString(COLUMN_RELATION_NAME);
 
                 if (retrieveDbKey) {
                     int dbKeyLength = rs.getInt("RDB$DBKEY_LENGTH");
                     valueBuilder
+                            .at(1).setString(schema)
                             .at(2).setString(tableName)
                             .at(3).setString("RDB$DB_KEY")
                             .at(4).setInt(Types.ROWID)
@@ -104,6 +108,7 @@ public abstract class GetPseudoColumns {
 
                 if (retrieveRecordVersion && rs.getBoolean("HAS_RECORD_VERSION")) {
                     valueBuilder
+                            .at(1).setString(schema)
                             .at(2).setString(tableName)
                             .at(3).setString("RDB$RECORD_VERSION")
                             .at(4).setInt(Types.BIGINT)
@@ -122,7 +127,7 @@ public abstract class GetPseudoColumns {
 
     abstract boolean supportsRecordVersion();
 
-    abstract MetadataQuery createGetPseudoColumnsQuery(String tableNamePattern);
+    abstract MetadataQuery createGetPseudoColumnsQuery(String schemaPattern, String tableNamePattern);
 
     private ResultSet createEmpty() throws SQLException {
         return new FBResultSet(ROW_DESCRIPTOR, emptyList());
@@ -131,7 +136,9 @@ public abstract class GetPseudoColumns {
     public static GetPseudoColumns create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(3, 0)) {
+        if (firebirdSupportInfo.isVersionEqualOrAbove(6)) {
+            return FB6.createInstance(mediator);
+        } else if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
             return FB3.createInstance(mediator);
         } else {
             return FB2_5.createInstance(mediator);
@@ -141,17 +148,17 @@ public abstract class GetPseudoColumns {
     @SuppressWarnings("java:S101")
     private static final class FB2_5 extends GetPseudoColumns {
 
-        //@formatter:off
-        private static final String GET_PSEUDO_COLUMNS_FRAGMENT_2_5 =
-                "select\n"
-                + " RDB$RELATION_NAME,\n"
-                + " RDB$DBKEY_LENGTH,\n"
-                + " 'F' AS HAS_RECORD_VERSION,\n"
-                + " '' AS RECORD_VERSION_NULLABLE\n" // unknown nullability (and doesn't matter, no RDB$RECORD_VERSION)
-                + "from RDB$RELATIONS\n";
+        private static final String GET_PSEUDO_COLUMNS_FRAGMENT_2_5 = """
+                select
+                 cast(null as char(1)) as RDB$SCHEMA_NAME,
+                 RDB$RELATION_NAME,
+                 RDB$DBKEY_LENGTH,
+                 'F' AS HAS_RECORD_VERSION,
+                 -- unknown nullability (and doesn't matter, no RDB$RECORD_VERSION)
+                 '' AS RECORD_VERSION_NULLABLE
+                from RDB$RELATIONS""";
 
-        private static final String GET_PSEUDO_COLUMNS_END_2_5 = "order by RDB$RELATION_NAME";
-        //@formatter:on
+        private static final String GET_PSEUDO_COLUMNS_END_2_5 = "\norder by RDB$RELATION_NAME";
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
@@ -167,32 +174,35 @@ public abstract class GetPseudoColumns {
         }
 
         @Override
-        MetadataQuery createGetPseudoColumnsQuery(String tableNamePattern) {
-            Clause tableNameClause = new Clause(COLUMN_RELATION_NAME, tableNamePattern);
+        MetadataQuery createGetPseudoColumnsQuery(String schemaPattern, String tableNamePattern) {
+            var tableNameClause = new Clause(COLUMN_RELATION_NAME, tableNamePattern);
             String sql = GET_PSEUDO_COLUMNS_FRAGMENT_2_5
-                    + tableNameClause.getCondition("where ", "\n")
+                    + tableNameClause.getCondition("\nwhere ", "")
                     + GET_PSEUDO_COLUMNS_END_2_5;
             return new MetadataQuery(sql, Clause.parameters(tableNameClause));
         }
+
     }
 
     private static final class FB3 extends GetPseudoColumns {
 
-        //@formatter:off
-        private static final String GET_PSEUDO_COLUMNS_FRAGMENT_3 =
-                "select\n"
-                + "  trim(trailing from RDB$RELATION_NAME) as RDB$RELATION_NAME,\n"
-                + "  RDB$DBKEY_LENGTH,\n"
-                + "  RDB$DBKEY_LENGTH = 8 as HAS_RECORD_VERSION,\n"
-                + "  case\n"
-                + "    when RDB$RELATION_TYPE in (0, 1, 4, 5) then 'NO'\n" // table, view, GTT preserve + delete: never null
-                + "    when RDB$RELATION_TYPE in (2, 3) then 'YES'\n" // external + virtual: always null
-                + "    else ''\n" // unknown or unsupported (by Jaybird) type: unknown nullability
-                + "  end as RECORD_VERSION_NULLABLE\n"
-                + "from RDB$RELATIONS\n";
+        private static final String GET_PSEUDO_COLUMNS_FRAGMENT_3 = """
+                select
+                  null as RDB$SCHEMA_NAME,
+                  trim(trailing from RDB$RELATION_NAME) as RDB$RELATION_NAME,
+                  RDB$DBKEY_LENGTH,
+                  RDB$DBKEY_LENGTH = 8 as HAS_RECORD_VERSION,
+                  case
+                    -- table, view, GTT preserve + delete: never null
+                    when RDB$RELATION_TYPE in (0, 1, 4, 5) then 'NO'
+                    -- external + virtual: always null
+                    when RDB$RELATION_TYPE in (2, 3) then 'YES'
+                    -- unknown or unsupported (by Jaybird) type: unknown nullability
+                    else ''
+                  end as RECORD_VERSION_NULLABLE
+                from RDB$RELATIONS""";
 
-        private static final String GET_PSEUDO_COLUMNS_END_3 = "order by RDB$RELATION_NAME";
-        //@formatter:on
+        private static final String GET_PSEUDO_COLUMNS_END_3 = "\norder by RDB$RELATION_NAME";
 
         private FB3(DbMetadataMediator mediator) {
             super(mediator);
@@ -208,12 +218,60 @@ public abstract class GetPseudoColumns {
         }
 
         @Override
-        MetadataQuery createGetPseudoColumnsQuery(String tableNamePattern) {
-            Clause tableNameClause = new Clause(COLUMN_RELATION_NAME, tableNamePattern);
+        MetadataQuery createGetPseudoColumnsQuery(String schemaPattern, String tableNamePattern) {
+            var tableNameClause = new Clause(COLUMN_RELATION_NAME, tableNamePattern);
             String sql = GET_PSEUDO_COLUMNS_FRAGMENT_3
-                    + tableNameClause.getCondition("where ", "\n")
+                    + tableNameClause.getCondition("\nwhere ", "")
                     + GET_PSEUDO_COLUMNS_END_3;
             return new MetadataQuery(sql, Clause.parameters(tableNameClause));
         }
+
     }
+
+    private static final class FB6 extends GetPseudoColumns {
+
+        private static final String GET_PSEUDO_COLUMNS_FRAGMENT_6 = """
+                select
+                  trim(trailing from RDB$SCHEMA_NAME) as RDB$SCHEMA_NAME,
+                  trim(trailing from RDB$RELATION_NAME) as RDB$RELATION_NAME,
+                  RDB$DBKEY_LENGTH,
+                  RDB$DBKEY_LENGTH = 8 as HAS_RECORD_VERSION,
+                  case
+                    -- table, view, GTT preserve + delete: never null
+                    when RDB$RELATION_TYPE in (0, 1, 4, 5) then 'NO'
+                    -- external + virtual: always null
+                    when RDB$RELATION_TYPE in (2, 3) then 'YES'
+                    -- unknown or unsupported (by Jaybird) type: unknown nullability
+                    else ''
+                  end as RECORD_VERSION_NULLABLE
+                from SYSTEM.RDB$RELATIONS""";
+
+        private static final String GET_PSEUDO_COLUMNS_END_6 = "\norder by RDB$SCHEMA_NAME, RDB$RELATION_NAME";
+
+        private FB6(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetPseudoColumns createInstance(DbMetadataMediator mediator) {
+            return new FB6(mediator);
+        }
+
+        @Override
+        boolean supportsRecordVersion() {
+            return true;
+        }
+
+        @Override
+        MetadataQuery createGetPseudoColumnsQuery(String schemaPattern, String tableNamePattern) {
+            var clauses = List.of(
+                    new Clause(COLUMN_SCHEMA_NAME, schemaPattern),
+                    new Clause(COLUMN_RELATION_NAME, tableNamePattern));
+            String sql = GET_PSEUDO_COLUMNS_FRAGMENT_6
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
+                    + GET_PSEUDO_COLUMNS_END_6;
+            return new MetadataQuery(sql, Clause.parameters(clauses));
+        }
+
+    }
+
 }

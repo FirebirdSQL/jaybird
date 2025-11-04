@@ -1,29 +1,36 @@
-// SPDX-FileCopyrightText: Copyright 2019-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -52,6 +59,21 @@ class FBDatabaseMetaDataFunctionsTest {
               return X+1;
             end""";
 
+    // Same name, different schema as CREATE_PSQL_EXAMPLE
+    private static final String CREATE_OTHER_SCHEMA_PSQL_EXAMPLE = """
+            create function OTHER_SCHEMA.PSQL$EXAMPLE(X double precision) returns varchar(50)
+            as
+            begin
+              return cast(x as varchar(50));
+            end""";
+
+    private static final String CREATE_OTHER_SCHEMA_PSQL_EXAMPLE2 = """
+            create function OTHER_SCHEMA.PSQL$EXAMPLE2(X int) returns int
+            as
+            begin
+              return X+1;
+            end""";
+
     private static final String ADD_COMMENT_ON_PSQL_EXAMPLE =
             "comment on function PSQL$EXAMPLE is 'Comment on PSQL$EXAMPLE'";
 
@@ -73,6 +95,8 @@ class FBDatabaseMetaDataFunctionsTest {
               end
             end""";
 
+    private static final String CREATE_OTHER_SCHEMA = "create schema OTHER_SCHEMA";
+
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
             getCreateStatements());
@@ -81,12 +105,19 @@ class FBDatabaseMetaDataFunctionsTest {
             new MetadataResultSetDefinition(FunctionMetaData.class);
 
     private static Connection con;
-    private static DatabaseMetaData dbmd;
+    private static DatabaseMetaData originalDbmd;
+    // may get replaced during a test
+    private DatabaseMetaData dbmd;
 
     @BeforeAll
     static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
-        dbmd = con.getMetaData();
+        originalDbmd = con.getMetaData();
+    }
+
+    @BeforeEach
+    void setup() {
+        dbmd = originalDbmd;
     }
 
     @AfterAll
@@ -95,7 +126,7 @@ class FBDatabaseMetaDataFunctionsTest {
             con.close();
         } finally {
             con = null;
-            dbmd = null;
+            originalDbmd = null;
         }
     }
 
@@ -117,6 +148,12 @@ class FBDatabaseMetaDataFunctionsTest {
                 statements.add(CREATE_PACKAGE_BODY_WITH_FUNCTION);
             }
         }
+        if (supportInfo.supportsSchemas()) {
+            statements.add(CREATE_OTHER_SCHEMA);
+            statements.add(CREATE_OTHER_SCHEMA_PSQL_EXAMPLE);
+            statements.add(CREATE_OTHER_SCHEMA_PSQL_EXAMPLE2);
+        }
+
         // TODO See if we can add a UDR example as well.
         return statements;
     }
@@ -132,40 +169,64 @@ class FBDatabaseMetaDataFunctionsTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = "%")
-    @NullSource
-    void testFunctionMetadata_everything_functionNamePattern(String functionNamePattern) throws Exception {
-        try (ResultSet functions = dbmd.getFunctions(null, null, functionNamePattern)) {
-            if (getDefaultSupportInfo().supportsPsqlFunctions()) {
-                expectNextFunction(functions);
-                validatePsqlExample(functions);
-            }
+    @CsvSource(useHeadersInDisplayName = true, nullValues = { "<NIL>" }, textBlock = """
+            schemaPattern, functionNamePattern
+            <NIL>,         <NIL>
+            <NIL>,         %
+            %,             <NIL>
+            %,             %
+            """)
+    void testFunctionMetadata_everything_functionNamePattern(String schemaPattern, String functionNamePattern)
+            throws Exception {
+        validateExpectedFunctions(null, schemaPattern, functionNamePattern, getAllFunctionsNonPackaged());
+    }
 
-            // Verify UDF$EXAMPLE
-            expectNextFunction(functions);
-            validateUdfExample(functions);
-
-            expectNoMoreRows(functions);
-        }
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = { "<NIL>" }, textBlock = """
+            schemaPattern, functionNamePattern
+            OTHER_SCHEMA,  <NIL>
+            OTHER_SCHEMA,  %
+            OTHER_SCHEMA,  PSQL$%
+            OTHER_%,       <NIL>
+            OTHER_%,       %
+            OTHER_%,       PSQL$%
+            """)
+    void testFunctionMetadata_everything_ofOtherSchema(String schemaPattern, String functionNamePattern)
+            throws Exception {
+        assumeSchemaSupport();
+        var expectedFunctions = List.of(getOtherSchemaPsqlExample(), getOtherSchemaPsqlExample2());
+        validateExpectedFunctions(null, schemaPattern, functionNamePattern, expectedFunctions);
     }
 
     @Test
     void testFunctionMetaData_udfExampleOnly() throws Exception {
-        try (ResultSet functions = dbmd.getFunctions(null, null, "UDF$EXAMPLE")) {
-            assertTrue(functions.next(), "Expected a row");
-            validateUdfExample(functions);
-            assertFalse(functions.next(), "Expected no more rows");
-        }
+        validateExpectedFunctions(null, null, "UDF$EXAMPLE", List.of(getUdfExample()));
     }
 
     @Test
-    void testFunctionMetaData_psqlExampleOnly() throws Exception {
+    void testFunctionMetaData_defaultSchema_psqlExampleOnly() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsPsqlFunctions(), "Requires PSQL function support");
-        try (ResultSet functions = dbmd.getFunctions(null, null, "PSQL$EXAMPLE")) {
-            assertTrue(functions.next(), "Expected a row");
-            validatePsqlExample(functions);
-            assertFalse(functions.next(), "Expected no more rows");
+        validateExpectedFunctions(null, ifSchemaElse("PUBLIC", ""), "PSQL$EXAMPLE", List.of(getPsqlExample()));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "%")
+    void testFunctionMetaData_allSchema_psqlExampleOnly(String schemaPattern) throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsPsqlFunctions(), "Requires PSQL function support");
+        var expectedFunctions = new ArrayList<Map<FunctionMetaData, Object>>();
+        if (supportInfo.supportsSchemas()) {
+            expectedFunctions.add(getOtherSchemaPsqlExample());
         }
+        expectedFunctions.add(getPsqlExample());
+        validateExpectedFunctions(null, schemaPattern, "PSQL$EXAMPLE", expectedFunctions);
+    }
+
+    @Test
+    void testFunctionMetaData_otherSchema_psqlExampleOnly() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsSchemas(), "Requires schema support");
+        validateExpectedFunctions(null, "OTHER_SCHEMA", "PSQL$EXAMPLE", List.of(getOtherSchemaPsqlExample()));
     }
 
     @Test
@@ -188,37 +249,21 @@ class FBDatabaseMetaDataFunctionsTest {
     @Test
     void testFunctionMetadata_useCatalogAsPackage_everything() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsPackages(), "Test requires package support");
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
-        try (var connection = DriverManager.getConnection(getUrl(), props);
-             var functions = connection.getMetaData().getFunctions(null, null, "%")) {
-            expectNextFunction(functions);
-            validatePsqlExample(functions, true);
+        List<Map<FunctionMetaData, Object>> expectedFunctions = getAllFunctionsNonPackaged(true);
+        expectedFunctions.add(getPackageFunctionExample());
 
-            // Verify UDF$EXAMPLE
-            expectNextFunction(functions);
-            validateUdfExample(functions, true);
-
-            // Verify packaged function WITH$FUNCTION.IN$PACKAGE
-            expectNextFunction(functions);
-            validatePackageFunctionExample(functions);
-
-            expectNoMoreRows(functions);
+        try (var connection = getConnectionViaDriverManager(PropertyNames.useCatalogAsPackage, "true")) {
+            dbmd = connection.getMetaData();
+            validateExpectedFunctions(null, null, "%", expectedFunctions);
         }
     }
 
     @Test
     void testFunctionMetadata_useCatalogAsPackage_specificPackage() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsPackages(), "Test requires package support");
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
-        try (var connection = DriverManager.getConnection(getUrl(), props);
-             var functions = connection.getMetaData().getFunctions("WITH$FUNCTION", null, "%")) {
-            // Verify packaged function WITH$FUNCTION.IN$PACKAGE
-            expectNextFunction(functions);
-            validatePackageFunctionExample(functions);
-
-            expectNoMoreRows(functions);
+        try (var connection = getConnectionViaDriverManager(PropertyNames.useCatalogAsPackage, "true")) {
+            dbmd = connection.getMetaData();
+            validateExpectedFunctions("WITH$FUNCTION", null, "%", List.of(getPackageFunctionExample()));
         }
     }
 
@@ -227,34 +272,35 @@ class FBDatabaseMetaDataFunctionsTest {
     @ValueSource(strings = "WITH$FUNCTION")
     void testFunctionMetadata_useCatalogAsPackage_specificPackageFunction(String catalog) throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsPackages(), "Test requires package support");
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
-        try (var connection = DriverManager.getConnection(getUrl(), props);
-             var functions = connection.getMetaData().getFunctions(catalog, null, "IN$PACKAGE")) {
-            // Verify packaged function WITH$FUNCTION.IN$PACKAGE
-            expectNextFunction(functions);
-            validatePackageFunctionExample(functions);
-
-            expectNoMoreRows(functions);
+        try (var connection = getConnectionViaDriverManager(PropertyNames.useCatalogAsPackage, "true")) {
+            dbmd = connection.getMetaData();
+            validateExpectedFunctions(catalog, null, "IN$PACKAGE", List.of(getPackageFunctionExample()));
         }
     }
 
     @Test
     void testFunctionMetadata_useCatalogAsPackage_nonPackagedOnly() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsPackages(), "Test requires package support");
-        Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(PropertyNames.useCatalogAsPackage, "true");
-        try (var connection = DriverManager.getConnection(getUrl(), props);
-             var functions = connection.getMetaData().getFunctions("", null, "%")) {
-            expectNextFunction(functions);
-            validatePsqlExample(functions, true);
-
-            // Verify UDF$EXAMPLE
-            expectNextFunction(functions);
-            validateUdfExample(functions, true);
-
-            expectNoMoreRows(functions);
+        try (var connection = getConnectionViaDriverManager(PropertyNames.useCatalogAsPackage, "true")) {
+            dbmd = connection.getMetaData();
+            validateExpectedFunctions("", null, "%", getAllFunctionsNonPackaged(true));
         }
+    }
+
+    private void validateExpectedFunctions(String catalog, String schemaPattern, String functionNamePattern,
+            List<Map<FunctionMetaData, Object>> expectedColumns) throws Exception {
+        try (ResultSet functions = dbmd.getFunctions(catalog, schemaPattern, functionNamePattern)) {
+            validateFunctions(functions, expectedColumns);
+        }
+    }
+
+    private static void validateFunctions(ResultSet functions,
+            List<Map<FunctionMetaData, Object>> expectedColumns) throws SQLException {
+        for (Map<FunctionMetaData, Object> expectedColumn : expectedColumns) {
+            expectNextFunction(functions);
+            getFunctionsDefinition.validateRowValues(functions, expectedColumn);
+        }
+        expectNoMoreRows(functions);
     }
 
     private void validateNoRows(String functionNamePattern) throws Exception {
@@ -263,11 +309,31 @@ class FBDatabaseMetaDataFunctionsTest {
         }
     }
 
-    private void validatePsqlExample(ResultSet functions) throws SQLException {
-        validatePsqlExample(functions, false);
+    private static List<Map<FunctionMetaData, Object>> getAllFunctionsNonPackaged() {
+        return getAllFunctionsNonPackaged(false);
     }
 
-    private void validatePsqlExample(ResultSet functions, boolean useCatalogAsPackage) throws SQLException {
+    private static List<Map<FunctionMetaData, Object>> getAllFunctionsNonPackaged(boolean useCatalogAsPackage) {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        var expectedFunctions = new ArrayList<Map<FunctionMetaData, Object>>();
+        if (supportInfo.supportsSchemas()) {
+            expectedFunctions.add(getOtherSchemaPsqlExample(useCatalogAsPackage));
+            expectedFunctions.add(getOtherSchemaPsqlExample2(useCatalogAsPackage));
+        }
+        if (supportInfo.supportsPsqlFunctions()) {
+            expectedFunctions.add(getPsqlExample(useCatalogAsPackage));
+        }
+        expectedFunctions.add(getUdfExample(useCatalogAsPackage));
+        return expectedFunctions;
+    }
+
+
+
+    private static Map<FunctionMetaData, Object> getPsqlExample() {
+        return getPsqlExample(false);
+    }
+
+    private static Map<FunctionMetaData, Object> getPsqlExample(boolean useCatalogAsPackage) {
         final boolean supportsComments = getDefaultSupportInfo().supportsComment();
         Map<FunctionMetaData, Object> rules = getDefaultValidationRules();
         if (useCatalogAsPackage) {
@@ -283,15 +349,54 @@ class FBDatabaseMetaDataFunctionsTest {
                   return X+1;
                 end""");
         rules.put(FunctionMetaData.JB_FUNCTION_KIND, "PSQL");
-
-        getFunctionsDefinition.validateRowValues(functions, rules);
+        return rules;
     }
 
-    private void validateUdfExample(ResultSet functions) throws SQLException {
-        validateUdfExample(functions, false);
+    private static Map<FunctionMetaData, Object> getOtherSchemaPsqlExample() {
+        return getOtherSchemaPsqlExample(false);
     }
 
-    private void validateUdfExample(ResultSet functions, boolean useCatalogAsPackage) throws SQLException {
+    private static Map<FunctionMetaData, Object> getOtherSchemaPsqlExample(boolean useCatalogAsPackage) {
+        Map<FunctionMetaData, Object> rules = getDefaultValidationRules();
+        if (useCatalogAsPackage) {
+            rules.put(FunctionMetaData.FUNCTION_CAT, "");
+        }
+        rules.put(FunctionMetaData.FUNCTION_SCHEM, "OTHER_SCHEMA");
+        rules.put(FunctionMetaData.FUNCTION_NAME, "PSQL$EXAMPLE");
+        rules.put(FunctionMetaData.SPECIFIC_NAME, "PSQL$EXAMPLE");
+        rules.put(FunctionMetaData.JB_FUNCTION_SOURCE, """
+                begin
+                  return cast(x as varchar(50));
+                end""");
+        rules.put(FunctionMetaData.JB_FUNCTION_KIND, "PSQL");
+        return rules;
+    }
+
+    private static Map<FunctionMetaData, Object> getOtherSchemaPsqlExample2() {
+        return getOtherSchemaPsqlExample2(false);
+    }
+
+    private static Map<FunctionMetaData, Object> getOtherSchemaPsqlExample2(boolean useCatalogAsPackage) {
+        Map<FunctionMetaData, Object> rules = getDefaultValidationRules();
+        if (useCatalogAsPackage) {
+            rules.put(FunctionMetaData.FUNCTION_CAT, "");
+        }
+        rules.put(FunctionMetaData.FUNCTION_SCHEM, "OTHER_SCHEMA");
+        rules.put(FunctionMetaData.FUNCTION_NAME, "PSQL$EXAMPLE2");
+        rules.put(FunctionMetaData.SPECIFIC_NAME, "PSQL$EXAMPLE2");
+        rules.put(FunctionMetaData.JB_FUNCTION_SOURCE, """
+                begin
+                  return X+1;
+                end""");
+        rules.put(FunctionMetaData.JB_FUNCTION_KIND, "PSQL");
+        return rules;
+    }
+
+    private static Map<FunctionMetaData, Object> getUdfExample() {
+        return getUdfExample(false);
+    }
+
+    private static Map<FunctionMetaData, Object> getUdfExample(boolean useCatalogAsPackage) {
         final boolean supportsComments = getDefaultSupportInfo().supportsComment();
         Map<FunctionMetaData, Object> rules = getDefaultValidationRules();
         if (useCatalogAsPackage) {
@@ -305,18 +410,19 @@ class FBDatabaseMetaDataFunctionsTest {
         rules.put(FunctionMetaData.JB_FUNCTION_KIND, "UDF");
         rules.put(FunctionMetaData.JB_MODULE_NAME, "fbudf");
         rules.put(FunctionMetaData.JB_ENTRYPOINT, "idNvl");
-        getFunctionsDefinition.validateRowValues(functions, rules);
+        return rules;
     }
     
-    private void validatePackageFunctionExample(ResultSet functions) throws SQLException {
+    private static Map<FunctionMetaData, Object> getPackageFunctionExample() {
         Map<FunctionMetaData, Object> rules = getDefaultValidationRules();
         rules.put(FunctionMetaData.FUNCTION_CAT, "WITH$FUNCTION");
         rules.put(FunctionMetaData.FUNCTION_NAME, "IN$PACKAGE");
-        rules.put(FunctionMetaData.SPECIFIC_NAME, "\"WITH$FUNCTION\".\"IN$PACKAGE\"");
+        rules.put(FunctionMetaData.SPECIFIC_NAME, ObjectReference.of("WITH$FUNCTION", "IN$PACKAGE").toString());
         // Stored with package
         rules.put(FunctionMetaData.JB_FUNCTION_SOURCE, null);
         rules.put(FunctionMetaData.JB_FUNCTION_KIND, "PSQL");
-        getFunctionsDefinition.validateRowValues(functions, rules);
+
+        return rules;
     }
 
     private static void expectNextFunction(ResultSet rs) throws SQLException {
@@ -338,9 +444,10 @@ class FBDatabaseMetaDataFunctionsTest {
             // Skipping RDB$GET_CONTEXT and RDB$SET_CONTEXT as that seems to be an implementation artifact:
             // present in FB 2.5, absent in FB 3.0
             private static final Set<String> FUNCTIONS_TO_IGNORE = Set.of("RDB$GET_CONTEXT", "RDB$SET_CONTEXT");
-            // Also skipping functions from system packages (when testing with useCatalogAsPackage=true)
+            // Also skipping functions from system packages (when testing with useCatalogAsPackage=true),
+            // and schema SYSTEM (Firebird 6+)
             private static final List<String> PREFIXES_TO_IGNORE =
-                    List.of("\"RDB$BLOB_UTIL\".", "\"RDB$PROFILER\".", "\"RDB$TIME_ZONE_UTIL\".");
+                    List.of("\"SYSTEM\".\"RDB$", "\"RDB$BLOB_UTIL\".", "\"RDB$PROFILER\".", "\"RDB$TIME_ZONE_UTIL\".");
         }
         if (Ignored.FUNCTIONS_TO_IGNORE.contains(specificName)) return true;
         return Ignored.PREFIXES_TO_IGNORE.stream().anyMatch(specificName::startsWith);
@@ -350,7 +457,7 @@ class FBDatabaseMetaDataFunctionsTest {
     static {
         Map<FunctionMetaData, Object> defaults = new EnumMap<>(FunctionMetaData.class);
         defaults.put(FunctionMetaData.FUNCTION_CAT, null);
-        defaults.put(FunctionMetaData.FUNCTION_SCHEM, null);
+        defaults.put(FunctionMetaData.FUNCTION_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(FunctionMetaData.REMARKS, null);
         defaults.put(FunctionMetaData.FUNCTION_TYPE, (short) DatabaseMetaData.functionNoTable);
         defaults.put(FunctionMetaData.JB_FUNCTION_SOURCE, null);

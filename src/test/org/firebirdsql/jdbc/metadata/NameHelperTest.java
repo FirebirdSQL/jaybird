@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -10,11 +10,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class NameHelperTest {
 
     @ParameterizedTest
-    @CsvSource(textBlock = """
+    @CsvSource(useHeadersInDisplayName = true, nullValues = "<null>", textBlock = """
+            catalog,     routineName,  expectedSpecificName
             <null>,      ROUTINE,      ROUTINE
             PACKAGE,     ROUTINE,      "PACKAGE"."ROUTINE"
             WITH"DOUBLE, DOUBLE"QUOTE, "WITH""DOUBLE"."DOUBLE""QUOTE"
-            """, nullValues = "<null>")
+            """)
     void testToSpecificName(String catalog, String routineName, String expectedResult) {
         assertEquals(expectedResult, NameHelper.toSpecificName(catalog, routineName));
     }

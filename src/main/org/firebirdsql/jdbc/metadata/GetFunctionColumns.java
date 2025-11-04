@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2024 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -13,6 +13,7 @@ import org.firebirdsql.util.InternalApi;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static java.sql.DatabaseMetaData.functionColumnIn;
 import static java.sql.DatabaseMetaData.functionNoNulls;
@@ -40,7 +41,7 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
  */
 @InternalApi
 @SuppressWarnings({ "java:S1192", "java:S5665" })
-public abstract class GetFunctionColumns extends AbstractMetadataMethod {
+public abstract sealed class GetFunctionColumns extends AbstractMetadataMethod {
 
     private static final String FUNCTION_COLUMNS = "FUNCTION_COLUMNS";
     
@@ -73,14 +74,15 @@ public abstract class GetFunctionColumns extends AbstractMetadataMethod {
     /**
      * @see java.sql.DatabaseMetaData#getFunctionColumns(String, String, String, String)
      */
-    public final ResultSet getFunctionColumns(String catalog, String functionNamePattern, String columnNamePattern)
-            throws SQLException {
+    public final ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
+            String columnNamePattern) throws SQLException {
         if ("".equals(functionNamePattern) || "".equals(columnNamePattern)) {
             // Matching function name or column name not possible
             return createEmpty();
         }
 
-        MetadataQuery metadataQuery = createGetFunctionColumnsQuery(catalog, functionNamePattern, columnNamePattern);
+        MetadataQuery metadataQuery = createGetFunctionColumnsQuery(catalog, schemaPattern, functionNamePattern,
+                columnNamePattern);
         return createMetaDataResultSet(metadataQuery);
     }
 
@@ -90,12 +92,13 @@ public abstract class GetFunctionColumns extends AbstractMetadataMethod {
                 .fromCurrentRow(rs)
                 .build();
         String catalog = rs.getString("FUNCTION_CAT");
+        String schema = rs.getString("FUNCTION_SCHEM");
         String functionName = rs.getString("FUNCTION_NAME");
         int ordinalPosition = rs.getInt("ORDINAL_POSITION");
         boolean nullable = rs.getBoolean("IS_NULLABLE");
         return valueBuilder
                 .at(0).setString(catalog)
-                .at(1).set(null)
+                .at(1).setString(schema)
                 .at(2).setString(functionName)
                 .at(3).setString(rs.getString("COLUMN_NAME"))
                 .at(4).setShort(ordinalPosition == 0 ? functionReturn : functionColumnIn)
@@ -115,13 +118,18 @@ public abstract class GetFunctionColumns extends AbstractMetadataMethod {
                 .toRowValue(false);
     }
 
-    abstract MetadataQuery createGetFunctionColumnsQuery(String catalog, String functionNamePattern,
-            String columnNamePattern);
+    abstract MetadataQuery createGetFunctionColumnsQuery(String catalog, String schemaPattern,
+            String functionNamePattern, String columnNamePattern);
 
     public static GetFunctionColumns create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
+        if (firebirdSupportInfo.isVersionEqualOrAbove(6)) {
+            if (mediator.isUseCatalogAsPackage()) {
+                return FB6CatalogAsPackage.createInstance(mediator);
+            }
+            return FB6.createInstance(mediator);
+        } else if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
             if (mediator.isUseCatalogAsPackage()) {
                 return FB3CatalogAsPackage.createInstance(mediator);
             }
@@ -135,31 +143,33 @@ public abstract class GetFunctionColumns extends AbstractMetadataMethod {
     private static final class FB2_5 extends GetFunctionColumns {
 
         //@formatter:off
-        private static final String GET_FUNCTION_COLUMNS_FRAGMENT_2_5 =
-                "select\n"
-                + "  null as FUNCTION_CAT,\n"
-                + "  FUN.RDB$FUNCTION_NAME as FUNCTION_NAME,\n"
-                // Firebird 2.5 and earlier have no parameter name: derive one
-                + "  'PARAM_' || FUNA.RDB$ARGUMENT_POSITION as COLUMN_NAME,\n"
-                + "  FUNA.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n"
-                + "  FUNA.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n"
-                + "  FUNA.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n"
-                + "  FUNA.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n"
-                + "  FUNA.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n"
-                + "  FUNA.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n"
-                + "  FUNA.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n"
-                + "  case\n"
-                + "    when FUN.RDB$RETURN_ARGUMENT = FUNA.RDB$ARGUMENT_POSITION then 0\n"
-                + "    else FUNA.RDB$ARGUMENT_POSITION\n"
-                + "  end as ORDINAL_POSITION,\n"
-                + "  case FUNA.RDB$MECHANISM\n"
-                + "    when 0 then 'F'\n"
-                + "    when 1 then 'F'\n"
-                + "    else 'T'\n"
-                + "  end as IS_NULLABLE\n"
-                + "from RDB$FUNCTIONS FUN\n"
-                + "inner join RDB$FUNCTION_ARGUMENTS FUNA\n"
-                + "  on FUNA.RDB$FUNCTION_NAME = FUN.RDB$FUNCTION_NAME";
+        private static final String GET_FUNCTION_COLUMNS_FRAGMENT_2_5 = """
+                select
+                  cast(null as char(1)) as FUNCTION_CAT,
+                  cast(null as char(1)) as FUNCTION_SCHEM,
+                  FUN.RDB$FUNCTION_NAME as FUNCTION_NAME,
+                  -- Firebird 2.5 and earlier have no parameter name: derive one
+                  'PARAM_' || FUNA.RDB$ARGUMENT_POSITION as COLUMN_NAME,
+                """ +
+                "  FUNA.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n" +
+                "  FUNA.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n" +
+                "  FUNA.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n" +
+                "  FUNA.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n" +
+                "  FUNA.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n" +
+                "  FUNA.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n" +
+                "  FUNA.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n" + """
+                  case
+                    when FUN.RDB$RETURN_ARGUMENT = FUNA.RDB$ARGUMENT_POSITION then 0
+                    else FUNA.RDB$ARGUMENT_POSITION
+                  end as ORDINAL_POSITION,
+                  case FUNA.RDB$MECHANISM
+                    when 0 then 'F'
+                    when 1 then 'F'
+                    else 'T'
+                  end as IS_NULLABLE
+                from RDB$FUNCTIONS FUN
+                inner join RDB$FUNCTION_ARGUMENTS FUNA
+                  on FUNA.RDB$FUNCTION_NAME = FUN.RDB$FUNCTION_NAME""";
         //@formatter:on
 
         private static final String GET_FUNCTION_COLUMNS_ORDER_BY_2_5 = """
@@ -178,53 +188,54 @@ public abstract class GetFunctionColumns extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionColumnsQuery(String catalog, String functionNamePattern,
+        MetadataQuery createGetFunctionColumnsQuery(String catalog, String schemaPattern, String functionNamePattern,
                 String columnNamePattern) {
-            Clause functionNameClause = new Clause("FUN.RDB$FUNCTION_NAME", functionNamePattern);
-            Clause columnNameClause = new Clause("'PARAM_' || FUNA.RDB$ARGUMENT_POSITION", columnNamePattern);
+            var clauses = List.of(
+                    new Clause("FUN.RDB$FUNCTION_NAME", functionNamePattern),
+                    new Clause("'PARAM_' || FUNA.RDB$ARGUMENT_POSITION", columnNamePattern));
             String query = GET_FUNCTION_COLUMNS_FRAGMENT_2_5
-                    + (anyCondition(functionNameClause, columnNameClause)
-                    ? "\nwhere " + functionNameClause.getCondition(columnNameClause.hasCondition())
-                    + columnNameClause.getCondition(false)
-                    : "")
+                    + (anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
                     + GET_FUNCTION_COLUMNS_ORDER_BY_2_5;
-            return new MetadataQuery(query, Clause.parameters(functionNameClause, columnNameClause));
+            return new MetadataQuery(query, Clause.parameters(clauses));
         }
+
     }
 
     private static final class FB3 extends GetFunctionColumns {
 
         //@formatter:off
-        private static final String GET_FUNCTION_COLUMNS_FRAGMENT_3 =
-                "select\n"
-                + "  null as FUNCTION_CAT,\n"
-                + "  trim(trailing from FUN.RDB$FUNCTION_NAME) as FUNCTION_NAME,\n"
-                + "  -- legacy UDF and return value have no parameter name: derive one\n"
-                + "  coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION) as COLUMN_NAME,\n"
-                + "  coalesce(FUNA.RDB$FIELD_TYPE, F.RDB$FIELD_TYPE) as " + FIELD_TYPE + ",\n"
-                + "  coalesce(FUNA.RDB$FIELD_SUB_TYPE, F.RDB$FIELD_SUB_TYPE) as " + FIELD_SUB_TYPE + ",\n"
-                + "  coalesce(FUNA.RDB$FIELD_PRECISION, F.RDB$FIELD_PRECISION) as " + FIELD_PRECISION + ",\n"
-                + "  coalesce(FUNA.RDB$FIELD_SCALE, F.RDB$FIELD_SCALE) as " + FIELD_SCALE + ",\n"
-                + "  coalesce(FUNA.RDB$FIELD_LENGTH, F.RDB$FIELD_LENGTH) as " + FIELD_LENGTH + ",\n"
-                + "  coalesce(FUNA.RDB$CHARACTER_LENGTH, F.RDB$CHARACTER_LENGTH) as " + CHAR_LEN + ",\n"
-                + "  coalesce(FUNA.RDB$CHARACTER_SET_ID, F.RDB$CHARACTER_SET_ID) as " + CHARSET_ID + ",\n"
-                + "  case\n"
-                + "    when FUN.RDB$RETURN_ARGUMENT = FUNA.RDB$ARGUMENT_POSITION then 0\n"
-                + "    else FUNA.RDB$ARGUMENT_POSITION\n"
-                + "  end as ORDINAL_POSITION,\n"
-                + "  case \n"
-                + "    when coalesce(FUNA.RDB$NULL_FLAG, F.RDB$NULL_FLAG) = 1 then false\n"
-                + "    when FUNA.RDB$MECHANISM = 0 then false\n"
-                + "    when FUNA.RDB$MECHANISM = 1 then false\n"
-                + "    else true\n"
-                + "  end as IS_NULLABLE\n"
-                + "from RDB$FUNCTIONS FUN\n"
-                + "inner join RDB$FUNCTION_ARGUMENTS FUNA\n"
-                + "  on FUNA.RDB$FUNCTION_NAME = FUN.RDB$FUNCTION_NAME \n"
-                + "    and FUNA.RDB$PACKAGE_NAME is not distinct from FUN.RDB$PACKAGE_NAME\n"
-                + "left join RDB$FIELDS F\n"
-                + "  on F.RDB$FIELD_NAME = FUNA.RDB$FIELD_SOURCE\n"
-                + "where FUN.RDB$PACKAGE_NAME is null";
+        private static final String GET_FUNCTION_COLUMNS_FRAGMENT_3 = """
+                select
+                  null as FUNCTION_CAT,
+                  null as FUNCTION_SCHEM,
+                  trim(trailing from FUN.RDB$FUNCTION_NAME) as FUNCTION_NAME,
+                  -- legacy UDF and return value have no parameter name: derive one
+                  trim(trailing from coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION)) as COLUMN_NAME,
+                """ +
+                "  coalesce(FUNA.RDB$FIELD_TYPE, F.RDB$FIELD_TYPE) as " + FIELD_TYPE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_SUB_TYPE, F.RDB$FIELD_SUB_TYPE) as " + FIELD_SUB_TYPE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_PRECISION, F.RDB$FIELD_PRECISION) as " + FIELD_PRECISION + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_SCALE, F.RDB$FIELD_SCALE) as " + FIELD_SCALE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_LENGTH, F.RDB$FIELD_LENGTH) as " + FIELD_LENGTH + ",\n" +
+                "  coalesce(FUNA.RDB$CHARACTER_LENGTH, F.RDB$CHARACTER_LENGTH) as " + CHAR_LEN + ",\n" +
+                "  coalesce(FUNA.RDB$CHARACTER_SET_ID, F.RDB$CHARACTER_SET_ID) as " + CHARSET_ID + ",\n" + """
+                  case
+                    when FUN.RDB$RETURN_ARGUMENT = FUNA.RDB$ARGUMENT_POSITION then 0
+                    else FUNA.RDB$ARGUMENT_POSITION
+                  end as ORDINAL_POSITION,
+                  case
+                    when coalesce(FUNA.RDB$NULL_FLAG, F.RDB$NULL_FLAG) = 1 then false
+                    when FUNA.RDB$MECHANISM = 0 then false
+                    when FUNA.RDB$MECHANISM = 1 then false
+                    else true
+                  end as IS_NULLABLE
+                from RDB$FUNCTIONS FUN
+                inner join RDB$FUNCTION_ARGUMENTS FUNA
+                  on FUNA.RDB$FUNCTION_NAME = FUN.RDB$FUNCTION_NAME
+                    and FUNA.RDB$PACKAGE_NAME is not distinct from FUN.RDB$PACKAGE_NAME
+                left join RDB$FIELDS F
+                  on F.RDB$FIELD_NAME = FUNA.RDB$FIELD_SOURCE
+                where FUN.RDB$PACKAGE_NAME is null""";
         //@formatter:on
 
         // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort
@@ -245,51 +256,54 @@ public abstract class GetFunctionColumns extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionColumnsQuery(String catalog, String functionNamePattern,
+        MetadataQuery createGetFunctionColumnsQuery(String catalog, String schemaPattern, String functionNamePattern,
                 String columnNamePattern) {
-            Clause functionNameClause = new Clause("FUN.RDB$FUNCTION_NAME", functionNamePattern);
-            Clause columnNameClause = new Clause(
-                    "coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION)", columnNamePattern);
+            var clauses = List.of(
+                    new Clause("FUN.RDB$FUNCTION_NAME", functionNamePattern),
+                    new Clause("coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION)",
+                            columnNamePattern));
             String query = GET_FUNCTION_COLUMNS_FRAGMENT_3
-                    + functionNameClause.getCondition("\nand ", "")
-                    + columnNameClause.getCondition("\nand ", "")
+                    + (Clause.anyCondition(clauses) ? "\nand " + Clause.conjunction(clauses) : "")
                     + GET_FUNCTION_COLUMNS_ORDER_BY_3;
-            return new MetadataQuery(query, Clause.parameters(functionNameClause, columnNameClause));
+            return new MetadataQuery(query, Clause.parameters(clauses));
         }
+
     }
 
     private static final class FB3CatalogAsPackage extends GetFunctionColumns {
 
         //@formatter:off
-        private static final String GET_FUNCTION_COLUMNS_FRAGMENT_3_W_PKG =
-                "select\n"
-                + "  coalesce(trim(trailing from FUN.RDB$PACKAGE_NAME), '') as FUNCTION_CAT,\n"
-                + "  trim(trailing from FUN.RDB$FUNCTION_NAME) as FUNCTION_NAME,\n"
-                + "  -- legacy UDF and return value have no parameter name: derive one\n"
-                + "  coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION) as COLUMN_NAME,\n"
-                + "  coalesce(FUNA.RDB$FIELD_TYPE, F.RDB$FIELD_TYPE) as " + FIELD_TYPE + ",\n"
-                + "  coalesce(FUNA.RDB$FIELD_SUB_TYPE, F.RDB$FIELD_SUB_TYPE) as " + FIELD_SUB_TYPE + ",\n"
-                + "  coalesce(FUNA.RDB$FIELD_PRECISION, F.RDB$FIELD_PRECISION) as " + FIELD_PRECISION + ",\n"
-                + "  coalesce(FUNA.RDB$FIELD_SCALE, F.RDB$FIELD_SCALE) as " + FIELD_SCALE + ",\n"
-                + "  coalesce(FUNA.RDB$FIELD_LENGTH, F.RDB$FIELD_LENGTH) as " + FIELD_LENGTH + ",\n"
-                + "  coalesce(FUNA.RDB$CHARACTER_LENGTH, F.RDB$CHARACTER_LENGTH) as " + CHAR_LEN + ",\n"
-                + "  coalesce(FUNA.RDB$CHARACTER_SET_ID, F.RDB$CHARACTER_SET_ID) as " + CHARSET_ID + ",\n"
-                + "  case\n"
-                + "    when FUN.RDB$RETURN_ARGUMENT = FUNA.RDB$ARGUMENT_POSITION then 0\n"
-                + "    else FUNA.RDB$ARGUMENT_POSITION\n"
-                + "  end as ORDINAL_POSITION,\n"
-                + "  case \n"
-                + "    when coalesce(FUNA.RDB$NULL_FLAG, F.RDB$NULL_FLAG) = 1 then false\n"
-                + "    when FUNA.RDB$MECHANISM = 0 then false\n"
-                + "    when FUNA.RDB$MECHANISM = 1 then false\n"
-                + "    else true\n"
-                + "  end as IS_NULLABLE\n"
-                + "from RDB$FUNCTIONS FUN\n"
-                + "inner join RDB$FUNCTION_ARGUMENTS FUNA\n"
-                + "  on FUNA.RDB$FUNCTION_NAME = FUN.RDB$FUNCTION_NAME \n"
-                + "    and FUNA.RDB$PACKAGE_NAME is not distinct from FUN.RDB$PACKAGE_NAME\n"
-                + "left join RDB$FIELDS F\n"
-                + "  on F.RDB$FIELD_NAME = FUNA.RDB$FIELD_SOURCE";
+        private static final String GET_FUNCTION_COLUMNS_FRAGMENT_3_W_PKG = """
+                select
+                  coalesce(trim(trailing from FUN.RDB$PACKAGE_NAME), '') as FUNCTION_CAT,
+                  null as FUNCTION_SCHEM,
+                  trim(trailing from FUN.RDB$FUNCTION_NAME) as FUNCTION_NAME,
+                  -- legacy UDF and return value have no parameter name: derive one
+                  trim(trailing from coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION)) as COLUMN_NAME,
+                """ +
+                "  coalesce(FUNA.RDB$FIELD_TYPE, F.RDB$FIELD_TYPE) as " + FIELD_TYPE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_SUB_TYPE, F.RDB$FIELD_SUB_TYPE) as " + FIELD_SUB_TYPE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_PRECISION, F.RDB$FIELD_PRECISION) as " + FIELD_PRECISION + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_SCALE, F.RDB$FIELD_SCALE) as " + FIELD_SCALE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_LENGTH, F.RDB$FIELD_LENGTH) as " + FIELD_LENGTH + ",\n" +
+                "  coalesce(FUNA.RDB$CHARACTER_LENGTH, F.RDB$CHARACTER_LENGTH) as " + CHAR_LEN + ",\n" +
+                "  coalesce(FUNA.RDB$CHARACTER_SET_ID, F.RDB$CHARACTER_SET_ID) as " + CHARSET_ID + ",\n" + """
+                  case
+                    when FUN.RDB$RETURN_ARGUMENT = FUNA.RDB$ARGUMENT_POSITION then 0
+                    else FUNA.RDB$ARGUMENT_POSITION
+                  end as ORDINAL_POSITION,
+                  case
+                    when coalesce(FUNA.RDB$NULL_FLAG, F.RDB$NULL_FLAG) = 1 then false
+                    when FUNA.RDB$MECHANISM = 0 then false
+                    when FUNA.RDB$MECHANISM = 1 then false
+                    else true
+                  end as IS_NULLABLE
+                from RDB$FUNCTIONS FUN
+                inner join RDB$FUNCTION_ARGUMENTS FUNA
+                  on FUNA.RDB$FUNCTION_NAME = FUN.RDB$FUNCTION_NAME
+                    and FUNA.RDB$PACKAGE_NAME is not distinct from FUN.RDB$PACKAGE_NAME
+                left join RDB$FIELDS F
+                  on F.RDB$FIELD_NAME = FUNA.RDB$FIELD_SOURCE""";
         //@formatter:on
 
         // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort
@@ -309,7 +323,7 @@ public abstract class GetFunctionColumns extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionColumnsQuery(String catalog, String functionNamePattern,
+        MetadataQuery createGetFunctionColumnsQuery(String catalog, String schemaPattern, String functionNamePattern,
                 String columnNamePattern) {
             var clauses = new ArrayList<Clause>(3);
             if (catalog != null) {
@@ -327,12 +341,161 @@ public abstract class GetFunctionColumns extends AbstractMetadataMethod {
                     "coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION)", columnNamePattern));
             //@formatter:off
             String sql = GET_FUNCTION_COLUMNS_FRAGMENT_3_W_PKG
-                    + (Clause.anyCondition(clauses)
-                    ? "\nwhere " + Clause.conjunction(clauses)
-                    : "")
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
                     + GET_FUNCTION_COLUMNS_ORDER_BY_3_W_PKG;
             //@formatter:on
             return new MetadataQuery(sql, Clause.parameters(clauses));
         }
+
     }
+
+    private static final class FB6 extends GetFunctionColumns {
+
+        //@formatter:off
+        private static final String GET_FUNCTION_COLUMNS_FRAGMENT_6 = """
+                select
+                  null as FUNCTION_CAT,
+                  trim(trailing from FUN.RDB$SCHEMA_NAME) as FUNCTION_SCHEM,
+                  trim(trailing from FUN.RDB$FUNCTION_NAME) as FUNCTION_NAME,
+                  -- legacy UDF and return value have no parameter name: derive one
+                  trim(trailing from coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION)) as COLUMN_NAME,
+                """ +
+                "  coalesce(FUNA.RDB$FIELD_TYPE, F.RDB$FIELD_TYPE) as " + FIELD_TYPE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_SUB_TYPE, F.RDB$FIELD_SUB_TYPE) as " + FIELD_SUB_TYPE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_PRECISION, F.RDB$FIELD_PRECISION) as " + FIELD_PRECISION + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_SCALE, F.RDB$FIELD_SCALE) as " + FIELD_SCALE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_LENGTH, F.RDB$FIELD_LENGTH) as " + FIELD_LENGTH + ",\n" +
+                "  coalesce(FUNA.RDB$CHARACTER_LENGTH, F.RDB$CHARACTER_LENGTH) as " + CHAR_LEN + ",\n" +
+                "  coalesce(FUNA.RDB$CHARACTER_SET_ID, F.RDB$CHARACTER_SET_ID) as " + CHARSET_ID + ",\n" + """
+                  case
+                    when FUN.RDB$RETURN_ARGUMENT = FUNA.RDB$ARGUMENT_POSITION then 0
+                    else FUNA.RDB$ARGUMENT_POSITION
+                  end as ORDINAL_POSITION,
+                  case
+                    when coalesce(FUNA.RDB$NULL_FLAG, F.RDB$NULL_FLAG) = 1 then false
+                    when FUNA.RDB$MECHANISM = 0 then false
+                    when FUNA.RDB$MECHANISM = 1 then false
+                    else true
+                  end as IS_NULLABLE
+                from SYSTEM.RDB$FUNCTIONS FUN
+                inner join SYSTEM.RDB$FUNCTION_ARGUMENTS FUNA
+                  on FUNA.RDB$SCHEMA_NAME = FUN.RDB$SCHEMA_NAME and FUNA.RDB$FUNCTION_NAME = FUN.RDB$FUNCTION_NAME
+                    and FUNA.RDB$PACKAGE_NAME is not distinct from FUN.RDB$PACKAGE_NAME
+                left join SYSTEM.RDB$FIELDS F
+                  on F.RDB$SCHEMA_NAME = FUNA.RDB$FIELD_SOURCE_SCHEMA_NAME and F.RDB$FIELD_NAME = FUNA.RDB$FIELD_SOURCE
+                where FUN.RDB$PACKAGE_NAME is null""";
+        //@formatter:on
+
+        // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort
+        private static final String GET_FUNCTION_COLUMNS_ORDER_BY_6 = """
+                \norder by FUN.RDB$SCHEMA_NAME, FUN.RDB$PACKAGE_NAME, FUN.RDB$FUNCTION_NAME,
+                  case
+                    when FUN.RDB$RETURN_ARGUMENT = FUNA.RDB$ARGUMENT_POSITION then -1
+                    else FUNA.RDB$ARGUMENT_POSITION
+                  end""";
+
+
+        private FB6(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetFunctionColumns createInstance(DbMetadataMediator mediator) {
+            return new FB6(mediator);
+        }
+
+        @Override
+        MetadataQuery createGetFunctionColumnsQuery(String catalog, String schemaPattern, String functionNamePattern,
+                String columnNamePattern) {
+            var clauses = List.of(
+                    new Clause("FUN.RDB$SCHEMA_NAME", schemaPattern),
+                    new Clause("FUN.RDB$FUNCTION_NAME", functionNamePattern),
+                    new Clause("coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION)",
+                            columnNamePattern));
+            String query = GET_FUNCTION_COLUMNS_FRAGMENT_6
+                    + (Clause.anyCondition(clauses) ? "\nand " + Clause.conjunction(clauses) : "")
+                    + GET_FUNCTION_COLUMNS_ORDER_BY_6;
+            return new MetadataQuery(query, Clause.parameters(clauses));
+        }
+
+    }
+
+    private static final class FB6CatalogAsPackage extends GetFunctionColumns {
+
+        //@formatter:off
+        private static final String GET_FUNCTION_COLUMNS_FRAGMENT_6_W_PKG = """
+                select
+                  coalesce(trim(trailing from FUN.RDB$PACKAGE_NAME), '') as FUNCTION_CAT,
+                  trim(trailing from FUN.RDB$SCHEMA_NAME) as FUNCTION_SCHEM,
+                  trim(trailing from FUN.RDB$FUNCTION_NAME) as FUNCTION_NAME,
+                  -- legacy UDF and return value have no parameter name: derive one
+                  trim(trailing from coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION)) as COLUMN_NAME,
+                """ +
+                "  coalesce(FUNA.RDB$FIELD_TYPE, F.RDB$FIELD_TYPE) as " + FIELD_TYPE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_SUB_TYPE, F.RDB$FIELD_SUB_TYPE) as " + FIELD_SUB_TYPE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_PRECISION, F.RDB$FIELD_PRECISION) as " + FIELD_PRECISION + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_SCALE, F.RDB$FIELD_SCALE) as " + FIELD_SCALE + ",\n" +
+                "  coalesce(FUNA.RDB$FIELD_LENGTH, F.RDB$FIELD_LENGTH) as " + FIELD_LENGTH + ",\n" +
+                "  coalesce(FUNA.RDB$CHARACTER_LENGTH, F.RDB$CHARACTER_LENGTH) as " + CHAR_LEN + ",\n" +
+                "  coalesce(FUNA.RDB$CHARACTER_SET_ID, F.RDB$CHARACTER_SET_ID) as " + CHARSET_ID + ",\n" + """
+                  case
+                    when FUN.RDB$RETURN_ARGUMENT = FUNA.RDB$ARGUMENT_POSITION then 0
+                    else FUNA.RDB$ARGUMENT_POSITION
+                  end as ORDINAL_POSITION,
+                  case
+                    when coalesce(FUNA.RDB$NULL_FLAG, F.RDB$NULL_FLAG) = 1 then false
+                    when FUNA.RDB$MECHANISM = 0 then false
+                    when FUNA.RDB$MECHANISM = 1 then false
+                    else true
+                  end as IS_NULLABLE
+                from SYSTEM.RDB$FUNCTIONS FUN
+                inner join SYSTEM.RDB$FUNCTION_ARGUMENTS FUNA
+                  on FUNA.RDB$SCHEMA_NAME = FUN.RDB$SCHEMA_NAME and FUNA.RDB$FUNCTION_NAME = FUN.RDB$FUNCTION_NAME
+                    and FUNA.RDB$PACKAGE_NAME is not distinct from FUN.RDB$PACKAGE_NAME
+                left join SYSTEM.RDB$FIELDS F
+                  on F.RDB$SCHEMA_NAME = FUNA.RDB$FIELD_SOURCE_SCHEMA_NAME and F.RDB$FIELD_NAME = FUNA.RDB$FIELD_SOURCE""";
+        //@formatter:on
+
+        private static final String GET_FUNCTION_COLUMNS_ORDER_BY_6_W_PKG = """
+                \norder by FUN.RDB$PACKAGE_NAME nulls first, FUN.RDB$SCHEMA_NAME, FUN.RDB$FUNCTION_NAME,
+                  case
+                    when FUN.RDB$RETURN_ARGUMENT = FUNA.RDB$ARGUMENT_POSITION then -1
+                    else FUNA.RDB$ARGUMENT_POSITION
+                  end""";
+
+        private FB6CatalogAsPackage(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetFunctionColumns createInstance(DbMetadataMediator mediator) {
+            return new FB6CatalogAsPackage(mediator);
+        }
+
+        @Override
+        MetadataQuery createGetFunctionColumnsQuery(String catalog, String schemaPattern, String functionNamePattern,
+                String columnNamePattern) {
+            var clauses = new ArrayList<Clause>(4);
+            clauses.add(new Clause("FUN.RDB$SCHEMA_NAME", schemaPattern));
+            if (catalog != null) {
+                // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
+                // should not be used to narrow the search
+                if (catalog.isEmpty()) {
+                    clauses.add(Clause.isNullClause("FUN.RDB$PACKAGE_NAME"));
+                } else {
+                    // Exact matches only
+                    clauses.add(Clause.equalsClause("FUN.RDB$PACKAGE_NAME", catalog));
+                }
+            }
+            clauses.add(new Clause("FUN.RDB$FUNCTION_NAME", functionNamePattern));
+            clauses.add(new Clause(
+                    "coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION)", columnNamePattern));
+            //@formatter:off
+            String sql = GET_FUNCTION_COLUMNS_FRAGMENT_6_W_PKG
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
+                    + GET_FUNCTION_COLUMNS_ORDER_BY_6_W_PKG;
+            //@formatter:on
+            return new MetadataQuery(sql, Clause.parameters(clauses));
+        }
+
+    }
+
 }

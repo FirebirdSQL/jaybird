@@ -142,8 +142,8 @@ public final class ClumpletReader {
                     default -> throw invalidStructure("unknown parameter for setting database properties");
                 };
             case ISCConstants.isc_action_svc_db_stats -> switch (tag) {
-                    case SpbItems.isc_spb_dbname, SpbItems.isc_spb_command_line, ISCConstants.isc_spb_sts_table ->
-                            ClumpletType.StringSpb;
+                    case SpbItems.isc_spb_dbname, SpbItems.isc_spb_command_line,
+                         ISCConstants.isc_spb_sts_table, ISCConstants.isc_spb_sts_schema -> ClumpletType.StringSpb;
                     case SpbItems.isc_spb_options -> ClumpletType.IntSpb;
                     default -> throw invalidStructure("unknown parameter for getting statistics");
                 };

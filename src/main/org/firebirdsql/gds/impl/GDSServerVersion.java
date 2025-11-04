@@ -4,18 +4,23 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.impl;
 
+import org.firebirdsql.gds.AbstractVersion;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
 import java.io.Serial;
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrBlank;
+
 /**
  * Object representing a Firebird server version. The version string is returned
  * in response to the {@code isc_info_firebird_version} information call.
- * Expected version format is:
  * <p>
+ * Expected version format is:
  * {@code <platform>-<type><majorVersion>.<minorVersion>.<variant>.<buildNum>[-<revision>] <serverName>},
  * and additional version string elements if present.
  * </p>
@@ -25,7 +30,8 @@ import java.util.regex.Pattern;
  * "V" - production version, "T" - beta version, "X" - development version.
  * </p>
  */
-public final class GDSServerVersion implements Serializable {
+@NullMarked
+public final class GDSServerVersion extends AbstractVersion {
 
     @Serial
     private static final long serialVersionUID = -3401092369588765195L;
@@ -66,21 +72,18 @@ public final class GDSServerVersion implements Serializable {
     private final String type;
 
     private final String fullVersion;
-    private final int majorVersion;
-    private final int minorVersion;
     private final int variant;
     private final int buildNumber;
 
     private final String serverName;
 
-    private GDSServerVersion(String[] rawVersions, String platform, String type, String fullVersion, int majorVersion,
-            int minorVersion, int variant, int buildNumber, String serverName) {
+    private GDSServerVersion(String[] rawVersions, String platform, String type, String fullVersion,
+            int majorVersion, int minorVersion, int variant, int buildNumber, String serverName) {
+        super(majorVersion, minorVersion);
         this.rawVersions = rawVersions.clone();
         this.platform = platform;
         this.type = type;
         this.fullVersion = fullVersion;
-        this.majorVersion = majorVersion;
-        this.minorVersion = minorVersion;
         this.variant = variant;
         this.buildNumber = buildNumber;
         this.serverName = serverName;
@@ -91,11 +94,11 @@ public final class GDSServerVersion implements Serializable {
     }
 
     public int getMajorVersion() {
-        return majorVersion;
+        return major();
     }
 
     public int getMinorVersion() {
-        return minorVersion;
+        return minor();
     }
 
     public String getPlatform() {
@@ -122,23 +125,12 @@ public final class GDSServerVersion implements Serializable {
         return List.of(rawVersions);
     }
 
-    public String getExtendedServerName() {
-        if (rawVersions.length < 2) {
-            return null;
-        } else if (rawVersions.length == 2) {
-            return rawVersions[1];
-        } else {
-            // Reserve additional space for connection information, etc. We could be more precise by summing the length
-            // of each version string from index 1 in the array, but this is good enough
-            var sb = new StringBuilder((rawVersions[1].length() + 50) * (rawVersions.length - 1));
-            for (int idx = 1; idx < rawVersions.length; idx++) {
-                if (idx > 1) {
-                    sb.append(',');
-                }
-                sb.append(rawVersions[idx]);
-            }
-            return sb.toString();
-        }
+    public @Nullable String getExtendedServerName() {
+        return switch (rawVersions.length) {
+            case 0, 1 -> null;
+            case 2 -> rawVersions[1];
+            default -> String.join(",", Arrays.asList(rawVersions).subList(1, rawVersions.length));
+        };
     }
 
     public String getFullVersion() {
@@ -151,7 +143,7 @@ public final class GDSServerVersion implements Serializable {
     public int getProtocolVersion() {
         // We assume the protocol information is in the second version string,
         // this assumption may be wrong for multi-hop connections
-        if (rawVersions.length == 1 || rawVersions[1] == null) return -1;
+        if (rawVersions.length == 1 || isNullOrBlank(rawVersions[1])) return -1;
         Matcher connectionMetadataMatcher = CONNECTION_METADATA_PATTERN.matcher(rawVersions[1]);
         if (!connectionMetadataMatcher.find()) return -1;
 
@@ -174,7 +166,7 @@ public final class GDSServerVersion implements Serializable {
     private String getConnectionOptions() {
         // We assume the protocol information is in the second version string,
         // this assumption may be wrong for multi-hop connections
-        if (rawVersions.length == 1 || rawVersions[1] == null) return "";
+        if (rawVersions.length == 1 || isNullOrBlank(rawVersions[1])) return "";
         Matcher connectionMetadataMatcher = CONNECTION_METADATA_PATTERN.matcher(rawVersions[1]);
         if (!connectionMetadataMatcher.find()) return "";
 
@@ -191,19 +183,7 @@ public final class GDSServerVersion implements Serializable {
     }
 
     public String toString() {
-        if (rawVersions.length == 1) {
-            return rawVersions[0];
-        }
-        // Reserve additional space for connection information, etc. We could be more precise by summing the length of
-        // each version string in the array, but this is good enough
-        var sb = new StringBuilder((rawVersions[0].length() + 50) * rawVersions.length);
-        int idx = 0;
-        sb.append(rawVersions[idx++]);
-        do {
-            sb.append(',');
-            sb.append(rawVersions[idx++]);
-        } while (idx < rawVersions.length);
-        return sb.toString();
+        return rawVersions.length == 1 ? rawVersions[0] : String.join(",", rawVersions);
     }
 
     /**
@@ -215,7 +195,7 @@ public final class GDSServerVersion implements Serializable {
      *         if versionString does not match expected pattern
      */
     public static GDSServerVersion parseRawVersion(String... versionStrings) throws GDSServerVersionException {
-        if (versionStrings == null || versionStrings.length == 0 || versionStrings[0] == null) {
+        if (versionStrings == null || versionStrings.length == 0 || isNullOrBlank(versionStrings[0])) {
             throw new GDSServerVersionException("No version string information present");
         }
 
@@ -238,35 +218,6 @@ public final class GDSServerVersion implements Serializable {
     }
 
     /**
-     * Convenience method to check if the <em>major</em> of this version is equal to or larger than the specified
-     * required version.
-     *
-     * @param requiredMajorVersion
-     *         Required major version
-     * @return {@code true} when current major is equal to or larger than required
-     * @since 6
-     */
-    public boolean isEqualOrAbove(int requiredMajorVersion) {
-        return majorVersion >= requiredMajorVersion;
-    }
-
-    /**
-     * Convenience method to check if the <em>major.minor</em> of this version is equal to or larger than the specified
-     * required version.
-     *
-     * @param requiredMajorVersion
-     *         Required major version
-     * @param requiredMinorVersion
-     *         Required minor version
-     * @return {@code true} when current major is larger than required, or major is same and minor is equal to or
-     * larger than required
-     */
-    public boolean isEqualOrAbove(int requiredMajorVersion, int requiredMinorVersion) {
-        return majorVersion > requiredMajorVersion ||
-                (majorVersion == requiredMajorVersion && minorVersion >= requiredMinorVersion);
-    }
-
-    /**
      * Convenience method to check if the major.minor.variant of this version is equal to or larger than the specified
      * required version.
      *
@@ -278,14 +229,27 @@ public final class GDSServerVersion implements Serializable {
      *         Required variant version
      * @return {@code true} when current major is larger than required, or major is same and minor is equal to required
      * and variant equal to or larger than required, or major is same and minor is larger than required
+     * @see #isEqualOrAbove(int)
+     * @see #isEqualOrAbove(int, int)
      */
     public boolean isEqualOrAbove(int requiredMajorVersion, int requiredMinorVersion, int requiredVariant) {
+        int majorVersion = major();
+        int minorVersion = minor();
         return majorVersion > requiredMajorVersion ||
                 (majorVersion == requiredMajorVersion &&
                         (minorVersion == requiredMinorVersion && variant >= requiredVariant ||
                                 minorVersion > requiredMinorVersion
                         )
                 );
+    }
+
+    @Override
+    public int compareTo(AbstractVersion o) {
+        int majorMinorDiff = super.compareTo(o);
+        if (majorMinorDiff != 0 || !(o instanceof GDSServerVersion other)) return majorMinorDiff;
+        int variantDiff = Integer.compare(this.variant, other.variant);
+        if (variantDiff != 0) return variantDiff;
+        return Integer.compare(this.buildNumber, other.buildNumber);
     }
 
 }

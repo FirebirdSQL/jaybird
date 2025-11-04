@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -8,11 +8,14 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -20,6 +23,9 @@ import java.util.Map;
 
 import static java.util.Collections.unmodifiableMap;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNoNextRow;
 
@@ -33,39 +39,9 @@ class FBDatabaseMetaDataPrimaryKeysTest {
     private static final String UNNAMED_CONSTRAINT_PREFIX = "INTEG_";
     private static final String UNNAMED_PK_INDEX_PREFIX = "RDB$PRIMARY";
 
-    //@formatter:off
     @RegisterExtension
-    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
-            """
-            create table UNNAMED_SINGLE_COLUMN_PK (
-              ID integer primary key
-            )""",
-            """
-            create table UNNAMED_MULTI_COLUMN_PK (
-              ID1 integer not null,
-              ID2 integer not null,
-              primary key (ID1, ID2)
-            )""",
-            """
-            create table UNNAMED_PK_NAMED_INDEX (
-              ID integer primary key using index ALT_NAMED_INDEX_3
-            )""",
-            """
-            create table NAMED_SINGLE_COLUMN_PK (
-              ID integer constraint PK_NAMED_4 primary key
-            )""",
-            """
-            create table NAMED_MULTI_COLUMN_PK (
-              ID1 integer not null,
-              ID2 integer not null,
-              constraint PK_NAMED_5 primary key (ID1, ID2)
-            )""",
-            """
-            create table NAMED_PK_NAMED_INDEX (
-              ID integer constraint PK_NAMED_6 primary key using index ALT_NAMED_INDEX_6
-            )"""
-    );
-    //@formatter:on
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase =
+            UsesDatabaseExtension.usesDatabaseForAll(getDbInitStatements());
 
     private static final MetadataResultSetDefinition getPrimaryKeysDefinition =
             new MetadataResultSetDefinition(PrimaryKeysMetaData.class);
@@ -77,6 +53,48 @@ class FBDatabaseMetaDataPrimaryKeysTest {
     static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
         dbmd = con.getMetaData();
+    }
+
+    private static List<String> getDbInitStatements() {
+        var statements = new ArrayList<>(List.of("""
+                create table UNNAMED_SINGLE_COLUMN_PK (
+                  ID integer primary key
+                )""",
+                """
+                create table UNNAMED_MULTI_COLUMN_PK (
+                  ID1 integer not null,
+                  ID2 integer not null,
+                  primary key (ID1, ID2)
+                )""",
+                """
+                create table UNNAMED_PK_NAMED_INDEX (
+                  ID integer primary key using index ALT_NAMED_INDEX_3
+                )""",
+                """
+                create table NAMED_SINGLE_COLUMN_PK (
+                  ID integer constraint PK_NAMED_4 primary key
+                )""",
+                """
+                create table NAMED_MULTI_COLUMN_PK (
+                  ID1 integer not null,
+                  ID2 integer not null,
+                  constraint PK_NAMED_5 primary key (ID1, ID2)
+                )""",
+                """
+                create table NAMED_PK_NAMED_INDEX (
+                  ID integer constraint PK_NAMED_6 primary key using index ALT_NAMED_INDEX_6
+                )"""));
+        if (getDefaultSupportInfo().supportsSchemas()) {
+            statements.addAll(List.of(
+                    "create schema OTHER_SCHEMA",
+                    """
+                    create table OTHER_SCHEMA.SCHEMA_NAMED_SINGLE_COLUMN_PK (
+                      ID integer constraint PK_NAMED_7 primary key
+                    )"""
+            ));
+        }
+
+        return statements;
     }
 
     @AfterAll
@@ -99,10 +117,11 @@ class FBDatabaseMetaDataPrimaryKeysTest {
         }
     }
 
-    @Test
-    void unnamedSingleColumnPk() throws Exception {
-        validateExpectedPrimaryKeys("UNNAMED_SINGLE_COLUMN_PK", List.of(
-                createPrimaryKeysRow("UNNAMED_SINGLE_COLUMN_PK", "ID", 1, UNNAMED_CONSTRAINT_PREFIX,
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void unnamedSingleColumnPk(boolean limitToSchema) throws Exception {
+        validateExpectedPrimaryKeys(limitToSchema ? ifSchemaElse("PUBLIC", "") : null, "UNNAMED_SINGLE_COLUMN_PK",
+                List.of(createPrimaryKeysRow("UNNAMED_SINGLE_COLUMN_PK", "ID", 1, UNNAMED_CONSTRAINT_PREFIX,
                         UNNAMED_PK_INDEX_PREFIX)));
     }
 
@@ -141,9 +160,23 @@ class FBDatabaseMetaDataPrimaryKeysTest {
                 createPrimaryKeysRow("NAMED_PK_NAMED_INDEX", "ID", 1, "PK_NAMED_6", "ALT_NAMED_INDEX_6")));
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void schemaNamedSingleColumnPk(boolean limitToSchema) throws Exception {
+        assumeSchemaSupport();
+        validateExpectedPrimaryKeys(limitToSchema ? "OTHER_SCHEMA" : null, "SCHEMA_NAMED_SINGLE_COLUMN_PK",
+                List.of(createPrimaryKeysRow("OTHER_SCHEMA", "SCHEMA_NAMED_SINGLE_COLUMN_PK", "ID", 1, "PK_NAMED_7", "PK_NAMED_7")));
+    }
+
     private static Map<PrimaryKeysMetaData, Object> createPrimaryKeysRow(String tableName, String columnName,
             int keySeq, String pkName, String jbIndexName) {
+        return createPrimaryKeysRow(ifSchemaElse("PUBLIC", null), tableName, columnName, keySeq, pkName, jbIndexName);
+    }
+
+    private static Map<PrimaryKeysMetaData, Object> createPrimaryKeysRow(String schema, String tableName,
+            String columnName, int keySeq, String pkName, String jbIndexName) {
         Map<PrimaryKeysMetaData, Object> rules = getDefaultValidationRules();
+        rules.put(PrimaryKeysMetaData.TABLE_SCHEM, schema);
         rules.put(PrimaryKeysMetaData.TABLE_NAME, tableName);
         rules.put(PrimaryKeysMetaData.COLUMN_NAME, columnName);
         rules.put(PrimaryKeysMetaData.KEY_SEQ, (short) keySeq);
@@ -156,7 +189,12 @@ class FBDatabaseMetaDataPrimaryKeysTest {
 
     private void validateExpectedPrimaryKeys(String tableName, List<Map<PrimaryKeysMetaData, Object>> expectedColumns)
             throws Exception {
-        try (ResultSet columns = dbmd.getPrimaryKeys(null, null, tableName)) {
+        validateExpectedPrimaryKeys(null, tableName, expectedColumns);
+    }
+
+    private void validateExpectedPrimaryKeys(String schema, String tableName,
+            List<Map<PrimaryKeysMetaData, Object>> expectedColumns) throws Exception {
+        try (ResultSet columns = dbmd.getPrimaryKeys(null, schema, tableName)) {
             for (Map<PrimaryKeysMetaData, Object> expectedColumn : expectedColumns) {
                 assertNextRow(columns);
                 getPrimaryKeysDefinition.validateRowValues(columns, expectedColumn);
@@ -170,6 +208,7 @@ class FBDatabaseMetaDataPrimaryKeysTest {
     static {
         var defaults = new EnumMap<>(PrimaryKeysMetaData.class);
         Arrays.stream(PrimaryKeysMetaData.values()).forEach(key -> defaults.put(key, null));
+        defaults.put(PrimaryKeysMetaData.TABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         DEFAULT_COLUMN_VALUES = unmodifiableMap(defaults);
     }
 

@@ -1,13 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2023-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
 
 import java.sql.ClientInfoStatus;
-import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -54,11 +52,10 @@ final class ClientInfoProvider {
             .collect(toUnmodifiableSet());
 
     private final FBConnection connection;
+    // Holds statement used for setting or retrieving client info properties.
+    private final MetadataStatementHolder statementHolder;
     // if null, use DEFAULT_CLIENT_INFO_PROPERTIES
     private Set<ClientInfoProperty> knownProperties;
-    // Statement used for setting or retrieving client info properties.
-    // We don't try to close this statement, and rely on it getting closed by connection close
-    private Statement statement;
 
     ClientInfoProvider(FBConnection connection) throws SQLException {
         connection.checkValidity();
@@ -67,17 +64,11 @@ final class ClientInfoProvider {
                     "Required functionality (RDB$SET_CONTEXT()) only available in Firebird 2.0 or higher");
         }
         this.connection = connection;
+        statementHolder = new MetadataStatementHolder(connection);
     }
 
     private Statement getStatement() throws SQLException {
-        Statement statement = this.statement;
-        if (statement != null && !statement.isClosed()) return statement;
-        var metaDataTransactionCoordinator = new MetaDataTransactionCoordinator(connection.txCoordinator);
-        // Create statement which piggybacks on active transaction, starts one when needed, but does not commit (not
-        // even in auto-commit)
-        var rsBehavior = ResultSetBehavior.of(
-                ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT);
-        return this.statement = new FBStatement(connection, rsBehavior, metaDataTransactionCoordinator);
+        return statementHolder.getStatement();
     }
 
     /**
@@ -179,7 +170,7 @@ final class ClientInfoProvider {
         QuoteStrategy quoteStrategy = connection.getQuoteStrategy();
         var sb = new StringBuilder("select ");
         renderGetValue(sb, property, quoteStrategy);
-        sb.append(" from RDB$DATABASE");
+        sb.append(" from ").append(supportInfoFor(connection).ifSchemaElse("SYSTEM.RDB$DATABASE", "RDB$DATABASE"));
         try (var rs = getStatement().executeQuery(sb.toString())) {
             if (rs.next()) {
                 registerKnownProperty(property);

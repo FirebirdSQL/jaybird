@@ -2,13 +2,14 @@
  SPDX-FileCopyrightText: Copyright 2001-2002 David Jencks
  SPDX-FileCopyrightText: Copyright 2002-2010 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
- SPDX-FileCopyrightText: Copyright 2011-2023 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -26,8 +27,14 @@ import java.util.Set;
 
 import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.RegexMatcher.matchesRegex;
+import static org.firebirdsql.gds.ISCConstants.isc_dsql_drop_schema_failed;
+import static org.firebirdsql.gds.ISCConstants.isc_dsql_drop_trigger_failed;
+import static org.firebirdsql.gds.ISCConstants.isc_dsql_table_not_found;
+import static org.firebirdsql.gds.ISCConstants.isc_dsql_view_not_found;
+import static org.firebirdsql.gds.ISCConstants.isc_no_meta_update;
 import static org.firebirdsql.jdbc.FBDatabaseMetaData.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.anyOf;
@@ -43,7 +50,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author David Jencks
  * @author Mark Rotteveel
- * @version 1.0
  */
 class FBDatabaseMetaDataTest {
 
@@ -612,40 +618,6 @@ class FBDatabaseMetaDataTest {
     }
 
     @Test
-    void testGetBestRowIdentifier() throws Exception {
-        createTable("best_row_pk");
-        createTable("best_row_no_pk", null);
-
-        for (int scope : new int[] { DatabaseMetaData.bestRowTemporary, DatabaseMetaData.bestRowTransaction,
-                DatabaseMetaData.bestRowTransaction }) {
-            try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_PK", scope, true)) {
-                assertTrue(rs.next(), "Should have rows");
-                assertEquals("C1", rs.getString(2), "Column name should be C1");
-                assertEquals("INTEGER", rs.getString(4), "Column type should be INTEGER");
-                assertEquals(DatabaseMetaData.bestRowSession, rs.getInt(1), "Scope should be bestRowSession");
-                assertEquals(DatabaseMetaData.bestRowNotPseudo, rs.getInt(8),
-                        "Pseudo column should be bestRowNotPseudo");
-                assertFalse(rs.next(), "Should have only one row");
-            }
-        }
-
-        for (int scope : new int[] { DatabaseMetaData.bestRowTemporary, DatabaseMetaData.bestRowTransaction }) {
-            try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_NO_PK", scope, true)) {
-                assertTrue(rs.next(), "Should have rows");
-                assertEquals("RDB$DB_KEY", rs.getString(2), "Column name should be RDB$DB_KEY");
-                assertEquals(DatabaseMetaData.bestRowTransaction, rs.getInt(1), "Scope should be bestRowTransaction");
-                assertEquals(DatabaseMetaData.bestRowPseudo, rs.getInt(8),
-                        "Pseudo column should be bestRowPseudo");
-                assertFalse(rs.next(), "Should have only one row");
-            }
-        }
-
-        try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_NO_PK", DatabaseMetaData.bestRowSession, true)) {
-            assertFalse(rs.next(), "Should have no rows");
-        }
-    }
-
-    @Test
     void testGetVersionColumns() throws Exception {
         ResultSet rs = dmd.getVersionColumns(null, null, null);
 
@@ -806,6 +778,161 @@ class FBDatabaseMetaDataTest {
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             DatabaseMetaData md = connection.getMetaData();
             assertEquals(expectedIdentifierQuote, md.getIdentifierQuoteString());
+        }
+    }
+
+    @Test
+    void testGetSchemaTerm() throws Exception {
+        final String expected = getDefaultSupportInfo().supportsSchemas() ? "SCHEMA" : null;
+        assertEquals(expected, dmd.getSchemaTerm(), "schemaTerm");
+    }
+
+    @Test
+    void testGetMaxSchemaNameLength() throws Exception {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        final int expected = getDefaultSupportInfo().supportsSchemas()
+                ? supportInfo.maxIdentifierLengthCharacters() : 0;
+        assertEquals(expected, dmd.getMaxSchemaNameLength(), "maxSchemaNameLength");
+    }
+
+    @Test
+    void testSupportsSchemasInXXX() {
+        final boolean expected = getDefaultSupportInfo().supportsSchemas();
+        assertAll(
+                () -> assertEquals(expected, dmd.supportsSchemasInDataManipulation(), "DataManipulation"),
+                () -> assertEquals(expected, dmd.supportsSchemasInIndexDefinitions(), "IndexDefinitions"),
+                () -> assertEquals(expected, dmd.supportsSchemasInPrivilegeDefinitions(), "PrivilegeDefinitions"),
+                () -> assertEquals(expected, dmd.supportsSchemasInProcedureCalls(), "ProcedureCalls"),
+                () -> assertEquals(expected, dmd.supportsSchemasInTableDefinitions(), "TableDefinitions")
+        );
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    void testGetProcedureSourceCode_String() throws SQLException {
+        var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+        assertNull(dbmd.getProcedureSourceCode("TEST_PROC_1"), "Expected no procedure source");
+
+        final String procedureBody = """
+                begin
+                  /* TEST_PROC_1 body */
+                end""";
+        try (var stmt = connection.createStatement()) {
+            stmt.execute("create procedure TEST_PROC_1 (VARIN integer) as " + procedureBody);
+        }
+
+        assertEquals(procedureBody, dbmd.getProcedureSourceCode("TEST_PROC_1"), "Procedure source");
+    }
+
+    @Test
+    void testGetTriggerSourceCode_String() throws SQLException {
+        var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+        assertNull(dbmd.getTriggerSourceCode("TEST_TRIG_1"), "Expected no trigger source");
+
+        final String triggerBody = """
+                as
+                begin
+                  /* TEST_TRIG_1 body */
+                end""";
+
+        try (var stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            try {
+                stmt.execute("create table TEST_1 (id integer)");
+                stmt.execute("create trigger TEST_TRIG_1 before insert on TEST_1 " + triggerBody);
+                connection.commit();
+
+                assertEquals(triggerBody, dbmd.getTriggerSourceCode("TEST_TRIG_1"), "Trigger source");
+            } finally {
+                DdlHelper.executeDDL(stmt, List.of("drop table TEST_1"), isc_no_meta_update, isc_dsql_table_not_found,
+                        isc_dsql_view_not_found, isc_dsql_drop_trigger_failed);
+            }
+        } finally {
+            connection.setAutoCommit(false);
+        }
+    }
+
+    @Test
+    void testGetTriggerSourceCode_String_String() throws SQLException {
+        assumeSchemaSupport();
+        var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+        assertNull(dbmd.getTriggerSourceCode("TEST_SCHEMA_1", "TEST_TRIG_1"), "Expected no trigger source");
+
+        final String triggerBody = """
+                as
+                begin
+                  /* TEST_SCHEMA_1.TEST_TRIG_1 body */
+                end""";
+
+        try (var stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            try {
+                stmt.execute("create schema TEST_SCHEMA_1");
+                stmt.execute("create table TEST_SCHEMA_1.TEST_1 (id integer)");
+                stmt.execute("create trigger TEST_TRIG_1 before insert on TEST_SCHEMA_1.TEST_1 " + triggerBody);
+                connection.commit();
+
+                assertEquals(triggerBody, dbmd.getTriggerSourceCode("TEST_SCHEMA_1", "TEST_TRIG_1"), "Trigger source");
+                assertEquals(triggerBody, dbmd.getTriggerSourceCode("TEST_TRIG_1"), "Trigger source");
+                assertNull(dbmd.getTriggerSourceCode("PUBLIC", "TEST_TRIG_1"), "Expected no trigger source");
+            } finally {
+                DdlHelper.executeDDL(stmt, List.of("drop table TEST_SCHEMA_1.TEST_1", "drop schema TEST_SCHEMA_1"),
+                        isc_no_meta_update, isc_dsql_table_not_found, isc_dsql_view_not_found,
+                        isc_dsql_drop_trigger_failed, isc_dsql_drop_schema_failed);
+            }
+        } finally {
+            connection.setAutoCommit(true);
+        }
+
+
+    }
+
+    @Test
+    void testGetViewSourceCode_String() throws SQLException {
+        var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+        assertNull(dbmd.getViewSourceCode("TEST_VIEW_1"), "Expected no view source");
+
+        final String viewBody = """
+                select 'TEST_VIEW_1' as VIEW_NAME, 1 as SOME_COLUMN
+                from RDB$DATABASE""";
+        try (var stmt = connection.createStatement()) {
+            try {
+                stmt.execute("create view TEST_VIEW_1 as " + viewBody);
+
+                assertEquals(viewBody, dbmd.getViewSourceCode("TEST_VIEW_1"), "View source");
+            } finally {
+                DdlHelper.executeDDL(stmt, List.of("drop view TEST_VIEW_1"), isc_no_meta_update,
+                        isc_dsql_table_not_found, isc_dsql_view_not_found, isc_dsql_drop_trigger_failed);
+            }
+        }
+    }
+
+    @Test
+    void testGetViewSourceCode_String_String() throws SQLException {
+        assumeSchemaSupport();
+        var dbmd = connection.getMetaData().unwrap(FirebirdDatabaseMetaData.class);
+        assertNull(dbmd.getViewSourceCode("TEST_SCHEMA_1", "TEST_VIEW_1"), "Expected no view source");
+
+        final String viewBody = """
+                select 'TEST_SCHEMA_1' as VIEW_SCHEMA, 'TEST_VIEW_1' as VIEW_NAME, 1 as SOME_COLUMN
+                from RDB$DATABASE""";
+        try (var stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            try {
+                stmt.execute("create schema TEST_SCHEMA_1");
+                stmt.execute("create view TEST_SCHEMA_1.TEST_VIEW_1 as " + viewBody);
+                connection.commit();
+
+                assertEquals(viewBody, dbmd.getViewSourceCode("TEST_SCHEMA_1", "TEST_VIEW_1"), "View source");
+                assertEquals(viewBody, dbmd.getViewSourceCode("TEST_VIEW_1"), "View source");
+                assertNull(dbmd.getViewSourceCode("PUBLIC", "TEST_VIEW_1"), "Expected no view source");
+            } finally {
+                DdlHelper.executeDDL(stmt, List.of("drop view TEST_SCHEMA_1.TEST_VIEW_1", "drop schema TEST_SCHEMA_1"),
+                        isc_no_meta_update, isc_dsql_table_not_found, isc_dsql_view_not_found,
+                        isc_dsql_drop_trigger_failed, isc_dsql_drop_schema_failed);
+            }
+        } finally {
+            connection.setAutoCommit(true);
         }
     }
 

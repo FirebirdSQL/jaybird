@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2024 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -13,6 +13,7 @@ import org.firebirdsql.util.InternalApi;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static java.sql.DatabaseMetaData.functionNoTable;
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
@@ -27,11 +28,13 @@ import static org.firebirdsql.jdbc.metadata.NameHelper.toSpecificName;
  * @since 4.0
  */
 @InternalApi
-public abstract class GetFunctions extends AbstractMetadataMethod {
+public abstract sealed class GetFunctions extends AbstractMetadataMethod {
 
     private static final String FUNCTIONS = "FUNCTIONS";
+    private static final String COLUMN_CATALOG_NAME = "RDB$PACKAGE_NAME";
+    private static final String COLUMN_SCHEMA_NAME = "RDB$SCHEMA_NAME";
     private static final String COLUMN_FUNCTION_NAME = "RDB$FUNCTION_NAME";
-    
+
     private static final RowDescriptor ROW_DESCRIPTOR = DbMetadataMediator.newRowDescriptorBuilder(11)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_CAT", FUNCTIONS).addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", FUNCTIONS).addField()
@@ -56,23 +59,25 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
     /**
      * @see java.sql.DatabaseMetaData#getFunctions(String, String, String)
      */
-    public final ResultSet getFunctions(String catalog, String functionNamePattern) throws SQLException {
+    public final ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
+            throws SQLException {
         if ("".equals(functionNamePattern)) {
             // Matching function name not possible
             return createEmpty();
         }
 
-        MetadataQuery metadataQuery = createGetFunctionsQuery(catalog, functionNamePattern);
+        MetadataQuery metadataQuery = createGetFunctionsQuery(catalog, schemaPattern, functionNamePattern);
         return createMetaDataResultSet(metadataQuery);
     }
 
     @Override
     final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
         String catalog = rs.getString("FUNCTION_CAT");
+        String schema = rs.getString("FUNCTION_SCHEM");
         String functionName = rs.getString("FUNCTION_NAME");
         return valueBuilder
                 .at(0).setString(catalog)
-                .at(1).set(null)
+                .at(1).setString(schema)
                 .at(2).setString(functionName)
                 .at(3).setString(rs.getString("REMARKS"))
                 .at(4).setShort(functionNoTable)
@@ -85,7 +90,7 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
                 .toRowValue(false);
     }
 
-    abstract MetadataQuery createGetFunctionsQuery(String catalog, String functionNamePattern);
+    abstract MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern);
 
     /**
      * Creates an instance of {@code GetFunctions}.
@@ -97,7 +102,12 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
     public static GetFunctions create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
+        if (firebirdSupportInfo.isVersionEqualOrAbove(6)) {
+            if (mediator.isUseCatalogAsPackage()) {
+                return FB6CatalogAsPackage.createInstance(mediator);
+            }
+            return FB6.createInstance(mediator);
+        } else if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
             if (mediator.isUseCatalogAsPackage()) {
                 return FB3CatalogAsPackage.createInstance(mediator);
             }
@@ -115,7 +125,8 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
 
         private static final String GET_FUNCTIONS_FRAGMENT_2_5 = """
                 select
-                  null as FUNCTION_CAT,
+                  cast(null as char(1)) as FUNCTION_CAT,
+                  cast(null as char(1)) as FUNCTION_SCHEM,
                   RDB$FUNCTION_NAME as FUNCTION_NAME,
                   RDB$DESCRIPTION as REMARKS,
                   cast(null as blob sub_type text) as JB_FUNCTION_SOURCE,
@@ -137,7 +148,7 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionsQuery(String catalog, String functionNamePattern) {
+        MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern) {
             Clause functionNameClause = new Clause(COLUMN_FUNCTION_NAME, functionNamePattern);
             String queryText = GET_FUNCTIONS_FRAGMENT_2_5
                     + functionNameClause.getCondition("\nwhere ", "")
@@ -154,6 +165,7 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
         private static final String GET_FUNCTIONS_FRAGMENT_3 = """
                 select
                   null as FUNCTION_CAT,
+                  null as FUNCTION_SCHEM,
                   trim(trailing from RDB$FUNCTION_NAME) as FUNCTION_NAME,
                   RDB$DESCRIPTION as REMARKS,
                   RDB$FUNCTION_SOURCE as JB_FUNCTION_SOURCE,
@@ -180,7 +192,7 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionsQuery(String catalog, String functionNamePattern) {
+        MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern) {
             Clause functionNameClause = new Clause(COLUMN_FUNCTION_NAME, functionNamePattern);
             String queryText = GET_FUNCTIONS_FRAGMENT_3
                     + functionNameClause.getCondition("\nand ", "")
@@ -194,6 +206,7 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
         private static final String GET_FUNCTIONS_FRAGMENT_3_W_PKG = """
                 select
                   coalesce(trim(trailing from RDB$PACKAGE_NAME), '') as FUNCTION_CAT,
+                  null as FUNCTION_SCHEM,
                   trim(trailing from RDB$FUNCTION_NAME) as FUNCTION_NAME,
                   RDB$DESCRIPTION as REMARKS,
                   RDB$FUNCTION_SOURCE as JB_FUNCTION_SOURCE,
@@ -210,8 +223,6 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
         private static final String GET_FUNCTIONS_ORDER_BY_3_W_PKG =
                 "\norder by RDB$PACKAGE_NAME nulls first, RDB$FUNCTION_NAME";
         
-        private static final String COLUMN_CATALOG_NAME = "RDB$PACKAGE_NAME";
-
         private FB3CatalogAsPackage(DbMetadataMediator mediator) {
             super(mediator);
         }
@@ -221,7 +232,7 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionsQuery(String catalog, String functionNamePattern) {
+        MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern) {
             var clauses = new ArrayList<Clause>(2);
             if (catalog != null) {
                 // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
@@ -234,14 +245,109 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
                 }
             }
             clauses.add(new Clause(COLUMN_FUNCTION_NAME, functionNamePattern));
-            //@formatter:off
             String sql = GET_FUNCTIONS_FRAGMENT_3_W_PKG
-                    + (Clause.anyCondition(clauses)
-                    ? "\nwhere " + Clause.conjunction(clauses)
-                    : "")
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
                     + GET_FUNCTIONS_ORDER_BY_3_W_PKG;
-            //@formatter:on
             return new MetadataQuery(sql, Clause.parameters(clauses));
         }
     }
+
+    private static final class FB6 extends GetFunctions {
+
+        private static final String GET_FUNCTIONS_FRAGMENT_6 = """
+                select
+                  null as FUNCTION_CAT,
+                  trim(trailing from RDB$SCHEMA_NAME) as FUNCTION_SCHEM,
+                  trim(trailing from RDB$FUNCTION_NAME) as FUNCTION_NAME,
+                  RDB$DESCRIPTION as REMARKS,
+                  RDB$FUNCTION_SOURCE as JB_FUNCTION_SOURCE,
+                  case
+                    when RDB$LEGACY_FLAG = 1 then 'UDF'
+                    when RDB$ENGINE_NAME is not null then 'UDR'
+                    else 'PSQL'
+                  end as JB_FUNCTION_KIND,
+                  trim(trailing from RDB$MODULE_NAME) as JB_MODULE_NAME,
+                  trim(trailing from RDB$ENTRYPOINT) as JB_ENTRYPOINT,
+                  trim(trailing from RDB$ENGINE_NAME) as JB_ENGINE_NAME
+                from SYSTEM.RDB$FUNCTIONS
+                where RDB$PACKAGE_NAME is null""";
+
+        // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort
+        private static final String GET_FUNCTIONS_ORDER_BY_6 =
+                "\norder by RDB$SCHEMA_NAME, RDB$PACKAGE_NAME, RDB$FUNCTION_NAME";
+
+        private FB6(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetFunctions createInstance(DbMetadataMediator mediator) {
+            return new FB6(mediator);
+        }
+
+        @Override
+        MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern) {
+            var clauses = List.of(
+                    new Clause(COLUMN_SCHEMA_NAME, schemaPattern),
+                    new Clause(COLUMN_FUNCTION_NAME, functionNamePattern));
+            String queryText = GET_FUNCTIONS_FRAGMENT_6
+                    + (Clause.anyCondition(clauses) ? "\nand " + Clause.conjunction(clauses) : "")
+                    + GET_FUNCTIONS_ORDER_BY_6;
+            return new MetadataQuery(queryText, Clause.parameters(clauses));
+        }
+
+    }
+
+    private static final class FB6CatalogAsPackage extends GetFunctions {
+
+        private static final String GET_FUNCTIONS_FRAGMENT_6_W_PKG = """
+                select
+                  coalesce(trim(trailing from RDB$PACKAGE_NAME), '') as FUNCTION_CAT,
+                  trim(trailing from RDB$SCHEMA_NAME) as FUNCTION_SCHEM,
+                  trim(trailing from RDB$FUNCTION_NAME) as FUNCTION_NAME,
+                  RDB$DESCRIPTION as REMARKS,
+                  RDB$FUNCTION_SOURCE as JB_FUNCTION_SOURCE,
+                  case
+                    when RDB$LEGACY_FLAG = 1 then 'UDF'
+                    when RDB$ENGINE_NAME is not null then 'UDR'
+                    else 'PSQL'
+                  end as JB_FUNCTION_KIND,
+                  trim(trailing from RDB$MODULE_NAME) as JB_MODULE_NAME,
+                  trim(trailing from RDB$ENTRYPOINT) as JB_ENTRYPOINT,
+                  trim(trailing from RDB$ENGINE_NAME) as JB_ENGINE_NAME
+                from SYSTEM.RDB$FUNCTIONS""";
+
+        private static final String GET_FUNCTIONS_ORDER_BY_6_W_PKG =
+                "\norder by RDB$PACKAGE_NAME nulls first, RDB$SCHEMA_NAME, RDB$FUNCTION_NAME";
+
+        private FB6CatalogAsPackage(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetFunctions createInstance(DbMetadataMediator mediator) {
+            return new FB6CatalogAsPackage(mediator);
+        }
+
+        @Override
+        MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern) {
+            var clauses = new ArrayList<Clause>(3);
+            clauses.add(new Clause(COLUMN_SCHEMA_NAME, schemaPattern));
+            if (catalog != null) {
+                // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
+                // should not be used to narrow the search
+                if (catalog.isEmpty()) {
+                    clauses.add(Clause.isNullClause(COLUMN_CATALOG_NAME));
+                } else {
+                    // Exact matches only
+                    clauses.add(Clause.equalsClause(COLUMN_CATALOG_NAME, catalog));
+                }
+            }
+            clauses.add(new Clause(COLUMN_FUNCTION_NAME, functionNamePattern));
+            String sql = GET_FUNCTIONS_FRAGMENT_6_W_PKG
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
+                    + GET_FUNCTIONS_ORDER_BY_6_W_PKG;
+            return new MetadataQuery(sql, Clause.parameters(clauses));
+        }
+
+    }
+
 }

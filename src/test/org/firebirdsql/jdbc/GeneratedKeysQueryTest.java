@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.sql.Statement;
+import java.util.Optional;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
@@ -284,8 +285,9 @@ class GeneratedKeysQueryTest {
     void testGeneratedKeys_columnIndexes() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
         prepareConnectionDialectCheck(3);
+        when(dbMetadata.findTableSchema("GENERATED_KEYS_TBL")).thenReturn(Optional.of("PUBLIC"));
         // Metadata for table in query will be retrieved
-        when(dbMetadata.getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
+        when(dbMetadata.getColumns(null, "PUBLIC", "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
         // We want to return three columns, so for next() three return true, fourth returns false
         when(columnRs.next()).thenReturn(true, true, true, false);
         // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice
@@ -320,8 +322,9 @@ class GeneratedKeysQueryTest {
     void testGeneratedKeys_columnIndexes_dialect1() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
         prepareConnectionDialectCheck(1);
+        when(dbMetadata.findTableSchema("GENERATED_KEYS_TBL")).thenReturn(Optional.of(""));
         // Metadata for table in query will be retrieved
-        when(dbMetadata.getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
+        when(dbMetadata.getColumns(null, "", "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
         // We want to return three columns, so for next() three return true, fourth returns false
         when(columnRs.next()).thenReturn(true, true, true, false);
         // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice
@@ -357,8 +360,9 @@ class GeneratedKeysQueryTest {
     void testGeneratedKeys_columnIndexes_includingNonExistentIndex() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
         prepareConnectionDialectCheck(3);
+        when(dbMetadata.findTableSchema("GENERATED_KEYS_TBL")).thenReturn(Optional.of("OTHER"));
         // Metadata for table in query will be retrieved
-        when(dbMetadata.getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
+        when(dbMetadata.getColumns(null, "OTHER", "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
         // We want to return three columns, so for next() three return true, fourth returns false
         when(columnRs.next()).thenReturn(true, true, true, false);
         // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice
@@ -370,7 +374,8 @@ class GeneratedKeysQueryTest {
                 () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, new int[] { 1, 2, 5 }));
         assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_generatedKeysInvalidColumnPosition),
-                fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysInvalidColumnPosition, "5", "GENERATED_KEYS_TBL"),
+                fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysInvalidColumnPosition, "5",
+                        "\"OTHER\".\"GENERATED_KEYS_TBL\""),
                 sqlStateEquals("22023")));
         verify(columnRs).close();
     }
@@ -390,8 +395,9 @@ class GeneratedKeysQueryTest {
     void testGeneratedKeys_columnIndexes_unOrdered() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
         prepareConnectionDialectCheck(3);
+        when(dbMetadata.findTableSchema("GENERATED_KEYS_TBL")).thenReturn(Optional.of("PUBLIC"));
         // Metadata for table in query will be retrieved
-        when(dbMetadata.getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
+        when(dbMetadata.getColumns(null, "PUBLIC", "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
         // We want to return three columns, so for next() three return true, fourth returns false
         when(columnRs.next()).thenReturn(true, true, true, false);
         // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice

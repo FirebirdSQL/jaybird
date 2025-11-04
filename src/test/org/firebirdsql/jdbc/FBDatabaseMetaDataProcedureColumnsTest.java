@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2012-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.jdbc.metadata.FbMetadataConstants;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -23,6 +25,9 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+import static org.firebirdsql.common.FBTestProperties.resolveSchema;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.jdbc.FBDatabaseMetaDataProceduresTest.isIgnoredProcedure;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
@@ -36,8 +41,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * @author Mark Rotteveel
  */
 class FBDatabaseMetaDataProcedureColumnsTest {
-    
-    // TODO This test will need to be expanded with version dependent features 
+
+    // TODO This test will need to be expanded with version dependent features
     // (eg TYPE OF <domain> (2.1), TYPE OF COLUMN <table.column> (2.5), NOT NULL (2.1), DEFAULT <value> (2.0)
 
     private static final String CREATE_NORMAL_PROC_NO_ARG_NO_RETURN = """
@@ -102,6 +107,18 @@ class FBDatabaseMetaDataProcedureColumnsTest {
               end
             end""";
 
+    private static final String CREATE_OTHER_SCHEMA = "create schema OTHER_SCHEMA";
+
+    private static final String CREATE_OTHER_SCHEMA_PROC_WITH_RETURN = """
+            create procedure OTHER_SCHEMA.PROC_WITH_RETURN
+             ( PARAM1 varchar(100),
+               PARAM2 decimal(18,2))
+            RETURNS (return1 VARCHAR(200))
+            AS
+            BEGIN
+              return1 = param1 || param1;
+            END""";
+
     private static final MetadataResultSetDefinition getProcedureColumnsDefinition =
             new MetadataResultSetDefinition(ProcedureColumnMetaData.class);
 
@@ -145,6 +162,10 @@ class FBDatabaseMetaDataProcedureColumnsTest {
             statements.add(CREATE_PACKAGE_WITH_PROCEDURE);
             statements.add(CREATE_PACKAGE_BODY_WITH_PROCEDURE);
         }
+        if (supportInfo.supportsSchemas()) {
+            statements.add(CREATE_OTHER_SCHEMA);
+            statements.add(CREATE_OTHER_SCHEMA_PROC_WITH_RETURN);
+        }
         return statements;
     }
     
@@ -172,11 +193,20 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     /**
      * Tests getProcedureColumn with normal_proc_no_return using all columnPattern, expecting result set with all defined rows.
      */
-    @Test
-    void testProcedureColumns_normalProc_noReturn_allPattern() throws Exception {
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = "<NIL>", textBlock = """
+            schemaPattern, columnNamePattern
+            <NIL>,         <NIL>
+            %,             <NIL>
+            PUBLIC,        %
+            <NIL>,         %
+            """)
+    void testProcedureColumns_normalProc_noReturn_allPattern(String schemaPattern, String columnNamePattern)
+            throws Exception {
         var expectedColumns = getNormalProcNoReturn_allColumns();
         
-        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "NORMAL_PROC_NO_RETURN", "%");
+        ResultSet procedureColumns = dbmd
+                .getProcedureColumns(null, resolveSchema(schemaPattern), "NORMAL_PROC_NO_RETURN", columnNamePattern);
         validate(procedureColumns, expectedColumns);        
     }
 
@@ -271,7 +301,11 @@ class FBDatabaseMetaDataProcedureColumnsTest {
         try (var connection = DriverManager.getConnection(getUrl(), props)) {
             dbmd = connection.getMetaData();
 
-            var expectedColumns = new ArrayList<>(getNormalProcNoReturn_allColumns());
+            var expectedColumns = new ArrayList<Map<ProcedureColumnMetaData, Object>>();
+            if (supportInfo.supportsSchemas()) {
+                expectedColumns.addAll(getOtherSchemaProcWithReturn_allColumns());
+            }
+            expectedColumns.addAll(getNormalProcNoReturn_allColumns());
             expectedColumns.addAll(getNormalProcWithReturn_allColumns());
             expectedColumns.addAll(getQuotedProcNoReturn_allColumns());
             withCatalog("", expectedColumns);
@@ -328,10 +362,10 @@ class FBDatabaseMetaDataProcedureColumnsTest {
             dbmd = connection.getMetaData();
 
             List<Map<ProcedureColumnMetaData, Object>> expectedColumns =
-                    withCatalog("WITH$PROCEDURE",
-                            withSpecificName("\"WITH$PROCEDURE\".\"IN$PACKAGE\"",
-                                    List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "RETURN1", 1, 10, 0, true,
-                                                    DatabaseMetaData.procedureColumnOut))));
+                    withCatalog("WITH$PROCEDURE", withSpecificName(
+                            ObjectReference.of("WITH$PROCEDURE", "IN$PACKAGE").toString(),
+                            List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "RETURN1", 1, 10, 0, true,
+                                    DatabaseMetaData.procedureColumnOut))));
 
             ResultSet procedureColumns = dbmd.getProcedureColumns(catalog, null, "IN$PACKAGE", "RETURN1");
             validate(procedureColumns, expectedColumns);
@@ -347,7 +381,11 @@ class FBDatabaseMetaDataProcedureColumnsTest {
         try (var connection = DriverManager.getConnection(getUrl(), props)) {
             dbmd = connection.getMetaData();
 
-            var expectedColumns = new ArrayList<>(getNormalProcNoReturn_allColumns());
+            var expectedColumns = new ArrayList<Map<ProcedureColumnMetaData, Object>>();
+            if (supportInfo.supportsSchemas()) {
+                expectedColumns.addAll(getOtherSchemaProcWithReturn_allColumns());
+            }
+            expectedColumns.addAll(getNormalProcNoReturn_allColumns());
             expectedColumns.addAll(getNormalProcWithReturn_allColumns());
             expectedColumns.addAll(getQuotedProcNoReturn_allColumns());
             withCatalog("", expectedColumns);
@@ -358,15 +396,47 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     }
 
     private static List<Map<ProcedureColumnMetaData, Object>> getInPackage_allColumns() {
-        return withCatalog("WITH$PROCEDURE",
-                withSpecificName("\"WITH$PROCEDURE\".\"IN$PACKAGE\"",
-                        // TODO Having result columns first might be against JDBC spec
-                        // TODO Describing result columns as procedureColumnOut might be against JDBC spec
-                        List.of(
-                                createNumericalType(Types.INTEGER, "IN$PACKAGE", "RETURN1", 1, 10, 0, true,
-                                        DatabaseMetaData.procedureColumnOut),
-                                createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM1", 1, 10, 0, true,
-                                        DatabaseMetaData.procedureColumnIn))));
+        return withCatalog("WITH$PROCEDURE", withSpecificName(
+                ObjectReference.of("WITH$PROCEDURE", "IN$PACKAGE").toString(),
+                // TODO Having result columns first might be against JDBC spec
+                // TODO Describing result columns as procedureColumnOut might be against JDBC spec
+                List.of(
+                        createNumericalType(Types.INTEGER, "IN$PACKAGE", "RETURN1", 1, 10, 0, true,
+                                DatabaseMetaData.procedureColumnOut),
+                        createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM1", 1, 10, 0, true,
+                                DatabaseMetaData.procedureColumnIn))));
+    }
+
+    /**
+     * Tests getProcedureColumn with OTHER_SCHEMA.PROC_WITH_RETURN, expecting result set with all defined rows.
+     */
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = "<NIL>", textBlock = """
+            schemaPattern,  procedureNamePattern, columnNamePattern
+            OTHER_SCHEMA,   PROC_WITH_RETURN,     %
+            OTHER\\_SCHEMA, PROC\\_WITH\\_RETURN, <NIL>
+            OTHER%,         PROC\\_WITH\\_RETURN, <NIL>
+            """)
+    void testProcedureColumns_otherSchemaProcWithReturn_all(String schemaPattern, String procedureNamePattern,
+            String columnNamePattern) throws Exception {
+        assumeSchemaSupport();
+        var expectedColumns = getOtherSchemaProcWithReturn_allColumns();
+
+        ResultSet procedureColumns = dbmd
+                .getProcedureColumns(null, schemaPattern, procedureNamePattern, columnNamePattern);
+        validate(procedureColumns, expectedColumns);
+    }
+
+    private static List<Map<ProcedureColumnMetaData, Object>> getOtherSchemaProcWithReturn_allColumns() {
+        return List.of(
+                // TODO Having result columns first might be against JDBC spec
+                // TODO Describing result columns as procedureColumnOut might be against JDBC spec
+                createStringType(Types.VARCHAR, "OTHER_SCHEMA", "PROC_WITH_RETURN", "RETURN1", 1, 200, true,
+                        DatabaseMetaData.procedureColumnOut),
+                createStringType(Types.VARCHAR, "OTHER_SCHEMA", "PROC_WITH_RETURN", "PARAM1", 1, 100, true,
+                        DatabaseMetaData.procedureColumnIn),
+                createNumericalType(Types.DECIMAL, "OTHER_SCHEMA", "PROC_WITH_RETURN", "PARAM2", 2,
+                                NUMERIC_BIGINT_PRECISION, 2, true, DatabaseMetaData.procedureColumnIn));
     }
     
     // TODO Add tests for more complex patterns for procedure and column
@@ -390,9 +460,10 @@ class FBDatabaseMetaDataProcedureColumnsTest {
         }
     }
 
-    private static Map<ProcedureColumnMetaData, Object> createColumn(String procedureName, String columnName,
-            int ordinalPosition, boolean nullable, int columnType) {
+    private static Map<ProcedureColumnMetaData, Object> createColumn(String schema, String procedureName,
+            String columnName, int ordinalPosition, boolean nullable, int columnType) {
         Map<ProcedureColumnMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(ProcedureColumnMetaData.PROCEDURE_SCHEM, schema);
         rules.put(ProcedureColumnMetaData.PROCEDURE_NAME, procedureName);
         rules.put(ProcedureColumnMetaData.SPECIFIC_NAME, procedureName);
         rules.put(ProcedureColumnMetaData.COLUMN_NAME, columnName);
@@ -408,8 +479,15 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     @SuppressWarnings("SameParameterValue")
     private static Map<ProcedureColumnMetaData, Object> createStringType(int jdbcType, String procedureName,
             String columnName, int ordinalPosition, int length, boolean nullable, int columnType) {
+        return createStringType(jdbcType, ifSchemaElse("PUBLIC", null), procedureName, columnName, ordinalPosition, length,
+                nullable, columnType);
+    }
+
+    private static Map<ProcedureColumnMetaData, Object> createStringType(int jdbcType, String schema,
+            String procedureName, String columnName, int ordinalPosition, int length, boolean nullable,
+            int columnType) {
         Map<ProcedureColumnMetaData, Object> rules =
-                createColumn(procedureName, columnName, ordinalPosition, nullable, columnType);
+                createColumn(schema, procedureName, columnName, ordinalPosition, nullable, columnType);
         rules.put(ProcedureColumnMetaData.DATA_TYPE, jdbcType);
         String typeName = switch (jdbcType) {
             case Types.CHAR, Types.BINARY -> "CHAR";
@@ -426,8 +504,15 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     @SuppressWarnings("SameParameterValue")
     private static Map<ProcedureColumnMetaData, Object> createNumericalType(int jdbcType, String procedureName,
             String columnName, int ordinalPosition, int precision, int scale, boolean nullable, int columnType) {
+        return createNumericalType(jdbcType, ifSchemaElse("PUBLIC", null), procedureName, columnName, ordinalPosition,
+                precision, scale, nullable, columnType);
+    }
+
+    private static Map<ProcedureColumnMetaData, Object> createNumericalType(int jdbcType, String schema,
+            String procedureName, String columnName, int ordinalPosition, int precision, int scale, boolean nullable,
+            int columnType) {
         Map<ProcedureColumnMetaData, Object> rules =
-                createColumn(procedureName, columnName, ordinalPosition, nullable, columnType);
+                createColumn(schema, procedureName, columnName, ordinalPosition, nullable, columnType);
         rules.put(ProcedureColumnMetaData.DATA_TYPE, jdbcType);
         String typeName;
         int length;
@@ -464,8 +549,15 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     @SuppressWarnings("SameParameterValue")
     private static Map<ProcedureColumnMetaData, Object> createDateTime(int jdbcType, String procedureName,
             String columnName, int ordinalPosition, boolean nullable, int columnType) {
+        return createDateTime(jdbcType, ifSchemaElse("PUBLIC", null), procedureName, columnName, ordinalPosition,
+                nullable, columnType);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static Map<ProcedureColumnMetaData, Object> createDateTime(int jdbcType, String schema,
+            String procedureName, String columnName, int ordinalPosition, boolean nullable, int columnType) {
         Map<ProcedureColumnMetaData, Object> rules =
-                createColumn(procedureName, columnName, ordinalPosition, nullable, columnType);
+                createColumn(schema, procedureName, columnName, ordinalPosition, nullable, columnType);
         rules.put(ProcedureColumnMetaData.DATA_TYPE, jdbcType);
         String typeName;
         int precision;
@@ -507,8 +599,14 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     @SuppressWarnings("SameParameterValue")
     private static Map<ProcedureColumnMetaData, Object> createDouble(String procedureName, String columnName,
             int ordinalPosition, boolean nullable, int columnType) {
+        return createDouble(ifSchemaElse("PUBLIC", null), procedureName, columnName, ordinalPosition, nullable,
+                columnType);
+    }
+
+    private static Map<ProcedureColumnMetaData, Object> createDouble(String schema, String procedureName,
+            String columnName, int ordinalPosition, boolean nullable, int columnType) {
         Map<ProcedureColumnMetaData, Object> rules =
-                createColumn(procedureName, columnName, ordinalPosition, nullable, columnType);
+                createColumn(schema, procedureName, columnName, ordinalPosition, nullable, columnType);
         rules.put(ProcedureColumnMetaData.DATA_TYPE, Types.DOUBLE);
         rules.put(ProcedureColumnMetaData.TYPE_NAME, "DOUBLE PRECISION");
         if (getDefaultSupportInfo().supportsFloatBinaryPrecision()) {
@@ -528,6 +626,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
         return column;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static Map<ProcedureColumnMetaData, Object> withDefault(String defaultDefinition,
             Map<ProcedureColumnMetaData, Object> rules) {
         rules.put(ProcedureColumnMetaData.COLUMN_DEF, defaultDefinition);
@@ -554,7 +653,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     static {
         Map<ProcedureColumnMetaData, Object> defaults = new EnumMap<>(ProcedureColumnMetaData.class);
         defaults.put(ProcedureColumnMetaData.PROCEDURE_CAT, null);
-        defaults.put(ProcedureColumnMetaData.PROCEDURE_SCHEM, null);
+        defaults.put(ProcedureColumnMetaData.PROCEDURE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(ProcedureColumnMetaData.SCALE, null);
         defaults.put(ProcedureColumnMetaData.RADIX, FbMetadataConstants.RADIX_DECIMAL);
         defaults.put(ProcedureColumnMetaData.NULLABLE, DatabaseMetaData.procedureNullable);

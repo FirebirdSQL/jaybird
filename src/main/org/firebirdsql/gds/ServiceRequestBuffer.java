@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2004-2006 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2014-2022 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 */
 package org.firebirdsql.gds;
@@ -14,6 +14,7 @@ import org.firebirdsql.jaybird.fb.constants.SpbItems;
  * Firebird API documentation and specifies the attributes for the Services API
  * operation.
  */
+@SuppressWarnings("unused")
 public interface ServiceRequestBuffer extends ParameterBuffer {
 
     //@formatter:off
@@ -237,7 +238,7 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     int STATS_DB_NAME                   = SpbItems.isc_spb_dbname;
     
     // Database statistics options.
-    int STATS_OPTIONS                   = SpbItems.isc_spb_dbname;
+    int STATS_OPTIONS                   = SpbItems.isc_spb_options;
     
     // Each constant below represents a bit in a bit mask.
     int STATS_DATA_PAGES                = ISCConstants.isc_spb_sts_data_pages;
@@ -246,8 +247,20 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     int STATS_INDEX_PAGES               = ISCConstants.isc_spb_sts_idx_pages;
     int STATS_SYSTEM_RELATIONS          = ISCConstants.isc_spb_sts_sys_relations;
     int STATS_RECORD_VERSIONS           = ISCConstants.isc_spb_sts_record_versions;
-    int STATS_TABLE                     = ISCConstants.isc_spb_sts_table;
     int STATS_NOCREATION                = ISCConstants.isc_spb_sts_nocreation;
+
+    /**
+     * Repeatable buffer item for a table name for operation {@link #STATS_DATA_PAGES}.
+     * <p>
+     * For backwards compatibility, it can also be used as an options flag, with a space separated list of table names
+     * in buffer item {@link SpbItems#isc_spb_command_line}.
+     * </p>
+     */
+    int STATS_TABLE                     = ISCConstants.isc_spb_sts_table;
+    /**
+     * Repeatable buffer item for a schema name for operation {@link #STATS_DATA_PAGES}.
+     */
+    int STATS_SCHEMA = ISCConstants.isc_spb_sts_schema;
 
     //@formatter:on
 

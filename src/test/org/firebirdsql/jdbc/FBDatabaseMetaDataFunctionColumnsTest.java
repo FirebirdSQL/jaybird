@@ -1,9 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2019-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.jaybird.util.CollectionUtils;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -22,9 +24,11 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.jdbc.FBDatabaseMetaDataFunctionsTest.isIgnoredFunction;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -37,6 +41,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
 
     private static final String PSQL_EXAMPLE_1 = "PSQL$EXAMPLE$1";
     private static final String PSQL_EXAMPLE_2 = "PSQL$EXAMPLE$2";
+    private static final String PSQL_EXAMPLE_3 = "PSQL$EXAMPLE$3";
     private static final String UDF_EXAMPLE_1 = "UDF$EXAMPLE$1";
     private static final String UDF_EXAMPLE_2 = "UDF$EXAMPLE$2";
     private static final String UDF_EXAMPLE_3 = "UDF$EXAMPLE$3";
@@ -47,77 +52,93 @@ class FBDatabaseMetaDataFunctionColumnsTest {
     private static final String CREATE_DOMAIN_D_INTEGER =
             "create domain D_INTEGER as integer";
 
-    private static final String CREATE_PSQL_EXAMPLE_1 = "create function " + PSQL_EXAMPLE_1 + "("
-            + "C$01$FLOAT float not null,"
-            + "C$02$DOUBLE double precision,"
-            + "C$03$CHAR10 char(10),"
-            + "C$04$VARCHAR15 varchar(15) not null,"
-            + "C$05$BINARY20 char(20) character set octets,"
-            + "C$06$VARBINARY25 varchar(25) character set octets,"
-            + "C$07$BIGINT bigint,"
-            + "C$08$INTEGER integer,"
-            + "C$09$SMALLINT smallint,"
-            + "C$10$NUMERIC18$3 numeric(18,3),"
-            + "C$11$NUMERIC9$3 numeric(9,3),"
-            + "C$12$NUMERIC4$3 numeric(4,3),"
-            + "C$13$DECIMAL18$2 decimal(18,2),"
-            + "C$14$DECIMAL9$2 decimal(9,2),"
-            + "C$15$DECIMAL4$2 decimal(4,2),"
-            + "C$16$DATE date,"
-            + "C$17$TIME time,"
-            + "C$18$TIMESTAMP timestamp,"
-            + "C$19$BOOLEAN boolean,"
-            + "C$20$D_INTEGER_NOT_NULL D_INTEGER_NOT_NULL,"
-            + "C$21$D_INTEGER_WITH_NOT_NULL D_INTEGER NOT NULL) "
-            + "returns varchar(100) "
-            + "as "
-            + "begin"
-            + "  return 'a';"
-            + "end";
+    private static final String CREATE_PSQL_EXAMPLE_1 = """
+            create function PSQL$EXAMPLE$1(
+              C$01$FLOAT float not null,
+              C$02$DOUBLE double precision,
+              C$03$CHAR10 char(10),
+              C$04$VARCHAR15 varchar(15) not null,
+              C$05$BINARY20 char(20) character set octets,
+              C$06$VARBINARY25 varchar(25) character set octets,
+              C$07$BIGINT bigint,
+              C$08$INTEGER integer,
+              C$09$SMALLINT smallint,
+              C$10$NUMERIC18$3 numeric(18,3),
+              C$11$NUMERIC9$3 numeric(9,3),
+              C$12$NUMERIC4$3 numeric(4,3),
+              C$13$DECIMAL18$2 decimal(18,2),
+              C$14$DECIMAL9$2 decimal(9,2),
+              C$15$DECIMAL4$2 decimal(4,2),
+              C$16$DATE date,
+              C$17$TIME time,
+              C$18$TIMESTAMP timestamp,
+              C$19$BOOLEAN boolean,
+              C$20$D_INTEGER_NOT_NULL D_INTEGER_NOT_NULL,
+              C$21$D_INTEGER_WITH_NOT_NULL D_INTEGER NOT NULL)
+            returns varchar(100)
+            as
+            begin
+              return 'a';
+            end""";
 
-    private static final String CREATE_PSQL_EXAMPLE_2 = "create function " + PSQL_EXAMPLE_2 + "("
-            + "C$01$TIME_WITH_TIME_ZONE time with time zone,"
-            + "C$02$TIMESTAMP_WITH_TIME_ZONE timestamp with time zone,"
-            + "C$03$DECFLOAT decfloat,"
-            + "C$04$DECFLOAT16 decfloat(16),"
-            + "C$05$DECFLOAT34 decfloat(34),"
-            + "C$06$NUMERIC21$5 numeric(21,5),"
-            + "C$07$DECIMAL34$19 decimal(34,19)) "
-            + "returns varchar(100) not null "
-            + "as "
-            + "begin"
-            + "  return 'a';"
-            + "end";
+    private static final String CREATE_PSQL_EXAMPLE_2 = """
+            create function PSQL$EXAMPLE$2(
+              C$01$TIME_WITH_TIME_ZONE time with time zone,
+              C$02$TIMESTAMP_WITH_TIME_ZONE timestamp with time zone,
+              C$03$DECFLOAT decfloat,
+              C$04$DECFLOAT16 decfloat(16),
+              C$05$DECFLOAT34 decfloat(34),
+              C$06$NUMERIC21$5 numeric(21,5),
+              C$07$DECIMAL34$19 decimal(34,19))
+            returns varchar(100) not null
+            as
+            begin
+              return 'a';
+            end""";
 
-    private static final String CREATE_UDF_EXAMPLE_1 = "declare external function " + UDF_EXAMPLE_1
-            + "/* 1*/ float by descriptor,"
-            + "/* 2*/ double precision,"
-            + "/* 3*/ char(10),"
-            + "/* 4*/ varchar(15) by descriptor,"
-            + "/* 5*/ char(20) character set octets,"
-            + "/* 6*/ varchar(25) character set octets,"
-            + "/* 7*/ bigint,"
-            + "/* 8*/ integer,"
-            + "/* 9*/ smallint,"
-            + "/*10*/ numeric(18,3) "
-            + "returns varchar(100) "
-            + "entry_point 'UDF$EXAMPLE$1' module_name 'module_1'";
+    private static final String CREATE_OTHER_SCHEMA = "create schema OTHER_SCHEMA";
 
-    private static final String CREATE_UDF_EXAMPLE_2 = "declare external function " + UDF_EXAMPLE_2
-            + "/* 1*/ numeric(9,3),"
-            + "/* 2*/ numeric(4,3),"
-            + "/* 3*/ decimal(18,2),"
-            + "/* 4*/ decimal(9,2),"
-            + "/* 5*/ decimal(4,2),"
-            + "/* 6*/ date,"
-            + "/* 7*/ time,"
-            + "/* 8*/ timestamp "
-            + "returns varchar(100) by descriptor "
-            + "entry_point 'UDF$EXAMPLE$2' module_name 'module_1'";
+    private static final String CREATE_PSQL_EXAMPLE_3 = """
+            create function OTHER_SCHEMA.PSQL$EXAMPLE$3(
+              C$01$TIME_WITH_TIME_ZONE time with time zone)
+            returns varchar(100) not null
+            as
+            begin
+              return 'a';
+            end""";
 
-    private static final String CREATE_UDF_EXAMPLE_3 = "declare external function " + UDF_EXAMPLE_3
-            + " returns cstring(100)"
-            + "entry_point 'UDF$EXAMPLE$3' module_name 'module_1'";
+    private static final String CREATE_UDF_EXAMPLE_1 = """
+            declare external function UDF$EXAMPLE$1
+            /* 1*/ float by descriptor,
+            /* 2*/ double precision,
+            /* 3*/ char(10),
+            /* 4*/ varchar(15) by descriptor,
+            /* 5*/ char(20) character set octets,
+            /* 6*/ varchar(25) character set octets,
+            /* 7*/ bigint,
+            /* 8*/ integer,
+            /* 9*/ smallint,
+            /*10*/ numeric(18,3)
+            returns varchar(100)
+            entry_point 'UDF$EXAMPLE$1' module_name 'module_1'""";
+
+    private static final String CREATE_UDF_EXAMPLE_2 = """
+            declare external function UDF$EXAMPLE$2
+            /* 1*/ numeric(9,3),
+            /* 2*/ numeric(4,3),
+            /* 3*/ decimal(18,2),
+            /* 4*/ decimal(9,2),
+            /* 5*/ decimal(4,2),
+            /* 6*/ date,
+            /* 7*/ time,
+            /* 8*/ timestamp
+            returns varchar(100) by descriptor
+            entry_point 'UDF$EXAMPLE$2' module_name 'module_1'""";
+
+    private static final String CREATE_UDF_EXAMPLE_3 = """
+            declare external function UDF$EXAMPLE$3
+            returns cstring(100)
+            entry_point 'UDF$EXAMPLE$3' module_name 'module_1'""";
 
     private static final String CREATE_PACKAGE_WITH_FUNCTION = """
             create package WITH$FUNCTION
@@ -174,7 +195,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         if (supportInfo.supportsPsqlFunctions()) {
             statements.add(CREATE_PSQL_EXAMPLE_1);
 
-            if (supportInfo.isVersionEqualOrAbove(4, 0)) {
+            if (supportInfo.isVersionEqualOrAbove(4)) {
                 statements.add(CREATE_PSQL_EXAMPLE_2);
             }
 
@@ -187,6 +208,11 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         statements.add(CREATE_UDF_EXAMPLE_1);
         statements.add(CREATE_UDF_EXAMPLE_2);
         statements.add(CREATE_UDF_EXAMPLE_3);
+
+        if (supportInfo.supportsSchemas()) {
+            statements.add(CREATE_OTHER_SCHEMA);
+            statements.add(CREATE_PSQL_EXAMPLE_3);
+        }
 
         return statements;
     }
@@ -201,30 +227,12 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         }
     }
 
-    @Test
-    void testFunctionColumnMetaData_everything_functionNamePattern_null() throws Exception {
-        validateFunctionColumnMetaData_everything(null);
-    }
-
-    @Test
-    void testFunctionColumnMetaData_everything_functionNamePattern_allPattern() throws Exception {
-        validateFunctionColumnMetaData_everything("%");
-    }
-
-    private void validateFunctionColumnMetaData_everything(String functionNamePattern)
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "%")
+    void testFunctionColumnMetaData_everything_functionNamePattern_all(String functionNamePattern)
             throws Exception {
-        FirebirdSupportInfo defaultSupportInfo = getDefaultSupportInfo();
-        List<Map<FunctionColumnMetaData, Object>> expectedColumns = new ArrayList<>();
-        if (defaultSupportInfo.supportsPsqlFunctions()) {
-            expectedColumns.addAll(getPsqlExample1Columns());
-            if (defaultSupportInfo.isVersionEqualOrAbove(4, 0)) {
-                expectedColumns.addAll(getPsqlExample2Columns());
-            }
-        }
-        expectedColumns.addAll(getUdfExample1Columns());
-        expectedColumns.addAll(getUdfExample2Columns());
-        expectedColumns.add(createStringType(Types.VARCHAR, UDF_EXAMPLE_3, "PARAM_0", 0, 100, false));
-        validateExpectedFunctionColumns(functionNamePattern, null, expectedColumns);
+        validateExpectedFunctionColumns(functionNamePattern, null, getAllNonPackagedFunctionColumns());
     }
 
     @Test
@@ -239,6 +247,25 @@ class FBDatabaseMetaDataFunctionColumnsTest {
 
     private void validateNoRows(String functionNamePattern, String columnNamePattern) throws Exception {
         validateExpectedFunctionColumns(functionNamePattern, columnNamePattern, Collections.emptyList());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "%")
+    void testFunctionColumnMetaData_defaultSchema_functionNamePatternAll(String functionNamePattern) throws Exception {
+        validateExpectedFunctionColumns("", ifSchemaElse("PUBLIC", ""), functionNamePattern, "%",
+                getDefaultSchemaAllNonPackagedFunctionColumns());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "%")
+    void testFunctionColumnMetaData_otherSchema_functionNamePatternAll(String functionNamePattern) throws Exception {
+        // For 4.0 and older, we ignore the schemaPattern, so we need to skip this test, as the query would return
+        // functions (the "default schema" functions) instead of no functions
+        assumeSchemaSupport();
+        validateExpectedFunctionColumns("", "OTHER_SCHEMA", functionNamePattern, "%",
+                getOtherSchemaAllNonPackagedFunctionColumns());
     }
 
     @Test
@@ -300,14 +327,8 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         props.setProperty(PropertyNames.useCatalogAsPackage, "true");
         try (var connection = DriverManager.getConnection(getUrl(), props)) {
             dbmd = connection.getMetaData();
-            var expectedColumns = new ArrayList<>(getPsqlExample1Columns());
-            if (supportInfo.isVersionEqualOrAbove(4)) {
-                expectedColumns.addAll(getPsqlExample2Columns());
-            }
-            expectedColumns.addAll(getUdfExample1Columns());
-            expectedColumns.addAll(getUdfExample2Columns());
-            expectedColumns.add(createStringType(Types.VARCHAR, UDF_EXAMPLE_3, "PARAM_0", 0, 100, false));
-            withCatalog("", expectedColumns);
+            List<Map<FunctionColumnMetaData, Object>> expectedColumns =
+                    withCatalog("", getAllNonPackagedFunctionColumns());
             expectedColumns.addAll(getWithFunctionInPackageColumns());
             validateExpectedFunctionColumns(null, null, null, expectedColumns);
         }
@@ -352,9 +373,9 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         props.setProperty(PropertyNames.useCatalogAsPackage, "true");
         try (var connection = DriverManager.getConnection(getUrl(), props)) {
             dbmd = connection.getMetaData();
-            List<Map<FunctionColumnMetaData, Object>> expectedColumns = withCatalog("WITH$FUNCTION",
-                    withSpecificName("\"WITH$FUNCTION\".\"IN$PACKAGE\"",
-                            List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM1", 1, 10, 0, true))));
+            List<Map<FunctionColumnMetaData, Object>> expectedColumns = withCatalog("WITH$FUNCTION", withSpecificName(
+                    ObjectReference.of("WITH$FUNCTION", "IN$PACKAGE").toString(),
+                    List.of(createNumericalType(Types.INTEGER, "IN$PACKAGE", "PARAM1", 1, 10, 0, true))));
             validateExpectedFunctionColumns(catalog, "IN$PACKAGE", "PARAM1", expectedColumns);
         }
     }
@@ -367,14 +388,8 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         props.setProperty(PropertyNames.useCatalogAsPackage, "true");
         try (var connection = DriverManager.getConnection(getUrl(), props)) {
             dbmd = connection.getMetaData();
-            var expectedColumns = new ArrayList<>(getPsqlExample1Columns());
-            if (supportInfo.isVersionEqualOrAbove(4)) {
-                expectedColumns.addAll(getPsqlExample2Columns());
-            }
-            expectedColumns.addAll(getUdfExample1Columns());
-            expectedColumns.addAll(getUdfExample2Columns());
-            expectedColumns.add(createStringType(Types.VARCHAR, UDF_EXAMPLE_3, "PARAM_0", 0, 100, false));
-            withCatalog("", expectedColumns);
+            List<Map<FunctionColumnMetaData, Object>> expectedColumns =
+                    withCatalog("", getAllNonPackagedFunctionColumns());
             validateExpectedFunctionColumns("", null, null, expectedColumns);
         }
     }
@@ -386,7 +401,13 @@ class FBDatabaseMetaDataFunctionColumnsTest {
 
     private void validateExpectedFunctionColumns(String catalog, String functionNamePattern, String columnNamePattern,
             List<Map<FunctionColumnMetaData, Object>> expectedColumns) throws Exception {
-        try (ResultSet columns = dbmd.getFunctionColumns(catalog, null, functionNamePattern, columnNamePattern)) {
+        validateExpectedFunctionColumns(catalog, null, functionNamePattern, columnNamePattern, expectedColumns);
+    }
+
+    private void validateExpectedFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
+            String columnNamePattern, List<Map<FunctionColumnMetaData, Object>> expectedColumns) throws Exception {
+        try (ResultSet columns = dbmd.getFunctionColumns(
+                catalog, schemaPattern, functionNamePattern, columnNamePattern)) {
             for (Map<FunctionColumnMetaData, Object> expectedColumn : expectedColumns) {
                 expectNextFunctionColumn(columns);
                 getFunctionColumnsDefinition.validateRowValues(columns, expectedColumn);
@@ -397,7 +418,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
 
     private static void expectNextFunctionColumn(ResultSet rs) throws SQLException {
         do {
-            assertTrue(rs.next(), "Expected a row");
+            assertNextRow(rs);
         } while (isIgnoredFunction(rs.getString("SPECIFIC_NAME")));
     }
 
@@ -407,6 +428,38 @@ class FBDatabaseMetaDataFunctionColumnsTest {
                 fail("Expected no more rows");
             }
         }
+    }
+
+    private static List<Map<FunctionColumnMetaData, Object>> getAllNonPackagedFunctionColumns() {
+        return CollectionUtils.concat(
+                getOtherSchemaAllNonPackagedFunctionColumns(), getDefaultSchemaAllNonPackagedFunctionColumns());
+    }
+
+    /**
+     * NOTE: returns an empty list when schemas are not supported.
+     */
+    private static List<Map<FunctionColumnMetaData, Object>> getOtherSchemaAllNonPackagedFunctionColumns() {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        List<Map<FunctionColumnMetaData, Object>> expectedColumns = new ArrayList<>();
+        if (supportInfo.supportsSchemas()) {
+            expectedColumns.addAll(getPsqlExample3Columns());
+        }
+        return expectedColumns;
+    }
+
+    private static List<Map<FunctionColumnMetaData, Object>> getDefaultSchemaAllNonPackagedFunctionColumns() {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        List<Map<FunctionColumnMetaData, Object>> expectedColumns = new ArrayList<>();
+        if (supportInfo.supportsPsqlFunctions()) {
+            expectedColumns.addAll(getPsqlExample1Columns());
+            if (supportInfo.isVersionEqualOrAbove(4)) {
+                expectedColumns.addAll(getPsqlExample2Columns());
+            }
+        }
+        expectedColumns.addAll(getUdfExample1Columns());
+        expectedColumns.addAll(getUdfExample2Columns());
+        expectedColumns.add(createStringType(Types.VARCHAR, UDF_EXAMPLE_3, "PARAM_0", 0, 100, false));
+        return expectedColumns;
     }
 
     private static List<Map<FunctionColumnMetaData, Object>> getPsqlExample1Columns() {
@@ -445,6 +498,12 @@ class FBDatabaseMetaDataFunctionColumnsTest {
                 createDecfloat(PSQL_EXAMPLE_2, "C$05$DECFLOAT34", 5, 34, true),
                 createNumericalType(Types.NUMERIC, PSQL_EXAMPLE_2, "C$06$NUMERIC21$5", 6, 21, 5, true),
                 createNumericalType(Types.DECIMAL, PSQL_EXAMPLE_2, "C$07$DECIMAL34$19", 7, 34, 19, true));
+    }
+
+    private static List<Map<FunctionColumnMetaData, Object>> getPsqlExample3Columns() {
+        return withSchema("OTHER_SCHEMA", List.of(
+                withColumnTypeFunctionReturn(createStringType(Types.VARCHAR, PSQL_EXAMPLE_3, "PARAM_0", 0, 100, false)),
+                createDateTime(Types.TIME_WITH_TIMEZONE, PSQL_EXAMPLE_3, "C$01$TIME_WITH_TIME_ZONE", 1, true)));
     }
 
     private static List<Map<FunctionColumnMetaData, Object>> getUdfExample1Columns() {
@@ -502,6 +561,16 @@ class FBDatabaseMetaDataFunctionColumnsTest {
             List<Map<FunctionColumnMetaData, Object>> rules) {
         for (Map<FunctionColumnMetaData, Object> rowRule : rules) {
             rowRule.put(FunctionColumnMetaData.SPECIFIC_NAME, specificName);
+        }
+        return rules;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static List<Map<FunctionColumnMetaData, Object>> withSchema(String schema,
+            List<Map<FunctionColumnMetaData, Object>> rules) {
+        for (Map<FunctionColumnMetaData, Object> rowRule : rules) {
+            rowRule.put(FunctionColumnMetaData.SPECIFIC_NAME, rowRule.get(FunctionColumnMetaData.FUNCTION_NAME));
+            rowRule.put(FunctionColumnMetaData.FUNCTION_SCHEM, schema);
         }
         return rules;
     }
@@ -674,7 +743,7 @@ class FBDatabaseMetaDataFunctionColumnsTest {
     static {
         Map<FunctionColumnMetaData, Object> defaults = new EnumMap<>(FunctionColumnMetaData.class);
         defaults.put(FunctionColumnMetaData.FUNCTION_CAT, null);
-        defaults.put(FunctionColumnMetaData.FUNCTION_SCHEM, null);
+        defaults.put(FunctionColumnMetaData.FUNCTION_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(FunctionColumnMetaData.PRECISION, null);
         defaults.put(FunctionColumnMetaData.SCALE, null);
         defaults.put(FunctionColumnMetaData.RADIX, 10);

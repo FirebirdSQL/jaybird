@@ -1,12 +1,15 @@
 // SPDX-FileCopyrightText: Copyright 2004 Gabriel Reid
 // SPDX-FileCopyrightText: Copyright 2006 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2016-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2016-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * A {@code StatisticsManager} is responsible for replicating the functionality of the {@code gstat} command-line tool.
@@ -112,6 +115,40 @@ public interface StatisticsManager extends ServiceManager {
     /**
      * Get the table statistics.
      * <p>
+     * For a more detailed description, see {@link #getTableStatistics(Collection, Collection)}.
+     * </p>
+     *
+     * @param tableNames
+     *         table names to analyze
+     * @throws SQLException
+     *         if something went wrong
+     * @see #getTableStatistics(Collection)
+     * @see #getTableStatistics(Collection, Collection)
+     */
+    default void getTableStatistics(String... tableNames) throws SQLException {
+        getTableStatistics(Arrays.asList(tableNames));
+    }
+
+    /**
+     * Get the table statistics.
+     * <p>
+     * For a more detailed description, see {@link #getTableStatistics(Collection, Collection)}.
+     * </p>
+     *
+     * @param tableNames
+     *         table names to analyze
+     * @throws SQLException
+     *         if something went wrong
+     * @see #getTableStatistics(Collection, Collection)
+     * @since 7
+     */
+    default void getTableStatistics(Collection<String> tableNames) throws SQLException {
+        getTableStatistics(List.of(), tableNames);
+    }
+
+    /**
+     * Get the table statistics.
+     * <p>
      * The statistics information is written to this {@code StatisticsManager}'s logger.
      * </p>
      * <p>
@@ -123,15 +160,22 @@ public interface StatisticsManager extends ServiceManager {
      * </ul>
      * </p>
      * <p>
-     * Invoking this method is equivalent to the behaviour of {@code gstat -t <table name>} on the command-line.
+     * Invoking this method is equivalent to the behaviour of
+     * {@code gstat -a [ -sch <schema> ]... [ -t <table name> ]...} on the commandline. For &mdash; unsupported &mdash;
+     * Firebird 2.5 and older, it's equivalent to {@code gstat -t <table name> [ <table name>... ]} or {@code gstat -a}
+     * when no tables are specified.
      * </p>
      *
+     * @param schemaNames
+     *         schemas to analyze; if empty, all schemas are analyzed (ignored on Firebird 5.0 or older)
      * @param tableNames
-     *         array of table names to analyze.
+     *         table names to analyze; if empty, all tables (restricted by {@code schemaNames}) are analyzed
      * @throws SQLException
-     *         if something went wrong.
+     *         if something went wrong (in current Firebird versions this includes when any of the tables cannot be
+     *         found)
+     * @since 7
      */
-    void getTableStatistics(String[] tableNames) throws SQLException;
+    void getTableStatistics(Collection<String> schemaNames, Collection<String> tableNames) throws SQLException;
 
     /**
      * Get transaction information of the database specified in {@code database}.

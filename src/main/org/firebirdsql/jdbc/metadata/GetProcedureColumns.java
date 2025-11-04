@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2024 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -13,6 +13,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static java.sql.DatabaseMetaData.procedureColumnIn;
 import static java.sql.DatabaseMetaData.procedureColumnOut;
@@ -21,7 +22,6 @@ import static java.sql.DatabaseMetaData.procedureNullable;
 import static org.firebirdsql.gds.ISCConstants.SQL_LONG;
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
-import static org.firebirdsql.jdbc.metadata.Clause.anyCondition;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 import static org.firebirdsql.jdbc.metadata.NameHelper.toSpecificName;
 import static org.firebirdsql.jdbc.metadata.TypeMetadata.CHARSET_ID;
@@ -39,9 +39,11 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
  * @since 5
  */
 @SuppressWarnings("java:S1192")
-public abstract class GetProcedureColumns extends AbstractMetadataMethod {
+public abstract sealed class GetProcedureColumns extends AbstractMetadataMethod {
 
     private static final String COLUMNINFO = "COLUMNINFO";
+    private static final String COLUMN_SCHEMA_NAME = "PP.RDB$SCHEMA_NAME";
+    private static final String COLUMN_PACKAGE_NAME = "PP.RDB$PACKAGE_NAME";
     private static final String COLUMN_PROCEDURE_NAME = "PP.RDB$PROCEDURE_NAME";
     private static final String COLUMN_PARAMETER_NAME = "PP.RDB$PARAMETER_NAME";
     
@@ -76,14 +78,15 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
     /**
      * @see DatabaseMetaData#getProcedureColumns(String, String, String, String) 
      */
-    public final ResultSet getProcedureColumns(String catalog, String procedureNamePattern, String columnNamePattern)
-            throws SQLException {
+    public final ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
+            String columnNamePattern) throws SQLException {
         if ("".equals(procedureNamePattern) || "".equals(columnNamePattern)) {
             // Matching procedure name or column name not possible
             return createEmpty();
         }
 
-        MetadataQuery metadataQuery = createGetProcedureColumnsQuery(catalog, procedureNamePattern, columnNamePattern);
+        MetadataQuery metadataQuery = createGetProcedureColumnsQuery(catalog, schemaPattern, procedureNamePattern,
+                columnNamePattern);
         return createMetaDataResultSet(metadataQuery);
     }
 
@@ -96,10 +99,11 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
                 .fromCurrentRow(rs)
                 .build();
         String catalog = rs.getString("PROCEDURE_CAT");
+        String schema = rs.getString("PROCEDURE_SCHEM");
         String procedureName = rs.getString("PROCEDURE_NAME");
         return valueBuilder
                 .at(0).setString(catalog)
-                .at(1).set(null)
+                .at(1).setString(schema)
                 .at(2).setString(procedureName)
                 .at(3).setString(rs.getString("COLUMN_NAME"))
                 // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
@@ -127,13 +131,18 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
                 .toRowValue(false);
     }
 
-    abstract MetadataQuery createGetProcedureColumnsQuery(String catalog, String procedureNamePattern,
-            String columnNamePattern);
+    abstract MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern,
+            String procedureNamePattern, String columnNamePattern);
 
     public static GetProcedureColumns create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         // NOTE: Indirection through static method prevents unnecessary classloading
-        if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
+        if (firebirdSupportInfo.isVersionEqualOrAbove(6)) {
+            if (mediator.isUseCatalogAsPackage()) {
+                return FB6CatalogAsPackage.createInstance(mediator);
+            }
+            return FB6.createInstance(mediator);
+        } else if (firebirdSupportInfo.isVersionEqualOrAbove(3)) {
             if (mediator.isUseCatalogAsPackage()) {
                 return FB3CatalogAsPackage.createInstance(mediator);
             }
@@ -144,30 +153,33 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
     }
 
     @SuppressWarnings("java:S101")
-    private static class FB2_5 extends GetProcedureColumns {
+    private static final class FB2_5 extends GetProcedureColumns {
 
         //@formatter:off
-        private static final String GET_PROCEDURE_COLUMNS_FRAGMENT_2_5 =
-                "select\n"
-                + "  null as PROCEDURE_CAT,\n"
-                + "  PP.RDB$PROCEDURE_NAME as PROCEDURE_NAME,\n"
-                + "  PP.RDB$PARAMETER_NAME as COLUMN_NAME,\n"
-                + "  PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,\n"
-                + "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n"
-                + "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n"
-                + "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n"
-                + "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n"
-                + "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n"
-                + "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n"
-                + "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n"
-                + "  F.RDB$NULL_FLAG as NULL_FLAG,\n"
-                + "  PP.RDB$DESCRIPTION as REMARKS,\n"
-                + "  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER,\n"
-                + "  coalesce(PP.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as COLUMN_DEF\n"
-                + "from RDB$PROCEDURE_PARAMETERS PP inner join RDB$FIELDS F on PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME";
+        private static final String GET_PROCEDURE_COLUMNS_FRAGMENT_2_5 = """
+                select
+                  cast(null as CHAR(1)) as PROCEDURE_CAT,
+                  cast(null as CHAR(1)) as PROCEDURE_SCHEM,
+                  PP.RDB$PROCEDURE_NAME as PROCEDURE_NAME,
+                  PP.RDB$PARAMETER_NAME as COLUMN_NAME,
+                  PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,
+                """ +
+                "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n" +
+                "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n" +
+                "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n" +
+                "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n" +
+                "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n" +
+                "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n" +
+                "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n" + """
+                  F.RDB$NULL_FLAG as NULL_FLAG,
+                  PP.RDB$DESCRIPTION as REMARKS,
+                  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER,
+                  coalesce(PP.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as COLUMN_DEF
+                from RDB$PROCEDURE_PARAMETERS PP inner join RDB$FIELDS F on PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME""";
+        //@formatter:on
+
         private static final String GET_PROCEDURE_COLUMNS_END_2_5 =
                 "\norder by PP.RDB$PROCEDURE_NAME, PP.RDB$PARAMETER_TYPE desc, PP.RDB$PARAMETER_NUMBER";
-        //@formatter:on
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
@@ -178,47 +190,50 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetProcedureColumnsQuery(String catalog, String procedureNamePattern,
+        MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern, String procedureNamePattern,
                 String columnNamePattern) {
-            Clause procedureClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
-            Clause columnClause = new Clause(COLUMN_PARAMETER_NAME, columnNamePattern);
+            var clauses = List.of(
+                    new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern),
+                    new Clause(COLUMN_PARAMETER_NAME, columnNamePattern));
             String query = GET_PROCEDURE_COLUMNS_FRAGMENT_2_5
-                    + (anyCondition(procedureClause, columnClause)
-                    ? "\nwhere " + procedureClause.getCondition(columnClause.hasCondition())
-                    + columnClause.getCondition(false)
-                    : "")
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
                     + GET_PROCEDURE_COLUMNS_END_2_5;
-            return new MetadataQuery(query, Clause.parameters(procedureClause, columnClause));
+            return new MetadataQuery(query, Clause.parameters(clauses));
         }
+
     }
 
-    private static class FB3 extends GetProcedureColumns {
+    private static final class FB3 extends GetProcedureColumns {
 
         //@formatter:off
-        private static final String GET_PROCEDURE_COLUMNS_FRAGMENT_3 =
-                "select\n"
-                + "  null as PROCEDURE_CAT,\n"
-                + "  trim(trailing from PP.RDB$PROCEDURE_NAME) as PROCEDURE_NAME,\n"
-                + "  trim(trailing from PP.RDB$PARAMETER_NAME) as COLUMN_NAME,\n"
-                + "  PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,\n"
-                + "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n"
-                + "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n"
-                + "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n"
-                + "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n"
-                + "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n"
-                + "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n"
-                + "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n"
-                + "  F.RDB$NULL_FLAG as NULL_FLAG,\n"
-                + "  PP.RDB$DESCRIPTION as REMARKS,\n"
-                + "  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER,\n"
-                + "  coalesce(PP.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as COLUMN_DEF\n"
-                + "from RDB$PROCEDURE_PARAMETERS PP inner join RDB$FIELDS F on PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME\n"
-                + "where PP.RDB$PACKAGE_NAME is null";
+        private static final String GET_PROCEDURE_COLUMNS_FRAGMENT_3 = """
+                select
+                  null as PROCEDURE_CAT,
+                  null as PROCEDURE_SCHEM,
+                  trim(trailing from PP.RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
+                  trim(trailing from PP.RDB$PARAMETER_NAME) as COLUMN_NAME,
+                  PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,
+                """ +
+                "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n" +
+                "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n" +
+                "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n" +
+                "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n" +
+                "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n" +
+                "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n" +
+                "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n" + """
+                  F.RDB$NULL_FLAG as NULL_FLAG,
+                  PP.RDB$DESCRIPTION as REMARKS,
+                  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER,
+                  coalesce(PP.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as COLUMN_DEF
+                from RDB$PROCEDURE_PARAMETERS PP inner join RDB$FIELDS F on PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME
+                where PP.RDB$PACKAGE_NAME is null""";
+        //@formatter:on
+
         // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort
         private static final String GET_PROCEDURE_COLUMNS_END_3 =
                 "\norder by PP.RDB$PACKAGE_NAME, PP.RDB$PROCEDURE_NAME, PP.RDB$PARAMETER_TYPE desc, "
                 + "PP.RDB$PARAMETER_NUMBER";
-        //@formatter:on
+
 
         private FB3(DbMetadataMediator mediator) {
             super(mediator);
@@ -229,46 +244,47 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetProcedureColumnsQuery(String catalog, String procedureNamePattern,
+        MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern, String procedureNamePattern,
                 String columnNamePattern) {
-            Clause procedureClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
-            Clause columnClause = new Clause(COLUMN_PARAMETER_NAME, columnNamePattern);
+            var clauses = List.of(
+                    new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern),
+                    new Clause(COLUMN_PARAMETER_NAME, columnNamePattern));
             String query = GET_PROCEDURE_COLUMNS_FRAGMENT_3
-                    + procedureClause.getCondition("\nand ", "")
-                    + columnClause.getCondition("\nand ", "")
+                    + (Clause.anyCondition(clauses) ? "\nand " + Clause.conjunction(clauses) : "")
                     + GET_PROCEDURE_COLUMNS_END_3;
-            return new MetadataQuery(query, Clause.parameters(procedureClause, columnClause));
+            return new MetadataQuery(query, Clause.parameters(clauses));
         }
+
     }
 
     private static final class FB3CatalogAsPackage extends GetProcedureColumns {
 
         //@formatter:off
-        private static final String GET_PROCEDURE_COLUMNS_FRAGMENT_3_W_PKG =
-                "select\n"
-                + "  coalesce(trim(trailing from PP.RDB$PACKAGE_NAME), '') as PROCEDURE_CAT,\n"
-                + "  trim(trailing from PP.RDB$PROCEDURE_NAME) as PROCEDURE_NAME,\n"
-                + "  trim(trailing from PP.RDB$PARAMETER_NAME) as COLUMN_NAME,\n"
-                + "  PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,\n"
-                + "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n"
-                + "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n"
-                + "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n"
-                + "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n"
-                + "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n"
-                + "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n"
-                + "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n"
-                + "  F.RDB$NULL_FLAG as NULL_FLAG,\n"
-                + "  PP.RDB$DESCRIPTION as REMARKS,\n"
-                + "  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER,\n"
-                + "  coalesce(PP.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as COLUMN_DEF\n"
-                + "from RDB$PROCEDURE_PARAMETERS PP inner join RDB$FIELDS F on PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME";
+        private static final String GET_PROCEDURE_COLUMNS_FRAGMENT_3_W_PKG = """
+                select
+                  coalesce(trim(trailing from PP.RDB$PACKAGE_NAME), '') as PROCEDURE_CAT,
+                  null as PROCEDURE_SCHEM,
+                  trim(trailing from PP.RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
+                  trim(trailing from PP.RDB$PARAMETER_NAME) as COLUMN_NAME,
+                  PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,
+                """ +
+                "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n" +
+                "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n" +
+                "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n" +
+                "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n" +
+                "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n" +
+                "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n" +
+                "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n" + """
+                  F.RDB$NULL_FLAG as NULL_FLAG,
+                  PP.RDB$DESCRIPTION as REMARKS,
+                  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER,
+                  coalesce(PP.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as COLUMN_DEF
+                from RDB$PROCEDURE_PARAMETERS PP inner join RDB$FIELDS F on PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME""";
+        //@formatter:on
 
         private static final String GET_PROCEDURE_COLUMNS_END_3_W_PKG =
                 "\norder by PP.RDB$PACKAGE_NAME nulls first, PP.RDB$PROCEDURE_NAME, PP.RDB$PARAMETER_TYPE desc, "
                 + "PP.RDB$PARAMETER_NUMBER";
-        //@formatter:on
-
-        private static final String COLUMN_PACKAGE_NAME = "PP.RDB$PACKAGE_NAME";
 
         private FB3CatalogAsPackage(DbMetadataMediator mediator) {
             super(mediator);
@@ -279,7 +295,7 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetProcedureColumnsQuery(String catalog, String procedureNamePattern,
+        MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern, String procedureNamePattern,
                 String columnNamePattern) {
             var clauses = new ArrayList<Clause>(3);
             if (catalog != null) {
@@ -294,14 +310,130 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
             }
             clauses.add(new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern));
             clauses.add(new Clause(COLUMN_PARAMETER_NAME, columnNamePattern));
-            //@formatter:off
             String sql = GET_PROCEDURE_COLUMNS_FRAGMENT_3_W_PKG
-                    + (Clause.anyCondition(clauses)
-                    ? "\nwhere " + Clause.conjunction(clauses)
-                    : "")
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
                     + GET_PROCEDURE_COLUMNS_END_3_W_PKG;
-            //@formatter:on
             return new MetadataQuery(sql, Clause.parameters(clauses));
         }
+
+    }
+
+    private static final class FB6 extends GetProcedureColumns {
+
+        //@formatter:off
+        private static final String GET_PROCEDURE_COLUMNS_FRAGMENT_6 = """
+                select
+                  null as PROCEDURE_CAT,
+                  trim(trailing from PP.RDB$SCHEMA_NAME) as PROCEDURE_SCHEM,
+                  trim(trailing from PP.RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
+                  trim(trailing from PP.RDB$PARAMETER_NAME) as COLUMN_NAME,
+                  PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,
+                """ +
+                "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n" +
+                "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n" +
+                "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n" +
+                "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n" +
+                "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n" +
+                "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n" +
+                "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n" + """
+                  F.RDB$NULL_FLAG as NULL_FLAG,
+                  PP.RDB$DESCRIPTION as REMARKS,
+                  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER,
+                  coalesce(PP.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as COLUMN_DEF
+                from SYSTEM.RDB$PROCEDURE_PARAMETERS PP
+                inner join SYSTEM.RDB$FIELDS F
+                    on PP.RDB$FIELD_SOURCE_SCHEMA_NAME = F.RDB$SCHEMA_NAME and PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME
+                where PP.RDB$PACKAGE_NAME is null""";
+        //@formatter:on
+
+        private static final String GET_PROCEDURE_COLUMNS_END_6 =
+                "\norder by PP.RDB$PACKAGE_NAME, PP.RDB$SCHEMA_NAME, PP.RDB$PROCEDURE_NAME, "
+                        + "PP.RDB$PARAMETER_TYPE desc, PP.RDB$PARAMETER_NUMBER";
+
+        private FB6(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetProcedureColumns createInstance(DbMetadataMediator mediator) {
+            return new FB6(mediator);
+        }
+
+        @Override
+        MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern, String procedureNamePattern,
+                String columnNamePattern) {
+            var clauses = List.of(
+                    new Clause(COLUMN_SCHEMA_NAME, schemaPattern),
+                    new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern),
+                    new Clause(COLUMN_PARAMETER_NAME, columnNamePattern));
+            String query = GET_PROCEDURE_COLUMNS_FRAGMENT_6
+                    + (Clause.anyCondition(clauses) ? "\nand " + Clause.conjunction(clauses) : "")
+                    + GET_PROCEDURE_COLUMNS_END_6;
+            return new MetadataQuery(query, Clause.parameters(clauses));
+        }
+
+    }
+
+    private static final class FB6CatalogAsPackage extends GetProcedureColumns {
+
+        //@formatter:off
+        private static final String GET_PROCEDURE_COLUMNS_FRAGMENT_6_W_PKG = """
+                select
+                  coalesce(trim(trailing from PP.RDB$PACKAGE_NAME), '') as PROCEDURE_CAT,
+                  trim(trailing from PP.RDB$SCHEMA_NAME) as PROCEDURE_SCHEM,
+                  trim(trailing from PP.RDB$PROCEDURE_NAME) as PROCEDURE_NAME,
+                  trim(trailing from PP.RDB$PARAMETER_NAME) as COLUMN_NAME,
+                  PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,
+                """ +
+                "  F.RDB$FIELD_TYPE as " + FIELD_TYPE + ",\n" +
+                "  F.RDB$FIELD_SUB_TYPE as " + FIELD_SUB_TYPE + ",\n" +
+                "  F.RDB$FIELD_PRECISION as " + FIELD_PRECISION + ",\n" +
+                "  F.RDB$FIELD_SCALE as " + FIELD_SCALE + ",\n" +
+                "  F.RDB$FIELD_LENGTH as " + FIELD_LENGTH + ",\n" +
+                "  F.RDB$CHARACTER_LENGTH as " + CHAR_LEN + ",\n" +
+                "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n" + """
+                  F.RDB$NULL_FLAG as NULL_FLAG,
+                  PP.RDB$DESCRIPTION as REMARKS,
+                  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER,
+                  coalesce(PP.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as COLUMN_DEF
+                from SYSTEM.RDB$PROCEDURE_PARAMETERS PP
+                inner join SYSTEM.RDB$FIELDS F
+                  on PP.RDB$FIELD_SOURCE_SCHEMA_NAME = F.RDB$SCHEMA_NAME and PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME""";
+        //@formatter:on
+
+        private static final String GET_PROCEDURE_COLUMNS_END_6_W_PKG =
+                "\norder by PP.RDB$PACKAGE_NAME nulls first, PP.RDB$SCHEMA_NAME, PP.RDB$PROCEDURE_NAME,"
+                        + "PP.RDB$PARAMETER_TYPE desc, PP.RDB$PARAMETER_NUMBER";
+
+        private FB6CatalogAsPackage(DbMetadataMediator mediator) {
+            super(mediator);
+        }
+
+        private static GetProcedureColumns createInstance(DbMetadataMediator mediator) {
+            return new FB6CatalogAsPackage(mediator);
+        }
+
+        @Override
+        MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern, String procedureNamePattern,
+                String columnNamePattern) {
+            var clauses = new ArrayList<Clause>(4);
+            clauses.add(new Clause(COLUMN_SCHEMA_NAME, schemaPattern));
+            if (catalog != null) {
+                // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
+                // should not be used to narrow the search
+                if (catalog.isEmpty()) {
+                    clauses.add(Clause.isNullClause(COLUMN_PACKAGE_NAME));
+                } else {
+                    // Exact matches only
+                    clauses.add(Clause.equalsClause(COLUMN_PACKAGE_NAME, catalog));
+                }
+            }
+            clauses.add(new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern));
+            clauses.add(new Clause(COLUMN_PARAMETER_NAME, columnNamePattern));
+            String sql = GET_PROCEDURE_COLUMNS_FRAGMENT_6_W_PKG
+                    + (Clause.anyCondition(clauses) ? "\nwhere " + Clause.conjunction(clauses) : "")
+                    + GET_PROCEDURE_COLUMNS_END_6_W_PKG;
+            return new MetadataQuery(sql, Clause.parameters(clauses));
+        }
+
     }
 }

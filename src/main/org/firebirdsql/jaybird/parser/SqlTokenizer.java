@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -162,6 +162,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
             yield new PeriodToken(start);
         }
         case '+',
+                '%', // Firebird 6.0 scope specifier
                 '*', // Can also signify 'all' (as in select * or select alias.*)
                 '=' -> new OperatorToken(start, src, start, pos);
         case '-' -> {
@@ -513,8 +514,8 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
 
     private static boolean isNormalTokenBoundary(int c) {
         return switch (c) {
-            case EOF, '\t', '\n', '\r', ' ', '(', ')', '{', '}', '[', ']', '\'', '"', ':', ';', '.', '+', '-', '/', '*',
-                    '=', '>', '<', '~', '^', '!', '?' -> true;
+            case EOF, '\t', '\n', '\r', ' ', '(', ')', '{', '}', '[', ']', '\'', '"', ':', ';', '.', ',', '+', '-', '/',
+                 '*', '=', '>', '<', '~', '^', '!', '?', '%' -> true;
             default -> false;
         };
     }

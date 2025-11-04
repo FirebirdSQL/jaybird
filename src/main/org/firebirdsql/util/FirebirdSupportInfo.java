@@ -13,6 +13,7 @@ import org.firebirdsql.gds.ng.wire.auth.srp.Srp512AuthenticationPluginSpi;
 import org.firebirdsql.gds.ng.wire.auth.srp.SrpAuthenticationPluginSpi;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.PageSizeConstants;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -32,10 +33,12 @@ import static java.util.Objects.requireNonNull;
  * </p>
  *
  * @author Mark Rotteveel
- * @since 3.0
+ * @since 3
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unused", "ClassCanBeRecord" })
 public final class FirebirdSupportInfo {
+
+    private static final int SUPPORTED_MIN_VERSION = 3;
 
     private final GDSServerVersion serverVersion;
 
@@ -517,8 +520,7 @@ public final class FirebirdSupportInfo {
             case 3 -> 50;
             case 4 -> 54;
             case 5 -> 56;
-            // Intentionally not merged with case 5 as it is likely to change during Firebird 6 development
-            case 6 -> 56;
+            case 6 -> 57;
             default -> -1;
         };
     }
@@ -786,10 +788,32 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * Reports if schemas are supported.
+     *
+     * @return {@code true} if schemas are not supported, {@code false} otherwise
+     */
+    public boolean supportsSchemas() {
+        return isVersionEqualOrAbove(6);
+    }
+
+    /**
+     * If schema support is available, returns {@code forSchema}, otherwise returns {@code withoutSchema}.
+     *
+     * @param forSchema
+     *         value to return when schema support is available
+     * @param withoutSchema
+     *         value to return when schema support is not available
+     * @return {@code forSchema} if schema support is available, otherwise {@code withoutSchema}
+     */
+    public <T extends @Nullable Object> T ifSchemaElse(T forSchema, T withoutSchema) {
+        return supportsSchemas() ? forSchema : withoutSchema;
+    }
+
+    /**
      * @return {@code true} when this Firebird version is considered a supported version
      */
     public boolean isSupportedVersion() {
-        return isVersionEqualOrAbove(3);
+        return isVersionEqualOrAbove(SUPPORTED_MIN_VERSION);
     }
 
     /**
@@ -823,15 +847,15 @@ public final class FirebirdSupportInfo {
 
     /**
      * @param connection
-     *         A database connection (NOTE: {@link java.sql.Connection} is used, but it must be or unwrap to a
-     *         {@link org.firebirdsql.jdbc.FirebirdConnection}).
+     *         a database connection (NOTE: it must be or unwrap to a {@link org.firebirdsql.jdbc.FirebirdConnection})
      * @return FirebirdVersionSupport instance
      * @throws java.lang.IllegalArgumentException
-     *         When the provided connection is not an instance of or wrapper for
+     *         when the provided connection is not an instance of or wrapper for
      *         {@link org.firebirdsql.jdbc.FirebirdConnection}
      * @throws java.lang.IllegalStateException
-     *         When an SQLException occurs unwrapping the connection, or creating
+     *         when an SQLException occurs unwrapping the connection, or creating
      *         the {@link org.firebirdsql.util.FirebirdSupportInfo} instance
+     * @see #supportInfoFor(FirebirdConnection)
      */
     public static FirebirdSupportInfo supportInfoFor(java.sql.Connection connection) {
         try {
@@ -841,6 +865,21 @@ public final class FirebirdSupportInfo {
                 throw new IllegalArgumentException(
                         "connection needs to be (or unwrap to) an org.firebirdsql.jdbc.FBConnection");
             }
+        } catch (SQLException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * @param connection
+     *         a database connection
+     * @return FirebirdVersionSupport instance
+     * @throws java.lang.IllegalStateException
+     *         when an SQLException occurs creating the {@link org.firebirdsql.util.FirebirdSupportInfo} instance
+     */
+    public static FirebirdSupportInfo supportInfoFor(FirebirdConnection connection) {
+        try {
+            return supportInfoFor(connection.getFbDatabase());
         } catch (SQLException e) {
             throw new IllegalStateException(e);
         }

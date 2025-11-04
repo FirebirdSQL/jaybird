@@ -1,11 +1,13 @@
-// SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.util;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EmptySource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -54,14 +56,27 @@ class StringUtilsTest {
     @ParameterizedTest
     @NullSource
     @EmptySource
-    void testIsNullOrEmpty_nullOrEmptyYieldsTrue(String value) {
+    void testIsNullOrEmpty_nullOrEmptyYieldsTrue(@Nullable String value) {
         assertTrue(StringUtils.isNullOrEmpty(value));
     }
 
     @ParameterizedTest
     @ValueSource(strings = { " ", "a", "\0", "abc" })
-    void testIsNullOrEmpty_nonEmptyYieldsFalse(String value) {
+    void testIsNullOrEmpty_nonEmptyYieldsFalse(@Nullable String value) {
         assertFalse(StringUtils.isNullOrEmpty(value));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = " ")
+    void testIsNullOrBlank_nullOrBlankYieldsTrue(@Nullable String value) {
+        assertTrue(StringUtils.isNullOrBlank(value));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "a", "\0", "abc" })
+    void testIsNullOrBlank_nonBlankYieldsFalse(@Nullable String value) {
+        assertFalse(StringUtils.isNullOrBlank(value));
     }
 
     @ParameterizedTest
@@ -74,7 +89,7 @@ class StringUtilsTest {
             ' a',  a
             ' a ', a
             """)
-    void testTrim(String input, String expectedOutput) {
+    void testTrim(@Nullable String input, @Nullable String expectedOutput) {
         assertEquals(expectedOutput, StringUtils.trim(input));
     }
 

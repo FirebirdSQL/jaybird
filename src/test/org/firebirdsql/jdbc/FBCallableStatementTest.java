@@ -5,7 +5,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2005-2007 Gabriel Reid
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -13,12 +13,14 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
@@ -30,6 +32,7 @@ import java.util.stream.Stream;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementClosed;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementOnlyMethod;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
@@ -1220,6 +1223,55 @@ class FBCallableStatementTest {
             cstmt.execute();
 
             assertEquals(sourceValue.substring(0, usedLength), cstmt.getString(1));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void determineSelectability_normalProc(boolean selectable) throws Exception {
+        executeDDL(con, """
+                create procedure test_selectability(in_param integer) returns (out_param integer)
+                as
+                begin
+                  out_param = in_param;
+                  %s
+                end
+                """.formatted(selectable ? "suspend;" : ""));
+
+        try (var cstmt = con.prepareCall("{call test_selectability(?)}").unwrap(FirebirdCallableStatement.class)) {
+            assertEquals(selectable, cstmt.isSelectableProcedure(), "selectable");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void determineSelectability_packagedProc(boolean selectable) throws Exception {
+        assumeFeature(FirebirdSupportInfo::supportsPackages, "Test requires package support");
+        con.setAutoCommit(false);
+        executeDDL(con, """
+                create package test_pkg
+                as
+                begin
+                  procedure test_selectability(in_param integer) returns (out_param integer);
+                end
+                """);
+        executeDDL(con, """
+                create package body test_pkg
+                as
+                begin
+                  procedure test_selectability(in_param integer) returns (out_param integer)
+                  as
+                  begin
+                    out_param = in_param;
+                    %s
+                  end
+                end
+                """.formatted(selectable ? "suspend;" : ""));
+        con.setAutoCommit(true);
+
+        try (var cstmt = con.prepareCall("{call test_pkg.test_selectability(?)}")
+                .unwrap(FirebirdCallableStatement.class)) {
+            assertEquals(selectable, cstmt.isSelectableProcedure(), "selectable");
         }
     }
 

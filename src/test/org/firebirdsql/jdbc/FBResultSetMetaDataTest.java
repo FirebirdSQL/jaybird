@@ -4,7 +4,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -45,6 +45,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
+ * @see FBResultSetMetaDataParametrizedTest
  */
 class FBResultSetMetaDataTest {
 
@@ -324,16 +325,12 @@ class FBResultSetMetaDataTest {
                     "select * from (select column1 from tablea b) a"
             }) {
                 try (ResultSet rs = stmt.executeQuery(query)) {
-//                    System.out.println(query);
                     FirebirdResultSetMetaData rsmd = rs.getMetaData().unwrap(FirebirdResultSetMetaData.class);
                     final String columnLabel = rsmd.getColumnLabel(1);
                     final String tableAlias = rsmd.getTableAlias(1);
-//                    System.out.println("'" + columnLabel + "'");
-//                    System.out.println("'" + tableAlias + "'");
                     assertEquals("COLUMN1", columnLabel, "columnLabel");
                     assertEquals("A", tableAlias, "tableAlias");
                 }
-//                System.out.println("---------");
             }
         }
     }
@@ -382,6 +379,7 @@ class FBResultSetMetaDataTest {
                 .at(0).simple(SQL_FLOAT, 4, "TEST", "FLOAT").addField()
                 .at(1).simple(SQL_DOUBLE, 8, "TEST", "DOUBLE").addField()
                 .toRowDescriptor();
+        //noinspection resource
         var rs = new FBResultSet(rowDescriptor, List.of());
         ResultSetMetaData rsmd = rs.getMetaData();
 
@@ -485,6 +483,28 @@ class FBResultSetMetaDataTest {
                 assertEquals(2, rs.getLong(4));
             }
         }
+    }
+
+    @Test
+    void expressionInSelect() throws Exception {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            try (var rs = stmt.executeQuery("select id, long_field + 1 as EXPRESSION from test_rs_metadata")) {
+                ResultSetMetaData rsmd = rs.getMetaData();
+                assertColumnMetadata(rsmd, 1, ifSchemaElse("PUBLIC", ""), "TEST_RS_METADATA", "ID", "ID",
+                        Types.INTEGER);
+                assertColumnMetadata(rsmd, 2, "", "", "EXPRESSION", "ADD", Types.NUMERIC);
+            }
+        }
+    }
+
+    static void assertColumnMetadata(ResultSetMetaData rsmd, int idx, String schema, String table, String label,
+            String name, int type) throws SQLException {
+        assertEquals(schema, rsmd.getSchemaName(idx), "schemaName");
+        assertEquals(table, rsmd.getTableName(idx), "tableName");
+        assertEquals(label, rsmd.getColumnLabel(idx), "columnLabel");
+        assertEquals(name, rsmd.getColumnName(idx), "columnName");
+        assertEquals(type, rsmd.getColumnType(idx), "columnType");
     }
 
 }

@@ -1,14 +1,17 @@
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.opentest4j.TestAbortedException;
 
 import java.nio.file.Files;
@@ -26,6 +29,8 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.common.FBTestProperties.ifSchemaElse;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -82,6 +87,17 @@ class FBDatabaseMetaDataIndexInfoTest {
     private static final String CREATE_PARTIAL_IDX_TBL_2 =
             "create index IDX_PARTIAL_IDX_TBL_2 on INDEX_TEST_TABLE_2 (COLUMN1) where COLUMN2 is not null";
 
+    private static final String CREATE_OTHER_SCHEMA = "create schema OTHER_SCHEMA";
+
+    private static final String CREATE_OTHER_SCHEMA_INDEX_TEST_TABLE_3 = """
+            create table OTHER_SCHEMA.INDEX_TEST_TABLE_3 (
+                ID integer constraint PK_IDX_TEST_3_ID primary key,
+                COLUMN1 VARCHAR(10)
+            )""";
+
+    private static final String CREATE_OTHER_SCHEMA_IDX_TBL3_COLUMN1 =
+            "create index OTHER_SCHEMA.IDX_TBL_3_COLUMN1 on OTHER_SCHEMA.INDEX_TEST_TABLE_3 (COLUMN1)";
+
     private static final MetadataResultSetDefinition getIndexInfoDefinition =
             new MetadataResultSetDefinition(IndexInfoMetaData.class);
 
@@ -119,8 +135,15 @@ class FBDatabaseMetaDataIndexInfoTest {
                 CREATE_IDX_TBL_2_COL1_AND_2,
                 CREATE_DESC_COMPUTED_IDX_TBL_2,
                 CREATE_UQ_DESC_IDX_TBL_2_COL3_AND_COL2));
-        if (getDefaultSupportInfo().supportsPartialIndices()) {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        if (supportInfo.supportsPartialIndices()) {
             statements.add(CREATE_PARTIAL_IDX_TBL_2);
+        }
+        if (supportInfo.supportsSchemas()) {
+            statements.addAll(List.of(
+                    CREATE_OTHER_SCHEMA,
+                    CREATE_OTHER_SCHEMA_INDEX_TEST_TABLE_3,
+                    CREATE_OTHER_SCHEMA_IDX_TBL3_COLUMN1));
         }
         return statements;
     }
@@ -139,12 +162,10 @@ class FBDatabaseMetaDataIndexInfoTest {
     /**
      * Tests getIndexInfo() for index_test_table_1 and unique false, expecting all indices, including those 
      * defined by PK, FK and Unique constraint.
-     * <p>
-     * Secondary: uses lowercase name of the table and approximate false
-     * </p>
      */
-    @Test
-    void testIndexInfo_table1_all() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testIndexInfo_table1_all(boolean limitToSchema) throws Exception {
         List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<>(5);
         String tableName = "INDEX_TEST_TABLE_1";
         expectedIndexInfo.add(createRule(tableName, true, "CMP_IDX_TEST_TABLE_1", "(UPPER(column1))", 1, true));
@@ -153,15 +174,13 @@ class FBDatabaseMetaDataIndexInfoTest {
         expectedIndexInfo.add(createRule(tableName, false, "UQ_COMP_IDX_TBL1", "(column2 + column3)", 1, true));
         expectedIndexInfo.add(createRule(tableName, false, "UQ_IDX_TEST_1_COLUMN3", "COLUMN3", 1, true));
         
-        ResultSet indexInfo = dbmd.getIndexInfo(null, null, "INDEX_TEST_TABLE_1", false, false);
+        ResultSet indexInfo = dbmd.getIndexInfo(null, limitToSchema ? ifSchemaElse("PUBLIC", "") : null,
+                "INDEX_TEST_TABLE_1", false, false);
         validate(indexInfo, expectedIndexInfo);
     }
     
     /**
      * Tests getIndexInfo() for index_test_table_1 and unique true, expecting only the unique indices.
-     * <p>
-     * Secondary: uses uppercase name of the table and approximate true
-     * </p>
      */
     @Test
     void testIndexInfo_table1_unique() throws Exception {
@@ -178,9 +197,6 @@ class FBDatabaseMetaDataIndexInfoTest {
     /**
      * Tests getIndexInfo() for index_test_table_2 and unique false, expecting all indices, including those 
      * defined by PK, FK and Unique constraint.
-     * <p>
-     * Secondary: uses uppercase name of the table and approximate true
-     * </p>
      */
     @Test
     void testIndexInfo_table2_all() throws Exception {
@@ -207,9 +223,6 @@ class FBDatabaseMetaDataIndexInfoTest {
     /**
      * Tests getIndexInfo() for index_test_table_2 and unique false, expecting all indices, including those 
      * defined by PK, FK and Unique constraint.
-     * <p>
-     * Secondary: uses lowercase name of the table and approximate false
-     * </p>
      */
     @Test
     void testIndexInfo_table2_unique() throws Exception {
@@ -230,7 +243,7 @@ class FBDatabaseMetaDataIndexInfoTest {
      * </p>
      * <p>
      * This test is machine specific (or at least, environment-specific), as it requires a Firebird database with
-     * the path {@code E:\DB\FB4\FB4TESTDATABASE.FDB}.
+     * the path {@code C:\DATA\DB\FB4\FB4TESTDATABASE.FDB}.
      * </p>
      */
     @Test
@@ -241,7 +254,7 @@ class FBDatabaseMetaDataIndexInfoTest {
 
         Path fb4DbPath;
         try {
-            fb4DbPath = Paths.get("E:/DB/FB4/FB4TESTDATABASE.FDB");
+            fb4DbPath = Paths.get("C:/DATA/DB/FB4/FB4TESTDATABASE.FDB");
         } catch (InvalidPathException e) {
             throw new TestAbortedException("Database path is invalid on this system", e);
         }
@@ -261,6 +274,25 @@ class FBDatabaseMetaDataIndexInfoTest {
                 getIndexInfoDefinition.validateResultSetColumns(indexInfo);
             }
         }
+    }
+
+    /**
+     * Tests getIndexInfo() for index_test_table_3 and unique false, expecting all indices, including those
+     * defined by PK constraint.
+     */
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testIndexInfo_table3_all(boolean limitToSchema) throws Exception {
+        assumeSchemaSupport();
+        String schema = "OTHER_SCHEMA";
+        String tableName = "INDEX_TEST_TABLE_3";
+        var expectedIndexInfo = List.of(
+                createRule(schema, tableName, true, "IDX_TBL_3_COLUMN1", "COLUMN1", 1, true),
+                createRule(schema, tableName, false, "PK_IDX_TEST_3_ID", "ID", 1, true));
+
+        ResultSet indexInfo = dbmd
+                .getIndexInfo(null, limitToSchema ? schema : null, "INDEX_TEST_TABLE_3", false, false);
+        validate(indexInfo, expectedIndexInfo);
     }
     
     // TODO Add tests with quoted identifiers
@@ -283,9 +315,16 @@ class FBDatabaseMetaDataIndexInfoTest {
         }
     }
 
-    private Map<IndexInfoMetaData, Object> createRule(String tableName, boolean nonUnique, String indexName, 
+    private Map<IndexInfoMetaData, Object> createRule(String tableName, boolean nonUnique, String indexName,
             String columnName, Integer ordinalPosition, boolean ascending) {
+        return createRule(ifSchemaElse("PUBLIC", null), tableName, nonUnique, indexName, columnName, ordinalPosition,
+                ascending);
+    }
+
+    private Map<IndexInfoMetaData, Object> createRule(String schema, String tableName, boolean nonUnique,
+            String indexName, String columnName, Integer ordinalPosition, boolean ascending) {
         Map<IndexInfoMetaData, Object> indexRules = getDefaultValueValidationRules();
+        indexRules.put(IndexInfoMetaData.TABLE_SCHEM, schema);
         indexRules.put(IndexInfoMetaData.TABLE_NAME, tableName);
         indexRules.put(IndexInfoMetaData.NON_UNIQUE, nonUnique ? "T" : "F");
         indexRules.put(IndexInfoMetaData.INDEX_NAME, indexName);
@@ -304,6 +343,7 @@ class FBDatabaseMetaDataIndexInfoTest {
      *         filter condition value
      * @return {@code rule}
      */
+    @SuppressWarnings("SameParameterValue")
     private Map<IndexInfoMetaData, Object> withFilterCondition(Map<IndexInfoMetaData, Object> rule,
             String filterCondition) {
         rule.put(IndexInfoMetaData.FILTER_CONDITION, filterCondition);
@@ -314,7 +354,7 @@ class FBDatabaseMetaDataIndexInfoTest {
     static {
         Map<IndexInfoMetaData, Object> defaults = new EnumMap<>(IndexInfoMetaData.class);
         defaults.put(IndexInfoMetaData.TABLE_CAT, null);
-        defaults.put(IndexInfoMetaData.TABLE_SCHEM, null);
+        defaults.put(IndexInfoMetaData.TABLE_SCHEM, ifSchemaElse("PUBLIC", null));
         defaults.put(IndexInfoMetaData.INDEX_QUALIFIER, null);
         defaults.put(IndexInfoMetaData.TYPE, DatabaseMetaData.tableIndexOther);
         defaults.put(IndexInfoMetaData.CARDINALITY, null);

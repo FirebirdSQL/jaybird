@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
 
@@ -7,8 +7,11 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.gds.ng.InfoTruncatedException;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.util.Volatile;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -17,9 +20,11 @@ import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
+import static java.util.stream.Collectors.toMap;
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 
 /**
  * Provides access to the table statistics of a {@link java.sql.Connection}.
@@ -39,12 +44,13 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * @since 5
  */
 @Volatile(reason = "Experimental")
+@NullMarked
 public final class FBTableStatisticsManager implements AutoCloseable {
 
     private static final int MAX_RETRIES = 3;
 
-    private Map<Integer, String> tableMapping = new HashMap<>();
-    private FirebirdConnection connection;
+    private Map<Integer, ObjectReference> tableMapping = new HashMap<>();
+    private @Nullable FirebirdConnection connection;
     /**
      * Table slack is a number which is used to pad the table count used for calculating the buffer size in an attempt
      * to prevent or fix truncation of the info request. It is incremented when a truncation is handled.
@@ -77,24 +83,31 @@ public final class FBTableStatisticsManager implements AutoCloseable {
      * <p>
      * A table is only present in the map if this connection touched it in a way which generated a statistic.
      * </p>
+     * <p>
+     * The method {@link #toKey(String, String)} can be used to produce a key as used for entries in the map.
+     * </p>
      *
-     * @return map from table name to table statistics
+     * @return map from table reference ({@code <table-name>} for schemaless, or
+     * {@code <quoted-schema>.<quoted-table-name>} for schema-bound) to table statistics
      * @throws InfoTruncatedException
      *         if a truncated response is received, after retrying 3 times (total: 4 attempts) while increasing
      *         the buffer size; it is possible that subsequent calls to this method may recover (as that will increase
      *         the buffer size even more)
      * @throws SQLException
      *         if the connection is closed, or if obtaining the statistics failed due to a database access error
+     * @see #toKey(String, String)
      */
     public Map<String, TableStatistics> getTableStatistics() throws SQLException {
         checkClosed();
-        FbDatabase db = connection.getFbDatabase();
+        @SuppressWarnings("DataFlowIssue") FbDatabase db = connection.getFbDatabase();
         InfoTruncatedException lastTruncation;
-        TableStatisticsProcessor tableStatisticsProcessor = new TableStatisticsProcessor();
+        var tableStatisticsProcessor = new TableStatisticsProcessor();
         int attempt = 0;
         do {
             try {
-                return db.getDatabaseInfo(getInfoItems(), bufferSize(getTableCount()), tableStatisticsProcessor);
+                return db.getDatabaseInfo(getInfoItems(), bufferSize(getTableCount()), tableStatisticsProcessor)
+                        .values().stream()
+                        .collect(toMap(FBTableStatisticsManager::toKey, Function.identity()));
             } catch (InfoTruncatedException e) {
                 /* Occurrence of truncation should be rare. It could occur if all tables have all statistics items, and
                    new tables are added after the last updateMapping() call or statistics were previously requested by
@@ -107,6 +120,53 @@ public final class FBTableStatisticsManager implements AutoCloseable {
             }
         } while (attempt++ < MAX_RETRIES);
         throw lastTruncation;
+    }
+
+    /**
+     * Produces a key to the map returned by {@link #getTableStatistics()}.
+     *
+     * @param schema
+     *         schema, or {@code null} or empty string for schemaless
+     * @param tableName
+     *         table name
+     * @return key: {@code <table-name>} for schemaless, or {@code <quoted-schema>.<quoted-table-name>} for schema-bound
+     * @since 7
+     */
+    public static String toKey(@Nullable String schema, String tableName) {
+        return isNullOrEmpty(schema) ? tableName : toKey(ObjectReference.of(schema, tableName));
+    }
+
+    /**
+     * Produces a key to the map returned by {@link #getTableStatistics()}.
+     *
+     * @param tableStatistics
+     *         table statistics object
+     * @return key
+     * @see #toKey(String, String)
+     * @since 7
+     */
+    public static String toKey(TableStatistics tableStatistics) {
+        return toKey(tableStatistics.table());
+    }
+
+    /**
+     * Produces a key to the map returned by {@link #getTableStatistics()}.
+     * <p>
+     * The behaviour is undefined when called with an {@link ObjectReference} of more than two identifiers.
+     * </p>
+     *
+     * @param objectReference
+     *         table object reference
+     * @return key
+     * @see #toKey(String, String)
+     * @since 7
+     */
+    static String toKey(ObjectReference objectReference) {
+        if (objectReference.size() == 1) {
+            return objectReference.first().name();
+        }
+        // We assume object reference is size 2, but this will 'work' even if that assumption is wrong
+        return objectReference.toString();
     }
 
     /**
@@ -132,8 +192,7 @@ public final class FBTableStatisticsManager implements AutoCloseable {
     @Override
     public void close() {
         connection = null;
-        tableMapping.clear();
-        tableMapping = null;
+        tableMapping = Map.of();
     }
 
     private void checkClosed() throws SQLException {
@@ -146,11 +205,12 @@ public final class FBTableStatisticsManager implements AutoCloseable {
     }
 
     private void updateTableMapping() throws SQLException {
-        DatabaseMetaData md = connection.getMetaData();
+        @SuppressWarnings("DataFlowIssue") DatabaseMetaData md = connection.getMetaData();
         try (ResultSet rs = md.getTables(
                 null, null, "%", new String[] { "SYSTEM TABLE", "TABLE", "GLOBAL TEMPORARY" })) {
             while (rs.next()) {
-                tableMapping.put(rs.getInt("JB_RELATION_ID"), rs.getString("TABLE_NAME"));
+                tableMapping.put(rs.getInt("JB_RELATION_ID"),
+                        ObjectReference.of(rs.getString("TABLE_SCHEM"), rs.getString("TABLE_NAME")));
             }
         }
     }
@@ -186,17 +246,17 @@ public final class FBTableStatisticsManager implements AutoCloseable {
      * {@link #updateTableMapping()} from this processor.
      * </p>
      */
-    private final class TableStatisticsProcessor implements InfoProcessor<Map<String, TableStatistics>> {
+    private final class TableStatisticsProcessor implements InfoProcessor<Map<ObjectReference, TableStatistics>> {
 
-        private final Map<String, TableStatistics.TableStatisticsBuilder> statisticsBuilders = new HashMap<>();
+        private final Map<ObjectReference, TableStatistics.TableStatisticsBuilder> statisticsBuilders = new HashMap<>();
         private boolean allowTableMappingUpdate = true;
 
         @Override
-        public Map<String, TableStatistics> process(byte[] infoResponse) throws SQLException {
+        public Map<ObjectReference, TableStatistics> process(byte[] infoResponse) throws SQLException {
             try {
                 decodeResponse(infoResponse);
                 return statisticsBuilders.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toTableStatistics()));
+                        .collect(toMap(Map.Entry::getKey, e -> e.getValue().toTableStatistics()));
             } finally {
                 statisticsBuilders.clear();
             }
@@ -245,28 +305,27 @@ public final class FBTableStatisticsManager implements AutoCloseable {
             }
         }
 
-        private String getTableName(Integer tableId) throws SQLException {
-            String tableName = tableMapping.get(tableId);
-            if (tableName == null) {
+        private ObjectReference getTable(Integer tableId) throws SQLException {
+            ObjectReference table = tableMapping.get(tableId);
+            if (table == null) {
                 // mapping empty or out of date (e.g. new table created since the last update)
                 if (allowTableMappingUpdate) {
                     updateTableMapping();
                     // Ensure that if we have multiple tables missing, we don't repeatedly update the table mapping, as
                     // that wouldn't result in new information.
                     allowTableMappingUpdate = false;
-                    tableName = tableMapping.get(tableId);
+                    table = tableMapping.get(tableId);
                 }
-                if (tableName == null) {
+                if (table == null) {
                     // fallback
-                    tableName = "UNKNOWN_TABLE_ID_" + tableId;
+                    table = ObjectReference.of("UNKNOWN_TABLE_ID_" + tableId);
                 }
             }
-            return tableName;
+            return table;
         }
 
         private TableStatistics.TableStatisticsBuilder getBuilder(int tableId) throws SQLException {
-            String tableName = getTableName(tableId);
-            return statisticsBuilders.computeIfAbsent(tableName, TableStatistics::builder);
+            return statisticsBuilders.computeIfAbsent(getTable(tableId), TableStatistics::builder);
         }
     }
 }
