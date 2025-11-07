@@ -1,0 +1,89 @@
+= jdp-2025-07: Statement Max Field Size
+
+// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 7
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+JDBC defines the methods https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/Statement.html#setMaxFieldSize(int)[`setMaxFieldSize`^] and https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/Statement.html#getMaxFieldSize()[`getMaxFieldSize`^] on `java.sql.Statement`, with the following in its javadoc:
+
+[quote,,Java 25 API documentation]
+____
+Sets the limit for the maximum number of bytes that can be returned for character and binary column values in a `ResultSet` object produced by this `Statement` object.
+This limit applies only to `BINARY`, `VARBINARY`, `LONGVARBINARY`, `CHAR`, `VARCHAR`, `NCHAR`, `NVARCHAR`, `LONGNVARCHAR` and `LONGVARCHAR` fields.
+If the limit is exceeded, the excess data is silently discarded.
+For maximum portability, use values greater than `256`.
+
+Parameters: +
+`max` - the new column size limit in bytes; zero means there is no limit
+____
+
+And in the specification:
+
+[quote,JDBC 4.3 Specification]
+____
+[discrete]
+==== 8.3.1 Silent Truncation
+
+The `Statement.setMaxFieldSize` method allows a maximum size (in bytes) to be set.
+This limit applies only to the `BINARY`, `VARBINARY`, `LONGVARBINARY`, `CHAR`, `VARCHAR`, `LONGVARCHAR`, `NCHAR`, `NVARCHAR`, and `LONGNVARCHAR` data types.
+If a limit has been set using `setMaxFieldSize` and there is an attempt to read data that exceeds the limit, any truncation that occurs as a result of exceeding the set limit will _not_ be reported.
+____
+
+Firebird doesn't provide a way to restrict the maximum number of bytes returned that will not result in string truncation errors for longer values, or -- for shorter values -- would result in _"`wrong`"_ client-side length derivations of variable length encodings like UTF8 (which would result in excessive truncation).
+
+Jaybird considers `BLOB SUB_TYPE TEXT` to be `LONGVARCHAR` and `BLOB SUB_TYPE BINARY` to be `LONGVARBINARY` (though all blob subtypes can be treated that way).
+
+== Decision
+
+Jaybird 7 implements support for `setMaxFieldSize`/`getMaxFieldSize` using client-side truncation.
+This will be implemented for `CHAR`, `VARCHAR`, `BINARY`, and `VARBINARY`.
+
+To avoid problems with `RDB$DB_KEY` columns, implementation must ignore the limit for those columns, as indicated by `FieldDescriptor.isDbKey()`.
+
+Decision for handling `LONGVARCHAR`/`LONGVARBINARY` is pending further investigation.
+Currently, we're leaning towards _not_ honouring the maximum field size, or only for `ResultSet.getBytes`/`getString`.
+
+== Consequences
+
+Handling the truncation for `CHAR`, `VARCHAR`, `BINARY`, and `VARBINARY` will be delegated to the `FbStatement` implementation.
+The truncation will be done when receiving the data from the server (from the wire, or from fbclient).
+
+`FbStatement` will receive an `int` property `maxFieldSize` (getter/setter pair) with a default implementation that ignores the set value and returns 0.
+The actual implementation will override this, and use the set value when receiving data from the server.
+
+Caveats or possible pitfalls:
+
+* Given the truncation happens at a set number of bytes, values in a multibyte character set (UTF8) might end in the Unicode replacement character due to truncation before the end of the encoded codepoint.
+* The detection of `RDB$DB_KEY` column will also ignore "`normal`" `BINARY` columns called `DB_KEY`.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2025-07: Statement Max Field Size`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2025.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
