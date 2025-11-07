@@ -214,7 +214,6 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
     private String readStringValue(StatementInfo info) {
         int len = iscVaxInteger2(info.buffer, info.currentIndex);
         info.currentIndex += 2;
-        if (len == 0) return "";
         // TODO Is it correct to use the connection encoding here, or should we use UTF-8 always?
         String value = database.getEncoding().decodeFromCharset(info.buffer, info.currentIndex, len);
         info.currentIndex += len;

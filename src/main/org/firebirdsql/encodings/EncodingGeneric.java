@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2003 Blas Rodriguez Somoza
 // SPDX-FileCopyrightText: Copyright 2004 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2012-2020 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.encodings;
 
@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
  * Implementation of {@link Encoding} which uses the default functionality of {@link java.nio.charset.Charset} and
  * {@link java.lang.String}.
  */
+@SuppressWarnings("ClassCanBeRecord")
 final class EncodingGeneric implements Encoding {
 
     private final Charset charset;
@@ -26,12 +27,12 @@ final class EncodingGeneric implements Encoding {
 
     @Override
     public String decodeFromCharset(final byte[] in) {
-        return new String(in, charset);
+        return decodeFromCharset(in, 0, in.length);
     }
 
     @Override
     public String decodeFromCharset(final byte[] in, final int offset, final int length) {
-        return new String(in, offset, length, charset);
+        return length == 0 ? "" : new String(in, offset, length, charset);
     }
 
     @Override
