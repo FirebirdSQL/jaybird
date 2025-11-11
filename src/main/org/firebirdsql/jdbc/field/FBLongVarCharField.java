@@ -36,7 +36,7 @@ import java.sql.SQLException;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
-public class FBLongVarCharField extends FBStringField implements FBCloseableField, FBFlushableField, BlobListenableField {
+public class FBLongVarCharField extends FBStringField implements FBCloseableField, FBFlushableField, BlobField {
 
     // TODO Reduce duplication with FBBlobField, maybe make it wrap an FBBlobField?
 

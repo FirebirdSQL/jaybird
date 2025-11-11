@@ -37,7 +37,7 @@ import java.sql.Types;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
-class FBBlobField extends FBField implements FBCloseableField, FBFlushableField, BlobListenableField {
+class FBBlobField extends FBField implements FBCloseableField, FBFlushableField, BlobField {
 
     FirebirdBlob blob;
     private boolean blobExplicitNull;

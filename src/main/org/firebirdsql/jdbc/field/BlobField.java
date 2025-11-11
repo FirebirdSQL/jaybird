@@ -14,7 +14,7 @@ import org.jspecify.annotations.NullMarked;
  */
 @InternalApi
 @NullMarked
-public interface BlobListenableField {
+public interface BlobField {
 
     /**
      * Sets the blob listener of the field.
