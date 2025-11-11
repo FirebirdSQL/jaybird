@@ -821,7 +821,7 @@ class FBDatabaseMetaDataTest {
             stmt.execute("create procedure TEST_PROC_1 (VARIN integer) as " + procedureBody);
         }
 
-        assertEquals(procedureBody, dbmd.getProcedureSourceCode("TEST_PROC_1"), "Procedure source");
+        assertEquals(procedureBody, dbmd.getProcedureSourceCode("TEST_PROC_1").trim(), "Procedure source");
     }
 
     @Test
@@ -899,7 +899,7 @@ class FBDatabaseMetaDataTest {
             try {
                 stmt.execute("create view TEST_VIEW_1 as " + viewBody);
 
-                assertEquals(viewBody, dbmd.getViewSourceCode("TEST_VIEW_1"), "View source");
+                assertEquals(viewBody, dbmd.getViewSourceCode("TEST_VIEW_1").trim(), "View source");
             } finally {
                 DdlHelper.executeDDL(stmt, List.of("drop view TEST_VIEW_1"), isc_no_meta_update,
                         isc_dsql_table_not_found, isc_dsql_view_not_found, isc_dsql_drop_trigger_failed);
