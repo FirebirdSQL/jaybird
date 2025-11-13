@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.*;
@@ -56,6 +57,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     @SuppressWarnings("java:S3077")
     private volatile FbTransaction transaction;
     private String cursorName;
+    private int maxFieldSize;
     private long timeout;
 
     private final TransactionListener transactionListener = new TransactionListener() {
@@ -845,6 +847,47 @@ public abstract class AbstractFbStatement implements FbStatement {
      */
     protected final String getCursorName() {
         return cursorName;
+    }
+
+    @Override
+    public final void setMaxFieldSize(int max) throws SQLException {
+        try (var ignored = withLock()) {
+            checkStatementValid(StatementState.NEW);
+            if (max < 0) {
+                throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidStringLength)
+                        .messageParameter("max", Integer.MAX_VALUE, max)
+                        .toSQLException();
+            }
+            maxFieldSize = max;
+        }
+    }
+
+    @Override
+    public final int getMaxFieldSize() throws SQLException {
+        try (var ignored = withLock()) {
+            checkStatementValid(StatementState.NEW);
+            return maxFieldSize;
+        }
+    }
+
+    @Override
+    public final int maxFieldSize() {
+        return maxFieldSize;
+    }
+
+    /**
+     * Determines if max field size should be applied for the value of {@code fieldDescriptor}.
+     *
+     * @param fieldDescriptor
+     *         field descriptor
+     * @return {@code true} if max field size should be applied, {@code false} otherwise
+     * @since 7
+     */
+    protected final boolean isApplyMaxFieldSize(FieldDescriptor fieldDescriptor) {
+        final int maxFieldSize = this.maxFieldSize;
+        return maxFieldSize != 0 && maxFieldSize < fieldDescriptor.getLength()
+                && (fieldDescriptor.isVarying()
+                || fieldDescriptor.isFbType(ISCConstants.SQL_TEXT) && !fieldDescriptor.isDbKey());
     }
 
     /**

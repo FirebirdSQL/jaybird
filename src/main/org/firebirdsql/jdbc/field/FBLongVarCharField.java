@@ -27,6 +27,9 @@ import java.io.Reader;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
+import java.util.function.IntSupplier;
+
+import static org.firebirdsql.jaybird.util.ConditionalHelpers.firstNonNull;
 
 /**
  * This is Blob-based implementation of {@link FBStringField}. It should be used
@@ -50,6 +53,7 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
     private Reader characterStream;
     private FBObjectListener.@NonNull BlobListener blobListener = FBObjectListener.NoActionBlobListener.instance();
     final FBBlob.@NonNull Config blobConfig;
+    private @NonNull IntSupplier lengthRestriction = DEFAULT_LENGTH_RESTRICTION;
 
     @NullMarked
     FBLongVarCharField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType,
@@ -68,6 +72,20 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
     @NullMarked
     public void setBlobListener(FBObjectListener.BlobListener blobListener) {
         this.blobListener = blobListener;
+    }
+
+    @Override
+    public final void restrictLength(@Nullable IntSupplier maxLengthSupplier) {
+        lengthRestriction = firstNonNull(maxLengthSupplier, DEFAULT_LENGTH_RESTRICTION);
+    }
+
+    /**
+     * @return the maximum size of a value, {@code 0} or negative values mean no restriction
+     * @see #restrictLength(IntSupplier)
+     * @since 7
+     */
+    final int maxFieldSize() {
+        return lengthRestriction.getAsInt();
     }
 
     @Override
@@ -115,7 +133,9 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
     @Override
     public byte[] getBytes() throws SQLException {
         final FirebirdBlob blob = getBlobInternal();
-        return blob != null ? blob.getBytes() : null;
+        if (blob == null) return null;
+        final int maxFieldSize = maxFieldSize();
+        return maxFieldSize > 0 ? blob.getBytes(1, maxFieldSize) : blob.getBytes();
     }
 
     @Override

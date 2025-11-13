@@ -23,7 +23,7 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
-import org.firebirdsql.jdbc.field.BlobListenableField;
+import org.firebirdsql.jdbc.field.BlobField;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
@@ -811,8 +811,8 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
         // TODO check if we can safely pass cached here
         var field = FBField.createField(getParameterDescriptor(fieldPosition + 1), dataProvider, gdsHelper, false);
-        if (field instanceof BlobListenableField blobListenableField) {
-            blobListenableField.setBlobListener(blobListener);
+        if (field instanceof BlobField blobField) {
+            blobField.setBlobListener(blobListener);
         }
         return field;
     }

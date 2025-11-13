@@ -16,6 +16,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.sql.Clob;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 /**
  * Field implementation for blobs other than {@code BLOB SUB_TYPE TEXT} which caches the blob content locally.
@@ -48,7 +49,9 @@ final class FBCachedBlobField extends FBBlobField {
 
     @Override
     public byte[] getBytes() throws SQLException {
-        // TODO Looks suspicious compared to the implementation in FBBlobField
-        return getFieldData();
+        final byte[] bytes = getFieldData();
+        if (bytes == null) return null;
+        final int maxFieldSize = maxFieldSize();
+        return 0 < maxFieldSize && maxFieldSize < bytes.length ? Arrays.copyOf(bytes, maxFieldSize) : bytes;
     }
 }

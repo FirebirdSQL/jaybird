@@ -30,6 +30,7 @@ import java.time.*;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.IntSupplier;
 
 import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
@@ -72,6 +73,8 @@ public abstract class FBField {
 
     static final double MAX_DOUBLE_VALUE = Double.MAX_VALUE;
     static final double MIN_DOUBLE_VALUE = -1 * FBField.MAX_DOUBLE_VALUE;
+
+    static final IntSupplier DEFAULT_LENGTH_RESTRICTION = () -> 0;
 
     protected final @NonNull FieldDescriptor fieldDescriptor;
     private final @NonNull FieldDataProvider dataProvider;
@@ -122,10 +125,21 @@ public abstract class FBField {
      * Set the required type for {@link #getObject()} conversion.
      *
      * @param requiredType
-     *         required type, one of the {@link java.sql.Types} constants.
+     *         required type, one of the {@link java.sql.Types} constants
      */
     public void setRequiredType(int requiredType) {
         this.requiredType = requiredType;
+    }
+
+    /**
+     * Get the required type for {@link #getObject()} conversion
+     *
+     * @return required type, one of the {@link java.sql.Types} constants
+     * @see #setRequiredType(int)
+     * @since 7
+     */
+    public int getRequiredType() {
+        return requiredType;
     }
 
     /**

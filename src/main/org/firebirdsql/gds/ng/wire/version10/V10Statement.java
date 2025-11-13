@@ -503,20 +503,23 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     protected RowValue readSqlData() throws SQLException, IOException {
         final RowDescriptor rowDescriptor = getRowDescriptor();
         final RowValue rowValue = rowDescriptor.createDefaultFieldValues();
-        final BlrCalculator blrCalculator = getBlrCalculator();
 
         final XdrInputStream xdrIn = getXdrIn();
 
         for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
-            final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-            final int len = blrCalculator.calculateIoLength(fieldDescriptor);
-            byte[] buffer = readColumnData(xdrIn, len);
-            if (xdrIn.readInt() == NULL_INDICATOR_NULL) {
-                buffer = null;
-            }
-            rowValue.setFieldData(idx, buffer);
+            // do not inline: column data must be read before null indicator
+            byte[] buffer = readColumnData(xdrIn, rowDescriptor.getFieldDescriptor(idx));
+            rowValue.setFieldData(idx, xdrIn.readInt() == NULL_INDICATOR_NULL ? null : buffer);
         }
         return rowValue;
+    }
+
+    protected byte[] readColumnData(XdrInputStream xdrIn, FieldDescriptor fieldDescriptor)
+            throws SQLException, IOException {
+        final int len = getBlrCalculator().calculateIoLength(fieldDescriptor);
+        return isApplyMaxFieldSize(fieldDescriptor)
+                ? readColumnDataWithMaxFieldSize(xdrIn, len)
+                : readColumnData(xdrIn, len);
     }
 
     protected byte[] readColumnData(XdrInputStream xdrIn, int len) throws IOException {
@@ -530,6 +533,23 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             // len is incremented in calculateIoLength to avoid value 0, so it must be decremented
             return xdrIn.readBuffer(len - 1);
         }
+    }
+
+    private byte[] readColumnDataWithMaxFieldSize(XdrInputStream xdrIn, int len) throws IOException {
+        if (len < 0) {
+            // Buffer is not padded; this code path shouldn't apply, but fallback for robustness
+            return xdrIn.readRawBuffer(-len);
+        }
+        final int actualSize = len == 0
+                // Length specified in response
+                ? XdrInputStream.fixupLength(xdrIn.readInt())
+                // len is incremented in calculateIoLength to avoid value 0, so it must be decremented
+                : len - 1;
+        final int toRead = Math.min(actualSize, maxFieldSize());
+        byte[] buffer = xdrIn.readRawBuffer(toRead);
+        // Skip remainder + buffer padding
+        xdrIn.skipNBytes(actualSize - toRead + ((4 - actualSize) & 3));
+        return buffer;
     }
 
     /**

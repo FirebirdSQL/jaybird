@@ -5,8 +5,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 7
+* Published: 2025-11-13
+* Implemented in: Jaybird 7
 
 == Type
 
@@ -35,36 +35,57 @@ ____
 ==== 8.3.1 Silent Truncation
 
 The `Statement.setMaxFieldSize` method allows a maximum size (in bytes) to be set.
-This limit applies only to the `BINARY`, `VARBINARY`, `LONGVARBINARY`, `CHAR`, `VARCHAR`, `LONGVARCHAR`, `NCHAR`, `NVARCHAR`, and `LONGNVARCHAR` data types.
+This limit applies only to the (JDBC types) `BINARY`, `VARBINARY`, `LONGVARBINARY`, `CHAR`, `VARCHAR`, `LONGVARCHAR`, `NCHAR`, `NVARCHAR`, and `LONGNVARCHAR` data types.
 If a limit has been set using `setMaxFieldSize` and there is an attempt to read data that exceeds the limit, any truncation that occurs as a result of exceeding the set limit will _not_ be reported.
 ____
 
-Firebird doesn't provide a way to restrict the maximum number of bytes returned that will not result in string truncation errors for longer values, or -- for shorter values -- would result in _"`wrong`"_ client-side length derivations of variable length encodings like UTF8 (which would result in excessive truncation).
+Firebird doesn't provide a way to restrict the maximum number of bytes returned that will not result in string truncation errors for longer values, or -- for shorter values -- would result in "`wrong`" client-side length derivations of variable length encodings like UTF8 (which would result in excessive truncation).
 
-Jaybird considers `BLOB SUB_TYPE TEXT` to be `LONGVARCHAR` and `BLOB SUB_TYPE BINARY` to be `LONGVARBINARY` (though all blob subtypes can be treated that way).
+Jaybird considers `BLOB SUB_TYPE TEXT` to be `LONGVARCHAR` and `BLOB SUB_TYPE BINARY` and other Firebird subtypes to be `LONGVARBINARY`.
+Custom subtypes (negative subtypes), are considered `Types.BLOB`
 
 == Decision
 
 Jaybird 7 implements support for `setMaxFieldSize`/`getMaxFieldSize` using client-side truncation.
-This will be implemented for `CHAR`, `VARCHAR`, `BINARY`, and `VARBINARY`.
+This will be implemented for `CHAR`, `VARCHAR`, `BINARY`, `VARBINARY`, `LONGVARCHAR` and `LONGVARBINARY`
 
 To avoid problems with `RDB$DB_KEY` columns, implementation must ignore the limit for those columns, as indicated by `FieldDescriptor.isDbKey()`.
 
-Decision for handling `LONGVARCHAR`/`LONGVARBINARY` is pending further investigation.
-Currently, we're leaning towards _not_ honouring the maximum field size, or only for `ResultSet.getBytes`/`getString`.
+Custom blob types (i.e. with a negative subtype) are not affected, as Jaybird considers those `Types.BLOB`.
 
 == Consequences
 
-Handling the truncation for `CHAR`, `VARCHAR`, `BINARY`, and `VARBINARY` will be delegated to the `FbStatement` implementation.
-The truncation will be done when receiving the data from the server (from the wire, or from fbclient).
+For `CHAR`, `VARCHAR`, `BINARY`, and `VARBINARY`, truncation is implemented in the `FbStatement` implementations in the GDS-ng layer.
+The truncation is done when fetching the data from the server (wire protocol), or from fbclient (native/embedded).
 
-`FbStatement` will receive an `int` property `maxFieldSize` (getter/setter pair) with a default implementation that ignores the set value and returns 0.
-The actual implementation will override this, and use the set value when receiving data from the server.
+`FbStatement` has an `int` property `maxFieldSize` with a default implementation that ignores the set value and returns `0`.
+The actual implementations override this, and use the set value when receiving data from the server or native client.
 
-Caveats or possible pitfalls:
+For `LONGVARCHAR`/`LONGVARBINARY`, this is implemented in the relevant `FBField` implementations and configured from `FBResultSet`.
 
-* Given the truncation happens at a set number of bytes, values in a multibyte character set (UTF8) might end in the Unicode replacement character due to truncation before the end of the encoded codepoint.
-* The detection of `RDB$DB_KEY` column will also ignore "`normal`" `BINARY` columns called `DB_KEY`.
+* For non-cached blobs, the maximum length is applied for `getBytes` and getters relying on `getBytes`, like the getters for string, numeric, Boolean and datetime types, and `getObject` that returns any of those types, but not to getters returning `Blob`, `Clob`, `InputStream`, or `Reader`.
++
+In case of `InputStream` and `Reader`, such behaviour doesn't conform to the JDBC requirements, but this avoids complications in the implementation.
+We may address this in the future (e.g. maybe if we implement support for `Blob.getBinaryStream(long, long)`).
++
+Supporting `Blob` and `Clob` for `LONGVARCHAR` and `LONGVARBINARY` is already a non-standard extension so -- in our opinion -- not subject to these requirements.
+* For cached blobs (as used in holdable or emulated scrollable result sets), the maximum length is also applied to methods returning `Blob`, `Clob`, `InputStream`, or `Reader`.
+
+Caveats:
+
+* Given the truncation happens at a set number of bytes, values in a multibyte character set (UTF8) might end in the Unicode replacement character (U+FFFD, '`&#xFFFD;`') due to truncation before the end of the encoded codepoint.
+* Jaybird will accept any non-negative value for `maxFieldSize`.
+The JDBC apidoc recommends using values greater than `256`.
+* A too small `maxFieldSize` may result in "`wrong`" values being returned without error for numeric and Boolean getters;
+for datetime getters it may result in missing precision without errors, or parse errors.
+* Setting the max field size after execute may not be immediately applied to the current result set for `CHAR`, `VARCHAR`, `BINARY`, and `VARBINARY`:
+** For a locally cached result set: never, as the rows were truncated to the `maxFieldSize` on execute.
+** Otherwise, already fetched rows are truncated to the `maxFieldSize` on their fetch, and only rows returned by a subsequent fetch will apply the new limit.
+* For `LONGVARCHAR`/`LONGVARBINARY`, the value will be truncated on access, with the following caveats:
+** For cached blobs, the limit is applied on retrieval, and applies to all methods (as the cached value is truncated).
+** The value of a cached blob (holdable result set or emulated scrollable result set) will be truncated to the initial `maxFieldSize`.
+Subsequent use of a larger `maxFieldSize` will continue to return the shorter value.
+* The detection of `RDB$DB_KEY` columns includes "`normal`" `BINARY`/`CHAR CHARACTER SET OCTETS` columns called `DB_KEY`.
 
 [appendix]
 == License Notice

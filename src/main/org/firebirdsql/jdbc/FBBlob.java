@@ -297,6 +297,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
                     in.seek((int) pos - 1);
                 }
 
+                length = Math.max(0, (int) Math.min(length, in.length() - pos + 1));
                 // We optimize for the case where we can read all data
                 byte[] result = new byte[length];
                 int read = in.readNBytes(result, 0, length);

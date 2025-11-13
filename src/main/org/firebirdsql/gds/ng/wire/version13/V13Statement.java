@@ -32,21 +32,14 @@ public class V13Statement extends V12Statement {
     protected RowValue readSqlData() throws SQLException, IOException {
         final RowDescriptor rowDescriptor = getRowDescriptor();
         final RowValue rowValue = rowDescriptor.createDefaultFieldValues();
-        final BlrCalculator blrCalculator = getBlrCalculator();
 
         final XdrInputStream xdrIn = getXdrIn();
         final int nullBitsLen = (rowDescriptor.getCount() + 7) / 8;
         final BitSet nullBits = BitSet.valueOf(xdrIn.readBuffer(nullBitsLen));
 
         for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
-            final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-            if (nullBits.get(idx)) {
-                rowValue.setFieldData(idx, null);
-            } else {
-                final int len = blrCalculator.calculateIoLength(fieldDescriptor);
-                final byte[] buffer = readColumnData(xdrIn, len);
-                rowValue.setFieldData(idx, buffer);
-            }
+            rowValue.setFieldData(idx,
+                    nullBits.get(idx) ? null : readColumnData(xdrIn, rowDescriptor.getFieldDescriptor(idx)));
         }
         return rowValue;
     }

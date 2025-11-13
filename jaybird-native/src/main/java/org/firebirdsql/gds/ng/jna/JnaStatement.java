@@ -349,16 +349,16 @@ public class JnaStatement extends AbstractFbStatement {
             if (xSqlVar.sqlind.getValue() == XSQLVAR.SQLIND_NULL) {
                 row.setFieldData(idx, null);
             } else {
-                int bufferOffset;
-                int bufferLength;
-
-                if (rowDescriptor.getFieldDescriptor(idx).isVarying()) {
+                FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
+                int bufferOffset = 0;
+                int bufferLength = switch (fieldDescriptor.getType() & ~1) {
+                case ISCConstants.SQL_VARYING -> {
                     bufferOffset = 2;
-                    bufferLength = xSqlVar.sqldata.getShort(0) & 0xffff;
-                } else {
-                    bufferOffset = 0;
-                    bufferLength = xSqlVar.sqllen & 0xffff;
+                    yield limitToMaxFieldSize(xSqlVar.sqldata.getShort(0) & 0xffff, fieldDescriptor);
                 }
+                case ISCConstants.SQL_TEXT -> limitToMaxFieldSize(xSqlVar.sqllen & 0xffff, fieldDescriptor);
+                default -> xSqlVar.sqllen & 0xffff;
+                };
 
                 byte[] data = new byte[bufferLength];
                 xSqlVar.sqldata.read(bufferOffset, data, 0, bufferLength);
@@ -366,6 +366,10 @@ public class JnaStatement extends AbstractFbStatement {
             }
         }
         return row;
+    }
+
+    private int limitToMaxFieldSize(int actualSize, FieldDescriptor fieldDescriptor) {
+        return isApplyMaxFieldSize(fieldDescriptor) ? Math.min(actualSize, maxFieldSize()) : actualSize;
     }
 
     /**

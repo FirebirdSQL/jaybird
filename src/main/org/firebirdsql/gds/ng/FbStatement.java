@@ -4,6 +4,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.BatchParameterBuffer;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
@@ -642,6 +643,67 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      */
     default BatchParameterBuffer createBatchParameterBuffer() throws SQLException {
         throw new FBDriverNotCapableException("implementation does not support createBatchParameterBuffer");
+    }
+
+    /**
+     * Sets the maximum number of bytes that can be returned for a &quot;string&quot; column ({@code CHAR},
+     * {@code VARCHAR}, {@code BINARY} or {@code VARBINARY}).
+     * <p>
+     * This method is used to fulfil the contract of {@link java.sql.Statement#setMaxFieldSize(int)} for
+     * non-{@code BLOB} columns. If this method is called after a fetch, the new limit will only be applied for rows
+     * returned by a subsequent fetch.
+     * </p>
+     * <p>
+     * Firebird doesn't support limiting the column sizes without producing string truncation errors, so this will only
+     * result in client-side truncation.
+     * </p>
+     * <p>
+     * Implementations must ignore this limit for {@code RDB$DB_KEY} columns (see {@link FieldDescriptor#isDbKey()}).
+     * </p>
+     * <p>
+     * The default implementation in this interface does nothing.
+     * </p>
+     *
+     * @param max
+     *         maximum number of bytes, {@code 0} means there is no limit
+     * @throws SQLException
+     *         if a database access error occurs, this method is called on a closed statement or the condition
+     *         {@code max >= 0} is not satisfied
+     * @see #getMaxFieldSize()
+     * @since 7
+     */
+    default void setMaxFieldSize(int max) throws SQLException {
+    }
+
+    /**
+     * Gets the maximum number of bytes that can be returned for a &quot;string&quot; column ({@code CHAR},
+     * {@code VARCHAR}, {@code BINARY} or {@code VARBINARY}).
+     * <p>
+     * The default implementation in this interface returns 0.
+     * </p>
+     *
+     * @return maximum number of bytes, {@code 0} means there is no limit
+     * @throws SQLException
+     *         if a database access error occurs, this method is called on a closed statement
+     * @see #setMaxFieldSize(int)
+     * @since 7
+     */
+    default int getMaxFieldSize() throws SQLException {
+        return 0;
+    }
+
+    /**
+     * Direct access (no locks, no validity checks) to the max field size.
+     * <p>
+     * The default implementation in this interface returns 0.
+     * </p>
+     *
+     * @return max field size
+     * @see #getMaxFieldSize()
+     * @since 7
+     */
+    default int maxFieldSize() {
+        return 0;
     }
 
     /**

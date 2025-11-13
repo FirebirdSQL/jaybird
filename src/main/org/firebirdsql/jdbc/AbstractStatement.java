@@ -107,6 +107,21 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
     }
 
     /**
+     * Direct access (no locks, no validity checks) to the max field size.
+     * <p>
+     * Subclasses will need to override this method to return the actual max field size if applicable.
+     * The implementation in {@code AbstractStatement} always returns {@code 0}.
+     * </p>
+     *
+     * @return max field size
+     * @see #getMaxFieldSize()
+     * @since 7
+     */
+    public int maxFieldSize() {
+        return 0;
+    }
+
+    /**
      * Check if this statement is valid (not closed). This method should be invoked before executing any action which
      * requires a valid/open statement.
      *

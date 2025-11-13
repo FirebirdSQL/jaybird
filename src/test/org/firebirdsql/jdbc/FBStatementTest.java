@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
@@ -224,7 +224,7 @@ class FBStatementTest {
     void testSetMaxFieldSize_negativeValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             SQLException exception = assertThrows(SQLException.class, () -> stmt.setMaxFieldSize(-1));
-            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH));
+            assertThat(exception, errorCodeEquals(JaybirdErrorCodes.jb_invalidStringLength));
         }
     }
 

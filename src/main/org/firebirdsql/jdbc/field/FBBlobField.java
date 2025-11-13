@@ -30,6 +30,9 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.function.IntSupplier;
+
+import static org.firebirdsql.jaybird.util.ConditionalHelpers.firstNonNull;
 
 /**
  * Field implementation for blobs other than {@code BLOB SUB_TYPE TEXT}.
@@ -47,6 +50,7 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
     private byte[] bytes;
     private FBObjectListener.@NonNull BlobListener blobListener = FBObjectListener.NoActionBlobListener.instance();
     final FBBlob.@NonNull Config blobConfig;
+    private @NonNull IntSupplier lengthRestriction = DEFAULT_LENGTH_RESTRICTION;
 
     @NullMarked
     FBBlobField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType,
@@ -65,6 +69,20 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
     @NullMarked
     public void setBlobListener(FBObjectListener.BlobListener blobListener) {
         this.blobListener = blobListener;
+    }
+
+    @Override
+    public final void restrictLength(@Nullable IntSupplier maxLengthSupplier) {
+        lengthRestriction = firstNonNull(maxLengthSupplier, DEFAULT_LENGTH_RESTRICTION);
+    }
+
+    /**
+     * @return the maximum size of a value, {@code 0} or negative values mean no restriction
+     * @see #restrictLength(IntSupplier)
+     * @since 7
+     */
+    final int maxFieldSize() {
+        return lengthRestriction.getAsInt();
     }
 
     @Override
@@ -121,7 +139,9 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField,
 
     public byte[] getBytesInternal() throws SQLException {
         FirebirdBlob blob = getBlobInternal();
-        return blob != null ? blob.getBytes() : null;
+        if (blob == null) return null;
+        final int maxFieldSize = maxFieldSize();
+        return maxFieldSize > 0 ? blob.getBytes(1, maxFieldSize) : blob.getBytes();
     }
 
     @Override

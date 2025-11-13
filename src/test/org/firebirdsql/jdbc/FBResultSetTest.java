@@ -15,18 +15,23 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.OffsetTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -42,6 +47,7 @@ import static org.firebirdsql.common.assertions.ResultSetAssertions.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.jaybird.props.PropertyConstants.SCROLLABLE_CURSOR_EMULATED;
 import static org.firebirdsql.jaybird.props.PropertyConstants.SCROLLABLE_CURSOR_SERVER;
+import static org.firebirdsql.jaybird.util.ConditionalHelpers.firstNonZero;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -1847,6 +1853,244 @@ class FBResultSetTest {
                     assertDoesNotThrow(() -> secondClob.getCharacterStream(),
                             "should be able to get character stream from clob after statement close"))) {
                 assertEquals("clob-value-2", secondReader.readLine());
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            maxFieldSize, valueSize
+            0,            500
+            0,            1000
+            1001,         500
+            1001,         1000
+            999,          500
+            999,          1000
+            500,          500
+            500,          1000
+            100,          500
+            5,            100
+            1,            50
+            """)
+    void testSetMaxFieldSize(int maxFieldSize, int valueSize) throws Exception {
+        final int columnSize = 1000;
+        assert valueSize <= columnSize : "Test supports valueSize up to 1000";
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            // Also tests if FbStatement implementation correctly handles nullability
+            stmt.execute("""
+                    create table MAX_FIELD_SIZE_TEST (
+                      ID bigint constraint PK_MAX_FIELD_SIZE_TEST primary key,
+                      CHAR_VAL char(1000) character set ASCII,
+                      CHAR_VAL_NN char(1000) character set ASCII not null,
+                      VARCHAR_VAL varchar(1000) character set ASCII,
+                      VARCHAR_VAL_NN varchar(1000) character set ASCII not null,
+                      BLOB_TXT_VAL blob sub_type TEXT,
+                      BIN_VAL char(1000) character set OCTETS,
+                      BIN_VAL_NN char(1000) character set OCTETS not null,
+                      VARBIN_VAL varchar(1000) character set OCTETS,
+                      VARBIN_VAL_NN varchar(1000) character set OCTETS not null,
+                      BLOB_BIN_VAL blob sub_type BINARY
+                    )""");
+            final byte[] testStringBytes = DataGenerator.createRandomAsciiBytes(valueSize);
+            final String testString = new String(testStringBytes, StandardCharsets.US_ASCII);
+            final byte[] testBytes = DataGenerator.createRandomBytes(valueSize);
+            try (var pstmt = connection.prepareStatement("""
+                    insert into MAX_FIELD_SIZE_TEST (ID, CHAR_VAL, CHAR_VAL_NN, VARCHAR_VAL, VARCHAR_VAL_NN,
+                        BLOB_TXT_VAL, BIN_VAL, BIN_VAL_NN, VARBIN_VAL, VARBIN_VAL_NN, BLOB_BIN_VAL)
+                      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""")) {
+                pstmt.setLong(1, valueSize);
+                int id;
+                for (id = 2; id <= 6; id++) {
+                    pstmt.setString(id, testString);
+                }
+                for (; id <= 11; id++) {
+                    pstmt.setBytes(id, testBytes);
+                }
+                pstmt.execute();
+            }
+            connection.setAutoCommit(false);
+            stmt.setMaxFieldSize(maxFieldSize);
+            try (var rs = stmt.executeQuery("select * from MAX_FIELD_SIZE_TEST")) {
+                assertNextRow(rs);
+                assertEquals(valueSize, rs.getLong("ID"), "Unexpected ID");
+
+                final String expectedString;
+                final byte[] expectedBytes;
+                final String expectedCharString;
+                final byte[] expectedBinBytes;
+                if (maxFieldSize == 0 || maxFieldSize >= valueSize) {
+                    expectedString = testString;
+                    expectedBytes = testBytes;
+
+                    int expectedLength = Math.min(columnSize, firstNonZero(maxFieldSize, columnSize));
+                    expectedCharString = testString + " ".repeat(expectedLength - valueSize);
+                    expectedBinBytes = Arrays.copyOf(testBytes, expectedLength);
+                } else {
+                    expectedString = testString.substring(0, maxFieldSize);
+                    expectedBytes = Arrays.copyOf(testBytes, maxFieldSize);
+
+                    expectedCharString = expectedString;
+                    expectedBinBytes = expectedBytes;
+                }
+
+                assertEquals(expectedCharString, rs.getString("CHAR_VAL"), "Unexpected CHAR_VAL");
+                assertEquals(expectedCharString, rs.getString("CHAR_VAL_NN"), "Unexpected CHAR_VAL_NN");
+                assertEquals(expectedString, rs.getString("VARCHAR_VAL"), "Unexpected VARCHAR_VAL");
+                assertEquals(expectedString, rs.getString("VARCHAR_VAL_NN"), "Unexpected VARCHAR_VAL_NN");
+                assertEquals(expectedString, rs.getString("BLOB_TXT_VAL"), "Unexpected BLOB_TXT_VAL");
+                assertArrayEquals(expectedBinBytes, rs.getBytes("BIN_VAL"), "Unexpected BIN_VAL");
+                assertArrayEquals(expectedBinBytes, rs.getBytes("BIN_VAL_NN"), "Unexpected BIN_VAL_NN");
+                assertArrayEquals(expectedBytes, rs.getBytes("VARBIN_VAL"), "Unexpected VARBIN_VAL");
+                assertArrayEquals(expectedBytes, rs.getBytes("VARBIN_VAL_NN"), "Unexpected VARBIN_VAL_NN");
+                assertArrayEquals(expectedBytes, rs.getBytes("BLOB_BIN_VAL"), "Unexpected BLOB_BIN_VAL");
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testSetMaxFieldSize_scrollableResultSet(String scrollableCursorPropertyValue) throws Exception {
+        try (var connection = createConnection(scrollableCursorPropertyValue);
+             var stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY)) {
+            stmt.execute("""
+                    create table MAX_FIELD_SIZE_TEST (
+                      ID bigint constraint PK_MAX_FIELD_SIZE_TEST primary key,
+                      VARCHAR_VAL varchar(1000) character set ASCII,
+                      BLOB_TXT_VAL blob sub_type TEXT,
+                      VARBIN_VAL varchar(1000) character set OCTETS,
+                      BLOB_BIN_VAL blob sub_type BINARY
+                    )""");
+            final byte[] testStringBytes = DataGenerator.createRandomAsciiBytes(500);
+            final String testString = new String(testStringBytes, StandardCharsets.US_ASCII);
+            final byte[] testBytes = DataGenerator.createRandomBytes(500);
+            try (var pstmt = connection.prepareStatement("""
+                         insert into MAX_FIELD_SIZE_TEST (ID, VARCHAR_VAL, BLOB_TXT_VAL, VARBIN_VAL, BLOB_BIN_VAL)
+                           values (?, ?, ?, ?, ?)""")) {
+                pstmt.setLong(1, 500);
+                pstmt.setString(2, testString);
+                pstmt.setString(3, testString);
+                pstmt.setBytes(4, testBytes);
+                pstmt.setBytes(5, testBytes);
+                pstmt.execute();
+            }
+
+            connection.setAutoCommit(false);
+            stmt.setMaxFieldSize(250);
+            final String expectedString = testString.substring(0, 250);
+            final byte[] expectedBytes = Arrays.copyOf(testBytes, 250);
+
+            try (var rs = stmt.executeQuery("select * from MAX_FIELD_SIZE_TEST")) {
+                assertNextRow(rs);
+                assertEquals(500, rs.getLong("ID"), "Unexpected ID");
+                assertEquals(expectedString, rs.getString("VARCHAR_VAL"), "Unexpected VARCHAR_VAL");
+                assertEquals(expectedString, rs.getString("BLOB_TXT_VAL"), "Unexpected BLOB_TXT_VAL");
+                assertArrayEquals(expectedBytes, rs.getBytes("VARBIN_VAL"), "Unexpected VARBIN_VAL");
+                assertArrayEquals(expectedBytes, rs.getBytes("BLOB_BIN_VAL"), "Unexpected BLOB_BIN_VAL");
+            }
+        }
+    }
+
+    @Test
+    void testSetMaxFieldSize_utf8Truncation() throws Exception {
+        // Ensure we're in NONE, so actual column character sets are used
+        try (var connection = getConnectionViaDriverManager("lc_ctype", "none");
+             var stmt = connection.createStatement()) {
+            stmt.execute("""
+                    create table MAX_FIELD_SIZE_TEST (
+                      ID bigint constraint PK_MAX_FIELD_SIZE_TEST primary key,
+                      VARCHAR_VAL varchar(1000) character set UTF8
+                    )""");
+            final String testString = "1234567€";
+            try (var pstmt = connection.prepareStatement(
+                    "insert into MAX_FIELD_SIZE_TEST (ID, VARCHAR_VAL) values (?, ?)")) {
+                pstmt.setLong(1, 1);
+                pstmt.setString(2, testString);
+                pstmt.execute();
+            }
+            stmt.setMaxFieldSize(8);
+            // testString is 8 characters, but 10 bytes in UTF8
+            try (var rs = stmt.executeQuery("select ID, VARCHAR_VAL from MAX_FIELD_SIZE_TEST")) {
+                assertNextRow(rs);
+                assertEquals("1234567\uFFFD", rs.getString("VARCHAR_VAL"),
+                        "Expected VARCHAR_VAL to end in Unicode replacement character (U+FFFD, \uFFFD)");
+            }
+
+            // testString is 8 characters and 8 bytes in WIN1252
+            try (var rs = stmt.executeQuery(
+                    "select ID, cast(VARCHAR_VAL as varchar(1000) character set WIN1252) as VARCHAR_VAL from MAX_FIELD_SIZE_TEST")) {
+                assertNextRow(rs);
+                assertEquals(testString, rs.getString("VARCHAR_VAL"), "Expected untruncated value of VARCHAR_VAL");
+            }
+        }
+    }
+
+    /**
+     * Tests if {@link Statement#setMaxFieldSize(int)} has no effect on non-{@code (VAR)CHAR/BINARY} types.
+     * <p>
+     * We don't perform an exhaustive tests of all types, just sufficient to have confidence we don't apply it
+     * unconditionally.
+     * </p>
+     */
+    @Test
+    void testSetMaxFieldSize_doesNotAffectOtherTypes() throws Exception {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            String sql = """
+                    create table MAX_FIELD_SIZE_TEST (
+                        ID bigint constraint PK_MAX_FIELD_SIZE_TEST primary key,
+                        TIMESTAMP_VAL timestamp,
+                        DOUBLE_VAL double precision,
+                        BLOB_CUSTOM_VAL blob sub_type -1,
+                        /* FB4 columns */
+                        IGNORED CHAR(1)
+                    )""";
+            final boolean fb4Types = getDefaultSupportInfo().isVersionEqualOrAbove(4);
+            if (fb4Types) {
+                sql = sql.replace("/* FB4 columns */", "INT128_VAL int128,\n  TIME_TZ_VAL time with time zone,");
+            }
+            stmt.execute(sql);
+
+            final var timestampVal = LocalDateTime.now().truncatedTo(FbDatetimeConversion.FB_TIME_UNIT);
+            final var doubleVal = Double.MAX_VALUE;
+            final var customBlobVal = DataGenerator.createRandomBytes(500);
+            final var int128 = new BigInteger("7fffffffffffffffffffffffffffffff", 16);
+            final var timeTzVal = OffsetTime.now().truncatedTo(FbDatetimeConversion.FB_TIME_UNIT);
+
+            try (var pstmt = connection.prepareStatement(fb4Types
+                            ? "insert into MAX_FIELD_SIZE_TEST (ID, TIMESTAMP_VAL, DOUBLE_VAL, BLOB_CUSTOM_VAL, INT128_VAL, TIME_TZ_VAL) values (?, ?, ?, ?, ?, ?)"
+                            : "insert into MAX_FIELD_SIZE_TEST (ID, TIMESTAMP_VAL, DOUBLE_VAL, BLOB_CUSTOM_VAL) values (?, ?, ?, ?)")) {
+                pstmt.setLong(1, -1L);
+                pstmt.setObject(2, timestampVal);
+                pstmt.setDouble(3, doubleVal);
+                pstmt.setBytes(4, customBlobVal);
+                if (fb4Types) {
+                    pstmt.setObject(5, int128);
+                    pstmt.setObject(6, timeTzVal);
+                }
+                pstmt.execute();
+            }
+
+            stmt.setMaxFieldSize(4);
+            try (var rs = stmt.executeQuery("select a.*, RDB$DB_KEY from MAX_FIELD_SIZE_TEST a")) {
+                assertNextRow(rs);
+                // if truncation would occur, these would throw exceptions, not return incorrect values
+                assertEquals(-1L, assertDoesNotThrow(() -> rs.getLong("ID"), "ID"), "Unexpected ID");
+                assertEquals(timestampVal,
+                        assertDoesNotThrow(() -> rs.getObject("TIMESTAMP_VAL", LocalDateTime.class), "TIMESTAMP_VAL"),
+                        "Unexpected TIMESTAMP_VAL");
+                assertEquals(doubleVal, assertDoesNotThrow(() -> rs.getDouble("DOUBLE_VAL"), "DOUBLE_VAL"),
+                        "Unexpected DOUBLE_VAL");
+                assertArrayEquals(customBlobVal, rs.getBytes("BLOB_CUSTOM_VAL"), "Unexpected BLOB_CUSTOM_VAL");
+                if (fb4Types) {
+                    assertEquals(int128,
+                            assertDoesNotThrow(() -> rs.getObject("INT128_VAL", BigInteger.class), "INT128_VAL"),
+                            "Unexpected INT128_VAL");
+                    assertEquals(timeTzVal,
+                            assertDoesNotThrow(() -> rs.getObject("TIME_TZ_VAL", OffsetTime.class), "TIME_TZ_VAL"),
+                            "Unexpected TIME_TZ_VAL");
+                }
+                assertEquals(8, rs.getBytes("DB_KEY").length, "Expected untruncated RDB$DB_KEY");
             }
         }
     }

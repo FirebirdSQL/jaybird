@@ -80,8 +80,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     // Used for singleton or batch results for getGeneratedKeys, and singleton results of stored procedures
     protected final List<RowValue> specialResult = new ArrayList<>();
 
-    private int maxFieldSize;
-
     private final FBObjectListener.ResultSetListener resultSetListener = new RSListener();
 
     /**
@@ -451,15 +449,17 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
 
     @Override
     public int getMaxFieldSize() throws SQLException {
-        return maxFieldSize;
+        return fbStatement.getMaxFieldSize();
+    }
+
+    @Override
+    public int maxFieldSize() {
+        return fbStatement.maxFieldSize();
     }
 
     @Override
     public void setMaxFieldSize(int max) throws SQLException {
-        if (max < 0) {
-            throw new SQLNonTransientException("Can't set max field size negative", SQL_STATE_INVALID_STRING_LENGTH);
-        }
-        maxFieldSize = max;
+        fbStatement.setMaxFieldSize(max);
     }
 
     @Override

@@ -22,6 +22,7 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.util.SQLExceptionThrowingFunction;
 import org.firebirdsql.jaybird.util.UncheckedSQLException;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
+import org.firebirdsql.jdbc.field.BlobField;
 import org.firebirdsql.jdbc.field.FBCloseableField;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.function.Function;
+import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
@@ -212,14 +214,25 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     private FBField[] createFields(boolean cached, boolean trimStrings) throws SQLException {
         int fieldCount = rowDescriptor.getCount();
+        IntSupplier maxLengthSupplier = this::maxFieldSize;
         var fields = new FBField[fieldCount];
         for (int i = 0; i < fieldCount; i++) {
-            fields[i] = FBField.createField(rowDescriptor.getFieldDescriptor(i), new DataProvider(i), gdsHelper, cached);
-            if (trimStrings && fields[i] instanceof TrimmableField trimmableField) {
+            var field = fields[i] = FBField
+                    .createField(rowDescriptor.getFieldDescriptor(i), new DataProvider(i), gdsHelper, cached);
+            if (trimStrings && field instanceof TrimmableField trimmableField) {
                 trimmableField.setTrimTrailing(true);
+            }
+            if (field instanceof BlobField blobField) {
+                switch (field.getRequiredType()) {
+                case Types.LONGVARBINARY, Types.LONGVARCHAR -> blobField.restrictLength(maxLengthSupplier);
+                }
             }
         }
         return fields;
+    }
+
+    private int maxFieldSize() {
+        return statement != null ? statement.maxFieldSize() : 0;
     }
 
     private static List<FBCloseableField> toCloseableFields(FBField[] fields) {

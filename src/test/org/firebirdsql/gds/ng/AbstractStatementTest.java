@@ -832,6 +832,28 @@ public abstract class AbstractStatementTest {
         }
     }
 
+    // NOTE: Actual use of maxFieldSize is tested through JDBC API (FBResultSetTest)
+
+    @Test
+    void testMaxFieldSize_getSet() throws Exception {
+        allocateStatement();
+
+        assertEquals(0, statement.getMaxFieldSize(), "Initial maxFieldSize should be 0");
+        assertDoesNotThrow(() -> statement.setMaxFieldSize(500));
+        assertEquals(500, statement.getMaxFieldSize(), "Expected last set value (500)");
+        assertDoesNotThrow(() -> statement.setMaxFieldSize(0));
+        assertEquals(0, statement.getMaxFieldSize(), "Expected last set value (0)");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { -1, -2, Integer.MIN_VALUE })
+    void testSetMaxFieldSize_lessThanZeroThrowsSQLException(int maxFieldSize) throws Exception {
+        allocateStatement();
+
+        var exception = assertThrows(SQLNonTransientException.class, () -> statement.setMaxFieldSize(maxFieldSize));
+        assertThat(exception, errorCodeEquals(JaybirdErrorCodes.jb_invalidStringLength));
+    }
+
     private FbTransaction getTransaction() throws SQLException {
         return db.startTransaction(getDefaultTpb());
     }
