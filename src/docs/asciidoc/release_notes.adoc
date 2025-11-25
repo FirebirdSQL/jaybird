@@ -35,6 +35,9 @@ For known issues, consult <<known-issues>>.
 The following has been changed or fixed since Jaybird 5.0.10:
 
 * Backported fatal error detection improvements for `FBPooledConnection` from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/899[#899])
+* Fixed: `FBServiceManager.getAuthPlugins()` reported the `dbCryptConfig` value (https://github.com/FirebirdSQL/jaybird/issues/902[#902])
++
+This fix was backported from Jaybird 6.0.4.
 
 [#jaybird-5-0-10-changelog]
 === Jaybird 5.0.10

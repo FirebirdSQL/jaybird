@@ -233,7 +233,7 @@ public class FBServiceManager implements ServiceManager {
 
     @Override
     public String getAuthPlugins() {
-        return ServiceManager.super.getDbCryptConfig();
+        return ServiceManager.super.getAuthPlugins();
     }
 
     @Override
