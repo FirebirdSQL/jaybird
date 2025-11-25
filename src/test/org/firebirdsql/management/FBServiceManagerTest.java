@@ -4,6 +4,7 @@ package org.firebirdsql.management;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
@@ -11,14 +12,19 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
-import static org.firebirdsql.common.FBTestProperties.ENABLE_PROTOCOL;
 import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
 import static org.firebirdsql.common.FBTestProperties.configureServiceManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
@@ -31,6 +37,7 @@ import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for {@link org.firebirdsql.management.FBServiceManager}.
@@ -139,4 +146,44 @@ class FBServiceManagerTest {
     private static boolean isWindowsSystem() {
         return System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
     }
+
+    @ParameterizedTest
+    @MethodSource
+    void testBeanProperties(PropertyDescriptor beanProperty) throws Exception {
+        var serviceManager = new FBServiceManager(FBTestProperties.getGdsType());
+        Method readMethod = beanProperty.getReadMethod();
+        final Object originalValue = readMethod.invoke(serviceManager);
+
+        final Object testValue = generateTestValue(beanProperty, originalValue);
+        Method writeMethod = beanProperty.getWriteMethod();
+        writeMethod.invoke(serviceManager, testValue);
+
+        assertEquals(testValue, readMethod.invoke(serviceManager),
+                "Unexpected value read back from property " + beanProperty.getName());
+    }
+
+    static Stream<Arguments> testBeanProperties() throws IntrospectionException {
+        final var excludedProperties = Set.of("type", "logger", "serverVersion");
+        BeanInfo serviceManagerBeanInfo = Introspector.getBeanInfo(FBServiceManager.class, Object.class);
+        return Stream.of(serviceManagerBeanInfo.getPropertyDescriptors())
+                .filter(property -> !excludedProperties.contains(property.getName()))
+                .map(Arguments::of);
+    }
+
+    private static Object generateTestValue(PropertyDescriptor beanProperty, Object originalValue) {
+        String propertyName = beanProperty.getName();
+        if ("wireCrypt".equals(propertyName)) {
+            return "ENABLED".equals(originalValue) ? "DISABLED" : "ENABLED";
+        }
+        return switch (beanProperty.getPropertyType().getName()) {
+            case "java.lang.String" -> "testValue " + propertyName;
+            case "boolean", "java.lang.Boolean" -> originalValue == null || !((boolean) originalValue);
+            case "int", "java.lang.Integer" -> originalValue == null ? 1 : ((int) originalValue) + 1;
+            case "org.firebirdsql.gds.ng.WireCrypt" ->
+                    originalValue == WireCrypt.ENABLED ? WireCrypt.DISABLED : WireCrypt.ENABLED;
+            default -> throw new IllegalStateException("Property: %s has unsupported type: %s"
+                    .formatted(propertyName, beanProperty.getPropertyType()));
+        };
+    }
+
 }
