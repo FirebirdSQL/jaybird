@@ -44,6 +44,7 @@ Symptoms include unexpected closed connections, and errors like "`__Unsupported 
 +
 This fix was frontported from Jaybird 5.0.10.
 Only Firebird 2.5 (not supported) is affected.
+* Fixed: `FBServiceManager.getAuthPlugins()` reported the `dbCryptConfig` value (https://github.com/FirebirdSQL/jaybird/issues/901[#901])
 
 === Jaybird 6.0.3
 
