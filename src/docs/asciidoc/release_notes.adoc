@@ -14,7 +14,7 @@
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
-:fb-canonical-html: https://firebirdsql.org/docs/drivers/java/6.0.x/release_notes.html
+:fb-canonical-html: https://firebirdsql.org/docs/drivers/java/7.0.x/release_notes.html
 
 ////
 SPDX-FileCopyrightText: Copyright 2021-2025 Firebird development team and individual contributors
