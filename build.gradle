@@ -16,7 +16,7 @@ plugins {
     id 'nu.studer.credentials' version '3.0'
     id 'maven-publish'
     id 'signing'
-    id 'org.asciidoctor.jvm.convert' version '4.0.4'
+    id 'org.asciidoctor.jvm.convert' version '4.0.5'
 }
 
 defaultTasks 'clean', 'build'
@@ -46,6 +46,10 @@ java {
     withSourcesJar()
 }
 
+configurations {
+    asciidoctorExt
+}
+
 dependencies {
     api libs.jspecify
 
@@ -66,6 +70,8 @@ dependencies {
     if (findProperty('test.chacha64') != 'disabled') {
         testRuntimeOnly project('chacha64-plugin')
     }
+
+    asciidoctorExt 'org.firebirdsql.asciidoctor:canonical-link:1.0'
 }
 
 sourceSets {
@@ -99,12 +105,11 @@ processResources {
 }
 
 asciidoctorj {
-    version = '3.0.0'
-
-    docExtensions file('doc-extension.groovy')
+    version = '3.0.1'
 }
 
 tasks.named('asciidoctor', AsciidoctorTask).configure {
+    configurations 'asciidoctorExt'
     executionMode = OUT_OF_PROCESS
     attributes 'version_simple': project.'version.simple',
             'version_wo_target': "${project.'version.simple'}${project.'version.tag'}",
