@@ -71,7 +71,8 @@ public class V13Statement extends V12Statement {
     @Override
     protected void writeSqlData(final RowDescriptor rowDescriptor, final RowValue fieldValues, boolean useActualLength)
             throws IOException, SQLException {
-        writeSqlData(getXdrOut(), getBlrCalculator(), rowDescriptor, fieldValues, useActualLength);
+        withTransmitLock(xdrOut ->
+                writeSqlData(xdrOut, getBlrCalculator(), rowDescriptor, fieldValues, useActualLength));
     }
     
     protected void writeSqlData(XdrOutputStream xdrOut, BlrCalculator blrCalculator, RowDescriptor rowDescriptor,

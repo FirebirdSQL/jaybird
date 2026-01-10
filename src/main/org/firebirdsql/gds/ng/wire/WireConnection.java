@@ -57,6 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
@@ -91,6 +92,9 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     private XdrOutputStream xdrOut;
     private XdrInputStream xdrIn;
     private final XdrStreamAccess streamAccess = new XdrStreamAccess() {
+
+        private final ReentrantLock transmitLock = new ReentrantLock();
+
         @Override
         public XdrInputStream getXdrIn() throws SQLException {
             if (isConnected() && xdrIn != null) {
@@ -108,6 +112,17 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 throw new SQLException("Connection closed or no connection available");
             }
         }
+
+        @Override
+        public void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+            transmitLock.lock();
+            try {
+                transmitAction.transmit(getXdrOut());
+            } finally {
+                transmitLock.unlock();
+            }
+        }
+
     };
 
     /**
@@ -599,7 +614,18 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
      *         If there is no socket, the socket is closed, or for errors writing to the socket.
      */
     public final void writeDirect(byte[] data) throws IOException {
-        xdrOut.writeDirect(data);
+        try {
+            // NOTE: In Jaybird 5 and 6, this is not fully thread-safe, as the transmit lock only covers cancellation
+            // and statement operations; a full solution is available in Jaybird 7 and higher
+            getXdrStreamAccess().withTransmitLock(xdrOut -> {
+                xdrOut.flush();
+                xdrOut.writeDirect(data);
+            });
+        } catch (SQLException e) {
+            // This can happen when withTransmitLock is called on a broken connection; we don't want to change
+            // the signature of this method, so we convert to an IOException
+            throw new IOException(e);
+        }
     }
 
     final List<KnownServerKey.PluginSpecificData> getPluginSpecificData() {

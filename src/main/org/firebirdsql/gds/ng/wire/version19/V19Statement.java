@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire.version19;
 
+import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.InlineBlob;
@@ -43,9 +44,10 @@ public class V19Statement extends V18Statement {
     }
 
     @Override
-    protected void sendExecute(int operation, RowValue parameters) throws IOException, SQLException {
-        super.sendExecute(operation, parameters);
-        getXdrOut().writeInt(getMaxInlineBlobSize()); //p_sqldata_inline_blob_size
+    protected void sendExecuteMsg(XdrOutputStream xdrOut, int operation, RowValue parameters)
+            throws IOException, SQLException {
+        super.sendExecuteMsg(xdrOut, operation, parameters);
+        xdrOut.writeInt(getMaxInlineBlobSize()); //p_sqldata_inline_blob_size
     }
 
     protected int getMaxInlineBlobSize() {

@@ -32,6 +32,7 @@ import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.version16.V16Statement;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.Set;
@@ -55,9 +56,10 @@ public class V18Statement extends V16Statement {
     }
 
     @Override
-    protected void sendExecute(int operation, RowValue parameters) throws IOException, SQLException {
-        super.sendExecute(operation, parameters);
-        getXdrOut().writeInt(getCursorFlagsAsInt()); // p_sqldata_cursor_flags
+    protected void sendExecuteMsg(XdrOutputStream xdrOut, int operation, RowValue parameters)
+            throws IOException, SQLException {
+        super.sendExecuteMsg(xdrOut, operation, parameters);
+        xdrOut.writeInt(getCursorFlagsAsInt()); // p_sqldata_cursor_flags
     }
 
     @Override
@@ -77,7 +79,7 @@ public class V18Statement extends V16Statement {
                     // We are allowing 0 and negative fetch sizes here, in case this triggers some server behaviour
                     int actualFetchSize = fetchType.supportsBatch() ? fetchSize : Math.min(1, fetchSize);
                     sendFetchScroll(fetchType, actualFetchSize, position);
-                    getXdrOut().flush();
+                    withTransmitLock(OutputStream::flush);
                 } catch (IOException ex) {
                     switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
@@ -93,14 +95,15 @@ public class V18Statement extends V16Statement {
     }
 
     protected void sendFetchScroll(FetchType fetchType, int fetchSize, int position) throws SQLException, IOException {
-        final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_fetch_scroll);
-        xdrOut.writeInt(getHandle());
-        xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor()));
-        xdrOut.writeInt(0); // out_message_number = out_message_type
-        xdrOut.writeInt(fetchSize); // fetch size
-        xdrOut.writeInt(fetchType.getFbFetchType()); // p_sqldata_fetch_op
-        xdrOut.writeInt(position); // p_sqldata_fetch_pos
+        withTransmitLock(xdrOut -> {
+            xdrOut.writeInt(WireProtocolConstants.op_fetch_scroll);
+            xdrOut.writeInt(getHandle());
+            xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor()));
+            xdrOut.writeInt(0); // out_message_number = out_message_type
+            xdrOut.writeInt(fetchSize); // fetch size
+            xdrOut.writeInt(fetchType.getFbFetchType()); // p_sqldata_fetch_op
+            xdrOut.writeInt(position); // p_sqldata_fetch_pos
+        });
     }
 
     @Override

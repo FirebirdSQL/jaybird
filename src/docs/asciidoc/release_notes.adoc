@@ -38,6 +38,10 @@ The following has been changed or fixed since Jaybird 5.0.10:
 * Fixed: `FBServiceManager.getAuthPlugins()` reported the `dbCryptConfig` value (https://github.com/FirebirdSQL/jaybird/issues/902[#902])
 +
 This fix was backported from Jaybird 6.0.4.
+* Fixed: `Statement.cancel()` causes lockup (https://github.com/FirebirdSQL/jaybird/issues/904[#904])
++
+This is a partial backport from Jaybird 7.
+See also <<breaking-changes-internal-api-5-0-11>>.
 
 [#jaybird-5-0-10-changelog]
 === Jaybird 5.0.10
@@ -1483,6 +1487,22 @@ This should only affect maintainers of Jaybird forks, or people using the intern
 * `AbstractFbWireBlob` and subclasses
 ** Constructors now throw `SQLException` if the provided database is null or not attached, or the provided transaction is null or not active.
 Previously, passing in a null transaction would result in a `NullPointerException`.
+
+[#breaking-changes-internal-api-5-0-11]
+==== Breaking changes internal API for 5.0.11
+
+With the introduction of the (partial) transmit lock in the wire protocol to address https://github.com/FirebirdSQL/jaybird/issues/892[#892 Statement.cancel() causes lockup], statement and transaction operations must now hold the transmit lock while sending messages to the server.
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-02-cancellation-thread-safety-backport.adoc[jdp-2026-02: Cancellation thread-safety backport].
+
+Implementations and forks *must* ensure they hold the transmit lock _within_ the connection lock while sending statement or transaction related messages.
+The transmit lock *must* be released before receiving (reading) responses from the server.
+
+We have avoided most of the breaking changes that we made in Jaybird 7, but the following is a minor incompatible change:
+
+* V10Statement
+** `sendExecute(int, RowValue)` should no longer be overridden, instead override `sendExecuteMsg(XdrOutputStream, int, RowValue)`.
++
+If you do continue to override `sendExecute(int, RowValue)`, make sure the transmit lock covers the entire message.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

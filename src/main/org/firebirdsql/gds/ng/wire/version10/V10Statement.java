@@ -29,6 +29,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
@@ -66,7 +67,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         try (LockCloseable ignored = withLock()) {
             try {
                 doFreePacket(option);
-                getXdrOut().flush();
+                withTransmitLock(OutputStream::flush);
             } catch (IOException ex) {
                 switchState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
@@ -100,10 +101,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         Free statement option
      */
     protected void sendFree(int option) throws IOException, SQLException {
-        final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_free_statement);
-        xdrOut.writeInt(getHandle());
-        xdrOut.writeInt(option);
+        withTransmitLock(xdrOut -> {
+            xdrOut.writeInt(WireProtocolConstants.op_free_statement);
+            xdrOut.writeInt(getHandle());
+            xdrOut.writeInt(option);
+        });
     }
 
     /**
@@ -130,7 +132,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             if (initialState == StatementState.NEW) {
                 try {
                     sendAllocate();
-                    getXdrOut().flush();
+                    withTransmitLock(OutputStream::flush);
                 } catch (IOException ex) {
                     switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
@@ -151,7 +153,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
             try {
                 sendPrepare(statementText);
-                getXdrOut().flush();
+                withTransmitLock(OutputStream::flush);
             } catch (IOException ex) {
                 switchState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
@@ -179,14 +181,15 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      */
     protected void sendPrepare(final String statementText) throws SQLException, IOException {
         switchState(StatementState.PREPARING);
-        final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_prepare_statement);
-        xdrOut.writeInt(getTransaction().getHandle());
-        xdrOut.writeInt(getHandle());
-        xdrOut.writeInt(getDatabase().getConnectionDialect());
-        xdrOut.writeString(statementText, getDatabase().getEncoding());
-        xdrOut.writeBuffer(getStatementInfoRequestItems());
-        xdrOut.writeInt(getDefaultSqlInfoSize());
+        withTransmitLock(xdrOut -> {
+            xdrOut.writeInt(WireProtocolConstants.op_prepare_statement);
+            xdrOut.writeInt(getTransaction().getHandle());
+            xdrOut.writeInt(getHandle());
+            xdrOut.writeInt(getDatabase().getConnectionDialect());
+            xdrOut.writeString(statementText, getDatabase().getEncoding());
+            xdrOut.writeBuffer(getStatementInfoRequestItems());
+            xdrOut.writeInt(getDefaultSqlInfoSize());
+        });
     }
 
     /**
@@ -206,13 +209,14 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             // TODO Check other statement states?
 
             try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_set_cursor);
-                xdrOut.writeInt(getHandle());
-                // Null termination is needed due to a quirk of the protocol
-                xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding());
-                xdrOut.writeInt(0); // Cursor type
-                xdrOut.flush();
+                withTransmitLock(xdrOut -> {
+                    xdrOut.writeInt(WireProtocolConstants.op_set_cursor);
+                    xdrOut.writeInt(getHandle());
+                    // Null termination is needed due to a quirk of the protocol
+                    xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding());
+                    xdrOut.writeInt(0); // Cursor type
+                    xdrOut.flush();
+                });
             } catch (IOException ex) {
                 switchState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
@@ -259,7 +263,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                                     : WireProtocolConstants.op_execute,
                             parameters);
                     expectedResponseCount++;
-                    getXdrOut().flush();
+                    withTransmitLock(OutputStream::flush);
                 } catch (IOException ex) {
                     switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
@@ -337,8 +341,25 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         Parameters
      */
     protected void sendExecute(final int operation, final RowValue parameters) throws IOException, SQLException {
+        withTransmitLock(xdrOut -> sendExecuteMsg(xdrOut, operation, parameters));
+    }
+
+    /**
+     * Sends the execute message (struct {@code p_sqldata}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param operation
+     *         operation ({@code op_execute} or {@code op_execute2})
+     * @param parameters
+     *         parameter values
+     */
+    protected void sendExecuteMsg(XdrOutputStream xdrOut, int operation, RowValue parameters)
+            throws IOException, SQLException {
         assert operation == WireProtocolConstants.op_execute || operation == WireProtocolConstants.op_execute2 : "Needs to be called with operation op_execute or op_execute2";
-        final XdrOutputStream xdrOut = getXdrOut();
         xdrOut.writeInt(operation);
         xdrOut.writeInt(getHandle());
         xdrOut.writeInt(getTransaction().getHandle());
@@ -481,12 +502,13 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @param fetchSize Number of rows to fetch.
      */
     protected void sendFetch(int fetchSize) throws SQLException, IOException {
-        final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_fetch);
-        xdrOut.writeInt(getHandle());
-        xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor()));
-        xdrOut.writeInt(0); // out_message_number = out_message_type
-        xdrOut.writeInt(fetchSize); // fetch size
+        withTransmitLock(xdrOut -> {
+            xdrOut.writeInt(WireProtocolConstants.op_fetch);
+            xdrOut.writeInt(getHandle());
+            xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor()));
+            xdrOut.writeInt(0); // out_message_number = out_message_type
+            xdrOut.writeInt(fetchSize); // fetch size
+        });
     }
 
     /**
@@ -548,21 +570,28 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         if an error occurs while writing to the underlying output stream
      */
     protected void writeSqlData(RowDescriptor rowDescriptor, RowValue fieldValues, boolean useActualLength)
-        throws IOException, SQLException {
-        final XdrOutputStream xdrOut = getXdrOut();
-        final BlrCalculator blrCalculator = getBlrCalculator();
-        for (int idx = 0; idx < fieldValues.getCount(); idx++) {
-            final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-            final byte[] buffer = fieldValues.getFieldData(idx);
-            final int len = useActualLength
-                    ? blrCalculator.calculateIoLength(fieldDescriptor, buffer)
-                    : blrCalculator.calculateIoLength(fieldDescriptor);
-            writeColumnData(xdrOut, len, buffer, fieldDescriptor);
-            // sqlind (null indicator)
-            xdrOut.writeInt(buffer != null ? NULL_INDICATOR_NOT_NULL : NULL_INDICATOR_NULL);
-        }
+            throws IOException, SQLException {
+        withTransmitLock(xdrOut -> {
+            final BlrCalculator blrCalculator = getBlrCalculator();
+            for (int idx = 0; idx < fieldValues.getCount(); idx++) {
+                final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
+                final byte[] buffer = fieldValues.getFieldData(idx);
+                final int len = useActualLength
+                        ? blrCalculator.calculateIoLength(fieldDescriptor, buffer)
+                        : blrCalculator.calculateIoLength(fieldDescriptor);
+                writeColumnData(xdrOut, len, buffer, fieldDescriptor);
+                // sqlind (null indicator)
+                xdrOut.writeInt(buffer != null ? NULL_INDICATOR_NOT_NULL : NULL_INDICATOR_NULL);
+            }
+        });
     }
 
+    /**
+     * Writes a column.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     */
     protected void writeColumnData(XdrOutputStream xdrOut, int len, byte[] buffer, FieldDescriptor fieldDescriptor)
             throws IOException {
         final int tempType = fieldDescriptor.getType() & ~1;
@@ -608,9 +637,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * Sends the <em>allocate</em> request to the server.
      */
     protected void sendAllocate() throws SQLException, IOException {
-        final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_allocate_statement);
-        xdrOut.writeInt(getDatabase().getHandle());
+        withTransmitLock(xdrOut -> {
+            xdrOut.writeInt(WireProtocolConstants.op_allocate_statement);
+            xdrOut.writeInt(getDatabase().getHandle());
+        });
     }
 
     /**

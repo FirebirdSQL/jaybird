@@ -61,10 +61,12 @@ public class V16Statement extends V13Statement {
     }
 
     @Override
-    protected void sendExecute(int operation, RowValue parameters) throws IOException, SQLException {
-        super.sendExecute(operation, parameters);
-        // timeout is an unsigned 32 bit int
-        getXdrOut().writeInt((int) getAllowedTimeout()); // p_sqldata_timeout
+    protected void sendExecuteMsg(XdrOutputStream xdrOut, int operation, RowValue parameters)
+            throws IOException, SQLException {
+        // timeout is an unsigned 32-bit int
+        int timeout = (int) getAllowedTimeout();
+        super.sendExecuteMsg(xdrOut, operation, parameters);
+        xdrOut.writeInt(timeout); // p_sqldata_timeout
     }
 
     @Override
@@ -103,13 +105,14 @@ public class V16Statement extends V13Statement {
         BatchParameterBuffer batchPb = createBatchParameterBuffer();
         batchConfig.populateBatchParameterBuffer(batchPb);
 
-        XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_batch_create);
-        xdrOut.writeInt(getHandle()); // p_batch_statement
-        xdrOut.writeBuffer(blrMessage); // p_batch_blr
-        xdrOut.writeInt(messageLength); // p_batch_msglen
-        xdrOut.writeTyped(batchPb); // p_batch_pb
-        xdrOut.flush();
+        withTransmitLock(xdrOut -> {
+            xdrOut.writeInt(WireProtocolConstants.op_batch_create);
+            xdrOut.writeInt(getHandle()); // p_batch_statement
+            xdrOut.writeBuffer(blrMessage); // p_batch_blr
+            xdrOut.writeInt(messageLength); // p_batch_msglen
+            xdrOut.writeTyped(batchPb); // p_batch_pb
+            xdrOut.flush();
+        });
     }
 
     @Override
@@ -132,21 +135,22 @@ public class V16Statement extends V13Statement {
     protected void sendBatchMsg(Collection<RowValue> rowValues) throws SQLException, IOException {
         BlrCalculator blrCalculator = getBlrCalculator();
         RowDescriptor parameterDescriptor = getParameterDescriptor();
-        XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_batch_msg);
-        xdrOut.writeInt(getHandle()); // p_batch_statement
-        xdrOut.writeInt(rowValues.size());
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        XdrOutputStream rowOut = new XdrOutputStream(baos, 512);
-        for (RowValue rowValue : rowValues) {
-            baos.reset();
-            writeSqlData(rowOut, blrCalculator, parameterDescriptor, rowValue, false);
-            rowOut.flush();
-            byte[] rowBytes = baos.toByteArray();
-            xdrOut.write(rowBytes);
-            xdrOut.writeZeroPadding((4 - rowBytes.length) & 3);
-        }
-        xdrOut.flush();
+        withTransmitLock(xdrOut -> {
+            xdrOut.writeInt(WireProtocolConstants.op_batch_msg);
+            xdrOut.writeInt(getHandle()); // p_batch_statement
+            xdrOut.writeInt(rowValues.size());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            XdrOutputStream rowOut = new XdrOutputStream(baos, 512);
+            for (RowValue rowValue : rowValues) {
+                baos.reset();
+                writeSqlData(rowOut, blrCalculator, parameterDescriptor, rowValue, false);
+                rowOut.flush();
+                byte[] rowBytes = baos.toByteArray();
+                xdrOut.write(rowBytes);
+                xdrOut.writeZeroPadding((4 - rowBytes.length) & 3);
+            }
+            xdrOut.flush();
+        });
     }
 
     @Override
@@ -156,11 +160,12 @@ public class V16Statement extends V13Statement {
             FbTransaction transaction = getTransaction();
             checkTransactionActive(transaction);
             try {
-                XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_batch_exec);
-                xdrOut.writeInt(getHandle());
-                xdrOut.writeInt(transaction.getHandle());
-                xdrOut.flush();
+                withTransmitLock(xdrOut -> {
+                    xdrOut.writeInt(WireProtocolConstants.op_batch_exec);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeInt(transaction.getHandle());
+                    xdrOut.flush();
+                });
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
@@ -183,10 +188,11 @@ public class V16Statement extends V13Statement {
     public void batchCancel() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             try {
-                XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_batch_cancel);
-                xdrOut.writeInt(getHandle());
-                xdrOut.flush();
+                withTransmitLock(xdrOut -> {
+                    xdrOut.writeInt(WireProtocolConstants.op_batch_cancel);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.flush();
+                });
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
@@ -208,10 +214,11 @@ public class V16Statement extends V13Statement {
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
             try {
-                XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_batch_rls);
-                xdrOut.writeInt(getHandle());
-                xdrOut.flush();
+                withTransmitLock(xdrOut -> {
+                    xdrOut.writeInt(WireProtocolConstants.op_batch_rls);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.flush();
+                });
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();

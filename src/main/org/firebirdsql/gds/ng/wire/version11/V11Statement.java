@@ -29,6 +29,7 @@ import org.firebirdsql.gds.ng.wire.Response;
 import org.firebirdsql.gds.ng.wire.version10.V10Statement;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 
@@ -75,7 +76,7 @@ public class V11Statement extends V10Statement {
                 sendPrepare(statementText);
                 expectedResponseCount++;
 
-                getXdrOut().flush();
+                withTransmitLock(OutputStream::flush);
             } catch (IOException ex) {
                 switchState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
@@ -124,23 +125,23 @@ public class V11Statement extends V10Statement {
                  retaining locks on metadata objects too long
                 */
                 if (option != ISCConstants.DSQL_close) {
-                    getXdrOut().flush();
+                    withTransmitLock(OutputStream::flush);
                 }
-                // process response later
-                getDatabase().enqueueDeferredAction(new DeferredAction() {
-                    @Override
-                    public void processResponse(Response response) {
-                        processFreeResponse(response);
-                    }
-                    @Override
-                    public WarningMessageCallback getWarningMessageCallback() {
-                        return getStatementWarningCallback();
-                    }
-                });
             } catch (IOException ex) {
                 switchState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
+            // process response later
+            getDatabase().enqueueDeferredAction(new DeferredAction() {
+                @Override
+                public void processResponse(Response response) {
+                    processFreeResponse(response);
+                }
+                @Override
+                public WarningMessageCallback getWarningMessageCallback() {
+                    return getStatementWarningCallback();
+                }
+            });
         }
     }
 }

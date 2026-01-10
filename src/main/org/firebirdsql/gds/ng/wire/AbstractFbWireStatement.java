@@ -82,12 +82,16 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         return getXdrStreamAccess().getXdrOut();
     }
 
-    private XdrStreamAccess getXdrStreamAccess() throws SQLException {
-        if (database != null) {
-            return database.getXdrStreamAccess();
-        } else {
-            throw new SQLException("Connection closed or no connection available");
-        }
+    /**
+     * @see XdrStreamAccess#withTransmitLock(TransmitAction)
+     * @since 5.0.11
+     */
+    protected final void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getXdrStreamAccess().withTransmitLock(transmitAction);
+    }
+
+    private XdrStreamAccess getXdrStreamAccess() {
+        return database.getXdrStreamAccess();
     }
 
     @Override

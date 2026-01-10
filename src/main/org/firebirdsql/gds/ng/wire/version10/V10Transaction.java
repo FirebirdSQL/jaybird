@@ -23,6 +23,8 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
+import org.firebirdsql.gds.ng.wire.TransmitAction;
+import org.firebirdsql.gds.ng.wire.XdrStreamAccess;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -63,7 +65,19 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     }
 
     protected final XdrOutputStream getXdrOut() throws SQLException {
-        return getDatabase().getXdrStreamAccess().getXdrOut();
+        return getXdrStreamAccess().getXdrOut();
+    }
+
+    /**
+     * @see XdrStreamAccess#withTransmitLock(TransmitAction)
+     * @since 5.0.11
+     */
+    protected final void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getXdrStreamAccess().withTransmitLock(transmitAction);
+    }
+
+    private XdrStreamAccess getXdrStreamAccess() {
+        return getDatabase().getXdrStreamAccess();
     }
 
     @Override
@@ -124,10 +138,11 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         assert commitOrRollback == op_commit || commitOrRollback == op_rollback
                 : "Unsupported operation code " + commitOrRollback;
         try {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(commitOrRollback);
-            xdrOut.writeInt(handle);
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                xdrOut.writeInt(commitOrRollback);
+                xdrOut.writeInt(handle);
+                xdrOut.flush();
+            });
         } catch (IOException ioex) {
             throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
         }
@@ -143,16 +158,17 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         try (LockCloseable ignored = withLock()) {
             switchState(TransactionState.PREPARING);
             try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                if (recoveryInformation != null) {
-                    xdrOut.writeInt(op_prepare2);
-                    xdrOut.writeInt(handle);
-                    xdrOut.writeBuffer(recoveryInformation);
-                } else {
-                    xdrOut.writeInt(op_prepare);
-                    xdrOut.writeInt(handle);
-                }
-                xdrOut.flush();
+                withTransmitLock(xdrOut -> {
+                    if (recoveryInformation != null) {
+                        xdrOut.writeInt(op_prepare2);
+                        xdrOut.writeInt(handle);
+                        xdrOut.writeBuffer(recoveryInformation);
+                    } else {
+                        xdrOut.writeInt(op_prepare);
+                        xdrOut.writeInt(handle);
+                    }
+                    xdrOut.flush();
+                });
             } catch (IOException ioex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
             }
