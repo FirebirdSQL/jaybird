@@ -6,8 +6,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 5.0.11, Jaybird 6.0.4
+* Published: 2026-01-10
+* Implemented in: Jaybird 5.0.11, Jaybird 6.0.4
 
 == Type
 
@@ -31,8 +31,11 @@ However, we will only make changes so cancellation is threadsafe with regard to 
 
 * Use `withTransmitLock`
 ** within `FbWireStatement` implementations
+** within `FbWireTransaction` implementations
++
+Given the likelihood of commit after a statement operation in auto-commit, thread-safety of commit/rollback with regard to cancellation turned out to be needed during testing.
 ** with the `writeDirect` method used by cancellation
-** with sync operations for deferred operations
+** with sync operations for deferred operations (Jaybird 6 only)
 * As much as possible, avoid changing method signatures, method visibility, and removing or renaming methods
 
 == Consequences
@@ -43,6 +46,8 @@ Given this backport does not cover the entire wire protocol, thread-safety of ca
 
 Implementers of Jaybird forks or alternative wire protocol versions building on classes in `org.firebirdsql.gds.ng.wire` package and "`sub`"-packages will need to change their code to correctly obtain the transmit lock during transmission to the server for statement operations.
 Given this backport is less invasive compared to the changes in Jaybird 7, there is some risk of "`missing`" necessary changes.
+
+Contrary to the implementation in Jaybird 7, the implementation in Jaybird 5 and 6 does rely on the reentrancy of the lock.
 
 It is possible that this change will not fully address cancellation issues.
 We suspect deferred response handling might need additional work, and result sets may need to be invalidated/closed by cancellation.
