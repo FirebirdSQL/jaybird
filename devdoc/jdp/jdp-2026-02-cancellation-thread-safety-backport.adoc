@@ -1,0 +1,71 @@
+= jdp-2026-02: Cancellation thread-safety backport
+:jdp-2026-01: https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-01-additional-locking-for-sending-in-wire-protocol.adoc[jdp-2026-01: Additional locking for sending in wire protocol]
+
+// SPDX-FileCopyrightText: Copyright 2026 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 5.0.11, Jaybird 6.0.4
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+As described in {jdp-2026-01}, cancellation as initially implemented is not threadsafe.
+The solution proposed there -- and implemented in Jaybird 7 -- solves the thread-safety issue, but is a rather invasive change as it covers the entire wire protocol implementation.
+
+== Decision
+
+For Jaybird 5 and 6, the solution of {jdp-2026-01} is backported in a reduced form.
+
+The basic solution is the same:
+
+* Adds a `withTransmitLock(TransmitAction)` method to `XdrStreamAccess`
+* Uses a `ReentrantLock` within the `XdrStreamAccess` implementation of `WireConnection`
+
+However, we will only make changes so cancellation is threadsafe with regard to statement operations:
+
+* Use `withTransmitLock`
+** within `FbWireStatement` implementations
+** with the `writeDirect` method used by cancellation
+** with sync operations for deferred operations
+* As much as possible, avoid changing method signatures, method visibility, and removing or renaming methods
+
+== Consequences
+
+Given this backport does not cover the entire wire protocol, thread-safety of cancellation is not guaranteed, but should address the immediate problems observed with rapid cancellation during statement execution.
+
+"`Normal`" users of the JDBC driver and the internal GDS-ng API, are not affected -- there is no change in the methods they call, or the operation or behaviour of the driver (except statement cancellation is now -- hopefully -- thread-safe).
+
+Implementers of Jaybird forks or alternative wire protocol versions building on classes in `org.firebirdsql.gds.ng.wire` package and "`sub`"-packages will need to change their code to correctly obtain the transmit lock during transmission to the server for statement operations.
+Given this backport is less invasive compared to the changes in Jaybird 7, there is some risk of "`missing`" necessary changes.
+
+It is possible that this change will not fully address cancellation issues.
+We suspect deferred response handling might need additional work, and result sets may need to be invalidated/closed by cancellation.
+This will be subject to further investigation after this thread-safety issue has been addressed.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2026-02: Cancellation thread-safety backport`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2026.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
