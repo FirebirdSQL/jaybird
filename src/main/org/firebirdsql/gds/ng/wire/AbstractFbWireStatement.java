@@ -25,7 +25,6 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbStatement;
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -91,12 +90,16 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         return getXdrStreamAccess().getXdrOut();
     }
 
-    private XdrStreamAccess getXdrStreamAccess() throws SQLException {
-        if (database != null) {
-            return database.getXdrStreamAccess();
-        } else {
-            throw FbExceptionBuilder.connectionClosed();
-        }
+    /**
+     * @see XdrStreamAccess#withTransmitLock(TransmitAction)
+     * @since 6.0.4
+     */
+    protected final void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getXdrStreamAccess().withTransmitLock(transmitAction);
+    }
+
+    private XdrStreamAccess getXdrStreamAccess() {
+        return database.getXdrStreamAccess();
     }
 
     @Override
@@ -318,11 +321,12 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
             if (database == null) return;
             try (LockCloseable ignored = database.withLock()) {
                 if (!database.isAttached()) return;
-                XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_free_statement); // p_operation
-                xdrOut.writeInt(handle); // p_sqlfree_statement
-                xdrOut.writeInt(ISCConstants.DSQL_drop); // p_sqlfree_option
-                xdrOut.flush();
+                database.getXdrStreamAccess().withTransmitLock(xdrOut -> {
+                    xdrOut.writeInt(WireProtocolConstants.op_free_statement); // p_operation
+                    xdrOut.writeInt(handle); // p_sqlfree_statement
+                    xdrOut.writeInt(ISCConstants.DSQL_drop); // p_sqlfree_option
+                    xdrOut.flush();
+                });
                 // TODO: This may process deferred actions on the cleaner thread, we may want to change that
                 database.enqueueDeferredAction(CLEANUP_FREE_DEFERRED_ACTION);
             } catch (SQLException | IOException e) {

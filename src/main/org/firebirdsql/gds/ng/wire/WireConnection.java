@@ -38,6 +38,7 @@ import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.jspecify.annotations.NonNull;
 
 import javax.net.SocketFactory;
 import java.io.ByteArrayOutputStream;
@@ -59,6 +60,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -98,8 +100,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     private XdrOutputStream xdrOut;
     private XdrInputStream xdrIn;
     private final XdrStreamAccess streamAccess = new XdrStreamAccess() {
+
+        private final ReentrantLock transmitLock = new ReentrantLock();
+
         @Override
-        public XdrInputStream getXdrIn() throws SQLException {
+        public @NonNull XdrInputStream getXdrIn() throws SQLException {
             if (isConnected() && xdrIn != null) {
                 return xdrIn;
             } else {
@@ -108,13 +113,24 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         }
 
         @Override
-        public XdrOutputStream getXdrOut() throws SQLException {
+        public @NonNull XdrOutputStream getXdrOut() throws SQLException {
             if (isConnected() && xdrOut != null) {
                 return xdrOut;
             } else {
                 throw FbExceptionBuilder.connectionClosed();
             }
         }
+
+        @Override
+        public void withTransmitLock(@NonNull TransmitAction transmitAction) throws IOException, SQLException {
+            transmitLock.lock();
+            try {
+                transmitAction.transmit(getXdrOut());
+            } finally {
+                transmitLock.unlock();
+            }
+        }
+
     };
 
     /**
@@ -678,7 +694,18 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
      *         If there is no socket, the socket is closed, or for errors writing to the socket.
      */
     public final void writeDirect(byte[] data) throws IOException {
-        xdrOut.writeDirect(data);
+        try {
+            // NOTE: In Jaybird 5 and 6, this is not fully thread-safe, as the transmit lock only covers cancellation
+            // and statement operations; a full solution is available in Jaybird 7 and higher
+            getXdrStreamAccess().withTransmitLock(xdrOut -> {
+                xdrOut.flush();
+                xdrOut.writeDirect(data);
+            });
+        } catch (SQLException e) {
+            // This can happen when withTransmitLock is called on a broken connection; we don't want to change
+            // the signature of this method, so we convert to an IOException
+            throw new IOException(e);
+        }
     }
 
     final List<KnownServerKey.PluginSpecificData> getPluginSpecificData() {

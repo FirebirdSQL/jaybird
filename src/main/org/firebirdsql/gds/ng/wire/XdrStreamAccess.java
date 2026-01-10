@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,7 +26,9 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
+import org.jspecify.annotations.NullMarked;
 
+import java.io.IOException;
 import java.sql.SQLException;
 
 /**
@@ -37,25 +37,58 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public interface XdrStreamAccess {
 
     /**
-     * Gets the XdrInputStream.
+     * Gets the XDR input stream.
      *
-     * @return Instance of XdrInputStream
+     * @return instance of {@link XdrInputStream}
      * @throws SQLException
-     *         If no connection is opened or when exceptions occur
-     *         retrieving the InputStream
+     *         if no connection is opened or when exceptions occur retrieving the InputStream
      */
     XdrInputStream getXdrIn() throws SQLException;
 
     /**
-     * Gets the XdrOutputStream.
+     * Gets the XDR output stream.
      *
-     * @return Instance of XdrOutputStream
+     * @return instance of {@link XdrOutputStream}
      * @throws SQLException
-     *         If no connection is opened or when exceptions occur
-     *         retrieving the OutputStream
+     *         if no connection is opened or when exceptions occur retrieving the OutputStream
+     * @see #withTransmitLock(TransmitAction)
      */
     XdrOutputStream getXdrOut() throws SQLException;
+
+    /**
+     * Runs {@link TransmitAction#transmit(XdrOutputStream)} with {@link #getXdrOut()} on {@code transmitAction} under
+     * the transmit lock.
+     * <p>
+     * For Jaybird 5 and 6, the transmit lock only needs to be used for statement operations and cancellation. See also
+     * <a href="https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-02-cancellation-thread-safety-backport.adoc">jdp-2026-02: Cancellation thread-safety backport</a>
+     * </p>
+     * <p>
+     * The transmit lock should only cover sending messages to the server. It should be held for the duration of the
+     * entire message. It <strong>must</strong> be released <em>before</em> reading (receiving) messages from the
+     * server. If possible, do not do anything other than writing to the XDR output stream while holding the lock.
+     * </p>
+     * <p>
+     * Normal operations <strong>must</strong> obtain the lock while holding the connection lock (i.e. the various
+     * {@code withLock()} methods). Out-of-band operations (e.g. cancellation) <strong>must not</strong> take out the
+     * connection lock, otherwise they can't be out-of-band.
+     * </p>
+     * <p>
+     * Note for implementations: the lock used must be reentrant.
+     * </p>
+     *
+     * @param transmitAction
+     *         the transmit action to run under lock
+     * @throws IOException
+     *         for errors writing to the XDR output stream
+     * @throws SQLException
+     *         for other database access errors
+     * @see TransmitAction
+     * @since 6.0.4
+     */
+    void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException;
+
 }

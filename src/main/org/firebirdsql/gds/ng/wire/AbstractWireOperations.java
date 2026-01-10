@@ -92,6 +92,14 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         return getXdrStreamAccess().getXdrOut();
     }
 
+    /**
+     * @see XdrStreamAccess#withTransmitLock(TransmitAction)
+     * @since 6.0.4
+     */
+    protected final void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getXdrStreamAccess().withTransmitLock(transmitAction);
+    }
+
     @Override
     public final SQLException readStatusVector() throws SQLException {
         return readStatusVector(getXdrIn());

@@ -22,6 +22,8 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
+import org.firebirdsql.gds.ng.wire.TransmitAction;
+import org.firebirdsql.gds.ng.wire.XdrStreamAccess;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -60,7 +62,19 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     }
 
     protected final XdrOutputStream getXdrOut() throws SQLException {
-        return getDatabase().getXdrStreamAccess().getXdrOut();
+        return getXdrStreamAccess().getXdrOut();
+    }
+
+    /**
+     * @see XdrStreamAccess#withTransmitLock(TransmitAction)
+     * @since 6.0.4
+     */
+    protected final void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getXdrStreamAccess().withTransmitLock(transmitAction);
+    }
+
+    private XdrStreamAccess getXdrStreamAccess() {
+        return getDatabase().getXdrStreamAccess();
     }
 
     @Override
@@ -105,10 +119,11 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         assert commitOrRollback == op_commit || commitOrRollback == op_rollback
                 : "Unsupported operation code " + commitOrRollback;
         try {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(commitOrRollback);
-            xdrOut.writeInt(handle);
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                xdrOut.writeInt(commitOrRollback);
+                xdrOut.writeInt(handle);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
@@ -135,16 +150,17 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
 
     private void sendPrepare(byte[] recoveryInformation) throws SQLException {
         try {
-            XdrOutputStream xdrOut = getXdrOut();
-            if (recoveryInformation != null) {
-                xdrOut.writeInt(op_prepare2);
-                xdrOut.writeInt(handle);
-                xdrOut.writeBuffer(recoveryInformation);
-            } else {
-                xdrOut.writeInt(op_prepare);
-                xdrOut.writeInt(handle);
-            }
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                if (recoveryInformation != null) {
+                    xdrOut.writeInt(op_prepare2);
+                    xdrOut.writeInt(handle);
+                    xdrOut.writeBuffer(recoveryInformation);
+                } else {
+                    xdrOut.writeInt(op_prepare);
+                    xdrOut.writeInt(handle);
+                }
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }

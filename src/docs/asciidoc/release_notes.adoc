@@ -37,6 +37,10 @@ For known issues, consult <<known-issues>>.
 
 The following was fixed or changed since Jaybird 6.0.3:
 
+* Fixed: `Statement.cancel()` causes lockup (https://github.com/FirebirdSQL/jaybird/issues/892[#892])
++
+This is a partial backport from Jaybird 7.
+See also <<breaking-changes-internal-api-6-0-4>>.
 * Fixed: Negative buffer size on Firebird 2.5 if information response is 32KiB or greater (https://github.com/FirebirdSQL/jaybird/issues/895[#895])
 +
 The error occurs when preparing or executing statements with a lot of columns, especially select statements with columns that have long names and/or aliases for columns, tables and table owners.
@@ -2092,6 +2096,22 @@ This should only affect maintainers of Jaybird forks, or people using the intern
 * `AbstractFbWireBlob` and subclasses
 ** Constructors now throw `SQLException` if the provided database is null or not attached, or the provided transaction is null or not active.
 Previously, passing in a null transaction would result in a `NullPointerException`.
+
+[#breaking-changes-internal-api-6-0-4]
+==== Breaking changes internal API for 6.0.4
+
+With the introduction of the (partial) transmit lock in the wire protocol to address https://github.com/FirebirdSQL/jaybird/issues/892[#892 Statement.cancel() causes lockup], statement and transaction operations must now hold the transmit lock while sending messages to the server.
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-02-cancellation-thread-safety-backport.adoc[jdp-2026-02: Cancellation thread-safety backport].
+
+Implementations and forks *must* ensure they hold the transmit lock _within_ the connection lock while sending statement or transaction related messages.
+The transmit lock *must* be released before receiving (reading) responses from the server.
+
+We have avoided most of the breaking changes that we made in Jaybird 7, but the following is a minor incompatible change:
+
+* V10Statement
+** `sendExecute(int, RowValue)` should no longer be overridden, instead override `sendExecuteMsg(XdrOutputStream, int, RowValue)`.
++
+If you do continue to override `sendExecute(int, RowValue)`, make sure the transmit lock covers the entire message.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

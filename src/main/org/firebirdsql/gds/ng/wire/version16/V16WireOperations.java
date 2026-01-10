@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng.wire.version16;
 
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
-import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.BatchCompletion;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -60,9 +59,10 @@ public class V16WireOperations extends V15WireOperations {
                 // Some deferred actions, specifically batch operations, will not send responses unless the server is
                 // forced by a ping or batch sync
                 try {
-                    XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(getBatchSyncOperation());
-                    xdrOut.flush();
+                    withTransmitLock(xdrOut -> {
+                        xdrOut.writeInt(getBatchSyncOperation());
+                        xdrOut.flush();
+                    });
                 } catch (IOException e) {
                     throw FbExceptionBuilder.ioWriteError(e);
                 }

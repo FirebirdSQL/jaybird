@@ -26,6 +26,7 @@ import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.gds.ng.wire.version10.V10WireOperations;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -103,7 +104,7 @@ public class V11WireOperations extends V10WireOperations {
         try (LockCloseable ignored = withLock()) {
             if (completeDeferredActionsRequiresSync()) {
                 // We sometimes forgo flushing of the request for deferred operations, flush to be able to complete
-                getXdrOut().flush();
+                withTransmitLock(OutputStream::flush);
             }
             processDeferredActions();
         } catch (IOException e) {

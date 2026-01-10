@@ -34,6 +34,7 @@ import org.firebirdsql.gds.ng.wire.Response;
 import org.firebirdsql.gds.ng.wire.version10.V10Statement;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.Optional;
 
@@ -77,7 +78,7 @@ public class V11Statement extends V10Statement {
                 sendPrepare(statementText);
                 expectedResponseCount++;
 
-                getXdrOut().flush();
+                withTransmitLock(OutputStream::flush);
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.ioWriteError(e);
@@ -188,7 +189,7 @@ public class V11Statement extends V10Statement {
                 throw FbExceptionBuilder.toException(ISCConstants.isc_cancelled);
             }
             sendFetch(fetchSize);
-            getXdrOut().flush();
+            withTransmitLock(OutputStream::flush);
         } catch (IOException e) {
             switchState(StatementState.ERROR);
             throw FbExceptionBuilder.ioWriteError(e);
@@ -253,31 +254,31 @@ public class V11Statement extends V10Statement {
                 // Don't flush close of cursor, only flush drop or unprepare of statement. This balances network
                 // efficiencies with preventing statements retaining locks on metadata objects too long
                 if (option != ISCConstants.DSQL_close) {
-                    getXdrOut().flush();
+                    withTransmitLock(OutputStream::flush);
                 }
-                // process response later
-                getDatabase().enqueueDeferredAction(new DeferredAction() {
-                    @Override
-                    public void processResponse(Response response) {
-                        processFreeResponse(response);
-                    }
-
-                    @Override
-                    public WarningMessageCallback getWarningMessageCallback() {
-                        return getStatementWarningCallback();
-                    }
-
-                    @Override
-                    public boolean requiresSync() {
-                        // DSQL_close requires sync as it isn't flushed,
-                        // other options require sync because server defers response
-                        return true;
-                    }
-                });
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.ioWriteError(e);
             }
+            // process response later
+            getDatabase().enqueueDeferredAction(new DeferredAction() {
+                @Override
+                public void processResponse(Response response) {
+                    processFreeResponse(response);
+                }
+
+                @Override
+                public WarningMessageCallback getWarningMessageCallback() {
+                    return getStatementWarningCallback();
+                }
+
+                @Override
+                public boolean requiresSync() {
+                    // DSQL_close requires sync as it isn't flushed,
+                    // other options require sync because server defers response
+                    return true;
+                }
+            });
         }
     }
 
