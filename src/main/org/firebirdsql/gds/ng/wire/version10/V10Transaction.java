@@ -147,7 +147,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
      * @param xdrOut
      *         XDR output stream
      * @param recoveryInformation
-     *         recovery information (if {@code null, uses {@code op_prepare}, otherwise {@code op_prepare2})
+     *         recovery information (if {@code null}, uses {@code op_prepare}, otherwise {@code op_prepare2})
      * @throws IOException
      *         for errors writing to the output stream
      * @since 7
