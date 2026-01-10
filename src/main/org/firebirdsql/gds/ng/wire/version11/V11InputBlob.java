@@ -1,10 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version11;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
-import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.CachedInfoResponse;
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -15,6 +14,7 @@ import org.firebirdsql.gds.ng.wire.Response;
 import org.firebirdsql.gds.ng.wire.version10.V10InputBlob;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.function.Function;
@@ -92,12 +92,14 @@ public class V11InputBlob extends V10InputBlob {
             return;
         }
         try {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_info_blob);
-            xdrOut.writeInt(getHandle());
-            xdrOut.writeInt(0); // incarnation
-            xdrOut.writeBuffer(knownBlobInfoItems);
-            xdrOut.writeInt(512);
+            withTransmitLock(xdrOut -> {
+                // TODO Duplicates AbstractFbWireDatabase.sendGetInfoMsg; rethink this if it needs versioning
+                xdrOut.writeInt(op_info_blob);
+                xdrOut.writeInt(getHandle());
+                xdrOut.writeInt(0); // incarnation
+                xdrOut.writeBuffer(knownBlobInfoItems);
+                xdrOut.writeInt(512);
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
@@ -141,7 +143,7 @@ public class V11InputBlob extends V10InputBlob {
     private void completePendingOpen0() throws SQLException {
         try {
             try {
-                getXdrOut().flush();
+                withTransmitLock(OutputStream::flush);
             } catch (IOException e) {
                 throw FbExceptionBuilder.ioWriteError(e);
             }

@@ -1,11 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
-import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -53,27 +52,18 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     }
 
     /**
-     * Gets the XdrInputStream.
-     *
-     * @return Instance of XdrInputStream
-     * @throws SQLException
-     *         If no connection is opened or when exceptions occur
-     *         retrieving the InputStream
+     * @see XdrStreamAccess#getXdrIn()
      */
     protected final XdrInputStream getXdrIn() throws SQLException {
         return getXdrStreamAccess().getXdrIn();
     }
 
     /**
-     * Gets the XdrOutputStream.
-     *
-     * @return Instance of XdrOutputStream
-     * @throws SQLException
-     *         If no connection is opened or when exceptions occur
-     *         retrieving the OutputStream
+     * @see XdrStreamAccess#withTransmitLock(TransmitAction)
+     * @since 7
      */
-    protected final XdrOutputStream getXdrOut() throws SQLException {
-        return getXdrStreamAccess().getXdrOut();
+    protected final void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getXdrStreamAccess().withTransmitLock(transmitAction);
     }
 
     @Override
@@ -276,11 +266,6 @@ public abstract class AbstractWireOperations implements FbWireOperations {
                 log.log(System.Logger.Level.DEBUG, "Exception in consumePackets", e);
             }
         }
-    }
-
-    @Override
-    public final void writeDirect(byte[] data) throws IOException {
-        connection.writeDirect(data);
     }
 
     @Override

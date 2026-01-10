@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -6,7 +6,6 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
-import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbService;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -130,27 +129,18 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     }
 
     /**
-     * Gets the XdrInputStream.
-     *
-     * @return Instance of XdrInputStream
-     * @throws SQLException
-     *         If no connection is opened or when exceptions occur
-     *         retrieving the InputStream
+     * @see XdrStreamAccess#getXdrIn()
      */
     protected final XdrInputStream getXdrIn() throws SQLException {
         return getXdrStreamAccess().getXdrIn();
     }
 
     /**
-     * Gets the XdrOutputStream.
-     *
-     * @return Instance of XdrOutputStream
-     * @throws SQLException
-     *         If no connection is opened or when exceptions occur
-     *         retrieving the OutputStream
+     * @see XdrStreamAccess#withTransmitLock(TransmitAction)
+     * @since 7
      */
-    protected final XdrOutputStream getXdrOut() throws SQLException {
-        return getXdrStreamAccess().getXdrOut();
+    protected final void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getXdrStreamAccess().withTransmitLock(transmitAction);
     }
 
     @Override

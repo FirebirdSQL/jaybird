@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.jspecify.annotations.NonNull;
 
 import javax.net.SocketFactory;
 import java.io.ByteArrayOutputStream;
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -83,8 +85,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     private XdrOutputStream xdrOut;
     private XdrInputStream xdrIn;
     private final XdrStreamAccess streamAccess = new XdrStreamAccess() {
+
+        private final ReentrantLock transmitLock = new ReentrantLock();
+
         @Override
-        public XdrInputStream getXdrIn() throws SQLException {
+        public @NonNull XdrInputStream getXdrIn() throws SQLException {
             if (isConnected() && xdrIn != null) {
                 return xdrIn;
             } else {
@@ -93,21 +98,31 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         }
 
         @Override
-        public XdrOutputStream getXdrOut() throws SQLException {
+        public @NonNull XdrOutputStream getXdrOut() throws SQLException {
             if (isConnected() && xdrOut != null) {
                 return xdrOut;
             } else {
                 throw FbExceptionBuilder.connectionClosed();
             }
         }
+
+        @Override
+        public void withTransmitLock(@NonNull TransmitAction transmitAction) throws IOException, SQLException {
+            transmitLock.lock();
+            try {
+                transmitAction.transmit(getXdrOut());
+            } finally {
+                transmitLock.unlock();
+            }
+        }
+
     };
 
     /**
-     * Creates a WireConnection (without establishing a connection to the
-     * server) with the default protocol collection.
+     * Creates a not-connected WireConnection with the default protocol collection.
      *
      * @param attachProperties
-     *         Attach properties
+     *         attach properties
      */
     protected WireConnection(T attachProperties) throws SQLException {
         this(attachProperties, EncodingFactory.getPlatformDefault(),
@@ -115,15 +130,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     }
 
     /**
-     * Creates a WireConnection (without establishing a connection to the
-     * server).
+     * Creates a not-connected WireConnection.
      *
      * @param attachProperties
-     *         Attach properties
+     *         attach properties
      * @param encodingFactory
-     *         Factory for encoding definitions
+     *         factory for encoding definitions
      * @param protocols
-     *         The collection of protocols to use for this connection.
+     *         collection of protocols to use for this connection
      */
     protected WireConnection(T attachProperties, IEncodingFactory encodingFactory,
             ProtocolCollection protocols) throws SQLException {
@@ -136,6 +150,10 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     // Allow access to withLock() at package level, without making it public in parent class
     final LockCloseable withLockProxy() {
         return withLock();
+    }
+
+    private void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getXdrStreamAccess().withTransmitLock(transmitAction);
     }
 
     public final String getServerName() {
@@ -300,14 +318,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 return propsConstructor.newInstance(getSocketFactoryProperties());
             } catch (ReflectiveOperationException e) {
                 log.log(DEBUG, socketFactoryName
-                        + "has no Properties constructor, or constructor execution resulted in an exception", e);
+                        + " has no Properties constructor, or constructor execution resulted in an exception", e);
             }
             try {
                 Constructor<? extends SocketFactory> noArgConstructor = socketFactoryClass.getConstructor();
                 return noArgConstructor.newInstance();
             } catch (ReflectiveOperationException e) {
                 log.log(DEBUG, socketFactoryName
-                        + "has no no-arg constructor, or constructor execution resulted in an exception", e);
+                        + " has no no-arg constructor, or constructor execution resulted in an exception", e);
             }
             throw FbExceptionBuilder
                     .forNonTransientConnectionException(JaybirdErrorCodes.jb_socketFactoryConstructorNotFound)
@@ -349,7 +367,10 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             xdrIn = new XdrInputStream(socket.getInputStream());
             xdrOut = new XdrOutputStream(socket.getOutputStream());
 
-            sendConnectAttach(xdrOut);
+            withTransmitLock(xdrOut -> {
+                sendConnectAttachMsg(xdrOut);
+                xdrOut.flush();
+            });
             int operation = handleCryptKeyCallbackBeforeAttachResponse();
 
             if (operation == op_accept || operation == op_cond_accept || operation == op_accept_data) {
@@ -366,7 +387,13 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         }
     }
 
-    private void sendConnectAttach(XdrOutputStream xdrOut) throws IOException, SQLException {
+    /**
+     * Sends the connect attach packet.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     */
+    private void sendConnectAttachMsg(XdrOutputStream xdrOut) throws IOException, SQLException {
         xdrOut.writeInt(op_connect); // p_operation
         xdrOut.writeInt(op_attach); // p_cnct_operation
         xdrOut.writeInt(CONNECT_VERSION3); // p_cnct_cversion
@@ -379,10 +406,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         for (ProtocolDescriptor protocol : protocols) {
             writeProtocolDescriptor(xdrOut, protocol);
         }
-
-        xdrOut.flush();
     }
 
+    /**
+     * Writes a protocol descriptor for the connect attach packet.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     */
     private void writeProtocolDescriptor(XdrOutputStream xdrOut, ProtocolDescriptor protocol) throws IOException {
         xdrOut.writeInt(protocol.getVersion()); // p_cnct_version - Protocol version
         xdrOut.writeInt(protocol.getArchitecture()); // p_cnct_architecture - Architecture of client
@@ -660,18 +691,6 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     @SuppressWarnings("SameParameterValue")
     private static String getSystemPropertyPrivileged(final String propertyName) {
         return AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty(propertyName));
-    }
-
-    /**
-     * Writes directly to the {@code OutputStream} of the underlying socket.
-     *
-     * @param data
-     *         Data to write
-     * @throws IOException
-     *         If there is no socket, the socket is closed, or for errors writing to the socket.
-     */
-    public final void writeDirect(byte[] data) throws IOException {
-        xdrOut.writeDirect(data);
     }
 
     final List<KnownServerKey.PluginSpecificData> getPluginSpecificData() {

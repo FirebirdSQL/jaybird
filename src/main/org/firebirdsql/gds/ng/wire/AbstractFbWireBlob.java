@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -105,20 +105,39 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
 
     protected final void sendOpen(BlobOpenOperation openOperation, boolean flush) throws SQLException {
         try {
-            XdrOutputStream xdrOut = getXdrOut();
-            BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
-            if (blobParameterBuffer == null || blobParameterBuffer.isEmpty()) {
-                xdrOut.writeInt(openOperation.opCodeWithoutBpb());
-            } else {
-                xdrOut.writeInt(openOperation.opCodeWithBpb());
-                xdrOut.writeTyped(blobParameterBuffer);
-            }
-            xdrOut.writeInt(getTransaction().getHandle());
-            xdrOut.writeLong(getBlobId());
-            if (flush) xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                sendOpenMsg(xdrOut, openOperation);
+                if (flush) xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
+    }
+
+    /**
+     * Sends the blob open message (struct {@code p_blob}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param openOperation
+     *         open operation
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendOpenMsg(XdrOutputStream xdrOut, BlobOpenOperation openOperation) throws IOException {
+        BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
+        if (blobParameterBuffer == null || blobParameterBuffer.isEmpty()) {
+            xdrOut.writeInt(openOperation.opCodeWithoutBpb()); // p_operation
+        } else {
+            xdrOut.writeInt(openOperation.opCodeWithBpb()); // p_operation
+            xdrOut.writeTyped(blobParameterBuffer); // p_blob_bpb
+        }
+        xdrOut.writeInt(getTransaction().getHandle()); // p_blob_transaction
+        xdrOut.writeLong(getBlobId()); // p_blob_id
     }
 
     protected final void receiveOpenResponse() throws SQLException {
@@ -175,11 +194,7 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
     }
 
     /**
-     * Gets the XdrInputStream.
-     *
-     * @return instance of XdrInputStream
-     * @throws SQLException
-     *         if no connection is opened or when exceptions occur retrieving the InputStream
+     * @see XdrStreamAccess#getXdrIn()
      * @since 6
      */
     protected final XdrInputStream getXdrIn() throws SQLException {
@@ -187,15 +202,11 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
     }
 
     /**
-     * Gets the XdrOutputStream.
-     *
-     * @return instance of XdrOutputStream
-     * @throws SQLException
-     *         if no connection is opened or when exceptions occur retrieving the OutputStream
-     * @since 6
+     * @see XdrStreamAccess#withTransmitLock(TransmitAction)
+     * @since 7
      */
-    protected final XdrOutputStream getXdrOut() throws SQLException {
-        return getXdrStreamAccess().getXdrOut();
+    protected final void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getXdrStreamAccess().withTransmitLock(transmitAction);
     }
 
     private XdrStreamAccess getXdrStreamAccess() {

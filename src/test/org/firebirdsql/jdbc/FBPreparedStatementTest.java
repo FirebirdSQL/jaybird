@@ -4,7 +4,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -39,7 +39,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
@@ -700,20 +699,22 @@ class FBPreparedStatementTest {
             end""";
 
     @Test
+    @Unstable("Test can be sensitive due to timing issues; if it fails to pass, try increasing delayMs")
     void testCancelStatement() throws Exception {
         assumeFeature(FirebirdSupportInfo::supportsCancelOperation, "Test requires fb_cancel_operations support");
         assumeFeature(FirebirdSupportInfo::supportsExecuteBlock, "Test requires EXECUTE BLOCK support");
+        final long delayMs = 20;
 
         try (var stmt = con.createStatement()) {
             final var cancelFailed = new AtomicBoolean(true);
-            ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+            var executor = Executors.newSingleThreadScheduledExecutor();
             executor.schedule(() -> {
                 try {
                     stmt.cancel();
                     cancelFailed.set(false);
                 } catch (SQLException ignored) {
                 }
-            }, 10, TimeUnit.MILLISECONDS);
+            }, delayMs, TimeUnit.MILLISECONDS);
             executor.shutdown();
 
             var exception = assertThrows(SQLException.class, () -> stmt.execute(LONG_RUNNING_STATEMENT),

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -11,6 +11,7 @@ import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 
 import static org.firebirdsql.gds.ISCConstants.isc_segstr_no_op;
@@ -82,17 +83,18 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
     private void batchPutSegment(byte[] b, int off, int len) throws SQLException {
         int requestCount = 0;
         try {
-            XdrOutputStream xdrOut = getXdrOut();
+            // NOTE: Previously, we called getHandle on each iteration; the value could change from INVALID_OBJECT to
+            // the actual handle; getting this once, and maybe using INVALID_OBJECT for all iterations, should be fine.
+            final int handle = getHandle();
             int count = 0;
             while (count < len) {
                 int segmentLength = Math.min(len - count, getMaximumSegmentSize());
-                xdrOut.writeInt(op_put_segment); // p_operation
-                xdrOut.writeInt(getHandle()); // p_sgmt_blob
-                xdrOut.writeInt(segmentLength); // p_sgmt_length
-                xdrOut.writeBuffer(b, off + count, segmentLength); // p_sgmt_segment
+                int offsetForTransmit = off + count;
+                withTransmitLock(xdrOut ->
+                        sendPutSegmentMsg(xdrOut, handle, b, offsetForTransmit, segmentLength));
                 count += segmentLength;
                 if (++requestCount >= OUTSTANDING_PUT_SEGMENT_PACKETS) {
-                    xdrOut.flush();
+                    withTransmitLock(OutputStream::flush);
                     try {
                         consumePutSegmentResponses(requestCount);
                     } finally {
@@ -100,13 +102,41 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
                     }
                 }
             }
-            xdrOut.flush();
+            withTransmitLock(OutputStream::flush);
         } catch (IOException e) {
             getDatabase().consumePackets(requestCount, w -> {});
             throw FbExceptionBuilder.ioWriteError(e);
         }
 
         consumePutSegmentResponses(requestCount);
+    }
+
+    /**
+     * Sends the put segment message (struct {@code p_sgmt_blob}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param handle
+     *         blob handle
+     * @param b
+     *         byte array
+     * @param off
+     *         offset into byte array
+     * @param len
+     *         number of bytes to write
+     * @throws IOException
+     *         for errors writing to the output stream, or invalid {@code off} or {@code len} for {@code b}
+     * @since 7
+     */
+    protected void sendPutSegmentMsg(XdrOutputStream xdrOut, int handle, byte[] b, int off, int len)
+            throws IOException {
+        xdrOut.writeInt(op_put_segment); // p_operation
+        xdrOut.writeInt(handle); // p_sgmt_blob
+        xdrOut.writeInt(len); // p_sgmt_length
+        xdrOut.writeBuffer(b, off, len); // p_sgmt_segment
     }
 
     protected void consumePutSegmentResponses(int requestCount) throws SQLException {

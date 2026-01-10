@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -72,27 +72,18 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     /**
-     * Gets the XdrInputStream.
-     *
-     * @return Instance of XdrInputStream
-     * @throws SQLException
-     *         If no connection is opened or when exceptions occur
-     *         retrieving the InputStream
+     * @see XdrStreamAccess#getXdrIn()
      */
     protected final XdrInputStream getXdrIn() throws SQLException {
         return getXdrStreamAccess().getXdrIn();
     }
 
     /**
-     * Gets the XdrOutputStream.
-     *
-     * @return Instance of XdrOutputStream
-     * @throws SQLException
-     *         If no connection is opened or when exceptions occur
-     *         retrieving the OutputStream
+     * @see XdrStreamAccess#withTransmitLock(TransmitAction)
+     * @since 7
      */
-    protected final XdrOutputStream getXdrOut() throws SQLException {
-        return getXdrStreamAccess().getXdrOut();
+    protected final void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getXdrStreamAccess().withTransmitLock(transmitAction);
     }
 
     @Override
@@ -300,19 +291,12 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     @SuppressWarnings("java:S4274")
     public byte[] getInfo(int operation, int handle, byte[] requestItems, int maxBufferLength,
             WarningMessageCallback warningMessageCallback) throws SQLException {
-        assert operation == op_info_sql || operation == op_info_blob || operation == op_info_database
-                || operation == op_info_transaction || operation == op_info_request
-                || operation == op_info_cursor && protocolDescriptor.getVersion() >= PROTOCOL_VERSION18
-                : "Unsupported operation code for info request " + operation;
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(operation); // p_operation
-                xdrOut.writeInt(handle); // p_info_object
-                xdrOut.writeInt(0); // p_info_incarnation
-                xdrOut.writeBuffer(requestItems); // p_info_items
-                xdrOut.writeInt(maxBufferLength); // p_info_buffer_length
-                xdrOut.flush();
+                withTransmitLock(xdrOut -> {
+                    sendGetInfoMsg(xdrOut, operation, handle, requestItems, maxBufferLength);
+                    xdrOut.flush();
+                });
             } catch (IOException e) {
                 throw FbExceptionBuilder.ioWriteError(e);
             }
@@ -323,6 +307,42 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
                 throw FbExceptionBuilder.ioReadError(e);
             }
         }
+    }
+
+    /**
+     * Sends the information request message (struct {@code p_info}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param operation
+     *         information request operation code
+     * @param handle
+     *         object handle (of the right type for {@code operation})
+     * @param requestItems
+     *         information request items
+     * @param maxBufferLength
+     *         maximum response buffer length
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendGetInfoMsg(XdrOutputStream xdrOut, int operation, int handle, byte[] requestItems,
+            int maxBufferLength) throws IOException {
+        assert isValidOperationCode(operation) : "Unsupported operation code for info request " + operation;
+        xdrOut.writeInt(operation); // p_operation
+        xdrOut.writeInt(handle); // p_info_object
+        xdrOut.writeInt(0); // p_info_incarnation
+        xdrOut.writeBuffer(requestItems); // p_info_items
+        xdrOut.writeInt(maxBufferLength); // p_info_buffer_length
+    }
+
+    private boolean isValidOperationCode(int operation) {
+        return operation == op_info_sql || operation == op_info_blob || operation == op_info_database
+                || operation == op_info_transaction || operation == op_info_request
+                || operation == op_info_cursor && protocolDescriptor.getVersion() >= PROTOCOL_VERSION18;
     }
 
     /**

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version11;
 
@@ -18,6 +18,7 @@ import org.firebirdsql.gds.ng.wire.Response;
 import org.firebirdsql.gds.ng.wire.version10.V10Statement;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.Optional;
 
@@ -50,7 +51,7 @@ public class V11Statement extends V10Statement {
             int expectedResponseCount = 0;
             try {
                 if (initialState == StatementState.NEW) {
-                    sendAllocate();
+                    withTransmitLock(this::sendAllocateStatementMsg);
                     // We're assuming allocation is successful, as changing it when processing the response breaks
                     // the state transition in sendPrepare
                     switchState(StatementState.ALLOCATED);
@@ -58,10 +59,11 @@ public class V11Statement extends V10Statement {
                 } else {
                     checkStatementValid();
                 }
-                sendPrepare(statementText);
+                switchState(StatementState.PREPARING);
+                withTransmitLock(xdrOut -> sendPrepareMsg(xdrOut, statementText));
                 expectedResponseCount++;
 
-                getXdrOut().flush();
+                withTransmitLock(OutputStream::flush);
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.ioWriteError(e);
@@ -171,8 +173,10 @@ public class V11Statement extends V10Statement {
                 // operation was synchronously cancelled from an OperationAware implementation
                 throw FbExceptionBuilder.toException(ISCConstants.isc_cancelled);
             }
-            sendFetch(fetchSize);
-            getXdrOut().flush();
+            withTransmitLock(xdrOut -> {
+                sendFetchMsg(xdrOut, fetchSize);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             switchState(StatementState.ERROR);
             throw FbExceptionBuilder.ioWriteError(e);
@@ -180,15 +184,11 @@ public class V11Statement extends V10Statement {
     }
 
     private AsyncFetchStatus processAsyncFetchResponse(Response initialResponse) {
-        try (OperationCloseHandle ignored = signalAsyncFetchComplete()){
+        try (OperationCloseHandle ignored = signalAsyncFetchComplete()) {
             processFetchResponse(FetchDirection.FORWARD, initialResponse);
             return AsyncFetchStatus.completed();
         } catch (IOException e) {
-            try {
-                switchState(StatementState.ERROR);
-            } catch (SQLException ignored) {
-                // ERROR is always a valid transition, so no exception should get thrown
-            }
+            forceState(StatementState.ERROR);
             return AsyncFetchStatus.completedWithException(FbExceptionBuilder.ioReadError(e));
         } catch (SQLException e) {
             return AsyncFetchStatus.completedWithException(e);
@@ -231,37 +231,37 @@ public class V11Statement extends V10Statement {
 
     @Override
     protected void free(final int option) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             try {
                 doFreePacket(option);
                 // Don't flush close of cursor, only flush drop or unprepare of statement. This balances network
                 // efficiencies with preventing statements retaining locks on metadata objects too long
                 if (option != ISCConstants.DSQL_close) {
-                    getXdrOut().flush();
+                    withTransmitLock(OutputStream::flush);
                 }
-                // process response later
-                getDatabase().enqueueDeferredAction(new DeferredAction() {
-                    @Override
-                    public void processResponse(Response response) {
-                        processFreeResponse(response);
-                    }
-
-                    @Override
-                    public WarningMessageCallback getWarningMessageCallback() {
-                        return getStatementWarningCallback();
-                    }
-
-                    @Override
-                    public boolean requiresSync() {
-                        // DSQL_close requires sync as it isn't flushed,
-                        // other options require sync because server defers response
-                        return true;
-                    }
-                });
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.ioWriteError(e);
             }
+            // process response later
+            getDatabase().enqueueDeferredAction(new DeferredAction() {
+                @Override
+                public void processResponse(Response response) {
+                    processFreeResponse(response);
+                }
+
+                @Override
+                public WarningMessageCallback getWarningMessageCallback() {
+                    return getStatementWarningCallback();
+                }
+
+                @Override
+                public boolean requiresSync() {
+                    // DSQL_close requires sync as it isn't flushed,
+                    // other options require sync because server defers response
+                    return true;
+                }
+            });
         }
     }
 

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version16;
 
@@ -25,11 +25,11 @@ import org.firebirdsql.gds.ng.wire.version13.V13Statement;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_batch_cancel;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_batch_rls;
@@ -52,10 +52,12 @@ public class V16Statement extends V13Statement {
     }
 
     @Override
-    protected void sendExecute(int operation, RowValue parameters) throws IOException, SQLException {
-        super.sendExecute(operation, parameters);
-        // timeout is an unsigned 32 bit int
-        getXdrOut().writeInt((int) getAllowedTimeout()); // p_sqldata_timeout
+    protected void sendExecuteMsg(XdrOutputStream xdrOut, int operation, RowValue parameters)
+            throws IOException, SQLException {
+        // timeout is an unsigned 32-bit int
+        int timeout = (int) getAllowedTimeout();
+        super.sendExecuteMsg(xdrOut, operation, parameters);
+        xdrOut.writeInt(timeout); // p_sqldata_timeout
     }
 
     @Override
@@ -98,13 +100,37 @@ public class V16Statement extends V13Statement {
         BatchParameterBuffer batchPb = createBatchParameterBuffer();
         batchConfig.populateBatchParameterBuffer(batchPb);
 
-        XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_batch_create);
+        withTransmitLock(xdrOut -> {
+            sendBatchCreateMsg(xdrOut, blrMessage, messageLength, batchPb);
+            xdrOut.flush();
+        });
+    }
+
+    /**
+     * Sends the batch create message (struct {@code p_batch_create}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param blrMessage
+     *         batch message BLR
+     * @param messageLength
+     *         message length
+     * @param batchPb
+     *         batch parameter buffer
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendBatchCreateMsg(XdrOutputStream xdrOut, byte[] blrMessage, int messageLength,
+            BatchParameterBuffer batchPb) throws IOException {
+        xdrOut.writeInt(WireProtocolConstants.op_batch_create); // p_operation
         xdrOut.writeInt(getHandle()); // p_batch_statement
         xdrOut.writeBuffer(blrMessage); // p_batch_blr
         xdrOut.writeInt(messageLength); // p_batch_msglen
         xdrOut.writeTyped(batchPb); // p_batch_pb
-        xdrOut.flush();
     }
 
     @Override
@@ -114,9 +140,8 @@ public class V16Statement extends V13Statement {
             DeferredAction deferredAction = wrapDeferredResponse(onResponse, r -> null, true);
             try {
                 RowDescriptor parameterDescriptor = getParameterDescriptor();
-                XdrOutputStream xdrOut = getXdrOut();
-                registerBlobs(xdrOut, parameterDescriptor, rowValues, deferredAction);
-                sendBatchMsg(xdrOut, parameterDescriptor, rowValues);
+                registerBlobs(parameterDescriptor, rowValues, deferredAction);
+                withTransmitLock(xdrOut -> sendBatchMsg(xdrOut, parameterDescriptor, rowValues));
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.ioWriteError(e);
@@ -128,12 +153,16 @@ public class V16Statement extends V13Statement {
         }
     }
 
-    protected void sendBatchMsg(XdrOutputStream xdrOut, RowDescriptor parameterDescriptor,
+    /**
+     * Sends a batch message and row data to the server.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     */
+    private void sendBatchMsg(XdrOutputStream xdrOut, RowDescriptor parameterDescriptor,
             Collection<RowValue> rowValues) throws SQLException, IOException {
         BlrCalculator blrCalculator = getBlrCalculator();
-        xdrOut.writeInt(WireProtocolConstants.op_batch_msg);
-        xdrOut.writeInt(getHandle()); // p_batch_statement
-        xdrOut.writeInt(rowValues.size()); // p_batch_messages
+        sendBatchMsg(xdrOut, rowValues.size());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         XdrOutputStream rowOut = new XdrOutputStream(baos, 512);
         for (RowValue rowValue : rowValues) {
@@ -151,12 +180,34 @@ public class V16Statement extends V13Statement {
         xdrOut.flush();
     }
 
-    private void registerBlobs(XdrOutputStream xdrOut, RowDescriptor parameterDescriptor,
-            Collection<RowValue> rowValues, DeferredAction deferredAction) throws SQLException, IOException {
-        List<Integer> blobPositions = blobPositions(parameterDescriptor);
-        if (blobPositions.isEmpty()) return;
+    /**
+     * Sends <em>only</em> the batch message (struct {@code p_batch_msg}) to the server, without flushing.
+     * <p>
+     * The row data is handled by the caller using
+     * {@link #writeSqlData(XdrOutputStream, BlrCalculator, RowDescriptor, RowValue, boolean)} for each row.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param rowCount
+     *         number of rows that are sent following this message
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendBatchMsg(XdrOutputStream xdrOut, int rowCount) throws IOException {
+        xdrOut.writeInt(WireProtocolConstants.op_batch_msg);
+        xdrOut.writeInt(getHandle()); // p_batch_statement
+        xdrOut.writeInt(rowCount); // p_batch_messages
+    }
+
+    private void registerBlobs(RowDescriptor parameterDescriptor, Collection<RowValue> rowValues,
+            DeferredAction deferredAction) throws SQLException, IOException {
+        int[] blobPositions = blobPositions(parameterDescriptor);
+        if (blobPositions.length == 0) return;
         FbWireDatabase db = getDatabase();
-        var blobsRegistered = new HashSet<>((int) (rowValues.size() * blobPositions.size() / 0.75f + 1));
+        // Given we register blobs under their own id, we can only register them once, use a Set to track this
+        var blobsRegistered = new HashSet<>((int) ((rowValues.size() * blobPositions.length) / 0.75f + 1));
         for (RowValue rowValue : rowValues) {
             for (int position : blobPositions) {
                 byte[] fieldData = rowValue.getFieldData(position);
@@ -164,28 +215,50 @@ public class V16Statement extends V13Statement {
                 // Do not register a blob multiple times
                 if (!blobsRegistered.add(toLong(fieldData))) continue;
 
-                xdrOut.writeInt(WireProtocolConstants.op_batch_regblob);
-                xdrOut.writeInt(getHandle()); // p_batch_statement
-                // register as itself
-                xdrOut.write(fieldData); // p_batch_exist_id
-                xdrOut.write(fieldData); // p_batch_blob_id
+                // Enqueueing the deferred action can perform a blocking read from the server, so we need to obtain and
+                // release the transmit lock for each registration individually
+                withTransmitLock(xdrOut ->
+                        // register blob as itself
+                        sendBatchRegBlobMsg(xdrOut, fieldData, fieldData));
                 db.enqueueDeferredAction(deferredAction);
             }
         }
-        xdrOut.flush();
+        withTransmitLock(OutputStream::flush);
     }
 
-    // This is not necessarily the correct endianness, we just want the id bytes expressed as a long.
+    /**
+     * Sends the batch register blob message (struct {@code p_batch_regblob}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param existId
+     *         existing blob id
+     * @param blobId
+     *         blob id used in the batch to refer to {@code existId}
+     * @throws IOException
+     *         for errors writing to the output stream
+     */
+    protected void sendBatchRegBlobMsg(XdrOutputStream xdrOut, byte[] existId, byte[] blobId) throws IOException {
+        xdrOut.writeInt(WireProtocolConstants.op_batch_regblob);
+        xdrOut.writeInt(getHandle()); // p_batch_statement
+        xdrOut.write(existId); // p_batch_exist_id
+        xdrOut.write(blobId); // p_batch_blob_id
+    }
+
+    // This is not necessarily the correct endianness, we just want the id bytes expressed as long to use as a key.
     private static long toLong(byte[] bytes) {
         assert bytes.length == 8 : "expected 8 bytes";
         return ByteBuffer.wrap(bytes).getLong();
     }
 
-    private List<Integer> blobPositions(RowDescriptor parameterDescriptor) {
+    private int[] blobPositions(RowDescriptor parameterDescriptor) {
         return parameterDescriptor.getFieldDescriptors().stream()
                 .filter(f -> f.isFbType(ISCConstants.SQL_BLOB))
-                .map(FieldDescriptor::getPosition)
-                .toList();
+                .mapToInt(FieldDescriptor::getPosition)
+                .toArray();
     }
 
     @Override
@@ -204,15 +277,34 @@ public class V16Statement extends V13Statement {
 
     private void sendBatchExec(FbTransaction transaction) throws SQLException {
         try {
-            XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(WireProtocolConstants.op_batch_exec);
-            xdrOut.writeInt(getHandle());
-            xdrOut.writeInt(transaction.getHandle());
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                sendBatchExecMsg(xdrOut, transaction);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             switchState(StatementState.ERROR);
             throw FbExceptionBuilder.ioWriteError(e);
         }
+    }
+
+    /**
+     * Sends the execute batch message (struct {@code p_batch_exec}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param transaction
+     *         transaction for execution (validity checked by the caller)
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendBatchExecMsg(XdrOutputStream xdrOut, FbTransaction transaction) throws IOException {
+        xdrOut.writeInt(WireProtocolConstants.op_batch_exec);
+        xdrOut.writeInt(getHandle());
+        xdrOut.writeInt(transaction.getHandle());
     }
 
     private BatchCompletion receiveBatchExecResponse() throws SQLException {
@@ -262,10 +354,12 @@ public class V16Statement extends V13Statement {
         assert operation == op_batch_cancel || operation == op_batch_rls
                 : "Unexpected operation for batch release: " + operation;
         try {
-            XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(operation);
-            xdrOut.writeInt(getHandle());
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                // TODO Duplicates AbstractFbWireDatabase.sendReleaseObjectMsg; rethink this if it needs versioning
+                xdrOut.writeInt(operation); // p_operation
+                xdrOut.writeInt(getHandle()); // p_rlse_object
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             switchState(StatementState.ERROR);
             throw FbExceptionBuilder.ioWriteError(e);

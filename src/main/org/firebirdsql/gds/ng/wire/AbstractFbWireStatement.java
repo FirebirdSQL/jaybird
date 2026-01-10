@@ -1,15 +1,13 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
-import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbStatement;
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -52,35 +50,22 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     /**
-     * Gets the XdrInputStream.
-     *
-     * @return Instance of XdrInputStream
-     * @throws SQLException
-     *         If no connection is opened or when exceptions occur
-     *         retrieving the InputStream
+     * @see XdrStreamAccess#getXdrIn()
      */
     protected final XdrInputStream getXdrIn() throws SQLException {
         return getXdrStreamAccess().getXdrIn();
     }
 
     /**
-     * Gets the XdrOutputStream.
-     *
-     * @return Instance of XdrOutputStream
-     * @throws SQLException
-     *         If no connection is opened or when exceptions occur
-     *         retrieving the OutputStream
+     * @see XdrStreamAccess#withTransmitLock(TransmitAction)
+     * @since 7
      */
-    protected final XdrOutputStream getXdrOut() throws SQLException {
-        return getXdrStreamAccess().getXdrOut();
+    protected final void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getXdrStreamAccess().withTransmitLock(transmitAction);
     }
 
-    private XdrStreamAccess getXdrStreamAccess() throws SQLException {
-        if (database != null) {
-            return database.getXdrStreamAccess();
-        } else {
-            throw FbExceptionBuilder.connectionClosed();
-        }
+    private XdrStreamAccess getXdrStreamAccess() {
+        return database.getXdrStreamAccess();
     }
 
     @Override
@@ -300,13 +285,16 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         public void run() {
             FbWireDatabase database = releaseAndGetDatabaseReference();
             if (database == null) return;
-            try (LockCloseable ignored = database.withLock()) {
+            try (var ignored = database.withLock()) {
                 if (!database.isAttached()) return;
-                XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_free_statement); // p_operation
-                xdrOut.writeInt(handle); // p_sqlfree_statement
-                xdrOut.writeInt(ISCConstants.DSQL_drop); // p_sqlfree_option
-                xdrOut.flush();
+                database.getXdrStreamAccess().withTransmitLock(xdrOut -> {
+                    // TODO: This duplicates V10Statement.sendFreeStatementMsg; rethink this if it needs to be
+                    //  versioned. Maybe move the message sending to FBWireOperations?
+                    xdrOut.writeInt(WireProtocolConstants.op_free_statement); // p_operation
+                    xdrOut.writeInt(handle); // p_sqlfree_statement
+                    xdrOut.writeInt(ISCConstants.DSQL_drop); // p_sqlfree_option
+                    xdrOut.flush();
+                });
                 // TODO: This may process deferred actions on the cleaner thread, we may want to change that
                 database.enqueueDeferredAction(CLEANUP_FREE_DEFERRED_ACTION);
             } catch (SQLException | IOException e) {

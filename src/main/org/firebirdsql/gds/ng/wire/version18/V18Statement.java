@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version18;
 
@@ -39,9 +39,10 @@ public class V18Statement extends V16Statement {
     }
 
     @Override
-    protected void sendExecute(int operation, RowValue parameters) throws IOException, SQLException {
-        super.sendExecute(operation, parameters);
-        getXdrOut().writeInt(getCursorFlagsAsInt()); // p_sqldata_cursor_flags
+    protected void sendExecuteMsg(XdrOutputStream xdrOut, int operation, RowValue parameters)
+            throws IOException, SQLException {
+        super.sendExecuteMsg(xdrOut, operation, parameters);
+        xdrOut.writeInt(getCursorFlagsAsInt()); // p_sqldata_cursor_flags
     }
 
     @Override
@@ -57,8 +58,10 @@ public class V18Statement extends V16Statement {
                 try {
                     // We are allowing 0 and negative fetch sizes here, in case this triggers some server behaviour
                     int actualFetchSize = fetchType.supportsBatch() ? fetchSize : Math.min(1, fetchSize);
-                    sendFetchScroll(fetchType, actualFetchSize, position);
-                    getXdrOut().flush();
+                    withTransmitLock(xdrOut -> {
+                        sendFetchScrollMsg(xdrOut, fetchType, actualFetchSize, position);
+                        xdrOut.flush();
+                    });
                 } catch (IOException e) {
                     switchState(StatementState.ERROR);
                     throw FbExceptionBuilder.ioWriteError(e);
@@ -73,8 +76,14 @@ public class V18Statement extends V16Statement {
         }
     }
 
-    protected void sendFetchScroll(FetchType fetchType, int fetchSize, int position) throws SQLException, IOException {
-        final XdrOutputStream xdrOut = getXdrOut();
+    /**
+     * Sends the fetch scroll message (struct {@code p_sqldata}) to the server without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     */
+    protected void sendFetchScrollMsg(XdrOutputStream xdrOut, FetchType fetchType, int fetchSize, int position)
+            throws SQLException, IOException {
         xdrOut.writeInt(WireProtocolConstants.op_fetch_scroll); // p_operation
         xdrOut.writeInt(getHandle()); // p_sqldata_statement
         xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor())); // p_sqldata_blr

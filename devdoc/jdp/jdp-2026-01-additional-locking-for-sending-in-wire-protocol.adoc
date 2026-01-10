@@ -5,8 +5,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 7
+* Published: 2026-01-10
+* Implemented in: Jaybird 7
 
 == Type
 
@@ -18,13 +18,13 @@ With Jaybird 3, we implemented support for protocol 12 and cancellation.
 We wanted to avoid an overly complex solution with overlapping locks to perform separate locking for sending and receiving, or switching to NIO.
 
 We decided to take the chance and implement cancellation in a way that is not thread-safe, by sending the cancellation message without taking out the connection lock.
-(The connection lock covers sending and receiving, making cancellation only occur after the operation if you try it under that lock.)
+(The connection lock covers sending and receiving, making cancellation only occur after the blocking operation if you try it under that lock.)
 This can lead to the cancellation message being sent in the middle of a normal message.
 This then results in the server receiving a corrupt message, with undefined results (e.g. errors, the server doing the wrong thing, or the connection being terminated).
-We tried to reduce this risk by first constructing the message on a separate `XdrOutputStream`, and then sending the resulting byte array at once.
+We tried to reduce this risk by first constructing the message on a separate `XdrOutputStream`, and then sending the resulting byte array at once, skipping the buffer of `XdrOutputStream`.
 
-We've now received reports that indicate this can occur when performing rapid cancellation, where the cancellation might overlap with the statement execute (or another action).
-We've been able to produce a broken connection with rapid cancellation;
+We've now received reports that problems can occur when performing rapid cancellation, where the cancellation might overlap with the statement execute (or another action).
+We have been able to produce a broken connection with rapid cancellation;
 this was a different issue than reported, though.
 
 The native implementation is not affected (and if it were, it is probably not an issue we can address within Jaybird).
@@ -33,60 +33,75 @@ The native implementation is not affected (and if it were, it is probably not an
 
 As we now have a clear case that our not thread-safe solution can actually fail in production, we will need to address the thread-safety of cancellation.
 
-For the wire protocol, we will add a "`transmit`"-lock which should _only_ cover transmitting (sending) messages to the server.
-This lock should _not_ cover receiving messages, and preferably not cover other actions unrelated to sending messages to the server.
-The "`transmit`"-lock should be held for the sending of an entire message.
+For the wire protocol, we will add a "`transmit`" lock which should _only_ cover transmitting (sending) messages to the server.
+This lock *must not* cover receiving messages, and preferably should not cover other actions unrelated to sending messages to the server.
+
+The transmit lock *must* be held for the sending of an entire message.
 When multiple messages are batched without an interleaved receive of responses, it should be considered carefully if the lock should cover individual messages or the entire batch.
+When deferred response are registered, this *must* be done outside the transmit lock, as registering a deferred response can trigger a blocking read from the server if too many messages are pending.
 
-For normal operations, the "`transmit`"-lock should be taken out while the normal connection lock is held (i.e. within a try-with-resources calling `withLock()`).
-For the cancellation operation, and possibly other "`out-of-band`" transmissions, only the "`transmit`"-lock should be taken out;
-this can probably be done within implementations of `FbWireOperations.writeDirect(byte[])`.
+Flushing *must* be done under transmit lock, but can be done separately if needed.
 
-The lock will use a `java.util.concurrent.locks.ReentrantLock` (see also <<rejected>>).
+For normal operations, the transmit lock *must* be obtained, held, and released while the normal connection lock is held (i.e. within a try-with-resources calling `withLock()`).
+For the cancellation operation -- and other "`out-of-band`" transmissions -- only the transmit lock should be obtained.
 
-Exact details of use will be fleshed out during implementation, but `XdrStreamAccess` is probably the right place to provide access to this lock.
-We will provide two methods of taking out the lock:
+The lock used is a `java.util.concurrent.locks.ReentrantLock` (see also <<rejected>>).
 
-. `LockCloseable withTransmitLock()` -- for use with try-with-resources in the same fashion as the `withLock()` method(s) for the connection lock
-. `void withTransmitLock(TransmitAction transmitAction) throws SQLException, IOException` where `TransmitAction` is a functional interface with a method `void transmit(XdrOutputStream xdrOut) throws SQLException, IOException`
-+
-If possible, the `IOException` should be left out of the throws lists of `withTransmitLock(TransmitAction)` and maybe `transmit(XdrOutputStream)` by using `FbExcepionBuilder.ioWriteError(IOException)`, but right now we can't oversee if that is always possible.
-On the other hand, we could always fall back on the first option if there are cases where an `IOException` must be thrown.
+The transmit lock is located within the `XdrStreamAccess` implementation of `WireConnection`, and its API provides access to the lock.
+We provide one method for taking out the lock:
 
-If needed, implementation classes (but not the `FbWireXXX` interfaces) may provide the same methods (e.g. as `protected`) for purposes of code simplication, as long as they ultimately call the actual locking methods.
+`void withTransmitLock(TransmitAction transmitAction) throws SQLException, IOException` where `TransmitAction` is a functional interface with a method `void transmit(XdrOutputStream xdrOut) throws SQLException, IOException`.
 
-The latter should also be viewed as an experiment if in the future we can use a similar alternative for `withLock()`.
-If during implementation this turns out to be too cumbersome, this may need to be revisited, and maybe we'll only implement the first option.
+Implementation classes -- but not the `FbWireXXX` interfaces -- may provide the same method (e.g. as `protected`) for purposes of code simplication, as long as they ultimately call the actual locking method.
 
-During implementation, this will be done first in the `FbWireStatement` implementations and the `FbWireOperations.writeDirect(byte[])` method as a proof of concept.
-If this proof of concept fails to resolve the broken connection issue we can reproduce, we will need to rethink this approach.
+The `withTransmitLock(TransmitAction)` method should also be viewed as an experiment if in the future we can use a similar alternative for the `withLock()` method for obtaining the connection lock.
+
+The `writeDirect(byte[])` methods skipping the buffer are removed: out-of-band operations must be written through the normal `XdrOutputStream` under the transmit lock.
 
 Given the invasiveness of this change, it will not be backported to Jaybird 5 and 6.
-We will consider a reduced solution, only covering `FbWireStatement` implementations, to address the immediate thread-safety problem of statement cancellation.
+We will consider a reduced solution, for example only covering `FbWireStatement` implementations, to address the immediate thread-safety problem of statement cancellation.
 Such a reduced solution could still cause problems if statement cancellation is done while the connection is performing a non-statement operation.
 If we decide to go for such a solution for Jaybird 5 and/or 6, it will be covered by a separate JDP.
 
 [#rejected]
 === Rejected options
 
-As the lock is generally uncontested, we considered using a simple spinlock on an `AtomicBoolean` or a volatile `int` field (with help of `AtomicIntegerFieldUpdater`) instead of a full-blown lock.
-Unfortunately, there may be cases where we need reentrancy of the lock due to implementation of protocol versioning (e.g. an overloaded method calling its parent and then doing something that should be done within the "`transmit`"-lock).
+==== Non-reentrant lock
 
-If during implementation it turns out that this is not a problem (e.g. because the lock can be taken out by the callers of such overloaded methods), we can revisit this decision.
+As the lock is generally uncontested, we considered using a simple spinlock on an `AtomicBoolean` or a volatile `int` field (with help of `AtomicIntegerFieldUpdater`) instead of a full-blown lock.
+Such a lock would not be reentrant.
+Unfortunately, there may be cases where we need reentrancy due to implementation of protocol versioning (e.g. overloads calling different methods that also obtain the transmit lock while it is already held).
+
+[NOTE]
+====
+Actual implementation has shown that reentrancy can be avoided.
+However, switching to a non-reentrant lock comes with risk of deadlock if we do -- intentionally or accidentally -- nest calls that (try to) obtain the transmit lock.
+We're also no convinced such a simpler lock would actually perform better in practice.
+
+In short, we'll stick with the reentrant lock as that is less brittle, and less surprising.
+====
+
+==== Providing a `withTransmitLock` method returning a `LockCloseable`
+
+Initially, we proposed adding a second method to `XdrStreamAccess`, `LockCloseable withTransmitLock()` which works similar as the `withLock()` methods for obtaining the connection lock.
+
+During implementation, we discovered that we don't really needed this method, and providing only the `withTransmitLock(TransmitAction)` methods provides a simpler, intention-revealing API.
+So, we removed this method from the design described under <<_decision>>.
 
 == Consequences
 
-The entire wire protocol implementation is revised to take out the "`transmit`"-lock during sending.
+The entire wire protocol implementation is revised to obtain the transmit lock for the duration of sending a message.
 
-The javadoc of `FbWireOperations.writeDirect(byte[])` is revised to remove mention of race conditions.
-The javadoc of other methods, etc., are revised as needed.
+Various methods in the implementation classes change signature, or are removed or renamed for consistency.
+(Some more details are provided in the Jaybird 7 release notes.)
 
 "`Normal`" users of the JDBC driver and the internal GDS-ng API, are not affected -- there is no change in the methods they call, or the operation or behaviour of the driver (except cancellation is now thread-safe).
 
-Implementers of Jaybird forks or alternative wire protocol versions building on the `org.firebirdsql.gds.ng.wire` package and related packages and classes will need to change their code to correctly take out the "`transmit`"-lock during transmission to the server.
+Implementers of Jaybird forks or alternative wire protocol versions building on classes in `org.firebirdsql.gds.ng.wire` package and "`sub`"-packages will need to change their code to correctly obtain the transmit lock during transmission to the server.
 
-It is possible that this change will not fully address cancellation issues (e.g. we suspect deferred response handling might need additional work, and result sets may need to be invalidated/closed by cancellation);
-this will be subject to further investigation after this thread-safety issue has been addressed.
+It is possible that this change will not fully address cancellation issues.
+We suspect deferred response handling might need additional work, and result sets may need to be invalidated/closed by cancellation.
+This will be subject to further investigation after this thread-safety issue has been addressed.
 
 [appendix]
 == License Notice

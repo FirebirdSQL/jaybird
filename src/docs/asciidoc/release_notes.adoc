@@ -17,11 +17,11 @@
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/7.0.x/release_notes.html
 
 ////
-SPDX-FileCopyrightText: Copyright 2021-2025 Firebird development team and individual contributors
+SPDX-FileCopyrightText: Copyright 2021-2026 Firebird development team and individual contributors
 SPDX-FileCopyrightText: Copyright 2002 David Jencks
 SPDX-FileCopyrightText: Copyright 2002-2003 Rick Fincher
 SPDX-FileCopyrightText: Copyright 2004-2010 Roman Rokytskyy
-SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 SPDX-License-Identifier: LicenseRef-PDL-1.0
 ////
 
@@ -58,7 +58,7 @@ Possible workarounds:
 --
 +
 This is caused by https://github.com/FirebirdSQL/firebird/issues/4971[firebird#4971]
-* In Java 24, the mapping of some named `WITH TIME ZONE` values changed as Java's mapping of short IDs changed.
+* In Java 24 and higher, the mapping of some named `WITH TIME ZONE` values changed as Java's mapping of short IDs changed.
 This should only affect cases where you explicitly obtain `ZonedDateTime` or `ZonedTime` instances with these named zones.
 +
 --
@@ -627,6 +627,13 @@ For further details, see https://github.com/FirebirdSQL/jaybird/blob/master/devd
 
 * Changed the documentation of `FirebirdDatabaseMetaData` methods `getProcedureSourceCode`, `getTriggerSourceCode` and `getViewSourceCode` that the object not being found is reported by a `null` value, not a `SQLException`.
 With this change, the documentation reflects the actual behaviour.
+* Fixed: race condition during cancellation (https://github.com/FirebirdSQL/jaybird/issues/903[#903])
++
+This change introduce an additional lock during transmit (sending to the server).
+Maintainers of Jaybird forks, or implementers of custom wire protocol implementations subclassing classes in `org.firebirdsql.gds.ng.wire` and related packages will need to take out this transmit lock when sending to the server.
+The change also lead to incompatible changes to protected methods in the various protocol implementation classes, like adding an `XdrOutputStream` parameter to various methods, and methods renamed for consistency.
++
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-01-additional-locking-for-sending-in-wire-protocol.adoc[jdp-2026-01: Additional locking for sending in wire protocol].
 * ...
 
 [#compatibility-changes]
@@ -812,12 +819,49 @@ If you are confronted with such a change, let us know on {firebird-java}[firebir
 
 * `FbAttachment`
 ** The `close()` method should no longer throw an exception if already closed, or not connected/attached.
+* `WireConnection`
+** Method `writeDirect(byte[])` was removed;
+use the `XdrOutputStream` under the transmit lock.
 * `FbWireAsynchronousChannel`
 ** `connect(String, int, int)` was replaced by `connect(String, int)`
 * `FbWireOperations`
 ** The `ProcessAttachCallback` parameter of `authReceiveResponse` was removed, as all implementations did nothing, and since protocol 13, it wasn't only called for the attach response
 ** Interface `ProcessAttachCallback` was removed
+** Method `writeDirect(byte[])` was removed;
+use the `XdrOutputStream` under the transmit lock.
 * The internal interface `org.firdsql.jdbc.field.BlobListenableField` was renamed to `BlobField` due to increased responsibilities
+* `XdrOutputStream`
+* `writeDirect(byte[])` was removed;
+use the `XdrOutputStream` under the transmit lock.
+* `XdrStreamAccess`
+** Method `withTransmitLock(TransmitAction)` was added for using the `XdrOutputStream` under the transmit lock.
+This method should be preferred over calling `getXdrOut()`.
+`TransmitAction` is a functional interface with method `transmit(XdrOutputStream xdrOut) throws IOException, SQLException`.
+* Various wire protocol implementation classes (in `org.firebirdsql.gds.ng.wire` and "`sub`"-packages)
++
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-01-additional-locking-for-sending-in-wire-protocol.adoc[jdp-2026-01: Additional locking for sending in wire protocol].
++
+** Methods `protected XdrOutputStream getXdrOut()` were removed;
+the replacement is `protected void withTransmitLock(TransmitAction)`.
+This was done to enforce use of the transmit lock.
+** When sending data to the server, the transmit lock *must* be taken out, and it *must* be released before performing another blocking action like reading (receiving) data from the server.
+For this purpose, use `withTransmitLock(TransmitAction)`.
+** Some protected methods for sending messages to the server were renamed for consistency;
+in general, methods of the form `sendXxx`, `sendXxxPacket`, `sendXxxMessage`, or `doXxxPacket`, or similar, to `sendXxxMsg` (where _Xxx_ is a name of the message action or type).
+** Some protected methods for sending messages or (partial) data to the server received an additional `XdrOutputStream` parameter.
++
+Usually, callers of these methods are responsible for taking out the transmit lock.
+** The protected methods for sending messages to the server (the `sendXxxMsg` methods mentioned earlier) now consistently do not call `flush()` on the `XdrOutputStream` to simplify protocol versioning of the messages.
+The caller is now responsible for flushing (if needed).
+** Additional protected methods were added (or were changed from private) for sending messages to the server.
+* `V10Statement`
+** `sendPrepareMsg` (previously `sendPrepare`) no longer calls `switchState(StatementState.PREPARING)`;
+this is now done by its callers.
++
+Subclasses overriding this method must ensure they do not switch state to `PREPARING` themselves, and callers must ensure they switch state before calling this method.
+* `V16Statement`
+** the `sendBatchMsg` protected method -- accepting `RowDescriptor` and `Collection<RowValue>` -- was made private.
+The new protected method of the same name is _only_ responsible for sending the `op_batch_msg` itself, not the subsequent row data.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
@@ -841,7 +885,7 @@ The following methods will be removed in Jaybird 8:
 
 * `WireConnection.getProtocolMinimumType()` -- use `WireConnection.getProtocolType()`
 +
-Might still be removed before Jaybird 7 final release as this is internal API, and unlikely to be used in user code.
+This method might still be removed before Jaybird 7 final release as this is internal API, and unlikely to be used in user code.
 
 [#removal-of-deprecated-classes-8]
 ===== Removal of deprecated classes
@@ -904,9 +948,9 @@ you may only use this Documentation if you comply with the terms of this License
 A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
 
 The Original Documentation is "`Jaybird {version_wo_target} Release Notes`".
-The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2012-2025.
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2012-2026.
 All Rights Reserved.
-(Initial Writer contact(s): _unknown_).
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
 
 Contributor(s): David Jencks, Rick Fincher, Roman Rokytskyy. +
 Portions created by David Jencks are Copyright © 2002.

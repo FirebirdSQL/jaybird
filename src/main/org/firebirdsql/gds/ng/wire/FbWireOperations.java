@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.wire;
 
@@ -194,21 +194,6 @@ public interface FbWireOperations {
      *         Response to process
      */
     void processResponseWarnings(Response response, WarningMessageCallback warningCallback);
-
-    /**
-     * Writes directly to the {@code OutputStream} of the underlying connection.
-     * <p>
-     * Use of this method might lead to hard to find race conditions in the protocol. It is currently only used
-     * to allow {@link org.firebirdsql.gds.ng.FbDatabase#cancelOperation(int)} to work.
-     * </p>
-     *
-     * @param data
-     *         Data to write
-     * @throws IOException
-     *         If there is no socket, the socket is closed, or for errors writing to the socket.
-     * @see WireConnection#writeDirect(byte[])
-     */
-    void writeDirect(byte[] data) throws IOException;
 
     /**
      * Receive authentication response from the server.

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -90,8 +90,10 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
 
     private void requestGetSegment(int sizeRequested) throws SQLException {
         try {
-            sendGetSegment(segmentRequestSize(sizeRequested));
-            getXdrOut().flush();
+            withTransmitLock(xdrOut -> {
+                sendGetSegmentMsg(xdrOut, segmentRequestSize(sizeRequested));
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
@@ -151,17 +153,19 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
     }
 
     /**
-     * Sends the {@code op_get_segment} request for {@code len}, without flushing.
+     * Sends the get segment reques (struct {@code p_sgmt}) for {@code len} to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
      *
+     * @param xdrOut
+     *         XDR output stream
      * @param len
      *         requested length (should not exceed {@link #getMaximumSegmentSize()}, but this is not enforced)
-     * @throws SQLException
-     *         for errors obtaining the XDR output stream
      * @throws IOException
-     *         for errors writing data to the output stream
+     *         for errors writing to the output stream
      */
-    protected void sendGetSegment(int len) throws SQLException, IOException {
-        XdrOutputStream xdrOut = getXdrOut();
+    protected void sendGetSegmentMsg(XdrOutputStream xdrOut, int len) throws IOException {
         xdrOut.writeInt(op_get_segment); // p_operation
         xdrOut.writeInt(getHandle()); // p_sgmt_blob
         xdrOut.writeInt(len); // p_sgmt_length
@@ -285,15 +289,36 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
 
     private void sendSeek(int offset, SeekMode seekMode) throws SQLException {
         try {
-            XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_seek_blob); // p_operation
-            xdrOut.writeInt(getHandle()); // p_seek_blob
-            xdrOut.writeInt(seekMode.getSeekModeId()); // p_seek_mode
-            xdrOut.writeInt(offset); // p_seek_offset
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                sendSeekBlobMsg(xdrOut, seekMode, offset);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
+    }
+
+    /**
+     * Sends the seek blob message (struct {@code p_seek}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param seekMode
+     *         seek mode
+     * @param offset
+     *         offset
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendSeekBlobMsg(XdrOutputStream xdrOut, SeekMode seekMode, int offset) throws IOException {
+        xdrOut.writeInt(op_seek_blob); // p_operation
+        xdrOut.writeInt(getHandle()); // p_seek_blob
+        xdrOut.writeInt(seekMode.getSeekModeId()); // p_seek_mode
+        xdrOut.writeInt(offset); // p_seek_offset
     }
 
     private void receiveSeekResponse() throws SQLException {

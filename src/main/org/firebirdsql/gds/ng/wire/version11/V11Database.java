@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version11;
 
@@ -40,7 +40,7 @@ public class V11Database extends V10Database {
     public void releaseObject(int operation, int objectId) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkAttached();
-            doReleaseObjectPacket(operation, objectId);
+            withTransmitLock(xdrOut -> sendReleaseObjectMsg(xdrOut, operation, objectId));
             // NOTE: Intentionally no flush!
             switch (operation) {
             case op_close_blob, op_cancel_blob -> enqueueDeferredAction(new DeferredAction() {

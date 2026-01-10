@@ -7,7 +7,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.gds.impl.wire;
@@ -44,7 +44,7 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
     public static final int SPACE_BYTE = 0x20;
     public static final int NULL_BYTE = 0x0;
     private static final int TEXT_PAD_LENGTH = BUF_SIZE;
-    private static final byte[] TEXT_PAD = createPadding(BUF_SIZE, SPACE_BYTE);
+    private static final byte[] TEXT_PAD = createPadding(TEXT_PAD_LENGTH, SPACE_BYTE);
     private static final int ZERO_PAD_LENGTH = 3;
     private static final byte[] ZERO_PADDING = new byte[ZERO_PAD_LENGTH];
 
@@ -361,19 +361,6 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
             out = new CipherOutputStream(currentStream, cipher);
         }
         encrypted = true;
-    }
-
-    /**
-     * Writes directly to the {@code OutputStream} of the underlying socket.
-     *
-     * @param data
-     *         data to write
-     * @throws IOException
-     *         for errors writing to the socket
-     */
-    public void writeDirect(byte[] data) throws IOException {
-        out.write(data);
-        out.flush();
     }
 
     @SuppressWarnings("java:S2177")

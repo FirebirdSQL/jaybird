@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -193,19 +193,16 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     @Override
     public void queueEvent(EventHandle eventHandle) throws SQLException {
         WireEventHandle wireEventHandle = requireWireEventHandle(eventHandle);
-        final int localId = wireEventHandle.assignNewLocalId();
+        wireEventHandle.assignNewLocalId();
         addChannelListener(wireEventHandle);
 
         try (var ignored = withLock()) {
             try {
                 log.log(TRACE, "Queue event: {0}", wireEventHandle);
-                final XdrOutputStream dbXdrOut = database.getXdrStreamAccess().getXdrOut();
-                dbXdrOut.writeInt(op_que_events); // p_operation
-                dbXdrOut.writeInt(0); // p_event_database
-                dbXdrOut.writeBuffer(wireEventHandle.toByteArray()); // p_event_items
-                dbXdrOut.writeLong(0); // p_event_ast + p_event_arg
-                dbXdrOut.writeInt(localId); // p_event_rid
-                dbXdrOut.flush();
+                database.getXdrStreamAccess().withTransmitLock(dbXdrOut -> {
+                    sendQueueEventsMsg(dbXdrOut, wireEventHandle);
+                    dbXdrOut.flush();
+                });
             } catch (IOException e) {
                 throw FbExceptionBuilder.ioWriteError(e);
             }
@@ -215,6 +212,29 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
                 throw FbExceptionBuilder.ioWriteError(e);
             }
         }
+    }
+
+    /**
+     * Sends the queue events message (struct {@code p_event}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param dbXdrOut
+     *         XDR output stream of the main DB connection
+     * @param wireEventHandle
+     *         event handle
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendQueueEventsMsg(XdrOutputStream dbXdrOut, WireEventHandle wireEventHandle)
+            throws IOException {
+        dbXdrOut.writeInt(op_que_events); // p_operation
+        dbXdrOut.writeInt(0); // p_event_database
+        dbXdrOut.writeBuffer(wireEventHandle.toByteArray()); // p_event_items
+        dbXdrOut.writeLong(0); // p_event_ast + p_event_arg
+        dbXdrOut.writeInt(wireEventHandle.getLocalId()); // p_event_rid
     }
 
     private static WireEventHandle requireWireEventHandle(EventHandle eventHandle) throws SQLException {
@@ -233,11 +253,10 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
         try (LockCloseable ignored = withLock()) {
             try {
-                final XdrOutputStream dbXdrOut = database.getXdrStreamAccess().getXdrOut();
-                dbXdrOut.writeInt(op_cancel_events);
-                dbXdrOut.writeInt(0);
-                dbXdrOut.writeInt(wireEventHandle.getLocalId());
-                dbXdrOut.flush();
+                database.getXdrStreamAccess().withTransmitLock(dbXdrOut -> {
+                    sendCancelEventsMsg(dbXdrOut, wireEventHandle);
+                    dbXdrOut.flush();
+                });
             } catch (IOException e) {
                 throw FbExceptionBuilder.ioWriteError(e);
             }
@@ -247,6 +266,26 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
                 throw FbExceptionBuilder.ioReadError(e);
             }
         }
+    }
+
+    /**
+     * Sends the cancel events message (struct {@code p_event}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param dbXdrOut
+     *         XDR output stream of the main DB connection
+     * @param wireEventHandle
+     *         event handle
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendCancelEventsMsg(XdrOutputStream dbXdrOut, WireEventHandle wireEventHandle) throws IOException {
+        dbXdrOut.writeInt(op_cancel_events); // p_operation
+        dbXdrOut.writeInt(0); // p_event_database
+        dbXdrOut.writeInt(wireEventHandle.getLocalId()); // p_event_rid
     }
 
     /**

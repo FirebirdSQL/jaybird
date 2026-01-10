@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version15;
 
@@ -13,8 +13,6 @@ import org.firebirdsql.gds.ng.wire.version13.V13WireOperations;
 
 import java.io.IOException;
 import java.sql.SQLException;
-
-import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_crypt_key_callback;
 
 /**
  * @author Mark Rotteveel
@@ -41,11 +39,8 @@ public class V15WireOperations extends V13WireOperations {
     }
 
     @Override
-    protected void writeCryptKeyCallback(DbCryptData clientPluginResponse) throws SQLException, IOException {
-        final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(op_crypt_key_callback);
-        xdrOut.writeBuffer(clientPluginResponse.getPluginData()); // p_cc_data
+    protected void sendCryptKeyCallbackMsg(XdrOutputStream xdrOut, DbCryptData clientPluginResponse) throws IOException {
+        super.sendCryptKeyCallbackMsg(xdrOut, clientPluginResponse);
         xdrOut.writeInt(clientPluginResponse.getReplySize()); // p_cc_reply
-        xdrOut.flush();
     }
 }

@@ -1,9 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version16;
 
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
-import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.BatchCompletion;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -40,13 +39,15 @@ public class V16WireOperations extends V15WireOperations {
     @Override
     public void completeDeferredActions() throws SQLException {
         try (LockCloseable ignored = withLock()) {
+            // TODO Should we distinguish between operations that only need a flush, and operations that require a sync message?
             if (completeDeferredActionsRequiresSync()) {
                 // Some deferred actions, specifically batch operations, will not send responses unless the server is
                 // forced by a ping or batch sync
                 try {
-                    XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(getBatchSyncOperation());
-                    xdrOut.flush();
+                    withTransmitLock(xdrOut -> {
+                        xdrOut.writeInt(getBatchSyncOperation());
+                        xdrOut.flush();
+                    });
                 } catch (IOException e) {
                     throw FbExceptionBuilder.ioWriteError(e);
                 }
@@ -74,7 +75,7 @@ public class V16WireOperations extends V15WireOperations {
     protected void afterProcessDeferredActions(int processedDeferredActions) {
         /* If we reached BATCH_LIMIT, then likely we will receive more deferred actions; trimming now would be a waste
            (of memory and CPU) due to GC and reallocation of the list. This may result in the trim never occurring if
-           we ever reach BATCH_LIMIT, but any subsequent processing never exceeds 10; we accept that limitation. */
+           we ever reach BATCH_LIMIT, and any subsequent processing never exceeds 10; we accept that limitation. */
         super.afterProcessDeferredActions(processedDeferredActions < BATCH_LIMIT ? processedDeferredActions : -1);
     }
 

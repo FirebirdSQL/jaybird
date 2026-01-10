@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -49,11 +49,11 @@ public final class WireEventHandle extends AbstractEventHandle implements Asynch
     /**
      * Generates a new local id for this event.
      */
+    @SuppressWarnings("UnusedReturnValue")
     public int assignNewLocalId() {
         final int newLocalId = localEventId.incrementAndGet();
         synchronized (this) {
-            localId = newLocalId;
-            return localId;
+            return localId = newLocalId;
         }
     }
 

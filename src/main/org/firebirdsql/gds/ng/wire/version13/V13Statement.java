@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version13;
 
@@ -45,9 +45,9 @@ public class V13Statement extends V12Statement {
     }
 
     @Override
-    protected void writeSqlData(final RowDescriptor rowDescriptor, final RowValue fieldValues, boolean useActualLength)
-            throws IOException, SQLException {
-        writeSqlData(getXdrOut(), getBlrCalculator(), rowDescriptor, fieldValues, useActualLength);
+    protected void writeSqlData(XdrOutputStream xdrOut, RowDescriptor rowDescriptor, RowValue fieldValues,
+            boolean useActualLength) throws IOException, SQLException {
+        writeSqlData(xdrOut, getBlrCalculator(), rowDescriptor, fieldValues, useActualLength);
     }
     
     protected void writeSqlData(XdrOutputStream xdrOut, BlrCalculator blrCalculator, RowDescriptor rowDescriptor,

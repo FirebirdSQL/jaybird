@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -85,8 +85,10 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     private void sendAttachOrCreate(DatabaseParameterBuffer dpb, boolean create) throws SQLException {
         try {
-            sendAttachOrCreateToBuffer(dpb, create);
-            getXdrOut().flush();
+            withTransmitLock(xdrOut -> {
+                sendAttachOrCreateMsg(xdrOut, dpb, create);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
@@ -101,29 +103,26 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     /**
-     * Sends the buffer for op_attach or op_create
+     * Sends the message for {@code op_attach} or {@code op_create} (struct {@code p_atch}) to the server, without
+     * flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
      *
+     * @param xdrOut
+     *         XDR output stream
      * @param dpb
-     *         Database parameter buffer
+     *         database parameter buffer
      * @param create
-     *         <code>true</code> create database, <code>false</code> only
-     *         attach
-     * @throws SQLException
-     *         If the connection is not open
+     *         {@code true} create database, {@code false} attach to existing database
      * @throws IOException
-     *         For errors writing to the connection
+     *         for errors writing to the connection
      */
-    protected final void sendAttachOrCreateToBuffer(DatabaseParameterBuffer dpb, boolean create)
-            throws SQLException, IOException {
-        final int operation = create ? op_create : op_attach;
-        final XdrOutputStream xdrOut = getXdrOut();
-
-        final Encoding filenameEncoding = getFilenameEncoding(dpb);
-
-        xdrOut.writeInt(operation); // p_operation
+    protected final void sendAttachOrCreateMsg(XdrOutputStream xdrOut, DatabaseParameterBuffer dpb, boolean create)
+            throws IOException {
+        xdrOut.writeInt(create ? op_create : op_attach); // p_operation
         xdrOut.writeInt(0); // p_atch_database
-        xdrOut.writeString(connection.getAttachObjectName(), filenameEncoding); // p_atch_file
-
+        xdrOut.writeString(connection.getAttachObjectName(), getFilenameEncoding(dpb)); // p_atch_file
         xdrOut.writeTyped(dpb); // p_atch_dpb
     }
 
@@ -188,16 +187,20 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     private void sendDetachDisconnect() throws SQLException {
         try {
-            XdrOutputStream xdrOut = getXdrOut();
-            if (isAttached()) {
-                xdrOut.writeInt(op_detach); // p_operation
-                xdrOut.writeInt(0); // p_rlse_object
-            }
-            xdrOut.writeInt(op_disconnect); // p_operation
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                sendDetachDisconnectMsg(xdrOut);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
+    }
+
+    protected void sendDetachDisconnectMsg(XdrOutputStream xdrOut) throws IOException {
+        if (isAttached()) {
+            sendReleaseObjectMsg(xdrOut, op_detach, 0);
+        }
+        xdrOut.writeInt(op_disconnect); // p_operation
     }
 
     private void receiveDetachResponse() throws SQLException {
@@ -244,10 +247,10 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     private void sendDropDatabase() throws SQLException {
         try {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_drop_database); // p_operation
-            xdrOut.writeInt(0); // p_rlse_object
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                sendReleaseObjectMsg(xdrOut, op_drop_database, 0);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
@@ -287,14 +290,34 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     private void sendStartTransaction(TransactionParameterBuffer tpb) throws SQLException {
         try {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_transaction); // p_operation
-            xdrOut.writeInt(0); // p_sttr_database
-            xdrOut.writeTyped(tpb); // p_sttr_tpb
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                sendStartTransactionMessage(xdrOut, tpb);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
+    }
+
+    /**
+     * Sends the start transaction message (struct {@code p_sttr}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param tpb
+     *         transaction parameter buffer
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendStartTransactionMessage(XdrOutputStream xdrOut, TransactionParameterBuffer tpb)
+            throws IOException {
+        xdrOut.writeInt(op_transaction); // p_operation
+        xdrOut.writeInt(0); // p_sttr_database
+        xdrOut.writeTyped(tpb); // p_sttr_tpb
     }
 
     private FbWireTransaction receiveTransactionResponse(TransactionState initialState) throws SQLException {
@@ -322,15 +345,33 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     private void sendReconnect(long transactionId) throws SQLException {
         try {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_reconnect); // p_operation
-            xdrOut.writeInt(0); // p_sttr_database
-            final byte[] transactionIdBuffer = getTransactionIdBuffer(transactionId);
-            xdrOut.writeBuffer(transactionIdBuffer); // p_sttr_tpb
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                sendReconnectMsg(xdrOut, transactionId);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
+    }
+
+    /**
+     * Sends the reconnect transaction message (struct {@code p_sttr}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param transactionId
+     *         transaction id
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    private void sendReconnectMsg(XdrOutputStream xdrOut, long transactionId) throws IOException {
+        xdrOut.writeInt(op_reconnect); // p_operation
+        xdrOut.writeInt(0); // p_sttr_database
+        xdrOut.writeBuffer(getTransactionIdBuffer(transactionId)); // p_sttr_tpb
     }
 
     @Override
@@ -390,21 +431,26 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     private void sendExecuteImmediate(String statementText, FbTransaction transaction) throws SQLException {
         try {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(op_exec_immediate);
-
-            xdrOut.writeInt(transaction != null ? transaction.getHandle() : 0);
-            xdrOut.writeInt(0);
-            xdrOut.writeInt(getConnectionDialect());
-            xdrOut.writeString(statementText, getEncoding());
-
-            // information request items
-            xdrOut.writeBuffer(null);
-            xdrOut.writeInt(0);
-            getXdrOut().flush();
+            withTransmitLock(xdrOut -> {
+                sendExecuteImmediateMsg(xdrOut, transaction, statementText);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
+    }
+
+    // TODO Make protected? We may need to consider adding support for op_exec_immediate2 before doing that.
+    private void sendExecuteImmediateMsg(XdrOutputStream xdrOut, FbTransaction transaction, String statementText)
+            throws IOException {
+        xdrOut.writeInt(op_exec_immediate);
+        xdrOut.writeInt(transaction != null ? transaction.getHandle() : 0); // p_sqlst_transaction
+        xdrOut.writeInt(0); // p_sqlst_statement
+        xdrOut.writeInt(getConnectionDialect()); // p_sqlst_SQL_dialect
+        xdrOut.writeString(statementText, getEncoding()); // p_sqlst_SQL_str
+        // information request items
+        xdrOut.writeBuffer(null); // p_sqlst_items
+        xdrOut.writeInt(0); // p_sqlst_buffer_length
     }
 
     private void receiveExecuteImmediateResponse() throws SQLException {
@@ -423,8 +469,10 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         try (LockCloseable ignored = withLock()) {
             checkAttached();
             try {
-                doReleaseObjectPacket(operation, objectId);
-                getXdrOut().flush();
+                withTransmitLock(xdrOut -> {
+                    sendReleaseObjectMsg(xdrOut, operation, objectId);
+                    xdrOut.flush();
+                });
             } catch (IOException e) {
                 throw FbExceptionBuilder.ioWriteError(e);
             }
@@ -436,18 +484,36 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         }
     }
 
+    /**
+     * Sends the (release) operation and objectId (struct {@code p_rlse_object}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param operation
+     *         Operation
+     * @param objectId
+     *         id of the object to release
+     * @throws IOException
+     *         for errors writing to the output stream
+     */
+    protected void sendReleaseObjectMsg(XdrOutputStream xdrOut, int operation, int objectId) throws IOException {
+        xdrOut.writeInt(operation); // p_operation
+        xdrOut.writeInt(objectId); // p_rlse_object
+    }
+
     @Override
     public final FbWireAsynchronousChannel initAsynchronousChannel() throws SQLException {
         checkAttached();
         final int port;
         try (LockCloseable ignored = withLock()) {
             try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(op_connect_request); // p_operation
-                xdrOut.writeInt(P_REQ_async); // p_req_type - Connection type
-                xdrOut.writeInt(0); // p_req_object
-                xdrOut.writeInt(0); // p_req_partner
-                xdrOut.flush();
+                withTransmitLock(xdrOut -> {
+                    sendAuxConnectRequestMessage(xdrOut);
+                    xdrOut.flush();
+                });
             } catch (IOException e) {
                 throw FbExceptionBuilder.ioWriteError(e);
             }
@@ -467,22 +533,11 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         return channel;
     }
 
-    /**
-     * Sends - without flushing - the (release) operation and objectId.
-     *
-     * @param operation
-     *         Operation
-     * @param objectId
-     *         Id of the object to release
-     * @throws IOException
-     *         For errors writing to the connection
-     * @throws SQLException
-     *         If the database connection is not available
-     */
-    protected final void doReleaseObjectPacket(int operation, int objectId) throws IOException, SQLException {
-        final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(operation); // p_operation
-        xdrOut.writeInt(objectId); // p_rlse_object
+    // TODO Make protected? Message is unlikely to change.
+    private void sendAuxConnectRequestMessage(XdrOutputStream xdrOut) throws IOException {
+        xdrOut.writeInt(op_connect_request); // p_operation
+        xdrOut.writeInt(P_REQ_async); // p_req_type - Connection type
+        xdrOut.writeLong(0); // p_req_object + p_req_partner
     }
 
     /**

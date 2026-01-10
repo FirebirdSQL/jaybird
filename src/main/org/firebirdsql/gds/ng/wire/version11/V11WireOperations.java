@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version11;
 
@@ -10,6 +10,7 @@ import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.gds.ng.wire.version10.V10WireOperations;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -87,7 +88,7 @@ public class V11WireOperations extends V10WireOperations {
         try (LockCloseable ignored = withLock()) {
             if (completeDeferredActionsRequiresSync()) {
                 // We sometimes forgo flushing of the request for deferred operations, flush to be able to complete
-                getXdrOut().flush();
+                withTransmitLock(OutputStream::flush);
             }
             processDeferredActions();
         } catch (IOException e) {

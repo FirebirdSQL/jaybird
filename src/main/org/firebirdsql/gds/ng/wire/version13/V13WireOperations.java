@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version13;
 
@@ -60,7 +60,6 @@ public class V13WireOperations extends V11WireOperations {
         assert acceptPacket == null || acceptPacket.operation == op_cond_accept
                 : "Unexpected operation in AcceptPacket";
         final XdrInputStream xdrIn = getXdrIn();
-        final XdrOutputStream xdrOut = getXdrOut();
         final ClientAuthBlock clientAuthBlock = getClientAuthBlock();
         final Encoding encoding = getEncoding();
         while (true) {
@@ -132,22 +131,42 @@ public class V13WireOperations extends V11WireOperations {
             log.log(TRACE, "receiveResponse: authenticate({0})", clientAuthBlock.getCurrentPluginName());
             clientAuthBlock.authenticate();
 
-            xdrOut.writeInt(op_cont_auth);
-            // TODO Move to ClientAuthBlock?
-            xdrOut.writeBuffer(clientAuthBlock.getClientData()); // p_data
-            xdrOut.writeString(clientAuthBlock.getCurrentPluginName(), encoding); // p_name
-            if (clientAuthBlock.isFirstTime()) {
-                xdrOut.writeString(clientAuthBlock.getPluginNames(), encoding); // p_list
-                clientAuthBlock.setFirstTime(false);
-            } else {
-                xdrOut.writeBuffer(null); // p_list
-            }
-            xdrOut.writeBuffer(null); // p_keys
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                sendContAuthMsg(xdrOut, clientAuthBlock);
+                xdrOut.flush();
+            });
         }
 
         // If we have exited from the cycle, this mean auth failed
         throw FbExceptionBuilder.toException(ISCConstants.isc_login);
+    }
+
+    /**
+     * Sends the continue auth message (struct {@code p_auth_continue}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param clientAuthBlock
+     *         client auth block
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendContAuthMsg(XdrOutputStream xdrOut, ClientAuthBlock clientAuthBlock) throws IOException {
+        Encoding encoding = getEncoding();
+        xdrOut.writeInt(op_cont_auth); // p_operation
+        xdrOut.writeBuffer(clientAuthBlock.getClientData()); // p_data
+        xdrOut.writeString(clientAuthBlock.getCurrentPluginName(), encoding); // p_name
+        if (clientAuthBlock.isFirstTime()) {
+            xdrOut.writeString(clientAuthBlock.getPluginNames(), encoding); // p_list
+            clientAuthBlock.setFirstTime(false);
+        } else {
+            xdrOut.writeBuffer(null); // p_list
+        }
+        xdrOut.writeBuffer(null); // p_keys
     }
 
     private CryptSessionConfig getCryptSessionConfig(EncryptionIdentifier encryptionIdentifier, byte[] specificData)
@@ -248,33 +267,54 @@ public class V13WireOperations extends V11WireOperations {
     }
 
     protected void enableEncryption(EncryptionInitInfo encryptionInitInfo) throws SQLException, IOException {
-        final XdrInputStream xdrIn = getXdrIn();
-        final XdrOutputStream xdrOut = getXdrOut();
-        final Encoding encoding = getEncoding();
-        final EncryptionIdentifier encryptionIdentifier = encryptionInitInfo.getEncryptionIdentifier();
-
-        xdrOut.writeInt(op_crypt);
-        xdrOut.writeString(encryptionIdentifier.pluginName(), encoding);
-        xdrOut.writeString(encryptionIdentifier.type(), encoding);
-        xdrOut.flush();
-
-        xdrIn.setCipher(encryptionInitInfo.getDecryptionCipher());
-        xdrOut.setCipher(encryptionInitInfo.getEncryptionCipher());
+        withTransmitLock(xdrOut -> {
+            sendCryptMsg(xdrOut, encryptionInitInfo.getEncryptionIdentifier());
+            xdrOut.flush();
+            // Set the ciphers under transmit lock to guarantee visibility for out-of-band operations
+            getXdrIn().setCipher(encryptionInitInfo.getDecryptionCipher());
+            xdrOut.setCipher(encryptionInitInfo.getEncryptionCipher());
+        });
 
         readResponse(null);
     }
 
+    /**
+     * Sends the start encryption message (struct {@code p_crypt}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param encryptionIdentifier
+     *         encryption identifier of the encryption to enable
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendCryptMsg(XdrOutputStream xdrOut, EncryptionIdentifier encryptionIdentifier) throws IOException {
+        Encoding encoding = getEncoding();
+        xdrOut.writeInt(op_crypt); // p_operation
+        xdrOut.writeString(encryptionIdentifier.pluginName(), encoding); // p_plugin
+        xdrOut.writeString(encryptionIdentifier.type(), encoding); // p_key
+    }
+
     @Override
     public final void handleCryptKeyCallback(DbCryptCallback dbCryptCallback) throws IOException, SQLException {
-        final DbCryptData serverPluginData = readCryptKeyCallback();
-        DbCryptData clientPluginResponse;
+        DbCryptData clientPluginResponse = getClientPluginResponse(dbCryptCallback, readCryptKeyCallback());
+        withTransmitLock(xdrOut -> {
+            sendCryptKeyCallbackMsg(xdrOut, clientPluginResponse);
+            xdrOut.flush();
+        });
+    }
+
+    private static DbCryptData getClientPluginResponse(DbCryptCallback dbCryptCallback, DbCryptData serverPluginData) {
         try {
-            clientPluginResponse = dbCryptCallback.handleCallback(serverPluginData);
+            return dbCryptCallback.handleCallback(serverPluginData);
         } catch (Exception e) {
             log.log(ERROR, "Error during database encryption callback, using default empty response", e);
-            clientPluginResponse = DbCryptData.EMPTY_DATA;
+            return DbCryptData.EMPTY_DATA;
         }
-        writeCryptKeyCallback(clientPluginResponse);
     }
 
     /**
@@ -299,20 +339,22 @@ public class V13WireOperations extends V11WireOperations {
     }
 
     /**
-     * Writes the database encryption callback response data to the connection.
+     * Sends the database encryption callback message (struct {@code p_crypt_callback}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
      *
+     * @param xdrOut
+     *         XDR output stream
      * @param clientPluginResponse
-     *         Database encryption callback response data to be sent to the server
+     *         database encryption callback response data to be sent to the server
      * @throws IOException
-     *         For errors reading data from the socket
-     * @throws SQLException
-     *         For database errors
+     *         for errors writing data to the output stream
      */
-    protected void writeCryptKeyCallback(DbCryptData clientPluginResponse) throws SQLException, IOException {
-        final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(op_crypt_key_callback);
+    protected void sendCryptKeyCallbackMsg(XdrOutputStream xdrOut, DbCryptData clientPluginResponse)
+            throws IOException {
+        xdrOut.writeInt(op_crypt_key_callback); // p_operation
         xdrOut.writeBuffer(clientPluginResponse.getPluginData()); // p_cc_data
-        xdrOut.flush();
     }
 
 }

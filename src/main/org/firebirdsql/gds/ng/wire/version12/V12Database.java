@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version12;
 
@@ -12,7 +12,6 @@ import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.version11.V11Database;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -56,16 +55,29 @@ public class V12Database extends V11Database {
 
     private void sendCancel(int kind) throws SQLException {
         try {
-            // We circumvent the normal xdrOut to minimize the chance of interleaved writes
-            ByteArrayOutputStream out = new ByteArrayOutputStream(8);
-            try (XdrOutputStream xdr = new XdrOutputStream(out, 8)) {
-                xdr.writeInt(WireProtocolConstants.op_cancel); // p_operation
-                xdr.writeInt(kind); // p_co_kind
-            }
-            wireOperations.writeDirect(out.toByteArray());
+            withTransmitLock(xdrOut -> {
+                sendCancelMsg(xdrOut, kind);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
+    }
+
+    /**
+     * Sends the cancel message (struct {@code p_cancel_op}) to the server, without flushing.
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param kind
+     *         cancellation kind
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendCancelMsg(XdrOutputStream xdrOut, int kind) throws IOException {
+        xdrOut.writeInt(WireProtocolConstants.op_cancel); // p_operation
+        xdrOut.writeInt(kind); // p_co_kind
     }
 
     /**

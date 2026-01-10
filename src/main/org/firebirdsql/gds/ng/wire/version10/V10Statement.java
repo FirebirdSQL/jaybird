@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
@@ -12,6 +12,7 @@ import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.gds.ng.wire.*;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 
@@ -45,10 +46,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     @Override
     protected void free(final int option) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+        try (var ignored = withLock()) {
             try {
                 doFreePacket(option);
-                getXdrOut().flush();
+                withTransmitLock(OutputStream::flush);
             } catch (IOException e) {
                 switchState(StatementState.ERROR);
                 throw FbExceptionBuilder.ioWriteError(e);
@@ -69,20 +70,26 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         <em>free statement</em> option
      */
     protected void doFreePacket(int option) throws SQLException, IOException {
-        sendFree(option);
+        withTransmitLock(xdrOut -> sendFreeStatementMsg(xdrOut, option));
 
         // Reset statement information
         reset(option == ISCConstants.DSQL_drop);
     }
 
     /**
-     * Sends the <em>free statement</em> to the database
+     * Sends the free statement message (struct {@code p_sqlfree}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
      *
+     * @param xdrOut
+     *         XDR output stream
      * @param option
-     *         Free statement option
+     *         free statement option
      */
-    protected void sendFree(int option) throws IOException, SQLException {
-        final XdrOutputStream xdrOut = getXdrOut();
+    protected void sendFreeStatementMsg(XdrOutputStream xdrOut, int option) throws IOException {
+        // TODO: This is partially duplicated by AbstractFbWireStatement.CleanupAction.run; rethink this if it needs to
+        //  be versioned. Maybe move the message sending to FBWireOperations?
         xdrOut.writeInt(WireProtocolConstants.op_free_statement); // p_operation
         xdrOut.writeInt(getHandle()); // p_sqlfree_statement
         xdrOut.writeInt(option); // p_sqlfree_option
@@ -121,8 +128,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     private void sendAllocate0() throws SQLException {
         try {
-            sendAllocate();
-            getXdrOut().flush();
+            withTransmitLock(xdrOut -> {
+                sendAllocateStatementMsg(xdrOut);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             switchState(StatementState.ERROR);
             throw FbExceptionBuilder.ioWriteError(e);
@@ -143,9 +152,12 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     private void sendPrepare0(String statementText) throws SQLException {
+        switchState(StatementState.PREPARING);
         try {
-            sendPrepare(statementText);
-            getXdrOut().flush();
+            withTransmitLock(xdrOut -> {
+                sendPrepareMsg(xdrOut, statementText);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             switchState(StatementState.ERROR);
             throw FbExceptionBuilder.ioWriteError(e);
@@ -165,14 +177,18 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the statement <em>prepare</em> to the connection.
+     * Sends the statement prepare (struct {@code p_sqlst}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock. The caller should also switch to
+     * {@link StatementState#PREPARING} before calling this method.
+     * </p>
      *
+     * @param xdrOut
+     *         XDR output stream
      * @param statementText
      *         Statement
      */
-    protected void sendPrepare(final String statementText) throws SQLException, IOException {
-        switchState(StatementState.PREPARING);
-        final XdrOutputStream xdrOut = getXdrOut();
+    protected void sendPrepareMsg(XdrOutputStream xdrOut, String statementText) throws IOException {
         xdrOut.writeInt(WireProtocolConstants.op_prepare_statement); // p_operation
         xdrOut.writeInt(getTransaction().getHandle()); // p_sqlst_transaction
         xdrOut.writeInt(getHandle()); // p_sqlst_statement
@@ -196,13 +212,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     @Override
     protected void setCursorNameImpl(String cursorName)throws SQLException {
         try {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(WireProtocolConstants.op_set_cursor); // p_operation
-            xdrOut.writeInt(getHandle()); // p_sqlcur_statement
-            // Null termination is needed due to a quirk of the protocol
-            xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding()); // p_sqlcur_cursor_name
-            xdrOut.writeInt(0); // // p_sqlcur_type
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                sendSetCursorMsg(xdrOut, cursorName);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             switchState(StatementState.ERROR);
             throw FbExceptionBuilder.ioWriteError(e);
@@ -213,6 +226,28 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             switchState(StatementState.ERROR);
             throw FbExceptionBuilder.ioReadError(e);
         }
+    }
+
+    /**
+     * Sends the set cursor message (struct {@code p_sqlcur}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param cursorName
+     *         cursor name
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendSetCursorMsg(XdrOutputStream xdrOut, String cursorName) throws IOException {
+        xdrOut.writeInt(WireProtocolConstants.op_set_cursor); // p_operation
+        xdrOut.writeInt(getHandle()); // p_sqlcur_statement
+        // Null termination is needed due to a quirk of the protocol
+        xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding()); // p_sqlcur_cursor_name
+        xdrOut.writeInt(0); // p_sqlcur_type
     }
 
     @Override
@@ -239,12 +274,15 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     if (hasSingletonResult) {
                         expectedResponseCount++;
                     }
-                    sendExecute(hasSingletonResult
-                                    ? WireProtocolConstants.op_execute2
-                                    : WireProtocolConstants.op_execute,
-                            parameters);
+                    withTransmitLock(xdrOut -> {
+                        sendExecuteMsg(xdrOut,
+                                hasSingletonResult
+                                        ? WireProtocolConstants.op_execute2
+                                        : WireProtocolConstants.op_execute,
+                                parameters);
+                        xdrOut.flush();
+                    });
                     expectedResponseCount++;
-                    getXdrOut().flush();
                 } catch (IOException e) {
                     switchState(StatementState.ERROR);
                     throw FbExceptionBuilder.ioWriteError(e);
@@ -315,16 +353,21 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the <em>execute</em> (for {@code op_execute} or {@code op_execute2}) to the database.
+     * Sends the execute message (struct {@code p_sqldata}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
      *
+     * @param xdrOut
+     *         XDR output stream
      * @param operation
-     *         Operation ({@code op_execute} or {@code op_execute2})
+     *         operation ({@code op_execute} or {@code op_execute2})
      * @param parameters
-     *         Parameters
+     *         parameter values
      */
-    protected void sendExecute(final int operation, final RowValue parameters) throws IOException, SQLException {
+    protected void sendExecuteMsg(XdrOutputStream xdrOut, int operation, RowValue parameters)
+            throws IOException, SQLException {
         assert operation == WireProtocolConstants.op_execute || operation == WireProtocolConstants.op_execute2 : "Needs to be called with operation op_execute or op_execute2";
-        final XdrOutputStream xdrOut = getXdrOut();
         xdrOut.writeInt(operation); // p_operation
         xdrOut.writeInt(getHandle()); // p_sqldata_statement
         xdrOut.writeInt(getTransaction().getHandle()); // p_sqldata_transaction
@@ -334,11 +377,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             xdrOut.writeBuffer(calculateBlr(parameterDescriptor, parameters)); // p_sqldata_blr
             xdrOut.writeInt(0); // p_sqldata_message_number
             xdrOut.writeInt(1); // p_sqldata_messages
-            writeSqlData(parameterDescriptor, parameters, true); // parameter data
+            writeSqlData(xdrOut, parameterDescriptor, parameters, true); // parameter data
         } else {
             xdrOut.writeBuffer(null); // p_sqldata_blr
-            xdrOut.writeInt(0); // p_sqldata_message_number
-            xdrOut.writeInt(0); // p_sqldata_messages
+            xdrOut.writeLong(0); // p_sqldata_message_number + p_sqldata_messages
         }
 
         if (operation == WireProtocolConstants.op_execute2) {
@@ -396,8 +438,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     private void sendFetch0(int fetchSize) throws SQLException {
         try {
-            sendFetch(fetchSize);
-            getXdrOut().flush();
+            withTransmitLock(xdrOut -> {
+                sendFetchMsg(xdrOut, fetchSize);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             switchState(StatementState.ERROR);
             throw FbExceptionBuilder.ioWriteError(e);
@@ -482,12 +526,17 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the <em>fetch</em> request to the database.
+     * Sends the <em>fetch</em> message (struct {@code p_sqldata}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
      *
-     * @param fetchSize Number of rows to fetch.
+     * @param xdrOut
+     *         XDR output stream
+     * @param fetchSize
+     *         number of rows to fetch.
      */
-    protected void sendFetch(int fetchSize) throws SQLException, IOException {
-        final XdrOutputStream xdrOut = getXdrOut();
+    protected void sendFetchMsg(XdrOutputStream xdrOut, int fetchSize) throws SQLException, IOException {
         xdrOut.writeInt(WireProtocolConstants.op_fetch); // p_operation
         xdrOut.writeInt(getHandle()); // p_sqldata_statement
         xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor())); // p_sqldata_blr
@@ -554,19 +603,23 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     /**
      * Write a set of SQL data from a {@link RowValue}.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
      *
+     * @param xdrOut
+     *         XDR output stream
      * @param rowDescriptor
-     *         The row descriptor
+     *         row descriptor
      * @param fieldValues
-     *         The List containing the SQL data to be written
+     *         SQL data to be written
      * @param useActualLength
-     *         Should actual field length be used (applies to CHAR)
+     *         should actual field length be used (applies to CHAR)
      * @throws IOException
      *         if an error occurs while writing to the underlying output stream
      */
-    protected void writeSqlData(RowDescriptor rowDescriptor, RowValue fieldValues, boolean useActualLength)
-        throws IOException, SQLException {
-        final XdrOutputStream xdrOut = getXdrOut();
+    protected void writeSqlData(XdrOutputStream xdrOut, RowDescriptor rowDescriptor, RowValue fieldValues,
+            boolean useActualLength) throws IOException, SQLException {
         final BlrCalculator blrCalculator = getBlrCalculator();
         for (int idx = 0; idx < fieldValues.getCount(); idx++) {
             final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
@@ -580,6 +633,12 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         }
     }
 
+    /**
+     * Writes a column.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     */
     protected void writeColumnData(XdrOutputStream xdrOut, int len, byte[] buffer, FieldDescriptor fieldDescriptor)
             throws IOException {
         // Nothing to write for SQL_NULL (except null indicator in v10 - v12, which happens at end in writeSqlData)
@@ -597,6 +656,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     /**
      * Writes the entire buffer prefixed with length and suffixed with padding using the padding byte of the descriptor.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
      */
     private static void writeLengthPrefixedBuffer(XdrOutputStream xdrOut, byte[] buffer,
             FieldDescriptor fieldDescriptor) throws IOException {
@@ -612,6 +674,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     /**
      * Writes {@code len} bytes of the buffer, or if {@code buffer == null}, {@code len} bytes of zero padding.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
      */
     private static void writeFixedLengthBuffer(XdrOutputStream xdrOut, int len, byte[] buffer) throws IOException {
         if (buffer != null) {
@@ -624,6 +689,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     /**
      * Writes at most {@code len} bytes from {@code buffer}, padding upto {@code len} if the buffer is shorter or
      * {@code null}, suffixed with the normal buffer padding. Padding is done with the padding byte from the descriptor.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
      */
     private static void writePaddedBuffer(XdrOutputStream xdrOut, int len, byte[] buffer,
             FieldDescriptor fieldDescriptor) throws IOException {
@@ -642,12 +710,14 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the <em>allocate</em> request to the server.
+     * Sends the allocate message (struct {@code p_rlse}) to the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
      */
-    protected void sendAllocate() throws SQLException, IOException {
-        final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_allocate_statement);
-        xdrOut.writeInt(0);
+    protected void sendAllocateStatementMsg(XdrOutputStream xdrOut) throws IOException {
+        xdrOut.writeInt(WireProtocolConstants.op_allocate_statement); // p_operation
+        xdrOut.writeInt(0); // p_rlse_object
     }
 
     /**

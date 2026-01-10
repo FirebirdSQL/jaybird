@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -6,6 +6,8 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
+import org.firebirdsql.gds.ng.wire.TransmitAction;
+import org.firebirdsql.gds.ng.wire.XdrStreamAccess;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -27,8 +29,8 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     /**
      * Creates a new instance of V10Transaction for the specified database.
      * <p>
-     * This can either be used for an active handle (with <code>initialState</code> {@link org.firebirdsql.gds.ng.TransactionState#ACTIVE}),
-     * or a reconnected (prepared) handle (with <code>initialState</code> {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}).
+     * This can either be used for an active handle (with {@code initialState} {@link org.firebirdsql.gds.ng.TransactionState#ACTIVE}),
+     * or a reconnected (prepared) handle (with {@code initialState} {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}).
      * </p>
      *
      * @param database
@@ -43,8 +45,12 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         handle = transactionHandle;
     }
 
-    protected final XdrOutputStream getXdrOut() throws SQLException {
-        return getDatabase().getXdrStreamAccess().getXdrOut();
+    /**
+     * @see XdrStreamAccess#withTransmitLock(TransmitAction)
+     * @since 7
+     */
+    protected final void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
+        getDatabase().getXdrStreamAccess().withTransmitLock(transmitAction);
     }
 
     @Override
@@ -88,11 +94,14 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     private void finishTransaction(final int commitOrRollback) throws SQLException {
         assert commitOrRollback == op_commit || commitOrRollback == op_rollback
                 : "Unsupported operation code " + commitOrRollback;
+        // Do not use getDatabase.releaseObject(...) as it can 1) delay sending the message and 2) effectively ignores
+        // the response; we need the response to get commit or rollback failures.
         try {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(commitOrRollback); // p_operation
-            xdrOut.writeInt(handle); // p_rlse_object
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                xdrOut.writeInt(commitOrRollback); // p_operation
+                xdrOut.writeInt(handle); // p_rlse_object
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
         }
@@ -119,18 +128,38 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
 
     private void sendPrepare(byte[] recoveryInformation) throws SQLException {
         try {
-            XdrOutputStream xdrOut = getXdrOut();
-            if (recoveryInformation != null) {
-                xdrOut.writeInt(op_prepare2); // p_operation
-                xdrOut.writeInt(handle); // p_prep_transaction
-                xdrOut.writeBuffer(recoveryInformation); // p_prep_data
-            } else {
-                xdrOut.writeInt(op_prepare); // p_operation
-                xdrOut.writeInt(handle); // p_rlse_object
-            }
-            xdrOut.flush();
+            withTransmitLock(xdrOut -> {
+                sendPrepareMsg(xdrOut, recoveryInformation);
+                xdrOut.flush();
+            });
         } catch (IOException e) {
             throw FbExceptionBuilder.ioWriteError(e);
+        }
+    }
+
+    /**
+     * Sends the prepare message (struct {@code p_prep} - {@code op_prepar2}/{@code p_rlse} - {@code op_prepare}) to
+     * the server, without flushing.
+     * <p>
+     * The caller is responsible for obtaining and releasing the transmit lock.
+     * </p>
+     *
+     * @param xdrOut
+     *         XDR output stream
+     * @param recoveryInformation
+     *         recovery information (if {@code null, uses {@code op_prepare}, otherwise {@code op_prepare2})
+     * @throws IOException
+     *         for errors writing to the output stream
+     * @since 7
+     */
+    protected void sendPrepareMsg(XdrOutputStream xdrOut, byte[] recoveryInformation) throws IOException {
+        if (recoveryInformation != null) {
+            xdrOut.writeInt(op_prepare2); // p_operation
+            xdrOut.writeInt(handle); // p_prep_transaction
+            xdrOut.writeBuffer(recoveryInformation); // p_prep_data
+        } else {
+            xdrOut.writeInt(op_prepare); // p_operation
+            xdrOut.writeInt(handle); // p_rlse_object
         }
     }
 
