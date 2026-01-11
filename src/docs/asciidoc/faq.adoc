@@ -373,7 +373,7 @@ We recommend upgrading to Jaybird 6.
 === Jaybird 3
 
 Jaybird 3 supports Java 7 and Java 8 and has basic support for Java 9 and higher using the Java 8 version of the driver.
-Support for Java 9 and higher is limited to Java 11 and 17, but in practice Jaybird should work on all Java 9+ versions upto Java 17footnote:[versions after Java 17 have not been tested].
+Support for Java 9 and higher is limited to Java 11 and 17, but in practice Jaybird should work on all Java 9+ versions up to Java 17footnote:[versions after Java 17 have not been tested].
 Jaybird 3.0.12 is the last release of Jaybird 3.
 
 Jaybird 3 is end-of-life.
