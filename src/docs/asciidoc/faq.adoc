@@ -43,7 +43,7 @@ SPDX-License-Identifier: LicenseRef-PDL-1.0
 ==== Jaybird 6
 
 Jaybird 6 requires Java 17 or higher.
-For older Java versions (Java and higher), use <<jaybird-5>>.
+For older Java versions (Java 8 and higher), use <<jaybird-5>>.
 
 Jaybird 6 is available on Maven Central:
 
