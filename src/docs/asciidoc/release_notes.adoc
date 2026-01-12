@@ -49,6 +49,9 @@ A minor breaking change was made in the internal GDS-ng wire API, which should o
 +
 This fix was backported from Jaybird 6.0.4.
 
+This release is not fully compatible with the upcoming JDBC 4.5 Specification.
+See <<jdbc45-compat>> for more information.
+
 [#jaybird-5-0-10-changelog]
 === Jaybird 5.0.10
 
@@ -361,8 +364,8 @@ This driver does not support InterBase servers due to Firebird-specific changes 
 Jaybird 5 supports Java 8 (JDBC 4.2), and Java 9 and higher (JDBC 4.3/JDBC 4.4).
 Support for earlier Java versions has been dropped.
 
-Given the limited support period for Java 9 and higher versions, we limit support to Java 8, Java 11, Java 17, Java 21 and the latest Java release.
-Currently, that means we support Java 8, Java 11, Java 17, Java 21, and Java 24.
+We limit support to Java LTS releases (Java 8, Java 11, Java 17, Java 21, and Java 25), and the latest Java release.
+Currently, that means we support Java 8, Java 11, Java 17, Java 21, and Java 25.
 
 [NOTE]
 ====
@@ -401,6 +404,25 @@ Java 9 and higher supported using the Java 8 or Java 11 driver.
 |JTA 1.0.1
 |Implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
 |===
+
+[discrete#jdbc45-compat]
+==== Incompatibilities with upcoming JDBC 4.5 Specification
+
+Java 26 will introduce https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5^].
+Jaybird is not yet compatible with some of the specified changes.
+
+Specifically affected are:
+
+* Introduction of `java.sql.JDBCType.DECFLOAT` and `java.sql.Types.DECFLOAT` (value `2015`).
++
+At this time, Jaybird still uses its own constants in `JaybirdType.DECFLOAT` and `JaybirdTypeCodes.DECFLOAT` (value `-6001`).
+The value of `JaybirdTypeCodes.DECFLOAT` will be updated in the first Jaybird 5 release _after_ the release of Java 26 (in March 2026).
+Support for `JDBCType.DECFLOAT` instead of `JaybirdType.DECFLOAT` will also be added in that release.
+* Introduction of new methods on `java.sql.Connection` -- `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier`
++
+The default implementation provided is not sufficient for Firebird, especially not when connecting to a dialect 1 database.
+For the time being, we recommend using the equivalent methods (with the same name) on a `java.sql.Statement` instance of the connection.
+* The JDBC escape to selectively disable escape processing ([.nowrap]`++{\ ... \}++`) is not yet implemented.
 
 [#getting-jaybird-5]
 == Getting Jaybird 5
