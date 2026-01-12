@@ -164,7 +164,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     }
 
     @Override
-    public final int readNextOperation() throws IOException {
+    public final int readNextOperation() throws SQLException, IOException {
         try (LockCloseable ignored = withLock()) {
             processDeferredActions();
             return connection.readNextOperation();

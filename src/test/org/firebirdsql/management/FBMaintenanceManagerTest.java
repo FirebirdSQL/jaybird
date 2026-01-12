@@ -21,6 +21,7 @@ package org.firebirdsql.management;
 import org.firebirdsql.common.extension.RunEnvironmentExtension.EnvironmentRequirement;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
@@ -202,7 +203,8 @@ class FBMaintenanceManagerTest {
 
                 SQLException exception = assertThrows(SQLException.class, () -> stmt.executeQuery(sql));
                 assertThat(exception, errorCode(oneOf(
-                        ISCConstants.isc_shutdown, ISCConstants.isc_att_shutdown, ISCConstants.isc_net_read_err)));
+                        ISCConstants.isc_shutdown, ISCConstants.isc_att_shutdown, ISCConstants.isc_net_read_err,
+                        JaybirdErrorCodes.jb_connectionClosed)));
             } finally {
                 closeQuietly(stmt);
             }

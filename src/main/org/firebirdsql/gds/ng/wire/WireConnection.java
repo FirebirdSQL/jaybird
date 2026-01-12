@@ -628,10 +628,13 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
      * codes received.
      *
      * @return Operation code
+     * @throws SQLException
+     *         when the connection is closed
      * @throws IOException
      *         if an error occurs while reading from the underlying InputStream
      */
-    public final int readNextOperation() throws IOException {
+    public final int readNextOperation() throws SQLException, IOException {
+        final XdrInputStream xdrIn = getXdrStreamAccess().getXdrIn();
         int op;
         do {
             op = xdrIn.readInt();
