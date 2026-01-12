@@ -24,9 +24,9 @@
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/faq.html
 
 ////
-SPDX-FileCopyrightText: Copyright 2021-2025 Firebird development team and individual contributors
+SPDX-FileCopyrightText: Copyright 2021-2026 Firebird development team and individual contributors
 SPDX-FileCopyrightText: Copyright 2002-2004 Rick Fincher
-SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 SPDX-License-Identifier: LicenseRef-PDL-1.0
 ////
 
@@ -63,7 +63,7 @@ For example:
 </dependency>
 ----
 
-If you want to use Type 2 support (native or embedded), you need to add `jaybird-native` as a dependency:
+If you want to use Type 2 support (native or embedded), add `jaybird-native` as a dependency:
 
 [source,xml,subs="verbatim,attributes"]
 ----
@@ -78,9 +78,9 @@ If -- with Jaybird 5 or older -- you added `net.java.dev.jna:jna` for native or 
 The `jaybird-native` dependency will automatically pull in `net.java.dev.jna:jna-jpms` (the modular variant of `jna`).
 
 For Windows and Linux, you can add the https://github.com/mrotteveel/jaybird-fbclient[`org.firebirdsql.jdbc:fbclient`] dependency on your classpath to provide the native libraries for the `native` protocol.
-Be aware that this dependency does not support `embedded`.
+Be aware that this dependency does not support Firebird embedded.
 
-To enable the "`ChaCha64`" wire encryption support for pure Java connections, you need to add `chacha64-plugin` as a dependency:
+To enable the "`ChaCha64`" wire encryption support for pure Java connections, add `chacha64-plugin` as a dependency:
 
 [source,xml,subs="verbatim,attributes"]
 ----
@@ -306,7 +306,7 @@ Alternatively, you can go directly to GitHub and download Jaybird from the https
 All Jaybird distribution zips contain a `jaybird-<version>-sources.zip` with the sources used for that specific version.
 The Maven Central repository also has the `jaybird-<version>-sources.zip`, and your IDE will generally offer to download it for you if you navigate to any Jaybird class.
 
-The full Jaybird sources are available from GitHub in the Jaybird repository, {jaybird-repo}.
+The full Jaybird sources, including the build files, are available from GitHub in the Jaybird repository, {jaybird-repo}.
 Each release is tagged in the repository.
 
 [#how-is-jaybird-licensed]
@@ -336,15 +336,15 @@ Future versions of Jaybird may specify an explicit version, or be released under
 [discrete]
 === Jaybird 6
 
-Jaybird 6 supports Java 17, Java 21, and Java 24.
-Support for Java 17 and higher is limited to Java 17, Java 21, -- once available -- the latest LTS after Java 21, and the latest Java release.
+Jaybird 6 supports Java 17, Java 21, and Java 25.
+Support is limited to Java LTS release (Java 17, Java 21, and Java 25), and the latest Java release.
 
 [#java-jaybird-5]
 [discrete]
 === Jaybird 5
 
-Jaybird 5 supports Java 8, Java 11, Java 17, Java 21, and Java 24.
-Support for Java 9 and higher is limited to Java 8, Java 11, Java 17, Java 21, -- once available -- the latest LTS version after Java 21, and the latest Java release.
+Jaybird 5 supports Java 8, Java 11, Java 17, Java 21, and Java 25.
+Support is limited to Java LTS release (Java 8, Java 11, Java 17, Java 21, and Java 25), and the latest Java release.
 
 Jaybird 5 is the last version to support Java 8 and Java 11, support has been dropped with Jaybird 6, raising the minimum supported version to Java 17.
 
@@ -359,8 +359,7 @@ See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-
 [discrete]
 === Jaybird 4
 
-Jaybird 4 supports Java 7, Java 8, Java 11, Java 17 and Java 21.
-Support for Java 9 and higher is limited to Java 11, Java 17 and Java 21.
+Jaybird 4 supports Java 7, Java 8, Java 11, Java 17, and Java 21footnote:[versions after Java 21 have not been tested].
 
 Jaybird 4 is the last version to support Java 7, support was dropped with Jaybird 5.
 Jaybird 4.0.10 is the last release of Jaybird 4.
@@ -1029,7 +1028,7 @@ you may only use this Documentation if you comply with the terms of this License
 A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
 
 The Original Documentation is "`Jaybird Frequently Asked Questions`".
-The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2013-2025.
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2013-2026.
 All Rights Reserved.
 (Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
 
