@@ -222,9 +222,50 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
         return wireOperations.readResponse(warningCallback);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The implementation decorates {@code deferredAction} to ensure this database instance is notified of exceptions.
+     * This can result in double notifications if the caller also notifies exceptions and this database instance is
+     * registered as an exception listener for those notifications (this is not harmful).
+     * </p>
+     */
     @Override
     public final void enqueueDeferredAction(DeferredAction deferredAction) {
-        wireOperations.enqueueDeferredAction(deferredAction);
+        wireOperations.enqueueDeferredAction(decorateWithExceptionNotification(deferredAction));
+    }
+
+    private DeferredAction decorateWithExceptionNotification(DeferredAction deferredAction) {
+        return deferredAction instanceof ExceptionNotifyingDeferredAction
+                // Don't decorate again
+                ? deferredAction
+                : new ExceptionNotifyingDeferredAction(deferredAction);
+    }
+
+    private final class ExceptionNotifyingDeferredAction extends DeferredAction.DelegatingDeferredAction {
+
+        ExceptionNotifyingDeferredAction(DeferredAction delegate) {
+            super(delegate);
+        }
+
+        @Override
+        public void onException(Exception exception) {
+            try {
+                super.onException(exception);
+            } finally {
+                exceptionListenerDispatcher.errorOccurred(toReadSQLException(exception));
+            }
+        }
+
+        private SQLException toReadSQLException(Exception exception) {
+            if (exception instanceof SQLException) {
+                return (SQLException) exception;
+            } else if (exception instanceof IOException) {
+                return FbExceptionBuilder.forException(ISCConstants.isc_net_read_err).cause(exception).toSQLException();
+            }
+            return new SQLException(exception);
+        }
+
     }
 
     @Override

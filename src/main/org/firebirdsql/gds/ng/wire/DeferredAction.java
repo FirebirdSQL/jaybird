@@ -31,6 +31,8 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Interface for processing deferred responses from the server.
  * <p>
@@ -109,5 +111,39 @@ public interface DeferredAction {
                 return warningMessageCallback;
             }
         };
+    }
+
+    /**
+     * Deferred action implementation that delegates to another deferred action.
+     * <p>
+     * This class is intended as a base class for implementations that want to decorate method calls. To decorate it,
+     * subclass this class, and override the method, and ensure you call {@code super.<overridden-method>} in such a
+     * way that it is always called, even if the decoration fails.
+     * </p>
+     * @since 5.0.11
+     */
+    abstract class DelegatingDeferredAction implements DeferredAction {
+
+        private final DeferredAction delegate;
+
+        DelegatingDeferredAction(DeferredAction delegate) {
+            this.delegate = requireNonNull(delegate, "delegate");
+        }
+
+        @Override
+        public void processResponse(Response response) {
+            delegate.processResponse(response);
+        }
+
+        @Override
+        public void onException(Exception exception) {
+            delegate.onException(exception);
+        }
+
+        @Override
+        public WarningMessageCallback getWarningMessageCallback() {
+            return delegate.getWarningMessageCallback();
+        }
+
     }
 }

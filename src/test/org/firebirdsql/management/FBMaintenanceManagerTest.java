@@ -22,7 +22,6 @@ import org.firebirdsql.common.extension.RunEnvironmentExtension.EnvironmentRequi
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.jdbc.FBConnection;
@@ -53,8 +52,11 @@ import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCode;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.oneOf;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -202,8 +204,10 @@ class FBMaintenanceManagerTest {
                 maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_FORCE, 0);
 
                 SQLException exception = assertThrows(SQLException.class, () -> stmt.executeQuery(sql));
-                assertThat(exception, errorCode(oneOf(
-                        ISCConstants.isc_shutdown, ISCConstants.isc_att_shutdown, ISCConstants.isc_net_read_err)));
+                assertThat(exception, anyOf(
+                        errorCode(oneOf(ISCConstants.isc_shutdown, ISCConstants.isc_att_shutdown,
+                                ISCConstants.isc_net_read_err)),
+                        message(startsWith("Connection closed"))));
             } finally {
                 closeQuietly(stmt);
             }

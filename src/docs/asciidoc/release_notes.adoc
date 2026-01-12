@@ -42,6 +42,12 @@ This fix was backported from Jaybird 6.0.4.
 +
 This is a partial backport from Jaybird 7.
 See also <<breaking-changes-internal-api-5-0-11>>.
+* Fixed: Incomplete detection of fatal connection errors for deferred actions (https://github.com/FirebirdSQL/jaybird/issues/905[#905])
++
+This change also fixes a `NullPointerException` when the connection was terminated due to a fatal connection error.
+A minor breaking change was made in the internal GDS-ng wire API, which should only be relevant to maintainers of Jaybird forks, see <<breaking-changes-internal-api-5-0-11>>.
++
+This fix was backported from Jaybird 6.0.4.
 
 [#jaybird-5-0-10-changelog]
 === Jaybird 5.0.10
@@ -1503,6 +1509,13 @@ We have avoided most of the breaking changes that we made in Jaybird 7, but the 
 ** `sendExecute(int, RowValue)` should no longer be overridden, instead override `sendExecuteMsg(XdrOutputStream, int, RowValue)`.
 +
 If you do continue to override `sendExecute(int, RowValue)`, make sure the transmit lock covers the entire message.
+
+Other breaking changes to the internal API in Jaybird 6.0.4 unrelated to the transmit lock:
+
+* `WireConnection`
+** `readNextOperation` now also throws `SQLException` -- if the connection is closed.
+* `FbWireOperations`
+** `readNextOperation` now also throws `SQLException` -- if the connection is closed.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
