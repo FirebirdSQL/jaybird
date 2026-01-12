@@ -36,6 +36,15 @@ SPDX-License-Identifier: LicenseRef-PDL-1.0
 [#where-do-i-get-jaybird]
 == Where do I get Jaybird?
 
+You can find the latest Jaybird releases on:
+
+* https://firebirdsql.org/en/jdbc-driver/[Firebird website: Firebird Type 4 JDBC Driver Downloads]
+* {jaybird-repo}/releases[Jaybird GitHub Releases page]
++
+The Jaybird GitHub Releases page is also an archive for all releases since JayBird _[sic]_ 1.0-beta-1.
+
+We recommend using your favourite build tool -- like Maven or Gradle -- to get Jaybird from Maven Central instead of downloading it manually.
+
 [#maven]
 === Maven
 
@@ -553,6 +562,8 @@ You can also fork the {jaybird-repo}[Jaybird repository] and create pull request
 [#connecting-to-firebird]
 = Connecting to Firebird
 
+For more information on connecting to Firebird using Jaybird, see also chapter https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html#connection[Obtaining a connection] in the _Jaybird JDBC Driver Java Programmer’s Manual_.
+
 [[jdbc-urls-java.sql.DriverManager]]
 == JDBC URLs (`java.sql.DriverManager`)
 
@@ -880,12 +891,53 @@ Be aware that the first two options may have legal implications depending on the
 [#jdbc-support]
 = JDBC Support
 
+[#jdbc44-support]
+== Is JDBC 4.4 supported?
+
+Yes, https://jcp.org/aboutJava/communityprocess/mrel/jsr221/index4.html[JDBC 4.4^] is supported by Jaybird 5 and Jaybird 6, with some minor caveats. +
+No -- for Jaybird 4 and older.
+
+JDBC 4.4 was introduced with Java 24.
+The only change in JDBC 4.4 was the removal of the requirement for `SQLPermission` checks, given `SecurityManager` support was removed in Java 24.
+
+There are two caveats to this support:
+
+* Jaybird still has the code for performing the permission checks to be compliant with the https://jcp.org/aboutJava/communityprocess/mrel/jsr221/index3.html[JDBC 4.3 Specification^] on Java 23 and older.
++
+As such, the JDBC 4.4 compliance of Jaybird currently relies on Java 24 and higher still having the `SQLPermission` class, and `System.getSecurityManager()` always returning `null`.
+This may break and need additional work once a Java version is released where this class or method are removed.
+* Jaybird 6.0.0 - 6.0.2 are broken on Java 24 and higher due to the way the permission check is performed in those versions.
++
+This is fixed in Jaybird 6.0.3 and higher (see https://github.com/FirebirdSQL/jaybird/issues/890[#890]).
+
+[#jdbc45-support]
+== Is JDBC 4.5 supported?
+
+Not fully -- for Jaybird 5.0.11 and older, and Jaybird 6.0.4 and older. +
+No -- for Jaybird 4 and older.
+
+Java 26 (expected in March 2026) will introduce https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5 (draft)^].
+Jaybird is not yet compatible with some of the specified changes.
+
+Specifically affected are:
+
+* Introduction of `java.sql.JDBCType.DECFLOAT` and `java.sql.Types.DECFLOAT` (value `2015`).
++
+At this time, Jaybird still uses its own constants in `JaybirdType.DECFLOAT` and `JaybirdTypeCodes.DECFLOAT` (value `-6001`).
+* Introduction of new methods on `java.sql.Connection` -- `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier`
++
+The default implementation provided is not sufficient for Firebird, especially not when connecting to a dialect 1 database.
+For the time being, we recommend using the equivalent JDBC 4.3 methods (with the same name) on a `java.sql.Statement` instance of the connection.
+* The JDBC escape to selectively disable escape processing ([.nowrap]`++{\ ... \}++`) is not yet implemented.
+
+We plan to address these issues in Jaybird 5 and Jaybird 6 releases _after_ the release of Java 26 (tracked by https://github.com/FirebirdSQL/jaybird/issues/907[#907]).
+
 [#how-much-of-jdbc-is-supported-by-jaybird]
 == How much of JDBC is supported by Jaybird?
 
 *WARNING* The information in this section is not 100% up-to-date
 
-Jaybird 4 follows the JDBC 4.3 specification with some features and methods not implemented as they are not supported by Firebird.
+Jaybird 4 follows the https://jcp.org/aboutJava/communityprocess/mrel/jsr221/index3.html[JDBC 4.3 Specification^] with some features and methods not implemented as they are not supported by Firebird.
 
 Implemented features:
 
