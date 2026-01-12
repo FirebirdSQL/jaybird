@@ -6,6 +6,7 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -210,9 +211,52 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
         return wireOperations.readResponse(warningCallback);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The implementation decorates {@code deferredAction} to ensure this database instance is notified of exceptions.
+     * This can result in double notifications if the caller also notifies exceptions and this database instance is
+     * registered as an exception listener for those notifications (this is not harmful).
+     * </p>
+     */
     @Override
     public final void enqueueDeferredAction(DeferredAction deferredAction) throws SQLException {
-        wireOperations.enqueueDeferredAction(deferredAction);
+        wireOperations.enqueueDeferredAction(decorateWithExceptionNotification(deferredAction));
+    }
+
+    @NullMarked
+    private DeferredAction decorateWithExceptionNotification(DeferredAction deferredAction) {
+        return deferredAction instanceof ExceptionNotifyingDeferredAction
+                // Don't decorate again
+                ? deferredAction
+                : new ExceptionNotifyingDeferredAction(deferredAction);
+    }
+
+    @NullMarked
+    private final class ExceptionNotifyingDeferredAction extends DeferredAction.DelegatingDeferredAction {
+
+        ExceptionNotifyingDeferredAction(DeferredAction delegate) {
+            super(delegate);
+        }
+
+        @Override
+        public void onException(Exception exception) {
+            try {
+                super.onException(exception);
+            } finally {
+                exceptionListenerDispatcher.errorOccurred(toReadSQLException(exception));
+            }
+        }
+
+        private static SQLException toReadSQLException(Exception exception) {
+            if (exception instanceof SQLException sqle) {
+                return sqle;
+            } else if (exception instanceof IOException ioe) {
+                return FbExceptionBuilder.ioReadError(ioe);
+            }
+            return new SQLException(exception);
+        }
+
     }
 
     @Override

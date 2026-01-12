@@ -635,11 +635,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
      * Reads the next operation code. Skips all {@link org.firebirdsql.gds.impl.wire.WireProtocolConstants#op_dummy}
      * codes received.
      *
-     * @return Operation code
+     * @return operation code
+     * @throws SQLException
+     *         when the connection is closed
      * @throws IOException
      *         if an error occurs while reading from the underlying InputStream
      */
-    public final int readNextOperation() throws IOException {
+    public final int readNextOperation() throws SQLException, IOException {
+        final XdrInputStream xdrIn = getXdrStreamAccess().getXdrIn();
         int op;
         do {
             op = xdrIn.readInt();

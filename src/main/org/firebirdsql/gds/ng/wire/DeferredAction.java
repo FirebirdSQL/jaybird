@@ -1,24 +1,28 @@
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.lang.System.Logger.Level.DEBUG;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Interface for processing deferred responses from the server.
  * <p>
- * This interfaces is used in protocol 11 or higher.
+ * This interface is used in protocol 11 or higher.
  * </p>
  *
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public interface DeferredAction {
 
     /**
@@ -62,7 +66,7 @@ public interface DeferredAction {
      *
      * @return warning callback to use when executing this deferred action, {@code null} signals to use the default
      */
-    default WarningMessageCallback getWarningMessageCallback() {
+    default @Nullable WarningMessageCallback getWarningMessageCallback() {
         return null;
     }
 
@@ -97,25 +101,99 @@ public interface DeferredAction {
      * @return deferred action
      */
     static <T> DeferredAction wrapDeferredResponse(DeferredResponse<T> deferredResponse,
-            Function<Response, T> responseMapper, WarningMessageCallback warningMessageCallback,
+            Function<Response, T> responseMapper, @Nullable WarningMessageCallback warningMessageCallback,
             Consumer<Exception> exceptionConsumer, boolean requiresSync) {
-        return new DeferredAction() {
+        return builder()
+                .withProcessResponse(response -> deferredResponse.onResponse(responseMapper.apply(response)))
+                .withOnException(exception -> {
+                    try {
+                        deferredResponse.onException(exception);
+                    } finally {
+                        exceptionConsumer.accept(exception);
+                    }
+                })
+                .withWarningMessageCallback(warningMessageCallback)
+                .withRequiresSync(requiresSync)
+                .build();
+    }
+
+    /**
+     * @return builder for a deferred action instance.
+     * @since 7
+     */
+    static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * Builder for lambda-based deferred actions.
+     *
+     * @since 7
+     */
+    final class Builder {
+
+        private static final Consumer<Response> RESPONSE_NO_OP = r -> {};
+        private static final Consumer<Exception> EXCEPTION_NO_OP = e ->
+                System.getLogger(DeferredAction.class.getName()).log(DEBUG, "Exception in processDeferredActions", e);
+
+        private Consumer<Response> processResponse = RESPONSE_NO_OP;
+        private Consumer<Exception> onException = EXCEPTION_NO_OP;
+        private @Nullable WarningMessageCallback warningMessageCallback;
+        private boolean requiresSync;
+
+        private Builder() {
+        }
+
+        public Builder withProcessResponse(Consumer<Response> processResponse) {
+            this.processResponse = processResponse;
+            return this;
+        }
+
+        public Builder withOnException(Consumer<Exception> onException) {
+            this.onException = onException;
+            return this;
+        }
+
+        public Builder withWarningMessageCallback(@Nullable WarningMessageCallback warningMessageCallback) {
+            this.warningMessageCallback = warningMessageCallback;
+            return this;
+        }
+
+        public Builder withRequiresSync(boolean requiresSync) {
+            this.requiresSync = requiresSync;
+            return this;
+        }
+
+        public DeferredAction build() {
+            if (processResponse == RESPONSE_NO_OP && onException == EXCEPTION_NO_OP && warningMessageCallback == null
+                    && !requiresSync) {
+                return NO_OP_INSTANCE;
+            }
+
+            return new DeferredActionImpl(processResponse, onException, warningMessageCallback, requiresSync);
+        }
+
+        /**
+         * Lambda-based deferred action implementation.
+         *
+         * @since 7
+         */
+        private record DeferredActionImpl(Consumer<Response> processResponse, Consumer<Exception> onException,
+                @Nullable WarningMessageCallback warningMessageCallback, boolean requiresSync)
+                implements DeferredAction {
+
             @Override
             public void processResponse(Response response) {
-                deferredResponse.onResponse(responseMapper.apply(response));
+                processResponse.accept(response);
             }
 
             @Override
             public void onException(Exception exception) {
-                try {
-                    deferredResponse.onException(exception);
-                } finally {
-                    exceptionConsumer.accept(exception);
-                }
+                onException.accept(exception);
             }
 
             @Override
-            public WarningMessageCallback getWarningMessageCallback() {
+            public @Nullable WarningMessageCallback getWarningMessageCallback() {
                 return warningMessageCallback;
             }
 
@@ -124,7 +202,46 @@ public interface DeferredAction {
                 return requiresSync;
             }
 
-        };
+        }
+
+    }
+
+    /**
+     * Deferred action implementation that delegates to another deferred action.
+     * <p>
+     * This class is intended as a base class for implementations that want to decorate method calls. To decorate it,
+     * subclass this class, and override the method, and ensure you call {@code super.<overridden-method>} in such a
+     * way that it is always called, even if the decoration fails.
+     * </p>
+     * @since 7
+     */
+    abstract class DelegatingDeferredAction implements DeferredAction {
+
+        private final DeferredAction delegate;
+
+        DelegatingDeferredAction(DeferredAction delegate) {
+            this.delegate = requireNonNull(delegate, "delegate");
+        }
+
+        @Override
+        public void processResponse(Response response) {
+            delegate.processResponse(response);
+        }
+
+        @Override
+        public void onException(Exception exception) {
+            delegate.onException(exception);
+        }
+
+        @Override
+        public @Nullable WarningMessageCallback getWarningMessageCallback() {
+            return delegate.getWarningMessageCallback();
+        }
+
+        @Override
+        public boolean requiresSync() {
+            return delegate.requiresSync();
+        }
     }
 
 }

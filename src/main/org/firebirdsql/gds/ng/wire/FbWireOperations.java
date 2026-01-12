@@ -59,11 +59,13 @@ public interface FbWireOperations {
      * </p>
      *
      * @return next operation
-     * @throws java.io.IOException
+     * @throws SQLException
+     *         when the connection is closed
+     * @throws IOException
      *         for errors reading the operation from the connection
      * @since 6
      */
-    int readNextOperation() throws IOException;
+    int readNextOperation() throws SQLException, IOException;
 
     /**
      * Reads the response from the server when the operation code has already been read.
