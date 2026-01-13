@@ -263,6 +263,14 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         private static final AtomicReferenceFieldUpdater<CleanupAction, FbWireDatabase> databaseUpdater =
                 AtomicReferenceFieldUpdater.newUpdater(CleanupAction.class, FbWireDatabase.class, "database");
 
+        private static final DeferredAction CLEANUP_FREE_DEFERRED_ACTION = new DeferredAction() {
+            @Override
+            public boolean requiresSync() {
+                // Server defers response to free, and must be synced
+                return true;
+            }
+        };
+
         private final int handle;
         private volatile FbWireDatabase database;
 
@@ -316,7 +324,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
                     xdrOut.flush();
                 });
                 // TODO: This may process deferred actions on the cleaner thread, we may want to change that
-                database.enqueueDeferredAction(DeferredAction.NO_OP_INSTANCE);
+                database.enqueueDeferredAction(CLEANUP_FREE_DEFERRED_ACTION);
             } catch (SQLException | IOException e) {
                 System.getLogger(getClass().getName()).log(System.Logger.Level.TRACE,
                         "Ignored exception during statement clean up", e);
