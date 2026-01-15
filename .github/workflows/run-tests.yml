@@ -15,7 +15,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: juarezr/firebirdsql-github-action@v2.0.1
         with:
-          version: '5.0.2'
+          version: '5.0.3'
           firebird_root_password: 'masterkey'
           enable_legacy_client_auth: 'true'
           firebird_conf: 'WireCrypt=Enabled'
