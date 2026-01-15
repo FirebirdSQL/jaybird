@@ -164,6 +164,8 @@ maps to -07:00 in older Java versions
 --
 +
 This is informational only, and not something that we can fix or change in a later Jaybird release.
+* Jaybird 6 is not yet fully compatible with the upcoming JDBC 4.5 Specification to be introduced with Java 26.
+See <<jdbc45-compat>> for more information.
 
 [#general-notes]
 == General Notes
