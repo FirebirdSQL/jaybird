@@ -64,11 +64,12 @@ java {
 }
 
 ext {
-    junit_jupiter = '5.13.4'
+    // Do not upgrade to JUnit 6 as it requires Java 17
+    junit_jupiter = '5.14.2'
     hamcrest = '3.0'
-    assertj = '3.27.4'
+    assertj = '3.27.6'
     // Mockito 5 requires Java 11 or higher
-    mockito = findProperty('buildProfile') == 'java8' ? '4.11.0' : '5.19.0'
+    mockito = findProperty('buildProfile') == 'java8' ? '4.11.0' : '5.21.0'
 }
 
 dependencies {
