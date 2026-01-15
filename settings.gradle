@@ -18,14 +18,14 @@ dependencyResolutionManagement {
 
         testLibs {
             version('junit', '5.13.4')
-            version('mockito', '5.19.0')
+            version('mockito', '5.21.0')
 
             library('junit-bom', 'org.junit', 'junit-bom').versionRef('junit')
             library('junit-jupiter', 'org.junit.jupiter', 'junit-jupiter').withoutVersion()
             library('junit-platform-launcher', 'org.junit.platform', 'junit-platform-launcher').withoutVersion()
             library('hamcrest', 'org.hamcrest', 'hamcrest').version('3.0')
             library('hamcrest-optional', 'com.spotify', 'hamcrest-optional').version('1.3.2')
-            library('assertj-core', 'org.assertj', 'assertj-core').version('3.27.4')
+            library('assertj-core', 'org.assertj', 'assertj-core').version('3.27.6')
             library('mockito-bom', 'org.mockito', 'mockito-bom').versionRef('mockito')
             library('mockito-core', 'org.mockito', 'mockito-core').withoutVersion()
             library('mockito-junit-jupiter', 'org.mockito', 'mockito-junit-jupiter').withoutVersion()
