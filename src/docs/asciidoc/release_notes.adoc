@@ -31,7 +31,7 @@ ifeval::["{version_tag}" != ""]
 Jaybird {version_wo_target} is still in development, and intended for testing and evaluation purposes.
 We do not recommend this version for use in production environments.
 
-If you come across any issues when using this version, please report them on {issues}[^].
+If you come across any issues when using this version, please report them on {issues}.
 ====
 endif::[]
 
@@ -90,7 +90,7 @@ Upgrading from Jaybird 6 should be straightforward, but please make sure to read
 See also <<upgrading-from-jaybird-6-to-jaybird-7>>.
 
 Bug reports about undocumented changes in behavior are appreciated.
-Feedback can be sent to the {firebird-java}[Firebird-java mailing list] or reported on the issue tracker {issues}[^].
+Feedback can be sent to the {firebird-java}[Firebird-java mailing list^] or reported on the issue tracker {issues}.
 
 [#supported-firebird-versions]
 === Supported Firebird versions
@@ -130,7 +130,7 @@ main Jaybird driver (`jaybird-{version_example}.jar`)
 ChaCha64 wire encryption implementation (`chacha64-plugin-{version_example}.jar`)
 
 `org.firebirdsql.jna`::
-native and embedded protocol implementation using JNA (`jaybird-native-{version_example}.jar`)
+native and embedded protocol implementation using https://github.com/java-native-access/jna[JNA^] (`jaybird-native-{version_example}.jar`)
 
 See also <<java-support>> in <<whats-new-in-jaybird-7>>.
 
@@ -155,25 +155,25 @@ Jaybird supports the following specifications:
 [#support]
 == Support
 
-If you need support with Jaybird, join the {firebird-java}[Firebird-Java Google Group] and mailing list.
+If you need support with Jaybird, join the {firebird-java}[Firebird-Java Google Group^] and mailing list.
 You can subscribe by sending an email to link:mailto:firebird-java+subscribe@googlegroups.com[firebird-java+subscribe@googlegroups.com].
 
 Looking for professional support of Jaybird?
-Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription].
+Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription^].
 
 For a more complete list, see the next section.
 
 [#where-to-get-help]
 === Where to get help
 
-* On https://stackoverflow.com/[Stack Overflow], please tag your questions with _jaybird_ and _firebird_
-* The {firebird-java}[Firebird-Java group] and corresponding mailing list firebird-java@googlegroups.com
+* On https://stackoverflow.com/[Stack Overflow^], please tag your questions with https://stackoverflow.com/questions/tagged/jaybird[_jaybird_^] and https://stackoverflow.com/questions/tagged/firebird[_firebird_^]
+* The {firebird-java}[Firebird-Java group^] and corresponding mailing list firebird-java@googlegroups.com
 +
 You can subscribe to the mailing list by sending an email to link:mailto:firebird-java+subscribe@googlegroups.com[firebird-java+subscribe@googlegroups.com]
 * Looking for professional support of Jaybird?
-Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription].
+Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription^].
 * The https://firebirdsql.org[Firebird project home page]
-* https://groups.google.com/g/firebird-support[Firebird-support] and other https://firebirdsql.org/en/mailing-lists/[Firebird mailing lists] for questions not directly related to Jaybird and Java.
+* https://groups.google.com/g/firebird-support[Firebird-support^] and other https://firebirdsql.org/en/mailing-lists/[Firebird mailing lists] for questions not directly related to Jaybird and Java.
 
 [#contributing]
 === Contributing
@@ -183,14 +183,14 @@ There are several ways you can contribute to Jaybird or Firebird in general:
 * Participate on the https://firebirdsql.org/en/mailing-lists/[mailing lists]
 * Report bugs or submit patches on the tracker (see <<reporting-bugs>>)
 * Create pull requests on GitHub (https://github.com/FirebirdSQL/jaybird)
-* Become a developer (for Jaybird contact us on {firebird-java}[firebird-java], for Firebird in general, use the https://groups.google.com/g/firebird-devel[Firebird-devel] mailing list)
+* Become a developer (for Jaybird contact us on {firebird-java}[firebird-java^], for Firebird in general, use the https://groups.google.com/g/firebird-devel[Firebird-devel^] mailing list)
 * Donate to the Firebird Foundation (see https://firebirdsql.org/en/donate/)
 * Become a paying Associate, Partner or sponsor of the Firebird Foundation (see https://firebirdsql.org/en/firebird-foundation/)
 
 [#reporting-bugs]
 === Reporting bugs
 
-The developers follow the {firebird-java}[firebird-java Google Group].
+The developers follow the {firebird-java}[firebird-java Google Group^].
 Join the list and post information about suspected bugs.
 List members may be able to help out to determine if it is an actual bug, provide a workaround and get you going again, whereas bug fixes might take a while.
 
@@ -297,7 +297,7 @@ You can download the release of Jaybird from https://firebirdsql.org/en/jdbc-dri
 
 At minimum, Jaybird 7 requires `jaybird-{version_example}.jar`.
 
-For native or embedded support, also add `jaybird-native-{version_example}.jar` and `jna-jpms-{jna-version}.jar` on your classpath or modulepath.
+For native or embedded support, also add `jaybird-native-{version_example}.jar` and `jna-jpms-{jna-version}.jar` () on your classpath or modulepath.
 See also <<type-2-native-and-embedded-driver>>.
 
 For "`ChaCha64`" wire-encryption support with pure Java connections, also add `chacha64-plugin-{version_example}.jar`, and `bcprov-jdk18on-{bc-version}.jar` from the `lib` directory of the distribution zip.
@@ -360,7 +360,7 @@ If you manage your dependencies manually, you need to do the following:
 [#gotchas]
 === Gotcha's
 
-If you find a problem while upgrading, or other bugs, please report it on {issues}[^] (see also <<reporting-bugs>>).
+If you find a problem while upgrading, or other bugs, please report it on {issues} (see also <<reporting-bugs>>).
 
 For known issues, consult <<known-issues>>.
 
@@ -814,7 +814,7 @@ These changes are primarily interesting for implementers of custom GDS-ng implem
 ====
 Only changes we think are relevant to driver implementers or (internal) API users are documented.
 This means there may be undocumented changes to internal API.
-If you are confronted with such a change, let us know on {firebird-java}[firebird-java], so we can take this into account when documenting future changes.
+If you are confronted with such a change, let us know on {firebird-java}[firebird-java^], so we can take this into account when documenting future changes.
 ====
 
 * `FbAttachment`
