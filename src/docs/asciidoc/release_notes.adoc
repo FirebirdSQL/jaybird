@@ -9,7 +9,7 @@
 :icons: font
 :sectnums:
 :bc-version: 1.81
-:jna-version: 5.17.0
+:jna-version: 5.18.1
 :jaybird-fbclient-version: 5.0.2.0
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
@@ -53,6 +53,7 @@ Symptoms include unexpected closed connections, and errors like "`__Unsupported 
 This fix was frontported from Jaybird 5.0.10.
 Only Firebird 2.5 (not supported) is affected.
 * Fixed: `FBServiceManager.getAuthPlugins()` reported the `dbCryptConfig` value (https://github.com/FirebirdSQL/jaybird/issues/901[#901])
+* Dependency update: updated `net.java.dev.jna:jna-jpms` from 5.17.0 to 5.18.1 (used by `jaybird-native`) (https://github.com/FirebirdSQL/jaybird/issues/910[#910])
 
 This release is not fully compatible with the upcoming JDBC 4.5 Specification to be introduced with Java 26.
 See <<jdbc45-compat>> for more information.
