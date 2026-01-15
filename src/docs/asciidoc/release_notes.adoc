@@ -9,7 +9,7 @@
 :icons: font
 :sectnums:
 :bc-version: 1.81
-:jna-version: 5.17.0
+:jna-version: 5.18.1
 :jaybird-fbclient-version: 5.0.2.0
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
@@ -908,7 +908,7 @@ The following constants have been deprecated and will be removed in Jaybird 8:
 === Type 2 (native) and embedded driver
 
 Since Jaybird 6, the native and embedded part of the driver has been moved to a separate artifact, `jaybird-native`.
-The Jaybird Native GDS Factory plugin uses JNA to access the client library.
+The Jaybird Native GDS Factory plugin uses https://github.com/java-native-access/jna[JNA^] to access the client library.
 If you want to use the Type 2 driver, or Firebird embedded, then you need to include `jaybird-native-{version_example}` and `jna-jpms-{jna-version}.jar` on the classpath.
 
 When using Maven, you need to specify the dependency on `jaybird-native`:
