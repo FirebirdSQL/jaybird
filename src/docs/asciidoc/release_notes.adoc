@@ -10,6 +10,9 @@
 :sectnums:
 :jaybird-fbclient-version: 5.0.3.0
 :jna-version: 5.17.0
+:firebird-java: https://groups.google.com/g/firebird-java
+:issues: https://github.com/FirebirdSQL/jaybird/issues
+:jaybird-repo: https://github.com/FirebirdSQL/jaybird
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/5.0.x/release_notes.html
 
 ifeval::["{version_tag}" != ""]
@@ -18,7 +21,7 @@ ifeval::["{version_tag}" != ""]
 Jaybird {version_wo_target} is still in development, and intended for testing and evaluation purposes.
 We do not recommend this version for use in production environments.
 
-If you come across any issues when using this version, please report them on https://github.com/FirebirdSQL/jaybird/issues.
+If you come across any issues when using this version, please report them on {issues}.
 ====
 endif::[]
 
@@ -49,7 +52,7 @@ A minor breaking change was made in the internal GDS-ng wire API, which should o
 +
 This fix was backported from Jaybird 6.0.4.
 
-This release is not fully compatible with the upcoming JDBC 4.5 Specification.
+This release is not fully compatible with the upcoming JDBC 4.5 Specification to be introduced with Java 26.
 See <<jdbc45-compat>> for more information.
 
 [#jaybird-5-0-10-changelog]
@@ -288,7 +291,7 @@ Possible workarounds:
 --
 +
 This is caused by https://github.com/FirebirdSQL/firebird/issues/4971[firebird#4971]
-* In Java 24, the mapping of some named `WITH TIME ZONE` values changed as Java's mapping of short IDs changed.
+* In Java 24 (and higher), the mapping of some named `WITH TIME ZONE` values changed as Java's mapping of short IDs changed.
 This should only affect cases where you explicitly obtain `ZonedDateTime` or `ZonedTime` instances with these named zones.
 +
 --
@@ -301,17 +304,6 @@ maps to -07:00 in older Java versions
 --
 +
 This is informational only, and not something that we can fix or change in a later Jaybird release.
-
-[#support]
-== Support
-
-If you need support with Jaybird, join the https://groups.google.com/g/firebird-java[Firebird-Java Google Group] and mailing list.
-You can subscribe by sending an email to link:mailto:firebird-java+subscribe@googlegroups.com[firebird-java+subscribe@googlegroups.com].
-
-Looking for professional support of Jaybird?
-Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription].
-
-See also https://firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#where-to-get-help[Where to get help]
 
 [#general-notes]
 == General Notes
@@ -347,7 +339,7 @@ Upgrading from Jaybird 4 to 5 should be simple, but please make sure to read <<c
 See also <<upgrading-from-jaybird-4-to-jaybird-5>>.
 
 Bug reports about undocumented changes in behavior are appreciated.
-Feedback can be sent to the https://groups.google.com/g/firebird-java[Firebird-java mailing list] or reported on the issue tracker https://github.com/FirebirdSQL/jaybird/issues.
+Feedback can be sent to the {firebird-java}[Firebird-java mailing list^] or reported on the issue tracker {issues}.
 
 [#supported-firebird-versions]
 === Supported Firebird versions
@@ -364,8 +356,8 @@ This driver does not support InterBase servers due to Firebird-specific changes 
 Jaybird 5 supports Java 8 (JDBC 4.2), and Java 9 and higher (JDBC 4.3/JDBC 4.4).
 Support for earlier Java versions has been dropped.
 
-We limit support to Java LTS releases (Java 8, Java 11, Java 17, Java 21, and Java 25), and the latest Java release.
-Currently, that means we support Java 8, Java 11, Java 17, Java 21, and Java 25.
+We limit support to Java LTS releases starting with Java 8, and the latest Java release.
+For Jaybird {version_wo_target} that means we support Java 8, Java 11, Java 17, Java 21, and Java 25.
 
 [NOTE]
 ====
@@ -374,19 +366,24 @@ Jaybird 6 uses Java 17 as the baseline (minimum) version.
 We highly recommend upgrading to Java 17 or higher.
 
 Jaybird 5 serves as a "`long-term support`" version for Java 8 and Java 11, with maintenance releases at least until the release of Jaybird 7.
+
+It is possible future maintenance releases of Jaybird 5 stop expanding Java support to include newly released Java versions.
+A reason can be -- but is not limited to -- if adding support for a newer Java version results in breaking support for Java 8 or Java 11, or JDBC 4.2 or JDBC 4.3, or require changes that would limit testability on those versions.
+We may also simply stop expanding Java support to limit the number of versions we need to test.
 ====
 
 Jaybird 5 provides libraries for Java 8 and Java 11.
 The Java 8 builds have all JDBC 4.3 related functionality and can be used on Java 9 and higher as well, but the Java 11 version has additional features, like the ChaCha wire encryption.
 
 Jaybird 5 is not modularized, but all versions declare the automatic module name `org.firebirdsql.jaybird`.
+If you need "`real`" module support, upgrade to Jaybird 6.
 
 See also <<java-support>> in <<whats-new-in-jaybird-5>>.
 
 [#specification-support]
 === Specification support
 
-Jaybird supports the following specifications:
+Jaybird 5 supports the following specifications:
 
 |===
 |Specification |Notes
@@ -408,21 +405,71 @@ Java 9 and higher supported using the Java 8 or Java 11 driver.
 [discrete#jdbc45-compat]
 ==== Incompatibilities with upcoming JDBC 4.5 Specification
 
-Java 26 will introduce https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5^].
+Java 26 (expected in March 2026) will introduce https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5^] (link to draft).
 Jaybird is not yet compatible with some of the specified changes.
 
 Specifically affected are:
 
 * Introduction of `java.sql.JDBCType.DECFLOAT` and `java.sql.Types.DECFLOAT` (value `2015`).
 +
-At this time, Jaybird still uses its own constants in `JaybirdType.DECFLOAT` and `JaybirdTypeCodes.DECFLOAT` (value `-6001`).
-The value of `JaybirdTypeCodes.DECFLOAT` will be updated in the first Jaybird 5 release _after_ the release of Java 26 (in March 2026).
-Support for `JDBCType.DECFLOAT` instead of `JaybirdType.DECFLOAT` will also be added in that release.
+At this time, Jaybird still uses its own constants in `JaybirdType.DECFLOAT` and `JaybirdTypeCodes.DECFLOAT` with value `-6001`.
+This value will be changed to match the JDBC specified value, and the constants deprecated, in a future maintenance release of Jaybird.
 * Introduction of new methods on `java.sql.Connection` -- `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier`
 +
 The default implementation provided is not sufficient for Firebird, especially not when connecting to a dialect 1 database.
-For the time being, we recommend using the equivalent methods (with the same name) on a `java.sql.Statement` instance of the connection.
+For the time being, we recommend using the equivalent JDBC 4.3 methods (with the same name) on a `java.sql.Statement` instance of the connection.
 * The JDBC escape to selectively disable escape processing ([.nowrap]`++{\ ... \}++`) is not yet implemented.
+
+We plan to address these issues in Jaybird 5 and Jaybird 6 maintenance releases _after_ the release of Java 26 (tracked by https://github.com/FirebirdSQL/jaybird/issues/907[#907]).
+
+[#support]
+== Support
+
+If you need support with Jaybird, join the {firebird-java}[Firebird-Java Google Group^] and mailing list.
+You can subscribe by sending an email to link:mailto:firebird-java+subscribe@googlegroups.com[firebird-java+subscribe@googlegroups.com].
+
+Looking for professional support of Jaybird?
+Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription^].
+
+For a more complete list, see the next section.
+
+[#where-to-get-help]
+=== Where to get help
+
+* On https://stackoverflow.com/[Stack Overflow^], please tag your questions with https://stackoverflow.com/questions/tagged/jaybird[_jaybird_^] and https://stackoverflow.com/questions/tagged/firebird[_firebird_^]
+* The {firebird-java}[Firebird-Java group^] and corresponding mailing list firebird-java@googlegroups.com
++
+You can subscribe to the mailing list by sending an email to link:mailto:firebird-java+subscribe@googlegroups.com[firebird-java+subscribe@googlegroups.com]
+* Looking for professional support of Jaybird?
+Jaybird is now part of the https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs[Tidelift subscription^].
+* The https://firebirdsql.org[Firebird project home page]
+* https://groups.google.com/g/firebird-support[Firebird-support^] and other https://firebirdsql.org/en/mailing-lists/[Firebird mailing lists] for questions not directly related to Jaybird and Java.
+
+[#contributing]
+=== Contributing
+
+There are several ways you can contribute to Jaybird or Firebird in general:
+
+* Participate on the https://firebirdsql.org/en/mailing-lists/[mailing lists]
+* Report bugs or submit patches on the tracker (see <<reporting-bugs>>)
+* Create pull requests on GitHub ({jaybird-repo})
+* Become a developer (for Jaybird contact us on {firebird-java}[firebird-java^], for Firebird in general, use the https://groups.google.com/g/firebird-devel[Firebird-devel^] mailing list)
+* Donate to the Firebird Foundation (see https://firebirdsql.org/en/donate/)
+* Become a paying Associate, Partner or sponsor of the Firebird Foundation (see https://firebirdsql.org/en/firebird-foundation/)
+
+[#reporting-bugs]
+=== Reporting bugs
+
+The developers follow the {firebird-java}[firebird-java Google Group^].
+Join the list and post information about suspected bugs.
+List members may be able to help out to determine if it is an actual bug, provide a workaround and get you going again, whereas bug fixes might take a while.
+
+You can also report bugs in the Jaybird bug tracker, {issues}.
+
+When reporting bugs, please provide a minimal, but complete reproduction, including databases and sourcecode to reproduce the problem.
+Patches to fix bugs are also appreciated.
+Make sure the patch is against a recent master version of the code.
+You can also fork the {jaybird-repo}[jaybird repository] and create pull requests.
 
 [#getting-jaybird-5]
 == Getting Jaybird 5
@@ -435,7 +482,7 @@ For the time being, we recommend using the equivalent methods (with the same nam
 
 Jaybird {version_wo_target} is available on Maven Central:
 
-[horizontal]
+[horizontal.compact]
 groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird`
 version:: `{version_simple}.<java>{version_tag}` (where `<java>` is `java11` or `java8`)
@@ -466,7 +513,7 @@ If you want to use Type 2 support (native or embedded), you need to explicitly i
 </dependency>
 ----
 
-For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient` dependency on your classpath to provide the native libraries for the `native` protocol.
+For Windows and Linux, you can add the https://github.com/mrotteveel/jaybird-fbclient[`org.firebirdsql.jdbc:fbclient`^] dependency on your classpath to provide the native libraries for the `native` protocol.
 Be aware that this dependency does not support `embedded`.
 
 See also <<type-2-native-and-embedded-driver>>.
@@ -534,7 +581,7 @@ This library is only needed if you actually use native or embedded connections, 
 [#gotchas]
 === Gotcha's
 
-If you find a problem while upgrading, or other bugs: please report it on https://github.com/FirebirdSQL/jaybird/issues.
+If you find a problem while upgrading, or other bugs: please report it on {issues}.
 
 For known issues, consult <<known-issues>>.
 
@@ -557,7 +604,7 @@ See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-
 
 The driver supports Java 8.
 
-Jaybird 5 is the last version to support Java 8
+Jaybird 5 is the last version to support Java 8.
 
 [#java-9-and-higher]
 ==== Java 9 and higher
@@ -566,7 +613,7 @@ Jaybird 5 supports Java 9 and higher (JDBC 4.3) with the Java 8 and 11 version o
 Most of the JDBC 4.3 features have been implemented (in as far as they are supported by Firebird).
 
 You can use the Java 8 driver under Java 9 and higher.
-For Java 11 or higher we recommend using the Java 11 driver, as it provides additional features (e.g. ChaCha wire encryption).
+For Java 11 or higher we recommend using the Java 11 driver, as it provides additional features like ChaCha wire encryption.
 
 Given the limited support period for Java 9 and higher versions, not all Java releases are supported, see <<supported-java-versions>> for details.
 
@@ -595,7 +642,7 @@ Jaybird 5 is the last version to support Firebird 2.5.
 [#jca-removed]
 === Java Connector Architecture (JCA) support removed
 
-Jaybird no longer implements JCA, and no longer has a dependency on `connector-api-1.5.jar`.
+Jaybird no longer implements Java Connector Architecture (JCA), and no longer has a dependency on `connector-api-1.5.jar`.
 
 See <<removal-of-javaeejakartaee-connector-architecture-jca>> for details.
 
@@ -779,7 +826,7 @@ This parser is used to detect statement types, the table name, and presence or a
 The new parser has no external dependencies, so Jaybird no longer depends on the ANTLR runtime (`org.antlr:antlr4-runtime`).
 
 As a result of this change, it is possible that detection of some statements has changed, especially detection of the presence of a `RETURNING` clause.
-Please report any incorrect changes in detection on https://groups.google.com/g/firebird-java[the firebird-java list] or on https://github.com/FirebirdSQL/jaybird/issues.
+Please report any incorrect changes in detection on {firebird-java}[the firebird-java list^] or on {issues}.
 
 If you were relying on disabling generated keys support by excluding the antlr4-runtime library from the classpath, you will now need to explicitly disable it.
 Disabling generated keys can be done using the connection property `generatedKeysEnabled` with value `disabled`, or `ignored` if you don't want an exception thrown when calling a generated-keys-related execute or prepare method.
@@ -805,7 +852,7 @@ When server-side batch support is not available, Jaybird will fall back to the e
 This property supports the following value ranges:
 +
 --
-[horizontal]
+[horizontal.compact]
 `< 0`:: use server-side default (16MB as of Firebird 4.0)
 `0`:: (default) use server-side maximum (256MB as of Firebird 4.0)
 `> 0`:: use specified size, capped at server-side maximum
@@ -839,7 +886,7 @@ The 256MB buffer used with Jaybird defaults on Firebird 4.0 is sufficient to acc
 [#multirow-returning]
 === Firebird 5.0 multi-row RETURNING support
 
-Jaybird supports multi-row `RETURNING` introduced in Firebird 5.0.
+Jaybird supports https://firebirdsql.org/file/documentation/release_notes/html/en/5_0/rlsnotes50.html#rnfb50-dml-returning[multi-row `RETURNING`] introduced in Firebird 5.0.
 
 The entire generated keys result set is retrieved immediately on execute.
 So, if the statement inserts, updates or deletes a significant number of rows, this can consume a lot of memory in Jaybird.
@@ -862,7 +909,7 @@ Use server-side scrollable cursors, if possible
 
 If a connection does not support scrollable cursors, or if holdable cursors are requested, the behaviour will silently fall back to _emulated_ scrollable cursors.
 
-Compared to emulated scrollable cursor, server-side scrollable cursors exhibit slightly different behaviour (we may change the behaviour of _emulated_ later in Jaybird 5 or in a future Jaybird release):
+Compared to emulated scrollable cursor, server-side scrollable cursors exhibit slightly different behaviour:
 
 * New rows are inserted at the end of the cursor, where in _emulated_ they are inserted before the current row
 * Deleted rows are visible with an all-null marker row, where in _emulated_, the deleted row is removed from the result set
@@ -870,6 +917,9 @@ Compared to emulated scrollable cursor, server-side scrollable cursors exhibit s
 +
 This is not yet reflected in `updatesAreDetected()`, `deletesAreDetected()` and `insertsAreDetected()` of `DatabaseMetaData`.
 This will be corrected if and when we retrofit the new behaviour for _emulated_ as well.
+
+In Jaybird 6, the behaviour of _emulated_ has been changed to match this new behaviour for _server_.
+In Jaybird 7 or later, we will make _server_ the default.
 
 See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md[jdp-2021-04].
 
@@ -884,7 +934,10 @@ It may change in point releases, and may get dropped in future Jaybird major ver
 The project does not provide libraries implementing the SPI at this time.
 As we have only successfully tested this on Windows, it is possible that -- at least initially -- only Windows versions of such a library will be released by the project.
 
-For details, see https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-05-firebird-embedded-locator-service-provider.md[jdp-2020-05: Firebird Embedded locator service provider^].
+For details, see https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-05-firebird-embedded-locator-service-provider.md[jdp-2020-05: Firebird Embedded locator service provider].
+
+An example implementation -- for Windows -- is available at https://github.com/mrotteveel/jaybird-embedded-win32-x86-64[^].
+This library should be considered experimental, and there is no guarantee of future releases.
 
 [NOTE]
 ====
@@ -979,7 +1032,7 @@ For native connections, a similar optimization is available when using a Firebir
 
 Added in: Jaybird 5.0.8, backported from Jaybird 7
 
-Introduced in Firebird 5.0.3 (protocol 19), inline blobs offer a significant performance improvement for querying smallish blobs.
+Introduced in Firebird 5.0.3 (protocol 19), https://firebirdsql.org/file/documentation/release_notes/html/en/5_0/rlsnotes50.html#rnfb50-apiods-inline-blobs[inline blobs] offer a significant performance improvement for querying smallish blobs.
 As the name suggests, blobs are sent _inline_ together with the row data, avoiding additional round trips to the server for reading the blob data and blob information.
 
 There are two connection properties affecting inline blobs:
@@ -1047,7 +1100,7 @@ Added in: Jaybird 5.0.7, backported from Jaybird 6
 Previously, when reading blobs, a `blobBufferSize` larger than the maximum segment size was effectively ignored.
 Now, when reading through an input stream, a `blobBufferSize` larger than the maximum segment size can be used.
 
-Jaybird will use one or more roundtrips to fill the buffer.
+Jaybird will use one or more round trips to fill the buffer.
 To avoid inefficient fetches, a minimum of 90% of the buffer size will be filled up to the `blobBufferSize`.
 This change is not likely to improve performance, but it may allow for optimizations when reading or transferring data in large chunks.
 
@@ -1159,7 +1212,7 @@ See <<removal-of-deprecated-classes-packages-and-methods,Removal of deprecated c
 
 Jaybird 5 introduces some changes in compatibility and announces future breaking changes.
 
-*The list might not be complete, if you notice a difference in behavior that is not listed, please https://github.com/FirebirdSQL/jaybird/issues[report it as bug].*
+*The list might not be complete, if you notice a difference in behavior that is not listed, please {issues}[report it as bug].*
 It might have been a change we forgot to document, but it could just as well be an implementation bug.
 
 [#support-for-java-7-dropped]
@@ -1186,7 +1239,7 @@ Where possible, classes in this package have been declared final.
 Be aware that the API and implementation of the classes in this package can change in any point release.
 
 If there turns out to be actual demand for JCA support in Jaybird after all, we will consider creating new support for JCA in a way that does not require JCA when using Jaybird as a JDBC driver.
-Contact us on the https://groups.google.com/g/firebird-java[firebird-java list] if you're interested in such a solution.
+Contact us on the {firebird-java}[firebird-java list^] if you're interested in such a solution.
 
 As a result of this change, `org.firebirdsql.jdbc.FBDataSource` is now considered internal API as well.
 For normal data sources, look at the classes in the package `org.firebirdsql.ds`.
@@ -1523,6 +1576,7 @@ With the introduction of the (partial) transmit lock in the wire protocol to add
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-02-cancellation-thread-safety-backport.adoc[jdp-2026-02: Cancellation thread-safety backport].
 
 Implementations and forks *must* ensure they hold the transmit lock _within_ the connection lock while sending statement or transaction related messages.
+For cancellation, the transmit lock must be held _without_ holding the connection lock.
 The transmit lock *must* be released before receiving (reading) responses from the server.
 
 We have avoided most of the breaking changes that we made in Jaybird 7, but the following is a minor incompatible change:
@@ -1568,7 +1622,7 @@ With Jaybird 6 the following breaking changes will be introduced.
 [#dropping-support-firebird-25]
 ==== Dropping support for Firebird 2.5
 
-Jaybird 6 will drop support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support^]).
+Jaybird 6 will drop support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support]).
 In general, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
 
 Wire protocol versions for Firebird 2.5 and earlier will be disabled by default to disallow connection for the pure Java protocol.
@@ -1577,7 +1631,7 @@ An option is available to re-enable unsupported wire protocol versions.
 [#dropping-support-for-java-8-11]
 ==== Dropping support for Java 8 and 11
 
-Jaybird 6 will drop support for Java 8 and 11, making Java 17 the baseline version (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-03-java-17-minimum-version.md[jdp-2022-03: Java 17 minimum version^]).
+Jaybird 6 will drop support for Java 8 and 11, making Java 17 the baseline version (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-03-java-17-minimum-version.md[jdp-2022-03: Java 17 minimum version]).
 
 Jaybird 5 will serve as a form of "`long-term support`" for Java 8 and 11, with maintenance releases at least until the release of Jaybird 7.
 
@@ -1585,7 +1639,7 @@ Jaybird 5 will serve as a form of "`long-term support`" for Java 8 and 11, with 
 
 The OOREMOTE protocol (JDBC URL prefix `jdbc:firebird:oo` and `jdbc:firebirdsql:oo`) has been deprecated in Jaybird 5 and will be removed in Jaybird 6.
 
-See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal^].
+See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal].
 
 The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
 
