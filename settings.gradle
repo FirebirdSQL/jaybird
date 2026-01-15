@@ -19,7 +19,7 @@ dependencyResolutionManagement {
         }
 
         testLibs {
-            version('junit', '5.13.4')
+            version('junit', '6.0.2')
             version('mockito', '5.21.0')
 
             library('junit-bom', 'org.junit', 'junit-bom').versionRef('junit')
