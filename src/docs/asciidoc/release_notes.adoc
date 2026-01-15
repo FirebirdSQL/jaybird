@@ -9,7 +9,7 @@
 :icons: font
 :sectnums:
 :jaybird-fbclient-version: 5.0.3.0
-:jna-version: 5.17.0
+:jna-version: 5.18.1
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
@@ -51,6 +51,7 @@ This change also fixes a `NullPointerException` when the connection was terminat
 A minor breaking change was made in the internal GDS-ng wire API, which should only be relevant to maintainers of Jaybird forks, see <<breaking-changes-internal-api-5-0-11>>.
 +
 This fix was backported from Jaybird 6.0.4.
+* Dependency update: updated `net.java.dev.jna:jna` from 5.17.0 to 5.18.1 (used by native and embedded protocols) (https://github.com/FirebirdSQL/jaybird/issues/911[#911])
 
 This release is not fully compatible with the upcoming JDBC 4.5 Specification to be introduced with Java 26.
 See <<jdbc45-compat>> for more information.
