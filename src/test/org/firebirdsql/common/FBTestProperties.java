@@ -380,6 +380,13 @@ public final class FBTestProperties {
         }
     }
 
+    /**
+     * @return the Java major/feature version (as defined in {@code java.lang.Runtime.Version} in Java 10 and higher)
+     */
+    public static int getJavaFeatureVersion() {
+        return Runtime.version().feature();
+    }
+
     private FBTestProperties() {
         // No instantiation
     }
