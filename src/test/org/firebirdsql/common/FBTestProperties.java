@@ -410,6 +410,15 @@ public final class FBTestProperties {
         }
     }
 
+    /**
+     * @return the Java major/feature version (as defined in {@code java.lang.Runtime.Version} in Java 10 and higher)
+     */
+    public static int getJavaFeatureVersion() {
+        String javaVersion = System.getProperty("java.specification.version");
+        int javaMajor = (int) Double.parseDouble(javaVersion);
+        return javaMajor > 1 ? javaMajor : 8;
+    }
+
     private static boolean isEnableNativeLegacyAuthCompat() {
         return NATIVE_LEGACY_AUTH_COMPAT && isOtherNativeType().matches(GDS_TYPE);
     }
