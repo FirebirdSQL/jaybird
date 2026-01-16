@@ -1949,7 +1949,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final int JDBC_MAJOR_VERSION = 4;
-    private static final int JDBC_MINOR_VERSION = 3;
+    private static final int JDBC_MINOR_VERSION = determineJDBCMinorVersion();
+
+    private static int determineJDBCMinorVersion() {
+        if (Runtime.version().feature() >= 24) {
+            // Java 24 and higher: JDBC 4.4
+            return 4;
+        }
+        // Assume Java 9 - 23: JDBC 4.3
+        return 3;
+    }
 
     @Override
     public int getJDBCMajorVersion() {

@@ -798,7 +798,8 @@ class FBDatabaseMetaDataTest {
 
     @Test
     void testGetJDBCMinorVersion() throws Exception {
-        assertEquals(3, dmd.getJDBCMinorVersion(), "JDBCMinorVersion");
+        final int expectedMinor = Runtime.version().compareTo(Runtime.Version.parse("24")) >= 0 ? 4 : 3;
+        assertEquals(expectedMinor, dmd.getJDBCMinorVersion(), "JDBCMinorVersion");
     }
 
     /**

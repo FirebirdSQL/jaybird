@@ -35,6 +35,9 @@ For known issues, consult <<known-issues>>.
 
 === Jaybird 6.0.4
 
+This release is not fully compatible with the upcoming JDBC 4.5 Specification to be introduced with Java 26.
+See <<jdbc45-compat>> for more information.
+
 The following was fixed or changed since Jaybird 6.0.3:
 
 * Fixed: Statement close of a leaked statement by the cleaner did not detect fatal connection errors (https://github.com/FirebirdSQL/jaybird/issues/879[#879])
@@ -55,9 +58,7 @@ Only Firebird 2.5 (not supported) is affected.
 * Fixed: `FBServiceManager.getAuthPlugins()` reported the `dbCryptConfig` value (https://github.com/FirebirdSQL/jaybird/issues/901[#901])
 * Dependency update: updated `net.java.dev.jna:jna-jpms` from 5.17.0 to 5.18.1 (used by `jaybird-native`) (https://github.com/FirebirdSQL/jaybird/issues/910[#910])
 * Dependency update: updated `org.bouncycastle:bcprov-jdk18on` from 1.81 to 1.83 (used by `chacha64-plugin`) (https://github.com/FirebirdSQL/jaybird/issues/912[#856])
-
-This release is not fully compatible with the upcoming JDBC 4.5 Specification to be introduced with Java 26.
-See <<jdbc45-compat>> for more information.
+* Fixed: `FBDatabaseMetaData.getMinorVersion()` should report 4 (for JDBC 4.4) on Java 24 and higher (https://github.com/FirebirdSQL/jaybird/issues/913[#913])
 
 === Jaybird 6.0.3
 
