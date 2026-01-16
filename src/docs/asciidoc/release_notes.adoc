@@ -35,6 +35,12 @@ For known issues, consult <<known-issues>>.
 [#jaybird-5-0-11-changelog]
 === Jaybird 5.0.11
 
+This release is not fully compatible with the upcoming JDBC 4.5 Specification to be introduced with Java 26.
+See <<jdbc45-compat>> for more information.
+
+Future maintenance releases of Jaybird 5 may stop expanding Java support to include newly released Java versions.
+If you use Java 17 or higher, we recommend upgrading to Jaybird 6.
+
 The following has been changed or fixed since Jaybird 5.0.10:
 
 * Backported fatal error detection improvements for `FBPooledConnection` from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/899[#899])
@@ -52,9 +58,7 @@ A minor breaking change was made in the internal GDS-ng wire API, which should o
 +
 This fix was backported from Jaybird 6.0.4.
 * Dependency update: updated `net.java.dev.jna:jna` from 5.17.0 to 5.18.1 (used by native and embedded protocols) (https://github.com/FirebirdSQL/jaybird/issues/911[#911])
-
-This release is not fully compatible with the upcoming JDBC 4.5 Specification to be introduced with Java 26.
-See <<jdbc45-compat>> for more information.
+* Fixed: `FBDatabaseMetaData.getMinorVersion()` should report 4 (for JDBC 4.4) on Java 24 and higher (https://github.com/FirebirdSQL/jaybird/issues/914[#914])
 
 [#jaybird-5-0-10-changelog]
 === Jaybird 5.0.10

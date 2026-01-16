@@ -1803,11 +1803,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 } catch (NumberFormatException e) {
                     javaVersionMajor = 1;
                 }
-                if (javaVersionMajor >= 9) {
+                if (javaVersionMajor >= 24) {
+                    // Java 24 and higher: JDBC 4.4
+                    tempVersion = 4;
+                } else if (javaVersionMajor >= 9) {
                     // JDK 9 or higher: JDBC 4.3
                     tempVersion = 3;
                 } else {
-                    // JDK 1.8 or lower: JDBC 4.2
+                    // JDK 1.8: JDBC 4.2
                     tempVersion = 2;
                 }
             }
