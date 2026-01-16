@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.tz;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -35,6 +36,7 @@ class TimeZoneByNameMappingTest {
     }
 
     static Stream<Arguments> getTestCases() {
+        final int javaVersion = FBTestProperties.getJavaFeatureVersion();
         return Stream.of(
                 testCase(65535, "GMT"),
                 testCase(65534, "ACT", "Australia/Darwin", 65180),
@@ -435,7 +437,8 @@ class TimeZoneByNameMappingTest {
                 testCase(65139, "EAT", "Africa/Addis_Ababa", 65527),
                 testCase(65138, "ECT", "Europe/Paris", 65061),
                 testCase(65137, "EET"),
-                testCase(65136, "EST", "-05:00", 1139),
+                javaVersion < 24 ? testCase(65136, "EST", "-05:00", 1139)
+                        : testCase(65136, "EST", "America/Panama", 65353),
                 testCase(65135, "EST5EDT"),
                 testCase(65134, "Egypt"),
                 testCase(65133, "Eire"),
@@ -544,7 +547,8 @@ class TimeZoneByNameMappingTest {
                 testCase(65030, "GMT-0", "GMT", 65535),
                 testCase(65029, "GMT0"),
                 testCase(65028, "Greenwich"),
-                testCase(65027, "HST", "-10:00", 839),
+                javaVersion < 24 ? testCase(65027, "HST", "-10:00", 839)
+                        : testCase(65027, "HST", "Pacific/Honolulu", 64971),
                 testCase(65026, "Hongkong"),
                 testCase(65025, "IET", "America/Indiana/Indianapolis", 65403),
                 testCase(65024, "IST", "Asia/Kolkata", 65248),
@@ -569,7 +573,8 @@ class TimeZoneByNameMappingTest {
                 testCase(65005, "Libya"),
                 testCase(65004, "MET"),
                 testCase(65003, "MIT", "Pacific/Apia", 64986),
-                testCase(65002, "MST", "-07:00", 1019),
+                javaVersion < 24 ? testCase(65002, "MST", "-07:00", 1019)
+                        : testCase(65002, "MST", "America/Phoenix", 65350),
                 testCase(65001, "MST7MDT"),
                 testCase(65000, "Mexico/BajaNorte"),
                 testCase(64999, "Mexico/BajaSur"),

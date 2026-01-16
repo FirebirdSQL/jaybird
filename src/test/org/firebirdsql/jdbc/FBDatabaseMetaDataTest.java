@@ -8,6 +8,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
@@ -759,7 +760,7 @@ class FBDatabaseMetaDataTest {
 
     @Test
     void testGetJDBCMinorVersion() throws Exception {
-        final int expectedMinor = Runtime.version().compareTo(Runtime.Version.parse("24")) >= 0 ? 4 : 3;
+        final int expectedMinor = FBTestProperties.getJavaFeatureVersion() >= 24 ? 4 : 3;
         assertEquals(expectedMinor, dmd.getJDBCMinorVersion(), "JDBCMinorVersion");
     }
 

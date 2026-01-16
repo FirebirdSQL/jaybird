@@ -371,6 +371,13 @@ public final class FBTestProperties {
     }
 
     /**
+     * @return the Java major/feature version (as defined in {@code java.lang.Runtime.Version} in Java 10 and higher)
+     */
+    public static int getJavaFeatureVersion() {
+        return Runtime.version().feature();
+    }
+
+    /**
      * If schema support is available, returns {@code forSchema}, otherwise returns {@code withoutSchema}.
      *
      * @param forSchema
