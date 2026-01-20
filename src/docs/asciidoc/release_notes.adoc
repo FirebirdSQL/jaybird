@@ -495,7 +495,7 @@ artifactId:: `jaybird`
 version:: `{version_simple}.<java>{version_tag}` (where `<java>` is `java11` or `java8`)
 
 ifeval::["{version_tag}" == "-SNAPSHOT"]
-NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://central.sonatype.com/repository/maven-snapshots
+NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://central.sonatype.com/repository/maven-snapshots/
 endif::[]
 
 For example:
@@ -659,7 +659,7 @@ See <<removal-of-javaeejakartaee-connector-architecture-jca>> for details.
 The Firebird wire protocol encryption plugin `ChaCha` -- introduced in Firebird 4.0 -- is now supported by the PURE_JAVA and OOREMOTE protocol implementations.
 Support is only available on Java 11 and higher using a Jaybird built for Java 11 or higher.
 
-The implementation relies on the `ChaCha20` cipher introduced by https://openjdk.java.net/jeps/329[JEP 329^].
+The implementation relies on the `ChaCha20` cipher introduced by https://openjdk.org/jeps/329[JEP 329^].
 
 Jaybird does not support the `ChaCha64` wire protocol encryption.
 Support for `ChaCha64` has been introduced in Jaybird 6.
@@ -928,7 +928,7 @@ This will be corrected if and when we retrofit the new behaviour for _emulated_ 
 In Jaybird 6, the behaviour of _emulated_ has been changed to match this new behaviour for _server_.
 In Jaybird 7 or later, we will make _server_ the default.
 
-See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md[jdp-2021-04].
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md[jdp-2021-04].
 
 [#embedded-locator-service-provider]
 === Firebird Embedded locator service provider (experimental)
@@ -1629,7 +1629,7 @@ With Jaybird 6 the following breaking changes will be introduced.
 [#dropping-support-firebird-25]
 ==== Dropping support for Firebird 2.5
 
-Jaybird 6 will drop support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support]).
+Jaybird 6 will drop support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support]).
 In general, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
 
 Wire protocol versions for Firebird 2.5 and earlier will be disabled by default to disallow connection for the pure Java protocol.
@@ -1638,7 +1638,7 @@ An option is available to re-enable unsupported wire protocol versions.
 [#dropping-support-for-java-8-11]
 ==== Dropping support for Java 8 and 11
 
-Jaybird 6 will drop support for Java 8 and 11, making Java 17 the baseline version (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-03-java-17-minimum-version.md[jdp-2022-03: Java 17 minimum version]).
+Jaybird 6 will drop support for Java 8 and 11, making Java 17 the baseline version (see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-03-java-17-minimum-version.md[jdp-2022-03: Java 17 minimum version]).
 
 Jaybird 5 will serve as a form of "`long-term support`" for Java 8 and 11, with maintenance releases at least until the release of Jaybird 7.
 
@@ -1646,7 +1646,7 @@ Jaybird 5 will serve as a form of "`long-term support`" for Java 8 and 11, with 
 
 The OOREMOTE protocol (JDBC URL prefix `jdbc:firebird:oo` and `jdbc:firebirdsql:oo`) has been deprecated in Jaybird 5 and will be removed in Jaybird 6.
 
-See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal].
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal].
 
 The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
 
