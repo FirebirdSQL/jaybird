@@ -1052,7 +1052,7 @@ If you develop standalone applications, or you use an application server without
 
 * https://github.com/brettwooldridge/HikariCP[HikariCP^]
 * https://www.mchange.com/projects/c3p0/[c3p0^]
-* http://commons.apache.org/proper/commons-dbcp/[Apache DBCP^]
+* https://commons.apache.org/proper/commons-dbcp/[Apache DBCP^]
 
 [#compatibility-notes]
 = Compatibility notes
