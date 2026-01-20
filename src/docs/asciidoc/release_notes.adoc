@@ -364,7 +364,7 @@ endif::[]
 ifeval::["{version_tag}" == "-SNAPSHOT"]
 Jaybird {version_wo_target} is available on the Sonatype snapshot repository.
 
-NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://central.sonatype.com/repository/maven-snapshots
+NOTE: SNAPSHOT releases are only available from the Sonatype snapshot repository, https://central.sonatype.com/repository/maven-snapshots/
 endif::[]
 
 [horizontal.compact]
@@ -535,7 +535,7 @@ For a full list of changes, see milestones https://github.com/FirebirdSQL/jaybir
 The minimum supported Java version of Jaybird 6 is Java 17.
 Our expectation is that Java version specific artifacts are no longer needed.
 As a consequence, the Java version has been dropped from the version number.
-The full version and naming convention is documented in https://github.com/FirebirdSQL/jaybird/blob/v5.0.0-beta-1/devdoc/jdp/jdp-2023-01-version-number-and-naming-scheme.md[jdp-2023-01: Version Number and Naming Scheme]
+The full version and naming convention is documented in https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2023-01-version-number-and-naming-scheme.md[jdp-2023-01: Version Number and Naming Scheme]
 
 As a result of these new naming conventions, the following has changed:
 
@@ -661,7 +661,7 @@ See also <<getting-jaybird-6>>.
 
 The OOREMOTE protocol (JDBC URL prefix `++jdbc:firebird[sql]:oo:++`) has been removed in Jaybird 6.
 
-See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal].
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal].
 
 The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
 
@@ -1519,7 +1519,7 @@ It might have been a change we forgot to document, but it could just as well be 
 [#support-for-firebird-25-dropped]
 === Support for Firebird 2.5 dropped
 
-Jaybird 6 has dropped support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support]).
+Jaybird 6 has dropped support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support]).
 
 By default, Jaybird 6 will only connect to Firebird 3.0 and higher.
 See also <<unsupported-protocols-disabled>>.
