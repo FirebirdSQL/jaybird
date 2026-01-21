@@ -741,14 +741,17 @@ class FBPreparedStatementTest {
     //@formatter:on
 
     @Test
+    @Unstable("Test can be sensitive due to timing issues; if it fails to pass, try increasing delayMs")
     void testCancelStatement() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsCancelOperation(), "Test requires fb_cancel_operations support");
         assumeTrue(getDefaultSupportInfo().supportsExecuteBlock(), "Test requires EXECUTE BLOCK support");
+        final long delayMs = 20;
+
         final AtomicBoolean cancelFailed = new AtomicBoolean(false);
         try (Statement stmt = con.createStatement()) {
             Thread cancelThread = new Thread(() -> {
                 try {
-                    Thread.sleep(5);
+                    Thread.sleep(delayMs);
                     stmt.cancel();
                 } catch (SQLException ex) {
                     cancelFailed.set(true);
