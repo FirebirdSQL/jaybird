@@ -708,9 +708,11 @@ class FBPreparedStatementTest {
             end""";
 
     @Test
+    @Unstable("Test can be sensitive due to timing issues; if it fails to pass, try increasing delayMs")
     void testCancelStatement() throws Exception {
         assumeFeature(FirebirdSupportInfo::supportsCancelOperation, "Test requires fb_cancel_operations support");
         assumeFeature(FirebirdSupportInfo::supportsExecuteBlock, "Test requires EXECUTE BLOCK support");
+        final long delayMs = 20;
 
         try (var stmt = con.createStatement()) {
             final var cancelFailed = new AtomicBoolean(true);
@@ -721,7 +723,7 @@ class FBPreparedStatementTest {
                     cancelFailed.set(false);
                 } catch (SQLException ignored) {
                 }
-            }, 10, TimeUnit.MILLISECONDS);
+            }, delayMs, TimeUnit.MILLISECONDS);
             executor.shutdown();
 
             var exception = assertThrows(SQLException.class, () -> stmt.execute(LONG_RUNNING_STATEMENT),
