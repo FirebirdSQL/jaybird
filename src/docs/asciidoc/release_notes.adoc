@@ -65,7 +65,7 @@ A minor breaking change was made in the internal GDS-ng wire API, which should o
 +
 This fix was backported from Jaybird 6.0.4.
 * Dependency update: updated `net.java.dev.jna:jna` from 5.17.0 to 5.18.1 (used by native and embedded protocols) (https://github.com/FirebirdSQL/jaybird/issues/911[#911])
-* Fixed: `FBDatabaseMetaData.getMinorVersion()` should report 4 (for JDBC 4.4) on Java 24 and higher (https://github.com/FirebirdSQL/jaybird/issues/914[#914])
+* Fixed: `FBDatabaseMetaData.getJDBCMinorVersion()` should report 4 (for JDBC 4.4) on Java 24 and higher (https://github.com/FirebirdSQL/jaybird/issues/914[#914])
 
 [#jaybird-5-0-10-changelog]
 === Jaybird 5.0.10
