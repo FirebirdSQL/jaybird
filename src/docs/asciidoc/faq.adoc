@@ -7,12 +7,12 @@
 :source-highlighter: prettify
 :toc: left
 :icons: font
-:jaybird6-full-version: 6.0.3
-:jaybird6-jna-version: 5.17.0
-:jaybird5-full-version: 5.0.10
+:jaybird6-full-version: 6.0.4
+:jaybird6-jna-version: 5.18.1
+:jaybird5-full-version: 5.0.11
 :jaybird5-template-version: {jaybird5-full-version}.<java>
 :jaybird5-example-version: {jaybird5-full-version}.java11
-:jaybird5-jna-version: 5.17.0
+:jaybird5-jna-version: 5.18.1
 :jaybird4-full-version: 4.0.10
 :jaybird4-template-version: {jaybird4-full-version}.<java>
 :jaybird4-example-version: {jaybird4-full-version}.java11
@@ -38,7 +38,7 @@ SPDX-License-Identifier: LicenseRef-PDL-1.0
 [#what-is-jaybird]
 == What is Jaybird?
 
-Jaybird is a JDBC (Java DataBase Connectivity) driver for the https://firebirdsql.org[Firebird] DBMS.
+Jaybird is a JDBC (Java DataBase Connectivity) driver for the https://firebirdsql.org[Firebird] SQL database management system.
 It is _the_ way to connect to Firebird from Java and any other Java Virtual Machine (JVM) based languages.
 
 [#where-do-i-get-jaybird]
@@ -319,7 +319,7 @@ When deploying to a JavaEE environment, exclude the `javax.resource connector-ap
 == Where can I get the sourcecode?
 
 All Jaybird distribution zips contain a `jaybird-<version>-sources.zip` with the sources used for that specific version.
-The Maven Central repository also has the `jaybird-<version>-sources.zip`, and your IDE will generally offer to download it for you if you navigate to any Jaybird class.
+The Maven Central repository also has this `jaybird-<version>-sources.zip`, and your IDE will generally offer to download it for you if you navigate to any Jaybird class.
 
 The full Jaybird sources, including the build files, are available from GitHub in the Jaybird repository, {jaybird-repo}.
 Each release is tagged in the repository.
@@ -408,7 +408,7 @@ We recommend upgrading to Jaybird 6.
 [discrete]
 === Jaybird 2.2
 
-Jaybird 2.2 supports Java 6, Java 7 and Java 8footnote:[Jaybird 2.2 was not tested against Java versions after Java 8].
+Jaybird 2.2 supports Java 6, Java 7 and Java 8footnote:[Jaybird 2.2 was not fully tested against Java versions after Java 8].
 Jaybird 2.2.15 is the last release of Jaybird 2.2.
 
 Jaybird 2.2 is end-of-life.
@@ -778,13 +778,13 @@ Microsoft has deprecated the `SIO_LOOPBACK_FAST_PATH` and recommends not to use 
 Support was removed in Firebird 5.0.
 ====
 
-Firebird 3.0.2 adds support for "`TCP Loopback Fast Path`" (`SIO_LOOPBACK_FAST_PATH` socket option);
+Firebird 3.0.2 added support for "`TCP Loopback Fast Path`" (`SIO_LOOPBACK_FAST_PATH` socket option);
 support was removed in Firebird 5.0.
 This is available in Windows 8 / Windows Server 2012 and higher.
 This feature enables performance optimizations when connecting through localhost (127.0.0.1 / ::1).
 It requires support on both client and server side.
 
-Java support for "TCP Loopback Fast Path" was introduced in Java 8 update 60, it can be enabled by specifying the system property `jdk.net.useFastTcpLoopback` with value `true` (e.g. specify `-Djdk.net.useFastTcpLoopback=true` in your Java commandline).
+Java support for "`TCP Loopback Fast Path`" was introduced in Java 8 update 60, it can be enabled by specifying the system property `jdk.net.useFastTcpLoopback` with value `true` (e.g. specify `-Djdk.net.useFastTcpLoopback=true` in your Java commandline).
 
 Unfortunately, Java only has an 'all-or-nothing' support for the "`TCP Loopback Fast Path`", so Jaybird cannot enable this for you: you must specify this property on JVM startup.
 On the other hand, this has the benefit that this works for all Jaybird versions, as long as you use Java 8 update 60 or higher (and Firebird 3.0.2 or higher, but before 5.0.0).
@@ -889,13 +889,14 @@ Either revise the Firebird configuration, or explicitly configure connection pro
 [#encryption-key-did-not-meet-algorithm-requirements-of-symmetricarc4-337248282]
 === Encryption key did not meet algorithm requirements of Symmetric/Arc4 (337248282)
 
-If the exception cause is _java.security.InvalidKeyException: Illegal key size or default parameters_, this means that your Java installation applies a security policy that does not allow ARCFOUR with a 160 bit encryption key.
+If the exception cause is "`__java.security.InvalidKeyException: Illegal key size or default parameters__`", this means that your Java installation applies a security policy that does not allow ARCFOUR encryption with a 160 bit encryption key.
 
 If {jaybird-manual}#ref-wirecrypt[`wireCrypt=ENABLED`] (the default), this is just logged as a warning.
 The connection will succeed, but it does mean that the connection will not be encrypted.
 If `wireCrypt=REQUIRED`, this is thrown as an exception, and the connection will fail.
 
-This could indicate that your Java version applies the limited strength Cryptographic Jurisdiction Policy (this was the default in Java 8 Update 152 and earlier), or has been explicitly configured to apply the limited policy, or has a custom security policy to restrict the cryptographic key size.
+This could indicate that your Java version applies the limited strength Cryptographic Jurisdiction Policy (this was the default in Java 8 Update 152 and earlier).
+Alternatively, it has been explicitly configured to apply the limited policy, or has a custom security policy to restrict the cryptographic key size.
 
 Solutions and workarounds:
 
@@ -903,8 +904,6 @@ Solutions and workarounds:
 * Relax your custom security policy to allow 160 bit keys for ARCFOUR
 * Disable wire encryption for Firebird by setting `WireCrypt = Disabled` in `firebird.conf`
 * Set `wireCrypt=DISABLED` in the connection properties
-
-Be aware that the first two options may have legal implications depending on the local law in your country regarding cryptography.
 
 [#jdbc-support]
 = JDBC Support
