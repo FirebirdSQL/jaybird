@@ -33,6 +33,12 @@ Changes per Jaybird 6 release.
 See also <<whats-new-in-jaybird-6>>.
 For known issues, consult <<known-issues>>.
 
+=== Jaybird 6.0.5
+
+The following was fixed or changed since Jaybird 6.0.4:
+
+* ...
+
 === Jaybird 6.0.4
 
 This release is not fully compatible with the upcoming JDBC 4.5 Specification to be introduced with Java 26.
