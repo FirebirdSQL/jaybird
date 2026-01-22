@@ -150,6 +150,11 @@ tasks.register('dist', Zip) {
     // NOTE: Inclusion of files from sub-projects is handled in their respective build.gradle files
 }
 
+tasks.named('assemble') {
+    dependsOn tasks.named('dist')
+    dependsOn tasks.named('signDist')
+}
+
 jar {
     manifest {
         attributes(
