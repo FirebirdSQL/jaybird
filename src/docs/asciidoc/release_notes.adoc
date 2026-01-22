@@ -40,7 +40,10 @@ If you use Java 17 or higher, we recommend upgrading to Jaybird 6.
 
 The following has been changed or fixed since Jaybird 5.0.10:
 
-* ...
+* JDBC 4.5 support: `JaybirdTypeCodes.DECFLOAT` and `JaybirdType.DECFLOAT` now use value `2015` instead of `-6001` (https://github.com/FirebirdSQL/jaybird/issues/917[#917])
++
+Applications referencing this constant may need to be recompiled to function correctly with Jaybird 5.0.12 and higher.
+If you use Java 26 or higher, we recommend using `java.sql.Type.DECFLOAT` and `java.sql.JDBCType.DECFLOAT` instead.
 
 [#jaybird-5-0-11-changelog]
 === Jaybird 5.0.11
@@ -419,6 +422,10 @@ Java 9 and higher supported using the Java 8 or Java 11 driver.
 [discrete#jdbc45-compat]
 ==== Incompatibilities with upcoming JDBC 4.5 Specification
 
+// TODO Revise/rename with state for Jaybird 6.0.5 once https://github.com/FirebirdSQL/jaybird/issues/907 is complete
+
+This section applies to Jaybird 6.0.4 and earlier.
+
 Java 26 (expected in March 2026) will introduce https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5^] (link to draft).
 Jaybird is not yet compatible with some of the specified changes.
 
@@ -428,6 +435,8 @@ Specifically affected are:
 +
 At this time, Jaybird still uses its own constants in `JaybirdType.DECFLOAT` and `JaybirdTypeCodes.DECFLOAT` with value `-6001`.
 This value will be changed to match the JDBC specified value, and the constants deprecated, in a future maintenance release of Jaybird.
++
+Addressed in Jaybird 6.0.5.
 * Introduction of new methods on `java.sql.Connection` -- `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier`
 +
 The default implementation provided is not sufficient for Firebird, especially not when connecting to a dialect 1 database.

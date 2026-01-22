@@ -35,10 +35,15 @@ import org.firebirdsql.util.Volatile;
 @Volatile(reason = "Defined type codes may receive a different value when standardized in JDBC")
 public final class JaybirdTypeCodes {
 
-    // TODO Remove when standardized in JDBC
-
-    @Volatile(reason = "To be standardized by future version of JDBC, type code may change")
-    public static final int DECFLOAT = -6001;
+    /**
+     * Type code for {@code DECFLOAT}.
+     * <p>
+     * When using Java 26 or higher, use {@code java.sql.Types.DECFLOAT}. This constant might be deprecated and
+     * removed once Jaybird only supports versions after Java 26.
+     * </p>
+     */
+    @Volatile(reason = "Type code changed in 5.0.12/6.0.5/7.0.0 to match JDBC 4.5 value; prefer java.sql.Types.DECFLOAT when using Java 26 or higher")
+    public static final int DECFLOAT = 2015;
 
     private JaybirdTypeCodes() {
         // no instances
