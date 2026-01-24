@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds;
@@ -128,6 +128,9 @@ public interface JaybirdErrorCodes {
     int jb_socketFactoryClassNotFound                    = 337248347;
     int jb_socketFactoryConstructorNotFound              = 337248348;
     int jb_socketFactoryFailedToCreateSocket             = 337248349;
+    int jb_invalidIdentifierLength  = 337248350;
+    int jb_invalidIdentifierName    = 337248351;
+    int jb_noDelimitedIdentifiersInDialect1              = 337248352;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

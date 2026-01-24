@@ -1,8 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2017-2023
+// SPDX-FileCopyrightText: Copyright 2017-2026
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.AbstractVersion;
+import org.firebirdsql.jaybird.parser.FirebirdReservedWords;
+import org.firebirdsql.jaybird.util.BasicVersion;
 import org.firebirdsql.jdbc.metadata.FbMetadataConstants;
 
 import java.sql.SQLException;
@@ -90,12 +92,20 @@ enum FirebirdVersionMetaData {
         }
     };
 
-    private final int majorVersion;
-    private final int minorVersion;
+    private final BasicVersion version;
+    private final FirebirdReservedWords reservedWords;
 
-    FirebirdVersionMetaData(int majorVersion, int minorVersion) {
-        this.majorVersion = majorVersion;
-        this.minorVersion = minorVersion;
+    FirebirdVersionMetaData(int major, int minor) {
+        version = BasicVersion.of(major, minor);
+        reservedWords = FirebirdReservedWords.of(version);
+    }
+
+    /**
+     * @return Firebird version
+     * @since 7
+     */
+    final BasicVersion version() {
+        return version;
     }
 
     /**
@@ -125,9 +135,25 @@ enum FirebirdVersionMetaData {
         return FbMetadataConstants.OBJECT_NAME_LENGTH_BEFORE_V4_0;
     }
 
-    static FirebirdVersionMetaData getVersionMetaDataFor(GDSServerVersion version) {
+    /**
+     * Determines if {@code word} is a reserved word in Firebird.
+     * <p>
+     * Contrary to {@link #getSqlKeywords()}, which only returns reserved words not reserved by SQL:2003, this checks
+     * against all reserved words of this Firebird version.
+     * </p>
+     *
+     * @param word
+     *         word to check
+     * @return {@code true} if {@code word} is a reserved word, {@code false} if it's not reserved
+     * @since 7
+     */
+    final boolean isReservedWord(CharSequence word) {
+        return reservedWords.isReservedWord(word);
+    }
+
+    static FirebirdVersionMetaData getVersionMetaDataFor(AbstractVersion serverVersion) {
         for (FirebirdVersionMetaData versionMetaData : values()) {
-            if (version.isEqualOrAbove(versionMetaData.majorVersion, versionMetaData.minorVersion)) {
+            if (serverVersion.compareTo(versionMetaData.version) >= 0) {
                 return versionMetaData;
             }
         }
@@ -138,4 +164,5 @@ enum FirebirdVersionMetaData {
     static FirebirdVersionMetaData getVersionMetaDataFor(FirebirdConnection connection) throws SQLException {
         return getVersionMetaDataFor(connection.getFbDatabase().getServerVersion());
     }
+
 }

@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2004-2011 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -52,6 +53,7 @@ import static org.firebirdsql.gds.ISCConstants.fb_info_wire_crypt;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.ISCConstants.isc_net_read_err;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidConnectionEncoding;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidIdentifierLength;
 import static org.firebirdsql.gds.JaybirdSystemProperties.DEFAULT_CONNECTION_ENCODING_PROPERTY;
 import static org.firebirdsql.gds.JaybirdSystemProperties.PROCESS_ID_PROP;
 import static org.firebirdsql.gds.JaybirdSystemProperties.PROCESS_NAME_PROP;
@@ -1007,6 +1009,152 @@ class FBConnectionTest {
             connection.addWarning(new SQLWarning("test"));
 
             assertNull(connection.getWarnings(), "Expected warning to be ignored");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, quoteCharacter = '|', textBlock = """
+            value,    expected
+            # Test cases from Java 26 java.sql.Connection.enquoteLiteral javadoc
+            Hello,    'Hello'
+            G'Day,    'G''Day'
+            'G''Day', '''G''''Day'''
+            I'''M,    'I''''''M'
+            # Other test cases
+            no quotes, 'no quotes'
+            with'quotes, 'with''quotes'
+            """)
+    void enquoteLiteral(String value, String expected) throws Exception {
+        try (var connection = getConnectionViaDriverManager()) {
+            assertEquals(expected, connection.enquoteLiteral(value), "enquoteLiteral");
+            // Our implementation of enquoteNCharLiteral calls enquoteLiteral; calling it as well for coverage
+            assertEquals(expected, connection.enquoteNCharLiteral(value), "enquoteNCharLiteral");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            identifier,         alwaysDelimit, dialect, expected
+            # Test cases from Java 26 java.sql.Connection.enquoteLiteral javadoc (dialect 3)
+            Hello,              false,         3,       Hello
+            Hello,              true,          3,       "Hello"
+            G'Day,              false,         3,       "G'Day"
+            "Bruce Wayne",      false,         3,       "Bruce Wayne"
+            "Bruce Wayne",      true,          3,       "Bruce Wayne"
+            "select",           false,         3,       "select"
+            "select",           true,          3,       "select"
+            # Modified: Firebird allows $ in simple identifier after first character
+            GoodDay$,           false,         3,       GoodDay$
+            # Modified: Firebird allows " in delimited identifier when doubled
+            Hello"World,        false,         3,       "Hello""World"
+            # Modified: Firebird allows " in delimited identifier when doubled
+            "Hello"World",      false,         3,       "Hello""World"
+            # Other test cases
+            $GoodDay,           false,         3,       "$GoodDay"
+            simple$identifier_, false,         3,       simple$identifier_
+            simple$identifier_, true,          3,       "simple$identifier_"
+            "already quoted",   false,         3,       "already quoted"
+            "already quoted",   true,          3,       "already quoted"
+            has space,          false,         3,       "has space"
+            has space,          true,          3,       "has space"
+            # Dialect 1 cases (only simple identifiers)
+            Hello,              false,         1,       Hello
+            GoodDay$,           false,         1,       GoodDay$
+            simple$identifier_, false,         1,       simple$identifier_
+            # reserved word cases
+            select,             false,         3,       "select"
+            SELECT,             false,         3,       "SELECT"
+            SELECT,             true,          3,       "SELECT"
+            """)
+    void enquoteIdentifier_validCases(String identifier, boolean alwaysDelimit, int dialect, String expected)
+            throws Exception {
+        try (var connection = getConnectionViaDriverManager(PropertyNames.sqlDialect, String.valueOf(dialect))) {
+            assertEquals(expected, connection.enquoteIdentifier(identifier, alwaysDelimit), "enquoteIdentifier");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            identifier,         alwaysDelimit, dialect, expectedExceptionName,                    expectedErrorCode
+            # Dialect 1 does not support delimited identifiers
+            Hello,              true,          1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            G'Day,              false,         1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            "Bruce Wayne",      false,         1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            "Bruce Wayne",      true,          1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            "select",           false,         1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            "select",           true,          1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            simple$identifier_, true,          1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            "already quoted",   false,         1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            "already quoted",   true,          1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            has space,          false,         1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            has space,          true,          1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            # empty string case
+            '',                 false,         1,       java.sql.SQLSyntaxErrorException,         337248350
+            '',                 false,         3,       java.sql.SQLSyntaxErrorException,         337248350
+            # invalid character case
+            '\u0000',           false,         1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            '\u0000',           false,         3,       java.sql.SQLSyntaxErrorException,         337248351
+            # reserved word cases
+            select,             false,         1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            SELECT,             false,         1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            SELECT,             true,          1,       java.sql.SQLFeatureNotSupportedException, 337248352
+            """)
+    void enquoteIdentifier_invalidCases(String identifier, boolean alwaysDelimit, int dialect,
+            String expectedExceptionName, int expectedErrorCode) throws Exception {
+        var expectedException = Class.forName(expectedExceptionName).asSubclass(SQLException.class);
+        try (var connection = getConnectionViaDriverManager(PropertyNames.sqlDialect, String.valueOf(dialect))) {
+            SQLException exception = assertThrows(expectedException,
+                    () -> connection.enquoteIdentifier(identifier, alwaysDelimit), "enquoteIdentifier");
+            assertThat(exception, fbMessageStartsWith(expectedErrorCode));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 1, 3 })
+    void enquoteIdentifier_invalidCase_tooLong(int dialect) throws SQLException {
+        try (var connection =
+                     getConnectionViaDriverManager(PropertyNames.sqlDialect, String.valueOf(dialect))) {
+            int maxColumnNameLength = connection.getMetaData().getMaxColumnNameLength();
+            String validIdentifier = FBStatementTest.generateIdentifier(maxColumnNameLength);
+            String tooLongIdentifier = validIdentifier + "a";
+            assertDoesNotThrow(() -> connection.enquoteIdentifier(validIdentifier, false),
+                    "Expected no exception for identifier with maximum length");
+            var exception = assertThrows(SQLSyntaxErrorException.class,
+                    () -> connection.enquoteIdentifier(tooLongIdentifier, false),
+                    "Expected exception for too long identifier");
+            assertThat(exception, fbMessageStartsWith(jb_invalidIdentifierLength));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            identifier,          expectedIsSimple
+            # Test cases from Java 26 java.sql.Connection.isSimpleIdentifier javadoc
+            Hello,               true
+            G'Day,               false
+            "Bruce Wayne",       false
+            # Modified: Firebird allows $ in simple identifier after first character
+            GoodDay$,            true
+            Hello"World,         false
+            "Hello"World",       false
+            "select",            false
+            "from",              false
+            # Other test cases
+            $GoodDay,            false
+            Simple$Identifier_,  true
+            1Simple$Identifier_, false
+            A234567890123456789012345678901, true
+            # empty string case
+            '',                  false
+            # invalid character case
+            '\u0000',            false
+            # reserved word cases
+            select,              false
+            SELECT,              false
+            """)
+    void isSimpleIdentifier(String identifier, boolean expectedIsSimple) throws Exception {
+        try (var connection = getConnectionViaDriverManager()) {
+            assertEquals(expectedIsSimple, connection.isSimpleIdentifier(identifier), "isSimpleIdentifier");
         }
     }
 

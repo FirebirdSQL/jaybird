@@ -8,7 +8,7 @@
  SPDX-FileCopyrightText: Copyright 2005 Michael Romankiewicz
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -27,6 +27,7 @@ import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 import java.nio.charset.StandardCharsets;
@@ -253,6 +254,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public String getSQLKeywords() throws SQLException {
         return versionMetaData.getSqlKeywords();
+    }
+
+    @Override
+    public boolean isReservedWord(@NonNull String word) {
+        return versionMetaData.isReservedWord(word);
     }
 
     /**

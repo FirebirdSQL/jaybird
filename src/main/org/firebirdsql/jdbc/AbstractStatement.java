@@ -3,7 +3,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2011 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -360,6 +360,45 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
                 currentWarning.setNextWarning(warning);
             }
         }
+    }
+
+    /**
+     * Returns a {@code String} enclosed in single quotes. Any occurrence of a single quote within the string will be
+     * replaced by two single quotes (for dialect 1, double quotes instead of single quotes).
+     *
+     * @see FirebirdConnection#enquoteLiteral(String)
+     */
+    @Override
+    public final String enquoteLiteral(String val)  throws SQLException {
+        return connection.enquoteLiteral(val);
+    }
+
+    /**
+     * @see #enquoteLiteral(String)
+     */
+    @Override
+    public final String enquoteNCharLiteral(String val)  throws SQLException {
+        return enquoteLiteral(val);
+    }
+
+    /**
+     * Returns a SQL identifier, appropriately delimited if needed.
+     *
+     * @see FirebirdConnection#enquoteIdentifier(String, boolean)
+     */
+    @Override
+    public final String enquoteIdentifier(String identifier, boolean alwaysDelimit) throws SQLException {
+        return connection.enquoteIdentifier(identifier, alwaysDelimit);
+    }
+
+    /**
+     * Returns whether {@code identifier} is a simple SQL identifier.
+     *
+     * @see FirebirdConnection#isSimpleIdentifier(String)
+     */
+    @Override
+    public final boolean isSimpleIdentifier(String identifier) throws SQLException {
+        return connection.isSimpleIdentifier(identifier);
     }
 
     @Override

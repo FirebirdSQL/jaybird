@@ -1,13 +1,14 @@
 // SPDX-FileCopyrightText: Copyright 2005 Michael Romankiewicz
 // SPDX-FileCopyrightText: Copyright 2005 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
-// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NonNull;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -249,5 +250,29 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @since 7
      */
     Optional<String> findTableSchema(String tableName) throws SQLException;
+
+    /**
+     * Returns whether {@code word} is a reserved word in Firebird.
+     * <p>
+     * This method may be inaccurate for unsupported Firebird versions. Jaybird uses internal lists of reserved words
+     * per version, and selects the closest matching version if a version is unknown. It does not use the
+     * {@code RDB$KEYWORDS} table.
+     * </p>
+     * <p>
+     * Contrary to {@link #getSQLKeywords()}, which only returns reserved words that are not also reserved in SQL:2003,
+     * this method checks against all Firebird reserved words. It will return {@code false} for SQL:2003 reserved words
+     * that are not reserved words in Firebird.
+     * </p>
+     *
+     * @param word
+     *         word to check against the reserved word list (case-insensitive)
+     * @return {@code true} if {@code word} is a reserved word, {@code false} otherwise
+     * @throws NullPointerException
+     *         if {@code word} is {@code null}
+     * @throws SQLException
+     *         for database access errors
+     * @since 7
+     */
+    boolean isReservedWord(@NonNull String word) throws SQLException;
 
 }

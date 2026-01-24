@@ -3,7 +3,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2008 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 20072 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -27,7 +27,6 @@ import org.jspecify.annotations.Nullable;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 import static java.lang.String.format;
 import static java.lang.System.Logger.Level.DEBUG;
@@ -1011,84 +1010,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
             }
             return getLargeUpdateCountMinZero();
         }
-    }
-
-    /**
-     * Returns a {@code String} enclosed in single quotes. Any occurrence of a single quote within the string will be
-     * replaced by two single quotes.
-     * <p>
-     * For a dialect 3 database, this will behave exactly like the JDBC 4.3 default implementation. For a
-     * dialect 1 database this will quote literals with double quotes and escape double quotes by doubling.
-     * </p>
-     *
-     * @param val a character string
-     * @return A string enclosed by single quotes with every single quote
-     * converted to two single quotes
-     * @throws NullPointerException if val is {@code null}
-     * @throws SQLException if a database access error occurs
-     */
-    @Override
-    public String enquoteLiteral(String val)  throws SQLException {
-        if (gdsHelper.getCurrentDatabase().getDatabaseDialect() == 1) {
-            return '"' + val.replace("\"", "\"\"") + '"';
-        }
-        return "'" + val.replace("'", "''") +  "'";
-    }
-
-    /**
-     * @see #enquoteLiteral(String)
-     */
-    @Override
-    public String enquoteNCharLiteral(String val)  throws SQLException {
-        return enquoteLiteral(val);
-    }
-
-    // NOTE: This intentionally does not take case sensitivity into account
-    private static final Pattern SIMPLE_IDENTIFIER_PATTERN = Pattern.compile("\\p{Alpha}[\\p{Alnum}_$]*");
-
-    /**
-     * Returns a SQL identifier. If {@code identifier} is a simple SQL identifier:
-     * <ul>
-     * <li>Return the original value if {@code alwaysQuote} is
-     * {@code false}</li>
-     * <li>Return a delimited identifier if {@code alwaysQuote} is
-     * {@code true}</li>
-     * </ul>
-     *
-     * @param identifier a SQL identifier
-     * @param alwaysQuote indicates if a simple SQL identifier should be
-     * returned as a quoted identifier
-     * @return A simple SQL identifier or a delimited identifier
-     * @throws SQLException if identifier is not a valid identifier
-     * @throws SQLFeatureNotSupportedException if the datasource does not support
-     * delimited identifiers (ie: a dialect 1 database)
-     * @throws NullPointerException if identifier is {@code null}
-     */
-    @Override
-    public String enquoteIdentifier(String identifier, boolean alwaysQuote) throws SQLException {
-        int len = identifier.length();
-        if (len < 1 || len > connection.getMetaData().getMaxColumnNameLength()) {
-            throw new SQLException("Invalid name");
-        }
-        if (!alwaysQuote && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches()) {
-            return identifier;
-        }
-        QuoteStrategy quoteStrategy = connection.getQuoteStrategy();
-        if (quoteStrategy == QuoteStrategy.DIALECT_1) {
-            throw new SQLFeatureNotSupportedException("Quoted identifiers not supported in dialect 1");
-        }
-        if (identifier.matches("^\".+\"$")) {
-            // We assume double quotes are already properly escaped within
-            return identifier;
-        }
-        return quoteStrategy.quoteObjectName(identifier);
-    }
-
-    @Override
-    public boolean isSimpleIdentifier(String identifier) throws SQLException {
-        int len = identifier.length();
-        return len >= 1 && len <= connection.getMetaData().getMaxColumnNameLength()
-                && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches();
     }
 
     /**

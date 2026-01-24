@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jdbc;
 
@@ -7,20 +7,20 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jaybird.util.SearchPathHelper;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NonNull;
 
 import java.sql.Blob;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * Extension of {@link Connection} interface providing access to Firebird specific features.
+ * Extension of the {@link java.sql.Connection} interface providing access to Firebird specific features.
  *
  * @author Roman Rokytskyy
  * @since 1.5
  */
-public interface FirebirdConnection extends Connection {
+public interface FirebirdConnection extends java.sql.Connection {
 
     /**
      * {@inheritDoc}
@@ -48,10 +48,10 @@ public interface FirebirdConnection extends Connection {
      * Get transaction parameters for the specified transaction isolation level.
      *
      * @param isolationLevel
-     *         isolation level defined in the {@link Connection} interface.
-     * @return instance of {@link TransactionParameterBuffer} containing current transaction parameters.
+     *         isolation level defined in the {@link java.sql.Connection} interface
+     * @return instance of {@link TransactionParameterBuffer} containing current transaction parameters
      * @throws SQLException
-     *         if error occurred obtaining transaction parameters.
+     *         if an error occurred obtaining transaction parameters
      * @since 2
      */
     TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException;
@@ -85,16 +85,16 @@ public interface FirebirdConnection extends Connection {
      * Set transaction parameters for the next transactions.
      * <p>
      * This method does not change the TPB mapping, but replaces the mapping for the current transaction isolation
-     * until {@link Connection#setTransactionIsolation(int)} is called.
+     * until {@link java.sql.Connection#setTransactionIsolation(int)} is called.
      * </p>
      * <p>
      * This method cannot be called when a transaction is currently active.
      * </p>
      *
      * @param tpb
-     *         instance of {@link TransactionParameterBuffer} with new transaction parameters.
+     *         instance of {@link TransactionParameterBuffer} with new transaction parameters
      * @throws SQLException
-     *         if method is called within a transaction.
+     *         if this method is called within a transaction
      * @since 2
      */
     void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException;
@@ -208,5 +208,108 @@ public interface FirebirdConnection extends Connection {
     default List<String> getSearchPathList() throws SQLException {
         return SearchPathHelper.parseSearchPath(getSearchPath());
     }
+
+    // TODO: If and when below JDBC 4.5 methods are removed from this interface, we may need to move parts of their
+    //  descriptions to FBConnection
+
+    /**
+     * Returns a string appropriately quoted as a string literal for the connection dialect.
+     * <p>
+     * This method is defined in {@link java.sql.Connection} starting with JDBC 4.5 (Java 26). The definition in this
+     * interface may be removed without notice once Jaybird only supports Java versions that expect JDBC 4.5 or higher.
+     * </p>
+     *
+     * @param val
+     *         a character string
+     * @return for dialect 3, a string enclosed by single quotes with every single quote converted to two single quotes,
+     * for dialect 1, with double quotes instead of single quotes.
+     * @throws NullPointerException
+     *         if {@code val} is {@code null}
+     * @throws SQLException
+     *         for database access errors
+     * @since 7
+     */
+    @NonNull String enquoteLiteral(@NonNull String val) throws SQLException;
+
+    /**
+     * Returns a string appropriately quoted as a string literal for the connection dialect.
+     * <p>
+     * Implementations should call their implementation of {@link #enquoteLiteral(String)}. Given the future removal
+     * of this method from this interface, we're not providing a default implementation in this interface. Contrary
+     * to the requirements stated in JDBC 4.5, the returned string is <strong>not</strong> prefixed with {@code N} as
+     * Firebird doesn't have NCHAR literals.
+     * </p>
+     * <p>
+     * This method is defined in {@link java.sql.Connection} starting with JDBC 4.5 (Java 26). The definition in this
+     * interface may be removed without notice once Jaybird only supports Java versions that expect JDBC 4.5 or higher.
+     * </p>
+     *
+     * @param val
+     *         a character string
+     * @return for dialect 3, a string enclosed by single quotes with every single quote converted to two single quotes,
+     * for dialect 1, with double quotes instead of single quotes.
+     * @throws NullPointerException
+     *         if {@code val} is {@code null}
+     * @throws SQLException
+     *         for database access errors
+     * @see #enquoteLiteral(String)
+     * @since 7
+     */
+    @NonNull String enquoteNCharLiteral(@NonNull String val) throws SQLException;
+
+    /**
+     * Returns a simple SQL identifier or a delimited identifier, as appropriate for the connection dialect.
+     * <p>
+     * For dialect 3, if {@code identifier} already starts and ends in a double quote, we strip the quotes, unescape
+     * doubled double quotes, and requote and reescape. Reserved words known to Jaybird are not considered simple
+     * identifiers, and are always delimited.
+     * </p>
+     * <p>
+     * For dialect 1, if {@code identifier} is not a simple identifier or if {@code alwaysDelimit} is {@code true},
+     * this method will throw a {@link java.sql.SQLFeatureNotSupportedException} as dialect 1 does not support delimited
+     * identifiers.
+     * </p>
+     * <p>
+     * This method is defined in {@link java.sql.Connection} starting with JDBC 4.5 (Java 26). The definition in this
+     * interface may be removed without notice once Jaybird only supports Java versions that expect JDBC 4.5 or higher.
+     * </p>
+     *
+     * @param identifier
+     *         a SQL identifier
+     * @param alwaysDelimit
+     *         indicates if a simple SQL identifier should be returned as a delimited identifier
+     * @return a simple SQL identifier or a delimited identifier
+     * @throws NullPointerException
+     *         if {@code identifier} is {@code null}
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         if the datasource does not support delimited identifiers and {@code identifier} is not a simple
+     *         identifier or {@code alwaysDelimit} is {@code true}
+     * @throws SQLException
+     *         if {@code identifier} is not a valid identifier
+     * @see #isSimpleIdentifier(String)
+     * @since 7
+     */
+    @NonNull String enquoteIdentifier(@NonNull String identifier, boolean alwaysDelimit) throws SQLException;
+
+    /**
+     * Returns whether {@code identifier} is a simple identifier.
+     * <p>
+     * Reserved words known to Jaybird are not considered simple identifiers.
+     * </p>
+     * <p>
+     * This method is defined in {@link java.sql.Connection} starting with JDBC 4.5 (Java 26). The definition in this
+     * interface may be removed without notice once Jaybird only supports Java versions that expect JDBC 4.5 or higher.
+     * </p>
+     *
+     * @param identifier
+     *         a SQL identifier
+     * @return {@code true} if a simple SQL identifier, {@code false} otherwise
+     * @throws NullPointerException
+     *         if {@code identifier} is {@code null}
+     * @throws SQLException
+     *         for database access errors
+     * @since 7
+     */
+    boolean isSimpleIdentifier(@NonNull String identifier) throws SQLException;
 
 }
