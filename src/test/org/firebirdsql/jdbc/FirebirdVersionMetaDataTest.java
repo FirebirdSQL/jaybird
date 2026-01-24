@@ -18,9 +18,14 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
+import java.util.Arrays;
+import java.util.Comparator;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -29,45 +34,34 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class FirebirdVersionMetaDataTest {
 
     @Test
-    void shouldReturn4_0ForFirebird4_0() throws Exception {
-        GDSServerVersion version = GDSServerVersion.parseRawVersion("WI-V4.0.0.459 Firebird 4.0");
-
-        assertEquals(FirebirdVersionMetaData.FIREBIRD_4_0, FirebirdVersionMetaData.getVersionMetaDataFor(version));
+    void validateOrderOfEnumConstants() {
+        FirebirdVersionMetaData[] sortedReservedWords = FirebirdVersionMetaData.values();
+        Arrays.sort(sortedReservedWords, Comparator
+                .comparingInt(FirebirdVersionMetaData::major).thenComparingInt(FirebirdVersionMetaData::minor)
+                .reversed());
+        assertArrayEquals(sortedReservedWords, FirebirdVersionMetaData.values(),
+                "Expected order of FirebirdVersionMetaData.values() to be descending by version");
     }
 
-    @Test
-    void shouldReturn3_0ForFirebird3_0() throws Exception {
-        GDSServerVersion version = GDSServerVersion.parseRawVersion("WI-V3.0.1.32609 Firebird 3.0");
-
-        assertEquals(FirebirdVersionMetaData.FIREBIRD_3_0, FirebirdVersionMetaData.getVersionMetaDataFor(version));
-    }
-
-    @Test
-    void shouldReturn2_5ForFirebird2_5() throws Exception {
-        GDSServerVersion version = GDSServerVersion.parseRawVersion("WI-V2.5.6.27020 Firebird 2.5");
-
-        assertEquals(FirebirdVersionMetaData.FIREBIRD_2_5, FirebirdVersionMetaData.getVersionMetaDataFor(version));
-    }
-
-    @Test
-    void shouldReturn2_1ForFirebird2_1() throws Exception {
-        GDSServerVersion version = GDSServerVersion.parseRawVersion("WI-V2.1.7.18553 Firebird 2.1");
-
-        assertEquals(FirebirdVersionMetaData.FIREBIRD_2_1, FirebirdVersionMetaData.getVersionMetaDataFor(version));
-    }
-
-    @Test
-    void shouldReturn2_0ForFirebird2_0() throws Exception {
-        GDSServerVersion version = GDSServerVersion.parseRawVersion("WI-V2.0.7.13318 Firebird 2.0");
-
-        assertEquals(FirebirdVersionMetaData.FIREBIRD_2_0, FirebirdVersionMetaData.getVersionMetaDataFor(version));
-    }
-
-    @Test
-    void shouldReturn2_0ForFirebird1_5() throws Exception {
-        GDSServerVersion version = GDSServerVersion.parseRawVersion("WI-V1.5.6.18482 Firebird 1.5");
-
-        assertEquals(FirebirdVersionMetaData.FIREBIRD_2_0, FirebirdVersionMetaData.getVersionMetaDataFor(version));
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, value = {
+            "major, minor, expected",
+            "6,     0,     FIREBIRD_5_0",
+            "5,     0,     FIREBIRD_5_0",
+            "4,     0,     FIREBIRD_4_0",
+            "3,     0,     FIREBIRD_3_0",
+            "2,     5,     FIREBIRD_2_5",
+            "2,     1,     FIREBIRD_2_1",
+            "2,     0,     FIREBIRD_2_0",
+            // lower versions should return the oldest known version
+            "1,     5,     FIREBIRD_2_0",
+            "1,     0,     FIREBIRD_2_0",
+            // higher versions should return the latest known version
+            "9999,  0,     FIREBIRD_5_0"
+    })
+    void getVersionMetaDataFor(int major, int minor, FirebirdVersionMetaData expected) {
+        assertEquals(expected, FirebirdVersionMetaData.of(major, minor),
+                () -> String.format("Unexpected FirebirdVersionMetaData for %d.%d", major, minor));
     }
 
 }

@@ -248,6 +248,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return versionMetaData.getSqlKeywords();
     }
 
+    @Override
+    public boolean isReservedWord(String word) {
+        return versionMetaData.isReservedWord(word);
+    }
+
     /**
      * {@inheritDoc}
      * <p>

@@ -1235,76 +1235,37 @@ public class FBStatement implements FirebirdStatement {
 
     /**
      * Returns a {@code String} enclosed in single quotes. Any occurrence of a single quote within the string will be
-     * replaced by two single quotes.
-     * <p>
-     * For a dialect 3 database, this will behave exactly like the JDBC 4.3 default implementation. For a
-     * dialect 1 database this will quote literals with double quotes and escape double quotes by doubling.
-     * </p>
+     * replaced by two single quotes (for dialect 1, double quotes instead of single quotes).
      *
-     * @param val a character string
-     * @return A string enclosed by single quotes with every single quote
-     * converted to two single quotes
-     * @throws NullPointerException if val is {@code null}
-     * @throws SQLException if a database access error occurs
+     * @see FirebirdConnection#enquoteLiteral(String)
      */
-    public String enquoteLiteral(String val)  throws SQLException {
-        if (gdsHelper.getCurrentDatabase().getDatabaseDialect() == 1) {
-            return '"' + val.replace("\"", "\"\"") + '"';
-        }
-        return "'" + val.replace("'", "''") +  "'";
+    public final String enquoteLiteral(String val)  throws SQLException {
+        return connection.enquoteLiteral(val);
     }
 
     /**
      * @see #enquoteLiteral(String)
      */
-    public String enquoteNCharLiteral(String val)  throws SQLException {
+    public final String enquoteNCharLiteral(String val)  throws SQLException {
         return enquoteLiteral(val);
     }
 
-    // NOTE: This intentionally does not take case sensitivity into account
-    private static final Pattern SIMPLE_IDENTIFIER_PATTERN = Pattern.compile("\\p{Alpha}[\\p{Alnum}_$]*");
-
     /**
-     * Returns a SQL identifier. If {@code identifier} is a simple SQL identifier:
-     * <ul>
-     * <li>Return the original value if {@code alwaysQuote} is
-     * {@code false}</li>
-     * <li>Return a delimited identifier if {@code alwaysQuote} is
-     * {@code true}</li>
-     * </ul>
+     * Returns a SQL identifier, appropriately delimited if needed.
      *
-     * @param identifier a SQL identifier
-     * @param alwaysQuote indicates if a simple SQL identifier should be
-     * returned as a quoted identifier
-     * @return A simple SQL identifier or a delimited identifier
-     * @throws SQLException if identifier is not a valid identifier
-     * @throws SQLFeatureNotSupportedException if the datasource does not support
-     * delimited identifiers (ie: a dialect 1 database)
-     * @throws NullPointerException if identifier is {@code null}
+     * @see FirebirdConnection#enquoteIdentifier(String, boolean)
      */
-    public String enquoteIdentifier(String identifier, boolean alwaysQuote) throws SQLException {
-        int len = identifier.length();
-        if (len < 1 || len > connection.getMetaData().getMaxColumnNameLength()) {
-            throw new SQLException("Invalid name");
-        }
-        if (!alwaysQuote && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches()) {
-            return identifier;
-        }
-        QuoteStrategy quoteStrategy = connection.getQuoteStrategy();
-        if (quoteStrategy == QuoteStrategy.NO_QUOTES) {
-            throw new SQLFeatureNotSupportedException("Quoted identifiers not supported in dialect 1");
-        }
-        if (identifier.matches("^\".+\"$")) {
-            // We assume double quotes are already properly escaped within
-            return identifier;
-        }
-        return quoteStrategy.quoteObjectName(identifier);
+    public final String enquoteIdentifier(String identifier, boolean alwaysDelimit) throws SQLException {
+        return connection.enquoteIdentifier(identifier, alwaysDelimit);
     }
 
-    public boolean isSimpleIdentifier(String identifier) throws SQLException {
-        int len = identifier.length();
-        return len >= 1 && len <= connection.getMetaData().getMaxColumnNameLength()
-                && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches();
+    /**
+     * Returns whether {@code identifier} is a simple SQL identifier.
+     *
+     * @see FirebirdConnection#isSimpleIdentifier(String)
+     */
+    public final boolean isSimpleIdentifier(String identifier) throws SQLException {
+        return connection.isSimpleIdentifier(identifier);
     }
 
     @Override

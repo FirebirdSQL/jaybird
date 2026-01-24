@@ -68,12 +68,12 @@ class FBDatabaseMetaDataTest {
 
     private static Connection connection;
     private static final boolean supportsComment = getDefaultSupportInfo().supportsComment();
-    private static DatabaseMetaData dmd;
+    private static FirebirdDatabaseMetaData dmd;
 
     @BeforeAll
     static void setupConnection() throws SQLException {
         connection = getConnectionViaDriverManager();
-        dmd = connection.getMetaData();
+        dmd = (FirebirdDatabaseMetaData) connection.getMetaData();
     }
 
     @AfterAll
@@ -888,6 +888,25 @@ class FBDatabaseMetaDataTest {
             DatabaseMetaData md = connection.getMetaData();
             assertEquals(expectedIdentifierQuote, md.getIdentifierQuoteString());
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, value = {
+            "word,             expected",
+            "SELECT,           true",
+            "select,           true",
+            "NOT,              true",
+            "notareservedword, false",
+            // Two reserved words separated by space: not a reserved word
+            "select update,    false"
+    })
+    void isReservedWord(String word, boolean expected) throws Exception {
+        assertEquals(expected, dmd.isReservedWord(word), "Unexpected reserved word result for " + word);
+    }
+
+    @Test
+    void isReservedWord_null_throwsNPE() {
+        assertThrows(NullPointerException.class, () -> dmd.isReservedWord(null));
     }
 
     @SuppressWarnings("SameParameterValue")

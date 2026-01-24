@@ -102,6 +102,9 @@ public interface JaybirdErrorCodes {
     int jb_localTransactionActive   = 337248309;
     // gaps due to selective backporting
     int jb_invalidStringLength      = 337248330;
+    int jb_invalidIdentifierLength  = 337248350;
+    int jb_invalidIdentifierName    = 337248351;
+    int jb_noDelimitedIdentifiersInDialect1              = 337248352;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

@@ -44,7 +44,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import java.util.regex.Pattern;
 
+import static java.util.Objects.requireNonNull;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidIdentifierLength;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidIdentifierName;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_noDelimitedIdentifiersInDialect1;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_CONNECTION_CLOSED;
 
 /**
@@ -1275,6 +1280,65 @@ public class FBConnection implements FirebirdConnection {
     @Override
     public int getNetworkTimeout() throws SQLException {
         return getFbDatabase().getNetworkTimeout();
+    }
+
+    @Override
+    public final String enquoteLiteral(String val) throws SQLException {
+        if (getFbDatabase().getDatabaseDialect() == 1) {
+            return '"' + val.replace("\"", "\"\"") + '"';
+        }
+        return "'" + val.replace("'", "''") +  "'";
+    }
+
+    @Override
+    public final String enquoteNCharLiteral(String val) throws SQLException {
+        return enquoteLiteral(val);
+    }
+
+    // NOTE: This intentionally does not take case sensitivity into account
+    private static final Pattern SIMPLE_IDENTIFIER_PATTERN = Pattern.compile("\\p{Alpha}[\\p{Alnum}_$]*");
+
+    @Override
+    public final String enquoteIdentifier(String identifier, boolean alwaysDelimit) throws SQLException {
+        int len = identifier.length();
+        // See also comment in isSimpleIdentifier(String) regarding length check
+        if (len < 1 || len > getMetaData().getMaxColumnNameLength()) {
+            throw FbExceptionBuilder.forException(jb_invalidIdentifierLength).toSQLException();
+        }
+        if (!alwaysDelimit && isSimpleIdentifier(identifier)) {
+            return identifier;
+        }
+        QuoteStrategy quoteStrategy = getQuoteStrategy();
+        if (quoteStrategy == QuoteStrategy.NO_QUOTES /* dialect 1 */) {
+            throw FbExceptionBuilder.forException(jb_noDelimitedIdentifiersInDialect1).toSQLException();
+        }
+        if (identifier.matches("^\".+\"$")) {
+            // Delimited identifier: remove delimiter and unescape double quotes
+            identifier = identifier.substring(1, len - 1).replace("\"\"", "\"");
+        }
+        // If the identifier contains a null character, throw a SQLException
+        if (identifier.indexOf(0) != -1) {
+            throw FbExceptionBuilder.forException(jb_invalidIdentifierName).toSQLException();
+        }
+        // Delimit identifier and escape double quotes
+        return quoteStrategy.quoteObjectName(identifier);
+    }
+
+    @Override
+    public final boolean isSimpleIdentifier(String identifier) throws SQLException {
+        int len = identifier.length();
+        /* This length check can be incorrect for Firebird 3.0 and lower, if the identifier contains non-ASCII (limit is
+         * 31 characters UNICODE_FSS and 31 bytes).
+         * This length check can be incorrect for Firebird 4.0 and higher, if the identifier contains codepoints that
+         * require surrogate pairs.
+         * We accept those limitations. */
+        return len >= 1 && len <= getMetaData().getMaxColumnNameLength()
+                && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches()
+                && !isReservedWord(identifier);
+    }
+
+    private boolean isReservedWord(String word) throws SQLException {
+        return ((FirebirdDatabaseMetaData) getMetaData()).isReservedWord(word);
     }
 
     /**

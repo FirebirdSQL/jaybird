@@ -872,6 +872,7 @@ class FBStatementTest {
     @Test
     void testEnquoteLiteral() throws Exception {
         // Only testing dialect 3
+        // FBConnectionTest has more test cases
         try (FBStatement stmt = (FBStatement) con.createStatement()) {
             assertEquals("'no quotes'", stmt.enquoteLiteral("no quotes"), "No quotes");
             assertEquals("'with''quotes'", stmt.enquoteLiteral("with'quotes"), "With quotes");
@@ -881,6 +882,7 @@ class FBStatementTest {
     @Test
     void testIsSimpleIdentifier() throws Exception {
         // Only testing dialect 3
+        // FBConnectionTest has more test cases
         try (FBStatement stmt = (FBStatement) con.createStatement()) {
             assertTrue(stmt.isSimpleIdentifier("Simple$Identifier_"), "Simple$Identifier_");
             assertFalse(stmt.isSimpleIdentifier("1Simple$Identifier_"), "1Simple$Identifier_");
@@ -899,6 +901,7 @@ class FBStatementTest {
     @Test
     void testEnquoteIdentifier() throws Exception {
         // Only testing dialect 3
+        // FBConnectionTest has more test cases
         try (FBStatement stmt = (FBStatement) con.createStatement()) {
             assertEquals("simple$identifier_", stmt.enquoteIdentifier("simple$identifier_", false),
                     "simple, alwaysQuote:false");
@@ -1196,14 +1199,10 @@ class FBStatementTest {
         }
     }
 
-    private static String generateIdentifier(final int length) {
-        StringBuilder sb = new StringBuilder(length);
-        int tempLength = length;
-        while (tempLength-- > 0) {
-            sb.append('a');
-        }
-        assert sb.length() == length;
-        return sb.toString();
+    static String generateIdentifier(int length) {
+        char[] charArray = new char[length];
+        Arrays.fill(charArray, 'a');
+        return new String(charArray);
     }
 
     static Stream<String> scrollableCursorPropertyValues() {

@@ -44,6 +44,13 @@ The following has been changed or fixed since Jaybird 5.0.10:
 +
 Applications referencing this constant may need to be recompiled to function correctly with Jaybird 5.0.12 and higher.
 If you use Java 26 or higher, we recommend using `java.sql.Type.DECFLOAT` and `java.sql.JDBCType.DECFLOAT` instead.
+* JDBC 4.5 support: implemented methods `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier` on `FBConnection`, and added them to interface `FirebirdConnection` so for older Java versions (https://github.com/FirebirdSQL/jaybird/issues/908[#908])
++
+The methods of the same name in the `java.sql.Statement` implementations now call the methods on the connection.
+This results in two minor breaking changes:
++
+** Reserved words are no longer considered simple identifiers by `enquoteIdentifier` and `isSimpleIdentifier` and will be quoted (or -- for dialect 1 -- result in a `SQLFeatureNotSupportedException`)
+** Presence of the NUL character (U+0000) in an identifier passed to `enquoteIdentifier` will result in a `SQLSyntaxErrorException`
 
 [#jaybird-5-0-11-changelog]
 === Jaybird 5.0.11
@@ -436,11 +443,13 @@ Specifically affected are:
 At this time, Jaybird still uses its own constants in `JaybirdType.DECFLOAT` and `JaybirdTypeCodes.DECFLOAT` with value `-6001`.
 This value will be changed to match the JDBC specified value, and the constants deprecated, in a future maintenance release of Jaybird.
 +
-Addressed in Jaybird 6.0.5.
+Addressed in Jaybird 5.0.12.
 * Introduction of new methods on `java.sql.Connection` -- `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier`
 +
 The default implementation provided is not sufficient for Firebird, especially not when connecting to a dialect 1 database.
 For the time being, we recommend using the equivalent JDBC 4.3 methods (with the same name) on a `java.sql.Statement` instance of the connection.
++
+Addressed in Jaybird 5.0.12
 * The JDBC escape to selectively disable escape processing ([.nowrap]`++{\ ... \}++`) is not yet implemented.
 
 We plan to address these issues in Jaybird 5 and Jaybird 6 maintenance releases _after_ the release of Java 26 (tracked by https://github.com/FirebirdSQL/jaybird/issues/907[#907]).

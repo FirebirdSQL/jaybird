@@ -19,6 +19,8 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.jaybird.parser.FirebirdReservedWords;
+import org.firebirdsql.jdbc.metadata.FbMetadataConstants;
 
 import java.sql.SQLException;
 
@@ -95,12 +97,28 @@ enum FirebirdVersionMetaData {
         }
     };
 
-    private final int majorVersion;
-    private final int minorVersion;
+    private final int major;
+    private final int minor;
+    private final FirebirdReservedWords reservedWords;
 
-    FirebirdVersionMetaData(int majorVersion, int minorVersion) {
-        this.majorVersion = majorVersion;
-        this.minorVersion = minorVersion;
+    FirebirdVersionMetaData(int major, int minor) {
+        this.major = major;
+        this.minor = minor;
+        reservedWords = FirebirdReservedWords.of(major, minor);
+    }
+
+    /**
+     * @return Firebird major version
+     */
+    int major() {
+        return major;
+    }
+
+    /**
+     * @return Firebird minor version
+     */
+    int minor() {
+        return minor;
     }
 
     /**
@@ -116,9 +134,43 @@ enum FirebirdVersionMetaData {
      */
     abstract String getSqlKeywords();
 
+    /**
+     * Returns the default maximum identifier length.
+     * <p>
+     * NOTE: For Firebird 3.0 and earlier, the actual limit is 31 characters <b>and</b> 31 bytes {@code UNICODE_FSS},
+     * whichever is shorter! For Firebird 4.0 and higher, it is possible to limit the identifier length through
+     * configuration. The runtime configuration is ignored here, and the default maximum length is reported.
+     * </p>
+     *
+     * @return maximum identifier length.
+     */
+    int maxIdentifierLength() {
+        return FbMetadataConstants.OBJECT_NAME_LENGTH_BEFORE_V4_0;
+    }
+
+    /**
+     * Determines if {@code word} is a reserved word in Firebird.
+     * <p>
+     * Contrary to {@link #getSqlKeywords()}, which only returns reserved words not reserved by SQL:2003, this checks
+     * against all reserved words of this Firebird version.
+     * </p>
+     *
+     * @param word
+     *         word to check
+     * @return {@code true} if {@code word} is a reserved word, {@code false} if it's not reserved
+     * @since 5.0.12
+     */
+    final boolean isReservedWord(CharSequence word) {
+        return reservedWords.isReservedWord(word);
+    }
+
     static FirebirdVersionMetaData getVersionMetaDataFor(GDSServerVersion version) {
+        return of(version.getMajorVersion(), version.getMinorVersion());
+    }
+
+    static FirebirdVersionMetaData of(int major, int minor) {
         for (FirebirdVersionMetaData versionMetaData : values()) {
-            if (version.isEqualOrAbove(versionMetaData.majorVersion, versionMetaData.minorVersion)) {
+            if (major > versionMetaData.major || major == versionMetaData.major && minor >= versionMetaData.minor) {
                 return versionMetaData;
             }
         }
@@ -129,4 +181,5 @@ enum FirebirdVersionMetaData {
     static FirebirdVersionMetaData getVersionMetaDataFor(FirebirdConnection connection) throws SQLException {
         return getVersionMetaDataFor(connection.getFbDatabase().getServerVersion());
     }
+
 }
