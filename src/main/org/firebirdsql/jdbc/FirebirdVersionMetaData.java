@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.jaybird.parser.FirebirdReservedWords;
 import org.firebirdsql.jdbc.metadata.FbMetadataConstants;
 
 import java.sql.SQLException;
@@ -106,12 +107,28 @@ enum FirebirdVersionMetaData {
         }
     };
 
-    private final int majorVersion;
-    private final int minorVersion;
+    private final int major;
+    private final int minor;
+    private final FirebirdReservedWords reservedWords;
 
-    FirebirdVersionMetaData(int majorVersion, int minorVersion) {
-        this.majorVersion = majorVersion;
-        this.minorVersion = minorVersion;
+    FirebirdVersionMetaData(int major, int minor) {
+        this.major = major;
+        this.minor = minor;
+        reservedWords = FirebirdReservedWords.of(major, minor);
+    }
+
+    /**
+     * @return Firebird major version
+     */
+    int major() {
+        return major;
+    }
+
+    /**
+     * @return Firebird minor version
+     */
+    int minor() {
+        return minor;
     }
 
     /**
@@ -141,9 +158,29 @@ enum FirebirdVersionMetaData {
         return FbMetadataConstants.OBJECT_NAME_LENGTH_BEFORE_V4_0;
     }
 
+    /**
+     * Determines if {@code word} is a reserved word in Firebird.
+     * <p>
+     * Contrary to {@link #getSqlKeywords()}, which only returns reserved words not reserved by SQL:2003, this checks
+     * against all reserved words of this Firebird version.
+     * </p>
+     *
+     * @param word
+     *         word to check
+     * @return {@code true} if {@code word} is a reserved word, {@code false} if it's not reserved
+     * @since 6.0.5
+     */
+    final boolean isReservedWord(CharSequence word) {
+        return reservedWords.isReservedWord(word);
+    }
+
     static FirebirdVersionMetaData getVersionMetaDataFor(GDSServerVersion version) {
+        return of(version.getMajorVersion(), version.getMinorVersion());
+    }
+
+    static FirebirdVersionMetaData of(int major, int minor) {
         for (FirebirdVersionMetaData versionMetaData : values()) {
-            if (version.isEqualOrAbove(versionMetaData.majorVersion, versionMetaData.minorVersion)) {
+            if (major > versionMetaData.major || major == versionMetaData.major && minor >= versionMetaData.minor) {
                 return versionMetaData;
             }
         }
@@ -154,4 +191,5 @@ enum FirebirdVersionMetaData {
     static FirebirdVersionMetaData getVersionMetaDataFor(FirebirdConnection connection) throws SQLException {
         return getVersionMetaDataFor(connection.getFbDatabase().getServerVersion());
     }
+
 }

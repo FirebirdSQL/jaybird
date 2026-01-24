@@ -155,6 +155,9 @@ public interface JaybirdErrorCodes {
     int jb_socketFactoryClassNotFound                    = 337248347;
     int jb_socketFactoryConstructorNotFound              = 337248348;
     int jb_socketFactoryFailedToCreateSocket             = 337248349;
+    int jb_invalidIdentifierLength  = 337248350;
+    int jb_invalidIdentifierName    = 337248351;
+    int jb_noDelimitedIdentifiersInDialect1              = 337248352;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

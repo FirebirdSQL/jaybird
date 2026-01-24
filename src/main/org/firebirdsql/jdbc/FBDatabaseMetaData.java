@@ -31,6 +31,7 @@ import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serial;
 import java.nio.charset.StandardCharsets;
@@ -257,6 +258,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public String getSQLKeywords() throws SQLException {
         return versionMetaData.getSqlKeywords();
+    }
+
+    @Override
+    public boolean isReservedWord(@NonNull String word) {
+        return versionMetaData.isReservedWord(word);
     }
 
     /**

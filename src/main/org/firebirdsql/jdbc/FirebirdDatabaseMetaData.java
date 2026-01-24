@@ -25,6 +25,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.jspecify.annotations.NonNull;
+
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
@@ -136,5 +138,29 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @return the (default) maximum identifier length
      */
     int getMaxObjectNameLength() throws SQLException;
+
+    /**
+     * Returns whether {@code word} is a reserved word in Firebird.
+     * <p>
+     * This method may be inaccurate for unsupported Firebird versions. Jaybird uses internal lists of reserved words
+     * per version, and selects the closest matching version if a version is unknown. It does not use the
+     * {@code RDB$KEYWORDS} table.
+     * </p>
+     * <p>
+     * Contrary to {@link #getSQLKeywords()}, which only returns reserved words that are not also reserved in SQL:2003,
+     * this method checks against all Firebird reserved words. It will return {@code false} for SQL:2003 reserved words
+     * that are not reserved words in Firebird.
+     * </p>
+     *
+     * @param word
+     *         word to check against the reserved word list (case-insensitive)
+     * @return {@code true} if {@code word} is a reserved word, {@code false} otherwise
+     * @throws NullPointerException
+     *         if {@code word} is {@code null}
+     * @throws SQLException
+     *         for database access errors
+     * @since 6.0.5
+     */
+    boolean isReservedWord(@NonNull String word) throws SQLException;
 
 }

@@ -357,6 +357,45 @@ public abstract class AbstractStatement implements Statement, FirebirdStatement 
         }
     }
 
+    /**
+     * Returns a {@code String} enclosed in single quotes. Any occurrence of a single quote within the string will be
+     * replaced by two single quotes (for dialect 1, double quotes instead of single quotes).
+     *
+     * @see FirebirdConnection#enquoteLiteral(String)
+     */
+    @Override
+    public final String enquoteLiteral(String val)  throws SQLException {
+        return connection.enquoteLiteral(val);
+    }
+
+    /**
+     * @see #enquoteLiteral(String)
+     */
+    @Override
+    public final String enquoteNCharLiteral(String val)  throws SQLException {
+        return enquoteLiteral(val);
+    }
+
+    /**
+     * Returns a SQL identifier, appropriately delimited if needed.
+     *
+     * @see FirebirdConnection#enquoteIdentifier(String, boolean)
+     */
+    @Override
+    public final String enquoteIdentifier(String identifier, boolean alwaysDelimit) throws SQLException {
+        return connection.enquoteIdentifier(identifier, alwaysDelimit);
+    }
+
+    /**
+     * Returns whether {@code identifier} is a simple SQL identifier.
+     *
+     * @see FirebirdConnection#isSimpleIdentifier(String)
+     */
+    @Override
+    public final boolean isSimpleIdentifier(String identifier) throws SQLException {
+        return connection.isSimpleIdentifier(identifier);
+    }
+
     @Override
     public final int getLocalStatementId() {
         return localStatementId;

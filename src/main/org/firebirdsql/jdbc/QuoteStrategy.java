@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * Strategy for quoting object names and literals (or no quoting of object names in the case of dialect 1).
@@ -29,6 +30,7 @@ import org.firebirdsql.util.InternalApi;
  *
  * @since 2.2
  */
+@NullMarked
 @InternalApi
 public enum QuoteStrategy {
     /**
@@ -38,7 +40,7 @@ public enum QuoteStrategy {
      */
     DIALECT_1 {
         @Override
-        public StringBuilder appendQuoted(final String objectName, final StringBuilder sb) {
+        public StringBuilder appendQuoted(String objectName, StringBuilder sb) {
             return sb.append(objectName);
         }
 
@@ -49,8 +51,7 @@ public enum QuoteStrategy {
 
         @Override
         public StringBuilder appendLiteral(String value, StringBuilder sb) {
-            // Quoting literals in dialect 1 works as quoting object names in dialect 3
-            return DIALECT_3.appendQuoted(value, sb);
+            return appendWithQuoteEscaped('"', value, sb);
         }
     },
     /**
@@ -60,7 +61,7 @@ public enum QuoteStrategy {
      */
     DIALECT_3 {
         @Override
-        public StringBuilder appendQuoted(final String objectName, final StringBuilder sb) {
+        public StringBuilder appendQuoted(String objectName, StringBuilder sb) {
             return appendWithQuoteEscaped('"', objectName, sb);
         }
 
