@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.escape;
 
@@ -331,21 +331,31 @@ class FBEscapedParserTest {
                 "Unexpected end of string at parser state Q_LITERAL_START");
     }
 
-    @Test
-    void testQLiteralSpecials() throws Exception {
-        checkQLiteralSpecialsBalancedStartEnd('(', ')');
-        checkQLiteralSpecialsBalancedStartEnd(')', ')');
-        checkQLiteralSpecialsBalancedStartEnd('{', '}');
-        checkQLiteralSpecialsBalancedStartEnd('}', '}');
-        checkQLiteralSpecialsBalancedStartEnd('[', ']');
-        checkQLiteralSpecialsBalancedStartEnd(']', ']');
-        checkQLiteralSpecialsBalancedStartEnd('<', '>');
-        checkQLiteralSpecialsBalancedStartEnd('>', '>');
-    }
-
-    private void checkQLiteralSpecialsBalancedStartEnd(char start, char end) throws Exception {
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            start, end
+            (,     )
+            ),     )
+            {,     }
+            [,     ]
+            ],     ]
+            <,     >
+            >,     >
+            """)
+    void checkQLiteralSpecialsBalancedStartEnd(char start, char end) throws Exception {
         final String input = "q'" + start + " {fn EXP(2)} " + end + "'";
 
         assertEquals(input, toNative(input), "Unexpected output");
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "'{fn EXP(2)}'",
+            "q'{{fn EXP(2)}}'",
+            "\"{fn EXP(2)}\""
+    })
+    void escapesInLiteralsOrDelimitedIdentifiers_notAnEscape(String input) throws Exception {
+        assertEquals(input, toNative(input), "Unexpected output");
+    }
+
 }

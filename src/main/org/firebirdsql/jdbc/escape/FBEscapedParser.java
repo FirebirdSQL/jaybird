@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2001-2002 David Jencks
  SPDX-FileCopyrightText: Copyright 2002-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2003 Blas Rodriguez Somoza
- SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc.escape;
@@ -133,9 +133,9 @@ public final class FBEscapedParser {
             case INITIAL_STATE -> {
                 // Ignore leading whitespace
             }
-            case NORMAL_STATE, LITERAL_STATE,
-                    START_LINE_COMMENT, LINE_COMMENT, START_BLOCK_COMMENT, BLOCK_COMMENT, END_BLOCK_COMMENT,
-                    POSSIBLE_Q_LITERAL_ENTER -> buffer.append(currentChar);
+            case NORMAL_STATE, LITERAL_STATE, DELIMITED_IDENTIFIER,
+                 START_LINE_COMMENT, LINE_COMMENT, START_BLOCK_COMMENT, BLOCK_COMMENT, END_BLOCK_COMMENT,
+                 POSSIBLE_Q_LITERAL_ENTER -> buffer.append(currentChar);
             case ESCAPE_ENTER_STATE -> {
                 bufferStack.push(buffer);
                 buffer = new StringBuilder();
@@ -393,6 +393,7 @@ public final class FBEscapedParser {
             protected ParserState nextState(char inputChar) {
                 return switch (inputChar) {
                     case '\'' -> LITERAL_STATE;
+                    case '"' -> DELIMITED_IDENTIFIER;
                     case '{' -> ESCAPE_ENTER_STATE;
                     case '}' -> ESCAPE_EXIT_STATE;
                     case '-' -> START_LINE_COMMENT;
@@ -409,6 +410,15 @@ public final class FBEscapedParser {
             @Override
             protected ParserState nextState(char inputChar) {
                 return (inputChar == '\'') ? NORMAL_STATE : LITERAL_STATE;
+            }
+        },
+        /**
+         * Dialect 3 delimited identifier or dialect 1 literal text (text inside double quotes).
+         */
+        DELIMITED_IDENTIFIER {
+            @Override
+            protected ParserState nextState(char inputChar) {
+                return (inputChar == '"') ? NORMAL_STATE : DELIMITED_IDENTIFIER;
             }
         },
         /**
