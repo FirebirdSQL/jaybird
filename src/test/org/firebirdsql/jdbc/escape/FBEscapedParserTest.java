@@ -361,22 +361,31 @@ class FBEscapedParserTest {
                 "Unexpected end of string at parser state Q_LITERAL_START");
     }
 
-    @Test
-    void testQLiteralSpecials() throws Exception {
-        checkQLiteralSpecialsBalancedStartEnd('(', ')');
-        checkQLiteralSpecialsBalancedStartEnd(')', ')');
-        checkQLiteralSpecialsBalancedStartEnd('{', '}');
-        checkQLiteralSpecialsBalancedStartEnd('}', '}');
-        checkQLiteralSpecialsBalancedStartEnd('[', ']');
-        checkQLiteralSpecialsBalancedStartEnd(']', ']');
-        checkQLiteralSpecialsBalancedStartEnd('<', '>');
-        checkQLiteralSpecialsBalancedStartEnd('>', '>');
-    }
-
-    private void checkQLiteralSpecialsBalancedStartEnd(char start, char end) throws Exception {
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, value = {
+            "start, end",
+            "(,     )",
+            "),     )",
+            "{,     }",
+            "[,     ]",
+            "],     ]",
+            "<,     >",
+            ">,     >"
+    })
+    void checkQLiteralSpecialsBalancedStartEnd(char start, char end) throws Exception {
         final String input = "q'" + start + " {fn EXP(2)} " + end + "'";
 
-        String parseResult = FBEscapedParser.toNativeSql(input);
-        assertEquals(input, parseResult, "Unexpected output");
+        assertEquals(input, FBEscapedParser.toNativeSql(input), "Unexpected output");
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "'{fn EXP(2)}'",
+            "q'{{fn EXP(2)}}'",
+            "\"{fn EXP(2)}\""
+    })
+    void escapesInLiteralsOrDelimitedIdentifiers_notAnEscape(String input) throws Exception {
+        assertEquals(input, FBEscapedParser.toNativeSql(input), "Unexpected output");
+    }
+
 }

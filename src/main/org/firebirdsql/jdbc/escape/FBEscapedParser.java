@@ -120,6 +120,7 @@ public final class FBEscapedParser {
                 continue;
             case NORMAL_STATE:
             case LITERAL_STATE:
+            case DELIMITED_IDENTIFIER:
             case START_LINE_COMMENT:
             case LINE_COMMENT:
             case START_BLOCK_COMMENT:
@@ -415,6 +416,8 @@ public final class FBEscapedParser {
                 switch (inputChar) {
                 case '\'':
                     return LITERAL_STATE;
+                case '"':
+                    return DELIMITED_IDENTIFIER;
                 case '{':
                     return ESCAPE_ENTER_STATE;
                 case '}':
@@ -438,6 +441,15 @@ public final class FBEscapedParser {
             @Override
             protected ParserState nextState(char inputChar) {
                 return (inputChar == '\'') ? NORMAL_STATE : LITERAL_STATE;
+            }
+        },
+        /**
+         * Dialect 3 delimited identifier or dialect 1 literal text (text inside double quotes).
+         */
+        DELIMITED_IDENTIFIER {
+            @Override
+            protected ParserState nextState(char inputChar) {
+                return (inputChar == '"') ? NORMAL_STATE : DELIMITED_IDENTIFIER;
             }
         },
         /**
