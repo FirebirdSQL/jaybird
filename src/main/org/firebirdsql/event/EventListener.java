@@ -7,6 +7,7 @@ package org.firebirdsql.event;
  *
  * @author Gabriel Reid
  */
+@FunctionalInterface
 public interface EventListener {
 
     /**
