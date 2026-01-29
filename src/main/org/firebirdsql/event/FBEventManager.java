@@ -1,7 +1,7 @@
 /*
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
  SPDX-FileCopyrightText: Copyright 2006-2008 Roman Rokytskyy
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 */
@@ -19,6 +19,8 @@ import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jaybird.xca.FatalErrorHelper;
 import org.firebirdsql.jdbc.FirebirdConnection;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -32,6 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.WARNING;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An {@link org.firebirdsql.event.EventManager} implementation to listen for database events.
@@ -40,6 +43,7 @@ import static java.lang.System.Logger.Level.WARNING;
  * @author Mark Rotteveel
  * @author Vasiliy Yashkov
  */
+@NullMarked
 public class FBEventManager implements EventManager {
 
     private static final System.Logger log = System.getLogger(FBEventManager.class.getName());
@@ -47,15 +51,14 @@ public class FBEventManager implements EventManager {
     private final Lock lock = new ReentrantLock();
     private final LockCloseable unlock = lock::unlock;
     private final GDSType gdsType;
-    private FbDatabase fbDatabase;
+    private @Nullable FbDatabase fbDatabase;
     private final IConnectionProperties connectionProperties;
     private final EventManagerBehaviour eventManagerBehaviour;
     private volatile boolean connected = false;
     private final Map<String, Set<EventListener>> listenerMap = new HashMap<>();
     private final Map<String, GdsEventHandler> handlerMap = new HashMap<>();
     private final BlockingQueue<DatabaseEvent> eventQueue = new LinkedBlockingQueue<>();
-    private EventDispatcher eventDispatcher;
-    private Thread dispatchThread;
+    private @Nullable EventDispatcher eventDispatcher;
     private volatile long waitTimeout = 1000;
     private final DbListener dbListener = new DbListener();
 
@@ -78,8 +81,8 @@ public class FBEventManager implements EventManager {
      */
     private FBEventManager(Connection connection) throws SQLException {
         this.fbDatabase = connection.unwrap(FirebirdConnection.class).getFbDatabase();
-        gdsType = null;
         connectionProperties = fbDatabase.getConnectionProperties().asImmutable();
+        gdsType = GDSType.getType(connectionProperties.getType());
         eventManagerBehaviour = new ManagedEventManagerBehaviour();
         // NOTE In this implementation, we don't take into account pooled connections that might be closed while
         //  the FbDatabase instance remains in use. This means that at the moment, it is possible that the event manager
@@ -127,9 +130,7 @@ public class FBEventManager implements EventManager {
             connected = true;
 
             eventDispatcher = new EventDispatcher();
-            dispatchThread = new Thread(eventDispatcher);
-            dispatchThread.setDaemon(true);
-            dispatchThread.start();
+            eventDispatcher.start();
         }
     }
 
@@ -182,17 +183,13 @@ public class FBEventManager implements EventManager {
     private void terminateDispatcher() throws SQLException {
         EventDispatcher eventDispatcher = this.eventDispatcher;
         if (eventDispatcher != null) {
-            eventDispatcher.stop();
-            dispatchThread.interrupt();
-            // join the thread and wait until it dies
             try {
-                dispatchThread.join();
+                eventDispatcher.stopAndWait();
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
                throw new SQLException(ex);
             } finally {
                 this.eventDispatcher = null;
-                dispatchThread = null;
             }
         }
     }
@@ -327,9 +324,8 @@ public class FBEventManager implements EventManager {
 
     @Override
     public void removeEventListener(String eventName, EventListener listener) throws SQLException {
-        if (eventName == null || listener == null) {
-            throw new NullPointerException();
-        }
+        requireNonNull(eventName, "eventName");
+        requireNonNull(listener, "listener");
         try (LockCloseable ignored = withLock()) {
             Set<EventListener> listenerSet = listenerMap.get(eventName);
             if (listenerSet != null) {
@@ -349,9 +345,7 @@ public class FBEventManager implements EventManager {
 
     @Override
     public int waitForEvent(String eventName, final int timeout) throws InterruptedException, SQLException {
-        if (eventName == null) {
-            throw new NullPointerException();
-        }
+        requireNonNull(eventName, "eventName");
         if (!connected) {
             throw new IllegalStateException("Can't wait for events with disconnected EventManager");
         }
@@ -420,12 +414,14 @@ public class FBEventManager implements EventManager {
     }
 
     private void addDbListeners(FbDatabase database) {
+        //noinspection ConstantValue : null check for robustness
         if (database == null) return;
         database.addDatabaseListener(dbListener);
         database.addExceptionListener(dbListener);
     }
 
     private void removeDbListeners(FbDatabase database) {
+        //noinspection ConstantValue : null check for robustness
         if (database == null) return;
         database.removeExceptionListener(dbListener);
         database.removeDatabaseListener(dbListener);
@@ -439,7 +435,7 @@ public class FBEventManager implements EventManager {
      *
      * @return underlying {@link FbDatabase}
      */
-    FbDatabase getFbDatabase() {
+    @Nullable FbDatabase getFbDatabase() {
         return fbDatabase;
     }
 
@@ -465,8 +461,11 @@ public class FBEventManager implements EventManager {
 
         @Override
         public void disconnectDatabase() throws SQLException {
-            removeDbListeners(fbDatabase);
-            fbDatabase.close();
+            FbDatabase fbDatabase = FBEventManager.this.fbDatabase;
+            if (fbDatabase != null) {
+                removeDbListeners(fbDatabase);
+                fbDatabase.close();
+            }
         }
 
         @Override
@@ -480,7 +479,7 @@ public class FBEventManager implements EventManager {
 
         @Override
         public void handleErrorOccurred(Object source, SQLException exception) {
-            FbDatabase fbDatabase = FBEventManager.this.fbDatabase;
+            FbDatabase fbDatabase = getFbDatabase();
             if (fbDatabase == null || !fbDatabase.isAttached()) return;
 
             if (FatalErrorHelper.isBrokenConnection(exception)) {
@@ -575,19 +574,19 @@ public class FBEventManager implements EventManager {
         private volatile boolean cancelled = false;
 
         GdsEventHandler(String eventName) throws SQLException {
-            eventHandle = fbDatabase.createEventHandle(eventName, this);
+            eventHandle = requireNonNull(fbDatabase, "fbDatabase").createEventHandle(eventName, this);
         }
 
         void register() throws SQLException {
             if (cancelled) {
                 throw new IllegalStateException("Trying to register a cancelled event handler");
             }
-            fbDatabase.queueEvent(eventHandle);
+            requireNonNull(fbDatabase, "fbDatabase").queueEvent(eventHandle);
         }
 
         void unregister() throws SQLException {
             if (cancelled) return;
-            fbDatabase.cancelEvent(eventHandle);
+            requireNonNull(fbDatabase, "fbDatabase").cancelEvent(eventHandle);
             cancelled = true;
         }
 
@@ -597,7 +596,7 @@ public class FBEventManager implements EventManager {
                 return;
             }
             try {
-                fbDatabase.countEvents(eventHandle);
+                requireNonNull(fbDatabase, "fbDatabase").countEvents(eventHandle);
             } catch (SQLException e) {
                 log.log(WARNING, "Exception processing event counts; see debug level for stacktrace");
                 log.log(DEBUG, "Exception processing event counts", e);
@@ -620,10 +619,57 @@ public class FBEventManager implements EventManager {
 
     final class EventDispatcher implements Runnable {
 
-        private volatile boolean running = true;
+        private @Nullable Thread thread;
+        private volatile boolean running;
 
+        /**
+         * Resets the running state if the dispatcher was previously stopped, and starts a new thread for the event
+         * dispatcher.
+         *
+         * @throws IllegalStateException
+         *         if this dispatcher already has a thread, and that thread is still alive
+         * @see #stop()
+         * @see #stopAndWait()
+         * @since 7
+         */
+        void start() {
+            synchronized (this) {
+                if (thread != null && thread.isAlive()) {
+                    throw new IllegalStateException("EventDispatcher is already running");
+                }
+                var thread = this.thread = new Thread(this);
+                thread.setDaemon(true);
+                running = true;
+                thread.start();
+            }
+        }
+
+        /**
+         * Stops the event dispatcher.
+         *
+         * @see #stopAndWait()
+         */
         void stop() {
             running = false;
+        }
+
+        /**
+         * Stops the event dispatcher, interrupts the dispatcher thread, and waits for it to end.
+         *
+         * @throws InterruptedException
+         *         if the call to {@link Thread#join()} throws
+         * @since 7
+         */
+        void stopAndWait() throws InterruptedException {
+            stop();
+            Thread thread;
+            synchronized (this) {
+                thread = this.thread;
+            }
+            if (thread != null) {
+                thread.interrupt();
+                thread.join();
+            }
         }
 
         @Override
@@ -642,11 +688,9 @@ public class FBEventManager implements EventManager {
 
         private void notify(DatabaseEvent event) {
             try (LockCloseable ignored = withLock()) {
-                Set<EventListener> listenerSet = listenerMap.get(event.getEventName());
-                if (listenerSet != null) {
-                    for (EventListener listener : listenerSet) {
-                        listener.eventOccurred(event);
-                    }
+                Set<EventListener> listenerSet = listenerMap.getOrDefault(event.getEventName(), Set.of());
+                for (EventListener listener : listenerSet) {
+                    listener.eventOccurred(event);
                 }
             }
         }

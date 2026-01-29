@@ -1,11 +1,13 @@
 // SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
-// SPDX-FileCopyrightText: Copyright 2011-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.event;
 
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -16,6 +18,7 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  */
 @SuppressWarnings("unused")
+@NullMarked
 public interface EventManager extends AttachmentProperties, AutoCloseable {
 
     /**
@@ -67,7 +70,7 @@ public interface EventManager extends AttachmentProperties, AutoCloseable {
      * @return database name
      * @since 5
      */
-    String getDatabaseName();
+    @Nullable String getDatabaseName();
 
     /**
      * Set the database name.

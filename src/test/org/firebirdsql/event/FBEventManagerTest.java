@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
 // SPDX-FileCopyrightText: Copyright 2006-2008 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.event;
 
@@ -381,11 +381,13 @@ class FBEventManagerTest {
         setupDefaultEventManager();
         FbDatabase db = ((FBEventManager) eventManager).getFbDatabase();
 
+        assertNotNull(db, "expected non-null FbDatabase");
         assertTrue(eventManager.isConnected(), "expected connected event manager");
 
         db.close();
 
         assertFalse(eventManager.isConnected(), "expected disconnected event manager");
+        assertNull(((FBEventManager) eventManager).getFbDatabase(), "expected null FbDatabase after close");
     }
 
     private class EventWait implements Callable<Integer> {
