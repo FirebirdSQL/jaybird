@@ -22,6 +22,7 @@ import org.firebirdsql.gds.ng.wire.BatchCompletionResponse;
 import org.firebirdsql.gds.ng.wire.DeferredAction;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.version13.V13Statement;
+import org.firebirdsql.jaybird.util.CollectionUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -207,7 +208,7 @@ public class V16Statement extends V13Statement {
         if (blobPositions.length == 0) return;
         FbWireDatabase db = getDatabase();
         // Given we register blobs under their own id, we can only register them once, use a Set to track this
-        var blobsRegistered = new HashSet<>((int) ((rowValues.size() * blobPositions.length) / 0.75f + 1));
+        var blobsRegistered = new HashSet<>(CollectionUtils.mapCapacity(rowValues.size() * blobPositions.length));
         for (RowValue rowValue : rowValues) {
             for (int position : blobPositions) {
                 byte[] fieldData = rowValue.getFieldData(position);

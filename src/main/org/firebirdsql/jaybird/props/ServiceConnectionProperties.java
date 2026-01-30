@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2020-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jaybird.props;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Properties for services.
@@ -62,7 +64,7 @@ public interface ServiceConnectionProperties extends AttachmentProperties {
      * @param serviceName
      *         service name
      */
-    default void setServiceName(String serviceName) {
+    default void setServiceName(@Nullable String serviceName) {
         setProperty(PropertyNames.serviceName, serviceName);
     }
 
@@ -72,7 +74,7 @@ public interface ServiceConnectionProperties extends AttachmentProperties {
      * @return expected database
      * @see #setExpectedDb(String)
      */
-    default String getExpectedDb() {
+    default @Nullable String getExpectedDb() {
         return getProperty(PropertyNames.expectedDb);
     }
 
@@ -90,7 +92,7 @@ public interface ServiceConnectionProperties extends AttachmentProperties {
      * @param expectedDb
      *         Expected database
      */
-    default void setExpectedDb(String expectedDb) {
+    default void setExpectedDb(@Nullable String expectedDb) {
         setProperty(PropertyNames.expectedDb, expectedDb);
     }
 }

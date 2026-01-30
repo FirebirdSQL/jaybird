@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2020-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jaybird.props;
 
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 
@@ -25,7 +26,7 @@ public interface BaseProperties {
      *         Property name (not {@code null} or empty)
      * @return Value of the property, or {@code null} when not set or not a known property
      */
-    String getProperty(String name);
+    @Nullable String getProperty(String name);
 
     /**
      * Retrieves a string property value by name, with a default if it's {@code null}.
@@ -55,7 +56,7 @@ public interface BaseProperties {
      *         When the specified property is an {@code int} or {@code boolean} property and the value is not
      *         {@code null} and not a valid {@code int} or {@code boolean}
      */
-    void setProperty(String name, String value);
+    void setProperty(String name, @Nullable String value);
 
     /**
      * Retrieves an {@code int} property value by name.
@@ -73,7 +74,7 @@ public interface BaseProperties {
      * @throws IllegalArgumentException
      *         (optional) If the specified property is not an {@code int} property
      */
-    Integer getIntProperty(String name);
+    @Nullable Integer getIntProperty(String name);
 
     /**
      * Retrieves an {@code int} property value by name, with a default if it's {@code null}.
@@ -104,7 +105,7 @@ public interface BaseProperties {
      * @throws IllegalArgumentException
      *         If the specified property is a {@code boolean} property
      */
-    void setIntProperty(String name, Integer value);
+    void setIntProperty(String name, @Nullable Integer value);
 
     /**
      * Retrieves a {@code boolean} property value by name.
@@ -116,12 +117,12 @@ public interface BaseProperties {
      *
      * @param name
      *         Property name (not {@code null} or empty)
-     * @return Integer with value of the property, or {@code null} when not set
+     * @return Boolean with value of the property, or {@code null} when not set
      * @throws IllegalArgumentException
      *         If the property value is not {@code null} and cannot be converted to a boolean ({@code true} or empty
      *         string, {@code false}), (optional) if the specified property is not a {@code boolean} property
      */
-    Boolean getBooleanProperty(String name);
+    @Nullable Boolean getBooleanProperty(String name);
 
     /**
      * Retrieves a {@code boolean} property value by name, with a default if it's {@code null}.
@@ -152,7 +153,7 @@ public interface BaseProperties {
      * @throws IllegalArgumentException
      *         If the specified property is an {@code int} property
      */
-    void setBooleanProperty(String name, Boolean value);
+    void setBooleanProperty(String name, @Nullable Boolean value);
 
     /**
      * An unmodifiable view on the connection properties held by this BaseProperties implementation.

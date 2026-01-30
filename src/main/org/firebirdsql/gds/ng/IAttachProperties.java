@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2021 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2015 Hakime Nakagami
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
@@ -6,6 +6,8 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import static java.util.Objects.requireNonNull;
 
@@ -15,6 +17,7 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public interface IAttachProperties<T extends IAttachProperties<T>> extends AttachmentProperties {
 
     int DEFAULT_SOCKET_BUFFER_SIZE = PropertyConstants.BUFFER_SIZE_NOT_SET;
@@ -25,7 +28,7 @@ public interface IAttachProperties<T extends IAttachProperties<T>> extends Attac
      * @return The name of the object to attach to (either a database or service name).
      * @see #setAttachObjectName(String) 
      */
-    default String getAttachObjectName() {
+    default @Nullable String getAttachObjectName() {
         return getProperty(PropertyNames.attachObjectName);
     }
 
@@ -39,7 +42,7 @@ public interface IAttachProperties<T extends IAttachProperties<T>> extends Attac
      *
      * @param attachObjectName Database attach object name
      */
-    default void setAttachObjectName(String attachObjectName) {
+    default void setAttachObjectName(@Nullable String attachObjectName) {
         setProperty(PropertyNames.attachObjectName, attachObjectName);
     }
 

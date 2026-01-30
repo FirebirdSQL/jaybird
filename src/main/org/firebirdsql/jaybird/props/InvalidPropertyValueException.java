@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jaybird.props;
 
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.jspecify.annotations.NullUnmarked;
 
 import java.io.Serial;
 import java.sql.SQLException;
@@ -18,6 +19,7 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidConnectionProperty
  * @author Mark Rotteveel
  * @since 5
  */
+@NullUnmarked
 public class InvalidPropertyValueException extends IllegalArgumentException {
 
     @Serial

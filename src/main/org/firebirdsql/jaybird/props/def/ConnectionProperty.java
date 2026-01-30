@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2020-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jaybird.props.def;
 
 import org.firebirdsql.jaybird.props.DpbType;
 import org.firebirdsql.jaybird.props.InvalidPropertyValueException;
 import org.firebirdsql.jaybird.util.StringUtils;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -141,12 +142,12 @@ public final class ConnectionProperty {
      * @throws IllegalArgumentException
      *         When {@code value} is not a valid value for this property
      */
-    public <T> T validate(T value) {
+    public <T extends @Nullable Object> T validate(T value) {
         defaultValidate(value);
         return value;
     }
 
-    private void defaultValidate(Object value) {
+    private void defaultValidate(@Nullable Object value) {
         if (value == null || choices.isEmpty()) {
             return;
         }
@@ -217,7 +218,7 @@ public final class ConnectionProperty {
      * </p>
      */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         return this == o || o instanceof ConnectionProperty that && name.equals(that.name);
     }
 
@@ -242,7 +243,7 @@ public final class ConnectionProperty {
      *         Other connection property object
      * @return {@code true} if this is the same object or all fields have the same value, {@code false} otherwise
      */
-    public boolean isIdenticalTo(ConnectionProperty other) {
+    public boolean isIdenticalTo(@Nullable ConnectionProperty other) {
         if (this == other) return true;
         if (other == null) return false;
         return name.equals(other.name)
@@ -255,16 +256,17 @@ public final class ConnectionProperty {
     }
 
     /**
-     * Normalizes values by trimming whitespace, removing {@code null}, empty or blank values.
+     * Normalises values by trimming whitespace, removing {@code null}, empty or blank values.
      *
      * @param values
-     *         Aliases to normalize (can be {@code null})
+     *         Aliases to normalise (can be {@code null})
      * @return immutable list with zero or more values; never {@code null}
      */
-    private static List<String> normalizeValues(List<String> values) {
+    private static List<String> normalizeValues(@Nullable List<String> values) {
         if (values == null || values.isEmpty()) {
             return emptyList();
         }
+        //noinspection NullableProblems : We exclude null
         List<String> normalizedValues = values.stream()
                 .map(StringUtils::trimToNull)
                 .filter(Objects::nonNull)
@@ -272,12 +274,21 @@ public final class ConnectionProperty {
         return normalizedValues.isEmpty() ? emptyList() : normalizedValues;
     }
 
+    /**
+     * Builder for a {@link ConnectionProperty}.
+     * <p>
+     * Builder methods may silently accept {@code null} as a value even though they are marked as not nullable. Actual
+     * validation is deferred until {@link #build()} is called. Similarly, some collection or varargs methods may accept
+     * {@code null}, or {@code null} in the collection argument or varargs list, which are then filtered out on
+     * {@link #build()}.
+     * </p>
+     */
     public static final class Builder {
 
-        private String name;
-        private List<String> aliases;
+        private @Nullable String name;
+        private @Nullable List<String> aliases;
         private ConnectionPropertyType type = ConnectionPropertyType.STRING;
-        private List<String> choices;
+        private @Nullable List<String> choices;
         private DpbType pbType = DpbType.NONE;
         private int dpbItem = NO_DPB_ITEM;
         private int spbItem = NO_SPB_ITEM;
@@ -290,6 +301,7 @@ public final class ConnectionProperty {
          * Primary name of the property; required.
          */
         public Builder name(String name) {
+            // null-check is performed in build() (specifically, in constructor of ConnectionProperty)
             this.name = name;
             return this;
         }
@@ -298,6 +310,8 @@ public final class ConnectionProperty {
          * Aliases or secondary names of the property; optional.
          */
         public Builder aliases(Collection<String> aliases) {
+            // null aliases are excluded in build() (specifically, in normalizeValues of ConnectionProperty)
+            //noinspection ConstantValue : null-check for robustness
             this.aliases = aliases != null ? new ArrayList<>(aliases) : null;
             return this;
         }
@@ -306,6 +320,8 @@ public final class ConnectionProperty {
          * Aliases or secondary names of the property; optional.
          */
         public Builder aliases(String... aliases) {
+            // null aliases are excluded in build() (specifically, in normalizeValues of ConnectionProperty)
+            //noinspection ConstantValue : null-check for robustness
             return aliases(aliases != null ? Arrays.asList(aliases) : null);
         }
 
@@ -314,6 +330,7 @@ public final class ConnectionProperty {
          */
         public Builder aliases(String alias) {
             aliases = new ArrayList<>(1);
+            // null aliases are excluded in build() (specifically, in normalizeValues of ConnectionProperty)
             aliases.add(alias);
             return this;
         }
@@ -322,6 +339,7 @@ public final class ConnectionProperty {
          * Type of the property; required; defaults to {@link ConnectionPropertyType#STRING}.
          */
         public Builder type(ConnectionPropertyType type) {
+            // null-check is performed in build() (specifically, in constructor of ConnectionProperty)
             this.type = type;
             // NOTE: Only changing when pbType is not NONE, because that means it was explicitly forced to NONE
             if ((dpbItem != NO_DPB_ITEM || spbItem != NO_SPB_ITEM) && pbType != DpbType.NONE) {
@@ -334,6 +352,8 @@ public final class ConnectionProperty {
          * Possible values of the property (case-insensitive); optional.
          */
         public Builder choices(Collection<String> choices) {
+            // null choices are excluded in build() (specifically, in normalizeValues of ConnectionProperty)
+            //noinspection ConstantValue : null-check for robustness
             this.choices = choices != null ? new ArrayList<>(choices) : null;
             return this;
         }
@@ -342,6 +362,8 @@ public final class ConnectionProperty {
          * Possible values of the property (case-insensitive); optional.
          */
         public Builder choices(String... choices) {
+            // null choices are excluded in build() (specifically, in normalizeValues of ConnectionProperty)
+            //noinspection ConstantValue : null-check for robustness
             return choices(choices != null ? Arrays.asList(choices) : null);
         }
 
@@ -361,6 +383,7 @@ public final class ConnectionProperty {
             } else if (dpbItem == NO_DPB_ITEM && spbItem == NO_SPB_ITEM) {
                 throw new IllegalArgumentException("Usage error, set pbType after setting dpbItem or spbItem");
             }
+            // null-check is performed in build() (specifically, in constructor of ConnectionProperty)
             this.pbType = pbType;
             return this;
         }

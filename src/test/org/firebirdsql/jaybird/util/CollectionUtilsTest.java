@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.util;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
@@ -127,6 +128,18 @@ class CollectionUtilsTest {
     private static <T> Function<Collection<? extends T>, List<T>> factory(
             Function<Collection<? extends T>, List<T>> f) {
         return f;
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            mapSize, expectedCapacity
+            0,       1
+            1,       2
+            16,      22
+            32,      43
+            """)
+    void mapCapacity(int mapSize, int expectedCapacity) {
+        assertEquals(expectedCapacity, CollectionUtils.mapCapacity(mapSize));
     }
 
 }

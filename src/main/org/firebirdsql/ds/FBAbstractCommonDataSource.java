@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2011-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.ds;
 
@@ -6,6 +6,8 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.FBConnectionProperties;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import javax.naming.BinaryRefAddr;
 import javax.naming.NamingException;
@@ -15,18 +17,21 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Abstract class for properties and behaviour common to DataSources, XADataSources and ConnectionPoolDataSources
  *
  * @author Mark Rotteveel
  * @since 2.2
  */
+@NullMarked
 public abstract class FBAbstractCommonDataSource extends AbstractConnectionPropertiesDataSource {
 
     protected static final String REF_DESCRIPTION = "description";
     protected static final String REF_PROPERTIES = "properties";
 
-    private String description;
+    private @Nullable String description;
     private final Lock lock = new ReentrantLock();
     private final LockCloseable unlock = lock::unlock;
     private FBConnectionProperties connectionProperties = new FBConnectionProperties();
@@ -48,16 +53,16 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
      */
     protected abstract void checkNotStarted() throws IllegalStateException;
 
-    public String getDescription() {
+    public @Nullable String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(@Nullable String description) {
         this.description = description;
     }
 
     @Override
-    public TransactionParameterBuffer getTransactionParameters(int isolation) {
+    public @Nullable TransactionParameterBuffer getTransactionParameters(int isolation) {
         try (LockCloseable ignored = withLock()) {
             return connectionProperties.getTransactionParameters(isolation);
         }
@@ -91,14 +96,14 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
     }
 
     @Override
-    public String getProperty(String name) {
+    public @Nullable String getProperty(String name) {
         try (LockCloseable ignored = withLock()) {
             return connectionProperties.getProperty(name);
         }
     }
 
     @Override
-    public void setProperty(String name, String value) {
+    public void setProperty(String name, @Nullable String value) {
         try (LockCloseable ignored = withLock()) {
             checkNotStarted();
             connectionProperties.setProperty(name, value);
@@ -106,14 +111,14 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
     }
 
     @Override
-    public Integer getIntProperty(String name) {
+    public @Nullable Integer getIntProperty(String name) {
         try (LockCloseable ignored = withLock()) {
             return connectionProperties.getIntProperty(name);
         }
     }
 
     @Override
-    public void setIntProperty(String name, Integer value) {
+    public void setIntProperty(String name, @Nullable Integer value) {
         try (LockCloseable ignored = withLock()) {
             checkNotStarted();
             connectionProperties.setIntProperty(name, value);
@@ -121,14 +126,14 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
     }
 
     @Override
-    public Boolean getBooleanProperty(String name) {
+    public @Nullable Boolean getBooleanProperty(String name) {
         try (LockCloseable ignored = withLock()) {
             return connectionProperties.getBooleanProperty(name);
         }
     }
 
     @Override
-    public void setBooleanProperty(String name, Boolean value) {
+    public void setBooleanProperty(String name, @Nullable Boolean value) {
         try (LockCloseable ignored = withLock()) {
             checkNotStarted();
             connectionProperties.setBooleanProperty(name, value);
@@ -143,12 +148,10 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
     }
 
     protected final void setConnectionProperties(FBConnectionProperties connectionProperties) {
-        if (connectionProperties == null) {
-            throw new NullPointerException("null value not allowed for connectionProperties");
-        }
         try (LockCloseable ignored = withLock()) {
             checkNotStarted();
-            this.connectionProperties = connectionProperties;
+            this.connectionProperties =
+                    requireNonNull(connectionProperties, "null value not allowed for connectionProperties");
         }
     }
 

@@ -4,7 +4,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPFX-FileCopyrightText: Copyright 2007 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2023 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.ds;
@@ -17,6 +17,8 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDataSource;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import javax.naming.*;
 import javax.sql.DataSource;
@@ -43,6 +45,7 @@ import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
  * @author Roman Rokytskyy
  * @author David Jencks
  */
+@NullMarked
 public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
         implements DataSource, Serializable, Referenceable {
 
@@ -53,9 +56,9 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
 
     protected final FBManagedConnectionFactory mcf;
     private final ReadWriteLock dsLock = new ReentrantReadWriteLock();
-    protected transient FBDataSource ds;
+    protected transient @Nullable FBDataSource ds;
 
-    protected String description;
+    protected @Nullable String description;
 
     /**
      * Creates an instance using the default GDS type (PURE_JAVA).
@@ -86,7 +89,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
     }
 
     @Override
-    public TransactionParameterBuffer getTransactionParameters(int isolation) {
+    public @Nullable TransactionParameterBuffer getTransactionParameters(int isolation) {
         return mcf.getTransactionParameters(isolation);
     }
 
@@ -101,32 +104,32 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
     }
 
     @Override
-    public String getProperty(String name) {
+    public @Nullable String getProperty(String name) {
         return mcf.getProperty(name);
     }
 
     @Override
-    public void setProperty(String name, String value) {
+    public void setProperty(String name, @Nullable String value) {
         mcf.setProperty(name, value);
     }
 
     @Override
-    public Integer getIntProperty(String name) {
+    public @Nullable Integer getIntProperty(String name) {
         return mcf.getIntProperty(name);
     }
 
     @Override
-    public void setIntProperty(String name, Integer value) {
+    public void setIntProperty(String name, @Nullable Integer value) {
         mcf.setIntProperty(name, value);
     }
 
     @Override
-    public Boolean getBooleanProperty(String name) {
+    public @Nullable Boolean getBooleanProperty(String name) {
         return mcf.getBooleanProperty(name);
     }
 
     @Override
-    public void setBooleanProperty(String name, Boolean value) {
+    public void setBooleanProperty(String name, @Nullable Boolean value) {
         mcf.setBooleanProperty(name, value);
     }
 
@@ -168,7 +171,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
      *         if something went wrong.
      */
     @Override
-    public Connection getConnection(String username, String password) throws SQLException {
+    public Connection getConnection(@Nullable String username, @Nullable String password) throws SQLException {
         return getDataSource().getConnection(username, password);
     }
 
@@ -177,7 +180,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
      *
      * @return description of this datasource.
      */
-    public String getDescription() {
+    public @Nullable String getDescription() {
         return description;
     }
 
@@ -187,7 +190,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
      * @param description
      *         description of this datasource.
      */
-    public void setDescription(String description) {
+    public void setDescription(@Nullable String description) {
         this.description = description;
     }
 
@@ -229,12 +232,14 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        //noinspection ConstantValue : null check for robustness
         return iface != null && iface.isAssignableFrom(getClass());
     }
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
+            //noinspection ConstantValue : null check for robustness
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unableToUnwrap)
                     .messageParameter(iface != null ? iface.getName() : "(null)")
                     .toSQLException();

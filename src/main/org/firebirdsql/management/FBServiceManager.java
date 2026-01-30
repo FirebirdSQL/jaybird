@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2004-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004-2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.management;
@@ -16,6 +16,8 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -36,12 +38,13 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
+@NullMarked
 public class FBServiceManager implements ServiceManager {
 
     private final IServiceProperties serviceProperties = new FbServiceProperties();
     private final FbDatabaseFactory dbFactory;
-    private String database;
-    private OutputStream logger;
+    private @Nullable String database;
+    private @Nullable OutputStream logger;
 
     public static final int BUFFER_SIZE = 1024; //1K
 
@@ -77,7 +80,7 @@ public class FBServiceManager implements ServiceManager {
     }
 
     @Override
-    public final void setType(String type) {
+    public final void setType(@Nullable String type) {
         throw new IllegalStateException("Type must be specified on construction");
     }
 
@@ -85,42 +88,42 @@ public class FBServiceManager implements ServiceManager {
     //  service manager can be introspected as a JavaBean (default methods are not returned by the introspector)
 
     @Override
-    public void setCharSet(String charSet) {
+    public void setCharSet(@Nullable String charSet) {
         ServiceManager.super.setCharSet(charSet);
     }
 
     @Override
-    public String getCharSet() {
+    public @Nullable String getCharSet() {
         return ServiceManager.super.getCharSet();
     }
 
     @Override
-    public void setUser(String user) {
+    public void setUser(@Nullable String user) {
         ServiceManager.super.setUser(user);
     }
 
     @Override
-    public String getUser() {
+    public @Nullable String getUser() {
         return ServiceManager.super.getUser();
     }
 
     @Override
-    public void setPassword(String password) {
+    public void setPassword(@Nullable String password) {
         ServiceManager.super.setPassword(password);
     }
 
     @Override
-    public String getPassword() {
+    public @Nullable String getPassword() {
         return ServiceManager.super.getPassword();
     }
 
     @Override
-    public String getServerName() {
+    public @Nullable String getServerName() {
         return ServiceManager.super.getServerName();
     }
 
     @Override
-    public void setServerName(String serverName) {
+    public void setServerName(@Nullable String serverName) {
         ServiceManager.super.setServerName(serverName);
     }
 
@@ -140,7 +143,7 @@ public class FBServiceManager implements ServiceManager {
     }
 
     @Override
-    public void setServiceName(String serviceName) {
+    public void setServiceName(@Nullable String serviceName) {
         ServiceManager.super.setServiceName(serviceName);
     }
 
@@ -152,29 +155,34 @@ public class FBServiceManager implements ServiceManager {
      * </p>
      */
     @Override
-    public void setExpectedDb(String expectedDb) {
+    public void setExpectedDb(@Nullable String expectedDb) {
         ServiceManager.super.setExpectedDb(expectedDb);
     }
 
     @Override
-    public String getExpectedDb() {
+    public @Nullable String getExpectedDb() {
         return ServiceManager.super.getExpectedDb();
     }
 
     @Override
-    public void setDatabase(String database) {
+    public void setDatabase(@Nullable String database) {
         this.database = database;
         setExpectedDb(database);
     }
 
     @Override
-    public String getDatabase() {
+    public @Nullable String getDatabase() {
         return database;
     }
 
     @Override
     public String getWireCrypt() {
         return ServiceManager.super.getWireCrypt();
+    }
+
+    @Override
+    public void setWireCrypt(@Nullable String wireCrypt) {
+        ServiceManager.super.setWireCrypt(wireCrypt);
     }
 
     @Override
@@ -188,12 +196,12 @@ public class FBServiceManager implements ServiceManager {
     }
 
     @Override
-    public String getDbCryptConfig() {
+    public @Nullable String getDbCryptConfig() {
         return ServiceManager.super.getDbCryptConfig();
     }
 
     @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
+    public void setDbCryptConfig(@Nullable String dbCryptConfig) {
         ServiceManager.super.setDbCryptConfig(dbCryptConfig);
     }
 
@@ -203,7 +211,7 @@ public class FBServiceManager implements ServiceManager {
     }
 
     @Override
-    public void setAuthPlugins(String authPlugins) {
+    public void setAuthPlugins(@Nullable String authPlugins) {
         ServiceManager.super.setAuthPlugins(authPlugins);
     }
 
@@ -218,12 +226,12 @@ public class FBServiceManager implements ServiceManager {
     }
 
     @Override
-    public String getProperty(String name) {
+    public @Nullable String getProperty(String name) {
         return serviceProperties.getProperty(name);
     }
 
     @Override
-    public void setProperty(String name, String value) {
+    public void setProperty(String name, @Nullable String value) {
         if (PropertyNames.type.equals(name)) {
             // Triggers exception
             setType(value);
@@ -232,22 +240,22 @@ public class FBServiceManager implements ServiceManager {
     }
 
     @Override
-    public Integer getIntProperty(String name) {
+    public @Nullable Integer getIntProperty(String name) {
         return serviceProperties.getIntProperty(name);
     }
 
     @Override
-    public void setIntProperty(String name, Integer value) {
+    public void setIntProperty(String name, @Nullable Integer value) {
         serviceProperties.setIntProperty(name, value);
     }
 
     @Override
-    public Boolean getBooleanProperty(String name) {
+    public @Nullable Boolean getBooleanProperty(String name) {
         return serviceProperties.getBooleanProperty(name);
     }
 
     @Override
-    public void setBooleanProperty(String name, Boolean value) {
+    public void setBooleanProperty(String name, @Nullable Boolean value) {
         serviceProperties.setBooleanProperty(name, value);
     }
 
@@ -259,7 +267,7 @@ public class FBServiceManager implements ServiceManager {
     /**
      * @return Returns the out.
      */
-    public synchronized OutputStream getLogger() {
+    public synchronized @Nullable OutputStream getLogger() {
         return logger;
     }
 
@@ -267,7 +275,7 @@ public class FBServiceManager implements ServiceManager {
      * @param logger
      *         The out to set.
      */
-    public synchronized void setLogger(OutputStream logger) {
+    public synchronized void setLogger(@Nullable OutputStream logger) {
         this.logger = logger;
     }
 

@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.props.internal;
 
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -33,6 +34,7 @@ public final class ConnectionPropertyRegistry {
 
     // default access for test purposes
     ConnectionPropertyRegistry(Map<String, ConnectionProperty> connectionPropertiesMap) {
+        // TODO Revisit this after we have more robust null-marking in place
         // Though the default implementation doesn't have null keys or values, there is no such requirement on the API
         //noinspection Java9CollectionFactory
         this.connectionPropertiesMap = unmodifiableMap(new HashMap<>(connectionPropertiesMap));
@@ -45,7 +47,7 @@ public final class ConnectionPropertyRegistry {
      *         Name or alias of the property
      * @return The property, or {@code null} if there is no property with this name.
      */
-    public ConnectionProperty getByName(String name) {
+    public @Nullable ConnectionProperty getByName(String name) {
         return connectionPropertiesMap.get(name);
     }
 

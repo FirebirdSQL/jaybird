@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2020-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jaybird.props;
 
 import org.firebirdsql.jdbc.FirebirdCallableStatement;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -23,7 +24,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @return database name
      * @see #setDatabaseName(String)
      */
-    default String getDatabaseName() {
+    default @Nullable String getDatabaseName() {
         return getProperty(PropertyNames.databaseName);
     }
 
@@ -72,7 +73,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @param databaseName
      *         database name
      */
-    default void setDatabaseName(String databaseName) {
+    default void setDatabaseName(@Nullable String databaseName) {
         setProperty(PropertyNames.databaseName, databaseName);
     }
 
@@ -97,7 +98,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * A value of {@code 0} indicates that the value is not set, and that the server default is used.
      * </p>
      * <p>
-     * This option is only relevant for Firebird implementations with per connection cache (eg Classic)
+     * This option is only relevant for Firebird implementations with per connection cache (e.g. Classic)
      * </p>
      * <p>
      * NOTE: Implementer should take care to return {@code 0} if the value hasn't been set yet.
@@ -116,7 +117,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * A value of {@code 0} indicates that the value is not set, and that the server default is used.
      * </p>
      * <p>
-     * This option is only relevant for Firebird implementations with per connection cache (eg Classic).
+     * This option is only relevant for Firebird implementations with per connection cache (e.g. Classic).
      * </p>
      *
      * @param pageCacheSize
@@ -133,7 +134,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @return configuration value for {@code dataTypeBind}, or {@code null} for driver default
      * @since 4.0
      */
-    default String getDataTypeBind() {
+    default @Nullable String getDataTypeBind() {
         return getProperty(PropertyNames.dataTypeBind);
     }
 
@@ -152,7 +153,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      *         Firebird 4+ data type bind configuration, a semicolon-separated list of {@code <from-type> TO <to-type>}
      * @since 4.0
      */
-    default void setDataTypeBind(String dataTypeBind) {
+    default void setDataTypeBind(@Nullable String dataTypeBind) {
         setProperty(PropertyNames.dataTypeBind, dataTypeBind);
     }
 
@@ -162,7 +163,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @return value for {@code sessionTimeZone}, or {@code null} for driver default (JVM default time zone)
      * @since 4.0
      */
-    default String getSessionTimeZone() {
+    default @Nullable String getSessionTimeZone() {
         return getProperty(PropertyNames.sessionTimeZone);
     }
 
@@ -172,11 +173,11 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @param sessionTimeZone
      *         Firebird 4+ session time zone name (we strongly suggest to use Java compatible names only),
      *         use {@code "server"} to use server default time zone (note: conversion will use JVM default time zone).
-     *         For offset-based names, the value will be normalized to the Firebird name (e.g. GMT+05:00 is stored as
+     *         For offset-based names, the value will be normalised to the Firebird name (e.g. GMT+05:00 is stored as
      *         +05:00).
      * @since 4.0
      */
-    default void setSessionTimeZone(String sessionTimeZone) {
+    default void setSessionTimeZone(@Nullable String sessionTimeZone) {
         setProperty(PropertyNames.sessionTimeZone, sessionTimeZone);
     }
 
@@ -270,12 +271,12 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * Set if {@link java.sql.ResultSetMetaData#getColumnName(int)} returns the {@code columnLabel} instead of the
      * {@code columnName}.
      * <p>
-     * The default behaviour (with {@code columnLabelForName=false} is JDBC-compliant. The behavior for value
+     * The default behaviour (with {@code columnLabelForName=false}) is JDBC-compliant. The behaviour for value
      * {@code true} is to provide compatibility with tools with a wrong expectation.
      * </p>
      *
      * @param columnLabelForName
-     *         {@code false} JDBC compliant behavior ({@code columnName} is returned), {@code true} compatibility
+     *         {@code false} JDBC compliant behaviour ({@code columnName} is returned), {@code true} compatibility
      *         option ({@code columnLabel} is returned)
      * @since 2.2.1
      */
@@ -289,7 +290,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @return configuration value for {@code generatedKeysEnabled}, or {@code null} for driver default
      * @since 4.0
      */
-    default String getGeneratedKeysEnabled() {
+    default @Nullable String getGeneratedKeysEnabled() {
         return getProperty(PropertyNames.generatedKeysEnabled);
     }
 
@@ -302,7 +303,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      *         {@code update_or_insert}, {@code merge})
      * @since 4.0
      */
-    default void setGeneratedKeysEnabled(String generatedKeysEnabled) {
+    default void setGeneratedKeysEnabled(@Nullable String generatedKeysEnabled) {
         setProperty(PropertyNames.generatedKeysEnabled, generatedKeysEnabled);
     }
 
@@ -336,7 +337,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     /**
      * @return the server-side {@code DECFLOAT} rounding mode, {@code null} applies the Firebird server default
      */
-    default String getDecfloatRound() {
+    default @Nullable String getDecfloatRound() {
         return getProperty(PropertyNames.decfloatRound);
     }
 
@@ -348,14 +349,14 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      *         half_down, down, floor, reround}); {@code null} to apply the Firebird server default ({@code half_up} in
      *         Firebird 4)
      */
-    default void setDecfloatRound(String decfloatRound) {
+    default void setDecfloatRound(@Nullable String decfloatRound) {
         setProperty(PropertyNames.decfloatRound, decfloatRound);
     }
 
     /**
      * @return the server-side {@code DECFLOAT} error traps, {@code null} applies the Firebird server default
      */
-    default String getDecfloatTraps() {
+    default @Nullable String getDecfloatTraps() {
         return getProperty(PropertyNames.decfloatTraps);
     }
 
@@ -367,7 +368,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      *         {@code Division_by_zero, Inexact, Invalid_operation, Overflow, Underflow}; {@code null} to apply
      *         Firebird server default ({@code Division_by_zero,Invalid_operation,Overflow} in Firebird 4)
      */
-    default void setDecfloatTraps(String decfloatTraps) {
+    default void setDecfloatTraps(@Nullable String decfloatTraps) {
         setProperty(PropertyNames.decfloatTraps, decfloatTraps);
     }
 
@@ -377,7 +378,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @return resource bundle name of the TPB mapping
      * @see #setTpbMapping(String)
      */
-    default String getTpbMapping() {
+    default @Nullable String getTpbMapping() {
         return getProperty(PropertyNames.tpbMapping);
     }
 
@@ -399,9 +400,9 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @param tpbMapping
      *         name of the resource bundle
      * @throws IllegalStateException
-     *         May be thrown when the mapping has already been initialized (not all implementations do this)
+     *         May be thrown when the mapping has already been initialised (not all implementations do this)
      */
-    default void setTpbMapping(String tpbMapping) {
+    default void setTpbMapping(@Nullable String tpbMapping) {
         setProperty(PropertyNames.tpbMapping, tpbMapping);
     }
 
@@ -453,7 +454,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @param isolation
      *         string constant representing a default isolation level.
      */
-    default void setDefaultIsolation(String isolation) {
+    default void setDefaultIsolation(@Nullable String isolation) {
         setProperty(PropertyNames.defaultIsolation, isolation);
     }
 
@@ -478,9 +479,10 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * </ul>
      *
      * @param scrollableCursor
-     *         Scrollable cursor type, one of {@code EMULATED} or {@code SERVER} (case-insensitive)
+     *         Scrollable cursor type, one of {@code EMULATED} or {@code SERVER} (case-insensitive); {@code null} to
+     *         apply the default
      */
-    default void setScrollableCursor(String scrollableCursor) {
+    default void setScrollableCursor(@Nullable String scrollableCursor) {
         setProperty(PropertyNames.scrollableCursor, scrollableCursor);
     }
 
@@ -606,7 +608,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * Setting to {@code true} will enable Jaybird to execute <em>equivalent</em> operations through the JDBC API
      * (specifically, {@link Statement#execute(String)}, {@link Statement#executeUpdate(String)},
      * {@link Statement#executeLargeUpdate(String)} and siblings, and statements prepared with
-     * {@link Connection#prepareStatement(String)} and siblings. Using callable statements (e.g. using
+     * {@link Connection#prepareStatement(String)} and siblings). Using callable statements (e.g. using
      * {@link Connection#prepareCall(String)}), {@link Statement#executeQuery(String)}, or batch execution is never
      * supported.
      * </p>
@@ -725,7 +727,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      *         reported; setting {@code null} will use {@code ALL}
      * @since 6
      */
-    default void setReportSQLWarnings(String reportSQLWarnings) {
+    default void setReportSQLWarnings(@Nullable String reportSQLWarnings) {
         setProperty(PropertyNames.reportSQLWarnings, reportSQLWarnings);
     }
 
@@ -829,7 +831,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @see #setSearchPath(String)
      * @since 7
      */
-    default String getSearchPath() {
+    default @Nullable String getSearchPath() {
         return getProperty(PropertyNames.searchPath);
     }
 
@@ -848,7 +850,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      *         list of comma-separated schema names
      * @since 7
      */
-    default void setSearchPath(String searchPath) {
+    default void setSearchPath(@Nullable String searchPath) {
         setProperty(PropertyNames.searchPath, searchPath);
     }
 

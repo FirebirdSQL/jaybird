@@ -1,12 +1,14 @@
 // SPDX-FileCopyrightText: Copyright 2004-2005 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2004 Steven Jardine
-// SPDX-FileCopyrightText: Copyright 2016-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2016-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.OutputStream;
 import java.sql.SQLException;
@@ -18,6 +20,7 @@ import java.sql.SQLException;
  * @author Steven Jardine
  * @author Mark Rotteveel
  */
+@NullMarked
 public interface ServiceManager extends ServiceConnectionProperties {
 
     /**
@@ -30,14 +33,14 @@ public interface ServiceManager extends ServiceConnectionProperties {
      * @param database
      *         path for the connection to the service manager.
      */
-    void setDatabase(String database);
+    void setDatabase(@Nullable String database);
 
     /**
      * Returns the database path for the connection to the service manager.
      *
      * @return the database path for the connection to the service manager.
      */
-    String getDatabase();
+    @Nullable String getDatabase();
 
     /**
      * Get the wire encryption level.
@@ -60,7 +63,7 @@ public interface ServiceManager extends ServiceConnectionProperties {
      *
      * @return the logger for the connection to the service manager.
      */
-    OutputStream getLogger();
+    @Nullable OutputStream getLogger();
 
     /**
      * Sets the logger for the connection to the service manager.
@@ -68,7 +71,7 @@ public interface ServiceManager extends ServiceConnectionProperties {
      * @param logger
      *         for the connection to the service manager.
      */
-    void setLogger(OutputStream logger);
+    void setLogger(@Nullable OutputStream logger);
 
     /**
      * Obtains the server version through a service call.

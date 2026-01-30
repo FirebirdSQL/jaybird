@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2020-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jaybird.props;
 
 import org.firebirdsql.gds.ng.FbAttachment;
 import org.firebirdsql.gds.ng.WireCrypt;
+import org.jspecify.annotations.Nullable;
 
 import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_WIRE_COMPRESSION;
 
@@ -18,10 +19,10 @@ public interface AttachmentProperties extends BaseProperties {
     /**
      * Get the hostname or IP address of the Firebird server.
      *
-     * @return Hostname or IP address of the server
+     * @return hostname or IP address of the server
      * @see #setServerName(String)
      */
-    default String getServerName() {
+    default @Nullable String getServerName() {
         return getProperty(PropertyNames.serverName);
     }
 
@@ -31,20 +32,20 @@ public interface AttachmentProperties extends BaseProperties {
      * When set to {@code null} (the default), the {@code databaseName} or {@code serviceName} is used as the full
      * identification of the database host, port and database path/alias. Protocol implementations, for example
      * {@code PURE_JAVA}, may default to {@code localhost} when this property is {@code null}, but
-     * {@code databaseName}/{@code serviceName} does not (seem to) contain a host name.
+     * {@code databaseName} or {@code serviceName} do not (seem to) contain a host name.
      * </p>
      *
      * @param serverName
-     *         Hostname or IP address of the server
+     *         hostname or IP address of the server
      */
-    default void setServerName(String serverName) {
+    default void setServerName(@Nullable String serverName) {
         setProperty(PropertyNames.serverName, serverName);
     }
 
     /**
      * Get the port number of the server.
      *
-     * @return Port number of the server
+     * @return port number of the server
      * @see #setPortNumber(int)
      */
     default int getPortNumber() {
@@ -59,7 +60,7 @@ public interface AttachmentProperties extends BaseProperties {
      * </p>
      *
      * @param portNumber
-     *         Port number of the server
+     *         port number of the server
      * @see #setServerName(String)
      */
     default void setPortNumber(int portNumber) {
@@ -68,27 +69,27 @@ public interface AttachmentProperties extends BaseProperties {
 
     /**
      * @return type of the connection, for example, "PURE_JAVA", "NATIVE", "EMBEDDED", depends on the GDS
-     * implementations installed in the system.
+     * implementations available on the classpath or modulepath.
      */
-    default String getType() {
+    default @Nullable String getType() {
         return getProperty(PropertyNames.type);
     }
 
     /**
      * @param type
      *         type of the connection, for example, "PURE_JAVA", "NATIVE", "EMBEDDED", depends on the GDS
-     *         implementations installed in the system.
+     *         implementations available on the classpath or modulepath.
      * @throws IllegalStateException
      *         may be thrown when type cannot or can no longer be changed
      */
-    default void setType(String type) {
+    default void setType(@Nullable String type) {
         setProperty(PropertyNames.type, type);
     }
 
     /**
      * @return Name of the user to authenticate to the server.
      */
-    default String getUser() {
+    default @Nullable String getUser() {
         return getProperty(PropertyNames.user);
     }
 
@@ -96,14 +97,14 @@ public interface AttachmentProperties extends BaseProperties {
      * @param user
      *         Name of the user to authenticate to the server.
      */
-    default void setUser(String user) {
+    default void setUser(@Nullable String user) {
         setProperty(PropertyNames.user, user);
     }
 
     /**
      * @return Password to authenticate to the server.
      */
-    default String getPassword() {
+    default @Nullable String getPassword() {
         return getProperty(PropertyNames.password);
     }
 
@@ -111,22 +112,22 @@ public interface AttachmentProperties extends BaseProperties {
      * @param password
      *         Password to authenticate to the server.
      */
-    default void setPassword(String password) {
+    default void setPassword(@Nullable String password) {
         setProperty(PropertyNames.password, password);
     }
 
     /**
-     * @return SQL role to use.
+     * @return SQL role to use
      */
-    default String getRoleName() {
+    default @Nullable String getRoleName() {
         return getProperty(PropertyNames.roleName);
     }
 
     /**
      * @param roleName
-     *         SQL role to use.
+     *         SQL role to use
      */
-    default void setRoleName(String roleName) {
+    default void setRoleName(@Nullable String roleName) {
         setProperty(PropertyNames.roleName, roleName);
     }
 
@@ -140,7 +141,7 @@ public interface AttachmentProperties extends BaseProperties {
      *
      * @return Java character set for the connection ({@code null} when not explicitly configured).
      */
-    default String getCharSet() {
+    default @Nullable String getCharSet() {
         return getProperty(PropertyNames.charSet);
     }
 
@@ -148,7 +149,7 @@ public interface AttachmentProperties extends BaseProperties {
      * Set the Java character set for the connection.
      * <p>
      * It is possible to set both the {@code charSet} and {@code encoding} to achieve a character set conversion effect,
-     * but in general only one of both properties should be set.
+     * but in general only one of these properties should be set.
      * </p>
      *
      * @param charSet
@@ -156,7 +157,7 @@ public interface AttachmentProperties extends BaseProperties {
      *         of Firebird ones.
      * @see #setEncoding(String)
      */
-    default void setCharSet(String charSet) {
+    default void setCharSet(@Nullable String charSet) {
         setProperty(PropertyNames.charSet, charSet);
     }
 
@@ -169,7 +170,7 @@ public interface AttachmentProperties extends BaseProperties {
      *
      * @return Firebird character encoding for the connection ({@code null} when not explicitly configured).
      */
-    default String getEncoding() {
+    default @Nullable String getEncoding() {
         return getProperty(PropertyNames.encoding);
     }
 
@@ -177,32 +178,35 @@ public interface AttachmentProperties extends BaseProperties {
      * Set the Firebird character set for the connection.
      * <p>
      * It is possible to set both the {@code charSet} and {@code encoding} to achieve a character set conversion effect,
-     * but in general only one of both properties should be set.
+     * but in general only one of these properties should be set.
      * </p>
      *
      * @param encoding
      *         Firebird character encoding for the connection. See Firebird documentation for more information.
      * @see #setCharSet(String)
      */
-    default void setEncoding(String encoding) {
+    default void setEncoding(@Nullable String encoding) {
         setProperty(PropertyNames.encoding, encoding);
     }
 
     /**
      * @return Custom process id sent to Firebird on attach; {@code null} means the default is applied (read from
-     * system property {@code org.firebirdsql.jdbc.pid}, future versions may also determine the actual process id)
+     * system property {@code org.firebirdsql.jdbc.pid}, or otherwise the actual process id)
      */
-    default Integer getProcessId() {
+    default @Nullable Integer getProcessId() {
         return getIntProperty(PropertyNames.processId);
     }
 
     /**
      * Sets a custom process id to send to Firebird on attach.
+     * <p>
+     * Native connections always use the actual process id.
+     * </p>
      *
      * @param processId
      *         The process id to send; {@code null} to apply the default behaviour (see {@link #getProcessId()})
      */
-    default void setProcessId(Integer processId) {
+    default void setProcessId(@Nullable Integer processId) {
         setIntProperty(PropertyNames.processId, processId);
     }
 
@@ -210,7 +214,7 @@ public interface AttachmentProperties extends BaseProperties {
      * @return Custom process name sent to Firebird on attach; {@code null} means the default is applied (read from
      * system property {@code org.firebirdsql.jdbc.processName})
      */
-    default String getProcessName() {
+    default @Nullable String getProcessName() {
         return getProperty(PropertyNames.processName);
     }
 
@@ -220,7 +224,7 @@ public interface AttachmentProperties extends BaseProperties {
      * @param processName
      *         The process name to send; {@code null} to apply the default behaviour (see {@link #getProcessName()})
      */
-    default void setProcessName(String processName) {
+    default void setProcessName(@Nullable String processName) {
         setProperty(PropertyNames.processName, processName);
     }
 
@@ -294,17 +298,17 @@ public interface AttachmentProperties extends BaseProperties {
     /**
      * Set the wire encryption level.
      * <p>
-     * Values are defined by {@link WireCrypt}, values are handled case insensitive. Invalid values will throw an
+     * Values are defined by {@link WireCrypt}, values are handled case-insensitive. Invalid values will throw an
      * exception.
      * </p>
      *
      * @param wireCrypt
-     *         Wire encryption level ({@code null} not allowed)
+     *         Wire encryption level; {@code null} to apply the default
      * @throws InvalidPropertyValueException
      *         If the value is not one of the allowed values
      * @since 4.0
      */
-    default void setWireCrypt(String wireCrypt) {
+    default void setWireCrypt(@Nullable String wireCrypt) {
         setProperty(PropertyNames.wireCrypt, wireCrypt);
     }
 
@@ -314,7 +318,7 @@ public interface AttachmentProperties extends BaseProperties {
      * @return Database encryption plugin configuration, meaning plugin specific
      * @since 3.0.4
      */
-    default String getDbCryptConfig() {
+    default @Nullable String getDbCryptConfig() {
         return getProperty(PropertyNames.dbCryptConfig);
     }
 
@@ -325,7 +329,7 @@ public interface AttachmentProperties extends BaseProperties {
      *         Database encryption plugin configuration, meaning plugin specific
      * @since 3.0.4
      */
-    default void setDbCryptConfig(String dbCryptConfig) {
+    default void setDbCryptConfig(@Nullable String dbCryptConfig) {
         setProperty(PropertyNames.dbCryptConfig, dbCryptConfig);
     }
 
@@ -349,7 +353,7 @@ public interface AttachmentProperties extends BaseProperties {
      *         comma-separated list of authentication plugins
      * @since 4.0
      */
-    default void setAuthPlugins(String authPlugins) {
+    default void setAuthPlugins(@Nullable String authPlugins) {
         setProperty(PropertyNames.authPlugins, authPlugins);
     }
 
@@ -400,7 +404,7 @@ public interface AttachmentProperties extends BaseProperties {
      * try all available protocols.
      * @since 6
      */
-    default String getEnableProtocol() {
+    default @Nullable String getEnableProtocol() {
         return getProperty(PropertyNames.enableProtocol);
     }
 
@@ -412,7 +416,7 @@ public interface AttachmentProperties extends BaseProperties {
      * @see #getEnableProtocol()
      * @since 6
      */
-    default void setEnableProtocol(String enableProtocol) {
+    default void setEnableProtocol(@Nullable String enableProtocol) {
         setProperty(PropertyNames.enableProtocol, enableProtocol);
     }
 
@@ -451,7 +455,7 @@ public interface AttachmentProperties extends BaseProperties {
      * @since 6
      * @see #setSocketFactory(String)
      */
-    default String getSocketFactory() {
+    default @Nullable String getSocketFactory() {
         return getProperty(PropertyNames.socketFactory);
     }
 
@@ -469,7 +473,7 @@ public interface AttachmentProperties extends BaseProperties {
      *         the default socket factory
      * @since 6
      */
-    default void setSocketFactory(String socketFactory) {
+    default void setSocketFactory(@Nullable String socketFactory) {
         setProperty(PropertyNames.socketFactory, socketFactory);
     }
 

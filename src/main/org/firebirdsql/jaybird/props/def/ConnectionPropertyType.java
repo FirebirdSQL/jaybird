@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2020-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jaybird.props.def;
 
 import org.firebirdsql.jaybird.props.DpbType;
 import org.firebirdsql.jaybird.props.internal.TransactionNameMapping;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Basic connection property types supported by Jaybird.
@@ -16,61 +17,61 @@ public enum ConnectionPropertyType {
 
     STRING(DpbType.STRING) {
         @Override
-        public String toType(String stringValue) {
+        public @Nullable String toType(@Nullable String stringValue) {
             return stringValue;
         }
 
         @Override
-        public String toType(Integer intValue) {
+        public @Nullable String toType(@Nullable Integer intValue) {
             return intValue != null ? String.valueOf(intValue) : null;
         }
 
         @Override
-        public String toType(Boolean booleanValue) {
+        public @Nullable String toType(@Nullable Boolean booleanValue) {
             return booleanValue != null ? String.valueOf(booleanValue) : null;
         }
 
         @Override
-        public Integer asInteger(Object value) {
+        public @Nullable Integer asInteger(@Nullable Object value) {
             return (Integer) INT.toType((String) value);
         }
 
         @Override
-        public Boolean asBoolean(Object value) {
+        public @Nullable Boolean asBoolean(@Nullable Object value) {
             return (Boolean) BOOLEAN.toType((String) value);
         }
     },
     INT(DpbType.INT) {
         @Override
-        public Integer toType(String stringValue) {
+        public @Nullable Integer toType(@Nullable String stringValue) {
             return stringValue != null ? Integer.valueOf(stringValue) : null;
         }
 
         @Override
-        public Integer toType(Integer intValue) {
+        public @Nullable Integer toType(@Nullable Integer intValue) {
             return intValue;
         }
 
         @Override
-        public Integer toType(Boolean booleanValue) {
+        public @Nullable Integer toType(@Nullable Boolean booleanValue) {
             if (booleanValue == null) return null;
             return booleanValue ? 1 : 0;
         }
 
         @Override
-        public Integer asInteger(Object value) {
+        public @Nullable Integer asInteger(@Nullable Object value) {
             return (Integer) value;
         }
 
         @Override
-        public Boolean asBoolean(Object value) {
+        public @Nullable Boolean asBoolean(@Nullable Object value) {
             return (Boolean) BOOLEAN.toType((Integer) value);
         }
     },
     BOOLEAN(DpbType.SINGLE) {
         @Override
         @SuppressWarnings("java:S2447")
-        public Boolean toType(String stringValue) {
+        public @Nullable Boolean toType(@Nullable String stringValue) {
             if (stringValue == null) {
                 return null;
             } else if (stringValue.isEmpty()) {
@@ -83,7 +84,7 @@ public enum ConnectionPropertyType {
 
         @Override
         @SuppressWarnings("java:S2447")
-        public Boolean toType(Integer intValue) {
+        public @Nullable Boolean toType(@Nullable Integer intValue) {
             if (intValue == null) {
                 return null;
             } else if (intValue == 0) {
@@ -95,17 +96,17 @@ public enum ConnectionPropertyType {
         }
 
         @Override
-        public Boolean toType(Boolean booleanValue) {
+        public @Nullable Boolean toType(@Nullable Boolean booleanValue) {
             return booleanValue;
         }
 
         @Override
-        public Integer asInteger(Object value) {
+        public @Nullable Integer asInteger(@Nullable Object value) {
             return (Integer) INT.toType((Boolean) value);
         }
 
         @Override
-        public Boolean asBoolean(Object value) {
+        public @Nullable Boolean asBoolean(@Nullable Object value) {
             return (Boolean) value;
         }
     },
@@ -116,36 +117,36 @@ public enum ConnectionPropertyType {
     @InternalApi
     TRANSACTION_ISOLATION(DpbType.NONE) {
         @Override
-        public Object toType(String stringValue) {
+        public @Nullable Object toType(@Nullable String stringValue) {
             if (stringValue == null) return null;
             return TransactionNameMapping.toIsolationLevel(stringValue);
         }
 
         @Override
-        public Object toType(Integer intValue) {
+        public @Nullable Object toType(@Nullable Integer intValue) {
             return intValue;
         }
 
         @Override
-        public Object toType(Boolean booleanValue) {
+        public @Nullable Object toType(@Nullable Boolean booleanValue) {
             if (booleanValue == null) return null;
             throw new IllegalArgumentException("Cannot convert Boolean to transaction isolation");
         }
 
         @Override
-        public String asString(Object value) {
+        public @Nullable String asString(@Nullable Object value) {
             if (value == null) return null;
             return TransactionNameMapping.toIsolationLevelName((int) value, true);
         }
 
         @Override
-        public Integer asInteger(Object value) {
+        public @Nullable Integer asInteger(@Nullable Object value) {
             return (Integer) value;
         }
 
         @Override
         @SuppressWarnings("java:S2447")
-        public Boolean asBoolean(Object value) {
+        public @Nullable Boolean asBoolean(@Nullable Object value) {
             if (value == null) return null;
             throw new IllegalArgumentException("Cannot convert transaction isolation to Boolean");
         }
@@ -171,7 +172,7 @@ public enum ConnectionPropertyType {
      *         For conversion errors
      */
     @InternalApi
-    public abstract Object toType(String stringValue);
+    public abstract @Nullable Object toType(@Nullable String stringValue);
 
     /**
      * Convert an integer to a value of this property type.
@@ -183,7 +184,7 @@ public enum ConnectionPropertyType {
      *         For conversion errors
      */
     @InternalApi
-    public abstract Object toType(Integer intValue);
+    public abstract @Nullable Object toType(@Nullable Integer intValue);
 
     /**
      * Convert a boolean to a value of this property type.
@@ -195,7 +196,7 @@ public enum ConnectionPropertyType {
      *         For conversion errors
      */
     @InternalApi
-    public abstract Object toType(Boolean booleanValue);
+    public abstract @Nullable Object toType(@Nullable Boolean booleanValue);
 
     /**
      * Convert a value of this property type to integer.
@@ -207,7 +208,7 @@ public enum ConnectionPropertyType {
      *         if {@code value} is not of this type
      */
     @InternalApi
-    public abstract Integer asInteger(Object value);
+    public abstract @Nullable Integer asInteger(@Nullable Object value);
 
     /**
      * Convert a value of this property type to string.
@@ -217,7 +218,7 @@ public enum ConnectionPropertyType {
      * @return String equivalent
      */
     @InternalApi
-    public String asString(Object value) {
+    public @Nullable String asString(@Nullable Object value) {
         return value != null ? String.valueOf(value) : null;
     }
 
@@ -231,6 +232,6 @@ public enum ConnectionPropertyType {
      *         if {@code value} is not of this type
      */
     @InternalApi
-    public abstract Boolean asBoolean(Object value);
+    public abstract @Nullable Boolean asBoolean(@Nullable Object value);
 
 }

@@ -6,7 +6,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2006 Ludovic Orban
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jaybird.xca;
@@ -27,6 +27,9 @@ import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 import org.firebirdsql.jdbc.*;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import javax.sql.DataSource;
 import javax.transaction.xa.XAException;
@@ -52,10 +55,10 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cannotInstantiateConnecti
 
 /**
  * FBManagedConnectionFactory is a factory for {@link FBManagedConnection}, and implements many of the internal
- * functions of FBManagedConnection. This behavior is required due to firebird requiring all work done in a transaction
+ * functions of FBManagedConnection. This behaviour is required due to firebird requiring all work done in a transaction
  * to be done over one connection.
  * <p>
- * To support xa semantics, the correct db handle must be located whenever a managed connection is associated with a
+ * To support XA semantics, the correct db handle must be located whenever a managed connection is associated with a
  * xid.
  * </p>
  *
@@ -212,15 +215,15 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
         return shared;
     }
 
-    public TransactionParameterBuffer getTransactionParameters(int isolation) {
+    public @Nullable TransactionParameterBuffer getTransactionParameters(int isolation) {
         return connectionProperties.getTransactionParameters(isolation);
     }
 
-    public void setNonStandardProperty(String propertyMapping) {
+    public void setNonStandardProperty(@NonNull String propertyMapping) {
         ensureCanModify(() -> connectionProperties.setNonStandardProperty(propertyMapping));
     }
 
-    public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
+    public void setTransactionParameters(int isolation, @NonNull TransactionParameterBuffer tpb) {
         ensureCanModify(() -> connectionProperties.setTransactionParameters(isolation, tpb));
     }
 
@@ -233,12 +236,12 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
     }
 
     @Override
-    public String getProperty(String name) {
+    public @Nullable String getProperty(@NonNull String name) {
         return connectionProperties.getProperty(name);
     }
 
     @Override
-    public void setProperty(String name, String value) {
+    public void setProperty(@NonNull String name, @Nullable String value) {
         ensureCanModify(() -> {
             if (PropertyNames.type.equals(name) && gdsType != null) {
                 throw new IllegalStateException("Cannot change GDS type at runtime.");
@@ -248,26 +251,27 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
     }
 
     @Override
-    public Integer getIntProperty(String name) {
+    public Integer getIntProperty(@NonNull String name) {
         return connectionProperties.getIntProperty(name);
     }
 
     @Override
-    public void setIntProperty(String name, Integer value) {
+    public void setIntProperty(@NonNull String name, @Nullable Integer value) {
         ensureCanModify(() -> connectionProperties.setIntProperty(name, value));
     }
 
     @Override
-    public Boolean getBooleanProperty(String name) {
+    public @Nullable Boolean getBooleanProperty(@NonNull String name) {
         return connectionProperties.getBooleanProperty(name);
     }
 
     @Override
-    public void setBooleanProperty(String name, Boolean value) {
+    public void setBooleanProperty(@NonNull String name, @Nullable Boolean value) {
         ensureCanModify(() -> connectionProperties.setBooleanProperty(name, value));
     }
 
     @Override
+    @NullMarked
     public Map<ConnectionProperty, Object> connectionPropertyValues() {
         return connectionProperties.connectionPropertyValues();
     }

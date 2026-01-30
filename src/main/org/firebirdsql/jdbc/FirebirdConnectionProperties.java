@@ -1,16 +1,17 @@
 // SPDX-FileCopyrightText: Copyright 2005-2010 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
- * Connection properties for the Firebird connection. Main part of this
- * interface corresponds to the Database Parameter Buffer, but also contains
- * properties to specify default transaction parameters.
+ * Connection properties for a Firebird connection.
  */
+@NullMarked
 public interface FirebirdConnectionProperties extends DatabaseConnectionProperties {
 
     /**
@@ -18,7 +19,7 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
      * @deprecated Use {@link #getUser()} instead; will be retained indefinitely for compatibility
      */
     @Deprecated(since = "5")
-    default String getUserName() {
+    default @Nullable String getUserName() {
         return getUser();
     }
 
@@ -28,7 +29,7 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
      * @deprecated Use {@link #setUser(String)}; will be retained indefinitely for compatibility
      */
     @Deprecated(since = "5")
-    default void setUserName(String userName) {
+    default void setUserName(@Nullable String userName) {
         setUser(userName);
     }
 
@@ -42,25 +43,38 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
     void setNonStandardProperty(String propertyMapping);
 
     /**
-     * Get the transaction parameter buffer corresponding to the current
-     * connection request information.
+     * Get the transaction parameter buffer corresponding to the current connection request information.
+     * <p>
+     * Implementations may return {@code null} or throw an {@link IllegalArgumentException} for invalid values of
+     * {@code isolation}. They may also return {@code null} for valid isolation levels before first use of the
+     * transaction configuration when that isolation level was not explicitly configured. Future versions of Jaybird may
+     * handle this differently with this method becoming {@code @NonNull}.
+     * </p>
      *
      * @param isolation
-     *         transaction isolation level for which TPB should be returned.
-     * @return instance of {@link TransactionParameterBuffer}.
+     *         transaction isolation level for which TPB should be returned
+     * @return instance of {@link TransactionParameterBuffer}
+     * @throws IllegalArgumentException
+     *         (optional) if {@code isolation} is not defined by JDBC; implementations may also return {@code null}
+     *         before first use of the transaction configuration (this may change in the future, see above)
      */
-    TransactionParameterBuffer getTransactionParameters(int isolation);
+    @Nullable TransactionParameterBuffer getTransactionParameters(int isolation);
 
     /**
      * Set transaction parameters for the specified transaction isolation level.
-     * The specified TPB is used as a default mapping for the specified
-     * isolation level.
+     * <p>
+     * The specified TPB is used as the default mapping for the specified isolation level.
+     * </p>
      *
      * @param isolation
-     *         transaction isolation level.
+     *         transaction isolation level
      * @param tpb
-     *         instance of {@link TransactionParameterBuffer} containing
-     *         transaction parameters.
+     *         instance of {@link TransactionParameterBuffer} containing transaction parameters (never {@code null})
+     * @throws IllegalArgumentException
+     *         (optional) if {@code isolation} is not defined by JDBC, though this may result in exceptions at a later
+     *         time; behaviour may change after first use of transaction configuration (post-configuration phase) (this
+     *         may change in the future, see also {@link #getTransactionParameters(int)})
+     * @see #getTransactionParameters(int)
      */
     void setTransactionParameters(int isolation, TransactionParameterBuffer tpb);
 

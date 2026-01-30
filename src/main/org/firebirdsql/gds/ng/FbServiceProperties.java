@@ -1,6 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
+
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Mutable implementation of {@link IServiceProperties}.
@@ -9,15 +12,16 @@ package org.firebirdsql.gds.ng;
  * @see FbImmutableServiceProperties
  * @since 3.0
  */
+@NullMarked
 public final class FbServiceProperties extends AbstractAttachProperties<IServiceProperties>
         implements IServiceProperties {
 
-    private FbImmutableServiceProperties immutableServicePropertiesCache;
+    private @Nullable FbImmutableServiceProperties immutableServicePropertiesCache;
 
     /**
      * Copy constructor for FbServiceProperties.
      * <p>
-     * All properties defined in {@link IServiceProperties} are copied from <code>src</code> to the new instance.
+     * All properties defined in {@link IServiceProperties} are copied from {@code src} to the new instance.
      * </p>
      *
      * @param src
@@ -48,7 +52,7 @@ public final class FbServiceProperties extends AbstractAttachProperties<IService
 
     @Override
     @SuppressWarnings("java:S1206")
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (!(o instanceof FbServiceProperties)) return false;
         return super.equals(o);

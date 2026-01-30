@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
@@ -8,6 +8,8 @@ import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,16 +24,17 @@ import static java.util.Collections.unmodifiableMap;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> implements IAttachProperties<T> {
 
     private static final PropertyUpdateListener NULL_LISTENER = new PropertyUpdateListener() {
         @Override
-        public void beforeUpdate(ConnectionProperty connectionProperty, Object newValue) {
+        public void beforeUpdate(ConnectionProperty connectionProperty, @Nullable Object newValue) {
             // do nothing
         }
 
         @Override
-        public void afterUpdate(ConnectionProperty connectionProperty, Object newValue) {
+        public void afterUpdate(ConnectionProperty connectionProperty, @Nullable Object newValue) {
             // do nothing
         }
     };
@@ -44,7 +47,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     /**
      * Copy constructor for IAttachProperties.
      * <p>
-     * All properties defined in {@link IAttachProperties} are copied from <code>src</code> to the new instance.
+     * All properties defined in {@link IAttachProperties} are copied from {@code src} to the new instance.
      * </p>
      *
      * @param src
@@ -52,6 +55,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
      */
     protected AbstractAttachProperties(IAttachProperties<T> src) {
         // Do not call this() as that also sets defaults, which should not be done when copying
+        //noinspection ConstantValue : null-check for robustness
         propertyValues = src != null ? new HashMap<>(src.connectionPropertyValues()) : new HashMap<>();
     }
 
@@ -69,42 +73,42 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     }
 
     @Override
-    public final void setProperty(String name, String value) {
+    public final void setProperty(String name, @Nullable String value) {
         ConnectionProperty property = property(name);
         setProperty(property, property.type().toType(value));
     }
 
     @Override
-    public final String getProperty(String name) {
+    public final @Nullable String getProperty(String name) {
         ConnectionProperty property = property(name);
         return property.type().asString(propertyValues.get(property));
     }
 
     @Override
-    public final void setIntProperty(String name, Integer value) {
+    public final void setIntProperty(String name, @Nullable Integer value) {
         ConnectionProperty property = property(name);
         setProperty(property, property.type().toType(value));
     }
 
     @Override
-    public final Integer getIntProperty(String name) {
+    public final @Nullable Integer getIntProperty(String name) {
         ConnectionProperty property = property(name);
         return property.type().asInteger(propertyValues.get(property));
     }
 
     @Override
-    public final void setBooleanProperty(String name, Boolean value) {
+    public final void setBooleanProperty(String name, @Nullable Boolean value) {
         ConnectionProperty property = property(name);
         setProperty(property, property.type().toType(value));
     }
 
     @Override
-    public final Boolean getBooleanProperty(String name) {
+    public final @Nullable Boolean getBooleanProperty(String name) {
         ConnectionProperty property = property(name);
         return property.type().asBoolean(propertyValues.get(property));
     }
 
-    private void setProperty(ConnectionProperty property, Object value) {
+    private void setProperty(ConnectionProperty property, @Nullable Object value) {
         if (value == null) {
             value = resolveStoredDefaultValue(property);
         }
@@ -133,9 +137,9 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
      *
      * @param timezone
      *         timezone name
-     * @return original or modified timezone name
+     * @return original or modified timezone name, only returns {@code null} when {@code timezone} is {@code null}
      */
-    private static String normalizeTimezone(String timezone) {
+    private static @Nullable String normalizeTimezone(@Nullable String timezone) {
         if (timezone == null) return null;
         Matcher matcher = GMT_WITH_OFFSET.matcher(timezone);
         if (matcher.matches()) {
@@ -150,10 +154,11 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
      * This method is only used for properties that must have a stored default value to function correctly.
      * </p>
      *
-     * @param property Connection property
+     * @param property
+     *         connection property
      * @return Default value to apply (usually {@code null})
      */
-    protected Object resolveStoredDefaultValue(ConnectionProperty property) {
+    protected @Nullable Object resolveStoredDefaultValue(ConnectionProperty property) {
         return null;
     }
 
@@ -187,11 +192,13 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
      * This method is only for internal use within Jaybird.
      * </p>
      *
-     * @param listener Listener to register or {@code null} to unregister
-     * @throws IllegalStateException When a property update listener was already registered
+     * @param listener
+     *         listener to register or {@code null} to unregister the current listener
+     * @throws IllegalStateException
+     *         when a property update listener was already registered
      */
     @InternalApi
-    public void registerPropertyUpdateListener(PropertyUpdateListener listener) {
+    public void registerPropertyUpdateListener(@Nullable PropertyUpdateListener listener) {
         if (listener == null) {
             propertyUpdateListener = NULL_LISTENER;
         } else if (propertyUpdateListener == NULL_LISTENER) {
@@ -202,7 +209,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (!(o instanceof AbstractAttachProperties<?> that)) return false;
 
@@ -225,9 +232,9 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     @InternalApi
     public interface PropertyUpdateListener {
 
-        void beforeUpdate(ConnectionProperty connectionProperty, Object newValue);
+        void beforeUpdate(ConnectionProperty connectionProperty, @Nullable Object newValue);
 
-        void afterUpdate(ConnectionProperty connectionProperty, Object newValue);
+        void afterUpdate(ConnectionProperty connectionProperty, @Nullable Object newValue);
 
     }
 }

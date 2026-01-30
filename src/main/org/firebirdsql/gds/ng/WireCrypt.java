@@ -1,14 +1,17 @@
-// SPDX-FileCopyrightText: Copyright 2017-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2017-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
 
 /**
  * @author Mark Rotteveel
  */
+@NullMarked
 public enum WireCrypt {
     REQUIRED(WireProtocolConstants.WIRE_CRYPT_REQUIRED),
     ENABLED(WireProtocolConstants.WIRE_CRYPT_ENABLED),
@@ -39,11 +42,13 @@ public enum WireCrypt {
      * are handled case-insensitively.
      * </p>
      *
-     * @param name String name
+     * @param name
+     *         String name
      * @return Enum name for the name
-     * @throws IllegalArgumentException if this enum type has no constant with the specified name
+     * @throws IllegalArgumentException
+     *         if this enum type has no constant with the specified name
      */
-    public static WireCrypt fromString(String name) throws IllegalArgumentException {
+    public static WireCrypt fromString(@Nullable String name) throws IllegalArgumentException {
         if (name == null) {
             return DEFAULT;
         }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jaybird.props;
 
@@ -34,6 +34,7 @@ public enum DpbType {
     INT {
         @Override
         public void addValue(ParameterBuffer pb, int pbItem, Object value, ConnectionPropertyType type) {
+            //noinspection DataFlowIssue : if value is non-null, then type.asInteger is also non-null
             pb.addArgument(pbItem, type.asInteger(value));
         }
     },
@@ -43,6 +44,7 @@ public enum DpbType {
     BYTE {
         @Override
         public void addValue(ParameterBuffer pb, int pbItem, Object value, ConnectionPropertyType type) {
+            //noinspection DataFlowIssue : if value is non-null, then type.asInteger is also non-null
             pb.addArgument(pbItem, type.asInteger(value).byteValue());
         }
     },

@@ -1,8 +1,7 @@
-// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.util;
 
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import java.util.stream.Stream;
  * @author Mark Rotteveel
  * @since 6
  */
-@NullMarked
 public final class CollectionUtils {
 
     private CollectionUtils() {
@@ -114,6 +112,21 @@ public final class CollectionUtils {
             newList.addAll(list);
         }
         return newList;
+    }
+
+    /**
+     * Calculates the map or set capacity for a given size for use with {@link java.util.HashMap#HashMap(int)} or
+     * {@link java.util.HashSet#HashSet(int)}.
+     * <p>
+     * This method may be removed without notice when the baseline version is Java 21 or higher.
+     * </p>
+     *
+     * @param mapSize
+     *         size of the map or set (number of entries)
+     * @return map or set capacity (for default load factor of {@code 0.75f})
+     */
+    public static int mapCapacity(int mapSize) {
+        return (int) (mapSize / 0.75f) + 1;
     }
 
 }

@@ -3,7 +3,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2006 Roman Rokytskyy
- SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.management;
@@ -16,6 +16,8 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -229,7 +231,7 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public String getAuthPlugins() {
+    public @NonNull String getAuthPlugins() {
         return FBManagerMBean.super.getAuthPlugins();
     }
 
@@ -421,37 +423,37 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public final String getProperty(String name) {
+    public final @Nullable String getProperty(@NonNull String name) {
         return connectionProperties.getProperty(name);
     }
 
     @Override
-    public final void setProperty(String name, String value) {
+    public final void setProperty(@NonNull String name, @Nullable String value) {
         connectionProperties.setProperty(name, value);
     }
 
     @Override
-    public final Integer getIntProperty(String name) {
+    public final @Nullable Integer getIntProperty(@NonNull String name) {
         return connectionProperties.getIntProperty(name);
     }
 
     @Override
-    public final void setIntProperty(String name, Integer value) {
+    public final void setIntProperty(@NonNull String name, @Nullable Integer value) {
         connectionProperties.setIntProperty(name, value);
     }
 
     @Override
-    public final Boolean getBooleanProperty(String name) {
+    public final @Nullable Boolean getBooleanProperty(@NonNull String name) {
         return connectionProperties.getBooleanProperty(name);
     }
 
     @Override
-    public final void setBooleanProperty(String name, Boolean value) {
+    public final void setBooleanProperty(@NonNull String name, @Nullable Boolean value) {
         connectionProperties.setBooleanProperty(name, value);
     }
 
     @Override
-    public final Map<ConnectionProperty, Object> connectionPropertyValues() {
+    public final @NonNull Map<ConnectionProperty, Object> connectionPropertyValues() {
         return connectionProperties.connectionPropertyValues();
     }
     

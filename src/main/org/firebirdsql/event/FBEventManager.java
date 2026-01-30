@@ -82,7 +82,7 @@ public class FBEventManager implements EventManager {
     private FBEventManager(Connection connection) throws SQLException {
         this.fbDatabase = connection.unwrap(FirebirdConnection.class).getFbDatabase();
         connectionProperties = fbDatabase.getConnectionProperties().asImmutable();
-        gdsType = GDSType.getType(connectionProperties.getType());
+        gdsType = requireNonNull(GDSType.getType(connectionProperties.getType()), "connection GDS type cannot be null");
         eventManagerBehaviour = new ManagedEventManagerBehaviour();
         // NOTE In this implementation, we don't take into account pooled connections that might be closed while
         //  the FbDatabase instance remains in use. This means that at the moment, it is possible that the event manager
@@ -116,7 +116,7 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
-    public final void setType(String type) {
+    public final void setType(@Nullable String type) {
         throw new IllegalStateException("Type must be specified on construction");
     }
 
@@ -204,32 +204,32 @@ public class FBEventManager implements EventManager {
     // which were not defined in this class in Jaybird 4 or earlier are not redirected
 
     @Override
-    public void setUser(String user) {
+    public void setUser(@Nullable String user) {
         EventManager.super.setUser(user);
     }
 
     @Override
-    public String getUser() {
+    public @Nullable String getUser() {
         return EventManager.super.getUser();
     }
 
     @Override
-    public void setPassword(String password) {
+    public void setPassword(@Nullable String password) {
         EventManager.super.setPassword(password);
     }
 
     @Override
-    public String getPassword() {
+    public @Nullable String getPassword() {
         return EventManager.super.getPassword();
     }
 
     @Override
-    public String getServerName() {
+    public @Nullable String getServerName() {
         return EventManager.super.getServerName();
     }
 
     @Override
-    public void setServerName(String serverName) {
+    public void setServerName(@Nullable String serverName) {
         EventManager.super.setServerName(serverName);
     }
 
@@ -244,7 +244,7 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
-    public String getDatabaseName() {
+    public @Nullable String getDatabaseName() {
         return connectionProperties.getDatabaseName();
     }
 
@@ -269,17 +269,17 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
-    public void setWireCrypt(String wireCrypt) {
+    public void setWireCrypt(@Nullable String wireCrypt) {
         EventManager.super.setWireCrypt(wireCrypt);
     }
 
     @Override
-    public String getDbCryptConfig() {
+    public @Nullable String getDbCryptConfig() {
         return EventManager.super.getDbCryptConfig();
     }
 
     @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
+    public void setDbCryptConfig(@Nullable String dbCryptConfig) {
         EventManager.super.setDbCryptConfig(dbCryptConfig);
     }
 
@@ -289,7 +289,7 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
-    public void setAuthPlugins(String authPlugins) {
+    public void setAuthPlugins(@Nullable String authPlugins) {
         EventManager.super.setAuthPlugins(authPlugins);
     }
 
@@ -375,12 +375,12 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
-    public String getProperty(String name) {
+    public @Nullable String getProperty(String name) {
         return connectionProperties.getProperty(name);
     }
 
     @Override
-    public void setProperty(String name, String value) {
+    public void setProperty(String name, @Nullable String value) {
         if (PropertyNames.type.equals(name)) {
             // Triggers exception
             setType(value);
@@ -389,22 +389,22 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
-    public Integer getIntProperty(String name) {
+    public @Nullable Integer getIntProperty(String name) {
         return connectionProperties.getIntProperty(name);
     }
 
     @Override
-    public void setIntProperty(String name, Integer value) {
+    public void setIntProperty(String name, @Nullable Integer value) {
         connectionProperties.setIntProperty(name, value);
     }
 
     @Override
-    public Boolean getBooleanProperty(String name) {
+    public @Nullable Boolean getBooleanProperty(String name) {
         return connectionProperties.getBooleanProperty(name);
     }
 
     @Override
-    public void setBooleanProperty(String name, Boolean value) {
+    public void setBooleanProperty(String name, @Nullable Boolean value) {
         connectionProperties.setBooleanProperty(name, value);
     }
 

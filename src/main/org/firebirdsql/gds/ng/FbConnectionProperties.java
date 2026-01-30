@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
@@ -7,6 +7,9 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
+import org.firebirdsql.jaybird.util.CollectionUtils;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -28,17 +31,17 @@ import static org.firebirdsql.gds.JaybirdSystemProperties.getDefaultReportSQLWar
  * @see FbImmutableConnectionProperties
  * @since 3.0
  */
+@NullMarked
 public final class FbConnectionProperties extends AbstractAttachProperties<IConnectionProperties>
         implements IConnectionProperties, Serializable {
 
     @SuppressWarnings("java:S1948")
-    private FbImmutableConnectionProperties immutableConnectionPropertiesCache;
+    private @Nullable FbImmutableConnectionProperties immutableConnectionPropertiesCache;
 
     /**
      * Copy constructor for FbConnectionProperties.
      * <p>
-     * All properties defined in {@link IConnectionProperties} are
-     * copied from <code>src</code> to the new instance.
+     * All properties defined in {@link IConnectionProperties} are copied from {@code src} to the new instance.
      * </p>
      *
      * @param src
@@ -92,7 +95,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     }
 
     @Override
-    protected Object resolveStoredDefaultValue(ConnectionProperty property) {
+    protected @Nullable Object resolveStoredDefaultValue(ConnectionProperty property) {
         return switch (property.name()) {
             case PropertyNames.sessionTimeZone -> defaultTimeZone();
             case PropertyNames.sqlDialect -> PropertyConstants.DEFAULT_DIALECT;
@@ -103,7 +106,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
         };
     }
 
-    private static Integer negativeToZero(Integer value) {
+    private static @Nullable Integer negativeToZero(@Nullable Integer value) {
         if (value != null && value < 0) return 0;
         return value;
     }
@@ -114,7 +117,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
 
     @Override
     @SuppressWarnings("java:S1206")
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         return super.equals(o);
@@ -144,15 +147,21 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
 
         private SerializationProxy(FbConnectionProperties fbConnectionProperties) {
             Map<ConnectionProperty, Object> srcProps = fbConnectionProperties.connectionPropertyValues();
-            propValues = new HashMap<>(srcProps.size());
+            propValues = new HashMap<>(CollectionUtils.mapCapacity(srcProps.size()));
             srcProps.forEach((k, v) -> propValues.put(k.name(), (Serializable) v));
         }
 
         @Serial
         protected Object readResolve() {
-            HashMap<ConnectionProperty, Object> targetProps = new HashMap<>(propValues.size());
-            ConnectionPropertyRegistry propertyRegistry = ConnectionPropertyRegistry.getInstance();
-            propValues.forEach((k, v) -> targetProps.put(propertyRegistry.getOrUnknown(k), v));
+            HashMap<ConnectionProperty, Object> targetProps;
+            // In theory, propValues might be null due to serialization
+            if (propValues != null) {
+                targetProps = new HashMap<>(CollectionUtils.mapCapacity(propValues.size()));
+                ConnectionPropertyRegistry propertyRegistry = ConnectionPropertyRegistry.getInstance();
+                propValues.forEach((k, v) -> targetProps.put(propertyRegistry.getOrUnknown(k), v));
+            } else {
+                targetProps = new HashMap<>();
+            }
 
             return new FbConnectionProperties(targetProps);
         }
