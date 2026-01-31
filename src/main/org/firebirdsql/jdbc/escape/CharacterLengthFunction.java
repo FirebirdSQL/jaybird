@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2018 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.escape;
 
@@ -10,8 +10,8 @@ package org.firebirdsql.jdbc.escape;
  */
 final class CharacterLengthFunction implements SQLFunction {
 
-    private static final SQLFunction CHAR_LENGTH_FUNCTION = new PatternSQLFunction("CHAR_LENGTH({0})");
-    private static final SQLFunction OCTET_LENGTH_FUNCTION = new PatternSQLFunction("OCTET_LENGTH({0})");
+    private static final PatternSQLFunction CHAR_LENGTH_FUNCTION = new PatternSQLFunction("CHAR_LENGTH({0})");
+    private static final PatternSQLFunction OCTET_LENGTH_FUNCTION = new PatternSQLFunction("OCTET_LENGTH({0})");
 
     @Override
     public String apply(String... parameters) throws FBSQLParseException {

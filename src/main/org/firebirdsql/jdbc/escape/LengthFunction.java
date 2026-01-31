@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2018 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.escape;
 
@@ -19,8 +19,8 @@ package org.firebirdsql.jdbc.escape;
  */
 final class LengthFunction implements SQLFunction {
 
-    private static final SQLFunction TRIM_TRAILING = new PatternSQLFunction("TRIM(TRAILING FROM {0})");
-    private static final SQLFunction CHARACTER_LENGTH = new CharacterLengthFunction();
+    private static final PatternSQLFunction TRIM_TRAILING = new PatternSQLFunction("TRIM(TRAILING FROM {0})");
+    private static final CharacterLengthFunction CHARACTER_LENGTH = new CharacterLengthFunction();
 
     @Override
     public String apply(String... parameters) throws FBSQLParseException {

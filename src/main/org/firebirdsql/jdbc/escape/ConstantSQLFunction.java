@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2018 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.escape;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Implementation of {@link SQLFunction} for constants or functions without parameters.
@@ -13,7 +15,7 @@ final class ConstantSQLFunction implements SQLFunction {
     private final String functionConstant;
 
     ConstantSQLFunction(String functionConstant) {
-        this.functionConstant = functionConstant;
+        this.functionConstant = requireNonNull(functionConstant, "functionConstant");
     }
 
     @Override

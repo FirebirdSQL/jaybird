@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2018 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.escape;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Implements the {@code POSITION} JDBC escape.
@@ -14,10 +16,10 @@ package org.firebirdsql.jdbc.escape;
  */
 final class PositionFunction implements SQLFunction {
 
-    private static final SQLFunction POSITION = new PatternSQLFunction("POSITION({0})");
+    private static final PatternSQLFunction POSITION = new PatternSQLFunction("POSITION({0})");
 
     @Override
-    public String apply(String... parameters) throws FBSQLParseException {
+    public @Nullable String apply(String... parameters) throws FBSQLParseException {
         switch (parameters.length) {
         case 1:
             return POSITION.apply(parameters);
