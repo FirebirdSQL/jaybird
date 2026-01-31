@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2011-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.ds;
 
@@ -18,7 +18,6 @@ import java.util.Hashtable;
  */
 public class DataSourceFactory implements ObjectFactory {
 
-    @SuppressWarnings("RedundantThrows")
     @Override
     public Object getObjectInstance(Object obj, Name name, Context nameCtx,Hashtable<?, ?> environment)
             throws Exception {
@@ -31,21 +30,21 @@ public class DataSourceFactory implements ObjectFactory {
         };
     }
 
-    private Object loadConnectionPoolDS(Reference ref) {
+    private Object loadConnectionPoolDS(Reference ref) throws Exception {
         var ds = new FBConnectionPoolDataSource();
         loadAbstractCommonDataSource(ds, ref);
 
         return ds;
     }
 
-    private Object loadXADS(Reference ref) {
+    private Object loadXADS(Reference ref) throws Exception {
         var ds = new FBXADataSource();
         loadAbstractCommonDataSource(ds, ref);
 
         return ds;
     }
 
-    private Object loadSimpleDS(Reference ref) {
+    private Object loadSimpleDS(Reference ref) throws Exception {
         RefAddr propertyContent = ref.get(FBSimpleDataSource.REF_MCF);
         FBManagedConnectionFactory mcf = null;
         if (propertyContent != null) {
@@ -60,7 +59,7 @@ public class DataSourceFactory implements ObjectFactory {
         return ds;
     }
 
-    private void loadAbstractCommonDataSource(FBAbstractCommonDataSource ds, Reference ref) {
+    private void loadAbstractCommonDataSource(FBAbstractCommonDataSource ds, Reference ref) throws Exception {
         RefAddr propertyContent = ref.get(FBAbstractCommonDataSource.REF_PROPERTIES);
         if (propertyContent != null) {
             byte[] data = (byte[]) propertyContent.getContent();
@@ -91,9 +90,9 @@ public class DataSourceFactory implements ObjectFactory {
     protected static byte[] serialize(Object obj) throws NamingException {
         try {
             var bout = new ByteArrayOutputStream();
-            var out = new ObjectOutputStream(bout);
-            out.writeObject(obj);
-            out.flush();
+            try (var out = new ObjectOutputStream(bout)) {
+                out.writeObject(obj);
+            }
             return bout.toByteArray();
         } catch (IOException e) {
             var namingException = new NamingException("Could not serialize object");
@@ -102,14 +101,14 @@ public class DataSourceFactory implements ObjectFactory {
         }
     }
 
-    protected static Object deserialize(byte[] data) {
+    protected static Object deserialize(byte[] data) throws NamingException {
         try {
             var in = new ObjectInputStream(new ByteArrayInputStream(data));
             return in.readObject();
-        } catch (IOException | ClassNotFoundException ex) {
-            System.getLogger(DataSourceFactory.class.getName())
-                    .log(System.Logger.Level.WARNING, "Could not deserialize object, returning null", ex);
-            return null;
+        } catch (IOException | ClassNotFoundException e) {
+            var namingException = new NamingException("Could not deserialize object");
+            namingException.initCause(e);
+            throw namingException;
         }
     }
 
