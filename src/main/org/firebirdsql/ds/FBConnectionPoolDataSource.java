@@ -1,12 +1,12 @@
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.ds;
 
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDataSource;
+import org.jspecify.annotations.Nullable;
 
 import javax.naming.NamingException;
 import javax.naming.Reference;
@@ -33,31 +33,36 @@ public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource imple
     // TODO Implement in terms of FBManagedConnectionFactory
     
     @SuppressWarnings("java:S3077")
-    private volatile FBDataSource internalDs;
+    private volatile @Nullable FBDataSource internalDs;
 
+    @Override
     public PooledConnection getPooledConnection() throws SQLException {
         return getPooledConnection(getUser(), getPassword());
     }
 
-    public PooledConnection getPooledConnection(String user, String password) throws SQLException {
+    @Override
+    public PooledConnection getPooledConnection(@Nullable String user, @Nullable String password) throws SQLException {
+        FBDataSource internalDs = this.internalDs;
         if (internalDs == null) {
-            initialize();
+            internalDs = initialize();
         }
         return new FBPooledConnection(internalDs.getConnection(user, password));
     }
     
-    private void initialize() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+    private FBDataSource initialize() throws SQLException {
+        try (var ignored = withLock()) {
+            FBDataSource internalDs = this.internalDs;
             if (internalDs != null) {
-                return;
+                return internalDs;
             }
             GDSType gdsType = GDSType.getType(getType());
             if (gdsType == null) {
                 gdsType = GDSFactory.getDefaultGDSType();
             }
-            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(gdsType, getConnectionProperties());
+            var mcf = new FBManagedConnectionFactory(gdsType, getConnectionProperties());
             internalDs = (FBDataSource) mcf.createConnectionFactory();
             internalDs.setLogWriter(getLogWriter());
+            return this.internalDs = internalDs;
         }
     }
 

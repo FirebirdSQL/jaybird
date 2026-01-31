@@ -3,7 +3,6 @@
 package org.firebirdsql.ds;
 
 import org.firebirdsql.jdbc.FirebirdConnectionProperties;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -12,7 +11,6 @@ import org.jspecify.annotations.Nullable;
  * @author Mark Rotteveel
  * @since 5
  */
-@NullMarked
 public abstract class AbstractConnectionPropertiesDataSource extends RootCommonDataSource
         implements FirebirdConnectionProperties {
 

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.ds;
 
@@ -20,9 +20,12 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jaybird.xca.FatalErrorHelper;
 import org.firebirdsql.jdbc.FirebirdConnection;
+import org.jspecify.annotations.Nullable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
- * PooledConnection implementation for {@link FBConnectionPoolDataSource}
+ * PooledConnection implementation for {@link FBConnectionPoolDataSource}.
  * 
  * @author Mark Rotteveel
  * @since 2.2
@@ -33,11 +36,11 @@ sealed class FBPooledConnection implements PooledConnection permits FBXAConnecti
 
     private final Lock lock = new ReentrantLock();
     private final LockCloseable unlock = lock::unlock;
-    private Connection connection;
-    private PooledConnectionHandler handler;
+    private @Nullable Connection connection;
+    private @Nullable PooledConnectionHandler handler;
 
     FBPooledConnection(Connection connection) {
-        this.connection = connection;
+        this.connection = requireNonNull(connection, "connection");
     }
 
     LockCloseable withLock() {
@@ -54,8 +57,7 @@ sealed class FBPooledConnection implements PooledConnection permits FBXAConnecti
                     handler.close();
                 }
                 resetConnection(connection);
-                handler = createConnectionHandler(connection);
-
+                PooledConnectionHandler handler = this.handler = createConnectionHandler(connection);
                 return handler.getProxy();
             } catch (SQLException ex) {
                 fireFatalConnectionError(ex);
@@ -95,13 +97,17 @@ sealed class FBPooledConnection implements PooledConnection permits FBXAConnecti
     public void close() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             var chain = new SQLExceptionChainBuilder();
+            PooledConnectionHandler handler = this.handler;
             if (handler != null) {
                 try {
                     handler.close();
                 } catch (SQLException se) {
                     chain.append(se);
+                } finally {
+                    this.handler = null;
                 }
             }
+            Connection connection = this.connection;
             if (connection != null) {
                 try {
                     connection.close();
@@ -109,7 +115,7 @@ sealed class FBPooledConnection implements PooledConnection permits FBXAConnecti
                     // We want the exception from closing the physical connection to be the first
                     chain.addFirst(se);
                 } finally {
-                    connection = null;
+                    this.connection = null;
                 }
             }
             chain.throwIfPresent();

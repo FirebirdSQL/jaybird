@@ -4,6 +4,8 @@ package org.firebirdsql.ds;
 
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBConnectionProperties;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
@@ -19,9 +21,10 @@ import java.util.Hashtable;
 public class DataSourceFactory implements ObjectFactory {
 
     @Override
-    public Object getObjectInstance(Object obj, Name name, Context nameCtx,Hashtable<?, ?> environment)
+    @NullUnmarked /* everything is nullable, but for our purposes it doesn't matter, so don't specifically annotate */
+    public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment)
             throws Exception {
-        Reference ref = (Reference) obj;
+        if (!(obj instanceof Reference ref)) return null;
         return switch (ref.getClassName()) {
             case "org.firebirdsql.ds.FBConnectionPoolDataSource" -> loadConnectionPoolDS(ref);
             case "org.firebirdsql.ds.FBXADataSource" -> loadXADS(ref);
@@ -33,14 +36,12 @@ public class DataSourceFactory implements ObjectFactory {
     private Object loadConnectionPoolDS(Reference ref) throws Exception {
         var ds = new FBConnectionPoolDataSource();
         loadAbstractCommonDataSource(ds, ref);
-
         return ds;
     }
 
     private Object loadXADS(Reference ref) throws Exception {
         var ds = new FBXADataSource();
         loadAbstractCommonDataSource(ds, ref);
-
         return ds;
     }
 
@@ -78,7 +79,7 @@ public class DataSourceFactory implements ObjectFactory {
      *         Address or type
      * @return Content as String
      */
-    protected static String getRefAddr(Reference ref, String type) {
+    protected static @Nullable String getRefAddr(Reference ref, String type) {
         RefAddr addr = ref.get(type);
         if (addr == null) {
             return null;

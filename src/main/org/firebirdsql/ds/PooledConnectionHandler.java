@@ -6,6 +6,10 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.FirebirdConnection;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -18,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_logicalConnectionForciblyClosed;
 import static org.firebirdsql.jaybird.util.ReflectionHelper.findMethod;
 import static org.firebirdsql.jaybird.util.ReflectionHelper.getAllInterfaces;
@@ -25,32 +30,34 @@ import static org.firebirdsql.jaybird.util.ReflectionHelper.getAllInterfaces;
 /**
  * InvocationHandler for the logical connection returned by FBPooledConnection.
  * <p>
- * Using an InvocationHandler together with a Proxy removes the need to create rappers for every individual JDBC
+ * Using an InvocationHandler together with a Proxy removes the need to create wrappers for every individual JDBC
  * version.
  * </p>
- * 
+ *
  * @author Mark Rotteveel
  * @since 2.2
  */
+@NullUnmarked /* InvocationHandler and reflection helper make nullability a bit messy; we annotated what we could */
 sealed class PooledConnectionHandler implements InvocationHandler permits XAConnectionHandler {
 
-    private final FBPooledConnection owner;
+    private final @NonNull FBPooledConnection owner;
     @SuppressWarnings("java:S3077")
-    volatile Connection connection;
+    volatile @Nullable Connection connection;
     @SuppressWarnings("java:S3077")
-    private volatile Connection proxy;
+    private volatile @Nullable Connection proxy;
     private volatile boolean forcedClose;
 
     private final List<StatementHandler> openStatements = new ArrayList<>();
 
+    @NullMarked
     PooledConnectionHandler(Connection connection, FBPooledConnection owner) {
-        this.connection = connection;
-        this.owner = owner;
+        this.connection = requireNonNull(connection, "connection");
+        this.owner = requireNonNull(owner, "owner");
         proxy = (Connection) Proxy.newProxyInstance(getClass().getClassLoader(),
                 getAllInterfaces(connection.getClass()), this);
     }
 
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(@NonNull Object proxy, @NonNull Method method, Object[] args) throws Throwable {
         // Methods from object
         if (method.equals(TO_STRING)) {
             return "Proxy for " + connection;
@@ -110,17 +117,20 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
             throw se;
         }
     }
-    
+
     /**
      * Method to decide if calling rollback on the physical connection for cleanup (in handleClose()) is allowed.
      * <p>
      * NOTE: This method is not involved in rollback decisions for calls to the proxy.
      * </p>
-     * 
+     *
+     * @param connection
+     *         the physical connection (this <em>must</em> be the {@code connection} field of this handler; we're
+     *         passing it in as a parameter for visibility reasons as the field is volatile)
      * @return {@code true} when calling rollback is allowed
      */
-    boolean isRollbackAllowed() throws SQLException {
-        return !connection.getAutoCommit();
+    boolean isRollbackAllowed(@Nullable Connection connection) throws SQLException {
+        return connection != null && !connection.getAutoCommit();
     }
 
     /**
@@ -139,35 +149,40 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
             chain.append(ex);
         }
 
-        if (isRollbackAllowed()) {
-            try {
-                connection.rollback();
-            } catch (SQLException ex) {
-                chain.append(ex);
-            }
-        } else if (connection.getAutoCommit() && connection.isWrapperFor(FirebirdConnection.class)
-                && connection.unwrap(FirebirdConnection.class).isUseFirebirdAutoCommit()) {
-            // Force commit when in Firebird autocommit mode
-            try {
-                connection.setAutoCommit(false);
-                connection.setAutoCommit(true);
-            } catch (SQLException ex) {
-                chain.append(ex);
-            }
-        }
-
         try {
-            connection.clearWarnings();
-        } catch (SQLException ex) {
-            chain.append(ex);
-        }
+            Connection connection = this.connection;
+            if (connection == null) return;
+            if (isRollbackAllowed(connection)) {
+                try {
+                    connection.rollback();
+                } catch (SQLException ex) {
+                    chain.append(ex);
+                }
+            } else if (connection.getAutoCommit()
+                    && connection.isWrapperFor(FirebirdConnection.class)
+                    && connection.unwrap(FirebirdConnection.class).isUseFirebirdAutoCommit()) {
+                // Force commit when in Firebird autocommit mode
+                try {
+                    connection.setAutoCommit(false);
+                    connection.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    chain.append(ex);
+                }
+            }
 
-        proxy = null;
-        connection = null;
-        owner.releaseConnectionHandler(this);
+            try {
+                connection.clearWarnings();
+            } catch (SQLException ex) {
+                chain.append(ex);
+            }
+        } finally {
+            proxy = null;
+            this.connection = null;
+            owner.releaseConnectionHandler(this);
 
-        if (notifyOwner) {
-            owner.fireConnectionClosed();
+            if (notifyOwner) {
+                owner.fireConnectionClosed();
+            }
         }
 
         chain.throwIfPresent();
@@ -176,7 +191,9 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
     /**
      * @return Proxy for the Connection object
      */
-    Connection getProxy() {
+    Connection getProxy() throws SQLException {
+        Connection proxy = this.proxy;
+        if (proxy == null) throw FbExceptionBuilder.connectionClosed();
         return proxy;
     }
 
@@ -197,12 +214,12 @@ sealed class PooledConnectionHandler implements InvocationHandler permits XAConn
         return connection == null || proxy == null;
     }
 
-    @SuppressWarnings("UnusedParameters")
-    void statementErrorOccurred(StatementHandler stmtHandler, SQLException sqle) {
+    @SuppressWarnings("unused")
+    void statementErrorOccurred(@NonNull StatementHandler stmtHandler, @NonNull SQLException sqle) {
         owner.fireConnectionError(sqle);
     }
 
-    void forgetStatement(StatementHandler stmtHandler) {
+    void forgetStatement(@NonNull StatementHandler stmtHandler) {
         try (LockCloseable ignored = owner.withLock()) {
             openStatements.remove(stmtHandler);
         }

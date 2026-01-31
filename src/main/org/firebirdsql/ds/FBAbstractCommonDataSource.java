@@ -6,7 +6,6 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.FBConnectionProperties;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import javax.naming.BinaryRefAddr;
@@ -25,7 +24,6 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 2.2
  */
-@NullMarked
 public abstract class FBAbstractCommonDataSource extends AbstractConnectionPropertiesDataSource {
 
     protected static final String REF_DESCRIPTION = "description";

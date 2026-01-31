@@ -1,14 +1,15 @@
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.ds;
 
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.xca.*;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.jdbc.FirebirdConnection;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import javax.naming.NamingException;
 import javax.naming.Reference;
@@ -25,6 +26,7 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 2.2
  */
+@NullMarked
 public class FBXADataSource extends FBAbstractCommonDataSource implements XADataSource, Referenceable {
 
     // TODO Implement in terms of FBManagedConnectionFactory
@@ -32,34 +34,35 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
     private static final System.Logger LOG = System.getLogger(FBXADataSource.class.getName());
 
     @SuppressWarnings("java:S3077")
-    private volatile FBDataSource internalDs;
+    private volatile @Nullable FBDataSource internalDs;
 
     public XAConnection getXAConnection() throws SQLException {
         return getXAConnection(getUser(), getPassword());
     }
 
-    public XAConnection getXAConnection(String user, String password) throws SQLException {
+    public XAConnection getXAConnection(@Nullable String user, @Nullable String password) throws SQLException {
+        FBDataSource internalDs = this.internalDs;
         if (internalDs == null) {
-            initialize();
+            internalDs = initialize();
         }
-        FBConnection connection = (FBConnection) internalDs.getConnection(user, password);
-        return new FBXAConnection(connection);
+        return new FBXAConnection((FBConnection) internalDs.getConnection(user, password));
     }
 
-    private void initialize() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
+    private FBDataSource initialize() throws SQLException {
+        try (var ignored = withLock()) {
+            FBDataSource internalDs = this.internalDs;
             if (internalDs != null) {
-                return;
+                return internalDs;
             }
             GDSType gdsType = GDSType.getType(getType());
             if (gdsType == null) {
                 gdsType = GDSFactory.getDefaultGDSType();
             }
-            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(gdsType,
-                    getConnectionProperties());
+            var mcf = new FBManagedConnectionFactory(gdsType, getConnectionProperties());
             mcf.setDefaultConnectionManager(new XAConnectionManager());
             internalDs = (FBDataSource) mcf.createConnectionFactory();
             internalDs.setLogWriter(getLogWriter());
+            return this.internalDs = internalDs;
         }
     }
 

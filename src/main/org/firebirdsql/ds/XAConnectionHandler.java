@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.ds;
+
+import org.jspecify.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -21,7 +23,7 @@ final class XAConnectionHandler extends PooledConnectionHandler {
     }
 
     @Override
-    boolean isRollbackAllowed() throws SQLException {
-        return !(xaOwner.inDistributedTransaction() || connection.getAutoCommit());
+    boolean isRollbackAllowed(@Nullable Connection connection) throws SQLException {
+        return connection != null && !(xaOwner.inDistributedTransaction() || connection.getAutoCommit());
     }
 }

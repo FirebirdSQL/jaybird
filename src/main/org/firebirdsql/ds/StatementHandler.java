@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.ds;
 
@@ -12,7 +12,12 @@ import java.sql.Statement;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jdbc.FirebirdStatement;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jaybird.util.ReflectionHelper.*;
 
 /**
@@ -25,13 +30,14 @@ import static org.firebirdsql.jaybird.util.ReflectionHelper.*;
  * @author Mark Rotteveel
  * @since 2.2
  */
+@NullUnmarked /* InvocationHandler and reflection helper make nullability a bit messy; we annotated what we could */
 class StatementHandler implements InvocationHandler {
 
-    private final PooledConnectionHandler owner;
+    private final @NonNull PooledConnectionHandler owner;
     @SuppressWarnings("java:S3077")
-    private volatile Statement stmt;
+    private volatile @Nullable Statement stmt;
     @SuppressWarnings("java:S3077")
-    private volatile Statement proxy;
+    private volatile @Nullable Statement proxy;
 
     /**
      * Constructor for StatementHandler.
@@ -41,15 +47,16 @@ class StatementHandler implements InvocationHandler {
      * @param stmt
      *         Statement to proxy
      */
+    @NullMarked
     StatementHandler(PooledConnectionHandler owner, Statement stmt) {
-        this.owner = owner;
-        this.stmt = stmt;
+        this.owner = requireNonNull(owner, "owner");
+        this.stmt = requireNonNull(stmt, "stmt");
 
         proxy = (Statement) Proxy.newProxyInstance(getClass().getClassLoader(),
                 getAllInterfaces(stmt.getClass()), this);
     }
 
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(@NonNull Object proxy, @NonNull Method method, Object[] args) throws Throwable {
         // Methods from object
         if (method.equals(TO_STRING)) {
             return "Proxy for " + stmt;
@@ -100,7 +107,9 @@ class StatementHandler implements InvocationHandler {
     /**
      * @return Proxy for the Statement object
      */
-    protected Statement getProxy() {
+    protected Statement getProxy() throws SQLException {
+        Statement proxy = this.proxy;
+        if (proxy == null) throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_stmtClosed).toSQLException();
         return proxy;
     }
 
@@ -116,10 +125,11 @@ class StatementHandler implements InvocationHandler {
             return;
         }
         try {
-            stmt.close();
+            Statement stmt = this.stmt;
+            if (stmt != null) stmt.close();
         } finally {
             owner.forgetStatement(this);
-            stmt = null;
+            this.stmt = null;
             proxy = null;
         }
     }

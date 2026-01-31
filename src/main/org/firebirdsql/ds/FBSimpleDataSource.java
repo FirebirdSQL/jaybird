@@ -17,7 +17,6 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDataSource;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import javax.naming.*;
@@ -45,7 +44,6 @@ import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
  * @author Roman Rokytskyy
  * @author David Jencks
  */
-@NullMarked
 public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
         implements DataSource, Serializable, Referenceable {
 
