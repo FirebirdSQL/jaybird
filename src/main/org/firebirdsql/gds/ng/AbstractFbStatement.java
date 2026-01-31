@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
@@ -10,6 +10,8 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.*;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -63,6 +65,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     private final TransactionListener transactionListener = new TransactionListener() {
         @Override
         @SuppressWarnings({ "ThrowFromFinallyBlock", "java:S1143", "java:S1163" })
+        @NullMarked
         public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
                 TransactionState previousState) {
             if (getTransaction() != transaction) {
@@ -668,12 +671,12 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    public final void addExceptionListener(ExceptionListener listener) {
+    public final void addExceptionListener(@NonNull ExceptionListener listener) {
         exceptionListenerDispatcher.addListener(listener);
     }
 
     @Override
-    public final void removeExceptionListener(ExceptionListener listener) {
+    public final void removeExceptionListener(@NonNull ExceptionListener listener) {
         exceptionListenerDispatcher.removeListener(listener);
     }
 
@@ -967,6 +970,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     /**
      * Listener to reset the statement state when it has been cancelled due to statement timeout.
      */
+    @NullMarked
     private final class StatementCancelledListener implements ExceptionListener {
 
         @SuppressWarnings("java:S1301")
@@ -995,6 +999,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     /**
      * Listener that allows a statement to listen to itself, so it can react to its own actions or state transitions.
      */
+    @NullMarked
     private final class SelfListener implements StatementListener {
         @Override
         public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {

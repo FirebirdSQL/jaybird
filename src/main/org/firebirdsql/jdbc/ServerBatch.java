@@ -12,6 +12,7 @@ import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jaybird.fb.constants.BatchItems;
 import org.firebirdsql.jaybird.util.Primitives;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.BatchUpdateException;
 import java.sql.SQLException;
@@ -59,6 +60,7 @@ final class ServerBatch implements Batch, StatementListener {
     }
 
     @Override
+    @NullMarked
     public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
         if (isClosed() || sender != statement) {
             sender.removeStatementListener(this);

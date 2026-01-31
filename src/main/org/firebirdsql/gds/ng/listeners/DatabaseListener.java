@@ -40,9 +40,9 @@ public interface DatabaseListener {
     /**
      * Called when a warning was received for the {@code database} connection.
      * <p>
-     * In implementation it is possible that some warnings are not sent to listeners on the database, but only to
-     * listeners on
-     * specific connection derived objects (like an {@link org.firebirdsql.gds.ng.FbStatement} implementation).
+     * In implementation, it is possible that some warnings are not sent to listeners on the database, but only to
+     * listeners on specific connection derived objects (like an {@link org.firebirdsql.gds.ng.FbStatement}
+     * implementation).
      * </p>
      *
      * @param database

@@ -4,7 +4,7 @@
  SPDX-FileCopyrightText: Copyright 2002 Nikolay Samofatov
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -141,12 +141,12 @@ final class FBCachedFetcher extends AbstractFetcher implements FBFetcher {
             if (isBlob[j] && tempData != null) {
                 final FieldDataProvider dataProvider = new FieldDataProvider() {
                     @Override
-                    public byte[] getFieldData() {
+                    public byte @Nullable [] getFieldData() {
                         return tempData;
                     }
 
                     @Override
-                    public void setFieldData(byte[] data) {
+                    public void setFieldData(byte @Nullable [] data) {
                         throw new UnsupportedOperationException();
                     }
                 };
@@ -321,6 +321,7 @@ final class FBCachedFetcher extends AbstractFetcher implements FBFetcher {
         return lockAction.get();
     }
 
+    @NullMarked
     private static final class RowListener implements StatementListener {
         private final List<RowValue> rows = new ArrayList<>();
         private boolean allRowsFetched = false;

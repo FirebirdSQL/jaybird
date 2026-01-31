@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -8,6 +8,8 @@ import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLWarning;
 import java.util.ArrayList;
@@ -20,16 +22,17 @@ import java.util.List;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public class SimpleStatementListener implements StatementListener {
 
     private final List<RowValue> rows = new ArrayList<>();
     private final List<SQLWarning> warnings = Collections.synchronizedList(new ArrayList<>());
-    private Boolean beforeFirst;
-    private Boolean afterLast;
-    private Boolean hasResultSet;
-    private Boolean hasSingletonResult;
-    private SqlCountHolder sqlCounts;
-    private Integer lastFetchCount;
+    private @Nullable Boolean beforeFirst;
+    private @Nullable Boolean afterLast;
+    private @Nullable Boolean hasResultSet;
+    private @Nullable Boolean hasSingletonResult;
+    private @Nullable SqlCountHolder sqlCounts;
+    private @Nullable Integer lastFetchCount;
 
     @Override
     public void receivedRow(FbStatement sender, RowValue rowValue) {
@@ -89,19 +92,19 @@ public class SimpleStatementListener implements StatementListener {
         this.sqlCounts = sqlCounts;
     }
 
-    public Boolean isBeforeFirst() {
+    public @Nullable Boolean isBeforeFirst() {
         return beforeFirst;
     }
 
-    public Boolean isAfterLast() {
+    public @Nullable Boolean isAfterLast() {
         return afterLast;
     }
 
-    public Boolean hasResultSet() {
+    public @Nullable Boolean hasResultSet() {
         return hasResultSet;
     }
 
-    public Boolean hasSingletonResult() {
+    public @Nullable Boolean hasSingletonResult() {
         return hasSingletonResult;
     }
 
@@ -113,7 +116,7 @@ public class SimpleStatementListener implements StatementListener {
         return new ArrayList<>(warnings);
     }
 
-    public Integer getLastFetchCount() {
+    public @Nullable Integer getLastFetchCount() {
         return lastFetchCount;
     }
 
@@ -128,7 +131,7 @@ public class SimpleStatementListener implements StatementListener {
         warnings.clear();
     }
 
-    public SqlCountHolder getSqlCounts() {
+    public @Nullable SqlCountHolder getSqlCounts() {
         return sqlCounts;
     }
 }

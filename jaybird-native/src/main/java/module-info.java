@@ -5,6 +5,9 @@ module org.firebirdsql.jna {
     requires com.sun.jna;
     requires static jakarta.servlet;
 
+    // Declare as optional for deployment simplicity
+    requires static org.jspecify;
+
     exports org.firebirdsql.jna.embedded.classpath;
     exports org.firebirdsql.jna.embedded.spi;
     exports org.firebirdsql.jna.jakarta;

@@ -14,6 +14,7 @@ dependencies {
     // NOTE: ':' represents the root module, which contains the main Jaybird driver
     api project(':')
     api libs.jna
+    api libs.jspecify
 
     compileOnly libs.jakarta.servlet.api
 

@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2015-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.listeners.AbstractListenerDispatcher;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * Dispatcher for {@link org.firebirdsql.gds.ng.wire.AsynchronousChannelListener}.
@@ -10,6 +11,7 @@ import org.firebirdsql.gds.ng.listeners.AbstractListenerDispatcher;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public class AsynchronousChannelListenerDispatcher extends AbstractListenerDispatcher<AsynchronousChannelListener>
         implements AsynchronousChannelListener {
 

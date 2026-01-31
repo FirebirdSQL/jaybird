@@ -297,6 +297,7 @@ sealed class FBStatementFetcher extends AbstractFetcher implements FBFetcher per
         return stmt.withLock();
     }
 
+    @NullMarked
     private final class RowListener implements StatementListener {
         @Override
         public void receivedRow(FbStatement sender, RowValue rowValue) {

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2018 Artyom Smirnov
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later
@@ -20,6 +20,8 @@ import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.jna.fbclient.XSQLDA;
 import org.firebirdsql.jna.fbclient.XSQLVAR;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.ref.Cleaner;
 import java.nio.ByteBuffer;
@@ -482,11 +484,12 @@ public class JnaStatement extends AbstractFbStatement {
         getDatabase().processStatusVector(statusVector, getStatementWarningCallback());
     }
 
+    @NullMarked
     private static final class CleanupAction implements Runnable, DatabaseListener {
 
         private final IntByReference handle;
         @SuppressWarnings("java:S3077")
-        private volatile JnaDatabase database;
+        private volatile @Nullable JnaDatabase database;
 
         private CleanupAction(IntByReference handle, JnaDatabase database) {
             this.handle = handle;

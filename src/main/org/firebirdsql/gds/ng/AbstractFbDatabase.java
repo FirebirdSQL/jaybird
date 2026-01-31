@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -11,6 +11,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.jspecify.annotations.NullMarked;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -258,6 +259,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     }
 
     @Override
+    @NullMarked
     public final void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
         switch (newState) {

@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2005-2006 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
@@ -13,6 +13,7 @@ import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.FBTpbMapper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -87,6 +88,7 @@ class ReconnectTransactionTest {
             final List<RowValue> rows = new ArrayList<>();
             StatementListener stmtListener = new StatementListener() {
                 @Override
+                @NullMarked
                 public void receivedRow(FbStatement sender, RowValue rowValues) {
                     rows.add(rowValues);
                 }

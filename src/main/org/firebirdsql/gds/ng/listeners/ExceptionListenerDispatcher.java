@@ -1,15 +1,17 @@
-// SPDX-FileCopyrightText: Copyright 2016-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2016-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.listeners;
 
 import java.sql.SQLException;
 import java.util.*;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Listener dispatcher for {@link ExceptionListener}.
  * <p>
- * This implementation uses {@code WeakReference} (or more specifically {@link WeakHashMap}. Therefor listeners
- * without a strong reference may be removed an no longer notified at any time.
+ * This implementation uses {@code WeakReference} (or more specifically {@link WeakHashMap}). Therefor listeners
+ * without a strong reference may be removed and no longer get notified at any time.
  * </p>
  *
  * @author Mark Rotteveel
@@ -25,9 +27,10 @@ public final class ExceptionListenerDispatcher implements Iterable<ExceptionList
     private volatile boolean shutdown = false;
 
     public ExceptionListenerDispatcher(Object source) {
-        this.source = source;
+        this.source = requireNonNull(source, "source");
     }
 
+    @Override
     public void errorOccurred(Object source, SQLException exception) {
         errorOccurred(exception);
     }
@@ -52,7 +55,7 @@ public final class ExceptionListenerDispatcher implements Iterable<ExceptionList
      *         Listener object
      */
     public void addListener(ExceptionListener listener) {
-        if (listener == this) {
+        if (requireNonNull(listener, "listener") == this) {
             throw new IllegalArgumentException("Adding this instance to itself is not allowed");
         }
         synchronized (listeners) {

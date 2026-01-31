@@ -473,6 +473,7 @@ final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
         return stmt.withLock();
     }
 
+    @NullMarked
     private static final class RowListener implements StatementListener {
         boolean beforeFirst;
         boolean afterLast;

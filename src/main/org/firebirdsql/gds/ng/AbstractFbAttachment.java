@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -9,6 +9,7 @@ import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSServerVersionException;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
+import org.jspecify.annotations.NonNull;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -138,12 +139,12 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     }
 
     @Override
-    public final void addExceptionListener(ExceptionListener listener) {
+    public final void addExceptionListener(@NonNull ExceptionListener listener) {
         exceptionListenerDispatcher.addListener(listener);
     }
 
     @Override
-    public final void removeExceptionListener(ExceptionListener listener) {
+    public final void removeExceptionListener(@NonNull ExceptionListener listener) {
         exceptionListenerDispatcher.removeListener(listener);
     }
 

@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2013-2016 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLWarning;
 import java.util.ArrayList;
@@ -15,9 +16,10 @@ import java.util.List;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public class SimpleDatabaseListener implements DatabaseListener {
 
-    private final List<SQLWarning> warnings = Collections.synchronizedList(new ArrayList<SQLWarning>());
+    private final List<SQLWarning> warnings = Collections.synchronizedList(new ArrayList<>());
     private boolean detaching = false;
     private boolean detached = false;
 

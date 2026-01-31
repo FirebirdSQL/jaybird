@@ -12,6 +12,7 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.jaybird.util.UncheckedSQLException;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -345,6 +346,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         }
     }
 
+    @NullMarked
     private final class ChannelDatabaseListener implements DatabaseListener {
 
         @Override

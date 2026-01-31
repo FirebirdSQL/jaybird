@@ -6,7 +6,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2006 Ludovic Orban
- SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jaybird.xca;
@@ -28,6 +28,8 @@ import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -129,6 +131,7 @@ public final class FBManagedConnection implements ExceptionListener {
     }
 
     @Override
+    @NullMarked
     public void errorOccurred(Object source, SQLException ex) {
         log.log(TRACE, "Error occurred", ex);
         if (FatalErrorHelper.isFatal(ex)) {
@@ -833,16 +836,18 @@ public final class FBManagedConnection implements ExceptionListener {
         }
 
         @Override
+        @NullMarked
         public void receivedRow(FbStatement sender, RowValue rowValue) {
             rows.add(rowValue);
         }
 
         @Override
-        public void afterLast(FbStatement sender) {
+        public void afterLast(@NonNull FbStatement sender) {
             moreRows = false;
         }
 
         @Override
+        @NullMarked
         public void fetchComplete(FbStatement sender, FetchDirection fetchDirection, int rows) {
             if (fetchAsyncAt * 3 < rows) {
                 fetchAsyncAt = rows >= 15 ? Math.min(rows / 3, 200) : NO_ASYNC_FETCH;
@@ -1289,6 +1294,7 @@ public final class FBManagedConnection implements ExceptionListener {
     /**
      * DatabaseListener implementation for use by this managed connection.
      */
+    @NullMarked
     private final class MCDatabaseListener implements DatabaseListener {
         @Override
         public void warningReceived(FbDatabase database, SQLWarning warning) {

@@ -6,6 +6,8 @@
  * @since 3
  */
 @InternalApi
+@NullMarked
 package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;

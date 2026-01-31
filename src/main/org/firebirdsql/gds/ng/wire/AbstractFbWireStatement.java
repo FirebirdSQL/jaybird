@@ -18,6 +18,8 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jaybird.util.Cleaners;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.lang.ref.Cleaner;
@@ -224,9 +226,10 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     @SuppressWarnings("resource")
+    @NullMarked
     private static final class CleanupAction implements Runnable, StatementListener, DatabaseListener {
 
-        private static final AtomicReferenceFieldUpdater<CleanupAction, FbWireDatabase> databaseUpdater =
+        private static final AtomicReferenceFieldUpdater<CleanupAction, @Nullable FbWireDatabase> databaseUpdater =
                 AtomicReferenceFieldUpdater.newUpdater(CleanupAction.class, FbWireDatabase.class, "database");
 
 
@@ -239,7 +242,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         };
 
         private final int handle;
-        private volatile FbWireDatabase database;
+        private volatile @Nullable FbWireDatabase database;
 
         private CleanupAction(AbstractFbWireStatement statement) {
             // NOTE: Care should be taken not to retain a handle to statement itself here
@@ -270,7 +273,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
             }
         }
 
-        private FbWireDatabase releaseAndGetDatabaseReference() {
+        private @Nullable FbWireDatabase releaseAndGetDatabaseReference() {
             FbWireDatabase database = databaseUpdater.getAndSet(this, null);
             if (database != null) {
                 database.removeDatabaseListener(this);

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.sql.*;
 import java.util.List;
 
+import static java.util.Objects.requireNonNullElse;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.FbAssumptions.assumeFeature;
@@ -269,7 +270,7 @@ public abstract class AbstractStatementTest {
         assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to be set to true");
         // Number is database dependent (unicode_fss + all single byte character sets)
         assertTrue(listener.getRows().size() > 2, "Expected more than two rows");
-        assertTrue(listener.getLastFetchCount() > 2, "Expected more than two rows");
+        assertTrue(requireNonNullElse(listener.getLastFetchCount(), 0) > 2, "Expected more than two rows");
 
         assertNull(listener.getSqlCounts(), "expected no SQL counts immediately after retrieving all rows");
 
@@ -311,9 +312,9 @@ public abstract class AbstractStatementTest {
                 db.getDatatypeCoder().encodeInt(1)); // Byte representation of 1
         statement.execute(rowValue);
 
-        assertTrue(listener.hasSingletonResult(), "Expected singleton result for executable stored procedure");
-        assertFalse(listener.hasResultSet(), "Expected no result set for executable stored procedure");
-        assertTrue(listener.isAfterLast(), "Expected all rows to have been fetched");
+        assertEquals(Boolean.TRUE, listener.hasSingletonResult(), "Expected singleton result for executable stored procedure");
+        assertEquals(Boolean.FALSE, listener.hasResultSet(), "Expected no result set for executable stored procedure");
+        assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected all rows to have been fetched");
         assertEquals(1, listener.getRows().size(), "Expected 1 row");
         assertNull(listener.getLastFetchCount(), "Expected no fetch count for EXECUTE PROCEDURE");
         RowValue fieldValues = listener.getRows().get(0);

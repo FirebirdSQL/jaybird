@@ -7,7 +7,7 @@
  SPDX-FileCopyrightText: Copyright 2002 Mark O'Donohue
  SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
  SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2016 Adriano dos Santos Fernandes
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -32,6 +32,7 @@ import org.firebirdsql.gds.ng.wire.InlineBlob;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.*;
 import java.sql.Blob;
@@ -642,6 +643,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     }
 
     @Override
+    @NullMarked
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
         if (newState == TransactionState.COMMITTED || newState == TransactionState.ROLLED_BACK) {

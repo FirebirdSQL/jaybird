@@ -1069,6 +1069,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return new FBStatementListener();
     }
 
+    @NullMarked
     private final class FBStatementListener implements StatementListener {
         @Override
         public void receivedRow(FbStatement sender, RowValue rowValue) {

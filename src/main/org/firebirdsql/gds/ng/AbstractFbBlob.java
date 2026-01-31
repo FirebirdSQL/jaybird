@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -9,6 +9,8 @@ import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -314,6 +316,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     @Override
+    @NullMarked
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
         if (getTransaction() != transaction) {
@@ -343,7 +346,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     @Override
-    public void detaching(FbDatabase database) {
+    public void detaching(@NonNull FbDatabase database) {
         if (this.database != database) {
             database.removeDatabaseListener(this);
             return;
@@ -361,7 +364,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     @Override
-    public void detached(FbDatabase database) {
+    public void detached(@NonNull FbDatabase database) {
         try (var ignored = withLock()) {
             if (this.database == database) {
                 state = BlobState.CLOSED;
@@ -375,6 +378,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     @Override
+    @NullMarked
     public void warningReceived(FbDatabase database, SQLWarning warning) {
         // Do nothing
     }
@@ -505,12 +509,12 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     @Override
-    public final void addExceptionListener(ExceptionListener listener) {
+    public final void addExceptionListener(@NonNull ExceptionListener listener) {
         exceptionListenerDispatcher.addListener(listener);
     }
 
     @Override
-    public final void removeExceptionListener(ExceptionListener listener) {
+    public final void removeExceptionListener(@NonNull ExceptionListener listener) {
         exceptionListenerDispatcher.removeListener(listener);
     }
 

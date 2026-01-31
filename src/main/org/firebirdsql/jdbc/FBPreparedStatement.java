@@ -8,7 +8,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
  SPDX-FileCopyrightText: Copyright 2005-2007 Gabriel Reid
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -916,6 +916,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         return fields != FIELDS_NOT_INITIALIZED;
     }
 
+    @NullMarked
     private static final class BatchStatementListener implements StatementListener {
 
         private final List<RowValue> rows;

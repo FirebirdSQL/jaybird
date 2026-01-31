@@ -544,6 +544,7 @@ public class FBEventManager implements EventManager {
         }
     }
 
+    @NullMarked
     private final class DbListener implements DatabaseListener, ExceptionListener {
 
         @Override

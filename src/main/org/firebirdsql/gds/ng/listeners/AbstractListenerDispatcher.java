@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.listeners;
+
+import org.jspecify.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
@@ -8,6 +10,8 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Dispatcher to maintain a list of listeners of type {@code L}.
@@ -31,7 +35,7 @@ public abstract class AbstractListenerDispatcher<L> implements Iterable<L> {
      * @param listener Listener object
      */
     public final void addListener(L listener) {
-        if (listener == this) {
+        if (requireNonNull(listener, "listener") == this) {
             throw new IllegalArgumentException("Adding this instance to itself is not allowed");
         }
         if (isShutdown()) return;
@@ -135,7 +139,7 @@ public abstract class AbstractListenerDispatcher<L> implements Iterable<L> {
         private final ListIterator<L> strongIterator;
         private final ListIterator<WeakReference<L>> weakIterator;
         private boolean useStrongIterator;
-        private L nextWeakListener;
+        private @Nullable L nextWeakListener;
 
         private ListenerIterator(
                 final CopyOnWriteArrayList<L> strongListeners,
@@ -168,10 +172,12 @@ public abstract class AbstractListenerDispatcher<L> implements Iterable<L> {
             }
             L next = nextWeakListener;
             nextWeakListener = null;
+            // Already covered by hasNext() check at start
+            assert next != null : "Implementation error: no next element";
             return next;
         }
 
-        private L getNextWeakListener() {
+        private @Nullable L getNextWeakListener() {
             // Be aware we are reverse iterating the listeners, but present it as forward iteration!
             final ListIterator<WeakReference<L>> weakIterator = this.weakIterator;
             L nextWeakListener = this.nextWeakListener;
@@ -179,6 +185,7 @@ public abstract class AbstractListenerDispatcher<L> implements Iterable<L> {
                 WeakReference<L> currentRef = weakIterator.previous();
                 nextWeakListener = currentRef.get();
             }
+            // This will temporarily strongly reference the listener to fulfill the contract of hasNext() and next()
             return this.nextWeakListener = nextWeakListener;
         }
 
