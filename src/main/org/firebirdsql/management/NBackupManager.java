@@ -1,7 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2009 Thomas Steinmaurer
-// SPDX-FileCopyrightText: Copyright 2011-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.management;
+
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -12,6 +15,7 @@ import java.sql.SQLException;
  * @author Thomas Steinmaurer
  * @author Mark Rotteveel
  */
+@NullMarked
 public interface NBackupManager extends ServiceManager {
 
     /**
@@ -46,8 +50,10 @@ public interface NBackupManager extends ServiceManager {
     void clearBackupFiles();
 
     /**
-     * Set the path to the database. This method is used both for backup and
-     * restore operation.
+     * Set the path to the database. This method is used both for backup and restore operation.
+     * <p>
+     * NOTE: Contrary to {@link ServiceManager#setDatabase(String)}, {@code path} is {@code @NonNull}.
+     * </p>
      *
      * @param path
      *         path to the database file.
@@ -108,7 +114,7 @@ public interface NBackupManager extends ServiceManager {
     /**
      * Sets the backup GUID (Firebird 4 and higher only).
      * <p>
-     * The backup GUID is the GUID of a previous backup of the (source) database. This is used by Firebird to backup
+     * The backup GUID is the GUID of a previous backup of the (source) database. This is used by Firebird to back up
      * the pages modified since that backup.
      * </p>
      * <p>
@@ -119,7 +125,7 @@ public interface NBackupManager extends ServiceManager {
      *         A GUID string of a previous backup, enclosed in braces.
      * @since 4.0.4
      */
-    void setBackupGuid(String guid);
+    void setBackupGuid(@Nullable String guid);
 
     /**
      * Sets the option no database triggers when connecting at backup or in-place restore.

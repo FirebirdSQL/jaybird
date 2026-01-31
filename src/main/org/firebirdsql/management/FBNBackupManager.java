@@ -1,16 +1,19 @@
 // SPDX-FileCopyrightText: Copyright 2009 Thomas Steinmaurer
-// SPDX-FileCopyrightText: Copyright 2012-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
 import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_options;
@@ -21,12 +24,13 @@ import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_options;
  * @author Thomas Steinmaurer
  * @author Mark Rotteveel
  */
+@NullMarked
 public class FBNBackupManager extends FBServiceManager implements NBackupManager {
 
     private final List<String> backupFiles = new ArrayList<>();
 
     private int backupLevel = -1;
-    private String backupGuid;
+    private @Nullable String backupGuid;
     private boolean noDBTriggers;
     private boolean inPlaceRestore;
     private boolean preserveSequence;
@@ -63,13 +67,18 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     }
 
     @Override
+    public void setDatabase(String database) {
+        super.setDatabase(requireNonNull(database, "database"));
+    }
+
+    @Override
     public void setBackupFile(String backupFile) {
         addBackupFile(backupFile);
     }
 
     @Override
     public void addBackupFile(String backupFile) {
-        backupFiles.add(backupFile);
+        backupFiles.add(requireNonNull(backupFile, "backupFile"));
     }
 
     @Override
@@ -197,7 +206,7 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     }
 
     @Override
-    public void setBackupGuid(String guid) {
+    public void setBackupGuid(@Nullable String guid) {
         backupGuid = guid;
     }
 

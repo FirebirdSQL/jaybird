@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2016-2017 Ivan Arabadzhiev
-// SPDX-FileCopyrightText: Copyright 2016-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2016-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
 
@@ -7,6 +7,8 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -20,16 +22,17 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 
 /**
- * Implements the streaming version of the backup and restore functionality of
- * Firebird Services API.
+ * Implements the streaming version of the backup and restore functionality of the Firebird Services API.
  *
+ * @author Ivan Arabadzhiev
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
+@NullMarked
 public class FBStreamingBackupManager extends FBBackupManagerBase implements BackupManager {
 
-    private OutputStream backupOutputStream = null;
-    private BufferedInputStream restoreInputStream = null;
+    private @Nullable OutputStream backupOutputStream;
+    private @Nullable BufferedInputStream restoreInputStream;
 
     private int backupBufferSize = BUFFER_SIZE * 30; // 30K
     private static final int MAX_RESTORE_CHUNK = 65532;
@@ -38,14 +41,17 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
     private static final int END_OF_STREAM = -1;
 
     /**
-     * Set the local buffer size to be used when doing a backup. Default is
-     * 30720
+     * Set the local buffer size to be used when doing a backup. Default is {@code 30720}.
+     * <p>
+     * The implementation may use a higher or lower buffer size than specified (for example, a minimum size of 1024; the
+     * implementation may also increase the size if truncation is signalled by the server).
+     * </p>
      *
      * @param bufferSize
      *        The buffer size to be used, a positive value
      */
     public void setBackupBufferSize(int bufferSize) {
-        if (bufferSize < 0) {
+        if (bufferSize <= 0) {
             throw new IllegalArgumentException("Buffer size must be positive");
         }
         this.backupBufferSize = bufferSize;
@@ -65,6 +71,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
      * @param gdsType
      *        type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
+    @SuppressWarnings("unused")
     public FBStreamingBackupManager(String gdsType) {
         super(gdsType);
     }
@@ -103,21 +110,23 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
     }
 
     public void backupDatabase(int options) throws SQLException {
+        final OutputStream backupOutputStream = this.backupOutputStream;
         if (backupOutputStream == null) {
             throw new SQLException("No output stream specified for the backup.");
         }
 
         try (FbService service = attachServiceManager()) {
-            executeServiceBackupOperation(service, getBackupSRB(service, options));
+            executeServiceBackupOperation(service, getBackupSRB(service, options), backupOutputStream);
         }
     }
 
     public void restoreDatabase(int options) throws SQLException {
+        final InputStream restoreInputStream = this.restoreInputStream;
         if (restoreInputStream == null) {
             throw new SQLException("No input stream specified for the restore.");
         }
         try (FbService service = attachServiceManager()) {
-            executeServiceRestoreOperation(service, getRestoreSRB(service, options));
+            executeServiceRestoreOperation(service, getRestoreSRB(service, options), restoreInputStream);
         }
     }
 
@@ -168,14 +177,15 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
         restoreSPB.addArgument(isc_spb_bkp_file, "stdin");
     }
 
-    private void executeServiceBackupOperation(FbService service, ServiceRequestBuffer srb) throws SQLException {
+    private void executeServiceBackupOperation(FbService service, ServiceRequestBuffer srb,
+            OutputStream backupOutputStream) throws SQLException {
         try {
             service.startServiceAction(srb);
 
             ServiceRequestBuffer infoSRB = service.createServiceRequestBuffer();
             infoSRB.addArgument(isc_info_svc_to_eof);
 
-            int bufferSize = backupBufferSize;
+            int bufferSize = Math.max(1024, backupBufferSize);
 
             boolean processing = true;
 
@@ -203,7 +213,8 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
         }
     }
 
-    private void executeServiceRestoreOperation(FbService service, ServiceRequestBuffer srb) throws SQLException {
+    private void executeServiceRestoreOperation(FbService service, ServiceRequestBuffer srb,
+            InputStream restoreInputStream) throws SQLException {
         OutputStream currentLogger = getLogger();
         if (this.verbose && currentLogger == null) {
             throw new SQLException("Verbose mode was requested but there is no logger provided.");
@@ -290,7 +301,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
         }
     }
 
-    private int readOutput(byte[] buffer, int offset, OutputStream out) throws SQLException, IOException {
+    private int readOutput(byte[] buffer, int offset, @Nullable OutputStream out) throws SQLException, IOException {
         int dataLength = iscVaxInteger2(buffer, offset + 1);
         if (dataLength == 0) {
             return switch (buffer[offset + 3]) {

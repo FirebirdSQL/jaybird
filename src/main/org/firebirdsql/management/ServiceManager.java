@@ -8,6 +8,7 @@ import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.OutputStream;
@@ -29,11 +30,18 @@ public interface ServiceManager extends ServiceConnectionProperties {
      * Will also set the {@code expectedDb} property. If a different value must be used, it must be set <em>after</em>
      * calling this method.
      * </p>
+     * <p>
+     * NOTE: This method is marked {@code @NullUnmarked} because the nullability of this property is questionable. For
+     * services that require a database path, setting {@code null} may result in failure on execute when executing the
+     * service action. Subinterfaces and their implementations may declare themselves to be {@code @NonNull} and throw
+     * a {@code NullPointerException} on receiving {@code null}.
+     * </p>
      *
      * @param database
      *         path for the connection to the service manager.
      */
-    void setDatabase(@Nullable String database);
+    @NullUnmarked
+    void setDatabase(String database);
 
     /**
      * Returns the database path for the connection to the service manager.

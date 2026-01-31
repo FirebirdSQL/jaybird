@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2004-2008 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004-2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2016 Ivan Arabadzhiev
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -12,12 +12,14 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
@@ -27,34 +29,40 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
+@NullMarked
 public abstract class FBBackupManagerBase extends FBServiceManager implements BackupManager {
 
     /**
      * Structure that holds path to the database and corresponding size of the file (in case of backup - that is
      * size of the file in megabytes, in case of restore - size of the database file in pages).
      */
-    protected static class PathSizeStruct {
-        private final int size;
-        private final String path;
+    protected record PathSizeStruct(String path, int size) {
 
-        protected PathSizeStruct(String path, int size) {
-            this.path = path;
-            this.size = size;
+        protected PathSizeStruct {
+            requireNonNull(path, "path");
+            if (size < -1 || size == 0) {
+                throw new IllegalArgumentException("size can only be -1 or a positive integer, value was " + size);
+            }
         }
 
+        /**
+         * @deprecated use {@link #path()}; this method may be removed in Jaybird 8 or later
+         */
+        @Deprecated(since = "7", forRemoval = true)
         public String getPath() {
             return path;
         }
 
+        /**
+         * @deprecated use {@link #size()}; this method may be removed in Jaybird 8 or later
+         */
         public int getSize() {
             return size;
         }
 
         public boolean equals(Object obj) {
             if (obj == this) return true;
-            if (!(obj instanceof PathSizeStruct that)) return false;
-
-            return this.path.equals(that.path);
+            return obj instanceof PathSizeStruct that && this.path.equals(that.path);
         }
 
         public int hashCode() {
@@ -112,7 +120,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
 
     @Override
     public void setDatabase(String database) {
-        super.setDatabase(database);
+        super.setDatabase(requireNonNull(database, "database"));
         addRestorePath(database, -1);
         noLimitRestore = true;
     }
@@ -241,15 +249,15 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
     }
 
     /**
-     * Creates and returns the "backup" service request buffer for the Service Manager.
+     * Creates and returns the "restore" service request buffer for the Service Manager.
      *
      * @param service
      *         Service handle
      * @param options
-     *         The options to be used for the backup operation
-     * @return the "backup" service request buffer for the Service Manager.
+     *         The options to be used for the restore operation
+     * @return the "restore" service request buffer for the Service Manager.
      */
-    protected ServiceRequestBuffer getRestoreSRB(FbService service, int options) {
+    protected ServiceRequestBuffer getRestoreSRB(FbService service, int options) throws SQLException {
         ServiceRequestBuffer restoreSPB = service.createServiceRequestBuffer();
         restoreSPB.addArgument(isc_action_svc_restore);
 
@@ -257,10 +265,13 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
         for (Iterator<PathSizeStruct> iter = restorePaths.iterator(); iter.hasNext(); ) {
             PathSizeStruct pathSize = iter.next();
 
-            restoreSPB.addArgument(SpbItems.isc_spb_dbname, pathSize.getPath());
+            restoreSPB.addArgument(SpbItems.isc_spb_dbname, pathSize.path());
 
-            if (iter.hasNext() && pathSize.getSize() != -1) {
-                restoreSPB.addArgument(isc_spb_res_length, pathSize.getSize());
+            if (iter.hasNext()) {
+                if (pathSize.size() == -1) {
+                    throw new SQLException("No size specified for a restore file " + pathSize.path());
+                }
+                restoreSPB.addArgument(isc_spb_res_length, pathSize.size());
             }
         }
 

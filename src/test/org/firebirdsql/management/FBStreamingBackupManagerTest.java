@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2016-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2016-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
 
@@ -122,5 +122,17 @@ class FBStreamingBackupManagerTest {
     void testAddBackupPathNotSupported() {
         assertThrows(IllegalArgumentException.class, () -> backupManager.addBackupPath("Some path"),
                 "addBackupPath not allowed");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 1, 1024, 30 * 1024, 512 * 1024, Integer.MAX_VALUE })
+    void setBackupBufferSize_validSizes(int bufferSize) {
+        assertDoesNotThrow(() -> backupManager.setBackupBufferSize(bufferSize));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { Integer.MIN_VALUE, -1, 0 })
+    void setBackupBufferSize_invalidSizes(int bufferSize) {
+        assertThrows(IllegalArgumentException.class, () -> backupManager.setBackupBufferSize(bufferSize));
     }
 }

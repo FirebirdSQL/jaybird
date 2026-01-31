@@ -2,12 +2,13 @@
  SPDX-FileCopyrightText: Copyright 2004-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2016 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 */
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 
@@ -17,6 +18,7 @@ import java.sql.SQLException;
  * @author Roman Rokytskyy
  * @author Steven Jardine
  */
+@NullMarked
 public interface BackupManager extends ServiceManager {
 
     /**
@@ -133,8 +135,10 @@ public interface BackupManager extends ServiceManager {
     void clearBackupPaths();
 
     /**
-     * Set the path to the database. This method is used both for backup and
-     * restore operation.
+     * Set the path to the database. This method is used both for backup and restore operation.
+     * <p>
+     * NOTE: Contrary to {@link ServiceManager#setDatabase(String)}, {@code path} is not nullable.
+     * </p>
      *
      * @param path
      *         path to the database file.

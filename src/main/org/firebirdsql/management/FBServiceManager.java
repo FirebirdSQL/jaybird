@@ -17,6 +17,7 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -165,7 +166,8 @@ public class FBServiceManager implements ServiceManager {
     }
 
     @Override
-    public void setDatabase(@Nullable String database) {
+    @NullUnmarked
+    public void setDatabase(String database) {
         this.database = database;
         setExpectedDb(database);
     }

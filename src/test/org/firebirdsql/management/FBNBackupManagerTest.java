@@ -223,7 +223,7 @@ class FBNBackupManagerTest {
     }
 
     @Test
-    void backupCleanHistoryWithKeepDays() throws Exception {
+    void backupCleanHistoryWithKeepDays() {
         assumeTrue(getDefaultSupportInfo().supportsNBackupCleanHistory(), "Requires NBackup clean history support");
         manager.setCleanHistory(true);
         manager.setKeepDays(5);
@@ -237,7 +237,7 @@ class FBNBackupManagerTest {
     }
 
     @Test
-    void backupCleanHistoryWithKeepRows() throws Exception {
+    void backupCleanHistoryWithKeepRows() {
         assumeTrue(getDefaultSupportInfo().supportsNBackupCleanHistory(), "Requires NBackup clean history support");
         manager.setCleanHistory(true);
         manager.setKeepRows(5);
