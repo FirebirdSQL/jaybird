@@ -5,6 +5,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jaybird.util.FbDatetimeConversion;
 import org.firebirdsql.jdbc.field.TypeConversionException;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -488,6 +489,7 @@ class JDBC42JavaTimeConversionsTest {
                 "insert into javatimetest (ID, " + testColumn.columnName() + ") values (?, ?)");
     }
 
+    @NullMarked
     private void assertRow(TestColumn testColumn, ThrowingConsumer<ResultSet> rowAssertion) throws Throwable {
         assertRow(testColumn, 1, rowAssertion);
     }

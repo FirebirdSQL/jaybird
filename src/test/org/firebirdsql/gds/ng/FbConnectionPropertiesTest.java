@@ -153,6 +153,7 @@ class FbConnectionPropertiesTest {
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void testWireCryptNullPointerExceptionOnNull() {
         assertThatExceptionOfType(NullPointerException.class)
                 .isThrownBy(() -> info.setWireCryptAsEnum(null))

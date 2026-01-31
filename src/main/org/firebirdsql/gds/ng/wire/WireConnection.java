@@ -341,6 +341,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
     private Properties getSocketFactoryProperties() {
         var props = new Properties();
+        //noinspection ConstantValue : null-check for robustness
         attachProperties.connectionPropertyValues().entrySet().stream()
                 .filter(e ->
                         e.getValue() != null && e.getKey().name().endsWith("@socketFactory"))

@@ -72,9 +72,9 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      *
      * @return a map of users parsed from the display buffer.
      */
-    private Map<String, User> getFBUsers() {
+    private Map<String, User> getFBUsers(ByteArrayOutputStream logger) {
         Map<String, User> users = new TreeMap<>();
-        byte[] displayBuffer = ((ByteArrayOutputStream) getLogger()).toByteArray();
+        byte[] displayBuffer = logger.toByteArray();
         var userBuilder = new FBUserBuilder();
         count = 0;
         while (count < displayBuffer.length && displayBuffer[count] != isc_info_end) {
@@ -230,10 +230,10 @@ public class FBUserManager extends FBServiceManager implements UserManager {
     @Override
     public Map<String, User> getUsers() throws SQLException, IOException {
         OutputStream savedStream = getLogger();
-        setLogger(new ByteArrayOutputStream());
-        try {
+        try (var logger = new ByteArrayOutputStream()) {
+            setLogger(logger);
             userAction(isc_action_svc_display_user, new FBUser());
-            return getFBUsers();
+            return getFBUsers(logger);
         } finally {
             setLogger(savedStream);
         }

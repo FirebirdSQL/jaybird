@@ -1,6 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
+
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Immutable implementation of {@link org.firebirdsql.gds.ng.IConnectionProperties}.
@@ -9,6 +12,7 @@ package org.firebirdsql.gds.ng;
  * @see FbConnectionProperties
  * @since 3.0
  */
+@NullMarked
 public final class FbImmutableConnectionProperties extends AbstractImmutableAttachProperties<IConnectionProperties>
         implements IConnectionProperties {
 
@@ -39,7 +43,7 @@ public final class FbImmutableConnectionProperties extends AbstractImmutableAtta
 
     @Override
     @SuppressWarnings("java:S1206")
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (!(o instanceof FbImmutableConnectionProperties)) return false;
         return super.equals(o);

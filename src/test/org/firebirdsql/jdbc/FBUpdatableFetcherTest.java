@@ -38,6 +38,7 @@ import static org.firebirdsql.jdbc.FetcherAssertions.assertAtRow;
 import static org.firebirdsql.jdbc.FetcherAssertions.assertBeforeFirst;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -406,6 +407,7 @@ class FBUpdatableFetcherTest {
     }
 
     private TestValue extractTestValue(RowValue rowValue) {
+        assertNotNull(rowValue, "rowValue");
         DatatypeCoder datatypeCoder = db.getDatatypeCoder();
         byte[] fieldId = rowValue.getFieldData(0);
         Integer id = fieldId != null ? datatypeCoder.decodeInt(fieldId) : null;

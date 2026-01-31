@@ -520,7 +520,8 @@ abstract class BaseJUnit5TestFBField<T extends FBField, O> {
     }
 
     @Test
-    void getObject_TypeNull() throws SQLException {
+    @SuppressWarnings("DataFlowIssue")
+    void getObject_TypeNull() {
         assertThrows(SQLException.class, () -> field.getObject((Class<?>) null));
     }
 

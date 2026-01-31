@@ -157,6 +157,7 @@ class FbExceptionBuilderTest {
      * Tests if overriding the SQLState throws an {@link NullPointerException} if null is passed
      */
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void exception_overrideSQLState_null() {
         builder.exception(isc_req_wrong_db).toSQLException();
         // isc_req_wrong_db defaults to SQLState HY000

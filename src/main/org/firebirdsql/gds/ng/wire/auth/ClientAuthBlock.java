@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.auth;
 
@@ -23,6 +23,7 @@ import static java.lang.System.Logger.Level.WARNING;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_noAuthenticationPlugin;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_AUTH_PLUGINS;
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 
 /**
  * Manages client authentication with multiple pluginProviders.
@@ -394,7 +395,7 @@ public final class ClientAuthBlock {
 
     private List<String> getRequestedPluginNames() {
         String pluginListString = attachProperties.getAuthPlugins();
-        if (pluginListString == null || pluginListString.isEmpty()) {
+        if (isNullOrEmpty(pluginListString)) {
             pluginListString = DEFAULT_AUTH_PLUGINS;
         }
         return splitPluginList(pluginListString);

@@ -6,6 +6,7 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.common.function.ThrowingBiConsumer;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -337,6 +338,7 @@ class FBTxPreparedStatementTest {
                 setXXXMethodCase("setNClob(int, Reader)", stmt -> stmt.setNClob(1, (Reader) null)));
     }
 
+    @NullMarked
     private static Arguments setXXXMethodCase(String description, ThrowingConsumer<PreparedStatement> setMethod) {
         return Arguments.of(description, setMethod);
     }

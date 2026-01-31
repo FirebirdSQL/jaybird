@@ -20,6 +20,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.Locale;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
@@ -128,7 +129,7 @@ class JnaDatabaseTest {
     void testBasicCreateAndDrop() throws Exception {
         connectionInfo.setSqlDialect(3);
         JnaDatabase db = factory.connect(connectionInfo);
-        File dbFile = new File(connectionInfo.getDatabaseName());
+        File dbFile = new File(requireNonNull(connectionInfo.getDatabaseName(), "databaseName"));
         try {
             db.createDatabase();
             assertTrue(db.isAttached(), "Database should be attached after create");

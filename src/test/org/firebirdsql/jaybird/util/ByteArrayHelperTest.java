@@ -49,6 +49,7 @@ class ByteArrayHelperTest {
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void toHexString_null_throwsNullPointerException() {
         assertThatNullPointerException()
                 .isThrownBy(() -> ByteArrayHelper.toHexString(null));

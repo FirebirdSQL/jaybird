@@ -1,8 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.ds;
 
 import org.firebirdsql.jdbc.FirebirdConnectionProperties;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Abstract implementation of {@link FirebirdConnectionProperties} to ensure subclasses can be introspected as beans.
@@ -10,6 +12,7 @@ import org.firebirdsql.jdbc.FirebirdConnectionProperties;
  * @author Mark Rotteveel
  * @since 5
  */
+@NullMarked
 public abstract class AbstractConnectionPropertiesDataSource extends RootCommonDataSource
         implements FirebirdConnectionProperties {
 
@@ -17,12 +20,12 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     // data source can be introspected as a JavaBean (default methods are not returned by the introspector)
 
     @Override
-    public String getServerName() {
+    public @Nullable String getServerName() {
         return FirebirdConnectionProperties.super.getServerName();
     }
 
     @Override
-    public void setServerName(String serverName) {
+    public void setServerName(@Nullable String serverName) {
         FirebirdConnectionProperties.super.setServerName(serverName);
     }
 
@@ -37,92 +40,92 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public String getDatabaseName() {
+    public @Nullable String getDatabaseName() {
         return FirebirdConnectionProperties.super.getDatabaseName();
     }
 
     @Override
-    public void setDatabaseName(String databaseName) {
+    public void setDatabaseName(@Nullable String databaseName) {
         FirebirdConnectionProperties.super.setDatabaseName(databaseName);
     }
 
     @Override
-    public String getType() {
+    public @Nullable String getType() {
         return FirebirdConnectionProperties.super.getType();
     }
 
     @Override
-    public void setType(String type) {
+    public void setType(@Nullable String type) {
         FirebirdConnectionProperties.super.setType(type);
     }
 
     @Override
-    public String getUser() {
+    public @Nullable String getUser() {
         return FirebirdConnectionProperties.super.getUser();
     }
 
     @Override
-    public void setUser(String user) {
+    public void setUser(@Nullable String user) {
         FirebirdConnectionProperties.super.setUser(user);
     }
 
     @Override
-    public String getPassword() {
+    public @Nullable String getPassword() {
         return FirebirdConnectionProperties.super.getPassword();
     }
 
     @Override
-    public void setPassword(String password) {
+    public void setPassword(@Nullable String password) {
         FirebirdConnectionProperties.super.setPassword(password);
     }
 
     @Override
-    public String getRoleName() {
+    public @Nullable String getRoleName() {
         return FirebirdConnectionProperties.super.getRoleName();
     }
 
     @Override
-    public void setRoleName(String roleName) {
+    public void setRoleName(@Nullable String roleName) {
         FirebirdConnectionProperties.super.setRoleName(roleName);
     }
 
     @Override
-    public String getCharSet() {
+    public @Nullable String getCharSet() {
         return FirebirdConnectionProperties.super.getCharSet();
     }
 
     @Override
-    public void setCharSet(String charSet) {
+    public void setCharSet(@Nullable String charSet) {
         FirebirdConnectionProperties.super.setCharSet(charSet);
     }
 
     @Override
-    public String getEncoding() {
+    public @Nullable String getEncoding() {
         return FirebirdConnectionProperties.super.getEncoding();
     }
 
     @Override
-    public void setEncoding(String encoding) {
+    public void setEncoding(@Nullable String encoding) {
         FirebirdConnectionProperties.super.setEncoding(encoding);
     }
 
     @Override
-    public Integer getProcessId() {
+    public @Nullable Integer getProcessId() {
         return FirebirdConnectionProperties.super.getProcessId();
     }
 
     @Override
-    public void setProcessId(Integer processId) {
+    public void setProcessId(@Nullable Integer processId) {
         FirebirdConnectionProperties.super.setProcessId(processId);
     }
 
     @Override
-    public String getProcessName() {
+    public @Nullable String getProcessName() {
         return FirebirdConnectionProperties.super.getProcessName();
     }
 
     @Override
-    public void setProcessName(String processName) {
+    public void setProcessName(@Nullable String processName) {
         FirebirdConnectionProperties.super.setProcessName(processName);
     }
 
@@ -184,17 +187,17 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public void setWireCrypt(String wireCrypt) {
+    public void setWireCrypt(@Nullable String wireCrypt) {
         FirebirdConnectionProperties.super.setWireCrypt(wireCrypt);
     }
 
     @Override
-    public String getDbCryptConfig() {
+    public @Nullable String getDbCryptConfig() {
         return FirebirdConnectionProperties.super.getDbCryptConfig();
     }
 
     @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
+    public void setDbCryptConfig(@Nullable String dbCryptConfig) {
         FirebirdConnectionProperties.super.setDbCryptConfig(dbCryptConfig);
     }
 
@@ -204,7 +207,7 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public void setAuthPlugins(String authPlugins) {
+    public void setAuthPlugins(@Nullable String authPlugins) {
         FirebirdConnectionProperties.super.setAuthPlugins(authPlugins);
     }
 
@@ -219,12 +222,12 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public String getEnableProtocol() {
+    public @Nullable String getEnableProtocol() {
         return FirebirdConnectionProperties.super.getEnableProtocol();
     }
 
     @Override
-    public void setEnableProtocol(String enableProtocol) {
+    public void setEnableProtocol(@Nullable String enableProtocol) {
         FirebirdConnectionProperties.super.setEnableProtocol(enableProtocol);
     }
 
@@ -249,22 +252,22 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public String getDataTypeBind() {
+    public @Nullable String getDataTypeBind() {
         return FirebirdConnectionProperties.super.getDataTypeBind();
     }
 
     @Override
-    public void setDataTypeBind(String dataTypeBind) {
+    public void setDataTypeBind(@Nullable String dataTypeBind) {
         FirebirdConnectionProperties.super.setDataTypeBind(dataTypeBind);
     }
 
     @Override
-    public String getSessionTimeZone() {
+    public @Nullable String getSessionTimeZone() {
         return FirebirdConnectionProperties.super.getSessionTimeZone();
     }
 
     @Override
-    public void setSessionTimeZone(String sessionTimeZone) {
+    public void setSessionTimeZone(@Nullable String sessionTimeZone) {
         FirebirdConnectionProperties.super.setSessionTimeZone(sessionTimeZone);
     }
 
@@ -319,12 +322,12 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public String getGeneratedKeysEnabled() {
+    public @Nullable String getGeneratedKeysEnabled() {
         return FirebirdConnectionProperties.super.getGeneratedKeysEnabled();
     }
 
     @Override
-    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
+    public void setGeneratedKeysEnabled(@Nullable String generatedKeysEnabled) {
         FirebirdConnectionProperties.super.setGeneratedKeysEnabled(generatedKeysEnabled);
     }
 
@@ -339,32 +342,32 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public String getDecfloatRound() {
+    public @Nullable String getDecfloatRound() {
         return FirebirdConnectionProperties.super.getDecfloatRound();
     }
 
     @Override
-    public void setDecfloatRound(String decfloatRound) {
+    public void setDecfloatRound(@Nullable String decfloatRound) {
         FirebirdConnectionProperties.super.setDecfloatRound(decfloatRound);
     }
 
     @Override
-    public String getDecfloatTraps() {
+    public @Nullable String getDecfloatTraps() {
         return FirebirdConnectionProperties.super.getDecfloatTraps();
     }
 
     @Override
-    public void setDecfloatTraps(String decfloatTraps) {
+    public void setDecfloatTraps(@Nullable String decfloatTraps) {
         FirebirdConnectionProperties.super.setDecfloatTraps(decfloatTraps);
     }
 
     @Override
-    public String getTpbMapping() {
+    public @Nullable String getTpbMapping() {
         return FirebirdConnectionProperties.super.getTpbMapping();
     }
 
     @Override
-    public void setTpbMapping(String tpbMapping) {
+    public void setTpbMapping(@Nullable String tpbMapping) {
         FirebirdConnectionProperties.super.setTpbMapping(tpbMapping);
     }
 
@@ -384,7 +387,7 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public void setDefaultIsolation(String isolation) {
+    public void setDefaultIsolation(@Nullable String isolation) {
         FirebirdConnectionProperties.super.setDefaultIsolation(isolation);
     }
 
@@ -394,7 +397,7 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public void setScrollableCursor(String scrollableCursor) {
+    public void setScrollableCursor(@Nullable String scrollableCursor) {
         FirebirdConnectionProperties.super.setScrollableCursor(scrollableCursor);
     }
 
@@ -429,12 +432,12 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public String getSocketFactory() {
+    public @Nullable String getSocketFactory() {
         return FirebirdConnectionProperties.super.getSocketFactory();
     }
 
     @Override
-    public void setSocketFactory(String socketFactory) {
+    public void setSocketFactory(@Nullable String socketFactory) {
         FirebirdConnectionProperties.super.setSocketFactory(socketFactory);
     }
 
@@ -484,7 +487,7 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public void setReportSQLWarnings(String reportSQLWarnings) {
+    public void setReportSQLWarnings(@Nullable String reportSQLWarnings) {
         FirebirdConnectionProperties.super.setReportSQLWarnings(reportSQLWarnings);
     }
 
@@ -519,26 +522,26 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public String getSearchPath() {
+    public @Nullable String getSearchPath() {
         return FirebirdConnectionProperties.super.getSearchPath();
     }
 
     @Override
-    public void setSearchPath(String searchPath) {
+    public void setSearchPath(@Nullable String searchPath) {
         FirebirdConnectionProperties.super.setSearchPath(searchPath);
     }
 
     @SuppressWarnings("deprecation")
     @Deprecated(since = "5")
     @Override
-    public String getUserName() {
+    public @Nullable String getUserName() {
         return FirebirdConnectionProperties.super.getUserName();
     }
 
     @SuppressWarnings("deprecation")
     @Deprecated(since = "5")
     @Override
-    public void setUserName(String userName) {
+    public void setUserName(@Nullable String userName) {
         FirebirdConnectionProperties.super.setUserName(userName);
     }
 

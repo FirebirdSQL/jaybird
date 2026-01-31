@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
@@ -12,6 +12,8 @@ import org.firebirdsql.gds.ng.WireCrypt;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for JNA.
@@ -40,7 +42,7 @@ public class JnaParameterConverter extends AbstractParameterConverter<JnaDatabas
         }
 
         String authPlugins = props.getAuthPlugins();
-        if (authPlugins != null && !authPlugins.isEmpty()) {
+        if (isNullOrEmpty(authPlugins)) {
             configMap.put("AuthClient", authPlugins);
         }
 
