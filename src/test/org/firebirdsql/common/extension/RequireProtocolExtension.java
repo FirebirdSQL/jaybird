@@ -1,7 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common.extension;
 
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * @author Mark Rotteveel
  * @since 5
  */
+@NullMarked
 public class RequireProtocolExtension implements BeforeAllCallback {
 
     private final int protocolVersion;

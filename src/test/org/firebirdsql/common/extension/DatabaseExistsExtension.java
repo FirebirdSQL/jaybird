@@ -1,14 +1,16 @@
-// SPDX-FileCopyrightText: Copyright 2018-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common.extension;
 
 import org.firebirdsql.management.FBStatisticsManager;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.opentest4j.TestAbortedException;
 
 import java.sql.SQLException;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.common.FBTestProperties.configureDefaultServiceProperties;
 import static org.firebirdsql.common.FBTestProperties.getGdsType;
 
@@ -18,6 +20,7 @@ import static org.firebirdsql.common.FBTestProperties.getGdsType;
  * @author Mark Rotteveel
  * @since 5
  */
+@NullMarked
 public class DatabaseExistsExtension implements BeforeAllCallback {
 
     private final String databaseName;
@@ -28,8 +31,8 @@ public class DatabaseExistsExtension implements BeforeAllCallback {
     }
 
     private DatabaseExistsExtension(String databaseName, CheckType checkType) {
-        this.databaseName = databaseName;
-        this.checkType = checkType;
+        this.databaseName = requireNonNull(databaseName, "databaseName");
+        this.checkType = requireNonNull(checkType, "checkType");
     }
 
     @Override

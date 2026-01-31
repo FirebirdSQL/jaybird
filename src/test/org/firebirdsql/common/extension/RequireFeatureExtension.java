@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common.extension;
 
 import org.firebirdsql.common.FeatureCheck;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -19,6 +20,7 @@ import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
  *
  * @author Mark Rotteveel
  */
+@NullMarked
 public class RequireFeatureExtension implements BeforeAllCallback {
 
     private final List<Consumer<FirebirdSupportInfo>> featureChecks;

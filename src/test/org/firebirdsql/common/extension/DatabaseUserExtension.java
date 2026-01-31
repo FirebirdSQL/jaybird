@@ -1,7 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common.extension;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -10,6 +12,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 
 /**
@@ -22,6 +25,7 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
  * @author Mark Rotteveel
  * @since 5
  */
+@NullMarked
 public class DatabaseUserExtension implements AfterEachCallback {
 
     private static final System.Logger log = System.getLogger(DatabaseUserExtension.class.getName());
@@ -44,12 +48,16 @@ public class DatabaseUserExtension implements AfterEachCallback {
      *
      * @param username
      *         username
+     * @param password
+     *         password
      * @param plugin
      *         the user manager plugin to use, or {@code null} for the default (or Firebird 2.5)
      * @throws SQLException
      *         for errors creating the user
      */
-    public void createUser(String username, String password, String plugin) throws SQLException {
+    public void createUser(String username, String password, @Nullable String plugin) throws SQLException {
+        requireNonNull(username, "userName");
+        requireNonNull(password, "password");
         try (var connection = getConnectionViaDriverManager();
              var statement = connection.createStatement()) {
             var createUserSql = new StringBuilder("CREATE USER ").append(statement.enquoteIdentifier(username, false))
@@ -94,7 +102,7 @@ public class DatabaseUserExtension implements AfterEachCallback {
         }
     }
 
-    private record User(String name, String plugin) {
+    private record User(String name, @Nullable String plugin) {
 
         @Override
         public String toString() {

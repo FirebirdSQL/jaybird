@@ -1,15 +1,14 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common.extension;
 
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.util.EnumSet;
 import java.util.List;
 
-import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.toList;
 import static org.firebirdsql.common.FBTestProperties.DB_ON_DOCKER;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -19,6 +18,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Mark Rotteveel
  */
+@NullMarked
 public class RunEnvironmentExtension implements BeforeAllCallback {
 
     private final List<EnvironmentRequirement> unmetRequirements;

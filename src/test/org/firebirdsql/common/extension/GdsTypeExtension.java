@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common.extension;
 
@@ -6,6 +6,7 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.hamcrest.Matcher;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -22,6 +23,7 @@ import static org.hamcrest.Matchers.not;
  * @author Mark Rotteveel
  * @since 5
  */
+@NullMarked
 public class GdsTypeExtension implements BeforeAllCallback {
 
     private final Matcher<String> testTypeMatcher;
