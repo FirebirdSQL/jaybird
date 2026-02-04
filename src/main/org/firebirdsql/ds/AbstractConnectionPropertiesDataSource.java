@@ -3,6 +3,7 @@
 package org.firebirdsql.ds;
 
 import org.firebirdsql.jdbc.FirebirdConnectionProperties;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -43,7 +44,8 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
-    public void setDatabaseName(@Nullable String databaseName) {
+    @NullUnmarked
+    public void setDatabaseName(String databaseName) {
         FirebirdConnectionProperties.super.setDatabaseName(databaseName);
     }
 

@@ -3,6 +3,7 @@
 package org.firebirdsql.jaybird.props;
 
 import org.firebirdsql.jdbc.FirebirdCallableStatement;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.Connection;
@@ -69,11 +70,17 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * <li>C:/path/to/your.fdb</li>
      * <li>relative/path/to/your.fdb &mdash; not recommended</li>
      * </ul>
+     * <p>
+     * NOTE: Nullability of this property is questionable; it currently accepts {@code null}, but a non-{@code null}
+     * value must be set to be able to create a connection. This is why it's currently {@code @NullUnmarked}. In the
+     * future, this property may be changed to not accept {@code null}.
+     * </p>
      *
      * @param databaseName
      *         database name
      */
-    default void setDatabaseName(@Nullable String databaseName) {
+    @NullUnmarked
+    default void setDatabaseName(String databaseName) {
         setProperty(PropertyNames.databaseName, databaseName);
     }
 
