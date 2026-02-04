@@ -6,6 +6,8 @@ package org.firebirdsql.management;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.*;
 import java.sql.SQLException;
@@ -13,13 +15,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElse;
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 
 /**
  * Implements the Trace/Audit API available new in Firebird 2.5
  *
  * @author Thomas Steinmaurer
  */
+@NullMarked
 public class FBTraceManager extends FBServiceManager implements TraceManager {
 
     private final Map<String, Integer> traceSessions = Collections.synchronizedMap(new HashMap<>());
@@ -30,8 +36,8 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
         private final FbService service;
 
         public TraceTask(FbService service, ServiceRequestBuffer srb) {
-            this.srb = srb;
-            this.service = service;
+            this.service = requireNonNull(service, "service");
+            this.srb = requireNonNull(srb, "srb");
         }
 
         public void run() {
@@ -57,6 +63,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
+    @SuppressWarnings("unused")
     public FBTraceManager(String gdsType) {
         super(gdsType);
     }
@@ -67,6 +74,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
+    @SuppressWarnings("unused")
     public FBTraceManager(GDSType gdsType) {
         super(gdsType);
     }
@@ -132,13 +140,11 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      *         The trace configuration. For an example, look into fbtrace.conf in the root directory of your
      *         Firebird installation
      */
-    public void startTraceSession(String traceSessionName, String configuration) throws SQLException {
-        if (configuration == null || configuration.equals("")) {
+    public void startTraceSession(@Nullable String traceSessionName, String configuration) throws SQLException {
+        if (isNullOrEmpty(configuration)) {
             throw new SQLException("No configuration provided");
         }
-        if (traceSessionName == null) {
-            traceSessionName = "";
-        }
+        traceSessionName = requireNonNullElse(traceSessionName, "");
 
         synchronized (this) {
             OutputStream currentLogger = getLogger();
@@ -226,7 +232,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      *         Name of the session
      * @return Id of the session or null otherwise
      */
-    public Integer getSessionId(String sessionName) {
+    public @Nullable Integer getSessionId(String sessionName) {
         return traceSessions.get(sessionName);
     }
 
@@ -236,7 +242,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
         private final String sessionName;
         private volatile boolean lookForSessionId = true;
 
-        public TraceStream(OutputStream out, String sessionName) {
+        public TraceStream(@Nullable OutputStream out, String sessionName) {
             super(out);
             this.sessionName = sessionName;
         }
@@ -252,13 +258,17 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
         }
 
         /**
-         * Tries to find the session ID
+         * Tries to find the session ID if the sessionName is not empty.
          *
-         * @param b Byte array
-         * @param off Offset
-         * @param len Length
+         * @param b
+         *         byte array
+         * @param off
+         *         offset
+         * @param len
+         *         length
          */
         private void findSessionId(byte[] b, int off, int len) {
+            if (sessionName.isEmpty()) return;
             String sessionStart = new String(b, off, len);
             int traceStartIdx = sessionStart.indexOf(START_TEXT);
             int sessionIdStart = -1;

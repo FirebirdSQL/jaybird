@@ -1,7 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2009 Thomas Steinmaurer
-// SPDX-FileCopyrightText: Copyright 2011-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.management;
+
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -20,6 +23,7 @@ import java.sql.SQLException;
  *
  * @author Thomas Steinmaurer
  */
+@NullMarked
 public interface TraceManager extends ServiceManager {
 
     /**
@@ -31,7 +35,7 @@ public interface TraceManager extends ServiceManager {
      *         The trace configuration. For an example, look into fbtrace.conf in the root directory of your Firebird
      *         installation
      */
-    void startTraceSession(String traceSessionName, String configuration) throws SQLException;
+    void startTraceSession(@Nullable String traceSessionName, String configuration) throws SQLException;
 
     /**
      * Stops a trace session with the given trace session ID
@@ -75,6 +79,6 @@ public interface TraceManager extends ServiceManager {
      *         Name of the session
      * @return ID of the session or null otherwise
      */
-    Integer getSessionId(String sessionName);
+    @Nullable Integer getSessionId(String sessionName);
 
 }
