@@ -1,10 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2013-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.encodings;
 
+import org.jspecify.annotations.Nullable;
+
 import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.Objects;
 
 import static java.lang.System.Logger.Level.DEBUG;
@@ -21,21 +21,22 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
     private static final System.Logger logger = System.getLogger(DefaultEncodingDefinition.class.getName());
 
     /**
-     * Marker object to indicate the encoding field of an instance hasn't been initialized yet
-     * (since {@code null} is a valid initialization).
+     * Marker object to indicate the encoding field of an instance hasn't been initialised yet (since {@code null} is
+     * a semi-valid initialisation).
      */
+    @SuppressWarnings("DataFlowIssue")
     private static final Encoding NOT_INITIALIZED = new EncodingGeneric(null);
 
-    private final String charsetName;
+    private @Nullable final String charsetName;
     private final String firebirdEncodingName;
     private final int maxBytesPerChar;
     private final int firebirdCharacterSetId;
     private final boolean firebirdOnly;
-    private Encoding encoding = NOT_INITIALIZED;
-    private Charset charset;
+    private @Nullable Encoding encoding = NOT_INITIALIZED;
+    private @Nullable Charset charset;
 
     /**
-     * Initializes an instance of DefaultEncodingDefinition.
+     * Initialises an instance of DefaultEncodingDefinition.
      *
      * @param firebirdEncodingName
      *         Name of the Firebird encoding
@@ -49,7 +50,7 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
      *         Mapping only applies from Firebird to Java, but not from Java to Firebird (e.g. Firebird UNICODE-FSS maps
      *         to Java UTF-8, but Java UTF-8 does not map to Firebird UNICODE-FSS (but to Firebird UTF8)
      */
-    public DefaultEncodingDefinition(String firebirdEncodingName, Charset charset, int maxBytesPerChar,
+    public DefaultEncodingDefinition(String firebirdEncodingName, @Nullable Charset charset, int maxBytesPerChar,
             int firebirdCharacterSetId, boolean firebirdOnly) {
         this(firebirdEncodingName, charset != null ? charset.name() : null, maxBytesPerChar, firebirdCharacterSetId,
                 firebirdOnly);
@@ -57,7 +58,7 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
     }
 
     /**
-     * Initializes an instance of DefaultEncodingDefinition.
+     * Initialises an instance of DefaultEncodingDefinition.
      * <p>
      * The actual Java character set is loaded on-demand. If the provided name cannot be resolved to a {@link Charset}
      * at on-demand load time, it will be handled as information-only.
@@ -75,7 +76,7 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
      *         Mapping only applies from Firebird to Java, but not from Java to Firebird (e.g. Firebird UNICODE-FSS maps
      *         to Java UTF-8, but Java UTF-8 does not map to Firebird UNICODE-FSS (but to Firebird UTF8)
      */
-    public DefaultEncodingDefinition(String firebirdEncodingName, String charsetName, int maxBytesPerChar,
+    public DefaultEncodingDefinition(String firebirdEncodingName, @Nullable String charsetName, int maxBytesPerChar,
             int firebirdCharacterSetId, boolean firebirdOnly) {
         this.firebirdEncodingName = requireNonNull(firebirdEncodingName, "firebirdEncodingName");
         this.charsetName = charsetName;
@@ -93,12 +94,12 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
     }
 
     @Override
-    public String getJavaEncodingName() {
+    public @Nullable String getJavaEncodingName() {
         return charsetName;
     }
 
     @Override
-    public Charset getJavaCharset() {
+    public @Nullable Charset getJavaCharset() {
         if (charset == null && encoding == NOT_INITIALIZED) {
             // We intentionally don't use synchronization or volatile here
             // Multiple initialization might be a bit wasteful, but it has no other side effects
@@ -132,7 +133,7 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
      * each time this method is called.
      */
     @Override
-    public Encoding getEncoding() {
+    public @Nullable Encoding getEncoding() {
         if (encoding == NOT_INITIALIZED) {
             // We intentionally don't use synchronization or volatile here
             // Multiple initialization might be a bit wasteful, but it has no other side effects
@@ -153,7 +154,7 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         DefaultEncodingDefinition that = (DefaultEncodingDefinition) o;
@@ -172,9 +173,10 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
     }
 
     private void initCharset() {
+        assert charsetName != null : "charsetName may not be null when calling initCharset()";
         try {
             charset = Charset.forName(charsetName);
-        } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+        } catch (IllegalArgumentException e) {
             // Prevent further attempts
             encoding = null;
             logger.log(System.Logger.Level.WARNING,
@@ -189,6 +191,7 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
         if (isInformationOnly()) {
             encoding = null;
         } else {
+            //noinspection DataFlowIssue : isInformationOnly() is true if getJavaCharSet() would return null
             encoding = new EncodingGeneric(getJavaCharset());
         }
     }

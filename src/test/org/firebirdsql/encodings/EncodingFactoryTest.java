@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2012-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.encodings;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Mark Rotteveel
  */
+@SuppressWarnings("DataFlowIssue") /* test failures due to NPEs are good enough */
 class EncodingFactoryTest {
 
     /**
@@ -334,6 +336,7 @@ class EncodingFactoryTest {
      *         The EncodingDefinition instances
      * @return EncodingSet instance
      */
+    @NullMarked
     private static EncodingSet createEncodingSet(final int preferenceWeight, final EncodingDefinition... encodingDefinitions) {
         return new EncodingSet() {
             @Override

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2016-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2016-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.encodings;
 
@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  *
  * @author Mark Rotteveel
  */
+@SuppressWarnings("DataFlowIssue") /* test failures due to NPEs are good enough */
 class ConnectionEncodingFactoryTest {
 
     private final EncodingFactory standardFactory = EncodingFactory.getRootEncodingFactory();

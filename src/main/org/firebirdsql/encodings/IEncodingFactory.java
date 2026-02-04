@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2013-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.encodings;
 
 import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.Charset;
 import java.util.function.Function;
@@ -44,12 +45,11 @@ public interface IEncodingFactory {
      *         The Firebird encoding name (case-insensitive)
      * @return EncodingDefinition instance or {@code null} if the encoding name is unknown
      */
-    EncodingDefinition getEncodingDefinitionByFirebirdName(String firebirdEncodingName);
+    @Nullable EncodingDefinition getEncodingDefinitionByFirebirdName(String firebirdEncodingName);
 
     /**
      * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Firebird encoding. If there is no known
-     * encoding for this name,
-     * or the loaded EncodingDefinition is information-only, then the defaultEncoding is used.
+     * encoding for this name, or the loaded EncodingDefinition is information-only, then the defaultEncoding is used.
      *
      * @param firebirdEncodingName
      *         The Firebird encoding name (case-insensitive)
@@ -70,7 +70,7 @@ public interface IEncodingFactory {
      * @return EncodingDefinition instance or {@code null} if the character set id is unknown or {@code 127} and this
      * implementation doesn't know the connection character set.
      */
-    EncodingDefinition getEncodingDefinitionByCharacterSetId(int firebirdCharacterSetId);
+    @Nullable EncodingDefinition getEncodingDefinitionByCharacterSetId(int firebirdCharacterSetId);
 
     /**
      * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Firebird character set id. If there is no
@@ -91,7 +91,7 @@ public interface IEncodingFactory {
      *         The Java character set
      * @return EncodingDefinition instance or {@code null} if the character set is not mapped
      */
-    EncodingDefinition getEncodingDefinitionByCharset(Charset charset);
+    @Nullable EncodingDefinition getEncodingDefinitionByCharset(Charset charset);
 
     /**
      * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Java character set. If there is no known
@@ -106,7 +106,7 @@ public interface IEncodingFactory {
      * @return Encoding instance (never null)
      * @see #getOrCreateEncodingForCharset(java.nio.charset.Charset)
      */
-    Encoding getEncodingForCharset(final Charset charset, final Encoding fallbackEncoding);
+    Encoding getEncodingForCharset(final Charset charset, final @Nullable Encoding fallbackEncoding);
 
     /**
      * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Java character set. If there is no known
@@ -145,7 +145,7 @@ public interface IEncodingFactory {
      *         Name (or alias) of the Java character set (case-insensitive)
      * @return EncodingDefinition instance or {@code null} if the character set name is not mapped
      */
-    EncodingDefinition getEncodingDefinitionByCharsetAlias(String charsetAlias);
+    @Nullable EncodingDefinition getEncodingDefinitionByCharsetAlias(String charsetAlias);
 
     /**
      * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Java character set name or alias. If there
@@ -173,8 +173,8 @@ public interface IEncodingFactory {
      * </p>
      * <p>
      * If either of the parameters cannot be resolved, to an EncodingDefinition or {@link Charset}, or the
-     * EncodingDefinition is information-only - with the exception of Firebird encoding NONE - and no Java Charset
-     * is specified, then null is returned.
+     * EncodingDefinition is information-only - except for Firebird encoding NONE - and no Java Charset is specified,
+     * then null is returned.
      * </p>
      *
      * @param firebirdEncodingName
@@ -184,7 +184,8 @@ public interface IEncodingFactory {
      * @return An EncodingDefinition or null if both parameters are null, no encoding was found or if an exception
      * occurred.
      */
-    EncodingDefinition getEncodingDefinition(String firebirdEncodingName, String javaCharsetAlias);
+    @Nullable EncodingDefinition getEncodingDefinition(@Nullable String firebirdEncodingName,
+            @Nullable String javaCharsetAlias);
 
     /**
      * Returns an {@link org.firebirdsql.encodings.IEncodingFactory} that uses {@code encodingDefinition} as the
@@ -194,7 +195,7 @@ public interface IEncodingFactory {
      *         The default encoding to use (or {@code null} for the value of {@link #getDefaultEncoding()}
      * @return IEncodingFactory instance with the specified default.
      */
-    IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition);
+    IEncodingFactory withDefaultEncodingDefinition(@Nullable EncodingDefinition encodingDefinition);
 
     /**
      * Returns an {@link org.firebirdsql.encodings.IEncodingFactory} that uses an {@link EncodingDefinition} identified

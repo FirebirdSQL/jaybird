@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2013-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.encodings;
+
+import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.Charset;
 
@@ -21,12 +23,12 @@ public interface EncodingDefinition {
     /**
      * @return Java name of the encoding
      */
-    String getJavaEncodingName();
+    @Nullable String getJavaEncodingName();
 
     /**
      * @return Java {@link java.nio.charset.Charset} for this encoding
      */
-    Charset getJavaCharset();
+    @Nullable Charset getJavaCharset();
 
     /**
      * @return Firebird name of the encoding
@@ -68,5 +70,5 @@ public interface EncodingDefinition {
      * @return Encoding object or <code>null</code> if this is an information only EncodingDefinition
      * @see #isInformationOnly()
      */
-    Encoding getEncoding();
+    @Nullable Encoding getEncoding();
 }

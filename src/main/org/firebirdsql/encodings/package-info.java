@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 /**
  * Defines the supported Firebird character sets and their mapping to Java character sets.
@@ -10,6 +10,8 @@
  * @since 3
  */
 @InternalApi
+@NullMarked
 package org.firebirdsql.encodings;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;

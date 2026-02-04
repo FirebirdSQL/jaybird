@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2013-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.encodings;
+
+import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +18,8 @@ import static org.firebirdsql.gds.ISCConstants.CS_NONE;
  * @since 3.0
  */
 public final class DefaultEncodingSet implements EncodingSet {
+
+    private static final @Nullable Charset NO_CHARSET = null;
 
     private final List<EncodingDefinition> encodingDefinitions = createEncodingDefinitions();
 
@@ -36,8 +40,8 @@ public final class DefaultEncodingSet implements EncodingSet {
      */
     private static List<EncodingDefinition> createEncodingDefinitions() {
         return List.of(
-                new DefaultEncodingDefinition("NONE", (Charset) null, 1, CS_NONE, false),
-                new DefaultEncodingDefinition("OCTETS", (Charset) null, 1, CS_BINARY, false),
+                new DefaultEncodingDefinition("NONE", NO_CHARSET, 1, CS_NONE, false),
+                new DefaultEncodingDefinition("OCTETS", NO_CHARSET, 1, CS_BINARY, false),
                 new DefaultEncodingDefinition("ASCII", StandardCharsets.US_ASCII, 1, 2, false),
                 new DefaultEncodingDefinition("UNICODE_FSS", StandardCharsets.UTF_8, 3, 3, true),
                 new DefaultEncodingDefinition("UTF8", StandardCharsets.UTF_8, 4, 4, false),
@@ -53,7 +57,7 @@ public final class DefaultEncodingSet implements EncodingSet {
                 new DefaultEncodingDefinition("DOS858", "Cp858", 1, 16, false),
                 new DefaultEncodingDefinition("DOS862", "Cp862", 1, 17, false),
                 new DefaultEncodingDefinition("DOS864", "Cp864", 1, 18, false),
-                new DefaultEncodingDefinition("NEXT", (Charset) null, 1, 19, false),
+                new DefaultEncodingDefinition("NEXT", NO_CHARSET, 1, 19, false),
                 new DefaultEncodingDefinition("ISO8859_1", StandardCharsets.ISO_8859_1, 1, 21, false),
                 new DefaultEncodingDefinition("ISO8859_2", "ISO-8859-2", 1, 22, false),
                 new DefaultEncodingDefinition("ISO8859_3", "ISO-8859-3", 1, 23, false),
@@ -70,7 +74,7 @@ public final class DefaultEncodingSet implements EncodingSet {
                 new DefaultEncodingDefinition("DOS861", "Cp861", 1, 47, false),
                 new DefaultEncodingDefinition("DOS866", "Cp866", 1, 48, false),
                 new DefaultEncodingDefinition("DOS869", "Cp869", 1, 49, false),
-                new DefaultEncodingDefinition("CYRL", (Charset) null, 1, 50, false),
+                new DefaultEncodingDefinition("CYRL", NO_CHARSET, 1, 50, false),
                 new DefaultEncodingDefinition("WIN1250", "Cp1250", 1, 51, false),
                 new DefaultEncodingDefinition("WIN1251", "Cp1251", 1, 52, false),
                 new DefaultEncodingDefinition("WIN1252", "Cp1252", 1, 53, false),

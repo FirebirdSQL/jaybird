@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2004-2008 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.encodings;
@@ -10,6 +10,7 @@ package org.firebirdsql.encodings;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.jaybird.util.PluginLoader;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -21,6 +22,7 @@ import java.util.function.Function;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.WARNING;
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ISCConstants.CS_dynamic;
 
 /**
@@ -55,7 +57,7 @@ public final class EncodingFactory implements IEncodingFactory {
     // Linked HashMap because we need to preserve insertion order for the lazy initialization.
     // Initial capacity of 128 should prevent resizing during loading (if only DefaultEncodingSet is present)
     private final Map<String, EncodingDefinition> firebirdEncodingToDefinition = new LinkedHashMap<>(128);
-    private final EncodingDefinition[] firebirdCharacterSetIdToDefinition =
+    private final @Nullable EncodingDefinition[] firebirdCharacterSetIdToDefinition =
             new EncodingDefinition[MAX_NORMAL_CHARSET_ID + 1];
     private final Map<Charset, EncodingDefinition> javaCharsetToDefinition = new ConcurrentHashMap<>();
     private final Map<String, EncodingDefinition> javaAliasesToDefinition = new ConcurrentHashMap<>();
@@ -81,7 +83,8 @@ public final class EncodingFactory implements IEncodingFactory {
         final EncodingDefinition candidateDefinition = getEncodingDefinitionByCharset(DEFAULT_CHARSET);
 
         if (candidateDefinition != null && !candidateDefinition.isInformationOnly()) {
-            defaultEncoding = candidateDefinition.getEncoding();
+            // Should not return null if not information-only
+            defaultEncoding = requireNonNull(candidateDefinition.getEncoding(), "candidateDefinition.getEncoding()");
             defaultEncodingDefinition = candidateDefinition;
         } else {
             defaultEncoding = new EncodingGeneric(DEFAULT_CHARSET);
@@ -108,7 +111,8 @@ public final class EncodingFactory implements IEncodingFactory {
     }
 
     @Override
-    public EncodingDefinition getEncodingDefinitionByFirebirdName(final String firebirdEncodingName) {
+    public @Nullable EncodingDefinition getEncodingDefinitionByFirebirdName(final String firebirdEncodingName) {
+        //noinspection ConstantValue : null-check for robustness
         return firebirdEncodingName != null
                 ? firebirdEncodingToDefinition.get(firebirdEncodingName.toLowerCase(Locale.ROOT))
                 : null;
@@ -125,7 +129,8 @@ public final class EncodingFactory implements IEncodingFactory {
      *         <code>null</code>, the defaultEncoding for the JVM is used.
      * @return Encoding instance (never null)
      */
-    public Encoding getEncodingForFirebirdName(final String firebirdEncodingName, final Encoding fallbackEncoding) {
+    public Encoding getEncodingForFirebirdName(final String firebirdEncodingName,
+            final @Nullable Encoding fallbackEncoding) {
         return returnEncodingOrFallback(getEncodingDefinitionByFirebirdName(firebirdEncodingName), fallbackEncoding);
     }
 
@@ -135,7 +140,7 @@ public final class EncodingFactory implements IEncodingFactory {
     }
 
     @Override
-    public EncodingDefinition getEncodingDefinitionByCharacterSetId(final int firebirdCharacterSetId) {
+    public @Nullable EncodingDefinition getEncodingDefinitionByCharacterSetId(final int firebirdCharacterSetId) {
         return firebirdCharacterSetIdToDefinition[firebirdCharacterSetId & 0xFF];
     }
 
@@ -151,7 +156,8 @@ public final class EncodingFactory implements IEncodingFactory {
      *         <code>null</code>, the defaultEncoding for the JVM is used.
      * @return Encoding instance (never null)
      */
-    public Encoding getEncodingForCharacterSetId(final int firebirdCharacterSetId, final Encoding fallbackEncoding) {
+    public Encoding getEncodingForCharacterSetId(final int firebirdCharacterSetId,
+            final @Nullable Encoding fallbackEncoding) {
         return returnEncodingOrFallback(getEncodingDefinitionByCharacterSetId(firebirdCharacterSetId), fallbackEncoding);
     }
 
@@ -161,7 +167,7 @@ public final class EncodingFactory implements IEncodingFactory {
     }
 
     @Override
-    public EncodingDefinition getEncodingDefinitionByCharset(final Charset charset) {
+    public @Nullable EncodingDefinition getEncodingDefinitionByCharset(final Charset charset) {
         EncodingDefinition encodingDefinition = javaCharsetToDefinition.get(charset);
         if (encodingDefinition != null) {
             return encodingDefinition;
@@ -169,7 +175,7 @@ public final class EncodingFactory implements IEncodingFactory {
         return findAndMapEncodingDefinition(charset);
     }
 
-    private EncodingDefinition findAndMapEncodingDefinition(final Charset charset) {
+    private @Nullable EncodingDefinition findAndMapEncodingDefinition(final Charset charset) {
         final Set<String> potentialNames = toLowerCaseAliasSet(charset);
         for (EncodingDefinition encodingDefinition : firebirdEncodingToDefinition.values()) {
             String javaEncodingName = encodingDefinition.getJavaEncodingName();
@@ -183,7 +189,7 @@ public final class EncodingFactory implements IEncodingFactory {
     }
 
     @Override
-    public Encoding getEncodingForCharset(final Charset charset, final Encoding fallbackEncoding) {
+    public Encoding getEncodingForCharset(final Charset charset, final @Nullable Encoding fallbackEncoding) {
         return returnEncodingOrFallback(getEncodingDefinitionByCharset(charset), fallbackEncoding);
     }
 
@@ -198,7 +204,8 @@ public final class EncodingFactory implements IEncodingFactory {
     }
 
     @Override
-    public EncodingDefinition getEncodingDefinitionByCharsetAlias(final String charsetAlias) {
+    public @Nullable EncodingDefinition getEncodingDefinitionByCharsetAlias(final String charsetAlias) {
+        //noinspection ConstantValue : null-check for robustness
         if (charsetAlias == null) {
             return null;
         }
@@ -221,7 +228,7 @@ public final class EncodingFactory implements IEncodingFactory {
      *         <code>null</code>, the defaultEncoding for the JVM is used.
      * @return Encoding instance (never null)
      */
-    public Encoding getEncodingForCharsetAlias(final String charsetAlias, final Encoding fallbackEncoding) {
+    public Encoding getEncodingForCharsetAlias(final String charsetAlias, final @Nullable Encoding fallbackEncoding) {
         return returnEncodingOrFallback(getEncodingDefinitionByCharsetAlias(charsetAlias), fallbackEncoding);
     }
 
@@ -231,7 +238,8 @@ public final class EncodingFactory implements IEncodingFactory {
     }
 
     @Override
-    public EncodingDefinition getEncodingDefinition(final String firebirdEncodingName, final String javaCharsetAlias) {
+    public @Nullable EncodingDefinition getEncodingDefinition(final @Nullable String firebirdEncodingName,
+            final @Nullable String javaCharsetAlias) {
         try {
             EncodingDefinition encodingDefinition = null;
             Charset charset = null;
@@ -251,7 +259,8 @@ public final class EncodingFactory implements IEncodingFactory {
 
             if (encodingDefinition == null) {
                 return null;
-            } else if (!encodingDefinition.isInformationOnly()
+            } else //noinspection DataFlowIssue : getJavaCharset() is not null if not information-only
+                if (!encodingDefinition.isInformationOnly()
                     && (charset == null || encodingDefinition.getJavaCharset().equals(charset))) {
                 // Normal encoding definition
                 return encodingDefinition;
@@ -282,7 +291,7 @@ public final class EncodingFactory implements IEncodingFactory {
      * </p>
      */
     @Override
-    public IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition) {
+    public IEncodingFactory withDefaultEncodingDefinition(@Nullable EncodingDefinition encodingDefinition) {
         EncodingDefinition resolvedEncodingDefinition =
                 encodingDefinition != null && !encodingDefinition.isInformationOnly()
                         ? encodingDefinition
@@ -412,7 +421,8 @@ public final class EncodingFactory implements IEncodingFactory {
      *         Encoding instance for fallback (default encoding for this VM is used if null)
      * @return Encoding instance
      */
-    private Encoding returnEncodingOrFallback(EncodingDefinition encodingDefinition, Encoding fallbackEncoding) {
+    private Encoding returnEncodingOrFallback(@Nullable EncodingDefinition encodingDefinition,
+            @Nullable Encoding fallbackEncoding) {
         if (fallbackEncoding == null) {
             fallbackEncoding = getDefaultEncoding();
         }
@@ -460,7 +470,7 @@ public final class EncodingFactory implements IEncodingFactory {
      *         The default encoding to use (or {@code null} to get {@link #getPlatformDefault()}
      * @return IEncodingFactory instance with the specified default.
      */
-    public static IEncodingFactory createInstance(EncodingDefinition encodingDefinition) {
+    public static IEncodingFactory createInstance(@Nullable EncodingDefinition encodingDefinition) {
         if (encodingDefinition == null || encodingDefinition.isInformationOnly()) {
             return getPlatformDefault();
         }
@@ -479,7 +489,7 @@ public final class EncodingFactory implements IEncodingFactory {
      *         The default charset to use, or {@code null} for {@link #getPlatformDefault()}.
      * @return IEncodingFactory instance with the specified default.
      */
-    public static IEncodingFactory createInstance(Charset charset) {
+    public static IEncodingFactory createInstance(@Nullable Charset charset) {
         if (charset == null) {
             return getPlatformDefault();
         }
@@ -527,7 +537,7 @@ public final class EncodingFactory implements IEncodingFactory {
      * @param charsetAlias Java character set alias
      * @return Encoding definition, or {@code null} if not found
      */
-    private EncodingDefinition resolveEncodingDefinitionByCharset(final String charsetAlias) {
+    private @Nullable EncodingDefinition resolveEncodingDefinitionByCharset(final String charsetAlias) {
         try {
             Charset charset = Charset.forName(charsetAlias);
             return getEncodingDefinitionByCharset(charset);
