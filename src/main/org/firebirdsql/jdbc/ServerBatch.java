@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -39,6 +39,7 @@ import static java.util.Collections.emptyList;
  * @author Mark Rotteveel
  * @since 5
  */
+@NullMarked
 final class ServerBatch implements Batch, StatementListener {
 
     private static final System.Logger log = System.getLogger(ServerBatch.class.getName());
@@ -60,7 +61,6 @@ final class ServerBatch implements Batch, StatementListener {
     }
 
     @Override
-    @NullMarked
     public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
         if (isClosed() || sender != statement) {
             sender.removeStatementListener(this);
@@ -249,11 +249,14 @@ final class ServerBatch implements Batch, StatementListener {
     }
 
     @Override
+    // setting @NonNull fields to null which are not accessed after close
+    @SuppressWarnings("DataFlowIssue")
     public void close() {
         if (isClosed()) return;
         state = BatchState.CLOSED;
         batchRowValues = null;
         FbStatement copyStmt = statement;
+        //noinspection ConstantValue : null-check for robustness
         if (copyStmt != null) {
             statement = null;
             copyStmt.removeStatementListener(this);

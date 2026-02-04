@@ -1000,6 +1000,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * statement is closed or not.
      * </p>
      */
+    @NullMarked
     private final class EmulatedPreparedStatementBatch implements Batch {
 
         private final Deque<BatchRowValue> batchRowValues = new ArrayDeque<>();

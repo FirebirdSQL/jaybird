@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.BatchUpdateException;
 import java.sql.SQLException;
@@ -14,6 +15,7 @@ import java.util.List;
  * @author Mark Rotteveel
  * @since 5
  */
+@NullMarked
 interface Batch {
 
     /**
