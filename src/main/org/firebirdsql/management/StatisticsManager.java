@@ -1,10 +1,11 @@
 // SPDX-FileCopyrightText: Copyright 2004 Gabriel Reid
 // SPDX-FileCopyrightText: Copyright 2006 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2016-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2016-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import java.util.List;
  *
  * @author Gabriel Reid
  */
+@NullMarked
 public interface StatisticsManager extends ServiceManager {
 
     /**
