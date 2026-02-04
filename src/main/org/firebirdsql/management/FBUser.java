@@ -1,8 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2004 Steven Jardine
 // SPDX-FileCopyrightText: Copyright 2004 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2016-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2016-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
+
+import org.jspecify.annotations.NullUnmarked;
 
 import java.util.Objects;
 
@@ -15,6 +17,7 @@ import java.util.Objects;
  */
 @Deprecated(since = "6")
 @SuppressWarnings("DeprecatedIsStillUsed")
+@NullUnmarked
 public class FBUser implements User {
 
     private String userName;

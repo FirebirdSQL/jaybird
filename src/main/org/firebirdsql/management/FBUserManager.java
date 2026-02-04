@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2004-2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2009 Thomas Steinmaurer
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.management;
@@ -10,6 +10,9 @@ package org.firebirdsql.management;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,10 +34,11 @@ import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
  */
 @Deprecated(since = "6")
 @SuppressWarnings("DeprecatedIsStillUsed")
+@NullMarked
 public class FBUserManager extends FBServiceManager implements UserManager {
 
     private int count = 0;
-    private String securityDatabase = null;
+    private @Nullable String securityDatabase = null;
 
     /**
      * Create a new instance of {@code FBMaintenanceManager} based on the default GDSType.
@@ -271,6 +275,7 @@ public class FBUserManager extends FBServiceManager implements UserManager {
         adminRoleAction(isc_action_svc_drop_mapping);
     }
 
+    @NullUnmarked
     private static final class FBUserBuilder {
 
         private String userName;

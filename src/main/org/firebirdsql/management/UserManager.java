@@ -1,8 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2004 Steven Jardine
 // SPDX-FileCopyrightText: Copyright 2009 Thomas Steinmaurer
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.management;
+
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -16,6 +18,7 @@ import java.util.Map;
  */
 @Deprecated(since = "6")
 @SuppressWarnings("DeprecatedIsStillUsed")
+@NullMarked
 public interface UserManager extends ServiceManager {
 
     /**

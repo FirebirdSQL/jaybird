@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: Copyright 2004 Steven Jardine
-// SPDX-FileCopyrightText: Copyright 2016-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2016-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.management;
+
+import org.jspecify.annotations.NullUnmarked;
 
 /**
  * A user in the Firebird Security Database.
@@ -11,6 +13,7 @@ package org.firebirdsql.management;
  */
 @Deprecated(since = "6")
 @SuppressWarnings("DeprecatedIsStillUsed")
+@NullUnmarked
 public interface User {
 
     /**
