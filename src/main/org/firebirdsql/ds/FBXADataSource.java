@@ -72,6 +72,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
         }
     }
 
+    @NullMarked
     private static class XAConnectionManager implements XcaConnectionManager, XcaConnectionEventListener,
             Serializable {
 

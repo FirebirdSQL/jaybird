@@ -3,10 +3,12 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2002-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2006 Ludovic Orban
- SPDX-FileCopyrightText: Copyright 2011-2023 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jaybird.xca;
+
+import org.jspecify.annotations.Nullable;
 
 import javax.transaction.xa.Xid;
 import java.nio.BufferUnderflowException;
@@ -45,7 +47,7 @@ final class FBXid implements Xid {
     /**
      * Return a string that describes any Xid instance.
      */
-    static String toString(Xid id) {
+    static String toString(@Nullable Xid id) {
         if (id == null)
             return "[NULL Xid]";
 
@@ -160,7 +162,7 @@ final class FBXid implements Xid {
      * transaction id and transaction branch qualifier.
      * </p>
      */
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof Xid other)) return false;
 

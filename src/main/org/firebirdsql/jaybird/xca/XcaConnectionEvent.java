@@ -1,8 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2020-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.jdbc.FirebirdConnection;
+import org.jspecify.annotations.Nullable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * The {@code XcaConnectionEvent} class provides information about the source of a connection related event. A
@@ -21,8 +24,8 @@ public final class XcaConnectionEvent {
 
     private final FBManagedConnection source;
     private final EventType eventType;
-    private final Exception exception;
-    private FirebirdConnection connectionHandle;
+    private final @Nullable Exception exception;
+    private @Nullable FirebirdConnection connectionHandle;
 
     /**
      * Construct a {@code ConnectionEvent} object.
@@ -47,11 +50,11 @@ public final class XcaConnectionEvent {
      *         Exception associated with the event
      */
     @SuppressWarnings("java:S4274")
-    public XcaConnectionEvent(FBManagedConnection source, EventType eventType, Exception exception) {
+    public XcaConnectionEvent(FBManagedConnection source, EventType eventType, @Nullable Exception exception) {
         assert exception != null || eventType != EventType.CONNECTION_ERROR_OCCURRED
                 : "Exception required for CONNECTION_ERROR_OCCURRED";
-        this.source = source;
-        this.eventType = eventType;
+        this.source = requireNonNull(source, "source");
+        this.eventType = requireNonNull(eventType, "eventType");
         this.exception = exception;
     }
 
@@ -68,7 +71,7 @@ public final class XcaConnectionEvent {
      *
      * @return The connection handle, can be {@code null}
      */
-    public FirebirdConnection getConnectionHandle() {
+    public @Nullable FirebirdConnection getConnectionHandle() {
         return connectionHandle;
     }
 
@@ -81,7 +84,7 @@ public final class XcaConnectionEvent {
      *
      * @return Exception for this event, can be {@code null} for event type other than {@code CONNECTION_ERROR_OCCURRED}
      */
-    public Exception getException() {
+    public @Nullable Exception getException() {
         return exception;
     }
 

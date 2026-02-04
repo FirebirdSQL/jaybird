@@ -3,12 +3,13 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2006 Roman Rokytskyy
- SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -45,11 +46,11 @@ public final class FBConnectionRequestInfo implements Serializable {
                 connectionProperties.isImmutable() ? connectionProperties.asNewMutable() : connectionProperties;
     }
 
-    public void setUserName(String userName) {
+    public void setUserName(@Nullable String userName) {
         connectionProperties.setUser(userName);
     }
 
-    public void setPassword(String password) {
+    public void setPassword(@Nullable String password) {
         connectionProperties.setPassword(password);
     }
 
@@ -62,7 +63,7 @@ public final class FBConnectionRequestInfo implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof FBConnectionRequestInfo other)) return false;
         return connectionProperties.equals(other.connectionProperties);

@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2005-2007 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.jspecify.annotations.Nullable;
 
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -38,10 +39,10 @@ public final class FatalErrorHelper {
      * Check whether the specified exception is fatal from the XCA point of view.
      *
      * @param exception
-     *         exception to check.
+     *         exception to check ({@code null} always returns {@code false})
      * @return {@code true} if the exception that happened is fatal
      */
-    public static boolean isFatal(SQLException exception) {
+    public static boolean isFatal(@Nullable SQLException exception) {
         return exception != null && (isFatal(exception.getErrorCode()) || isFatal(exception.getSQLState()));
     }
 
@@ -60,10 +61,10 @@ public final class FatalErrorHelper {
      * Checks whether {@code sqlState} is fatal from the XCA point of view.
      *
      * @param sqlState
-     *         SQLSTATE value
+     *         SQLSTATE value ({@code null} always returns {@code false})
      * @return {@code true} if the SQLSTATE is (considered) fatal
      */
-    private static boolean isFatal(String sqlState) {
+    private static boolean isFatal(@Nullable String sqlState) {
         // Don't consider absence of SQLSTATE as a sign of fatal error (we did in the past for FBPooledConnection),
         // there are exceptions in Jaybird without SQLSTATE, and most of them are not fatal.
         if (sqlState == null) return false;
@@ -85,7 +86,7 @@ public final class FatalErrorHelper {
         return Arrays.binarySearch(BROKEN_CONNECTION_ERRORS, errorCode) >= 0;
     }
 
-    private static boolean isBrokenConnectionSqlState(String sqlState) {
+    private static boolean isBrokenConnectionSqlState(@Nullable String sqlState) {
         return sqlState != null && sqlState.startsWith(SQLSTATE_CLASS_CONNECTION_ERROR);
     }
 
@@ -103,14 +104,12 @@ public final class FatalErrorHelper {
      * </p>
      *
      * @param exception
-     *         exception to check
+     *         exception to check ({@code null} always returns {@code false})
      * @return {@code true} if the error code is signals a (possibly) broken connection
      */
     @SuppressWarnings({ "RedundantIfStatement", "java:S1126" })
-    public static boolean isBrokenConnection(Exception exception) {
-        if (exception == null) {
-            return false;
-        }
+    public static boolean isBrokenConnection(@Nullable Exception exception) {
+        if (exception == null) return false;
 
         SQLException firstSqlException = findException(exception, SQLException.class);
         if (firstSqlException != null && (
@@ -127,7 +126,7 @@ public final class FatalErrorHelper {
         return false;
     }
 
-    private static <T extends Exception> T findException(Exception root, Class<T> exceptionType) {
+    private static <T extends Exception> @Nullable T findException(Exception root, Class<T> exceptionType) {
         Throwable current = root;
         while (current != null) {
             if (exceptionType.isInstance(current)) {

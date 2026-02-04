@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 /**
  * XCA (or ex-connector-architecture), is an internal API of Jaybird for connection management.
@@ -12,6 +12,8 @@
  * </p>
  */
 @InternalApi
+@NullMarked
 package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;

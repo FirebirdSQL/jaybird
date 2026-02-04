@@ -27,8 +27,7 @@ import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 import org.firebirdsql.jdbc.*;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import javax.sql.DataSource;
@@ -51,6 +50,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cannotInstantiateConnection;
 
 /**
@@ -91,7 +91,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
 
     private XcaConnectionManager defaultCm;
     private int hashCode;
-    private GDSType gdsType;
+    private @Nullable GDSType gdsType;
 
     // Maps supplied XID to internal transaction handle.
     private final Map<Xid, FBManagedConnection> xidMap = new ConcurrentHashMap<>();
@@ -180,13 +180,15 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
      * @param connectionProperties
      *         Initial connection properties (will be copied), use of {@code null} is allowed
      */
-    public FBManagedConnectionFactory(boolean shared, GDSType gdsType, FBConnectionProperties connectionProperties) {
+    public FBManagedConnectionFactory(boolean shared, GDSType gdsType,
+            @Nullable FBConnectionProperties connectionProperties) {
         this.shared = shared;
         this.connectionProperties = connectionProperties != null
                 ? (FBConnectionProperties) connectionProperties.clone()
                 : new FBConnectionProperties();
         setType(gdsType.toString());
-        setDefaultConnectionManager(new FBStandAloneConnectionManager());
+        defaultCm = new FBStandAloneConnectionManager();
+        recordDefaultConnectionManagerInProps(defaultCm);
     }
 
     public FbDatabaseFactory getDatabaseFactory() {
@@ -198,6 +200,8 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
      *
      * @return The GDS implementation type
      */
+    // TODO: Current nullability is questionable, will need to be investigated
+    @NullUnmarked
     public GDSType getGDSType() {
         if (gdsType != null) {
             return gdsType;
@@ -219,29 +223,33 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
         return connectionProperties.getTransactionParameters(isolation);
     }
 
-    public void setNonStandardProperty(@NonNull String propertyMapping) {
+    public void setNonStandardProperty(String propertyMapping) {
         ensureCanModify(() -> connectionProperties.setNonStandardProperty(propertyMapping));
     }
 
-    public void setTransactionParameters(int isolation, @NonNull TransactionParameterBuffer tpb) {
+    public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
         ensureCanModify(() -> connectionProperties.setTransactionParameters(isolation, tpb));
     }
 
     public void setDefaultConnectionManager(XcaConnectionManager defaultCm) {
         ensureCanModify(() -> {
-            // Ensures that instances with different connection managers do not resolve to the same connection manager
-            connectionProperties.setProperty(DEFAULT_CONNECTION_MANAGER_TYPE, defaultCm.getClass().getName());
+            recordDefaultConnectionManagerInProps(defaultCm);
             this.defaultCm = defaultCm;
         });
     }
 
+    private void recordDefaultConnectionManagerInProps(XcaConnectionManager defaultCm) {
+        // Ensures that instances with different connection managers do not resolve to the same connection manager
+        connectionProperties.setProperty(DEFAULT_CONNECTION_MANAGER_TYPE, defaultCm.getClass().getName());
+    }
+
     @Override
-    public @Nullable String getProperty(@NonNull String name) {
+    public @Nullable String getProperty(String name) {
         return connectionProperties.getProperty(name);
     }
 
     @Override
-    public void setProperty(@NonNull String name, @Nullable String value) {
+    public void setProperty(String name, @Nullable String value) {
         ensureCanModify(() -> {
             if (PropertyNames.type.equals(name) && gdsType != null) {
                 throw new IllegalStateException("Cannot change GDS type at runtime.");
@@ -251,27 +259,26 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
     }
 
     @Override
-    public Integer getIntProperty(@NonNull String name) {
+    public @Nullable Integer getIntProperty(String name) {
         return connectionProperties.getIntProperty(name);
     }
 
     @Override
-    public void setIntProperty(@NonNull String name, @Nullable Integer value) {
+    public void setIntProperty(String name, @Nullable Integer value) {
         ensureCanModify(() -> connectionProperties.setIntProperty(name, value));
     }
 
     @Override
-    public @Nullable Boolean getBooleanProperty(@NonNull String name) {
+    public @Nullable Boolean getBooleanProperty(String name) {
         return connectionProperties.getBooleanProperty(name);
     }
 
     @Override
-    public void setBooleanProperty(@NonNull String name, @Nullable Boolean value) {
+    public void setBooleanProperty(String name, @Nullable Boolean value) {
         ensureCanModify(() -> connectionProperties.setBooleanProperty(name, value));
     }
 
     @Override
-    @NullMarked
     public Map<ConnectionProperty, Object> connectionPropertyValues() {
         return connectionProperties.connectionPropertyValues();
     }
@@ -296,12 +303,13 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (other == this) return true;
         return other instanceof FBManagedConnectionFactory that
                && this.connectionProperties.equals(that.connectionProperties);
     }
 
+    @SuppressWarnings("RedundantThrows")
     public FBConnectionRequestInfo getDefaultConnectionRequestInfo() throws SQLException {
         return new FBConnectionRequestInfo(connectionProperties.asIConnectionProperties().asNewMutable());
     }
@@ -374,7 +382,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
      *         generic exception
      * @see #createManagedConnection()
      */
-    public FBManagedConnection createManagedConnection(FBConnectionRequestInfo connectionRequestInfo)
+    public FBManagedConnection createManagedConnection(@Nullable FBConnectionRequestInfo connectionRequestInfo)
             throws SQLException {
         start();
         if (connectionRequestInfo == null) {
@@ -430,6 +438,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
         for (Map.Entry<ConnectionProperty, Object> entry : originalProperties.connectionPropertyValues().entrySet()) {
             asCreateOverrideProperty(entry.getKey()).map(ConnectionProperty::name).ifPresent(name -> {
                 Object value = entry.getValue();
+                //noinspection ConstantValue : null-check for robustness
                 if (value == null) {
                     newProperties.setProperty(name, null);
                 } else if (value instanceof String s) {
@@ -503,7 +512,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
         return this;
     }
 
-    private FBManagedConnectionFactory internalCanonicalize() {
+    private @Nullable FBManagedConnectionFactory internalCanonicalize() {
         final SoftReference<FBManagedConnectionFactory> factoryReference = mcfInstances.get(getCacheKey());
         return factoryReference != null ? factoryReference.get() : null;
     }
@@ -801,7 +810,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
 
         private final boolean shared;
         private final XcaConnectionManager fbCm;
-        private final String type;
+        private final @Nullable String type;
         private final FBConnectionProperties fbConnectionProperties;
 
         private SerializationProxy(FBManagedConnectionFactory connectionFactory) {
@@ -818,7 +827,7 @@ public final class FBManagedConnectionFactory implements FirebirdConnectionPrope
                 gdsType = GDSFactory.getDefaultGDSType();
             }
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(shared, gdsType, fbConnectionProperties);
-            mcf.setDefaultConnectionManager(fbCm);
+            mcf.setDefaultConnectionManager(requireNonNull(fbCm, "fbCm"));
             if (!shared) {
                 return mcf;
             }

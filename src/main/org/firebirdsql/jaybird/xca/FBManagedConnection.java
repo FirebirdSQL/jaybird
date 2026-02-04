@@ -28,8 +28,7 @@ import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -64,25 +63,25 @@ public final class FBManagedConnection implements ExceptionListener {
     private final FBManagedConnectionFactory mcf;
 
     private final List<XcaConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
-    private static final AtomicReferenceFieldUpdater<FBManagedConnection, FBConnection> connectionHandleUpdater =
+    private static final AtomicReferenceFieldUpdater<FBManagedConnection, @Nullable FBConnection> connectionHandleUpdater =
             AtomicReferenceFieldUpdater.newUpdater(FBManagedConnection.class, FBConnection.class, "connectionHandle");
     @SuppressWarnings("java:S3077")
-    private volatile FBConnection connectionHandle;
+    private volatile @Nullable FBConnection connectionHandle;
     // This is a bit of hack to be able to get attach warnings into the FBConnection that is created later.
-    private static final AtomicReferenceFieldUpdater<FBManagedConnection, SQLWarning> unnotifiedWarningsUpdater =
+    private static final AtomicReferenceFieldUpdater<FBManagedConnection, @Nullable SQLWarning> unnotifiedWarningsUpdater =
             AtomicReferenceFieldUpdater.newUpdater(FBManagedConnection.class, SQLWarning.class, "unnotifiedWarnings");
     @SuppressWarnings("java:S3077")
-    private volatile SQLWarning unnotifiedWarnings;
+    private volatile @Nullable SQLWarning unnotifiedWarnings;
 
     private int timeout = 0;
 
     private final Map<Xid, FbTransaction> xidMap = new ConcurrentHashMap<>();
 
-    private GDSHelper gdsHelper;
+    private @Nullable GDSHelper gdsHelper;
     private final FbDatabase database;
-    private XAResource xaResource;
+    private @Nullable XAResource xaResource;
     private final FBConnectionRequestInfo cri;
-    private FBTpbMapper transactionMapping;
+    private @Nullable FBTpbMapper transactionMapping;
     private TransactionParameterBuffer tpb;
     private int transactionIsolation;
 
@@ -131,7 +130,6 @@ public final class FBManagedConnection implements ExceptionListener {
     }
 
     @Override
-    @NullMarked
     public void errorOccurred(Object source, SQLException ex) {
         log.log(TRACE, "Error occurred", ex);
         if (FatalErrorHelper.isFatal(ex)) {
@@ -333,10 +331,8 @@ public final class FBManagedConnection implements ExceptionListener {
         destroy(null);
     }
 
-    public void destroy(XcaConnectionEvent connectionEvent) throws SQLException {
-        if (gdsHelper == null) {
-            return;
-        }
+    public void destroy(@Nullable XcaConnectionEvent connectionEvent) throws SQLException {
+        if (gdsHelper == null) return;
 
         try {
             if (isBrokenConnection(connectionEvent)) {
@@ -356,7 +352,7 @@ public final class FBManagedConnection implements ExceptionListener {
         }
     }
 
-    private boolean isBrokenConnection(XcaConnectionEvent connectionEvent) {
+    private boolean isBrokenConnection(@Nullable XcaConnectionEvent connectionEvent) {
         if (connectionEvent == null
                 || connectionEvent.getEventType() != XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED) {
             return false;
@@ -520,7 +516,7 @@ public final class FBManagedConnection implements ExceptionListener {
         }
     }
 
-    private boolean isCurrentTransaction(FbTransaction transaction) {
+    private boolean isCurrentTransaction(@Nullable FbTransaction transaction) {
         GDSHelper gdsHelper = this.gdsHelper;
         return gdsHelper != null && gdsHelper.getCurrentTransaction() == transaction;
     }
@@ -723,7 +719,7 @@ public final class FBManagedConnection implements ExceptionListener {
         }
     }
 
-    private static FBXid extractXid(byte[] xidData, long txId) {
+    private static @Nullable FBXid extractXid(byte[] xidData, long txId) {
         try {
             return new FBXid(xidData, txId);
         } catch (FBIncorrectXidException e) {
@@ -746,7 +742,7 @@ public final class FBManagedConnection implements ExceptionListener {
      *         An error has occurred. Possible values are XAER_RMERR,
      *         XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
      */
-    Xid findSingleXid(Xid externalXid) throws javax.transaction.xa.XAException {
+    @Nullable Xid findSingleXid(Xid externalXid) throws javax.transaction.xa.XAException {
         try {
             FbTransaction trHandle = database.startTransaction(tpb);
             try (FbStatement stmtHandle = database.createStatement(trHandle)) {
@@ -801,12 +797,12 @@ public final class FBManagedConnection implements ExceptionListener {
 
         private final Deque<RowValue> rows = new ArrayDeque<>();
         private final FbStatement statementHandle;
-        private RowValue currentRow;
+        private @Nullable RowValue currentRow;
         private boolean moreRows = true;
         private int fetchAsyncAt = NO_ASYNC_FETCH;
 
         private DataProvider(FbStatement statementHandle) {
-            this.statementHandle = statementHandle;
+            this.statementHandle = requireNonNull(statementHandle, "statementHandle");
         }
 
         boolean hasNext() throws SQLException {
@@ -836,18 +832,16 @@ public final class FBManagedConnection implements ExceptionListener {
         }
 
         @Override
-        @NullMarked
         public void receivedRow(FbStatement sender, RowValue rowValue) {
             rows.add(rowValue);
         }
 
         @Override
-        public void afterLast(@NonNull FbStatement sender) {
+        public void afterLast(FbStatement sender) {
             moreRows = false;
         }
 
         @Override
-        @NullMarked
         public void fetchComplete(FbStatement sender, FetchDirection fetchDirection, int rows) {
             if (fetchAsyncAt * 3 < rows) {
                 fetchAsyncAt = rows >= 15 ? Math.min(rows / 3, 200) : NO_ASYNC_FETCH;
@@ -857,12 +851,13 @@ public final class FBManagedConnection implements ExceptionListener {
         FieldDataProvider asFieldDataProvider(int fieldPos) {
             return new FieldDataProvider() {
                 @Override
-                public byte[] getFieldData() {
+                public byte @Nullable [] getFieldData() {
+                    assert currentRow != null : "call to getFieldData() while not on a row";
                     return currentRow.getFieldData(fieldPos);
                 }
 
                 @Override
-                public void setFieldData(byte[] data) {
+                public void setFieldData(byte @Nullable [] data) {
                     throw new UnsupportedOperationException();
                 }
             };
@@ -1060,7 +1055,8 @@ public final class FBManagedConnection implements ExceptionListener {
         }
     }
 
-    public TransactionParameterBuffer getTransactionParameters(int isolation) {
+    // TODO The nullability is questionable and might need to be defined to @NonNull
+    public @Nullable TransactionParameterBuffer getTransactionParameters(int isolation) {
         try (LockCloseable ignored = withLock()) {
             final FBTpbMapper mapping = transactionMapping;
             if (mapping == null) {
@@ -1277,7 +1273,7 @@ public final class FBManagedConnection implements ExceptionListener {
         }
     }
 
-    private static String getDefaultConnectionEncoding() {
+    private static @Nullable String getDefaultConnectionEncoding() {
         try {
             String defaultConnectionEncoding = JaybirdSystemProperties.getDefaultConnectionEncoding();
             if (defaultConnectionEncoding != null) {
@@ -1294,7 +1290,6 @@ public final class FBManagedConnection implements ExceptionListener {
     /**
      * DatabaseListener implementation for use by this managed connection.
      */
-    @NullMarked
     private final class MCDatabaseListener implements DatabaseListener {
         @Override
         public void warningReceived(FbDatabase database, SQLWarning warning) {

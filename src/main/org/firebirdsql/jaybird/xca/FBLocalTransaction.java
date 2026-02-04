@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2001-2002 David Jencks
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2002-2005 Roman Rokytskyy
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jaybird.xca;
@@ -11,6 +11,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.jspecify.annotations.Nullable;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -29,7 +30,7 @@ import static java.util.Objects.requireNonNull;
 public final class FBLocalTransaction {
 
     private final FBManagedConnection mc;
-    private Xid xid = null;
+    private @Nullable Xid xid;
 
     FBLocalTransaction(FBManagedConnection mc) {
         this.mc = requireNonNull(mc, "mc");
