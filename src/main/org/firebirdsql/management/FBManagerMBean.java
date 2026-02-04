@@ -8,6 +8,9 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.jaybird.props.AttachmentProperties;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * API for {@link FBManager}, for creating and dropping databases.
@@ -42,7 +45,21 @@ import org.firebirdsql.jaybird.props.AttachmentProperties;
  * @version 1.0
  */
 @SuppressWarnings("java:S112")
+@NullMarked
 public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
+
+    /**
+     * Value of {@link #getState()} if the manager is stopped.
+     *
+     * @since 7
+     */
+    String STOPPED = "Stopped";
+    /**
+     * Value of {@link #getState()} if the manager is started.
+     *
+     * @since 7
+     */
+    String STARTED = "Started";
 
     /**
      * Start this manager.
@@ -99,14 +116,14 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
      * @deprecated use {@link #setServerName(String)}; will not be removed for now
      */
     @Deprecated(since = "7")
-    void setServer(String host);
+    void setServer(@Nullable String host);
 
     /**
      * @return hostname of the Firebird server (default is {@code "localhost"})
      * @deprecated use {@link #getServerName()}; will not be removed for now
      */
     @Deprecated(since = "7")
-    String getServer();
+    @Nullable String getServer();
 
     /**
      * Set the port of the Firebird server.
@@ -128,14 +145,20 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
     /**
      * @return File name or alias of the database
      */
-    String getFileName();
+    @Nullable String getFileName();
 
     /**
      * Set the file name or alias of the database.
+     * <p>
+     * NOTE: The nullability of this property is questionable. It currently accepts {@code null}, but it must be set to
+     * a non-{@code null} value for most operations. It is currently marked {@code @NullUnmarked}, it may require a
+     * non-{@code null} value in the future.
+     * </p>
      *
      * @param fileName
      *         File name or alias of the database
      */
+    @NullUnmarked
     void setFileName(String fileName);
 
     /**
@@ -143,7 +166,7 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
      * @deprecated use {@link #getUser()}; will not be removed for now
      */
     @Deprecated(since = "7")
-    String getUserName();
+    @Nullable String getUserName();
 
     /**
      * Set the username.
@@ -153,7 +176,7 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
      * @deprecated use {@link #setUser(String)}; will not be removed for now
      */
     @Deprecated(since = "7")
-    void setUserName(String userName);
+    void setUserName(@Nullable String userName);
 
     /**
      * Set the database dialect to use when creating a new database.
@@ -199,13 +222,13 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
      *         Character set name, use Firebird names only; {@code null} will use Firebird default ({@code NONE}).
      *         Specifying an invalid name will result in an exception during database creation.
      */
-    void setDefaultCharacterSet(String firebirdCharsetName);
+    void setDefaultCharacterSet(@Nullable String firebirdCharsetName);
 
     /**
      * @return The default character set name, {@code null} means not set.
      * @see #setDefaultCharacterSet(String)
      */
-    String getDefaultCharacterSet();
+    @Nullable String getDefaultCharacterSet();
 
     /**
      * Control force write behaviour of the created database.
@@ -219,13 +242,13 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
      *         {@code true} - enable force write at database creation,
      *         {@code false} - disable force write
      */
-    void setForceWrite(Boolean forceWrite);
+    void setForceWrite(@Nullable Boolean forceWrite);
 
     /**
      * @return The forced writes configuration
      * @see #setForceWrite(Boolean)
      */
-    Boolean getForceWrite();
+    @Nullable Boolean getForceWrite();
 
     /**
      * Get if the database will be created when calling {@link #start()}.
@@ -287,15 +310,15 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
      * @param fileName
      *         Database file name or alias
      * @param user
-     *         User name
+     *         Username (a username is generally required, but {@code null} might work if WinSSPI is used with native)
      * @param password
-     *         Password
+     *         Password (password may be {@code null} for embedded or if WinSSPI is used with native)
      * @throws IllegalStateException
      *         If this manager is not started
      * @throws Exception
      *         If database creation fails.
      */
-    void createDatabase(String fileName, String user, String password) throws Exception;
+    void createDatabase(String fileName, @Nullable String user, @Nullable String password) throws Exception;
 
     /**
      * Create a database with the specified file name, username, password and role on the specified {@code server}
@@ -312,9 +335,9 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
      * @param fileName
      *         Database file name or alias
      * @param user
-     *         User name
+     *         Username (a username is generally required, but {@code null} might work if WinSSPI is used with native)
      * @param password
-     *         Password
+     *         Password (password may be {@code null} for embedded or if WinSSPI is used with native)
      * @param roleName
      *         Role name (or {@code null} for no role)
      * @throws IllegalStateException
@@ -322,7 +345,8 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
      * @throws Exception
      *         If database creation fails.
      */
-    void createDatabase(String fileName, String user, String password, String roleName) throws Exception;
+    void createDatabase(String fileName, @Nullable String user, @Nullable String password, @Nullable String roleName)
+            throws Exception;
 
     /**
      * Drop a database with the specified file name, username and password on the specified {@code server}
@@ -331,13 +355,13 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
      * @param fileName
      *         Database file name or alias
      * @param user
-     *         User name
+     *         Username (a username is generally required, but {@code null} might work if WinSSPI is used with native)
      * @param password
-     *         Password
+     *         Password (password may be {@code null} for embedded or if WinSSPI is used with native)
      * @throws Exception
      *         If this manager is not started or database drop fails.
      */
-    void dropDatabase(String fileName, String user, String password) throws Exception;
+    void dropDatabase(String fileName, @Nullable String user, @Nullable String password) throws Exception;
 
     /**
      * Drop a database with the specified file name, username, password and role on the specified {@code server}
@@ -346,15 +370,16 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
      * @param fileName
      *         Database file name or alias
      * @param user
-     *         User name
+     *         Username (a username is generally required, but {@code null} might work if WinSSPI is used with native)
      * @param password
-     *         Password
+     *         Password (password may be {@code null} for embedded or if WinSSPI is used with native)
      * @param roleName
      *         Role name (or {@code null} for no role)
      * @throws Exception
      *         If this manager is not started or database drop fails.
      */
-    void dropDatabase(String fileName, String user, String password, String roleName) throws Exception;
+    void dropDatabase(String fileName, @Nullable String user, @Nullable String password, @Nullable String roleName)
+            throws Exception;
 
     /**
      * Check if a database exists with the specified file name, username and password on the specified {@code server}
@@ -367,14 +392,14 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
      * @param fileName
      *         Database file name or alias
      * @param user
-     *         User name
+     *         Username (a username is generally required, but {@code null} might work if WinSSPI is used with native)
      * @param password
-     *         Password
+     *         Password (password may be {@code null} for embedded or if WinSSPI is used with native)
      * @return {@code true} if the database exists and can be connected, {@code false} if the database does not exist
      * or any other error occurred.
      * @throws Exception
      *         Currently no other exception is thrown, this may change in the future
      */
-    boolean isDatabaseExists(String fileName, String user, String password) throws Exception;
+    boolean isDatabaseExists(String fileName, @Nullable String user, @Nullable String password) throws Exception;
 
 }

@@ -16,11 +16,14 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.Map;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A tool for creating and dropping databases.
@@ -34,23 +37,22 @@ import java.util.Map;
  * @author David Jencks
  * @version 1.0
  */
+@NullMarked
 public class FBManager implements FBManagerMBean {
 
     private static final System.Logger log = System.getLogger(FBManager.class.getName());
 
-    private FbDatabaseFactory dbFactory;
+    private @Nullable FbDatabaseFactory dbFactory;
     private final IConnectionProperties connectionProperties = new FbConnectionProperties();
-    private String fileName;
+    private @Nullable String fileName;
     private int dialect = ISCConstants.SQL_DIALECT_CURRENT;
     private int pageSize = -1;
-    private String defaultCharacterSet;
-    private Boolean forceWrite;
+    private @Nullable String defaultCharacterSet;
+    private @Nullable Boolean forceWrite;
     private boolean forceCreate;
     private boolean createOnStart;
     private boolean dropOnStop;
-    private String state = STOPPED;
-    private static final String STOPPED = "Stopped";
-    private static final String STARTED = "Started";
+    private String state = FBManagerMBean.STOPPED;
     private GDSType type;
 
     public FBManager() {
@@ -58,7 +60,7 @@ public class FBManager implements FBManagerMBean {
     }
 
     public FBManager(GDSType type) {
-        this.type = type;
+        this.type = requireNonNull(type, "type");
         connectionProperties.setType(type.toString());
     }
 
@@ -70,11 +72,11 @@ public class FBManager implements FBManagerMBean {
 
     @Override
     public synchronized void start() throws Exception {
-        if (STARTED.equals(state)) {
+        if (FBManagerMBean.STARTED.equals(state)) {
             throw new IllegalStateException("FBManager already started. Call stop() before starting again.");
         }
         dbFactory = GDSFactory.getDatabaseFactoryForType(type);
-        state = STARTED;
+        state = FBManagerMBean.STARTED;
         String fileName = getFileName();
         if (isCreateOnStart() && fileName != null) {
             createDatabase(fileName, getUserName(), getPassword(), getRoleName());
@@ -84,7 +86,7 @@ public class FBManager implements FBManagerMBean {
     @Override
     public synchronized void stop() throws Exception {
         try {
-            if (STOPPED.equals(state)) {
+            if (FBManagerMBean.STOPPED.equals(state)) {
                 log.log(System.Logger.Level.WARNING, "FBManager already stopped");
                 return;
             }
@@ -94,7 +96,7 @@ public class FBManager implements FBManagerMBean {
             }
         } finally {
             dbFactory = null;
-            state = STOPPED;
+            state = FBManagerMBean.STOPPED;
         }
     }
 
@@ -118,24 +120,24 @@ public class FBManager implements FBManagerMBean {
     // This is primarily for historic reasons, and don't add redirection for all properties.
 
     @Override
-    public void setServerName(String serverName) {
+    public void setServerName(@Nullable String serverName) {
         FBManagerMBean.super.setServerName(serverName);
     }
 
     @Override
-    public String getServerName() {
+    public @Nullable String getServerName() {
         return FBManagerMBean.super.getServerName();
     }
 
     @Deprecated(since = "7")
     @Override
-    public void setServer(String host) {
+    public void setServer(@Nullable String host) {
         setServerName(host);
     }
 
     @Deprecated(since = "7")
     @Override
-    public String getServer() {
+    public @Nullable String getServer() {
         return getServerName();
     }
 
@@ -162,11 +164,13 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public String getFileName() {
+    public @Nullable String getFileName() {
         return fileName;
     }
 
     @Override
+    @NullUnmarked
+    @SuppressWarnings("NullableProblems") /* Intentional use of @NullUnmarked to leave nullability as questionable */
     public void setFileName(String fileName) {
         this.fileName = fileName;
     }
@@ -177,7 +181,7 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public void setType(String type) {
+    public void setType(@Nullable String type) {
         GDSType gdsType = GDSType.getType(type);
 
         if (gdsType == null) {
@@ -189,64 +193,64 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public String getUser() {
+    public @Nullable String getUser() {
         return FBManagerMBean.super.getUser();
     }
 
     @Override
-    public void setUser(String user) {
+    public void setUser(@Nullable String user) {
         FBManagerMBean.super.setUser(user);
     }
 
     @Deprecated(since = "7")
     @Override
-    public String getUserName() {
+    public @Nullable String getUserName() {
         return getUser();
     }
 
     @Deprecated(since = "7")
     @Override
-    public void setUserName(String userName) {
+    public void setUserName(@Nullable String userName) {
         setUser(userName);
     }
 
     @Override
-    public String getPassword() {
+    public @Nullable String getPassword() {
         return FBManagerMBean.super.getPassword();
     }
 
     @Override
-    public void setPassword(String password) {
+    public void setPassword(@Nullable String password) {
         FBManagerMBean.super.setPassword(password);
     }
 
     @Override
-    public String getRoleName() {
+    public @Nullable String getRoleName() {
         return FBManagerMBean.super.getRoleName();
     }
 
     @Override
-    public void setRoleName(String roleName) {
+    public void setRoleName(@Nullable String roleName) {
         FBManagerMBean.super.setRoleName(roleName);
     }
 
     @Override
-    public @NonNull String getAuthPlugins() {
+    public String getAuthPlugins() {
         return FBManagerMBean.super.getAuthPlugins();
     }
 
     @Override
-    public void setAuthPlugins(String authPlugins) {
+    public void setAuthPlugins(@Nullable String authPlugins) {
         FBManagerMBean.super.setAuthPlugins(authPlugins);
     }
 
     @Override
-    public void setEnableProtocol(String enableProtocol) {
+    public void setEnableProtocol(@Nullable String enableProtocol) {
        FBManagerMBean.super.setEnableProtocol(enableProtocol);
     }
 
     @Override
-    public String getEnableProtocol() {
+    public @Nullable String getEnableProtocol() {
         return FBManagerMBean.super.getEnableProtocol();
     }
 
@@ -272,22 +276,22 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public void setDefaultCharacterSet(String firebirdCharsetName) {
+    public void setDefaultCharacterSet(@Nullable String firebirdCharsetName) {
         this.defaultCharacterSet = firebirdCharsetName;
     }
 
     @Override
-    public String getDefaultCharacterSet() {
+    public @Nullable String getDefaultCharacterSet() {
         return defaultCharacterSet;
     }
 
     @Override
-    public void setForceWrite(Boolean forceWrite) {
+    public void setForceWrite(@Nullable Boolean forceWrite) {
         this.forceWrite = forceWrite;
     }
 
     @Override
-    public Boolean getForceWrite() {
+    public @Nullable Boolean getForceWrite() {
         return forceWrite;
     }
 
@@ -324,14 +328,15 @@ public class FBManager implements FBManagerMBean {
     //Meaningful management methods
 
     @Override
-    public void createDatabase(String fileName, String user, String password) throws Exception {
+    public void createDatabase(String fileName, @Nullable String user, @Nullable String password) throws Exception {
         createDatabase(fileName, user, password, null);
     }
 
     @Override
-    public synchronized void createDatabase(String fileName, String user, String password, String roleName)
-            throws Exception {
+    public synchronized void createDatabase(String fileName, @Nullable String user, @Nullable String password,
+            @Nullable String roleName) throws Exception {
         checkStarted();
+        assert dbFactory != null;
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, roleName);
             connectionProperties.setDatabaseName(fileName);
@@ -372,14 +377,15 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public void dropDatabase(String fileName, String user, String password) throws Exception {
+    public void dropDatabase(String fileName, @Nullable String user, @Nullable String password) throws Exception {
         dropDatabase(fileName, user, password, null);
     }
 
     @Override
-    public synchronized void dropDatabase(String fileName, String user, String password, String roleName)
-            throws Exception {
+    public synchronized void dropDatabase(String fileName, @Nullable String user, @Nullable String password,
+            @Nullable String roleName) throws Exception {
         checkStarted();
+        assert dbFactory != null;
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, roleName);
             connectionProperties.setDatabaseName(fileName);
@@ -394,8 +400,10 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public synchronized boolean isDatabaseExists(String fileName, String user, String password) throws Exception {
+    public synchronized boolean isDatabaseExists(String fileName, @Nullable String user, @Nullable String password)
+            throws Exception {
         checkStarted();
+        assert dbFactory != null;
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password, null);
             connectionProperties.setDatabaseName(fileName);
@@ -408,7 +416,8 @@ public class FBManager implements FBManagerMBean {
         }
     }
 
-    private IConnectionProperties createDefaultConnectionProperties(String user, String password, String roleName) {
+    private IConnectionProperties createDefaultConnectionProperties(@Nullable String user, @Nullable String password,
+            @Nullable String roleName) {
         IConnectionProperties connectionProperties = this.connectionProperties.asNewMutable();
         connectionProperties.setUser(user);
         connectionProperties.setPassword(password);
@@ -417,43 +426,43 @@ public class FBManager implements FBManagerMBean {
     }
 
     private synchronized void checkStarted() {
-        if (!STARTED.equals(state)) {
+        if (!FBManagerMBean.STARTED.equals(state)) {
             throw new IllegalStateException("FBManager has not been started. Call start() before use.");
         }
     }
 
     @Override
-    public final @Nullable String getProperty(@NonNull String name) {
+    public final @Nullable String getProperty(String name) {
         return connectionProperties.getProperty(name);
     }
 
     @Override
-    public final void setProperty(@NonNull String name, @Nullable String value) {
+    public final void setProperty(String name, @Nullable String value) {
         connectionProperties.setProperty(name, value);
     }
 
     @Override
-    public final @Nullable Integer getIntProperty(@NonNull String name) {
+    public final @Nullable Integer getIntProperty(String name) {
         return connectionProperties.getIntProperty(name);
     }
 
     @Override
-    public final void setIntProperty(@NonNull String name, @Nullable Integer value) {
+    public final void setIntProperty(String name, @Nullable Integer value) {
         connectionProperties.setIntProperty(name, value);
     }
 
     @Override
-    public final @Nullable Boolean getBooleanProperty(@NonNull String name) {
+    public final @Nullable Boolean getBooleanProperty(String name) {
         return connectionProperties.getBooleanProperty(name);
     }
 
     @Override
-    public final void setBooleanProperty(@NonNull String name, @Nullable Boolean value) {
+    public final void setBooleanProperty(String name, @Nullable Boolean value) {
         connectionProperties.setBooleanProperty(name, value);
     }
 
     @Override
-    public final @NonNull Map<ConnectionProperty, Object> connectionPropertyValues() {
+    public final Map<ConnectionProperty, Object> connectionPropertyValues() {
         return connectionProperties.connectionPropertyValues();
     }
     
