@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2023-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.stream.Stream;
 
@@ -16,6 +17,7 @@ import static org.firebirdsql.jaybird.props.def.ConnectionProperty.builder;
  * @author Mark Rotteveel
  * @since 6
  */
+@NullMarked
 public final class NativeConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi {
 
     @Override
