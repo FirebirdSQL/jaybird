@@ -8,7 +8,6 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.jaybird.props.AttachmentProperties;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
@@ -45,7 +44,6 @@ import org.jspecify.annotations.Nullable;
  * @version 1.0
  */
 @SuppressWarnings("java:S112")
-@NullMarked
 public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
 
     /**

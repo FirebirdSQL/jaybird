@@ -10,7 +10,6 @@ import org.firebirdsql.gds.ng.InfoTruncatedException;
 import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.util.Volatile;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.Connection;
@@ -44,7 +43,6 @@ import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
  * @since 5
  */
 @Volatile(reason = "Experimental")
-@NullMarked
 public final class FBTableStatisticsManager implements AutoCloseable {
 
     private static final int MAX_RETRIES = 3;

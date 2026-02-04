@@ -8,7 +8,6 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 
@@ -18,7 +17,6 @@ import java.sql.SQLException;
  * @author Roman Rokytskyy
  * @author Steven Jardine
  */
-@NullMarked
 public interface BackupManager extends ServiceManager {
 
     /**

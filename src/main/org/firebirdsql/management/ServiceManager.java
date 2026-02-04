@@ -7,7 +7,6 @@ package org.firebirdsql.management;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
@@ -21,7 +20,6 @@ import java.sql.SQLException;
  * @author Steven Jardine
  * @author Mark Rotteveel
  */
-@NullMarked
 public interface ServiceManager extends ServiceConnectionProperties {
 
     /**

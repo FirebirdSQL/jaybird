@@ -6,7 +6,6 @@ package org.firebirdsql.management;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.*;
@@ -25,7 +24,6 @@ import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
  *
  * @author Thomas Steinmaurer
  */
-@NullMarked
 public class FBTraceManager extends FBServiceManager implements TraceManager {
 
     private final Map<String, Integer> traceSessions = Collections.synchronizedMap(new HashMap<>());

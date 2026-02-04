@@ -6,7 +6,6 @@ package org.firebirdsql.management;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -24,7 +23,6 @@ import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_options;
  * @author Thomas Steinmaurer
  * @author Mark Rotteveel
  */
-@NullMarked
 public class FBNBackupManager extends FBServiceManager implements NBackupManager {
 
     private final List<String> backupFiles = new ArrayList<>();

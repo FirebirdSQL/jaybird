@@ -10,7 +10,6 @@ package org.firebirdsql.management;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
@@ -34,7 +33,6 @@ import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
  */
 @Deprecated(since = "6")
 @SuppressWarnings("DeprecatedIsStillUsed")
-@NullMarked
 public class FBUserManager extends FBServiceManager implements UserManager {
 
     private int count = 0;

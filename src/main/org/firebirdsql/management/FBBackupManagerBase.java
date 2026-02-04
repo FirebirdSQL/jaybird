@@ -12,7 +12,6 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
-import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -29,7 +28,6 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
-@NullMarked
 public abstract class FBBackupManagerBase extends FBServiceManager implements BackupManager {
 
     /**

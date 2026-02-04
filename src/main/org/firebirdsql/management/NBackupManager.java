@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.management;
 
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -15,7 +14,6 @@ import java.sql.SQLException;
  * @author Thomas Steinmaurer
  * @author Mark Rotteveel
  */
-@NullMarked
 public interface NBackupManager extends ServiceManager {
 
     /**

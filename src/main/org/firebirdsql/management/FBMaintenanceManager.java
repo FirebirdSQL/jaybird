@@ -13,7 +13,6 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.util.NumericHelper;
-import org.jspecify.annotations.NullMarked;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -48,7 +47,6 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
  * @author Thomas Steinmaurer
  * @author Mark Rotteveel
  */
-@NullMarked
 public class FBMaintenanceManager extends FBServiceManager implements MaintenanceManager {
 
     /**

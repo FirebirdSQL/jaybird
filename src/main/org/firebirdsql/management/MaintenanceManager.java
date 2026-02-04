@@ -5,7 +5,6 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -33,7 +32,6 @@ import java.util.List;
  * @author Gabriel Reid
  * @author Thomas Steinmaurer
  */
-@NullMarked
 public interface MaintenanceManager extends ServiceManager {
 
     /**

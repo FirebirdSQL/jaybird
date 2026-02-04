@@ -4,7 +4,6 @@ package org.firebirdsql.management;
 
 import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.Volatile;
-import org.jspecify.annotations.NullMarked;
 
 import static org.firebirdsql.gds.ISCConstants.isc_info_backout_count;
 import static org.firebirdsql.gds.ISCConstants.isc_info_delete_count;
@@ -23,7 +22,6 @@ import static org.firebirdsql.gds.ISCConstants.isc_info_update_count;
  * @since 5
  */
 @SuppressWarnings("unused")
-@NullMarked
 @Volatile(reason = "Experimental")
 public final class TableStatistics {
 

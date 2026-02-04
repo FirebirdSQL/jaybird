@@ -16,7 +16,6 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
@@ -39,7 +38,6 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
-@NullMarked
 public class FBServiceManager implements ServiceManager {
 
     private final IServiceProperties serviceProperties = new FbServiceProperties();

@@ -7,7 +7,6 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -28,7 +27,6 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
-@NullMarked
 public class FBStreamingBackupManager extends FBBackupManagerBase implements BackupManager {
 
     private @Nullable OutputStream backupOutputStream;

@@ -17,7 +17,6 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.jspecify.annotations.NullMarked;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -43,7 +42,6 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
  *
  * @author Gabriel Reid
  */
-@NullMarked
 public class FBStatisticsManager extends FBServiceManager implements StatisticsManager {
 
     private static final int POSSIBLE_STATISTICS =

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 /**
  * APIs and implementation to manage or obtain information about the Firebird server or a specific database.
@@ -18,4 +18,7 @@
  * <li>Obtaining connection-specific table statistics ({@link org.firebirdsql.management.FBTableStatisticsManager})</li>
  * </ul>
  */
+@NullMarked
 package org.firebirdsql.management;
+
+import org.jspecify.annotations.NullMarked;

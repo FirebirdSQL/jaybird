@@ -16,7 +16,6 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
@@ -37,7 +36,6 @@ import static java.util.Objects.requireNonNull;
  * @author David Jencks
  * @version 1.0
  */
-@NullMarked
 public class FBManager implements FBManagerMBean {
 
     private static final System.Logger log = System.getLogger(FBManager.class.getName());
