@@ -13,6 +13,8 @@ import org.firebirdsql.gds.ng.AbstractFbDatabase;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.util.Unstable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -240,7 +242,7 @@ class FBEventManagerTest {
         setupDefaultEventManager();
         var ael = new AccumulatingEventListener() {
             @SuppressWarnings("java:S2925")
-            public void eventOccurred(DatabaseEvent e) {
+            public void eventOccurred(@NonNull DatabaseEvent e) {
                 try {
                     Thread.sleep(250);
                 } catch (InterruptedException ie) {
@@ -411,6 +413,7 @@ class FBEventManagerTest {
         }
     }
 
+    @NullMarked
     private static class AccumulatingEventListener implements EventListener {
 
         private volatile int eventCount = 0;

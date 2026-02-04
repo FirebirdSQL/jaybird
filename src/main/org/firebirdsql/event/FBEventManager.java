@@ -19,7 +19,7 @@ import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jaybird.xca.FatalErrorHelper;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.Connection;
@@ -43,7 +43,6 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @author Vasiliy Yashkov
  */
-@NullMarked
 public class FBEventManager implements EventManager {
 
     private static final System.Logger log = System.getLogger(FBEventManager.class.getName());
@@ -249,6 +248,7 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
+    @NullUnmarked
     public void setDatabaseName(String databaseName) {
         connectionProperties.setDatabaseName(databaseName);
     }
@@ -305,9 +305,8 @@ public class FBEventManager implements EventManager {
 
     @Override
     public void addEventListener(String eventName, EventListener listener) throws SQLException {
-        if (listener == null || eventName == null) {
-            throw new NullPointerException();
-        }
+        requireNonNull(eventName, "eventName");
+        requireNonNull(listener, "listener");
         if (!connected) {
             throw new IllegalStateException("Can't add event listeners to disconnected EventManager");
         }
@@ -544,7 +543,6 @@ public class FBEventManager implements EventManager {
         }
     }
 
-    @NullMarked
     private final class DbListener implements DatabaseListener, ExceptionListener {
 
         @Override

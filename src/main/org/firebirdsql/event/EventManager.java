@@ -7,6 +7,7 @@ import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -81,6 +82,7 @@ public interface EventManager extends AttachmentProperties, AutoCloseable {
      * @param databaseName database name
      * @since 5
      */
+    @NullUnmarked
     void setDatabaseName(String databaseName);
 
     /**
