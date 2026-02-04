@@ -3,7 +3,7 @@
  SPDX-FileCopyrightText: Copyright 2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2009 Thomas Steinmaurer
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 */
 package org.firebirdsql.management;
@@ -13,6 +13,7 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.util.NumericHelper;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -47,6 +48,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
  * @author Thomas Steinmaurer
  * @author Mark Rotteveel
  */
+@NullMarked
 public class FBMaintenanceManager extends FBServiceManager implements MaintenanceManager {
 
     /**
@@ -54,7 +56,6 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
      */
     @SuppressWarnings("unused")
     public FBMaintenanceManager() {
-        super();
     }
 
     /**

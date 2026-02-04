@@ -1,10 +1,11 @@
 // SPDX-FileCopyrightText: Copyright 2004-2005 Gabriel Reid
 // SPDX-FileCopyrightText: Copyright 2009 Thomas Steinmaurer
-// SPDX-FileCopyrightText: Copyright 2011-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.List;
  * @author Gabriel Reid
  * @author Thomas Steinmaurer
  */
+@NullMarked
 public interface MaintenanceManager extends ServiceManager {
 
     /**
