@@ -1,9 +1,11 @@
 // SPDX-FileCopyrightText: Copyright 2003-2004 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2012-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.Blob;
 import java.sql.SQLException;
@@ -16,6 +18,7 @@ import java.io.*;
  * 
  * @author Roman Rokytskyy
  */
+@NullMarked
 public interface FirebirdBlob extends Blob {
     
     /**
@@ -24,6 +27,7 @@ public interface FirebirdBlob extends Blob {
      * {@link InputStream} only because it is abstract class and not interface
      * that we can extend.
      */
+    @SuppressWarnings("unused")
     interface BlobInputStream extends AutoCloseable {
         
         /** Seek based on the absolute beginning of the stream */
@@ -278,6 +282,6 @@ public interface FirebirdBlob extends Blob {
      *         {@link Integer#MAX_VALUE} - 8)
      * @since 6
      */
-    byte[] getBytes() throws SQLException;
+    byte @Nullable [] getBytes() throws SQLException;
 
 }

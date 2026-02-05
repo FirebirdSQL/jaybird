@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2007 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -7,6 +7,8 @@ import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -23,22 +25,24 @@ import java.util.Objects;
  * </p>
  */
 @InternalApi
+@NullMarked
 public final class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobInputStream {
 
     private byte[] buffer = ByteArrayHelper.emptyByteArray();
-    private FbBlob blobHandle;
+    private @Nullable FbBlob blobHandle;
     private int pos;
     private int lim;
-    private boolean closed;
 
     private final FBBlob owner;
 
     FBBlobInputStream(FBBlob owner) throws SQLException {
-        if (owner.isNew()) {
-            throw new SQLException("Cannot read a new blob", SQLStateConstants.SQL_STATE_LOCATOR_EXCEPTION);
-        }
         this.owner = owner;
-        blobHandle = owner.openBlob();
+        try (var ignored = owner.withLock()) {
+            if (owner.isNew()) {
+                throw new SQLException("Cannot read a new blob", SQLStateConstants.SQL_STATE_LOCATOR_EXCEPTION);
+            }
+            blobHandle = owner.openBlob();
+        }
     }
 
     @Override
@@ -56,20 +60,20 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         seek(position, FbBlob.SeekMode.getById(seekMode));
     }
 
+    @SuppressWarnings("resource")
     public void seek(int position, FbBlob.SeekMode seekMode) throws IOException {
-        try (LockCloseable ignored = owner.withLock()) {
-            checkClosed();
-            blobHandle.seek(position, seekMode);
+        try (var ignored = withLock()) {
+            requireOpenBlobHandle().seek(position, seekMode);
         } catch (SQLException ex) {
             throw new IOException(ex.getMessage(), ex);
         }
     }
 
     @Override
+    @SuppressWarnings("resource")
     public long length() throws IOException {
-        try (LockCloseable ignored = owner.withLock()) {
-            checkClosed();
-            return blobHandle.length();
+        try (var ignored = withLock()) {
+            return requireOpenBlobHandle().length();
         } catch (SQLException e) {
             throw new IOException(e);
         }
@@ -77,6 +81,20 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
 
     @Override
     public int available() throws IOException {
+        try (var ignored = withLock()) {
+            return availableNoLock();
+        }
+    }
+
+    /**
+     * Implementation of {@link #available()} <em>without</em> lock.
+     * <p>
+     * In general, it should only be used if the caller is already holding the lock of {@link #withLock()}.
+     * </p>
+     *
+     * @return number of bytes available without blocking
+     */
+    private int availableNoLock() {
         return lim - pos;
     }
 
@@ -88,11 +106,13 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
      *         if an I/O error occurs, or if the stream has been closed.
      */
     private int checkBuffer() throws IOException {
-        try (LockCloseable ignored = owner.withLock()) {
-            checkClosed();
-            if (pos < lim) {
-                return lim - pos;
-            }
+        return checkBuffer(requireOpenBlobHandle());
+    }
+
+    private int checkBuffer(FbBlob blobHandle) throws IOException {
+        try {
+            int avail = availableNoLock();
+            if (avail > 0) return avail;
             if (blobHandle.isEof()) return -1;
 
             byte[] buffer = requireBuffer();
@@ -124,10 +144,12 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
 
     @Override
     public int read() throws IOException {
-        if (checkBuffer() == -1) {
-            return -1;
+        try (var ignored = withLock()) {
+            if (checkBuffer() == -1) {
+                return -1;
+            }
+            return buffer[pos++] & 0xFF;
         }
-        return buffer[pos++] & 0xFF;
     }
 
     @Override
@@ -135,11 +157,11 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         Objects.checkFromIndexSize(off, len, b.length);
         if (len == 0) return 0;
 
-        try (LockCloseable ignored = owner.withLock()) {
-            checkClosed();
+        try (var ignored = withLock()) {
+            FbBlob blobHandle = requireOpenBlobHandle();
             // Optimization: for small lengths use buffer, otherwise only check if we currently have data in buffer
             final int smallBufferLimit = Math.min(owner.getBufferLength(), blobHandle.getMaximumSegmentSize()) / 2;
-            final int avail = len <= smallBufferLimit ? checkBuffer() : available();
+            final int avail = len <= smallBufferLimit ? checkBuffer(blobHandle) : availableNoLock();
             if (avail == -1) {
                 return -1;
             }
@@ -167,13 +189,14 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     }
 
     @Override
+    @SuppressWarnings("resource")
     public int readNBytes(final byte[] b, final int off, final int len) throws IOException {
         Objects.checkFromIndexSize(off, len, b.length);
         if (len == 0) return 0;
 
-        try (LockCloseable ignored = owner.withLock()) {
-            checkClosed();
-            final int count = Math.min(available(), len);
+        try (var ignored = withLock()) {
+            FbBlob blobHandle = requireOpenBlobHandle();
+            final int count = Math.min(availableNoLock(), len);
             if (count > 0) {
                 System.arraycopy(buffer, pos, b, off, count);
                 pos += count;
@@ -206,9 +229,9 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     public long transferTo(final OutputStream out) throws IOException {
         Objects.requireNonNull(out, "out");
 
-        try (LockCloseable ignored = owner.withLock()) {
-            checkClosed();
-            int read = checkBuffer();
+        try (var ignored = withLock()) {
+            FbBlob blobHandle = requireOpenBlobHandle();
+            int read = checkBuffer(blobHandle);
             if (read == -1) return 0;
             final byte[] buffer = requireBuffer();
             if (read != 0) {
@@ -234,10 +257,8 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
 
     @Override
     public void close() throws IOException {
-        try (LockCloseable ignored = owner.withLock()) {
-            if (blobHandle == null) {
-                return;
-            }
+        try (var ignored = withLock()) {
+            if (blobHandle == null) return;
             try {
                 blobHandle.close();
                 owner.notifyClosed(this);
@@ -245,7 +266,6 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
                 throw new IOException("Couldn't close blob: " + e, e);
             } finally {
                 blobHandle = null;
-                closed = true;
                 buffer = ByteArrayHelper.emptyByteArray();
                 pos = 0;
                 lim = 0;
@@ -253,7 +273,16 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         }
     }
 
-    private void checkClosed() throws IOException {
-        if (closed) throw new IOException("Input stream is already closed.");
+    private FbBlob requireOpenBlobHandle() throws IOException {
+        FbBlob blobHandle = this.blobHandle;
+        if (blobHandle == null || !blobHandle.isOpen()) {
+            throw new IOException("Input stream is already closed.");
+        }
+        return blobHandle;
     }
+
+    private LockCloseable withLock() {
+        return owner.withLock();
+    }
+
 }

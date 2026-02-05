@@ -30,9 +30,12 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.wire.InlineBlob;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
+import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
+import org.firebirdsql.jdbc.FBObjectListener.BlobListener;
 import org.firebirdsql.util.InternalApi;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.*;
 import java.sql.Blob;
@@ -41,7 +44,6 @@ import java.sql.SQLNonTransientException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 
 import static java.util.Objects.requireNonNull;
@@ -62,6 +64,7 @@ import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_type;
  * </p>
  */
 @InternalApi
+@NullMarked
 public final class FBBlob implements FirebirdBlob, TransactionListener {
 
     private static final System.Logger logger = System.getLogger(FBBlob.class.getName());
@@ -69,15 +72,15 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     private boolean isNew;
     private long blobId;
     @SuppressWarnings("java:S3077")
-    private volatile GDSHelper gdsHelper;
-    private FBObjectListener.BlobListener blobListener;
+    private volatile @Nullable GDSHelper gdsHelper;
+    private BlobListener blobListener;
     private final Config config;
 
-    private final Collection<FBBlobInputStream> inputStreams = Collections.synchronizedSet(new HashSet<>());
-    private FBBlobOutputStream blobOut;
-    private InlineBlob cachedInlineBlob;
+    private final Collection<FBBlobInputStream> inputStreams = new HashSet<>();
+    private @Nullable FBBlobOutputStream blobOut;
+    private @Nullable InlineBlob cachedInlineBlob;
 
-    private FBBlob(GDSHelper c, boolean isNew, FBObjectListener.BlobListener blobListener, Config config) {
+    private FBBlob(GDSHelper c, boolean isNew, @Nullable BlobListener blobListener, Config config) {
         gdsHelper = c;
         this.isNew = isNew;
         this.blobListener = blobListener != null ? blobListener : FBObjectListener.NoActionBlobListener.instance();
@@ -95,7 +98,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      *         blob configuration (cannot be {@code null})
      * @since 5
      */
-    public FBBlob(GDSHelper c, FBObjectListener.BlobListener blobListener, Config config) {
+    public FBBlob(GDSHelper c, @Nullable BlobListener blobListener, Config config) {
         this(c, true, blobListener, config);
     }
 
@@ -112,7 +115,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      *         blob configuration (cannot be {@code null})
      * @since 5
      */
-    public FBBlob(GDSHelper c, long blobId, FBObjectListener.BlobListener blobListener, Config config) {
+    public FBBlob(GDSHelper c, long blobId, @Nullable BlobListener blobListener, Config config) {
         this(c, false, blobListener, config);
         this.blobId = blobId;
     }
@@ -135,7 +138,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      */
     FbBlob openBlob() throws SQLException {
         try (var ignored = withLock()) {
-            checkClosed();
+            GDSHelper gdsHelper = requireOpenGDSHelper();
             if (isNew) {
                 throw new SQLException("No Blob ID is available in new Blob object",
                         SQLStateConstants.SQL_STATE_GENERAL_ERROR);
@@ -164,8 +167,8 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      * @since 5
      */
     FbBlob createBlob() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            checkClosed();
+        try (var ignored = withLock()) {
+            GDSHelper gdsHelper = requireOpenGDSHelper();
             // For historic reasons we allow creating an output blob even if this is not a new blob. This may need to
             // be reconsidered in the future
             return gdsHelper.createBlob(config);
@@ -231,8 +234,8 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      *         if something went wrong
      */
     public byte[] getInfo(byte[] items, int bufferLength) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            checkClosed();
+        try (var ignored = withLock()) {
+            GDSHelper gdsHelper = requireOpenGDSHelper();
             blobListener.executionStarted(this);
             // TODO Does it make sense to close blob here?
             try (FbBlob blob = gdsHelper.openBlob(blobId, config)) {
@@ -246,7 +249,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     @Override
     public long length() throws SQLException {
         try (var ignored = withLock()) {
-            checkClosed();
+            checkOpen();
             blobListener.executionStarted(this);
             try (FbBlob blob = openBlob()) {
                 return blob.length();
@@ -269,7 +272,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     @Override
     public FBBlob detach() throws SQLException {
         try (var ignored = withLock()) {
-            checkClosed();
+            GDSHelper gdsHelper = requireOpenGDSHelper();
             var blobCopy = new FBBlob(gdsHelper, blobId, blobListener, config);
             if (cachedInlineBlob != null) {
                 blobCopy.cachedInlineBlob = cachedInlineBlob.copy();
@@ -343,8 +346,8 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
 
     @Override
     public InputStream getBinaryStream() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            checkClosed();
+        try (var ignored = withLock()) {
+            checkOpen();
             FBBlobInputStream blobstream = new FBBlobInputStream(this);
             inputStreams.add(blobstream);
             return blobstream;
@@ -384,8 +387,8 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
 
     @Override
     public OutputStream setBinaryStream(long pos) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            checkClosed();
+        try (var ignored = withLock()) {
+            checkOpen();
             blobListener.executionStarted(this);
 
             if (blobOut != null) {
@@ -430,6 +433,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     void setBlobId(long blobId) {
         try (LockCloseable ignored = withLock()) {
             this.blobId = blobId;
+            GDSHelper gdsHelper = this.gdsHelper;
             if (isNew && gdsHelper != null) {
                 FbTransaction currentTransaction = gdsHelper.getCurrentTransaction();
                 if (currentTransaction != null) {
@@ -456,7 +460,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      * @return The buffer length
      */
     int getBufferLength() {
-        return config.blobBufferSize();
+        return Math.max(PropertyConstants.MIN_BLOB_BUFFER_SIZE, config.blobBufferSize());
     }
 
     /**
@@ -466,7 +470,9 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      *         InputStream that has been closed.
      */
     void notifyClosed(FBBlobInputStream stream) {
-        inputStreams.remove(stream);
+        try (var ignored = withLock()) {
+            inputStreams.remove(stream);
+        }
     }
 
     /**
@@ -647,7 +653,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
         if (newState == TransactionState.COMMITTED || newState == TransactionState.ROLLED_BACK) {
-            try (LockCloseable ignored = withLock()) {
+            try {
                 free();
             } catch (SQLException e) {
                 logger.log(System.Logger.Level.ERROR, "Error calling free on blob during transaction end", e);
@@ -655,10 +661,28 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
         }
     }
 
-    private void checkClosed() throws SQLException {
+    /**
+     * Checks if this blob is open.
+     * <p>
+     * If the method also requires use of the {@code GDSHelper} object, use {@link #requireOpenGDSHelper()} instead.
+     * </p>
+     *
+     * @throws SQLException
+     *         if this blob is currently not open (does not have a {@code GDSHelper}).
+     * @see #requireOpenGDSHelper()
+     */
+    private void checkOpen() throws SQLException {
         if (gdsHelper == null) {
             throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_blobClosed);
         }
+    }
+
+    private GDSHelper requireOpenGDSHelper() throws SQLException {
+        GDSHelper gdsHelper = this.gdsHelper;
+        if (gdsHelper == null) {
+            throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_blobClosed);
+        }
+        return gdsHelper;
     }
 
     /**
