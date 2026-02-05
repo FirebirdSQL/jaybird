@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2023 Mark Rotteveel
+SPDX-FileCopyrightText: Copyright 2023-2026 Mark Rotteveel
 SPDX-License-Identifier: LicenseRef-PDL-1.0
 -->
 # jdp-2023-03: Jaybird style guide
@@ -111,6 +111,34 @@ For test code, additional cases are allowed:
    (e.g. `var dbmd = (FirebirdDatabaseMetaData) connection.getMetaData()`) or
    `unwrap` (e.g. `var fbConnection = connection.unwrap(FirebirdConnection.class)`)
 
+## Methods
+
+In general, we follow common Java method naming rules. Here, we document some
+deviations.
+
+### Naming of Private Methods Split From a Larger Method
+
+When splitting of a private method with parts of the implementation of a larger
+method, it is preferred to give it a good name. However, sometimes that leads to
+obnoxiously long names that do very little to clarify purpose (or possibly, we
+lack the imagination to come up with a good name).
+
+In that case, we allow use of `<method-name><number>` as the method name. For
+example, `flush0()` as part of the implementation of `flush()`. However, this
+comes with the following limitations:
+
+1. The split-off method must be private.
+2. Only `originalMethod(..)` (any overload) calls `originalMethod0(...)`. If
+   a differently named method calls it, the method should receive a real name,
+   e.g. `flushNoLock()`.
+3. Methods with a numeric must may not be overloaded: each receives their own
+   suffix number.
+4. There should only be at most two such methods (i.e. `originalMethod0(...)`, 
+   `originalMethod1(...)`). If a third needs to be added, it is time to think
+   harder on names.
+5. This naming must not be applied to methods that already have a numeric suffix.
+   So, no `flush00()`, or `flush0_0()`, etc.
+
 ## License Notice
 
 The contents of this Documentation are subject to the Public Documentation
@@ -120,7 +148,7 @@ comply with the terms of this License. A copy of the License is available at
 
 The Original Documentation is "jdp-2023-03: Jaybird style guide".
 The Initial Writer of the Original Documentation is Mark Rotteveel,
-Copyright © 2023. All Rights Reserved. (Initial Writer contact(s):
+Copyright © 2023-2026. All Rights Reserved. (Initial Writer contact(s):
 mark (at) lawinegevaar (dot) nl).
 
 <!--
