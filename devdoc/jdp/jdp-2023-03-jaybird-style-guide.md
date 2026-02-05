@@ -70,9 +70,9 @@ When breaking a line, it is preferred to keep article and noun together, that
 means that even if the article (e.g. _"the"_) would still fit on the line, you 
 break *before* the article, so article and noun are on the new line.
 
-#### Asciidoc
+#### AsciiDoc
 
-For asciidoc, we don't apply a maximum line length for normal text. Instead, 
+For AsciiDoc, we don't apply a maximum line length for normal text. Instead, 
 a "sentence-per-line" (or "line-per-sentence", or "ventilated prose") style is 
 used. This means
 
