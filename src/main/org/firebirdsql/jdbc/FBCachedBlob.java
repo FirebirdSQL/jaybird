@@ -8,6 +8,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.util.InternalApi;
 import org.jspecify.annotations.NullMarked;
 
@@ -47,8 +48,7 @@ public final class FBCachedBlob implements FirebirdBlob {
 
     @Override
     public FirebirdBlob detach() throws SQLException {
-        checkOpen();
-        return new FBCachedBlob(blobData);
+        return new FBCachedBlob(requireBlobData());
     }
 
     /**
@@ -70,8 +70,7 @@ public final class FBCachedBlob implements FirebirdBlob {
      */
     @Override
     public long length() throws SQLException {
-        checkOpen();
-        return blobData.length;
+        return requireBlobData().length;
     }
 
     @Override
@@ -79,14 +78,15 @@ public final class FBCachedBlob implements FirebirdBlob {
         if (pos < 1) {
             throw new SQLException("Expected value of pos > 0, got " + pos,
                     SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
-        }
-        if (length < 0) {
+        } else if (length < 0) {
             throw new SQLException("Expected value of length >= 0, got " + length,
                     SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
         }
-        checkOpen();
+        byte[] blobData = requireBlobData();
 
-        // TODO What if pos or length are beyond blobData
+        if (pos > blobData.length) return ByteArrayHelper.emptyByteArray();
+        length = (int) Math.min(length, blobData.length - pos + 1L);
+
         byte[] result = new byte[length];
         System.arraycopy(blobData, (int) pos - 1, result, 0, length);
         return result;
@@ -94,8 +94,7 @@ public final class FBCachedBlob implements FirebirdBlob {
 
     @Override
     public byte[] getBytes() throws SQLException {
-        checkOpen();
-        return blobData.clone();
+        return requireBlobData().clone();
     }
 
     /**
@@ -122,8 +121,7 @@ public final class FBCachedBlob implements FirebirdBlob {
 
     @Override
     public InputStream getBinaryStream() throws SQLException {
-        checkOpen();
-        return new ByteArrayInputStream(blobData);
+        return new ByteArrayInputStream(requireBlobData());
     }
 
     @Override
@@ -180,9 +178,25 @@ public final class FBCachedBlob implements FirebirdBlob {
         blobData = FREED_MARKER;
     }
 
+    /**
+     * Checks if the blob is open (not freed).
+     * <p>
+     * If a method needs access to the blob data, use {@link #requireBlobData()} instead.
+     * </p>
+     *
+     * @see #requireBlobData()
+     */
     private void checkOpen() throws SQLException {
         if (blobData == FREED_MARKER) {
             throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_blobClosed);
         }
+    }
+
+    private byte[] requireBlobData() throws SQLException {
+        byte[] blobData = this.blobData;
+        if (blobData == FREED_MARKER) {
+            throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_blobClosed);
+        }
+        return blobData;
     }
 }
