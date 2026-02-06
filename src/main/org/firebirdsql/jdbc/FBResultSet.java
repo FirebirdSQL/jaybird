@@ -139,7 +139,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
             if (behavior.isUpdatable()) {
                 try {
-                    rowUpdater = new FBRowUpdater(connection, rowDescriptor, cached, listener);
+                    rowUpdater = new FBRowUpdater(connection, rowDescriptor, cached, this.listener);
                     if (behavior.isScrollable()) {
                         fbFetcher = new FBUpdatableFetcher(fbFetcher, this, rowDescriptor.createDeletedRowMarker());
                     }
@@ -215,6 +215,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     private FBField[] createFields(boolean cached, boolean trimStrings) throws SQLException {
         int fieldCount = rowDescriptor.getCount();
+        // TODO: We don't check if the result set has at least one column, should we?
         IntSupplier maxLengthSupplier = this::maxFieldSize;
         var fields = new FBField[fieldCount];
         for (int i = 0; i < fieldCount; i++) {
