@@ -1,7 +1,7 @@
 /*
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003-2007 Roman Rokytskyy
- SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -9,10 +9,13 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.sql.Blob;
 import java.io.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * This class represents a cached blob field.
@@ -22,6 +25,7 @@ import java.io.*;
  * </p>
  */
 @InternalApi
+@NullMarked
 public final class FBCachedBlob implements FirebirdBlob {
 
     // NOTE: Do not assign ByteArrayHelper.empty(), as this must be a unique instance
@@ -35,15 +39,15 @@ public final class FBCachedBlob implements FirebirdBlob {
      * Create an instance using the cached data.
      *
      * @param data
-     *            array of bytes containing the cached data.
+     *         array of bytes containing the cached data
      */
     public FBCachedBlob(byte[] data) {
-        blobData = data;
+        blobData = requireNonNull(data, "data");
     }
 
     @Override
     public FirebirdBlob detach() throws SQLException {
-        checkClosed();
+        checkOpen();
         return new FBCachedBlob(blobData);
     }
 
@@ -55,23 +59,22 @@ public final class FBCachedBlob implements FirebirdBlob {
      */
     @Override
     public boolean isSegmented() throws SQLException {
-        checkClosed();
+        checkOpen();
         return false;
     }
 
     /**
      * Get the length of the cached blob field.
      *
-     * @return length of the cached blob field or -1 if the field is null.
+     * @return length of the cached blob field
      */
     @Override
     public long length() throws SQLException {
-        checkClosed();
-        return blobData != null ? blobData.length : -1;
+        checkOpen();
+        return blobData.length;
     }
 
     @Override
-    @SuppressWarnings("java:S1168")
     public byte[] getBytes(long pos, int length) throws SQLException {
         if (pos < 1) {
             throw new SQLException("Expected value of pos > 0, got " + pos,
@@ -81,8 +84,7 @@ public final class FBCachedBlob implements FirebirdBlob {
             throw new SQLException("Expected value of length >= 0, got " + length,
                     SQLStateConstants.SQL_STATE_INVALID_STRING_LENGTH);
         }
-        checkClosed();
-        if (blobData == null) return null;
+        checkOpen();
 
         // TODO What if pos or length are beyond blobData
         byte[] result = new byte[length];
@@ -92,8 +94,8 @@ public final class FBCachedBlob implements FirebirdBlob {
 
     @Override
     public byte[] getBytes() throws SQLException {
-        checkClosed();
-        return blobData != null ? blobData.clone() : null;
+        checkOpen();
+        return blobData.clone();
     }
 
     /**
@@ -120,9 +122,7 @@ public final class FBCachedBlob implements FirebirdBlob {
 
     @Override
     public InputStream getBinaryStream() throws SQLException {
-        checkClosed();
-        if (blobData == null) return null;
-
+        checkOpen();
         return new ByteArrayInputStream(blobData);
     }
 
@@ -180,7 +180,7 @@ public final class FBCachedBlob implements FirebirdBlob {
         blobData = FREED_MARKER;
     }
 
-    private void checkClosed() throws SQLException {
+    private void checkOpen() throws SQLException {
         if (blobData == FREED_MARKER) {
             throw FbExceptionBuilder.toException(JaybirdErrorCodes.jb_blobClosed);
         }

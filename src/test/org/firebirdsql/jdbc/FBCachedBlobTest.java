@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -45,14 +45,10 @@ class FBCachedBlobTest {
         assertFalse(blob.isSegmented(), "FBCachedBlob.isSegmented() should return false");
     }
 
-    /**
-     * Test if {@link FBCachedBlob#length()} returns {@code -1} if data is {@code null}.
-     */
     @Test
-    void testLength_null() throws Exception {
-        FBCachedBlob blob = new FBCachedBlob(null);
-
-        assertEquals(-1, blob.length(), "Unexpected length for null data");
+    @SuppressWarnings("DataFlowIssue")
+    void createBlobWithNull_notAllowed() {
+        assertThrows(NullPointerException.class, () -> new FBCachedBlob(null));
     }
 
     /**
@@ -121,19 +117,6 @@ class FBCachedBlobTest {
     }
 
     /**
-     * Test if {@link FBCachedBlob#getBytes(long, int)} returns {@code null} if data is null.
-     * <p>
-     * TODO: Not certain if this behavior is allowed!
-     * </p>
-     */
-    @Test
-    void testGetBytes_long_int_null() throws Exception {
-        FBCachedBlob blob = new FBCachedBlob(null);
-
-        assertNull(blob.getBytes(1, 1));
-    }
-
-    /**
      * Test {@link FBCachedBlob#getBytes(long, int)}.
      */
     @Test
@@ -158,19 +141,6 @@ class FBCachedBlobTest {
     }
 
     /**
-     * Test if {@link FBCachedBlob#getBytes()} returns {@code null} if data is null.
-     * <p>
-     * TODO: Not certain if this behavior is allowed!
-     * </p>
-     */
-    @Test
-    void testGetBytes_null() throws Exception {
-        var blob = new FBCachedBlob(null);
-
-        assertNull(blob.getBytes());
-    }
-
-    /**
      * Test if {@link FBCachedBlob#position(byte[], long)} throws SQLFeatureNotSupportedException.
      */
     @Test
@@ -188,16 +158,6 @@ class FBCachedBlobTest {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
         assertThrows(SQLFeatureNotSupportedException.class, () -> blob.position(blob, 1));
-    }
-
-    /**
-     * Test if {@link FBCachedBlob#getBinaryStream()} returns {@code null} when data is {@code null}.
-     */
-    @Test
-    void testGetBinaryStream_null() throws Exception {
-        FBCachedBlob blob = new FBCachedBlob(null);
-
-        assertNull(blob.getBinaryStream());
     }
 
     /**

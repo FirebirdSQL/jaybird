@@ -868,6 +868,8 @@ use constructor `RowDescriptor(List<FieldDescriptor>, DatatypeCoder)`
 * `RowDescriptorBuilder`
 ** `toRowDescriptor()` can no longer build an incomplete row descriptor, and throws an `IllegalStateException` if one or more fields have not been defined.
 There is no replacement to build incomplete row descriptors.
+* `FBCachedBlob`
+** Constructor `FBCachedBlob(byte[])` no longer accepts `null`.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
