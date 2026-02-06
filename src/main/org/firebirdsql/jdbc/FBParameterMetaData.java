@@ -2,13 +2,15 @@
  SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
  SPDX-FileCopyrightText: Copyright 2003-2007 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2005-2006 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ParameterMetaData;
 import java.sql.SQLException;
@@ -29,6 +31,7 @@ import java.util.Map;
  */
 @SuppressWarnings("RedundantThrows")
 @InternalApi
+@NullMarked
 public class FBParameterMetaData extends AbstractFieldMetaData implements FirebirdParameterMetaData {
 
     /**
@@ -41,7 +44,7 @@ public class FBParameterMetaData extends AbstractFieldMetaData implements Firebi
      * @throws SQLException
      *         if an error occurs
      */
-    protected FBParameterMetaData(RowDescriptor rowDescriptor, FBConnection connection) throws SQLException {
+    protected FBParameterMetaData(RowDescriptor rowDescriptor, @Nullable FBConnection connection) throws SQLException {
         super(rowDescriptor, connection);
     }
 
@@ -106,7 +109,8 @@ public class FBParameterMetaData extends AbstractFieldMetaData implements Firebi
      * </p>
      */
     @Override
-    protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException {
+    protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(@Nullable FBConnection connection)
+            throws SQLException {
         return Collections.emptyMap();
     }
 }

@@ -6,7 +6,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
  SPDX-FileCopyrightText: Copyright 2005-2006 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -17,6 +17,8 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -39,6 +41,7 @@ import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
  */
 @SuppressWarnings("RedundantThrows")
 @InternalApi
+@NullMarked
 public class FBResultSetMetaData extends AbstractFieldMetaData implements FirebirdResultSetMetaData {
 
     private final ColumnStrategy columnStrategy;
@@ -54,7 +57,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
      *         if an error occurs
      */
     //TODO Need another constructor for metadata from constructed result set, where we supply the ext field info.
-    protected FBResultSetMetaData(RowDescriptor rowDescriptor, FBConnection connection) throws SQLException {
+    protected FBResultSetMetaData(RowDescriptor rowDescriptor, @Nullable FBConnection connection) throws SQLException {
         super(rowDescriptor, connection);
 
         // Decide how to handle column names and column labels
@@ -65,7 +68,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         }
     }
 
-    private static boolean isColumnLabelForName(FBConnection connection) throws SQLException {
+    private static boolean isColumnLabelForName(@Nullable FBConnection connection) throws SQLException {
         if (connection == null) {
             return false;
         }
@@ -302,7 +305,8 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
 
     @Override
     @SuppressWarnings({ "java:S1994", "java:S135" })
-    protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException {
+    protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(@Nullable FBConnection connection)
+            throws SQLException {
         if (connection == null || !connection.isExtendedMetadata()) return Collections.emptyMap();
 
         final int fieldCount = getFieldCount();

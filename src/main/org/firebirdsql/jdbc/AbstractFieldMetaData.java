@@ -6,7 +6,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
  SPDX-FileCopyrightText: Copyright 2005-2006 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -19,6 +19,8 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -42,13 +44,14 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  * @since 3.0
  */
 @InternalApi
+@NullMarked
 public abstract class AbstractFieldMetaData implements Wrapper {
 
     private final RowDescriptor rowDescriptor;
-    private final FBConnection connection;
-    private Map<FieldKey, ExtendedFieldInfo> extendedInfo;
+    private final @Nullable FBConnection connection;
+    private @Nullable Map<FieldKey, ExtendedFieldInfo> extendedInfo;
 
-    protected AbstractFieldMetaData(RowDescriptor rowDescriptor, FBConnection connection) {
+    protected AbstractFieldMetaData(RowDescriptor rowDescriptor, @Nullable FBConnection connection) {
         assert rowDescriptor != null : "rowDescriptor is required";
         this.rowDescriptor = rowDescriptor;
         this.connection = connection;
@@ -56,12 +59,14 @@ public abstract class AbstractFieldMetaData implements Wrapper {
 
     @Override
     public final boolean isWrapperFor(Class<?> iface) throws SQLException {
+        //noinspection ConstantValue : null-check for robustness
         return iface != null && iface.isAssignableFrom(getClass());
     }
 
     @Override
     public final <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
+            //noinspection ConstantValue : null-check for robustness
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unableToUnwrap)
                     .messageParameter(iface != null ? iface.getName() : "(null)")
                     .toSQLException();
@@ -242,7 +247,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         };
     }
 
-    protected final ExtendedFieldInfo getExtFieldInfo(int columnIndex) throws SQLException {
+    protected final @Nullable ExtendedFieldInfo getExtFieldInfo(int columnIndex) throws SQLException {
         if (extendedInfo == null) {
             extendedInfo = getExtendedFieldInfo(connection);
         }
@@ -254,12 +259,16 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      * This method retrieves extended information from the system tables in a database. Since this method is expensive,
      * use it with care.
      *
+     * @param connection
+     *         connection to use (can be {@code null} if this is a disconnected result set); caller should do something
+     *         appropriate if {@code null}, like returning an empty map
      * @return mapping between {@link FieldKey} instances and {@link ExtendedFieldInfo} instances, or an empty Map if
      * the metadata implementation does not support extended info.
      * @throws SQLException
      *         if a database error occurs while obtaining extended field information.
      */
-    protected abstract Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException;
+    protected abstract Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(@Nullable FBConnection connection)
+            throws SQLException;
 
     /**
      * Stores additional information about fields in a database.
@@ -281,7 +290,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      * @param fieldName
      *         field name
      */
-    protected record FieldKey(String schema, String relationName, String fieldName) {
+    protected record FieldKey(@Nullable String schema, @Nullable String relationName, @Nullable String fieldName) {
 
         protected FieldKey {
             if (schema == null) {
