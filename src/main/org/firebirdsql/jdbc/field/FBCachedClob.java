@@ -6,6 +6,7 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBCachedBlob;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,6 +29,7 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_LOCATOR_EXCEPTION
  * transparently. It technically does not conform to the JDBC requirements for {@code NClob}.
  * </p>
  */
+@NullMarked
 public final class FBCachedClob implements Clob, NClob {
 	
 	private final FBCachedBlob wrappedBlob;
