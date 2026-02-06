@@ -5,7 +5,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2011 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2005-2007 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2019-2020 Vasiliy Yashkov
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -67,6 +67,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported";
     private static final String TYPE_SQLXML = "SQLXML";
+    private static final RowValue NO_CURRENT_ROW = RowValue.EMPTY_ROW_VALUE;
 
     private final @Nullable AbstractStatement statement;
     private final FBFetcher fbFetcher;
@@ -77,7 +78,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     protected final RowDescriptor rowDescriptor;
 
-    protected @Nullable RowValue row;
+    protected RowValue row = NO_CURRENT_ROW;
 
     private boolean wasNull;
 
@@ -90,7 +91,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public void rowChanged(FBFetcher fetcher, @Nullable RowValue newRow) throws SQLException {
-        this.row = newRow;
+        this.row = newRow != null ? newRow : NO_CURRENT_ROW;
     }
 
     /**
@@ -527,7 +528,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
         checkOpen();
 
-        if (checkRowPosition && row == null && rowUpdater == null) {
+        if (checkRowPosition && row == NO_CURRENT_ROW && rowUpdater == null) {
             throw new SQLException("The result set is not in a row, use next", SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
         }
 
@@ -1853,7 +1854,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         return new FBDriverNotCapableException("Type " + typeName + " not supported");
     }
 
-    @SuppressWarnings("DataFlowIssue")
     private final class DataProvider implements FieldDataProvider {
 
         private final int fieldPosition;
