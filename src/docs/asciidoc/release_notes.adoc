@@ -52,6 +52,7 @@ This results in two minor breaking changes:
 ** Reserved words are no longer considered simple identifiers by `enquoteIdentifier` and `isSimpleIdentifier` and will be quoted (or -- for dialect 1 -- result in a `SQLFeatureNotSupportedException`)
 ** Presence of the NUL character (U+0000) in an identifier passed to `enquoteIdentifier` will result in a `SQLSyntaxErrorException`
 * Fixed: JDBC escapes should not be parsed inside dialect 3 delimited identifiers or dialect 1 string literals (https://github.com/FirebirdSQL/jaybird/issues/922[#922])
+* Fixed: `IndexOutOfBoundsException` in `FBCachedBlob.getBytes(long, int)` for position or length beyond end of data (https://github.com/FirebirdSQL/jaybird/issues/924[#924])
 
 [#jaybird-5-0-11-changelog]
 === Jaybird 5.0.11

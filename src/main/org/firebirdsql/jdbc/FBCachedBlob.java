@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.util.ByteArrayHelper;
 
 import java.sql.SQLException;
 import java.sql.Blob;
@@ -81,15 +82,17 @@ public final class FBCachedBlob implements FirebirdBlob {
         if (pos < 1) {
             throw new SQLException("Expected value of pos > 0, got " + pos,
                     SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
-        }
-        if (length < 0) {
+        } else if (length < 0) {
             throw new SQLException("Expected value of length >= 0, got " + length,
                     SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
         checkClosed();
+        byte[] blobData = this.blobData;
         if (blobData == null) return BYTES_NULL_VALUE;
 
-        // TODO What if pos or length are beyond blobData
+        if (pos > blobData.length) return ByteArrayHelper.emptyByteArray();
+        length = (int) Math.min(length, blobData.length - pos + 1L);
+
         byte[] result = new byte[length];
         System.arraycopy(blobData, (int) pos - 1, result, 0, length);
         return result;

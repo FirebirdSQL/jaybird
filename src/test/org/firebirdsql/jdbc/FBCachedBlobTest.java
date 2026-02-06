@@ -21,6 +21,8 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -31,6 +33,7 @@ import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -160,6 +163,28 @@ class FBCachedBlobTest {
 
         assertNotNull(data, "Expected non-null array");
         assertArrayEquals(new byte[] { 5, 6, 7, 8, 9 }, data, "Unexpected data");
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = { 11, Integer.MAX_VALUE, Integer.MAX_VALUE + 1L, Long.MAX_VALUE })
+    void testGetBytes_long_int_posBeyondEnd(long pos) throws Exception {
+        assertThat("Wrong value for pos", pos, greaterThan(10L));
+        FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+
+        byte[] data = blob.getBytes(pos, 5);
+
+        assertNotNull(data, "Expected non-null array");
+        assertArrayEquals(new byte[0], data, "Unexpected data");
+    }
+
+    @Test
+    void testGetBytes_long_int_lengthBeyondEnd() throws Exception {
+        FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+
+        byte[] data = blob.getBytes(5, 10);
+
+        assertNotNull(data, "Expected non-null array");
+        assertArrayEquals(new byte[] { 5, 6, 7, 8, 9, 10 }, data, "Unexpected data");
     }
 
     /**
