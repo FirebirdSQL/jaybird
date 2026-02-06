@@ -862,6 +862,12 @@ Subclasses overriding this method must ensure they do not switch state to `PREPA
 * `V16Statement`
 ** the `sendBatchMsg` protected method -- accepting `RowDescriptor` and `Collection<RowValue>` -- was made private.
 The new protected method of the same name is _only_ responsible for sending the `op_batch_msg` itself, not the subsequent row data.
+* `RowDescriptor`
+** `createRowDescriptor(FieldDescriptor[], DatatypeCoder)` was removed;
+use constructor `RowDescriptor(List<FieldDescriptor>, DatatypeCoder)`
+* `RowDescriptorBuilder`
+** `toRowDescriptor()` can no longer build an incomplete row descriptor, and throws an `IllegalStateException` if one or more fields have not been defined.
+There is no replacement to build incomplete row descriptors.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

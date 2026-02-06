@@ -341,6 +341,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
                 sb.append("\nand ");
             }
 
+            //noinspection DataFlowIssue : the way keyColumns is constructed guarantees originalName is non-null
             quoteStrategy.appendQuoted(fieldDescriptor.getOriginalName(), sb).append("=?");
         }
     }
@@ -360,7 +361,8 @@ final class FBRowUpdater implements FirebirdRowUpdater {
             } else {
                 sb.append(",\n\t");
             }
-            
+
+            //noinspection DataFlowIssue : given the check in requireSingleTable, originalName should be non-null
             quoteStrategy.appendQuoted(fieldDescriptor.getOriginalName(), sb).append("=?");
         }
 
@@ -395,6 +397,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
                 params.append(',');
             }
 
+            //noinspection DataFlowIssue : given the check in requireSingleTable, originalName should be non-null
             quoteStrategy.appendQuoted(fieldDescriptor.getOriginalName(), columns);
             params.append('?');
         }
@@ -423,6 +426,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
             if (fieldDescriptor.isDbKey()) {
                 columns.append("RDB$DB_KEY");
             } else {
+                //noinspection DataFlowIssue : given the check in requireSingleTable, originalName should be non-null
                 quoteStrategy.appendQuoted(fieldDescriptor.getOriginalName(), columns);
             }
         }

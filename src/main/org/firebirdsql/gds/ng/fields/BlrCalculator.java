@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2013-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.fields;
+
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -82,7 +84,7 @@ public interface BlrCalculator {
      * @return The io length
      * @since 4.0
      */
-    int calculateIoLength(FieldDescriptor fieldDescriptor, byte[] fieldData) throws SQLException;
+    int calculateIoLength(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData) throws SQLException;
 
     /**
      * Calculates the batch message length.

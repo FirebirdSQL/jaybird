@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.fields;
 
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.List;
@@ -22,22 +23,22 @@ import static java.util.Objects.requireNonNull;
  */
 public final class RowDescriptor implements Iterable<FieldDescriptor> {
 
-    private static final FieldDescriptor[] NO_DESCRIPTORS = new FieldDescriptor[0];
+    private static final List<FieldDescriptor> NO_DESCRIPTORS = List.of();
     private final List<FieldDescriptor> fieldDescriptors;
     private final DatatypeCoder datatypeCoder;
     private int hash;
 
     /**
-     * Creates an instance of {@code RowDescriptor} with the supplied array of
-     * {@link FieldDescriptor} instances.
+     * Creates an instance of {@code RowDescriptor} with the supplied array of {@link FieldDescriptor} instances.
      *
      * @param fieldDescriptors
-     *         field descriptors (array is copied before use)
+     *         field descriptors (list is copied before use)
      * @param datatypeCoder
-     *         datatype coder for the connection that uses this RowDescriptor.
+     *         datatype coder for the connection that uses this row descriptor
+     * @since 7
      */
-    private RowDescriptor(FieldDescriptor[] fieldDescriptors, DatatypeCoder datatypeCoder) {
-        this.fieldDescriptors = List.of(fieldDescriptors);
+    public RowDescriptor(List<FieldDescriptor> fieldDescriptors, DatatypeCoder datatypeCoder) {
+        this.fieldDescriptors = List.copyOf(fieldDescriptors);
         this.datatypeCoder = requireNonNull(datatypeCoder, "dataTypeCoder should not be null");
     }
 
@@ -88,7 +89,7 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
      * All fields are marked as uninitialized.
      * </p>
      * <p>
-     * The (0-based) index of the each field value in the {@link RowValue} corresponds with the (0-based) index of the
+     * The (0-based) index of each field value in the {@link RowValue} corresponds with the (0-based) index of the
      * {@link FieldDescriptor} within this {@code RowDescriptor}.
      * </p>
      *
@@ -123,6 +124,7 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
         for (int idx = 0; idx < fieldDescriptors.size(); idx++) {
             sb.append(idx).append('=');
             FieldDescriptor descriptor = fieldDescriptors.get(idx);
+            //noinspection ConstantValue : null-check for robustness and debugging purposes
             if (descriptor != null) {
                 descriptor.appendFieldDescriptor(sb);
             } else {
@@ -139,7 +141,7 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof RowDescriptor other)) return false;
         return this.fieldDescriptors.equals(other.fieldDescriptors);
@@ -153,23 +155,10 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
     }
 
     /**
-     * Creates an instance of {@code RowDescriptor} with the supplied {@link FieldDescriptor} instances.
-     *
-     * @param fieldDescriptors
-     *         field descriptors (array is cloned before use)
-     * @param datatypeCoder
-     *         datatype coder for the connection that uses this RowDescriptor.
-     * @return {@code RowDescriptor} instance
-     */
-    public static RowDescriptor createRowDescriptor(FieldDescriptor[] fieldDescriptors, DatatypeCoder datatypeCoder) {
-        return new RowDescriptor(fieldDescriptors, datatypeCoder);
-    }
-
-    /**
      * Returns an empty row descriptor with the specified datatype coder.
      *
      * @param datatypeCoder
-     *         datatype coder for the connection that uses this RowDescriptor.
+     *         datatype coder for the connection that uses this row descriptor
      * @return Empty row descriptor
      */
     public static RowDescriptor empty(DatatypeCoder datatypeCoder) {

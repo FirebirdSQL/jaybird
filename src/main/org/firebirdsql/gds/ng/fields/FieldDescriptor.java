@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.fields;
 
@@ -6,6 +6,7 @@ import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -30,12 +31,12 @@ public final class FieldDescriptor {
     private final int subType;
     private final int scale;
     private final int length;
-    private final String fieldName;
-    private final String tableAlias;
-    private final String originalName;
-    private final String originalSchema;
-    private final String originalTableName;
-    private final String ownerName;
+    private final @Nullable String fieldName;
+    private final @Nullable String tableAlias;
+    private final @Nullable String originalName;
+    private final @Nullable String originalSchema;
+    private final @Nullable String originalTableName;
+    private final @Nullable String ownerName;
 
     // cached data derived from immutable state
     private int hash;
@@ -72,9 +73,9 @@ public final class FieldDescriptor {
      */
     public FieldDescriptor(int position, DatatypeCoder datatypeCoder,
             int type, int subType, int scale, int length,
-            String fieldName, String tableAlias,
-            String originalName, String originalSchema, String originalTableName,
-            String ownerName) {
+            @Nullable String fieldName, @Nullable String tableAlias,
+            @Nullable String originalName, @Nullable String originalSchema, @Nullable String originalTableName,
+            @Nullable String ownerName) {
         this.position = position;
         this.datatypeCoder = datatypeCoderForType(datatypeCoder, type, subType, scale);
         this.type = type;
@@ -173,21 +174,21 @@ public final class FieldDescriptor {
     /**
      * @return The (aliased) field name
      */
-    public String getFieldName() {
+    public @Nullable String getFieldName() {
         return fieldName;
     }
 
     /**
      * @return The (aliased) table name
      */
-    public String getTableAlias() {
+    public @Nullable String getTableAlias() {
         return tableAlias;
     }
 
     /**
      * @return The original name of the field (e.g. the column name in the table)
      */
-    public String getOriginalName() {
+    public @Nullable String getOriginalName() {
         return originalName;
     }
 
@@ -195,21 +196,21 @@ public final class FieldDescriptor {
      * @return The original schema ({@code null} if schemaless, e.g. Firebird 5.0 or older, or a column not backed by
      * a table)
      */
-    public String getOriginalSchema() {
+    public @Nullable String getOriginalSchema() {
         return originalSchema;
     }
 
     /**
      * @return The original table name
      */
-    public String getOriginalTableName() {
+    public @Nullable String getOriginalTableName() {
         return originalTableName;
     }
 
     /**
      * @return The owner
      */
-    public String getOwnerName() {
+    public @Nullable String getOwnerName() {
         return ownerName;
     }
 
@@ -359,7 +360,7 @@ public final class FieldDescriptor {
      * {@code false} otherwise.
      */
     @SuppressWarnings("unused")
-    public boolean typeEquals(final FieldDescriptor other) {
+    public boolean typeEquals(@Nullable FieldDescriptor other) {
         return this == other
                 || other != null
                 && this.type == other.type
@@ -410,7 +411,7 @@ public final class FieldDescriptor {
     }
 
     @Override
-    public boolean equals(final Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof FieldDescriptor other)) return false;
         return this.position == other.position

@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.fields;
+
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 
@@ -20,7 +22,7 @@ public sealed class RowValue {
 
     public static final RowValue EMPTY_ROW_VALUE = new RowValue(0, false);
 
-    private final byte[][] fieldData;
+    private final byte[] @Nullable [] fieldData;
 
     /**
      * Creates an empty row value with {@code size} fields.
@@ -57,7 +59,7 @@ public sealed class RowValue {
      * @throws java.lang.IndexOutOfBoundsException
      *         if index is not {@code 0 <= index > getCount()}
      */
-    public void setFieldData(int index, byte[] data) {
+    public void setFieldData(int index, byte @Nullable [] data) {
         fieldData[index] = data;
     }
 
@@ -74,7 +76,7 @@ public sealed class RowValue {
      * @throws java.lang.IndexOutOfBoundsException
      *         if index is not {@code 0 <= index > getCount()}
      */
-    public final byte[] getFieldData(int index) {
+    public final byte @Nullable [] getFieldData(int index) {
         byte[] data = fieldData[index];
         return data != NOT_INITIALIZED ? data : null;
     }
@@ -261,7 +263,7 @@ public sealed class RowValue {
         }
 
         @Override
-        public void setFieldData(int index, byte[] data) {
+        public void setFieldData(int index, byte @Nullable [] data) {
             throw new UnsupportedOperationException("Deleted row marker should not be updated");
         }
 

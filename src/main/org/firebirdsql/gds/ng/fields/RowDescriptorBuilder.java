@@ -3,6 +3,12 @@
 package org.firebirdsql.gds.ng.fields;
 
 import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.IntStream;
 
 /**
  * Builder to construct an immutable {@link RowDescriptor}.
@@ -25,13 +31,13 @@ public final class RowDescriptorBuilder {
     private int subType;
     private int scale;
     private int length;
-    private String fieldName;
-    private String tableAlias;
-    private String originalName;
-    private String originalSchema;
-    private String originalTableName;
-    private String ownerName;
-    private final FieldDescriptor[] fieldDescriptors;
+    private @Nullable String fieldName;
+    private @Nullable String tableAlias;
+    private @Nullable String originalName;
+    private @Nullable String originalSchema;
+    private @Nullable String originalTableName;
+    private @Nullable String ownerName;
+    private final @Nullable FieldDescriptor[] fieldDescriptors;
 
     private int currentFieldIndex;
 
@@ -113,7 +119,7 @@ public final class RowDescriptorBuilder {
      * @return this builder
      * @see #setOriginalName(String)
      */
-    public RowDescriptorBuilder setFieldName(final String fieldName) {
+    public RowDescriptorBuilder setFieldName(@Nullable String fieldName) {
         this.fieldName = fieldName;
         return this;
     }
@@ -126,7 +132,7 @@ public final class RowDescriptorBuilder {
      * @return this builder
      * @see #setOriginalTableName(String)
      */
-    public RowDescriptorBuilder setTableAlias(final String tableAlias) {
+    public RowDescriptorBuilder setTableAlias(@Nullable String tableAlias) {
         this.tableAlias = tableAlias;
         return this;
     }
@@ -139,7 +145,7 @@ public final class RowDescriptorBuilder {
      * @return this builder
      * @see #setFieldName(String)
      */
-    public RowDescriptorBuilder setOriginalName(final String originalName) {
+    public RowDescriptorBuilder setOriginalName(@Nullable String originalName) {
         this.originalName = originalName;
         return this;
     }
@@ -151,7 +157,7 @@ public final class RowDescriptorBuilder {
      *         The schema of the table
      * @return this builder
      */
-    public RowDescriptorBuilder setOriginalSchema(final String originalSchema) {
+    public RowDescriptorBuilder setOriginalSchema(@Nullable String originalSchema) {
         this.originalSchema = originalSchema;
         return this;
     }
@@ -164,7 +170,7 @@ public final class RowDescriptorBuilder {
      * @return this builder
      * @see #setTableAlias(String)
      */
-    public RowDescriptorBuilder setOriginalTableName(final String originalTableName) {
+    public RowDescriptorBuilder setOriginalTableName(@Nullable String originalTableName) {
         this.originalTableName = originalTableName;
         return this;
     }
@@ -221,7 +227,7 @@ public final class RowDescriptorBuilder {
      *         Name of the owner
      * @return this builder
      */
-    public RowDescriptorBuilder setOwnerName(final String ownerName) {
+    public RowDescriptorBuilder setOwnerName(@Nullable String ownerName) {
         this.ownerName = ownerName;
         return this;
     }
@@ -335,28 +341,33 @@ public final class RowDescriptorBuilder {
     /**
      * Constructs the {@link RowDescriptor} with the current content.
      * <p>
-     * This method can also return a partially filled {@link RowDescriptor}. Caller can check for completeness by
-     * calling {@link #isComplete()}.
+     * This method throws an {@code IllegalStateException} if one or more fields are not defined. Caller can check for
+     * completeness by calling {@link #isComplete()}.
      * </p>
      *
-     * @return RowDescriptor instance.
+     * @return RowDescriptor instance
+     * @throws IllegalStateException
+     *         if one or more fields have not been defined
      * @see #isComplete()
      */
     public RowDescriptor toRowDescriptor() {
-        // NOTE: The correctness of this depends on the fact that RowDescriptor copies the content of the array
-        return RowDescriptor.createRowDescriptor(fieldDescriptors, datatypeCoder);
+        int[] missingFields = IntStream.range(0, getSize())
+                .filter(idx -> fieldDescriptors[idx] == null)
+                .toArray();
+        if (missingFields.length == 0) {
+            //noinspection NullableProblems : Covered by missingFields check
+            return new RowDescriptor(List.of(fieldDescriptors), datatypeCoder);
+        } else {
+            throw new IllegalStateException(
+                    "Fields at indices %s have not been defined".formatted(Arrays.toString(missingFields)));
+        }
     }
 
     /**
      * @return <tt>true</tt> when all {@link FieldDescriptor} entries have been defined
      */
     public boolean isComplete() {
-        for (FieldDescriptor fieldDescriptor : fieldDescriptors) {
-            if (fieldDescriptor == null) {
-                return false;
-            }
-        }
-        return true;
+        return Arrays.stream(fieldDescriptors).noneMatch(Objects::isNull);
     }
 
     /**

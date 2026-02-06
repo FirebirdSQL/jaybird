@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -6,6 +6,8 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.*;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
@@ -23,6 +25,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public class DefaultBlrCalculator implements BlrCalculator {
 
     /**
@@ -276,7 +279,7 @@ public class DefaultBlrCalculator implements BlrCalculator {
     }
 
     @Override
-    public int calculateIoLength(FieldDescriptor fieldDescriptor, byte[] fieldData) throws SQLException {
+    public int calculateIoLength(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData) throws SQLException {
         final int fieldType = fieldDescriptor.getType() & ~1;
         if (fieldType == SQL_TEXT) {
             // Use actual data length for SQL_TEXT

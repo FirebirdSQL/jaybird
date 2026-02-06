@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.fields;
 
@@ -118,7 +118,10 @@ class RowDescriptorBuilderTest {
 
     @Test
     void testEmpty() {
-        RowDescriptor rowDescriptor = new RowDescriptorBuilder(0, datatypeCoder)
+        var builder = new RowDescriptorBuilder(0, datatypeCoder);
+        assertTrue(builder.isComplete(), "Unexpected incomplete");
+
+        RowDescriptor rowDescriptor = builder
                 .toRowDescriptor();
 
         assertEquals(0, rowDescriptor.getCount(), "Unexpected count of fields in RowDescriptor");
@@ -130,6 +133,8 @@ class RowDescriptorBuilderTest {
         for (FieldDescriptor fieldDescriptor : TEST_FIELD_DESCRIPTORS) {
             builder.addField(fieldDescriptor);
         }
+        assertTrue(builder.isComplete(), "Unexpected incomplete");
+
         RowDescriptor rowDescriptor = builder.toRowDescriptor();
 
         assertEquals(TEST_FIELD_DESCRIPTORS.size(), rowDescriptor.getCount(), "Unexpected count of fields in RowDescriptor");
@@ -217,4 +222,43 @@ class RowDescriptorBuilderTest {
 
         assertTrue(fieldDescriptor.isDbKey(), "isDbKey()");
     }
+
+    @Test
+    void toRowDescriptor_incomplete_noneDefined() {
+        var builder = new RowDescriptorBuilder(1, datatypeCoder);
+
+        assertFalse(builder.isComplete(), "Unexpected complete");
+        var exception = assertThrows(IllegalStateException.class, builder::toRowDescriptor);
+        assertEquals("Fields at indices [0] have not been defined", exception.getMessage());
+    }
+
+    @Test
+    void toRowDescriptor_incomplete_firstDefined() {
+        RowDescriptorBuilder builder = new RowDescriptorBuilder(2, datatypeCoder)
+                .at(0)
+                .setType(1)
+                .setSubType(1)
+                .setFieldName("Field1")
+                .setTableAlias("Alias1")
+                .addField();
+
+        assertFalse(builder.isComplete(), "Unexpected complete");
+        var exception = assertThrows(IllegalStateException.class, builder::toRowDescriptor);
+        assertEquals("Fields at indices [1] have not been defined", exception.getMessage());
+    }
+
+    @Test
+    void toRowDescriptor_incomplete_lastDefined() {
+        RowDescriptorBuilder builder = new RowDescriptorBuilder(3, datatypeCoder)
+                .at(2)
+                .setType(1)
+                .setSubType(1)
+                .setFieldName("Field2")
+                .addField();
+
+        assertFalse(builder.isComplete(), "Unexpected complete");
+        var exception = assertThrows(IllegalStateException.class, builder::toRowDescriptor);
+        assertEquals("Fields at indices [0, 1] have not been defined", exception.getMessage());
+    }
+
 }
