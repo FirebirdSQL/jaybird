@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2005-2011 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -17,12 +17,15 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.StreamSupport;
 
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_CURSOR_STATE;
@@ -53,6 +56,7 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_CURSOR_ST
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
+@NullMarked
 final class FBRowUpdater implements FirebirdRowUpdater {
 
     // Estimated average column length of 10 + 2 quote characters + comma (for pre-sizing string builders).
@@ -61,6 +65,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
     // Estimated size for update/delete/select statement (for pre-sizing string builders).
     // This is probably still too small for some cases, but will prevent a number of resizes from the default size
     private static final int EST_STATEMENT_SIZE = 64;
+    private static final RowValue NO_CURRENT_ROW = RowValue.EMPTY_ROW_VALUE;
 
     private static final String ROW_INSERT = "insert";
     private static final String ROW_CURRENT = "current";
@@ -75,11 +80,11 @@ final class FBRowUpdater implements FirebirdRowUpdater {
     private final RowDescriptor rowDescriptor;
     private final List<FBField> fields;
     private final QuoteStrategy quoteStrategy;
-    private final FbStatement[] statements = new FbStatement[4];
+    private final Map<StatementType, FbStatement> statements = new EnumMap<>(StatementType.class);
 
     private final List<FieldDescriptor> keyColumns;
     private final RowValue newRow;
-    private RowValue oldRow;
+    private RowValue oldRow = NO_CURRENT_ROW;
 
     private boolean inInsertRow;
     private boolean closed;
@@ -148,6 +153,10 @@ final class FBRowUpdater implements FirebirdRowUpdater {
                                 .formatted(table.toString(quoteStrategy), currentTable.toString(quoteStrategy)));
             }
         }
+        if (table == null) {
+            // Primarily to silence nullability warning
+            throw new FBResultSetNotUpdatableException("Underlying result set has no columns");
+        }
         return table;
     }
 
@@ -165,7 +174,6 @@ final class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     private void deallocateStatement(FbStatement handle, SQLExceptionChainBuilder chain) {
-        if (handle == null) return;
         try {
             handle.close();
         } catch (SQLException ex) {
@@ -177,7 +185,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
     public void close() throws SQLException {
         closed = true;
         var chain = new SQLExceptionChainBuilder();
-        for (FbStatement statement : statements) {
+        for (FbStatement statement : statements.values()) {
             deallocateStatement(statement, chain);
         }
         try {
@@ -427,12 +435,14 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         return sb.toString();
     }
 
-    private static final int UPDATE_STATEMENT_TYPE = 0;
-    private static final int DELETE_STATEMENT_TYPE = 1;
-    private static final int INSERT_STATEMENT_TYPE = 2;
-    private static final int SELECT_STATEMENT_TYPE = 3;
+    private enum StatementType {
+        UPDATE,
+        DELETE,
+        INSERT,
+        SELECT
+    }
 
-    private void modifyRow(int statementType) throws SQLException {
+    private void modifyRow(StatementType statementType) throws SQLException {
         try (LockCloseable ignored = gdsHelper.withLock()) {
             boolean success = false;
             try {
@@ -447,30 +457,30 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         }
     }
 
-    @SuppressWarnings("resource")
-    private FbStatement getStatementWithTransaction(int statementType) throws SQLException {
-        FbStatement stmt = statements[statementType];
+    private FbStatement getStatementWithTransaction(StatementType statementType) throws SQLException {
+        FbStatement stmt = statements.get(statementType);
         if (stmt == null) {
-            return statements[statementType] = gdsHelper.allocateStatement();
+            stmt = gdsHelper.allocateStatement();
+            statements.put(statementType, stmt);
         } else {
             stmt.setTransaction(gdsHelper.getCurrentTransaction());
-            return stmt;
         }
+        return stmt;
     }
 
     @Override
     public void updateRow() throws SQLException {
-        modifyRow(UPDATE_STATEMENT_TYPE);
+        modifyRow(StatementType.UPDATE);
     }
 
     @Override
     public void deleteRow() throws SQLException {
-        modifyRow(DELETE_STATEMENT_TYPE);
+        modifyRow(StatementType.DELETE);
     }
 
     @Override
     public void insertRow() throws SQLException {
-        modifyRow(INSERT_STATEMENT_TYPE);
+        modifyRow(StatementType.INSERT);
     }
 
     @Override
@@ -480,13 +490,13 @@ final class FBRowUpdater implements FirebirdRowUpdater {
             try {
                 notifyExecutionStarted();
 
-                FbStatement selectStatement = getStatementWithTransaction(SELECT_STATEMENT_TYPE);
+                FbStatement selectStatement = getStatementWithTransaction(StatementType.SELECT);
 
                 final RowListener rowListener = new RowListener();
                 selectStatement.addStatementListener(rowListener);
 
                 try {
-                    executeStatement(SELECT_STATEMENT_TYPE, selectStatement);
+                    executeStatement(StatementType.SELECT, selectStatement);
 
                     // should fetch one row anyway
                     selectStatement.fetchRows(10);
@@ -513,11 +523,11 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         }
     }
 
-    private void executeStatement(int statementType, FbStatement stmt) throws SQLException {
-        if (statementType != INSERT_STATEMENT_TYPE) {
+    private void executeStatement(StatementType statementType, FbStatement stmt) throws SQLException {
+        if (statementType != StatementType.INSERT) {
             if (inInsertRow) {
                 throw new SQLException("Only insertRow() is allowed when result set is positioned on insert row.");
-            } else if (oldRow == null) {
+            } else if (oldRow == NO_CURRENT_ROW) {
                 throw new SQLException("Result set is not positioned on a row.");
             }
         }
@@ -530,7 +540,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         List<byte[]> params = new ArrayList<>(newRow.initializedCount() + keyColumns.size());
 
         // Set parameters of new values
-        if (statementType == UPDATE_STATEMENT_TYPE || statementType == INSERT_STATEMENT_TYPE) {
+        if (statementType == StatementType.UPDATE || statementType == StatementType.INSERT) {
             for (FieldDescriptor fieldDescriptor : rowDescriptor) {
                 if (newRow.isInitialized(fieldDescriptor.getPosition()) && !fieldDescriptor.isDbKey()) {
                     params.add(newRow.getFieldData(fieldDescriptor.getPosition()));
@@ -539,7 +549,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         }
 
         // Set parameters of where clause
-        if (statementType != INSERT_STATEMENT_TYPE) {
+        if (statementType != StatementType.INSERT) {
             for (FieldDescriptor keyColumn : keyColumns) {
                 params.add(oldRow.getFieldData(keyColumn.getPosition()));
             }
@@ -556,13 +566,12 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         }
     }
 
-    private String generateStatementText(int statementType) {
+    private String generateStatementText(StatementType statementType) {
         return switch (statementType) {
-            case UPDATE_STATEMENT_TYPE -> buildUpdateStatement();
-            case DELETE_STATEMENT_TYPE -> buildDeleteStatement();
-            case INSERT_STATEMENT_TYPE -> buildInsertStatement();
-            case SELECT_STATEMENT_TYPE -> buildSelectStatement();
-            default -> throw new IllegalArgumentException("Incorrect statement type specified.");
+            case UPDATE -> buildUpdateStatement();
+            case DELETE -> buildDeleteStatement();
+            case INSERT -> buildInsertStatement();
+            case SELECT -> buildSelectStatement();
         };
     }
 
@@ -580,7 +589,7 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         return newRowCopy;
     }
 
-    private byte[] getFieldData(int field) {
+    private byte @Nullable [] getFieldData(int field) {
         RowValue source = newRow.isInitialized(field) || inInsertRow ? newRow : oldRow;
         return source.getFieldData(field);
     }
@@ -644,12 +653,12 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         }
 
         @Override
-        public byte[] getFieldData() {
+        public byte @Nullable [] getFieldData() {
             return FBRowUpdater.this.getFieldData(field);
         }
 
         @Override
-        public void setFieldData(byte[] data) {
+        public void setFieldData(byte @Nullable [] data) {
             newRow.setFieldData(field, data);
         }
 
