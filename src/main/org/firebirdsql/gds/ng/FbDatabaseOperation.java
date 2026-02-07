@@ -1,11 +1,13 @@
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
-// SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.monitor.Operation;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -21,17 +23,18 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 4.0
  */
+@NullMarked
 final class FbDatabaseOperation implements Operation, OperationCloseHandle {
 
     private static final Runnable NO_OP = () -> {};
 
     private final Type type;
     @SuppressWarnings("java:S3077")
-    private volatile FbDatabase fbDatabase;
+    private volatile @Nullable FbDatabase fbDatabase;
     private volatile boolean cancelled;
     private Runnable onCompletion;
 
-    private FbDatabaseOperation(Operation.Type type, FbDatabase fbDatabase, Runnable onCompletion) {
+    private FbDatabaseOperation(Operation.Type type, FbDatabase fbDatabase, @Nullable Runnable onCompletion) {
         this.type = requireNonNull(type, "type");
         this.onCompletion = onCompletion != null ? onCompletion : NO_OP;
         this.fbDatabase = requireNonNull(fbDatabase, "fbDatabase");
@@ -75,7 +78,7 @@ final class FbDatabaseOperation implements Operation, OperationCloseHandle {
     public void close() {
         final FbDatabase previous = fbDatabase;
         final Runnable onCompletion = this.onCompletion;
-        this.onCompletion = null;
+        this.onCompletion = NO_OP;
         fbDatabase = null;
         if (previous != null) {
             OperationMonitor.endOperation(this);
