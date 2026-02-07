@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,7 +25,7 @@ public abstract sealed class GetImportedKeys extends AbstractKeysMethod {
         super(mediator);
     }
 
-    public final ResultSet getImportedKeys(String schema, String table) throws SQLException {
+    public final ResultSet getImportedKeys(@Nullable String schema, @Nullable String table) throws SQLException {
         if (isNullOrEmpty(table)) {
             return createEmpty();
         }
@@ -32,7 +33,7 @@ public abstract sealed class GetImportedKeys extends AbstractKeysMethod {
         return createMetaDataResultSet(metadataQuery);
     }
 
-    abstract MetadataQuery createGetImportedKeysQuery(String schema, String table);
+    abstract MetadataQuery createGetImportedKeysQuery(@Nullable String schema, String table);
 
     public static GetImportedKeys create(DbMetadataMediator mediator) {
         // NOTE: Indirection through static method prevents unnecessary classloading
@@ -85,7 +86,7 @@ public abstract sealed class GetImportedKeys extends AbstractKeysMethod {
         }
 
         @Override
-        MetadataQuery createGetImportedKeysQuery(String schema, String table) {
+        MetadataQuery createGetImportedKeysQuery(@Nullable String schema, String table) {
             Clause tableClause = Clause.equalsClause("FK.RDB$RELATION_NAME", table);
             String sql = GET_IMPORTED_KEYS_START_5
                     + tableClause.getCondition(false)
@@ -139,7 +140,7 @@ public abstract sealed class GetImportedKeys extends AbstractKeysMethod {
         }
 
         @Override
-        MetadataQuery createGetImportedKeysQuery(String schema, String table) {
+        MetadataQuery createGetImportedKeysQuery(@Nullable String schema, String table) {
             var clauses = new ArrayList<Clause>(2);
             if (schema != null) {
                 // NOTE: empty string will return no rows as required ("" retrieves those without a schema)

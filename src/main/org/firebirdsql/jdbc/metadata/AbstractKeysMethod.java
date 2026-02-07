@@ -1,11 +1,12 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -75,7 +76,7 @@ abstract class AbstractKeysMethod extends AbstractMetadataMethod {
      *         Firebird action name
      * @return database metadata constant value
      */
-    private static Integer mapAction(String firebirdActionName) {
+    private static @Nullable Integer mapAction(String firebirdActionName) {
         return switch (firebirdActionName) {
             // NOTE: Firebird has no ON UPDATE/DELETE option RESTRICT, but absence of a ON UPDATE/DELETE clause stores
             // "RESTRICT", which behaves the same as NO ACTION.

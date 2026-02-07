@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -9,6 +9,7 @@ import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -60,7 +61,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
     /**
      * @see DatabaseMetaData#getProcedures(String, String, String)
      */
-    public final ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
+    public final ResultSet getProcedures(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String procedureNamePattern)
             throws SQLException {
         if ("".equals(procedureNamePattern)) {
             return createEmpty();
@@ -87,7 +89,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
                 .toRowValue(true);
     }
 
-    abstract MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern);
+    abstract MetadataQuery createGetProceduresQuery(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String procedureNamePattern);
 
     public static GetProcedures create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
@@ -132,7 +135,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern) {
+        MetadataQuery createGetProceduresQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String procedureNamePattern) {
             Clause procedureNameClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
             String queryText = GET_PROCEDURES_FRAGMENT_2_5
                     + procedureNameClause.getCondition("\nwhere ", "")
@@ -167,7 +171,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern) {
+        MetadataQuery createGetProceduresQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String procedureNamePattern) {
             Clause procedureNameClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
             String queryText = GET_PROCEDURES_FRAGMENT_3
                     + procedureNameClause.getCondition("\nand ", "")
@@ -201,7 +206,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern) {
+        MetadataQuery createGetProceduresQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String procedureNamePattern) {
             var clauses = new ArrayList<Clause>(2);
             if (catalog != null) {
                 // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
@@ -252,7 +258,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern) {
+        MetadataQuery createGetProceduresQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String procedureNamePattern) {
             var schemaNameClause = new Clause(COLUMN_SCHEMA_NAME, schemaPattern);
             var procedureNameClause = new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern);
             //@formatter:off
@@ -291,7 +298,8 @@ public abstract sealed class GetProcedures extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetProceduresQuery(String catalog, String schemaPattern, String procedureNamePattern) {
+        MetadataQuery createGetProceduresQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String procedureNamePattern) {
             var clauses = new ArrayList<Clause>(3);
             clauses.add(new Clause(COLUMN_SCHEMA_NAME, schemaPattern));
             if (catalog != null) {

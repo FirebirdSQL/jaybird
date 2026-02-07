@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -9,6 +9,7 @@ import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -59,8 +60,8 @@ public abstract sealed class GetFunctions extends AbstractMetadataMethod {
     /**
      * @see java.sql.DatabaseMetaData#getFunctions(String, String, String)
      */
-    public final ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
-            throws SQLException {
+    public final ResultSet getFunctions(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String functionNamePattern) throws SQLException {
         if ("".equals(functionNamePattern)) {
             // Matching function name not possible
             return createEmpty();
@@ -90,7 +91,8 @@ public abstract sealed class GetFunctions extends AbstractMetadataMethod {
                 .toRowValue(false);
     }
 
-    abstract MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern);
+    abstract MetadataQuery createGetFunctionsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String functionNamePattern);
 
     /**
      * Creates an instance of {@code GetFunctions}.
@@ -148,7 +150,8 @@ public abstract sealed class GetFunctions extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern) {
+        MetadataQuery createGetFunctionsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String functionNamePattern) {
             Clause functionNameClause = new Clause(COLUMN_FUNCTION_NAME, functionNamePattern);
             String queryText = GET_FUNCTIONS_FRAGMENT_2_5
                     + functionNameClause.getCondition("\nwhere ", "")
@@ -192,7 +195,8 @@ public abstract sealed class GetFunctions extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern) {
+        MetadataQuery createGetFunctionsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String functionNamePattern) {
             Clause functionNameClause = new Clause(COLUMN_FUNCTION_NAME, functionNamePattern);
             String queryText = GET_FUNCTIONS_FRAGMENT_3
                     + functionNameClause.getCondition("\nand ", "")
@@ -232,7 +236,8 @@ public abstract sealed class GetFunctions extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern) {
+        MetadataQuery createGetFunctionsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String functionNamePattern) {
             var clauses = new ArrayList<Clause>(2);
             if (catalog != null) {
                 // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
@@ -285,7 +290,8 @@ public abstract sealed class GetFunctions extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern) {
+        MetadataQuery createGetFunctionsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String functionNamePattern) {
             var clauses = List.of(
                     new Clause(COLUMN_SCHEMA_NAME, schemaPattern),
                     new Clause(COLUMN_FUNCTION_NAME, functionNamePattern));
@@ -328,7 +334,8 @@ public abstract sealed class GetFunctions extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetFunctionsQuery(String catalog, String schemaPattern, String functionNamePattern) {
+        MetadataQuery createGetFunctionsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String functionNamePattern) {
             var clauses = new ArrayList<Clause>(3);
             clauses.add(new Clause(COLUMN_SCHEMA_NAME, schemaPattern));
             if (catalog != null) {

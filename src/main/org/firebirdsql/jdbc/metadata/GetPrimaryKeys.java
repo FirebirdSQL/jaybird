@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -7,6 +7,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -41,7 +42,7 @@ public abstract sealed class GetPrimaryKeys extends AbstractMetadataMethod {
         super(ROW_DESCRIPTOR, mediator);
     }
 
-    public final ResultSet getPrimaryKeys(String schema, String table) throws SQLException {
+    public final ResultSet getPrimaryKeys(@Nullable String schema, @Nullable String table) throws SQLException {
         if (isNullOrEmpty(table)) {
             return createEmpty();
         }
@@ -49,7 +50,7 @@ public abstract sealed class GetPrimaryKeys extends AbstractMetadataMethod {
         return createMetaDataResultSet(metadataQuery);
     }
 
-    abstract MetadataQuery createGetPrimaryKeysQuery(String schema, String table);
+    abstract MetadataQuery createGetPrimaryKeysQuery(@Nullable String schema, String table);
 
     @Override
     RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
@@ -103,7 +104,7 @@ public abstract sealed class GetPrimaryKeys extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetPrimaryKeysQuery(String schema, String table) {
+        MetadataQuery createGetPrimaryKeysQuery(@Nullable String schema, String table) {
             Clause tableClause = Clause.equalsClause("RC.RDB$RELATION_NAME", table);
             String sql = GET_PRIMARY_KEYS_START_5
                     + tableClause.getCondition(false)
@@ -145,7 +146,7 @@ public abstract sealed class GetPrimaryKeys extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetPrimaryKeysQuery(String schema, String table) {
+        MetadataQuery createGetPrimaryKeysQuery(@Nullable String schema, String table) {
             var clauses = new ArrayList<Clause>(2);
             if (schema != null) {
                 // NOTE: empty string will return no rows as required ("" retrieves those without a schema)

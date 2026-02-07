@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2024 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -10,6 +10,7 @@ import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.jdbc.JaybirdTypeCodes;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -185,9 +186,9 @@ public final class GetTypeInfo {
     }
 
     // NOTE: No parameters for NULLABLE (always true), AUTO_INCREMENT (always false), MINIMUM_SCALE (always 0), LOCAL_TYPE_NAME (always null) and SQL_DATETIME_SUB (unused)
-    private static RowValue row(String typeName, int jdbcType, int precision, String literalPrefix,
-            String literalSuffix, String createParams, boolean caseSensitive, int searchable, boolean unsigned,
-            boolean fixedPrecScale, int maxScale, int sqlDataType, int numPrecRadix) {
+    private static RowValue row(String typeName, int jdbcType, int precision, @Nullable String literalPrefix,
+            @Nullable String literalSuffix, @Nullable String createParams, boolean caseSensitive, int searchable,
+            boolean unsigned, boolean fixedPrecScale, int maxScale, int sqlDataType, int numPrecRadix) {
         DatatypeCoder coder = ROW_DESCRIPTOR.getDatatypeCoder();
         return RowValue.of(ROW_DESCRIPTOR, getBytes(typeName), coder.encodeInt(jdbcType), coder.encodeInt(precision),
                 getBytes(literalPrefix), getBytes(literalSuffix), getBytes(createParams),
@@ -197,7 +198,7 @@ public final class GetTypeInfo {
                 coder.encodeInt(sqlDataType), null, coder.encodeInt(numPrecRadix));
     }
 
-    private static byte[] getBytes(String value) {
+    private static byte @Nullable [] getBytes(@Nullable String value) {
         return ROW_DESCRIPTOR.getDatatypeCoder().encodeString(value);
     }
 

@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2023 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -8,6 +8,7 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.jdbc.FBResultSet;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -74,7 +75,7 @@ abstract class AbstractMetadataMethod {
      * @return default value ({@code null} if there is no default, a default of {@code NULL} is represented with
      * the string {@code "NULL"})
      */
-    static String extractDefault(String defaultDefinition) {
+    static @Nullable String extractDefault(@Nullable String defaultDefinition) {
         if (defaultDefinition == null || defaultDefinition.isEmpty()) {
             return null;
         }

@@ -27,7 +27,9 @@ import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Serial;
 import java.nio.charset.StandardCharsets;
@@ -51,6 +53,7 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  */
 @SuppressWarnings("RedundantThrows")
 @InternalApi
+@NullMarked
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private static final System.Logger log = System.getLogger(FBDatabaseMetaData.class.getName());
@@ -62,7 +65,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int STATEMENT_CACHE_SIZE = 12;
     private final Map<String, FBPreparedStatement> statements = new LruPreparedStatementCache(STATEMENT_CACHE_SIZE);
     private final FirebirdVersionMetaData versionMetaData;
-    private CatalogMetadataInfo catalogMetadataInfo;
+    private @Nullable CatalogMetadataInfo catalogMetadataInfo;
 
     protected FBDatabaseMetaData(FBConnection c) throws SQLException {
         this.gdsHelper = c.getGDSHelper();
@@ -111,12 +114,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GDSFactory.getJdbcUrl(gdsType, gdsHelper.getConnectionProperties());
     }
 
+    @NullUnmarked
     private GDSType getGDSType() {
         return connection.mc.getManagedConnectionFactory().getGDSType();
     }
 
     @Override
-    public String getUserName() throws SQLException {
+    public @Nullable String getUserName() throws SQLException {
         return gdsHelper.getUserName();
     }
 
@@ -257,7 +261,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     @Override
-    public boolean isReservedWord(@NonNull String word) {
+    public boolean isReservedWord(String word) {
         return versionMetaData.isReservedWord(word);
     }
 
@@ -774,7 +778,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return the vendor term; for Firebird 5.0 and older always {@code null} because schemas are not supported
      */
     @Override
-    public String getSchemaTerm() throws SQLException {
+    public @Nullable String getSchemaTerm() throws SQLException {
         return firebirdSupportInfo.ifSchemaElse("SCHEMA", null);
     }
 
@@ -791,7 +795,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * supported.
      */
     @Override
-    public String getCatalogTerm() throws SQLException {
+    public @Nullable String getCatalogTerm() throws SQLException {
         return getCatalogMetadata().getCatalogTerm();
     }
 
@@ -814,7 +818,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * JDBC CTS for details), or {@code "."} when {@code useCatalogAsPackage = true} and packages are supported.
      */
     @Override
-    public String getCatalogSeparator() throws SQLException {
+    public @Nullable String getCatalogSeparator() throws SQLException {
         return getCatalogMetadata().getCatalogSeparator();
     }
 
@@ -1222,8 +1226,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </ul>
      */
     @Override
-    public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
-            throws SQLException {
+    public ResultSet getProcedures(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String procedureNamePattern) throws SQLException {
         return GetProcedures.create(getDbMetadataMediator())
                 .getProcedures(catalog, schemaPattern, procedureNamePattern);
     }
@@ -1248,8 +1252,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </ul>
      */
     @Override
-    public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
-            String columnNamePattern) throws SQLException {
+    public ResultSet getProcedureColumns(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String procedureNamePattern, @Nullable String columnNamePattern) throws SQLException {
         return GetProcedureColumns.create(getDbMetadataMediator())
                 .getProcedureColumns(catalog, schemaPattern, procedureNamePattern, columnNamePattern);
     }
@@ -1270,8 +1274,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
-            throws SQLException {
+    public ResultSet getTables(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String tableNamePattern, String @Nullable [] types) throws SQLException {
         return createGetTablesInstance().getTables(schemaPattern, tableNamePattern, types);
     }
 
@@ -1308,7 +1312,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     @Override
-    public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
+    public ResultSet getSchemas(@Nullable String catalog, @Nullable String schemaPattern) throws SQLException {
         return GetSchemas.create(getDbMetadataMediator()).getSchemas(catalog, schemaPattern);
     }
 
@@ -1362,8 +1366,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
-            throws SQLException {
+    public ResultSet getColumns(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String tableNamePattern, @Nullable String columnNamePattern) throws SQLException {
         return GetColumns.create(getDbMetadataMediator())
                 .getColumns(schemaPattern, tableNamePattern, columnNamePattern);
     }
@@ -1396,8 +1400,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern)
-            throws SQLException {
+    public ResultSet getColumnPrivileges(@Nullable String catalog, @Nullable String schema, @Nullable String table,
+            @Nullable String columnNamePattern) throws SQLException {
         return GetColumnPrivileges.create(getDbMetadataMediator()).getColumnPrivileges(schema, table, columnNamePattern);
     }
 
@@ -1420,8 +1424,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getTablePrivileges(String catalog, String schemaPattern, String tableNamePattern)
-            throws SQLException {
+    public ResultSet getTablePrivileges(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String tableNamePattern) throws SQLException {
         return GetTablePrivileges.create(getDbMetadataMediator()).getTablePrivileges(schemaPattern, tableNamePattern);
     }
 
@@ -1443,8 +1447,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
-            throws SQLException {
+    public ResultSet getBestRowIdentifier(@Nullable String catalog, @Nullable String schema, @Nullable String table,
+            int scope, boolean nullable) throws SQLException {
         return GetBestRowIdentifier.create(getDbMetadataMediator())
                 .getBestRowIdentifier(catalog, schema, table, scope, nullable);
     }
@@ -1461,7 +1465,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException {
+    public ResultSet getVersionColumns(@Nullable String catalog, @Nullable String schema, @Nullable String table)
+            throws SQLException {
         return GetVersionColumns.create(getDbMetadataMediator())
                 .getVersionColumns(catalog, schema, table);
     }
@@ -1476,7 +1481,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
+    public ResultSet getPrimaryKeys(@Nullable String catalog, @Nullable String schema, @Nullable String table)
+            throws SQLException {
         return GetPrimaryKeys.create(getDbMetadataMediator()).getPrimaryKeys(schema, table);
     }
 
@@ -1491,7 +1497,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
+    public ResultSet getImportedKeys(@Nullable String catalog, @Nullable String schema, @Nullable String table)
+            throws SQLException {
         return GetImportedKeys.create(getDbMetadataMediator()).getImportedKeys(schema, table);
     }
 
@@ -1506,7 +1513,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
+    public ResultSet getExportedKeys(@Nullable String catalog, @Nullable String schema, @Nullable String table)
+            throws SQLException {
         return GetExportedKeys.create(getDbMetadataMediator()).getExportedKeys(schema, table);
     }
 
@@ -1522,8 +1530,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public ResultSet getCrossReference(
-            String parentCatalog, String parentSchema, String parentTable,
-            String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
+            @Nullable String parentCatalog, @Nullable String parentSchema, @Nullable String parentTable,
+            @Nullable String foreignCatalog, @Nullable String foreignSchema, @Nullable String foreignTable)
+            throws SQLException {
         return GetCrossReference.create(getDbMetadataMediator())
                 .getCrossReference(parentSchema, parentTable, foreignSchema, foreignTable);
     }
@@ -1544,8 +1553,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate)
-            throws SQLException {
+    public ResultSet getIndexInfo(@Nullable String catalog, @Nullable String schema, @Nullable String table,
+            boolean unique, boolean approximate) throws SQLException {
         return GetIndexInfo.create(getDbMetadataMediator()).getIndexInfo(schema, table, unique, approximate);
     }
 
@@ -1627,8 +1636,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getUDTs(String catalog, String schemaPattern, String typeNamePattern, int[] types)
-            throws SQLException {
+    public ResultSet getUDTs(@Nullable String catalog, @Nullable String schemaPattern, @Nullable String typeNamePattern,
+            int @Nullable [] types) throws SQLException {
         return GetUDTs.create(getDbMetadataMediator()).getUDTs();
     }
 
@@ -1644,8 +1653,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern,
-            String attributeNamePattern) throws SQLException {
+    public ResultSet getAttributes(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String typeNamePattern, @Nullable String attributeNamePattern) throws SQLException {
         return GetAttributes.create(getDbMetadataMediator()).getAttributes();
     }
 
@@ -1677,7 +1686,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getSuperTypes(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
+    public ResultSet getSuperTypes(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String tableNamePattern) throws SQLException {
         return GetSuperTypes.create(getDbMetadataMediator()).getSuperTypes();
     }
 
@@ -1688,7 +1698,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     @Override
-    public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
+    public ResultSet getSuperTables(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String tableNamePattern) throws SQLException {
         return GetSuperTables.create(getDbMetadataMediator()).getSuperTables();
     }
 
@@ -1788,8 +1799,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </ul>
      */
     @Override
-    public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
-            String columnNamePattern) throws SQLException {
+    public ResultSet getFunctionColumns(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String functionNamePattern, @Nullable String columnNamePattern) throws SQLException {
         return GetFunctionColumns.create(getDbMetadataMediator())
                 .getFunctionColumns(catalog, schemaPattern, functionNamePattern, columnNamePattern);
     }
@@ -1827,19 +1838,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </ul>
      */
     @Override
-    public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
-            throws SQLException {
+    public ResultSet getFunctions(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String functionNamePattern) throws SQLException {
         return GetFunctions.create(getDbMetadataMediator()).getFunctions(catalog, schemaPattern, functionNamePattern);
     }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        //noinspection ConstantValue : null-check for robustness
         return iface != null && iface.isAssignableFrom(FBDatabaseMetaData.class);
     }
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
+            //noinspection ConstantValue : null-check for robustness
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unableToUnwrap)
                     .messageParameter(iface != null ? iface.getName() : "(null)")
                     .toSQLException();
@@ -1859,13 +1872,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *         Object name to escape.
      * @return Object name with wildcards escaped.
      */
-    public static String escapeWildcards(String objectName) {
+    public static @Nullable String escapeWildcards(@Nullable String objectName) {
         return MetadataPattern.escapeWildcards(objectName);
     }
 
     @Override
-    public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
-            String columnNamePattern) throws SQLException {
+    public ResultSet getPseudoColumns(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String tableNamePattern, @Nullable String columnNamePattern) throws SQLException {
         return GetPseudoColumns.create(getDbMetadataMediator())
                 .getPseudoColumns(schemaPattern, tableNamePattern, columnNamePattern);
     }
@@ -1877,27 +1890,27 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     @Override
-    public String getProcedureSourceCode(String procedureName) throws SQLException {
+    public @Nullable String getProcedureSourceCode(String procedureName) throws SQLException {
         return getSourceCode(null, procedureName, SourceObjectType.PROCEDURE);
     }
 
     @Override
-    public String getTriggerSourceCode(String triggerName) throws SQLException {
+    public @Nullable String getTriggerSourceCode(String triggerName) throws SQLException {
         return getTriggerSourceCode(null, triggerName);
     }
 
     @Override
-    public String getTriggerSourceCode(String schema, String triggerName) throws SQLException {
+    public @Nullable String getTriggerSourceCode(@Nullable String schema, String triggerName) throws SQLException {
         return getSourceCode(schema, triggerName, SourceObjectType.TRIGGER);
     }
 
     @Override
-    public String getViewSourceCode(String viewName) throws SQLException {
+    public @Nullable String getViewSourceCode(String viewName) throws SQLException {
         return getViewSourceCode(null, viewName);
     }
 
     @Override
-    public String getViewSourceCode(String schema, String viewName) throws SQLException {
+    public @Nullable String getViewSourceCode(@Nullable String schema, String viewName) throws SQLException {
         return getSourceCode(schema, viewName, SourceObjectType.VIEW);
     }
 
@@ -1917,7 +1930,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             this.objectNameColumn = objectNameColumn;
         }
 
-        List<Clause> toClauses(boolean supportsSchemas, String schema, String objectName) {
+        List<Clause> toClauses(boolean supportsSchemas, @Nullable String schema, String objectName) {
             var objectNameClause = Clause.equalsClause(objectNameColumn, objectName);
             return schema != null && supportsSchemas
                     ? List.of(Clause.equalsClause("RDB$SCHEMA_NAME", schema), objectNameClause)
@@ -1931,7 +1944,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     }
 
-    private String getSourceCode(String schema, String objectName, SourceObjectType objectType) throws SQLException {
+    private @Nullable String getSourceCode(@Nullable String schema, String objectName, SourceObjectType objectType)
+            throws SQLException {
         final boolean supportsSchemas = firebirdSupportInfo.supportsSchemas();
         var clauses = objectType.toClauses(supportsSchemas, schema, objectName);
         String sql = objectType.toQuery(supportsSchemas, clauses);
@@ -1941,7 +1955,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return null;
     }
 
-    protected static byte[] getBytes(String value) {
+    protected static byte @Nullable [] getBytes(@Nullable String value) {
         return value != null ? value.getBytes(StandardCharsets.UTF_8) : null;
     }
 
@@ -2102,6 +2116,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         @Override
+        @NullUnmarked
         public GDSType getGDSType() {
             return FBDatabaseMetaData.this.getGDSType();
         }

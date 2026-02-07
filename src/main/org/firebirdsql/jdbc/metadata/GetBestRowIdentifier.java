@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -9,6 +9,7 @@ import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
 import org.firebirdsql.jdbc.FBResultSet;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -62,8 +63,8 @@ public abstract sealed class GetBestRowIdentifier extends AbstractMetadataMethod
     }
 
     @SuppressWarnings("unused")
-    public final ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
-            throws SQLException {
+    public final ResultSet getBestRowIdentifier(@Nullable String catalog, @Nullable String schema,
+            @Nullable String table, int scope, boolean nullable) throws SQLException {
         if (isNullOrEmpty(table)) {
             return createEmpty();
         }
@@ -119,8 +120,8 @@ public abstract sealed class GetBestRowIdentifier extends AbstractMetadataMethod
      * @throws SQLException
      *         if something went wrong.
      */
-    private List<RowValue> getPrimaryKeyIdentifier(String schema, String table, RowValueBuilder valueBuilder)
-            throws SQLException {
+    private List<RowValue> getPrimaryKeyIdentifier(@Nullable String schema, String table,
+            RowValueBuilder valueBuilder) throws SQLException {
         MetadataQuery metadataQuery = createGetPrimaryKeyIdentifierQuery(schema, table);
         try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
             List<RowValue> rows = new ArrayList<>();
@@ -131,7 +132,7 @@ public abstract sealed class GetBestRowIdentifier extends AbstractMetadataMethod
         }
     }
 
-    abstract MetadataQuery createGetPrimaryKeyIdentifierQuery(String schema, String table);
+    abstract MetadataQuery createGetPrimaryKeyIdentifierQuery(@Nullable String schema, String table);
 
     @Override
     RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
@@ -200,7 +201,7 @@ public abstract sealed class GetBestRowIdentifier extends AbstractMetadataMethod
         }
 
         @Override
-        MetadataQuery createGetPrimaryKeyIdentifierQuery(String schema, String table) {
+        MetadataQuery createGetPrimaryKeyIdentifierQuery(@Nullable String schema, String table) {
             Clause tableClause = Clause.equalsClause("RC.RDB$RELATION_NAME", table);
             String sql = GET_BEST_ROW_IDENT_START
                     + tableClause.getCondition(false)
@@ -250,7 +251,7 @@ public abstract sealed class GetBestRowIdentifier extends AbstractMetadataMethod
         }
 
         @Override
-        MetadataQuery createGetPrimaryKeyIdentifierQuery(String schema, String table) {
+        MetadataQuery createGetPrimaryKeyIdentifierQuery(@Nullable String schema, String table) {
            var clauses = new ArrayList<Clause>(2);
             if (schema != null) {
                 // NOTE: empty string will return no rows as required ("" retrieves those without a schema)

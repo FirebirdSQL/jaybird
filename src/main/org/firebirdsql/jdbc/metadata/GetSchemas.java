@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -7,6 +7,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,7 +33,7 @@ public abstract sealed class GetSchemas extends AbstractMetadataMethod {
         super(ROW_DESCRIPTOR, mediator);
     }
 
-    public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
+    public ResultSet getSchemas(@Nullable String catalog, @Nullable String schemaPattern) throws SQLException {
         if (!isNullOrEmpty(catalog) || "".equals(schemaPattern)) {
             // matching schema name not possible
             return createEmpty();
@@ -48,7 +49,7 @@ public abstract sealed class GetSchemas extends AbstractMetadataMethod {
                 .toRowValue(true);
     }
 
-    abstract MetadataQuery createGetSchemasQuery(String schemaPattern);
+    abstract MetadataQuery createGetSchemasQuery(@Nullable String schemaPattern);
 
     @SuppressWarnings("unused")
     public static GetSchemas create(DbMetadataMediator mediator) {
@@ -74,12 +75,12 @@ public abstract sealed class GetSchemas extends AbstractMetadataMethod {
         }
 
         @Override
-        public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
+        public ResultSet getSchemas(@Nullable String catalog, @Nullable String schemaPattern) throws SQLException {
             return createEmpty();
         }
 
         @Override
-        MetadataQuery createGetSchemasQuery(String schemaPattern) {
+        MetadataQuery createGetSchemasQuery(@Nullable String schemaPattern) {
             throw new UnsupportedOperationException("This method should not get called for Firebird 5.0 and older");
         }
 
@@ -106,7 +107,7 @@ public abstract sealed class GetSchemas extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetSchemasQuery(String schemaPattern) {
+        MetadataQuery createGetSchemasQuery(@Nullable String schemaPattern) {
             var schemaClause = new Clause("RDB$SCHEMA_NAME", schemaPattern);
             String sql = GET_SCHEMAS_FRAGMENT_6
                     + (schemaClause.hasCondition() ? "\nwhere " + schemaClause.getCondition(false) : "")

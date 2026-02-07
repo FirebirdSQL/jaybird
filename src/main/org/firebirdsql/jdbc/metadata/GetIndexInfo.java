@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -8,6 +8,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -54,7 +55,8 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
     }
 
     @SuppressWarnings("unused")
-    public ResultSet getIndexInfo(String schema, String table, boolean unique, boolean approximate) throws SQLException {
+    public ResultSet getIndexInfo(@Nullable String schema, @Nullable String table, boolean unique, boolean approximate)
+            throws SQLException {
         if (isNullOrEmpty(table)) {
             return createEmpty();
         }
@@ -63,7 +65,7 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
         return createMetaDataResultSet(metadataQuery);
     }
 
-    abstract MetadataQuery createIndexInfoQuery(String schema, String table, boolean unique);
+    abstract MetadataQuery createIndexInfoQuery(@Nullable String schema, String table, boolean unique);
 
     @Override
     RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
@@ -146,7 +148,7 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createIndexInfoQuery(String schema, String table, boolean unique) {
+        MetadataQuery createIndexInfoQuery(@Nullable String schema, String table, boolean unique) {
             Clause tableClause = Clause.equalsClause("IND.RDB$RELATION_NAME", table);
             String sql = GET_INDEX_INFO_START_2_5
                     + tableClause.getCondition(unique)
@@ -186,7 +188,7 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createIndexInfoQuery(String schema, String table, boolean unique) {
+        MetadataQuery createIndexInfoQuery(@Nullable String schema, String table, boolean unique) {
             Clause tableClause = Clause.equalsClause("IND.RDB$RELATION_NAME", table);
             String sql = GET_INDEX_INFO_START_5
                     + tableClause.getCondition(unique)
@@ -227,7 +229,7 @@ public abstract sealed class GetIndexInfo extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createIndexInfoQuery(String schema, String table, boolean unique) {
+        MetadataQuery createIndexInfoQuery(@Nullable String schema, String table, boolean unique) {
             var clauses = new ArrayList<Clause>(2);
             if (schema != null) {
                 // NOTE: empty string will return no rows as required ("" retrieves those without a schema)

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -6,6 +6,7 @@ import org.firebirdsql.jdbc.JaybirdTypeCodes;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -37,15 +38,16 @@ public final class TypeMetadata {
 
     private final int type;
     private final int subType;
-    private final Integer precision;
-    private final Integer scale;
-    private final Integer jdbcType;
-    private final Integer fieldLength;
-    private final Integer characterLength;
+    private final @Nullable Integer precision;
+    private final @Nullable Integer scale;
+    private final int jdbcType;
+    private final @Nullable Integer fieldLength;
+    private final @Nullable Integer characterLength;
     private final Set<TypeBehaviour> typeBehaviours;
 
-    private TypeMetadata(int type, Integer subType, Integer precision, Integer scale, Integer characterSetId,
-            Integer fieldLength, Integer characterLength, Set<TypeBehaviour> typeBehaviours) {
+    private TypeMetadata(int type, @Nullable Integer subType, @Nullable Integer precision, @Nullable Integer scale,
+            @Nullable Integer characterSetId, @Nullable Integer fieldLength,
+            @Nullable Integer characterLength, Set<TypeBehaviour> typeBehaviours) {
         this.type = type;
         this.subType = coalesce(subType, 0);
         this.precision = precision;
@@ -54,7 +56,7 @@ public final class TypeMetadata {
         this.fieldLength = fieldLength;
         if (isDefault(characterLength) && !isDefault(fieldLength) && isCharacterType(type)) {
             // NOTE: We're not taking the character set length into account as there are situations where the maximum
-            // field and character length is the same even if a multi-byte character set is used.
+            // field and character length is the same even if a multibyte character set is used.
             this.characterLength = fieldLength;
         } else {
             this.characterLength = characterLength;
@@ -100,7 +102,7 @@ public final class TypeMetadata {
      *
      * @return The column size as defined in {@link java.sql.DatabaseMetaData}, or {@code null}.
      */
-    Integer getColumnSize() {
+    @Nullable Integer getColumnSize() {
         return switch (jdbcType) {
             case Types.FLOAT -> isFloatBinaryPrecision() ? FLOAT_BINARY_PRECISION : FLOAT_DECIMAL_PRECISION;
             case Types.DOUBLE -> isFloatBinaryPrecision() ? DOUBLE_BINARY_PRECISION : DOUBLE_DECIMAL_PRECISION;
@@ -114,7 +116,7 @@ public final class TypeMetadata {
                 case integer_type -> coalesce(precision, NUMERIC_INTEGER_PRECISION);
                 case smallint_type -> coalesce(precision, NUMERIC_SMALLINT_PRECISION);
                 case int128_type -> {
-                    if (precision == 0) {
+                    if (precision != null && precision == 0) {
                         // INT128 (precision reported as 38, not 39 to avoid issues with tools using type name as NUMERIC)
                         yield NUMERIC_INT128_PRECISION;
                     }
@@ -144,7 +146,7 @@ public final class TypeMetadata {
     /**
      * @return The field length in bytes
      */
-    Integer getLength() {
+    @Nullable Integer getLength() {
         return fieldLength;
     }
 
@@ -157,7 +159,7 @@ public final class TypeMetadata {
      *
      * @return The scale of a field, or {@code null}.
      */
-    Integer getScale() {
+    @Nullable Integer getScale() {
         return switch (jdbcType) {
             case Types.BIGINT, Types.INTEGER, Types.SMALLINT -> 0;
             case Types.NUMERIC, Types.DECIMAL -> -1 * coalesce(scale, 0);
@@ -181,7 +183,7 @@ public final class TypeMetadata {
     /**
      * @return The maximum number of bytes for a character type column, {@code null} otherwise
      */
-    Integer getCharOctetLength() {
+    @Nullable Integer getCharOctetLength() {
         if (isCharacterType(type)) {
             return getLength();
         }
@@ -250,11 +252,11 @@ public final class TypeMetadata {
         return typeBehaviours.contains(TypeBehaviour.FLOAT_BINARY_PRECISION);
     }
 
-    private static int coalesce(Integer value, int replacement) {
+    private static int coalesce(@Nullable Integer value, int replacement) {
         return value != null ? value : replacement;
     }
 
-    private static boolean isDefault(Integer value) {
+    private static boolean isDefault(@Nullable Integer value) {
         return value == null;
     }
 
@@ -270,12 +272,12 @@ public final class TypeMetadata {
     static final class Builder {
 
         private int type;
-        private Integer subType;
-        private Integer precision;
-        private Integer scale;
-        private Integer characterSetId;
-        private Integer fieldLength;
-        private Integer characterLength;
+        private @Nullable Integer subType;
+        private @Nullable Integer precision;
+        private @Nullable Integer scale;
+        private @Nullable Integer characterSetId;
+        private @Nullable Integer fieldLength;
+        private @Nullable Integer characterLength;
         private final Set<TypeBehaviour> typeBehaviours = EnumSet.noneOf(TypeBehaviour.class);
 
         Builder(FirebirdSupportInfo supportInfo) {
@@ -305,13 +307,13 @@ public final class TypeMetadata {
         }
 
         /**
-         * Sets the field sub-type code ({@code RDB$FIELD_SUB_TYPE}).
+         * Sets the field subtype code ({@code RDB$FIELD_SUB_TYPE}).
          *
          * @param subType
          *         Field subtype code
          * @return this builder
          */
-        Builder withSubType(Integer subType) {
+        Builder withSubType(@Nullable Integer subType) {
             this.subType = subType;
             return this;
         }
@@ -323,7 +325,7 @@ public final class TypeMetadata {
          *         Field precision
          * @return this builder
          */
-        Builder withPrecision(Integer precision) {
+        Builder withPrecision(@Nullable Integer precision) {
             this.precision = precision;
             return this;
         }
@@ -335,7 +337,7 @@ public final class TypeMetadata {
          *         Field scale
          * @return this builder
          */
-        Builder withScale(Integer scale) {
+        Builder withScale(@Nullable Integer scale) {
             this.scale = scale;
             return this;
         }
@@ -347,7 +349,7 @@ public final class TypeMetadata {
          *         Character set id
          * @return this builder
          */
-        Builder withCharacterSetId(Integer characterSetId) {
+        Builder withCharacterSetId(@Nullable Integer characterSetId) {
             this.characterSetId = characterSetId;
             return this;
         }
@@ -359,7 +361,7 @@ public final class TypeMetadata {
          *         Field length
          * @return this builder
          */
-        Builder withFieldLength(Integer fieldLength) {
+        Builder withFieldLength(@Nullable Integer fieldLength) {
             this.fieldLength = fieldLength;
             return this;
         }
@@ -371,7 +373,7 @@ public final class TypeMetadata {
          *         Character length
          * @return this builder
          */
-        Builder withCharacterLength(Integer characterLength) {
+        Builder withCharacterLength(@Nullable Integer characterLength) {
             this.characterLength = characterLength;
             return this;
         }

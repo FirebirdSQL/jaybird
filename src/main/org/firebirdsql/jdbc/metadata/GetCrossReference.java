@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,8 +25,8 @@ public abstract sealed class GetCrossReference extends AbstractKeysMethod {
         super(mediator);
     }
 
-    public final ResultSet getCrossReference(String parentSchema, String parentTable,
-            String foreignSchema, String foreignTable) throws SQLException {
+    public final ResultSet getCrossReference(@Nullable String parentSchema, @Nullable String parentTable,
+            @Nullable String foreignSchema, @Nullable String foreignTable) throws SQLException {
         if (isNullOrEmpty(parentTable) || isNullOrEmpty(foreignTable)) {
             return createEmpty();
         }
@@ -33,8 +34,8 @@ public abstract sealed class GetCrossReference extends AbstractKeysMethod {
         return createMetaDataResultSet(metadataQuery);
     }
 
-    abstract MetadataQuery createGetCrossReferenceQuery(String parentSchema, String parentTable,
-            String foreignSchema, String foreignTable);
+    abstract MetadataQuery createGetCrossReferenceQuery(@Nullable String parentSchema, String parentTable,
+            @Nullable String foreignSchema, String foreignTable);
 
     public static GetCrossReference create(DbMetadataMediator mediator) {
         // NOTE: Indirection through static method prevents unnecessary classloading
@@ -87,8 +88,8 @@ public abstract sealed class GetCrossReference extends AbstractKeysMethod {
         }
 
         @Override
-        MetadataQuery createGetCrossReferenceQuery(String parentSchema, String parentTable,
-                String foreignSchema, String foreignTable) {
+        MetadataQuery createGetCrossReferenceQuery(@Nullable String parentSchema, String parentTable,
+                @Nullable String foreignSchema, String foreignTable) {
             Clause parentTableClause = Clause.equalsClause("PK.RDB$RELATION_NAME", parentTable);
             Clause foreignTableCause = Clause.equalsClause("FK.RDB$RELATION_NAME", foreignTable);
             String sql = GET_CROSS_KEYS_START_5
@@ -143,8 +144,8 @@ public abstract sealed class GetCrossReference extends AbstractKeysMethod {
         }
 
         @Override
-        MetadataQuery createGetCrossReferenceQuery(String parentSchema, String parentTable,
-                String foreignSchema, String foreignTable) {
+        MetadataQuery createGetCrossReferenceQuery(@Nullable String parentSchema, String parentTable,
+                @Nullable String foreignSchema, String foreignTable) {
             var clauses = new ArrayList<Clause>(4);
             if (parentSchema != null) {
                 // NOTE: empty string will return no rows as required ("" retrieves those without a schema)

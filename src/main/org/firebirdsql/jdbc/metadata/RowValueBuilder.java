@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Serial;
 import java.util.LinkedHashMap;
@@ -80,7 +81,7 @@ final class RowValueBuilder {
      *         Data
      * @return this builder
      */
-    RowValueBuilder set(byte[] fieldData) {
+    RowValueBuilder set(byte @Nullable [] fieldData) {
         rowValue.setFieldData(currentIndex, fieldData);
         return this;
     }
@@ -105,7 +106,7 @@ final class RowValueBuilder {
      * @return this builder
      * @since 5
      */
-    RowValueBuilder setInt(Number value) {
+    RowValueBuilder setInt(@Nullable Number value) {
         if (value != null) {
             return setInt(value.intValue());
         } else {
@@ -135,7 +136,7 @@ final class RowValueBuilder {
      * @see #setShort(short)
      * @since 5
      */
-    RowValueBuilder setShort(Number value) {
+    RowValueBuilder setShort(@Nullable Number value) {
         if (value != null) {
             return setShort(value.shortValue());
         } else {
@@ -164,7 +165,7 @@ final class RowValueBuilder {
      * @return this builder
      * @since 5
      */
-    RowValueBuilder setString(String value) {
+    RowValueBuilder setString(@Nullable String value) {
         return set(value != null
                 ? stringCache.computeIfAbsent(value, datatypeCoder::encodeString)
                 : null);
@@ -179,7 +180,7 @@ final class RowValueBuilder {
      * @throws java.lang.IndexOutOfBoundsException
      *         When @{code index} is not between 0 (inclusive) and {@link #getSize()} (exclusive)
      */
-    byte[] get(int index) {
+    byte @Nullable [] get(int index) {
         checkBounds(index);
         return rowValue.getFieldData(index);
     }

@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
-// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -12,6 +12,7 @@ import org.firebirdsql.jdbc.metadata.GetProcedures;
 import org.firebirdsql.jdbc.metadata.MetadataPattern;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
@@ -311,6 +312,7 @@ final class PackageAwareStoredProcedureMetaData implements StoredProcedureMetaDa
         }
 
         @Override
+        @NullUnmarked
         public GDSType getGDSType() {
             return mediator.getGDSType();
         }

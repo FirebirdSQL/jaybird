@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2018-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,13 +36,36 @@ public abstract sealed class MetadataPatternMatcher {
      */
     public static MetadataPatternMatcher fromPattern(MetadataPattern metadataPattern) {
         return switch (metadataPattern.getConditionType()) {
-            case NONE -> AllMatcher.INSTANCE;
-            case SQL_EQUALS -> new EqualsMatcher(metadataPattern.getConditionValue());
-            case SQL_STARTING_WITH -> new StartingWithMatcher(metadataPattern.getConditionValue());
-            case SQL_LIKE -> new LikeMatcher(metadataPattern.getConditionValue());
-            case SQL_IS_NULL -> NullMatcher.INSTANCE;
-            default -> throw new AssertionError("Unexpected condition type " + metadataPattern.getConditionType());
+            case NONE -> matchAll();
+            case SQL_EQUALS -> isEquals(metadataPattern.getConditionValue());
+            case SQL_STARTING_WITH -> startingWith(metadataPattern.getConditionValue());
+            case SQL_LIKE -> like(metadataPattern.getConditionValue());
+            case SQL_IS_NULL -> isNull();
         };
+    }
+
+    private static MetadataPatternMatcher matchAll() {
+        return FixedBooleanMatcher.ALL_INSTANCE;
+    }
+
+    private static MetadataPatternMatcher isEquals(@Nullable String pattern) {
+        return pattern != null ? new EqualsMatcher(pattern) : matchNothing();
+    }
+
+    private static MetadataPatternMatcher startingWith(@Nullable String pattern) {
+        return pattern != null ? new StartingWithMatcher(pattern) : matchNothing();
+    }
+
+    private static MetadataPatternMatcher like(@Nullable String pattern) {
+        return pattern != null ? new LikeMatcher(pattern) : matchNothing();
+    }
+
+    private static MetadataPatternMatcher matchNothing() {
+        return FixedBooleanMatcher.NOTHING_INSTANCE;
+    }
+
+    private static MetadataPatternMatcher isNull() {
+        return NullMatcher.INSTANCE;
     }
 
     /**
@@ -54,15 +78,22 @@ public abstract sealed class MetadataPatternMatcher {
      *         Value to check
      * @return {@code true} if {@code value} matches this pattern, {@code false} otherwise
      */
-    public abstract boolean matches(String value);
+    public abstract boolean matches(@Nullable String value);
 
-    private static final class AllMatcher extends MetadataPatternMatcher {
+    private static final class FixedBooleanMatcher extends MetadataPatternMatcher {
 
-        private static final AllMatcher INSTANCE = new AllMatcher();
+        private static final FixedBooleanMatcher ALL_INSTANCE = new FixedBooleanMatcher(true);
+        private static final FixedBooleanMatcher NOTHING_INSTANCE = new FixedBooleanMatcher(false);
+
+        private final boolean reply;
+
+        private FixedBooleanMatcher(boolean reply) {
+            this.reply = reply;
+        }
 
         @Override
-        public boolean matches(String value) {
-            return true;
+        public boolean matches(@Nullable String value) {
+            return reply;
         }
     }
 
@@ -75,8 +106,9 @@ public abstract sealed class MetadataPatternMatcher {
         }
 
         @Override
-        public boolean matches(String value) {
-            return pattern.equals(value);
+        public boolean matches(@Nullable String value) {
+            // value null should return false even if pattern is null to match SQL NULL behaviour
+            return value != null && value.equals(pattern);
         }
 
     }
@@ -90,7 +122,7 @@ public abstract sealed class MetadataPatternMatcher {
         }
 
         @Override
-        public boolean matches(String value) {
+        public boolean matches(@Nullable String value) {
             return value != null && value.startsWith(pattern);
         }
 
@@ -107,10 +139,8 @@ public abstract sealed class MetadataPatternMatcher {
         }
 
         @Override
-        public boolean matches(String value) {
-            if (value == null) {
-                return false;
-            }
+        public boolean matches(@Nullable String value) {
+            if (value == null) return false;
             regexMatcher.reset(value);
             return regexMatcher.matches();
         }
@@ -122,7 +152,7 @@ public abstract sealed class MetadataPatternMatcher {
         private static final NullMatcher INSTANCE = new NullMatcher();
 
         @Override
-        public boolean matches(String value) {
+        public boolean matches(@Nullable String value) {
             return value == null;
         }
 

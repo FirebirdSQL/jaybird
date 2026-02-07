@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -7,6 +7,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,7 +54,8 @@ public abstract sealed class GetColumnPrivileges extends AbstractMetadataMethod 
     /**
      * @see java.sql.DatabaseMetaData#getColumnPrivileges(String, String, String, String) 
      */
-    public final ResultSet getColumnPrivileges(String schema, String table, String columnNamePattern) throws SQLException {
+    public final ResultSet getColumnPrivileges(@Nullable String schema, @Nullable String table,
+            @Nullable String columnNamePattern) throws SQLException {
         if (isNullOrEmpty(table) || "".equals(columnNamePattern)) {
             return createEmpty();
         }
@@ -61,7 +63,8 @@ public abstract sealed class GetColumnPrivileges extends AbstractMetadataMethod 
         return createMetaDataResultSet(metadataQuery);
     }
 
-    abstract MetadataQuery createMetadataQuery(String schema, String table, String columnNamePattern);
+    abstract MetadataQuery createMetadataQuery(@Nullable String schema, String table,
+            @Nullable String columnNamePattern);
 
     @Override
     RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
@@ -126,7 +129,7 @@ public abstract sealed class GetColumnPrivileges extends AbstractMetadataMethod 
         }
 
         @Override
-        MetadataQuery createMetadataQuery(String schema, String table, String columnNamePattern) {
+        MetadataQuery createMetadataQuery(@Nullable String schema, String table, @Nullable String columnNamePattern) {
             var clauses = List.of(
                     Clause.equalsClause("RF.RDB$RELATION_NAME", table),
                     new Clause("RF.RDB$FIELD_NAME", columnNamePattern));
@@ -178,7 +181,7 @@ public abstract sealed class GetColumnPrivileges extends AbstractMetadataMethod 
         }
 
         @Override
-        MetadataQuery createMetadataQuery(String schema, String table, String columnNamePattern) {
+        MetadataQuery createMetadataQuery(@Nullable String schema, String table, @Nullable String columnNamePattern) {
             var clauses = new ArrayList<Clause>(3);
             if (schema != null) {
                 // NOTE: empty string will return no rows as required ("" retrieves those without a schema)

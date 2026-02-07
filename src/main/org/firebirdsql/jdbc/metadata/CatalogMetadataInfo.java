@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2001-2023 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2023-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.jdbc.DbMetadataMediator;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Metadata information related to catalogs.
@@ -33,12 +34,12 @@ public sealed class CatalogMetadataInfo {
 
     // NOTE: Methods report values for default (no catalog support), these should be overridden as needed in subclasses
 
-    public String getCatalogSeparator() {
+    public @Nullable String getCatalogSeparator() {
         // not supported, so need to report null as separator
         return null;
     }
 
-    public String getCatalogTerm() {
+    public @Nullable String getCatalogTerm() {
         // not supported, so need to report null as term
         return null;
     }

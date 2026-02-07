@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -7,6 +7,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -48,7 +49,8 @@ public abstract sealed class GetTablePrivileges extends AbstractMetadataMethod {
         super(ROW_DESCRIPTOR, mediator);
     }
 
-    public final ResultSet getTablePrivileges(String schemaPattern, String tableNamePattern) throws SQLException {
+    public final ResultSet getTablePrivileges(@Nullable String schemaPattern,
+            @Nullable String tableNamePattern) throws SQLException {
         if ("".equals(tableNamePattern)) {
             return createEmpty();
         }
@@ -56,7 +58,8 @@ public abstract sealed class GetTablePrivileges extends AbstractMetadataMethod {
         return createMetaDataResultSet(metadataQuery);
     }
 
-    abstract MetadataQuery createGetTablePrivilegesQuery(String schemaPattern, String tableNamePattern);
+    abstract MetadataQuery createGetTablePrivilegesQuery(@Nullable String schemaPattern,
+            @Nullable String tableNamePattern);
 
     @Override
     RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
@@ -117,7 +120,7 @@ public abstract sealed class GetTablePrivileges extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetTablePrivilegesQuery(String schemaPattern, String tableNamePattern) {
+        MetadataQuery createGetTablePrivilegesQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern) {
             Clause tableClause = new Clause("UP.RDB$RELATION_NAME", tableNamePattern);
             String sql = GET_TABLE_PRIVILEGES_START_5
                     + tableClause.getCondition("\nand ", "")
@@ -163,7 +166,7 @@ public abstract sealed class GetTablePrivileges extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetTablePrivilegesQuery(String schemaPattern, String tableNamePattern) {
+        MetadataQuery createGetTablePrivilegesQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern) {
             var clauses = List.of(
                     new Clause("UP.RDB$RELATION_SCHEMA_NAME", schemaPattern),
                     new Clause("UP.RDB$RELATION_NAME", tableNamePattern));

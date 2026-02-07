@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2018-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.util.regex.Pattern;
 
@@ -29,7 +30,7 @@ public final class MetadataPattern {
     private static final Pattern METADATA_SPECIALS = Pattern.compile("([\\\\_%])");
 
     private final ConditionType conditionType;
-    private final String conditionValue;
+    private final @Nullable String conditionValue;
 
     /**
      * Create a metadata pattern.
@@ -39,7 +40,7 @@ public final class MetadataPattern {
      * @param conditionValue
      *         Value to be used with the specified condition type
      */
-    private MetadataPattern(ConditionType conditionType, String conditionValue) {
+    private MetadataPattern(ConditionType conditionType, @Nullable String conditionValue) {
         this.conditionType = conditionType;
         this.conditionValue = conditionValue;
     }
@@ -54,7 +55,7 @@ public final class MetadataPattern {
     /**
      * @return Value for the condition; {@code null} signals no value
      */
-    public String getConditionValue() {
+    public @Nullable String getConditionValue() {
         return conditionValue;
     }
 
@@ -83,7 +84,7 @@ public final class MetadataPattern {
      *         Metadata pattern string
      * @return MetadataPattern instance
      */
-    public static MetadataPattern compile(String metadataPattern) {
+    public static MetadataPattern compile(@Nullable String metadataPattern) {
         if (isAllCondition(metadataPattern)) {
             return ALL_PATTERN;
         }
@@ -100,7 +101,8 @@ public final class MetadataPattern {
     /**
      * Creates a {@code MetadataPattern} explicit for an <em>equals</em> ({@code =}) condition.
      *
-     * @param value value for equals condition
+     * @param value
+     *         value for equals condition
      * @return MetadataPattern of type {@code SQL_EQUALS}
      */
     static MetadataPattern equalsCondition(String value) {
@@ -147,13 +149,11 @@ public final class MetadataPattern {
      * Escapes the like wildcards and escape ({@code \_%} in the provided search string with a {@code \}.
      *
      * @param objectName
-     *         Object name to escape.
+     *         Object name to escape ({@code null} is returned as is)
      * @return Object name with wildcards escaped.
      */
-    public static String escapeWildcards(String objectName) {
-        if (objectName == null) {
-            return null;
-        }
+    public static @Nullable String escapeWildcards(@Nullable String objectName) {
+        if (objectName == null) return null;
         return METADATA_SPECIALS.matcher(objectName).replaceAll("\\\\$1");
     }
 
@@ -217,17 +217,23 @@ public final class MetadataPattern {
         }
     }
 
-    public static boolean isAllCondition(String metadataPattern) {
+    public static boolean isAllCondition(@Nullable String metadataPattern) {
         return metadataPattern == null || "%".equals(metadataPattern);
     }
 
     public enum ConditionType {
+        /**
+         * No condition (or: match all).
+         */
         NONE {
             @Override
             String renderCondition(String columnName) {
                 return "";
             }
         },
+        /**
+         * SQL {@code LIKE} condition.
+         */
         SQL_LIKE {
             @Override
             String renderCondition(String columnName) {
@@ -236,18 +242,27 @@ public final class MetadataPattern {
                         + "cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) escape '\\' ";
             }
         },
+        /**
+         * SQL equals ({@code =}) condition.
+         */
         SQL_EQUALS {
             @Override
             String renderCondition(String columnName) {
                 return columnName + " = cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) ";
             }
         },
+        /**
+         * SQL {@code STARTING WITH} condition.
+         */
         SQL_STARTING_WITH {
             @Override
             String renderCondition(String columnName) {
                 return columnName + " starting with cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) ";
             }
         },
+        /**
+         * SQL {@code IS NULL} condition.
+         */
         SQL_IS_NULL {
             @Override
             String renderCondition(String columnName) {

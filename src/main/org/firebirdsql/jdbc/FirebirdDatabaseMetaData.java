@@ -8,7 +8,8 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -21,6 +22,7 @@ import java.util.Optional;
  * @author Mark Rotteveel
  */
 @SuppressWarnings("unused")
+@NullMarked
 public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
 
     /**
@@ -62,7 +64,7 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * {@code JB_PROCEDURE_SOURCE}; there are currently no plans to remove this method
      */
     @Deprecated(forRemoval = false, since = "7")
-    String getProcedureSourceCode(String procedureName) throws SQLException;
+    @Nullable String getProcedureSourceCode(String procedureName) throws SQLException;
 
     /**
      * Get the source of a trigger.
@@ -78,7 +80,7 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      *         for database access errors
      * @see #getTriggerSourceCode(String, String)
      */
-    String getTriggerSourceCode(String triggerName) throws SQLException;
+    @Nullable String getTriggerSourceCode(String triggerName) throws SQLException;
 
     /**
      * Get the source of a trigger.
@@ -92,7 +94,7 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      *         for database access errors
      * @since 7
      */
-    String getTriggerSourceCode(String schema, String triggerName) throws SQLException;
+    @Nullable String getTriggerSourceCode(@Nullable String schema, String triggerName) throws SQLException;
 
     /**
      * Get the source of a view.
@@ -111,7 +113,7 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      *         for database access errors
      * @see #getViewSourceCode(String, String)
      */
-    String getViewSourceCode(String viewName) throws SQLException;
+    @Nullable String getViewSourceCode(String viewName) throws SQLException;
 
     /**
      * Get the source of a view.
@@ -125,7 +127,7 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      *         for database access errors
      * @since 7
      */
-    String getViewSourceCode(String schema, String viewName) throws SQLException;
+    @Nullable String getViewSourceCode(@Nullable String schema, String viewName) throws SQLException;
 
     /**
      * Get the Firebird server version.
@@ -273,6 +275,6 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      *         for database access errors
      * @since 7
      */
-    boolean isReservedWord(@NonNull String word) throws SQLException;
+    boolean isReservedWord(String word) throws SQLException;
 
 }

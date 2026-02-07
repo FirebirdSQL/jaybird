@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -8,6 +8,7 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -79,7 +80,8 @@ public abstract sealed class GetColumns extends AbstractMetadataMethod {
      * @see java.sql.DatabaseMetaData#getColumns(String, String, String, String)
      * @see org.firebirdsql.jdbc.FBDatabaseMetaData#getColumns(String, String, String, String) 
      */
-    public final ResultSet getColumns(String schemaPattern, String tableNamePattern, String columnNamePattern) throws SQLException {
+    public final ResultSet getColumns(@Nullable String schemaPattern, @Nullable String tableNamePattern,
+            @Nullable String columnNamePattern) throws SQLException {
         if ("".equals(tableNamePattern) || "".equals(columnNamePattern)) {
             // Matching table name or column not possible
             return createEmpty();
@@ -140,8 +142,8 @@ public abstract sealed class GetColumns extends AbstractMetadataMethod {
         };
     }
 
-    abstract MetadataQuery createGetColumnsQuery(String schemaPattern, String tableNamePattern,
-            String columnNamePattern);
+    abstract MetadataQuery createGetColumnsQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern,
+            @Nullable String columnNamePattern);
 
     public static GetColumns create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
@@ -191,7 +193,8 @@ public abstract sealed class GetColumns extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetColumnsQuery(String schemaPattern, String tableNamePattern, String columnNamePattern) {
+        MetadataQuery createGetColumnsQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern,
+                @Nullable String columnNamePattern) {
             var clauses = List.of(
                     new Clause("RF.RDB$RELATION_NAME", tableNamePattern),
                     new Clause("RF.RDB$FIELD_NAME", columnNamePattern));
@@ -238,7 +241,8 @@ public abstract sealed class GetColumns extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetColumnsQuery(String schemaPattern, String tableNamePattern, String columnNamePattern) {
+        MetadataQuery createGetColumnsQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern,
+                @Nullable String columnNamePattern) {
             var clauses = List.of(
                     new Clause("RF.RDB$RELATION_NAME", tableNamePattern),
                     new Clause("RF.RDB$FIELD_NAME", columnNamePattern));
@@ -288,7 +292,8 @@ public abstract sealed class GetColumns extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetColumnsQuery(String schemaPattern, String tableNamePattern, String columnNamePattern) {
+        MetadataQuery createGetColumnsQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern,
+                @Nullable String columnNamePattern) {
             var clauses = List.of(
                     new Clause("RF.RDB$SCHEMA_NAME", schemaPattern),
                     new Clause("RF.RDB$RELATION_NAME", tableNamePattern),

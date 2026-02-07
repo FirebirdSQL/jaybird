@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -9,6 +9,7 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.jdbc.FBResultSet;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -81,7 +82,8 @@ public abstract sealed class GetTables extends AbstractMetadataMethod {
     /**
      * @see java.sql.DatabaseMetaData#getTables(String, String, String, String[])
      */
-    public final ResultSet getTables(String schemaPattern, String tableNamePattern, String[] types) throws SQLException {
+    public final ResultSet getTables(@Nullable String schemaPattern, @Nullable String tableNamePattern,
+            String @Nullable [] types) throws SQLException {
         if ("".equals(tableNamePattern) || types != null && types.length == 0) {
             // Matching table name not possible
             return createEmpty();
@@ -118,11 +120,12 @@ public abstract sealed class GetTables extends AbstractMetadataMethod {
         return allTableTypes().toArray(new String[0]);
     }
 
-    private Set<String> toTypesSet(String[] types) {
+    private Set<String> toTypesSet(String @Nullable [] types) {
         return types != null ? new HashSet<>(Arrays.asList(types)) : allTableTypes();
     }
 
-    abstract MetadataQuery createGetTablesQuery(String schemaPattern, String tableNamePattern, Set<String> types);
+    abstract MetadataQuery createGetTablesQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern,
+            Set<String> types);
 
     /**
      * All supported table types.
@@ -219,7 +222,8 @@ public abstract sealed class GetTables extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetTablesQuery(String schemaPattern, String tableNamePattern, Set<String> types) {
+        MetadataQuery createGetTablesQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern,
+                Set<String> types) {
             var tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
             var clauses = new ArrayList<Clause>(types.size());
             var queryBuilder = new StringBuilder(2000);
@@ -291,7 +295,8 @@ public abstract sealed class GetTables extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetTablesQuery(String schemaPattern, String tableNamePattern, Set<String> types) {
+        MetadataQuery createGetTablesQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern,
+                Set<String> types) {
             var tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
 
             var queryBuilder = new StringBuilder(1000).append(TABLE_COLUMNS_2_5);
@@ -353,7 +358,8 @@ public abstract sealed class GetTables extends AbstractMetadataMethod {
         }
 
         @Override
-        MetadataQuery createGetTablesQuery(String schemaPattern, String tableNamePattern, Set<String> types) {
+        MetadataQuery createGetTablesQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern,
+                Set<String> types) {
             var clauses = List.of(
                     new Clause("RDB$SCHEMA_NAME", schemaPattern),
                     new Clause("RDB$RELATION_NAME", tableNamePattern));

@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -8,6 +8,7 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -78,8 +79,8 @@ public abstract sealed class GetProcedureColumns extends AbstractMetadataMethod 
     /**
      * @see DatabaseMetaData#getProcedureColumns(String, String, String, String) 
      */
-    public final ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
-            String columnNamePattern) throws SQLException {
+    public final ResultSet getProcedureColumns(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String procedureNamePattern, @Nullable String columnNamePattern) throws SQLException {
         if ("".equals(procedureNamePattern) || "".equals(columnNamePattern)) {
             // Matching procedure name or column name not possible
             return createEmpty();
@@ -131,8 +132,8 @@ public abstract sealed class GetProcedureColumns extends AbstractMetadataMethod 
                 .toRowValue(false);
     }
 
-    abstract MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern,
-            String procedureNamePattern, String columnNamePattern);
+    abstract MetadataQuery createGetProcedureColumnsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+            @Nullable String procedureNamePattern, @Nullable String columnNamePattern);
 
     public static GetProcedureColumns create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
@@ -190,8 +191,8 @@ public abstract sealed class GetProcedureColumns extends AbstractMetadataMethod 
         }
 
         @Override
-        MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern, String procedureNamePattern,
-                String columnNamePattern) {
+        MetadataQuery createGetProcedureColumnsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String procedureNamePattern, @Nullable String columnNamePattern) {
             var clauses = List.of(
                     new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern),
                     new Clause(COLUMN_PARAMETER_NAME, columnNamePattern));
@@ -244,8 +245,8 @@ public abstract sealed class GetProcedureColumns extends AbstractMetadataMethod 
         }
 
         @Override
-        MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern, String procedureNamePattern,
-                String columnNamePattern) {
+        MetadataQuery createGetProcedureColumnsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String procedureNamePattern, @Nullable String columnNamePattern) {
             var clauses = List.of(
                     new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern),
                     new Clause(COLUMN_PARAMETER_NAME, columnNamePattern));
@@ -295,8 +296,8 @@ public abstract sealed class GetProcedureColumns extends AbstractMetadataMethod 
         }
 
         @Override
-        MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern, String procedureNamePattern,
-                String columnNamePattern) {
+        MetadataQuery createGetProcedureColumnsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String procedureNamePattern, @Nullable String columnNamePattern) {
             var clauses = new ArrayList<Clause>(3);
             if (catalog != null) {
                 // To quote from the JDBC API: "" retrieves those without a catalog; null means that the catalog name
@@ -359,8 +360,8 @@ public abstract sealed class GetProcedureColumns extends AbstractMetadataMethod 
         }
 
         @Override
-        MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern, String procedureNamePattern,
-                String columnNamePattern) {
+        MetadataQuery createGetProcedureColumnsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String procedureNamePattern, @Nullable String columnNamePattern) {
             var clauses = List.of(
                     new Clause(COLUMN_SCHEMA_NAME, schemaPattern),
                     new Clause(COLUMN_PROCEDURE_NAME, procedureNamePattern),
@@ -413,8 +414,8 @@ public abstract sealed class GetProcedureColumns extends AbstractMetadataMethod 
         }
 
         @Override
-        MetadataQuery createGetProcedureColumnsQuery(String catalog, String schemaPattern, String procedureNamePattern,
-                String columnNamePattern) {
+        MetadataQuery createGetProcedureColumnsQuery(@Nullable String catalog, @Nullable String schemaPattern,
+                @Nullable String procedureNamePattern, @Nullable String columnNamePattern) {
             var clauses = new ArrayList<Clause>(4);
             clauses.add(new Clause(COLUMN_SCHEMA_NAME, schemaPattern));
             if (catalog != null) {

@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -9,6 +9,7 @@ import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.PseudoColumnUsage;
 import java.sql.ResultSet;
@@ -63,7 +64,8 @@ public abstract sealed class GetPseudoColumns {
         this.mediator = mediator;
     }
 
-    public ResultSet getPseudoColumns(String schemaPattern, String tableNamePattern, String columnNamePattern) throws SQLException {
+    public ResultSet getPseudoColumns(@Nullable String schemaPattern, @Nullable String tableNamePattern,
+            @Nullable String columnNamePattern) throws SQLException {
         if ("".equals(tableNamePattern) || "".equals(columnNamePattern)) {
             // Matching table and/or column not possible
             return createEmpty();
@@ -127,7 +129,8 @@ public abstract sealed class GetPseudoColumns {
 
     abstract boolean supportsRecordVersion();
 
-    abstract MetadataQuery createGetPseudoColumnsQuery(String schemaPattern, String tableNamePattern);
+    abstract MetadataQuery createGetPseudoColumnsQuery(@Nullable String schemaPattern,
+            @Nullable String tableNamePattern);
 
     private ResultSet createEmpty() throws SQLException {
         return new FBResultSet(ROW_DESCRIPTOR, emptyList());
@@ -174,7 +177,7 @@ public abstract sealed class GetPseudoColumns {
         }
 
         @Override
-        MetadataQuery createGetPseudoColumnsQuery(String schemaPattern, String tableNamePattern) {
+        MetadataQuery createGetPseudoColumnsQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern) {
             var tableNameClause = new Clause(COLUMN_RELATION_NAME, tableNamePattern);
             String sql = GET_PSEUDO_COLUMNS_FRAGMENT_2_5
                     + tableNameClause.getCondition("\nwhere ", "")
@@ -218,7 +221,7 @@ public abstract sealed class GetPseudoColumns {
         }
 
         @Override
-        MetadataQuery createGetPseudoColumnsQuery(String schemaPattern, String tableNamePattern) {
+        MetadataQuery createGetPseudoColumnsQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern) {
             var tableNameClause = new Clause(COLUMN_RELATION_NAME, tableNamePattern);
             String sql = GET_PSEUDO_COLUMNS_FRAGMENT_3
                     + tableNameClause.getCondition("\nwhere ", "")
@@ -262,7 +265,7 @@ public abstract sealed class GetPseudoColumns {
         }
 
         @Override
-        MetadataQuery createGetPseudoColumnsQuery(String schemaPattern, String tableNamePattern) {
+        MetadataQuery createGetPseudoColumnsQuery(@Nullable String schemaPattern, @Nullable String tableNamePattern) {
             var clauses = List.of(
                     new Clause(COLUMN_SCHEMA_NAME, schemaPattern),
                     new Clause(COLUMN_RELATION_NAME, tableNamePattern));

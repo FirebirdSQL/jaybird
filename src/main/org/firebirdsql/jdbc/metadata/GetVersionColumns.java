@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: Copyright 2001-2025 Firebird development team and individual contributors
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2001-2026 Firebird development team and individual contributors
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
@@ -8,6 +8,7 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.DbMetadataMediator;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
 import org.firebirdsql.jdbc.FBResultSet;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -19,6 +20,7 @@ import static java.util.Collections.emptyList;
 import static org.firebirdsql.gds.ISCConstants.SQL_LONG;
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 import static org.firebirdsql.jdbc.metadata.MetadataPattern.escapeWildcards;
 
@@ -46,8 +48,9 @@ public final class GetVersionColumns {
         this.mediator = mediator;
     }
 
-    public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException {
-        if (table == null || table.isEmpty()) {
+    public ResultSet getVersionColumns(@Nullable String catalog, @Nullable String schema, @Nullable String table)
+            throws SQLException {
+        if (isNullOrEmpty(table)) {
             return new FBResultSet(ROW_DESCRIPTOR, emptyList());
         }
 
