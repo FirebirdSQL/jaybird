@@ -17,6 +17,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
@@ -160,11 +161,11 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      * Write byte buffer {@code buf} to the underlying output stream in XDR format.
      *
      * @param buf
-     *         byte buffer to be written
+     *         byte buffer to be written, a {@code null} is written as an empty buffer
      * @throws IOException
      *         if an error occurs while writing to the underlying output stream
      */
-    public void writeBuffer(byte[] buf) throws IOException {
+    public void writeBuffer(byte @Nullable [] buf) throws IOException {
         if (buf == null) {
             writeInt(0);
         } else {
@@ -198,10 +199,7 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      * Write content of the specified string using the specified encoding.
      */
     public void writeString(String s, Encoding encoding) throws IOException {
-        byte[] buffer = encoding != null
-                ? encoding.encodeToCharset(s)
-                // TODO Remove this option (always require encoding)
-                : s.getBytes();
+        byte[] buffer = encoding.encodeToCharset(s);
         writeBuffer(buffer);
     }
 
@@ -211,11 +209,11 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      * @param type
      *         type of the {@code Xdrable} to be written, e.g. {@link ISCConstants#isc_tpb_version3}
      * @param item
-     *         object to be written
+     *         object to be written ({@code null} is written as an empty item)
      * @throws IOException
      *         if an error occurs while writing to the underlying output stream
      */
-    public void writeTyped(int type, Xdrable item) throws IOException {
+    public void writeTyped(int type, @Nullable Xdrable item) throws IOException {
         int size;
         if (item == null) {
             writeInt(1);
@@ -243,6 +241,7 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      *         if an error occurs while writing to the underlying output stream
      */
     public void writeLong(long v) throws IOException {
+        byte[] buf = this.buf;
         if (buf.length - count < 8) {
             flushBuffer();
         }
@@ -265,6 +264,7 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      *         if an error occurs while writing to the underlying output stream
      */
     public void writeInt(int v) throws IOException {
+        byte[] buf = this.buf;
         if (buf.length - count < 4) {
             flushBuffer();
         }

@@ -3,6 +3,7 @@
 package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.gds.JaybirdSystemProperties;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -21,7 +22,7 @@ final class FbCipherInputStream extends FilterInputStream {
 
     private final Cipher cipher;
     private byte[] inBuf;
-    private byte[] outBuf = null;
+    private byte[] outBuf = ByteArrayHelper.emptyByteArray();
     private int outPos = 0;
     private int outLim = 0;
     private boolean eof = false;
@@ -35,7 +36,7 @@ final class FbCipherInputStream extends FilterInputStream {
 
     private void ensureCapacity(int inLen) {
         int minLen = cipher.getOutputSize(inLen);
-        if (outBuf == null || outBuf.length < minLen) {
+        if (outBuf.length < minLen) {
             outBuf = new byte[minLen];
         }
         outPos = 0;
@@ -93,9 +94,7 @@ final class FbCipherInputStream extends FilterInputStream {
         }
         if (len <= 0) return 0;
         int available = Math.min(outLim - outPos, len);
-        if (b != null) {
-            System.arraycopy(outBuf, outPos, b, off, available);
-        }
+        System.arraycopy(outBuf, outPos, b, off, available);
         outPos += available;
         return available;
     }
@@ -131,7 +130,7 @@ final class FbCipherInputStream extends FilterInputStream {
                 }
             }
         } finally {
-            outBuf = null;
+            outBuf = ByteArrayHelper.emptyByteArray();
             inBuf = new byte[1];
         }
     }

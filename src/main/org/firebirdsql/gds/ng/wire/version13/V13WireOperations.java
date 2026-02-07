@@ -156,11 +156,14 @@ public class V13WireOperations extends V11WireOperations {
      * @since 7
      */
     protected void sendContAuthMsg(XdrOutputStream xdrOut, ClientAuthBlock clientAuthBlock) throws IOException {
+        // TODO Consider doing something other than the suppression of DataFlowIssue below
         Encoding encoding = getEncoding();
         xdrOut.writeInt(op_cont_auth); // p_operation
         xdrOut.writeBuffer(clientAuthBlock.getClientData()); // p_data
+        //noinspection DataFlowIssue : if we're continueing auth, we have a plugin
         xdrOut.writeString(clientAuthBlock.getCurrentPluginName(), encoding); // p_name
         if (clientAuthBlock.isFirstTime()) {
+            //noinspection DataFlowIssue : if we're continueing auth, we have a plugin list
             xdrOut.writeString(clientAuthBlock.getPluginNames(), encoding); // p_list
             clientAuthBlock.setFirstTime(false);
         } else {
