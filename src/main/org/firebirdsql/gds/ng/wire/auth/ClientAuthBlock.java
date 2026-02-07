@@ -9,6 +9,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -42,9 +43,9 @@ public final class ClientAuthBlock {
     private static final Pattern AUTH_PLUGIN_LIST_SPLIT = Pattern.compile("[ \t,;]+");
 
     private final IAttachProperties<?> attachProperties;
-    private List<AuthenticationPluginSpi> pluginProviders;
+    private List<AuthenticationPluginSpi> pluginProviders = List.of();
     private final Set<String> serverPlugins = new LinkedHashSet<>();
-    private AuthenticationPlugin currentPlugin;
+    private @Nullable AuthenticationPlugin currentPlugin;
     private boolean authComplete;
     private boolean firstTime = true;
 
@@ -53,15 +54,15 @@ public final class ClientAuthBlock {
         resetClient(null);
     }
 
-    public String getLogin() {
+    public @Nullable String getLogin() {
         return attachProperties.getUser();
     }
 
-    public String getNormalizedLogin() {
+    public @Nullable String getNormalizedLogin() {
         return normalizeLogin(getLogin());
     }
 
-    public String getPassword() {
+    public @Nullable String getPassword() {
         return attachProperties.getPassword();
     }
 
@@ -73,18 +74,18 @@ public final class ClientAuthBlock {
         this.authComplete = authComplete;
     }
 
-    public String getCurrentPluginName() {
+    public @Nullable String getCurrentPluginName() {
         return currentPlugin != null ? currentPlugin.getName() : null;
     }
 
     /**
      * @return Comma separated list of available plugins.
      */
-    public String getPluginNames() {
+    public @Nullable String getPluginNames() {
         return getPluginNames(pluginProviders);
     }
 
-    public byte[] getClientData() {
+    public byte @Nullable [] getClientData() {
         return currentPlugin != null ? currentPlugin.getClientData() : null;
     }
 
@@ -117,7 +118,7 @@ public final class ClientAuthBlock {
         }
     }
 
-    public void resetClient(byte[] serverInfo) throws SQLException {
+    public void resetClient(byte @Nullable [] serverInfo) throws SQLException {
         if (serverInfo != null) {
             if (currentPlugin != null && currentPlugin.hasServerData()) {
                 // We should not change plugins iterator now
@@ -161,10 +162,8 @@ public final class ClientAuthBlock {
         }
     }
 
-    private static String getPluginNames(List<AuthenticationPluginSpi> pluginProviders) {
-        if (pluginProviders.isEmpty()) {
-            return null;
-        }
+    private static @Nullable String getPluginNames(List<AuthenticationPluginSpi> pluginProviders) {
+        if (pluginProviders.isEmpty()) return null;
         StringBuilder names = new StringBuilder();
         for (int idx = 0; idx < pluginProviders.size(); idx++) {
             if (idx > 0) {
@@ -245,8 +244,17 @@ public final class ClientAuthBlock {
         return currentPlugin != null;
     }
 
+    private AuthenticationPlugin requirePlugin() throws SQLException {
+        AuthenticationPlugin plugin = currentPlugin;
+        if (plugin == null) {
+            throw FbExceptionBuilder.toNonTransientConnectionException(jb_noAuthenticationPlugin);
+        }
+        return plugin;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
     public AuthenticationPlugin.AuthStatus authenticate() throws SQLException {
-        return currentPlugin.authenticate(this);
+        return requirePlugin().authenticate(this);
     }
 
     @SuppressWarnings("java:S1301")
@@ -281,16 +289,12 @@ public final class ClientAuthBlock {
     }
 
     /**
-     * TODO Need to handle this differently
      * @return {@code true} if the encryption is supported
      * @throws SQLException
      *         If it is impossible to determine if encryption is supported (e.g. there is no current auth plugin)
      */
     public boolean supportsEncryption() throws SQLException {
-        if (currentPlugin == null) {
-            throw FbExceptionBuilder.toNonTransientConnectionException(jb_noAuthenticationPlugin);
-        }
-        return currentPlugin.generatesSessionKey();
+        return requirePlugin().generatesSessionKey();
     }
 
     /**
@@ -299,22 +303,17 @@ public final class ClientAuthBlock {
      *         If a session key cannot be provided
      */
     public byte[] getSessionKey() throws SQLException {
-        if (currentPlugin == null) {
-            throw FbExceptionBuilder.toNonTransientConnectionException(jb_noAuthenticationPlugin);
-        }
-        return currentPlugin.getSessionKey();
+        return requirePlugin().getSessionKey();
     }
 
     /**
-     * Normalizes a login by uppercasing unquoted usernames, or stripping and unescaping (double) quoted user names.
+     * Normalises a login by uppercasing unquoted usernames, or stripping and unescaping (double) quoted usernames.
      *
      * @param login Login to process
      * @return Normalized login
      */
-    static String normalizeLogin(String login) {
-        if (login == null || login.isEmpty()) {
-            return login;
-        }
+    static @Nullable String normalizeLogin(@Nullable String login) {
+        if (isNullOrEmpty(login)) return login;
         // Contrary to Firebird, check if login is enclosed in double quotes, not just starting with a double quote
         if (login.length() > 2 && login.charAt(0) == '"' && login.charAt(login.length() - 1) == '"') {
             return normalizeQuotedLogin(login);
@@ -377,12 +376,10 @@ public final class ClientAuthBlock {
         List<String> requestedPluginNames = getRequestedPluginNames();
         List<AuthenticationPluginSpi> pluginProviders = new ArrayList<>(requestedPluginNames.size());
         for (String pluginName : requestedPluginNames) {
-            AuthenticationPluginSpi pluginSpi = AuthenticationPluginRegistry.getAuthenticationPluginSpi(pluginName);
-            if (pluginSpi != null) {
-                pluginProviders.add(pluginSpi);
-            } else {
-                log.log(WARNING, "No authentication plugin available with name {0}", pluginName);
-            }
+            AuthenticationPluginRegistry.getAuthenticationPluginSpi(pluginName)
+                    .ifPresentOrElse(
+                            pluginProviders::add,
+                            () -> log.log(WARNING, "No authentication plugin available with name {0}", pluginName));
         }
 
         if (pluginProviders.isEmpty()) {

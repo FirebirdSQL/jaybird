@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.auth;
 
@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Registry of authentication plugins.
@@ -26,8 +27,8 @@ public final class AuthenticationPluginRegistry {
         // no instances
     }
 
-    public static AuthenticationPluginSpi getAuthenticationPluginSpi(String authenticationPluginName) {
-        return PLUGIN_SPI_MAP.get(authenticationPluginName);
+    public static Optional<AuthenticationPluginSpi> getAuthenticationPluginSpi(String authenticationPluginName) {
+        return Optional.ofNullable(PLUGIN_SPI_MAP.get(authenticationPluginName));
     }
 
     private static Map<String, AuthenticationPluginSpi> findAuthenticationPluginSpi() {

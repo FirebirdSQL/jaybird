@@ -4,10 +4,12 @@
  SPDX-FileCopyrightText: Copyright 2001 Daniel Deville
  SPDX-FileCopyrightText: Copyright 2004 Greg Wilkins
  SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
- SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
  SPDX-License-Identifier: UnixCrypt
 */
 package org.firebirdsql.gds.ng.wire.auth.legacy;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Implements the one way password hash used by the legacy authentication of Firebird.
@@ -367,7 +369,7 @@ public final class LegacyHash {
      *         the key to be encrypted
      * @return the encrypted String
      */
-    public static byte[] fbCrypt(final String key) {
+    public static byte[] fbCrypt(@Nullable String key) {
         if (key == null) {
             return new byte[] { '*' }; // will NOT match under ANY circumstances!
         }

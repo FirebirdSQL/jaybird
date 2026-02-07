@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.auth.srp;
 
@@ -6,6 +6,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.wire.auth.AuthenticationPlugin;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -24,9 +25,9 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
 
     private final String pluginName;
     private final String clientProofHashAlgorithm;
-    private byte[] clientData;
-    private SrpClient srpClient;
-    private byte[] serverData;
+    private byte @Nullable [] clientData;
+    private @Nullable SrpClient srpClient;
+    private byte @Nullable [] serverData;
 
     /**
      * Initializes the SRP authentication plugin.
@@ -49,27 +50,35 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
 
     @Override
     public AuthStatus authenticate(ClientAuthBlock clientAuthBlock) throws SQLException {
+        SrpClient srpClient = this.srpClient;
         if (srpClient == null) {
             if (clientAuthBlock.getLogin() == null || clientAuthBlock.getPassword() == null) {
                 return AuthStatus.AUTH_CONTINUE;
             }
-            srpClient = new SrpClient(clientProofHashAlgorithm);
+            srpClient = this.srpClient = new SrpClient(clientProofHashAlgorithm);
             clientData = srpClient.getPublicKeyHex().getBytes(StandardCharsets.ISO_8859_1);
             return AuthStatus.AUTH_MORE_DATA;
-        } else if (srpClient.getSessionKey() != null) {
+        } else if (hasSessionKey()) {
+            // Same code and message as Firebird's implementation
             throw FbExceptionBuilder.forException(ISCConstants.isc_random)
                     .messageParameter("Auth sync failure - SRP's authenticate called more times than supported")
                     .toSQLException();
         }
 
-        clientData = toHexString(
-                srpClient.clientProof(clientAuthBlock.getNormalizedLogin(), clientAuthBlock.getPassword(), serverData))
+        String login = clientAuthBlock.getNormalizedLogin();
+        String password = clientAuthBlock.getPassword();
+        if (login == null || password == null) {
+            // This shouldn't happen in practice, as it's checked in the previous phase of authentication
+            throw new SQLException("Auth sync failure - login or password not available");
+        }
+
+        clientData = toHexString(srpClient.clientProof(login, password, serverData))
                 .getBytes(StandardCharsets.ISO_8859_1);
         return AuthStatus.AUTH_SUCCESS;
     }
 
     @Override
-    public byte[] getClientData() {
+    public byte @Nullable [] getClientData() {
         return clientData;
     }
 
@@ -88,9 +97,17 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
         return true;
     }
 
+    private boolean hasSessionKey() {
+        return srpClient != null && srpClient.getSessionKey() != null;
+    }
+
     @Override
-    public byte[] getSessionKey() {
-        return srpClient.getSessionKey();
+    public byte[] getSessionKey() throws SQLException {
+        byte[] sessionKey = srpClient != null ? srpClient.getSessionKey() : null;
+        if (sessionKey == null) {
+            throw new SQLException("Auth sync failure - SRP plugin has produced no session key at this time");
+        }
+        return sessionKey;
     }
 
     @Override

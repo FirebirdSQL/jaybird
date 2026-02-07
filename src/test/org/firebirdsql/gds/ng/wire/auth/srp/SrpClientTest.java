@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.auth.srp;
 
@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Tests for {@link SrpClient}.
@@ -31,7 +32,7 @@ class SrpClientTest {
 
         byte[] clientSessionKey = srp.getSessionKey();
 
-        assertEquals(ByteArrayHelper.toHexString(clientSessionKey),
-                ByteArrayHelper.toHexString(serverSessionKey));
+        assertNotNull(clientSessionKey);
+        assertEquals(ByteArrayHelper.toHexString(clientSessionKey), ByteArrayHelper.toHexString(serverSessionKey));
     }
 }

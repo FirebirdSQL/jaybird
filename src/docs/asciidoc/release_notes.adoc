@@ -870,6 +870,8 @@ use constructor `RowDescriptor(List<FieldDescriptor>, DatatypeCoder)`
 There is no replacement to build incomplete row descriptors.
 * `FBCachedBlob`
 ** Constructor `FBCachedBlob(byte[])` no longer accepts `null`.
+* `AuthenticationPluginRegistry`
+** `getAuthenticationPluginSpi` now returns `Optional<AuthenticationPluginSpi>`
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

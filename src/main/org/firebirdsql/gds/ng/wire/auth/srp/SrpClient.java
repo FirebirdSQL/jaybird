@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.wire.auth.srp;
 
@@ -8,6 +8,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -41,7 +42,7 @@ public final class SrpClient {
     private final String clientProofHashAlgorithm;
     private final BigInteger publicKey;   /* A */
     private final BigInteger privateKey;  /* a */
-    private byte[] sessionKey;      /* K */
+    private byte @Nullable [] sessionKey; /* K */
 
     public SrpClient(String clientProofHashAlgorithm) {
         this.clientProofHashAlgorithm = clientProofHashAlgorithm;
@@ -207,7 +208,7 @@ public final class SrpClient {
         }
     }
 
-    byte[] clientProof(String user, String password, byte[] authData) throws SQLException {
+    byte[] clientProof(String user, String password, byte @Nullable [] authData) throws SQLException {
         if (authData == null || authData.length == 0) {
             throw FbExceptionBuilder.toException(ISCConstants.isc_auth_data);
         }
@@ -241,7 +242,7 @@ public final class SrpClient {
         return clientProof(user, password, salt, serverPublicKey);
     }
 
-    public byte[] getSessionKey() {
+    public byte @Nullable [] getSessionKey() {
         return sessionKey;
     }
 

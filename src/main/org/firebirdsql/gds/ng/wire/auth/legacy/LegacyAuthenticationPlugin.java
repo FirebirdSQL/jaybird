@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2015-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.auth.legacy;
 
 import org.firebirdsql.gds.ng.wire.auth.AuthenticationPlugin;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -15,7 +16,7 @@ import java.sql.SQLException;
  */
 final class LegacyAuthenticationPlugin implements AuthenticationPlugin {
 
-    private byte[] clientData;
+    private byte @Nullable [] clientData;
     private boolean hasServerData;
 
     @Override
@@ -33,12 +34,13 @@ final class LegacyAuthenticationPlugin implements AuthenticationPlugin {
     }
 
     @Override
-    public byte[] getClientData() {
+    public byte @Nullable [] getClientData() {
         return clientData;
     }
 
     @Override
     public void setServerData(byte[] serverData) {
+        //noinspection ConstantValue : null-check for robustness
         hasServerData = serverData != null && serverData.length > 0;
     }
 
