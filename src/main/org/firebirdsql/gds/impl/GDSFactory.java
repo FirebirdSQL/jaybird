@@ -4,7 +4,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2023 Tobias Weimer
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -15,6 +15,8 @@ import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.jaybird.util.PluginLoader;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -28,6 +30,7 @@ import java.util.Map.Entry;
  * @author Mark Rotteveel
  */
 public final class GDSFactory {
+
     private static final Set<GDSFactoryPlugin> registeredPlugins = new HashSet<>();
     private static final Map<GDSType, GDSFactoryPlugin> typeToPluginMap = new HashMap<>();
     /**
@@ -36,13 +39,13 @@ public final class GDSFactory {
      */
     private static final TreeMap<String, GDSFactoryPlugin> jdbcUrlToPluginMap = new TreeMap<>(Comparator.reverseOrder());
 
-    private static GDSType defaultType;
-
+    private static @Nullable GDSType defaultType;
     static {
         PluginLoader.findPlugins(GDSFactoryPlugin.class, List.of("org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin"))
                 .forEach(GDSFactory::registerPlugin);
 
         GDSType pureJavaType = GDSType.getType(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME);
+        // TODO Shouldn't this cause a hard failure instead, or fallback to a different plugin?
         if (pureJavaType != null && defaultType != pureJavaType && typeToPluginMap.containsKey(pureJavaType)) {
             // ensure defaultType is PURE_JAVA if that plugin was registered
             defaultType = pureJavaType;
@@ -92,13 +95,15 @@ public final class GDSFactory {
     /**
      * Get default GDS type.
      *
-     * @return instance of {@link GDSType}.
+     * @return instance of {@link GDSType}; can be {@code null} if the pure Java implementation was not found
      */
+    // TODO The fact this can be null is highly questionable; find a way to "fix" that
+    @NullUnmarked
     public static GDSType getDefaultGDSType() {
         return defaultType;
     }
 
-    public static FbDatabaseFactory getDatabaseFactoryForType(GDSType gdsType) {
+    public static FbDatabaseFactory getDatabaseFactoryForType(@Nullable GDSType gdsType) {
         if (gdsType == null) gdsType = defaultType;
         return getPlugin(gdsType).getDatabaseFactory();
     }
@@ -178,7 +183,7 @@ public final class GDSFactory {
      *         JDBC URL for which GDS type should be obtained.
      * @return instance of {@link GDSType}.
      */
-    public static GDSType getTypeForProtocol(String jdbcUrl) {
+    public static @Nullable GDSType getTypeForProtocol(String jdbcUrl) {
         for (Entry<String, GDSFactoryPlugin> entry : jdbcUrlToPluginMap.entrySet()) {
             String jdbcProtocol = entry.getKey();
 
@@ -212,7 +217,7 @@ public final class GDSFactory {
      *         if specified type is not known.
      */
     @InternalApi
-    public static GDSFactoryPlugin getPlugin(GDSType gdsType) {
+    public static GDSFactoryPlugin getPlugin(@Nullable GDSType gdsType) {
         GDSFactoryPlugin gdsPlugin = typeToPluginMap.get(gdsType);
         if (gdsPlugin == null) {
             throw new IllegalArgumentException("Specified GDS type " + gdsType + " is unknown.");

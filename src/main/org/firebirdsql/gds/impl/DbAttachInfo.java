@@ -6,7 +6,7 @@
  SPDX-FileCopyrightText: Copyright 2002 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2002-2008 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.gds.impl;
@@ -18,6 +18,8 @@ import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
 
 import java.sql.SQLException;
 
@@ -25,7 +27,11 @@ import java.sql.SQLException;
  * Container for attachment information (i.e. server, port and filename/alias/service name/url).
  */
 @InternalApi
+@NullUnmarked
 public record DbAttachInfo(String serverName, int portNumber, String attachObjectName) {
+
+    // TODO Null behaviour may need to be rethought and further refined; annotating its current behaviour results in
+    //  quite a lot of warnings (some false-positives)
 
     public DbAttachInfo {
         if (serverName != null && serverName.isEmpty()) {
@@ -61,6 +67,7 @@ public record DbAttachInfo(String serverName, int portNumber, String attachObjec
         return new DbAttachInfo(serverName, portNumber, attachObjectName);
     }
 
+    @NullMarked
     public <T extends IAttachProperties<T>> void copyTo(T attachProperties) {
         attachProperties.setServerName(serverName);
         attachProperties.setPortNumber(portNumber);

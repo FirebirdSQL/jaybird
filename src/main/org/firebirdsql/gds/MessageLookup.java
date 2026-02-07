@@ -1,9 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2018-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
 import org.firebirdsql.jaybird.util.CollectionUtils;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -15,7 +14,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import static java.lang.System.Logger.Level.DEBUG;
 
 /**
- * Lookup table for error messages and sql states by error code.
+ * Lookup table for error messages and SQL states by error code.
  * <p>
  * See also Firebird {@code src\common\msg_encode.h}.
  * </p>
@@ -23,7 +22,6 @@ import static java.lang.System.Logger.Level.DEBUG;
  * @author Mark Rotteveel
  * @since 4
  */
-@NullMarked
 final class MessageLookup {
 
     // See definitions in Firebird's msg_encode.h

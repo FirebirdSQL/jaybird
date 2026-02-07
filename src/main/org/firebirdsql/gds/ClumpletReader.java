@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
@@ -7,7 +7,6 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.Charset;
@@ -24,7 +23,6 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidClumpletStructure;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public final class ClumpletReader {
 
     private final Kind kind;

@@ -1,8 +1,7 @@
-// SPDX-FileCopyrightText: Copyright 2018-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -22,7 +21,6 @@ import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
  * @author Mark Rotteveel
  * @since 4
  */
-@NullMarked
 final class MessageLoader {
 
     private final MessageDefinition messageDefinition;
@@ -66,6 +64,7 @@ final class MessageLoader {
      * @return stream of message templates
      */
     Stream<MessageTemplate> createMessageTemplates() {
+        //noinspection NullableProblems : non-null due to filter(Objects::nonNull)
         return messages.stringPropertyNames().stream()
                 .map(this::createMessageTemplate)
                 .filter(Objects::nonNull);

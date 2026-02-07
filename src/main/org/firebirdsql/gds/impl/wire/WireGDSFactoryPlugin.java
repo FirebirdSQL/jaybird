@@ -1,14 +1,16 @@
 // SPDX-FileCopyrightText: Copyright 2005 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.wire.FbWireDatabaseFactory;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
+@NullMarked
 public final class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String PURE_JAVA_TYPE_NAME = "PURE_JAVA";

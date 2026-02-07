@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.gds.impl;
@@ -15,6 +15,7 @@ import org.firebirdsql.gds.impl.argument.*;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
+import org.jspecify.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -124,7 +125,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     @Override
-    public final String getArgumentAsString(int type) {
+    public final @Nullable String getArgumentAsString(int type) {
         return findFirst(type).map(Argument::getValueAsString).orElse(null);
     }
 
@@ -218,7 +219,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     @Override
     @SuppressWarnings("java:S2097")
-    public final boolean equals(Object other) {
+    public final boolean equals(@Nullable Object other) {
         if (other == null || !(this.getClass().isAssignableFrom(other.getClass()))) {
             return false;
         }

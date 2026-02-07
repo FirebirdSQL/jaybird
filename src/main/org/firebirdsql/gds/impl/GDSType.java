@@ -2,19 +2,26 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2022 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.gds.impl;
 
+import org.jspecify.annotations.NullUnmarked;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Type-safe "enumeration" of the GDS types registered in the system. 
  */
+// TODO Nullability may need to be rethought and further refined
+@NullUnmarked
 public final class GDSType implements Serializable {
 
     /*
@@ -25,6 +32,7 @@ public final class GDSType implements Serializable {
      serializing registerType is sufficient protection in general.
     */
     private static final Map<String, GDSType> typeMap = new HashMap<>();
+    @Serial
     private static final long serialVersionUID = 817804953480527534L;
 
     // DO NOT REMOVE: needed to initiate static initialization of the GDSFactory
@@ -54,6 +62,7 @@ public final class GDSType implements Serializable {
      * @return instance of {@link GDSType} corresponding to the specified
      * string representation or {@code null} if no match could be found.
      */
+    // TODO should type accept null?
     public static GDSType getType(String type) {
         if (type == null) {
             return null;
@@ -81,8 +90,9 @@ public final class GDSType implements Serializable {
         this.name = name;
     }
 
+    @Serial
     private Object readResolve() {
-        return registerType(name);
+        return registerType(requireNonNull(name, "name"));
     }
 
     @Override

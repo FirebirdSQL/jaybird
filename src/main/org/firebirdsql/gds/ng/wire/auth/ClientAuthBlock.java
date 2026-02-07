@@ -357,7 +357,10 @@ public final class ClientAuthBlock {
             if (pluginName != null) {
                 pb.addArgument(tagMapping.getAuthPluginNameTag(), pluginName);
             }
-            pb.addArgument(tagMapping.getAuthPluginListTag(), getPluginNames());
+            String pluginNames = getPluginNames();
+            if (pluginNames != null) {
+                pb.addArgument(tagMapping.getAuthPluginListTag(), pluginNames);
+            }
             firstTime = false;
             log.log(TRACE, "first time - added plugName & pluginList");
         }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
@@ -11,7 +11,6 @@ import static java.util.Objects.requireNonNull;
 /**
  * A message template overriding the SQLstate of its parent.
  */
-@NullMarked
 final class OverriddenSqlStateMessageTemplate extends MessageTemplate {
 
     private final DefaultMessageTemplate parent;

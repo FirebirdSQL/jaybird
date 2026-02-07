@@ -161,7 +161,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
     protected ServiceRequestBuffer getBackupSRB(FbService service, int options) throws SQLException {
         ServiceRequestBuffer backupSPB = service.createServiceRequestBuffer();
         backupSPB.addArgument(isc_action_svc_backup);
-        backupSPB.addArgument(SpbItems.isc_spb_dbname, getDatabase());
+        backupSPB.addArgument(SpbItems.isc_spb_dbname, requireDatabase());
         addBackupsToBackupRequestBuffer(service, backupSPB);
 
         if (verboseBackup()) {

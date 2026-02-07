@@ -25,6 +25,7 @@ public enum DpbType {
     STRING {
         @Override
         public void addValue(ParameterBuffer pb, int pbItem, Object value, ConnectionPropertyType type) {
+            //noinspection DataFlowIssue : if value is non-null, then type.asString is also non-null
             pb.addArgument(pbItem, type.asString(value));
         }
     },

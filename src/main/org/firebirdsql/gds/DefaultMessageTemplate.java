@@ -1,8 +1,7 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -21,7 +20,6 @@ import static org.firebirdsql.gds.ISCConstants.isc_formatted_exception;
  *
  * @since 6
  */
-@NullMarked
 final class DefaultMessageTemplate extends MessageTemplate {
 
     private static final int PARAM_SIZE_FACTOR = 20;

@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2017-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2017-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
+
+import org.jspecify.annotations.Nullable;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -44,15 +46,15 @@ public final class JaybirdSystemProperties {
         return getBooleanSystemPropertyPrivileged(SYNC_WRAP_NATIVE_LIBRARY_PROP);
     }
 
-    public static Integer getProcessId() {
+    public static @Nullable Integer getProcessId() {
         return getIntegerSystemPropertyPrivileged(PROCESS_ID_PROP);
     }
 
-    public static String getProcessName() {
+    public static @Nullable String getProcessName() {
         return getSystemPropertyPrivileged(PROCESS_NAME_PROP);
     }
 
-    public static String getDefaultConnectionEncoding() {
+    public static @Nullable String getDefaultConnectionEncoding() {
         return getSystemPropertyPrivileged(DEFAULT_CONNECTION_ENCODING_PROPERTY);
     }
 
@@ -88,26 +90,26 @@ public final class JaybirdSystemProperties {
         return getWithDefault(WIRE_OUTPUT_BUFFER_SIZE, defaultValue);
     }
 
-    public static String getDefaultEnableProtocol() {
+    public static @Nullable String getDefaultEnableProtocol() {
         return getSystemPropertyPrivileged(DEFAULT_ENABLE_PROTOCOL);
     }
 
-    public static String getDefaultReportSQLWarnings() {
+    public static @Nullable String getDefaultReportSQLWarnings() {
         return getSystemPropertyPrivileged(DEFAULT_REPORT_SQL_WARNINGS);
     }
 
-    public static Boolean getDefaultAsyncFetch() {
+    public static @Nullable Boolean getDefaultAsyncFetch() {
         String asyncFetch = getSystemPropertyPrivileged(DEFAULT_ASYNC_FETCH);
         if (asyncFetch == null) return null;
         // Special handling for empty string to be equal to true
         return asyncFetch.isBlank() || Boolean.parseBoolean(asyncFetch);
     }
 
-    public static Integer getDefaultMaxInlineBlobSize() {
+    public static @Nullable Integer getDefaultMaxInlineBlobSize() {
         return getIntegerSystemPropertyPrivileged(DEFAULT_MAX_INLINE_BLOB_SIZE);
     }
 
-    public static Integer getDefaultMaxBlobCacheSize() {
+    public static @Nullable Integer getDefaultMaxBlobCacheSize() {
         return getIntegerSystemPropertyPrivileged(DEFAULT_MAX_BLOB_CACHE_SIZE);
     }
 
@@ -116,7 +118,7 @@ public final class JaybirdSystemProperties {
         return value != null ? value : defaultValue;
     }
 
-    private static String getSystemPropertyPrivileged(final String propertyName) {
+    private static @Nullable String getSystemPropertyPrivileged(final String propertyName) {
         return AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty(propertyName));
     }
 
@@ -124,7 +126,7 @@ public final class JaybirdSystemProperties {
         return AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> Boolean.getBoolean(propertyName));
     }
 
-    private static Integer getIntegerSystemPropertyPrivileged(final String propertyName) {
+    private static @Nullable Integer getIntegerSystemPropertyPrivileged(final String propertyName) {
         return AccessController.doPrivileged((PrivilegedAction<Integer>) () -> Integer.getInteger(propertyName));
     }
 }

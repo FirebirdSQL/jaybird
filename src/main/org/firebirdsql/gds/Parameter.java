@@ -3,7 +3,6 @@
 package org.firebirdsql.gds;
 
 import org.firebirdsql.encodings.Encoding;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -12,7 +11,6 @@ import org.jspecify.annotations.Nullable;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public interface Parameter {
 
     /**

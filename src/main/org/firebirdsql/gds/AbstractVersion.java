@@ -1,9 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
 import org.firebirdsql.jaybird.util.BasicVersion;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -70,7 +70,7 @@ public abstract class AbstractVersion implements Comparable<AbstractVersion>, Se
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         AbstractVersion that = (AbstractVersion) o;
         return major == that.major && minor == that.minor;
@@ -106,7 +106,7 @@ public abstract class AbstractVersion implements Comparable<AbstractVersion>, Se
      * </p>
      */
     @Override
-    public int compareTo(@NonNull AbstractVersion other) {
+    public int compareTo(AbstractVersion other) {
         int majorDiff = Integer.compare(this.major, other.major);
         if (majorDiff != 0) return majorDiff;
         return Integer.compare(this.minor, other.minor);

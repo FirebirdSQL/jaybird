@@ -247,7 +247,7 @@ public final class FBManagedConnection implements ExceptionListener {
     private void clearCurrentTransaction() {
         GDSHelper gdsHelper = this.gdsHelper;
         if (gdsHelper != null) {
-            gdsHelper.setCurrentTransaction(null);
+            gdsHelper.clearCurrentTransaction();
         }
     }
 

@@ -1,12 +1,14 @@
 // SPDX-FileCopyrightText: Copyright 2005 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jdbc.FBConnection;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -53,6 +55,7 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
      *         if {@code path} is {@code null}
      * @since 6
      */
+    @NullUnmarked
     protected static void requirePath(String path) throws SQLException {
         if (path == null) {
             throw FbExceptionBuilder.toNonTransientConnectionException(JaybirdErrorCodes.jb_databasePathRequired);
@@ -60,7 +63,9 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     @Override
-    public String getDatabasePath(String server, Integer port, String path) throws SQLException {
+    @NullUnmarked
+    public String getDatabasePath(@Nullable String server, @Nullable Integer port, String path)
+            throws SQLException {
         requirePath(path);
 
         if (server == null) {
@@ -83,7 +88,7 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     @Override
-    public final boolean equals(Object obj) {
+    public final boolean equals(@Nullable Object obj) {
         return obj != null && (obj == this || getClass() == obj.getClass());
     }
 }

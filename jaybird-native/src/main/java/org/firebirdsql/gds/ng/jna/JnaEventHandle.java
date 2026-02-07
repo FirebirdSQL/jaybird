@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
@@ -13,6 +13,8 @@ import org.firebirdsql.gds.ng.AbstractEventHandle;
 import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Event handle for the JNA protocol.
@@ -20,6 +22,7 @@ import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public final class JnaEventHandle extends AbstractEventHandle {
 
     private static final System.Logger log = System.getLogger(JnaEventHandle.class.getName());
@@ -144,7 +147,7 @@ public final class JnaEventHandle extends AbstractEventHandle {
 
     private class JnaEventCallback implements FbClientLibrary.IscEventCallback {
         @Override
-        public void apply(Pointer resultArgument, short eventBufferLength, Pointer eventsList) {
+        public void apply(Pointer resultArgument, short eventBufferLength, @Nullable Pointer eventsList) {
             final int length = eventBufferLength & 0xFFFF;
             if (length == 0 || eventsList == null) return;
 

@@ -2,13 +2,14 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2008 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 */
 package org.firebirdsql.gds;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.impl.wire.Xdrable;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -115,9 +116,9 @@ public interface ParameterBuffer extends Iterable<Parameter>, Serializable {
      *
      * @param argumentType
      *         type of argument to find.
-     * @return argument as string or <code>null</code> if nothing found.
+     * @return argument as string or {@code null} if nothing found.
      */
-    String getArgumentAsString(int argumentType);
+    @Nullable String getArgumentAsString(int argumentType);
 
     /**
      * Get argument as int.

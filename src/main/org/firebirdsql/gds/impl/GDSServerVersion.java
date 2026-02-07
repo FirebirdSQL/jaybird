@@ -1,11 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2005 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2016 Artyom Smirnov
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.AbstractVersion;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Serial;
@@ -30,7 +29,6 @@ import static org.firebirdsql.jaybird.util.StringUtils.isNullOrBlank;
  * "V" - production version, "T" - beta version, "X" - development version.
  * </p>
  */
-@NullMarked
 public final class GDSServerVersion extends AbstractVersion {
 
     @Serial
@@ -178,7 +176,7 @@ public final class GDSServerVersion extends AbstractVersion {
         return Arrays.hashCode(rawVersions);
     }
 
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         return obj == this || obj instanceof GDSServerVersion that && Arrays.equals(this.rawVersions, that.rawVersions);
     }
 

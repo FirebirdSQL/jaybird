@@ -101,7 +101,11 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     private ServiceRequestBuffer getBackupSRB(FbService service) throws SQLException {
         ServiceRequestBuffer backupSPB = service.createServiceRequestBuffer();
         backupSPB.addArgument(isc_action_svc_nbak);
-        backupSPB.addArgument(isc_spb_dbname, getDatabase());
+        String database = getDatabase();
+        if (database == null) {
+            throw new SQLException("Property database cannot be null");
+        }
+        backupSPB.addArgument(isc_spb_dbname, database);
         if (backupFiles.isEmpty()) {
             throw new SQLException("No backup file specified");
         }
@@ -150,7 +154,11 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     private ServiceRequestBuffer getRestoreSRB(FbService service) throws SQLException {
         ServiceRequestBuffer restoreSPB = service.createServiceRequestBuffer();
         restoreSPB.addArgument(isc_action_svc_nrest);
-        restoreSPB.addArgument(isc_spb_dbname, getDatabase());
+        String database = getDatabase();
+        if (database == null) {
+            throw new SQLException("Property database cannot be null");
+        }
+        restoreSPB.addArgument(isc_spb_dbname, database);
 
         if (backupFiles.isEmpty()) {
             throw new SQLException("No backup file specified");
@@ -173,10 +181,10 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
         }
     }
 
-    private ServiceRequestBuffer getFixupSRB(FbService service) {
+    private ServiceRequestBuffer getFixupSRB(FbService service) throws SQLException {
         ServiceRequestBuffer restoreSPB = service.createServiceRequestBuffer();
         restoreSPB.addArgument(isc_action_svc_nfix);
-        restoreSPB.addArgument(isc_spb_dbname, getDatabase());
+        restoreSPB.addArgument(isc_spb_dbname, requireDatabase());
         int options = getOptions();
         if (options != 0) {
             restoreSPB.addArgument(isc_spb_options, options);

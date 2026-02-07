@@ -6,6 +6,8 @@ package org.firebirdsql.gds.impl;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -86,7 +88,10 @@ public interface GDSFactoryPlugin {
      */
     FbDatabaseFactory getDatabaseFactory();
 
-    String getDatabasePath(String server, Integer port, String path) throws SQLException;
+    // TODO Path is required, but making it @NonNull results in warnings, and making it @Nullable does not fit as that
+    //  will always result in an exception
+    @NullUnmarked
+    String getDatabasePath(@Nullable String server, @Nullable Integer port, String path) throws SQLException;
 
     @InternalApi
     default String getDatabasePath(DbAttachInfo dbAttachInfo) throws SQLException {

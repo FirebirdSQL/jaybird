@@ -175,6 +175,14 @@ public class FBServiceManager implements ServiceManager {
         return database;
     }
 
+    public String requireDatabase() throws SQLException {
+        String database = getDatabase();
+        if (database == null) {
+            throw new SQLException("Property database was null");
+        }
+        return database;
+    }
+
     @Override
     public String getWireCrypt() {
         return ServiceManager.super.getWireCrypt();

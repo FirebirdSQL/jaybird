@@ -1,8 +1,7 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -14,7 +13,6 @@ import static java.util.Objects.requireNonNull;
  *
  * @since 6
  */
-@NullMarked
 public sealed abstract class MessageTemplate permits DefaultMessageTemplate, OverriddenSqlStateMessageTemplate {
 
     private static final MessageLookup MESSAGE_LOOKUP = new MessageLookup();

@@ -1,9 +1,12 @@
-// SPDX-FileCopyrightText: Copyright 2015 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
+import org.jspecify.annotations.NullMarked;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Abstract implementation for event handle.
@@ -11,6 +14,7 @@ import org.firebirdsql.gds.EventHandler;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public abstract class AbstractEventHandle implements EventHandle {
 
     private final String eventName;
@@ -18,8 +22,8 @@ public abstract class AbstractEventHandle implements EventHandle {
     private volatile int eventCount;
 
     protected AbstractEventHandle(String eventName, EventHandler eventHandler) {
-        this.eventName = eventName;
-        this.eventHandler = eventHandler;
+        this.eventName = requireNonNull(eventName, "eventName");
+        this.eventHandler = requireNonNull(eventHandler, "eventHandler");
     }
 
     @Override

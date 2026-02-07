@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -43,7 +43,9 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
         EncodingDefinition tempEncodingDefinition = encodingFactory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
         if (tempEncodingDefinition == null || tempEncodingDefinition.isInformationOnly()) {
             if (firebirdEncodingName == null && javaCharsetAlias == null) {
+                // TODO Can we use a different method that is not nullable to get NONE (which should always exist)
                 tempEncodingDefinition = encodingFactory.getEncodingDefinition("NONE", null);
+                assert tempEncodingDefinition != null;
             } else {
                 throw FbExceptionBuilder.forNonTransientConnectionException(jb_invalidConnectionEncoding)
                         .messageParameter(firebirdEncodingName, javaCharsetAlias)

@@ -2,12 +2,13 @@
 // SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
 // SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
 // SPDX-FileCopyrightText: Copyright 2006 Ludovic Orban
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ng.*;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.TimeZone;
@@ -26,8 +27,8 @@ public final class GDSHelper {
             Pattern.compile("[+-]\\d{2}:\\d{2}").asMatchPredicate();
 
     private final FbDatabase database;
-    private FbTransaction transaction;
-    private TimeZone sessionTimeZone;
+    private @Nullable FbTransaction transaction;
+    private @Nullable TimeZone sessionTimeZone;
 
     /**
      * Create instance of this class.
@@ -36,13 +37,21 @@ public final class GDSHelper {
         this.database = requireNonNull(database, "database");
     }
 
-    public FbTransaction getCurrentTransaction() {
+    public @Nullable FbTransaction getCurrentTransaction() {
         try (LockCloseable ignored = withLock()) {
             return transaction;
         }
     }
 
+    public void clearCurrentTransaction() {
+        setCurrentTransactionImpl(null);
+    }
+
     public void setCurrentTransaction(FbTransaction transaction) {
+        setCurrentTransactionImpl(transaction);
+    }
+
+    private void setCurrentTransactionImpl(@Nullable FbTransaction transaction) {
         try (LockCloseable ignored = withLock()) {
             this.transaction = transaction;
         }
@@ -234,7 +243,7 @@ public final class GDSHelper {
      *
      * @return The username of the current database user
      */
-    public String getUserName() {
+    public @Nullable String getUserName() {
         return database.getConnectionProperties().getUser();
     }
 

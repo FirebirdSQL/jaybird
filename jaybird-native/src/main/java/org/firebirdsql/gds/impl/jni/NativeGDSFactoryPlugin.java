@@ -1,15 +1,19 @@
 // SPDX-FileCopyrightText: Copyright 2005 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.jna.FbClientDatabaseFactory;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.NullUnmarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.List;
 
+@NullMarked
 public final class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String NATIVE_TYPE_NAME = "NATIVE";
@@ -47,7 +51,9 @@ public final class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     }
 
     @Override
-    public String getDatabasePath(String server, Integer port, String path) throws SQLException {
+    @NullUnmarked
+    public String getDatabasePath(@Nullable String server, @Nullable Integer port, String path)
+            throws SQLException {
         requirePath(path);
         if (server == null) {
             return path;
