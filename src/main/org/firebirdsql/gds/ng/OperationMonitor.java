@@ -1,10 +1,12 @@
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
-// SPDX-FileCopyrightText: Copyright 2019-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ng.monitor.Operation;
 import org.firebirdsql.gds.ng.monitor.OperationAware;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLPermission;
 import java.util.concurrent.atomic.AtomicReference;
@@ -16,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Mark Rotteveel
  * @since 4.0
  */
+@NullMarked
 public final class OperationMonitor {
 
     private static final SQLPermission PERMISSION_INIT_OPERATION_AWARE =
@@ -67,14 +70,12 @@ public final class OperationMonitor {
      *         "org.firebirdsql.jaybird.initOperationAware"}
      */
     @SuppressWarnings("removal")
-    public static void initOperationAware(OperationAware operationAware) {
+    public static void initOperationAware(@Nullable OperationAware operationAware) {
         var sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(PERMISSION_INIT_OPERATION_AWARE);
         }
-        instance.set(operationAware != null
-                ? operationAware
-                : NoOpOperationAware.INSTANCE);
+        instance.set(operationAware != null ? operationAware : NoOpOperationAware.INSTANCE);
     }
 
     /**

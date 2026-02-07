@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version11;
 
@@ -10,6 +10,7 @@ import org.firebirdsql.gds.ng.TestOperationAware;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.monitor.Operation;
 import org.firebirdsql.gds.ng.wire.version10.V10StatementTest;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -159,6 +160,7 @@ public class V11StatementTest extends V10StatementTest {
     }
 
     @Test
+    @NullMarked
     public void testAsyncFetchRows_allowCancel() throws Exception {
         allocateStatement();
         statement.prepare("select RDB$CHARACTER_SET_NAME from RDB$CHARACTER_SETS order by RDB$CHARACTER_SET_NAME");

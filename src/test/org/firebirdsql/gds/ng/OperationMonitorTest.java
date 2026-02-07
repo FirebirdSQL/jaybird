@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -6,6 +6,7 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.TestOperationAware.OperationReport;
 import org.firebirdsql.gds.ng.monitor.Operation;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
 
+@NullMarked
 class OperationMonitorTest {
 
     @RegisterExtension
@@ -182,6 +184,7 @@ class OperationMonitorTest {
     private static class DummyOperation implements Operation {
 
         @Override
+        @SuppressWarnings("DataFlowIssue") /* allow null here for testing only; should not cause problems */
         public Type getType() {
             return null;
         }

@@ -1,13 +1,15 @@
-// SPDX-FileCopyrightText: Copyright 2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ng.monitor.Operation;
 import org.firebirdsql.gds.ng.monitor.OperationAware;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@NullMarked
 public class TestOperationAware implements OperationAware {
 
     private final List<OperationReport> reportedOperations = new ArrayList<>();
