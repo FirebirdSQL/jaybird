@@ -175,7 +175,7 @@ public sealed class RowValue {
      * @throws IllegalArgumentException
      *         If the {@code rowData} byte array count does not match field count of the row descriptor
      */
-    public static RowValue of(RowDescriptor rowDescriptor, byte[]... rowData) {
+    public static RowValue of(RowDescriptor rowDescriptor, byte[] @Nullable ... rowData) {
         final int size = rowDescriptor.getCount();
         if (size != rowData.length) {
             throw new IllegalArgumentException("Expected RowDescriptor count and rowData length to be the same");
@@ -215,7 +215,7 @@ public sealed class RowValue {
      * @return new {@code RowValue} object
      * @see #of(RowDescriptor, byte[][])
      */
-    public static RowValue of(byte[]... rowData) {
+    public static RowValue of(byte[] @Nullable ... rowData) {
         if (rowData.length == 0) {
             return EMPTY_ROW_VALUE;
         }
