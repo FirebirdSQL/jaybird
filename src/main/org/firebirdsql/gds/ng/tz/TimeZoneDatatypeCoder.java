@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.tz;
 
@@ -6,6 +6,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.time.*;
@@ -42,11 +43,11 @@ public class TimeZoneDatatypeCoder {
     private final DatatypeCoder datatypeCoder;
     private final Clock utcClock;
     private final TimeZoneMapping timeZoneMapping = TimeZoneMapping.getInstance();
-    // Fields below are lazily cached, we don't care about possible race conditions in initialization
-    private TimeZoneCodec standardTimeWithTimeZoneCodec;
-    private TimeZoneCodec standardTimestampWithTimeZoneCodec;
-    private TimeZoneCodec extendedTimeWithTimeZoneCodec;
-    private TimeZoneCodec extendedTimestampWithTimeZoneCodec;
+    // Fields below are lazily cached, we don't care about possible race conditions in initialisation
+    private @Nullable TimeZoneCodec standardTimeWithTimeZoneCodec;
+    private @Nullable TimeZoneCodec standardTimestampWithTimeZoneCodec;
+    private @Nullable TimeZoneCodec extendedTimeWithTimeZoneCodec;
+    private @Nullable TimeZoneCodec extendedTimestampWithTimeZoneCodec;
 
     /**
      * Initializes a time zone datatype coder.
@@ -122,7 +123,7 @@ public class TimeZoneDatatypeCoder {
         return timeZoneMapping.timeZoneById(timeZoneId);
     }
 
-    private <T extends Temporal> T decodeTimestampTz(byte[] timestampTzBytes,
+    private <T extends Temporal> @Nullable T decodeTimestampTz(byte @Nullable [] timestampTzBytes,
             BiFunction<Instant, ZoneId, T> conversionFunction) {
         if (timestampTzBytes == null) return null;
         Instant instant = decodeTimestampTzAsInstant(timestampTzBytes);
@@ -135,7 +136,8 @@ public class TimeZoneDatatypeCoder {
     }
 
     @SuppressWarnings("java:S1168")
-    private byte[] encodeOffsetDateTimeToTimestampTz(OffsetDateTime offsetDateTime, int bufferSize) {
+    private byte @Nullable [] encodeOffsetDateTimeToTimestampTz(@Nullable OffsetDateTime offsetDateTime,
+            int bufferSize) {
         if (offsetDateTime == null) return null;
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(offsetDateTime.getOffset());
 
@@ -144,7 +146,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     @SuppressWarnings("java:S1168")
-    private byte[] encodeZonedDateTimeToTimestampTz(ZonedDateTime zonedDateTime, int bufferSize) {
+    private byte @Nullable [] encodeZonedDateTimeToTimestampTz(@Nullable ZonedDateTime zonedDateTime, int bufferSize) {
         if (zonedDateTime == null) return null;
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(zonedDateTime.getZone());
 
@@ -166,7 +168,7 @@ public class TimeZoneDatatypeCoder {
         return datatypeCoder.decodeLocalTime(timeTzBytes);
     }
 
-    private OffsetTime decodeTimeTzToOffsetTime(byte[] timeTzBytes) {
+    private @Nullable OffsetTime decodeTimeTzToOffsetTime(byte @Nullable [] timeTzBytes) {
         if (timeTzBytes == null) return null;
         LocalTime utcTime = decodeTimeTzToUtcLocalTime(timeTzBytes);
         ZoneId zoneId = decodeTimeZoneId(timeTzBytes, 4);
@@ -186,7 +188,7 @@ public class TimeZoneDatatypeCoder {
                 .toOffsetTime();
     }
 
-    private OffsetDateTime decodeTimeTzToOffsetDateTime(byte[] timeTzBytes) {
+    private @Nullable OffsetDateTime decodeTimeTzToOffsetDateTime(byte @Nullable [] timeTzBytes) {
         if (timeTzBytes == null) return null;
         LocalTime utcTime = decodeTimeTzToUtcLocalTime(timeTzBytes);
         ZoneId zoneId = decodeTimeZoneId(timeTzBytes, 4);
@@ -202,7 +204,7 @@ public class TimeZoneDatatypeCoder {
                 .toOffsetDateTime();
     }
 
-    private ZonedDateTime decodeTimeTzToZonedDateTime(byte[] timeTzBytes) {
+    private @Nullable ZonedDateTime decodeTimeTzToZonedDateTime(byte @Nullable [] timeTzBytes) {
         if (timeTzBytes == null) return null;
         LocalTime utcTime = decodeTimeTzToUtcLocalTime(timeTzBytes);
         ZoneId zoneId = decodeTimeZoneId(timeTzBytes, 4);
@@ -221,7 +223,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     @SuppressWarnings("java:S1168")
-    private byte[] encodeOffsetTimeToTimeTz(OffsetTime offsetTime, int bufferSize) {
+    private byte @Nullable [] encodeOffsetTimeToTimeTz(@Nullable OffsetTime offsetTime, int bufferSize) {
         if (offsetTime == null) return null;
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(offsetTime.getOffset());
 
@@ -230,7 +232,7 @@ public class TimeZoneDatatypeCoder {
     }
 
     @SuppressWarnings("java:S1168")
-    private byte[] encodeZonedDateTimeToTimeTz(ZonedDateTime zonedDateTime, int bufferSize) {
+    private byte @Nullable [] encodeZonedDateTimeToTimeTz(@Nullable ZonedDateTime zonedDateTime, int bufferSize) {
         if (zonedDateTime == null) return null;
         ZoneId zone = zonedDateTime.getZone();
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(zone);
@@ -297,7 +299,7 @@ public class TimeZoneDatatypeCoder {
          *         offset date time instance
          * @return byte array with encoded value, or {@code null} if {@code offsetDateTime} is {@code null}
          */
-        byte[] encodeOffsetDateTime(OffsetDateTime offsetDateTime);
+        byte @Nullable [] encodeOffsetDateTime(@Nullable OffsetDateTime offsetDateTime);
 
         /**
          * Decodes an encoded value to an offset date time.
@@ -306,7 +308,7 @@ public class TimeZoneDatatypeCoder {
          *         byte array with encoded value
          * @return offset date time instance, or {@code null} if {@code fieldDate} is {@code null}
          */
-        OffsetDateTime decodeOffsetDateTime(byte[] fieldData);
+        @Nullable OffsetDateTime decodeOffsetDateTime(byte @Nullable [] fieldData);
 
         /**
          * Encode an offset time to an encoded value.
@@ -315,7 +317,7 @@ public class TimeZoneDatatypeCoder {
          *         offset time instance
          * @return byte array with encoded value, or {@code null} if {@code offsetTime} is {@code null}
          */
-        byte[] encodeOffsetTime(OffsetTime offsetTime);
+        byte @Nullable [] encodeOffsetTime(@Nullable OffsetTime offsetTime);
 
         /**
          * Decodes an encoded value to an offset time.
@@ -324,7 +326,7 @@ public class TimeZoneDatatypeCoder {
          *         byte array with encoded value
          * @return offset time instance, or {@code null} if {@code fieldDate} is {@code null}
          */
-        OffsetTime decodeOffsetTime(byte[] fieldData);
+        @Nullable OffsetTime decodeOffsetTime(byte @Nullable [] fieldData);
 
         /**
          * Encode a zoned date time to an encoded value.
@@ -333,7 +335,7 @@ public class TimeZoneDatatypeCoder {
          *         zoned date time instance
          * @return byte array with encoded value, or {@code null} if {@code zonedDateTime} is {@code null}
          */
-        byte[] encodeZonedDateTime(ZonedDateTime zonedDateTime);
+        byte @Nullable [] encodeZonedDateTime(@Nullable ZonedDateTime zonedDateTime);
 
         /**
          * Decodes an encoded value to a zoned date time.
@@ -342,7 +344,7 @@ public class TimeZoneDatatypeCoder {
          *         byte array with encoded value
          * @return zoned date time value, or {@code null} if {@code fieldDate} is {@code null}
          */
-        ZonedDateTime decodeZonedDateTime(byte[] fieldData);
+        @Nullable ZonedDateTime decodeZonedDateTime(byte @Nullable [] fieldData);
 
     }
 
@@ -364,34 +366,34 @@ public class TimeZoneDatatypeCoder {
 
         @Override
         @SuppressWarnings("java:S1168")
-        public byte[] encodeOffsetDateTime(OffsetDateTime offsetDateTime) {
+        public byte @Nullable [] encodeOffsetDateTime(@Nullable OffsetDateTime offsetDateTime) {
             if (offsetDateTime == null) return null;
             return encodeOffsetTime(offsetDateTime.toOffsetTime());
         }
 
         @Override
-        public OffsetDateTime decodeOffsetDateTime(byte[] fieldData) {
+        public @Nullable OffsetDateTime decodeOffsetDateTime(byte @Nullable [] fieldData) {
             return decodeTimeTzToOffsetDateTime(fieldData);
         }
 
         @Override
-        public byte[] encodeOffsetTime(OffsetTime offsetTime) {
+        public byte @Nullable [] encodeOffsetTime(@Nullable OffsetTime offsetTime) {
             return encodeOffsetTimeToTimeTz(offsetTime, encodedSize);
         }
 
         @Override
-        public OffsetTime decodeOffsetTime(byte[] fieldData) {
+        public @Nullable OffsetTime decodeOffsetTime(byte @Nullable [] fieldData) {
             assert fieldData == null || fieldData.length == encodedSize : "timestampTzBytes not length " + encodedSize;
             return decodeTimeTzToOffsetTime(fieldData);
         }
 
         @Override
-        public byte[] encodeZonedDateTime(ZonedDateTime zonedDateTime) {
+        public byte @Nullable [] encodeZonedDateTime(@Nullable ZonedDateTime zonedDateTime) {
             return encodeZonedDateTimeToTimeTz(zonedDateTime, encodedSize);
         }
 
         @Override
-        public ZonedDateTime decodeZonedDateTime(byte[] fieldData) {
+        public @Nullable ZonedDateTime decodeZonedDateTime(byte @Nullable [] fieldData) {
             return decodeTimeTzToZonedDateTime(fieldData);
         }
     }
@@ -410,19 +412,19 @@ public class TimeZoneDatatypeCoder {
         }
 
         @Override
-        public byte[] encodeOffsetDateTime(OffsetDateTime offsetDateTime) {
+        public byte @Nullable [] encodeOffsetDateTime(@Nullable OffsetDateTime offsetDateTime) {
             return encodeOffsetDateTimeToTimestampTz(offsetDateTime, encodedSize);
         }
 
         @Override
-        public OffsetDateTime decodeOffsetDateTime(byte[] fieldData) {
+        public @Nullable OffsetDateTime decodeOffsetDateTime(byte @Nullable [] fieldData) {
             assert fieldData == null || fieldData.length == encodedSize : "timestampTzBytes not length " + encodedSize;
             return decodeTimestampTz(fieldData, OffsetDateTime::ofInstant);
         }
 
         @Override
         @SuppressWarnings("java:S1168")
-        public byte[] encodeOffsetTime(OffsetTime offsetTime) {
+        public byte @Nullable [] encodeOffsetTime(@Nullable OffsetTime offsetTime) {
             if (offsetTime == null) return null;
             // We need to base on a date to determine value, we use the current date; this will be inconsistent depending
             // on the date, but this aligns closest with Firebird behaviour and SQL standard
@@ -433,18 +435,18 @@ public class TimeZoneDatatypeCoder {
         }
 
         @Override
-        public OffsetTime decodeOffsetTime(byte[] fieldData) {
-            if (fieldData == null) return null;
-            return decodeOffsetDateTime(fieldData).toOffsetTime();
+        public @Nullable OffsetTime decodeOffsetTime(byte @Nullable [] fieldData) {
+            OffsetDateTime decoded = decodeOffsetDateTime(fieldData);
+            return decoded == null ? null : decoded.toOffsetTime();
         }
 
         @Override
-        public byte[] encodeZonedDateTime(ZonedDateTime zonedDateTime) {
+        public byte @Nullable [] encodeZonedDateTime(@Nullable ZonedDateTime zonedDateTime) {
             return encodeZonedDateTimeToTimestampTz(zonedDateTime, encodedSize);
         }
 
         @Override
-        public ZonedDateTime decodeZonedDateTime(byte[] fieldData) {
+        public @Nullable ZonedDateTime decodeZonedDateTime(byte @Nullable [] fieldData) {
             assert fieldData == null || fieldData.length == encodedSize : "timestampTzBytes not length " + encodedSize;
             return decodeTimestampTz(fieldData, ZonedDateTime::ofInstant);
         }

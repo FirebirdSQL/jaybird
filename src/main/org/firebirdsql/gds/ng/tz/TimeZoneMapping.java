@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.tz;
 
@@ -37,7 +37,7 @@ public final class TimeZoneMapping {
     /**
      * Maximum number of zone offsets cached. If a 25th needs to be cached, we clear the cache and start afresh.
      * <p>
-     * Given the general practice of having full hour offsets and the limited number of zones per applications, this
+     * Given the general practice of having full hour offsets and the limited number of zones per application, this
      * should be more than sufficient for most applications.
      * </p>
      *
@@ -83,7 +83,7 @@ public final class TimeZoneMapping {
      * </p>
      *
      * @param timeZoneId
-     *         Firebird time zone id (valid between between 0 and 65535)
+     *         Firebird time zone id (valid between 0 and 65535)
      * @return {@code java.time.Zone} equivalent (out of range values or unmapped ids will return {@code UTC}).
      */
     public ZoneId timeZoneById(final int timeZoneId) {
@@ -263,7 +263,7 @@ public final class TimeZoneMapping {
         }
 
         final String zoneIdName = timeZoneNameById.get(internalId);
-        zoneId = zoneIdName != null ? ZoneId.of(zoneIdName, ZoneId.SHORT_IDS) : defaultForOutOfRange(timeZoneId);
+        zoneId = ZoneId.of(zoneIdName, ZoneId.SHORT_IDS);
         cacheNamedZone(key, zoneId);
         return zoneId;
     }
