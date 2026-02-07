@@ -9,7 +9,7 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * Indicates that the annotated package, class, method or value is for internal use only.
  * <p>
- * Future versions may radically change, move, or make inaccessible this type.
+ * Future versions may radically change, move, or make inaccessible the annotated package, type, or method.
  * </p>
  *
  * @author Mark Rotteveel
