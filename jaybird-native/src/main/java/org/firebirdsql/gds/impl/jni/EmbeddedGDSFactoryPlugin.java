@@ -6,14 +6,12 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.jna.FbEmbeddedDatabaseFactory;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.List;
 
-@NullMarked
 public final class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String EMBEDDED_TYPE_NAME = "EMBEDDED";

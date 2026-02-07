@@ -6,14 +6,12 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.jna.FbClientDatabaseFactory;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.List;
 
-@NullMarked
 public final class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String NATIVE_TYPE_NAME = "NATIVE";
