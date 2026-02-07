@@ -2,26 +2,30 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2023 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.gds.impl.argument;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ParameterBuffer;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serial;
 import java.util.EnumSet;
+import java.util.Set;
+
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * {@link Argument} implementation for String values
  */
 public final class StringArgument extends TypedArgument {
 
-    private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
-            EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.StringSpb);
+    private static final Set<ArgumentType> SUPPORTED_ARGUMENT_TYPES = unmodifiableSet(
+            EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.StringSpb));
     @Serial
     private static final long serialVersionUID = -7980793147101287101L;
     
@@ -30,10 +34,7 @@ public final class StringArgument extends TypedArgument {
     private final Encoding encoding;
 
     public StringArgument(int type, ArgumentType argumentType, String value, Encoding encoding) {
-        super(type, argumentType);
-        if (!SUPPORTED_ARGUMENT_TYPES.contains(argumentType)) {
-            throw new IllegalArgumentException("Invalid argument type: " + argumentType);
-        }
+        super(type, checkArgumentType(argumentType, SUPPORTED_ARGUMENT_TYPES));
         if (encoding == null) {
             throw new IllegalArgumentException("Encoding is required");
         }
@@ -73,7 +74,7 @@ public final class StringArgument extends TypedArgument {
     }
 
     @Override
-    public void copyTo(ParameterBuffer buffer, Encoding stringEncoding) {
+    public void copyTo(ParameterBuffer buffer, @Nullable Encoding stringEncoding) {
         buffer.addArgument(getType(), value, stringEncoding != null ? stringEncoding : encoding);
     }
 
@@ -86,7 +87,7 @@ public final class StringArgument extends TypedArgument {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (this == other) return true;
         if (!(other instanceof final StringArgument otherStringArgument)) return false;
         return this.getType() == otherStringArgument.getType() && value.equals(otherStringArgument.value);

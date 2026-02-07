@@ -1,8 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds;
 
 import org.firebirdsql.encodings.Encoding;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Interface for parameters stored in a {@link org.firebirdsql.gds.ParameterBuffer}.
@@ -10,6 +12,7 @@ import org.firebirdsql.encodings.Encoding;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public interface Parameter {
 
     /**
@@ -72,5 +75,5 @@ public interface Parameter {
      *         Encoding to use for string properties. A value of {@code null} can be used to signal that the
      *         original encoding should be used.
      */
-    void copyTo(ParameterBuffer buffer, Encoding stringEncoding);
+    void copyTo(ParameterBuffer buffer, @Nullable Encoding stringEncoding);
 }

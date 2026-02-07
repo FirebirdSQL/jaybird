@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2023 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2016 Ivan Arabadzhiev
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -10,11 +10,16 @@ package org.firebirdsql.gds.impl.argument;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ParameterBuffer;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serial;
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Set;
+
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * {@link Argument} implementation for byte arrays.
@@ -24,9 +29,11 @@ import java.util.Arrays;
  */
 public final class ByteArrayArgument extends TypedArgument {
 
+    private static final Set<ArgumentType> SUPPORTED_ARGUMENT_TYPES = unmodifiableSet(
+            EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.StringSpb));
     @Serial
     private static final long serialVersionUID = -8636439991275911102L;
-    
+
     private final byte[] value;
 
     /**
@@ -38,12 +45,7 @@ public final class ByteArrayArgument extends TypedArgument {
      *        Byte array with a maximum length defined by {@code argumentType}.
      */
     public ByteArrayArgument(int type, ArgumentType argumentType, byte[] value) {
-        super(type, argumentType);
-        if (argumentType != ArgumentType.TraditionalDpb && argumentType != ArgumentType.Wide
-                && argumentType != ArgumentType.StringSpb) {
-            throw new IllegalArgumentException(
-                    "ByteArrayArgument only works for TraditionalDpb, Wide, or StringSpb was: " + argumentType);
-        }
+        super(type, checkArgumentType(argumentType, SUPPORTED_ARGUMENT_TYPES));
         if (value == null) {
             throw new IllegalArgumentException("byte array value should not be null");
         }
@@ -77,12 +79,12 @@ public final class ByteArrayArgument extends TypedArgument {
     }
 
     @Override
-    public void copyTo(ParameterBuffer buffer, Encoding encoding) {
+    public void copyTo(ParameterBuffer buffer, @Nullable Encoding encoding) {
         buffer.addArgument(getType(), value.clone());
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (this == other) return true;
         if (!(other instanceof final ByteArrayArgument otherByteArrayArgument)) return false;
         return this.getType() == otherByteArrayArgument.getType()
