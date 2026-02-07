@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
+import org.jspecify.annotations.Nullable;
+
 import java.nio.CharBuffer;
 
 import static java.util.Objects.requireNonNull;
@@ -77,7 +79,7 @@ abstract class AbstractToken implements Token {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 

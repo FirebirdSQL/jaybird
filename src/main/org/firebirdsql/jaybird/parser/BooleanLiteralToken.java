@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Signals a boolean literal ({@code true}, {@code false} or {@code unknown} in the token stream.
  *
@@ -23,7 +25,7 @@ final class BooleanLiteralToken extends AbstractToken implements LiteralToken {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (!super.equals(o)) return false;
 

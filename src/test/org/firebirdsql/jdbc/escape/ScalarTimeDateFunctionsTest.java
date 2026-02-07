@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.shadow.de.siegmar.fastcsv.util.Nullable;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
@@ -309,7 +310,7 @@ class ScalarTimeDateFunctionsTest {
                     expectedValue, functionCall);
         }
 
-        private boolean equals(Object o1, Object o2) {
+        private boolean equals(@Nullable Object o1, @Nullable Object o2) {
             if (o1 == o2) {
                 return true;
             }

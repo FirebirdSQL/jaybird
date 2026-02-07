@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.wire.crypt;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
@@ -56,7 +58,7 @@ public final class EncryptionIdentifier {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (!(o instanceof EncryptionIdentifier other)) return false;
         return this.type.equals(other.type) && this.pluginName.equals(other.pluginName);

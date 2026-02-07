@@ -12,6 +12,7 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
             return size;
         }
 
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (obj == this) return true;
             return obj instanceof PathSizeStruct that && this.path.equals(that.path);
         }

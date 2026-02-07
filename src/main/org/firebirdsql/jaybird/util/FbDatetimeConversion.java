@@ -382,7 +382,7 @@ public final class FbDatetimeConversion {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             return obj instanceof FbTimeField;
         }
 
@@ -442,7 +442,7 @@ public final class FbDatetimeConversion {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             return obj instanceof FbTimeUnit;
         }
 

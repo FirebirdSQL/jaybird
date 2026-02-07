@@ -11,6 +11,7 @@
 package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.junit.jupiter.params.shadow.de.siegmar.fastcsv.util.Nullable;
 
 import javax.transaction.xa.Xid;
 import java.io.Serial;
@@ -162,7 +163,7 @@ public class XidImpl implements Xid, Serializable {
      * transaction id and transaction branch qualifier.
      * </p>
      */
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (obj instanceof XidImpl other && Arrays.equals(globalId, other.globalId)) {
             return Arrays.equals(branchId, other.branchId);
         }
