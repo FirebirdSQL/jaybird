@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2017-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2017-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.crypt;
 
@@ -41,14 +41,13 @@ class EncryptionInitInfoTest {
         EncryptionInitInfo initInfo = EncryptionInitInfo.success(DUMMY_IDENTIFIER, DUMMY_CIPHER_1, DUMMY_CIPHER_2);
 
         assertEquals(DUMMY_IDENTIFIER, initInfo.getEncryptionIdentifier(), "encryptionIdentifier");
-        assertEquals(EncryptionInitInfo.InitResult.SUCCESS, initInfo.getInitResult(), "initResult");
-        assertTrue(initInfo.isSuccess(), "success");
-        assertNull(initInfo.getException(), "exception");
-        assertSame(DUMMY_CIPHER_1, initInfo.getEncryptionCipher(), "encryptionCipher");
-        assertSame(DUMMY_CIPHER_2, initInfo.getDecryptionCipher(), "decryptionCipher");
+        var success = assertInstanceOf(EncryptionInitInfo.Success.class, initInfo);
+        assertSame(DUMMY_CIPHER_1, success.getEncryptionCipher(), "encryptionCipher");
+        assertSame(DUMMY_CIPHER_2, success.getDecryptionCipher(), "decryptionCipher");
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void successRequiresEncryptionCipherNotNull() {
         NullPointerException exception = assertThrows(NullPointerException.class,
                 ()-> EncryptionInitInfo.success(DUMMY_IDENTIFIER, null, DUMMY_CIPHER_2));
@@ -56,6 +55,7 @@ class EncryptionInitInfoTest {
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void successRequiresDecryptionCipherNotNull() {
         NullPointerException exception = assertThrows(NullPointerException.class,
                 ()-> EncryptionInitInfo.success(DUMMY_IDENTIFIER, DUMMY_CIPHER_1, null));
@@ -68,29 +68,16 @@ class EncryptionInitInfoTest {
         EncryptionInitInfo initInfo = EncryptionInitInfo.failure(DUMMY_IDENTIFIER, exception);
 
         assertEquals(DUMMY_IDENTIFIER, initInfo.getEncryptionIdentifier(), "encryptionIdentifier");
-        assertEquals(EncryptionInitInfo.InitResult.FAILURE, initInfo.getInitResult(), "initResult");
-        assertFalse(initInfo.isSuccess(), "success");
-        assertSame(exception, initInfo.getException(), "exception");
+        var failure = assertInstanceOf(EncryptionInitInfo.Failure.class, initInfo);
+        assertSame(exception, failure.getCause(), "cause");
     }
 
     @Test
-    void failureRequiresExceptionNotNull() {
+    @SuppressWarnings("DataFlowIssue")
+    void failureRequiresCauseNotNull() {
         NullPointerException exception = assertThrows(NullPointerException.class,
                 ()-> EncryptionInitInfo.failure(DUMMY_IDENTIFIER, null));
-        assertThat(exception, message(equalTo("exception")));
+        assertThat(exception, message(equalTo("cause")));
     }
 
-    @Test
-    void failureGetEncryptionCipherNotAllowed() {
-        EncryptionInitInfo initInfo = EncryptionInitInfo.failure(DUMMY_IDENTIFIER, new SQLException());
-
-        assertThrows(IllegalStateException.class, initInfo::getEncryptionCipher);
-    }
-
-    @Test
-    void failureGetDecryptionCipherNotAllowed() {
-        EncryptionInitInfo initInfo = EncryptionInitInfo.failure(DUMMY_IDENTIFIER, new SQLException());
-
-        assertThrows(IllegalStateException.class, initInfo::getDecryptionCipher);
-    }
 }

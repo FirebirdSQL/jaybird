@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.crypt;
+
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 
@@ -14,7 +16,7 @@ import static java.util.Objects.requireNonNull;
  */
 @SuppressWarnings("java:S6218")
 record CryptSessionConfigImpl(
-        EncryptionIdentifier encryptionIdentifier, byte[] encryptKey, byte[] decryptKey, byte[] specificData)
+        EncryptionIdentifier encryptionIdentifier, byte[] encryptKey, byte[] decryptKey, byte @Nullable [] specificData)
         implements CryptSessionConfig {
 
     CryptSessionConfigImpl {

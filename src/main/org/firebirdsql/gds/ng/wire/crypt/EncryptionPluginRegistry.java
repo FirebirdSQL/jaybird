@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2023-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.crypt;
 
@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Registry of encryption plugins.
@@ -28,10 +29,10 @@ public final class EncryptionPluginRegistry {
      *
      * @param encryptionIdentifier
      *         encryption identifier
-     * @return the encryption plugin SPI, or {@code null} if there is no SPI registered for {@code encryptionIdentifier}
+     * @return the encryption plugin SPI, or empty if there is no SPI registered for {@code encryptionIdentifier}
      */
-    public static EncryptionPluginSpi getEncryptionPluginSpi(EncryptionIdentifier encryptionIdentifier) {
-        return Holder.PLUGIN_SPI_MAP.get(encryptionIdentifier);
+    public static Optional<EncryptionPluginSpi> getEncryptionPluginSpi(EncryptionIdentifier encryptionIdentifier) {
+        return Optional.ofNullable(Holder.PLUGIN_SPI_MAP.get(encryptionIdentifier));
     }
 
     /**

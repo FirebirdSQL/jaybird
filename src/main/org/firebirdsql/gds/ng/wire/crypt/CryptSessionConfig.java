@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.wire.crypt;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Interface for the encryption/decryption session config for wire protocol encryption for a specific plugin.
@@ -28,7 +30,7 @@ public interface CryptSessionConfig extends AutoCloseable {
     /**
      * @return Plugin-specific data (can be {@code null})
      */
-    byte[] specificData();
+    byte @Nullable [] specificData();
 
     /**
      * Clears (e.g. zeroes out) the keys and specific data
@@ -48,7 +50,7 @@ public interface CryptSessionConfig extends AutoCloseable {
      * @return Crypt session config
      */
     static CryptSessionConfig symmetric(
-            EncryptionIdentifier encryptionIdentifier, byte[] sessionKey, byte[] specificData) {
+            EncryptionIdentifier encryptionIdentifier, byte[] sessionKey, byte @Nullable [] specificData) {
         if (encryptionIdentifier.isTypeSymmetric()) {
             return new CryptSessionConfigImpl(encryptionIdentifier, sessionKey, sessionKey, specificData);
         } else {

@@ -872,6 +872,11 @@ There is no replacement to build incomplete row descriptors.
 ** Constructor `FBCachedBlob(byte[])` no longer accepts `null`.
 * `AuthenticationPluginRegistry`
 ** `getAuthenticationPluginSpi` now returns `Optional<AuthenticationPluginSpi>`
+* `EncryptionPluginRegistry`
+** `getEncryptionPluginSpi` now returns `Optional<EncryptionPluginSpi>`
+* `EncryptionInitInfo`
+** Success and failure are now represented by two sealed subclasses instead of the enum `InitResult`.
+Methods to obtain the ciphers are only available in the `Success` subclass, the cause (exception) only in `Failure`.
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

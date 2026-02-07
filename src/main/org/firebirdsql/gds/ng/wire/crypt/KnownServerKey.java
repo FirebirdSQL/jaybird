@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.crypt;
+
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +29,7 @@ public final class KnownServerKey {
     private final List<String> plugins;
     private final Map<String, byte[]> specificData;
 
-    private KnownServerKey(String keyType, List<String> plugins, Map<String, byte[]> specificData) {
+    private KnownServerKey(String keyType, List<String> plugins, @Nullable Map<String, byte[]> specificData) {
         this.keyType = requireNonNull(keyType, "keyType");
         this.plugins = List.copyOf(requireNonNull(plugins, "plugins"));
         this.specificData = specificData == null || specificData.isEmpty()
@@ -35,7 +37,7 @@ public final class KnownServerKey {
                 : unmodifiableMap(specificData);
     }
 
-    public KnownServerKey(String keyType, String plugins, Map<String, byte[]> specificData) {
+    public KnownServerKey(String keyType, String plugins, @Nullable Map<String, byte[]> specificData) {
         this(keyType, Arrays.asList(CRYPT_PLUGIN_LIST_SPLIT.split(plugins)), specificData);
     }
 

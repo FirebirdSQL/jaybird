@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 plugins {
     id 'java-library'
@@ -13,6 +13,7 @@ version = project.'version.maven'
 dependencies {
     // NOTE: ':' represents the root module, which contains the main Jaybird driver
     api project(':')
+    api libs.jspecify
     implementation libs.bcprov.jdk18on
 
     // Use JUnit Jupiter API for testing.

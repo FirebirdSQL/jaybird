@@ -205,12 +205,14 @@ public class V13WireOperations extends V11WireOperations {
         }
 
         EncryptionIdentifier encryptionIdentifier = pluginSpecificData.encryptionIdentifier();
-        EncryptionPluginSpi encryptionPluginSpi =
+        Optional<EncryptionPluginSpi> encryptionPluginSpiOpt =
                 EncryptionPluginRegistry.getEncryptionPluginSpi(encryptionIdentifier);
-        if (encryptionPluginSpi == null) {
+        if (encryptionPluginSpiOpt.isEmpty()) {
             log.log(TRACE, "No wire encryption plugin available for {0}", encryptionIdentifier);
             return Optional.empty();
-        } else if (!encryptionPluginSpi.isSupported(new ConnectionInfoImpl(getConnection().getProtocolVersion()))) {
+        }
+        EncryptionPluginSpi encryptionPluginSpi = encryptionPluginSpiOpt.get();
+        if (!encryptionPluginSpi.isSupported(new ConnectionInfoImpl(getConnection().getProtocolVersion()))) {
             log.log(TRACE, "Wire encryption plugin {0} skipped, not supported", encryptionIdentifier);
             return Optional.empty();
         }
@@ -219,8 +221,8 @@ public class V13WireOperations extends V11WireOperations {
                      getCryptSessionConfig(encryptionIdentifier, pluginSpecificData.specificData())) {
             EncryptionPlugin encryptionPlugin = encryptionPluginSpi.createEncryptionPlugin(cryptSessionConfig);
             EncryptionInitInfo encryptionInitInfo = encryptionPlugin.initializeEncryption();
-            if (encryptionInitInfo.isSuccess()) {
-                enableEncryption(encryptionInitInfo);
+            if (encryptionInitInfo instanceof EncryptionInitInfo.Success success) {
+                enableEncryption(success);
 
                 clearServerKeys();
 
@@ -232,8 +234,8 @@ public class V13WireOperations extends V11WireOperations {
                     log.log(TRACE, "Wire encryption established with {0}", encryptionIdentifier);
                 }
                 return Optional.of(encryptionIdentifier);
-            } else {
-                chainBuilder.append(encryptionInitInfo.getException());
+            } else if (encryptionInitInfo instanceof EncryptionInitInfo.Failure failure) {
+                chainBuilder.append(failure.getCause());
             }
         } catch (SQLException e) {
             chainBuilder.append(e);
@@ -266,7 +268,7 @@ public class V13WireOperations extends V11WireOperations {
         }
     }
 
-    protected void enableEncryption(EncryptionInitInfo encryptionInitInfo) throws SQLException, IOException {
+    protected void enableEncryption(EncryptionInitInfo.Success encryptionInitInfo) throws SQLException, IOException {
         withTransmitLock(xdrOut -> {
             sendCryptMsg(xdrOut, encryptionInitInfo.getEncryptionIdentifier());
             xdrOut.flush();
