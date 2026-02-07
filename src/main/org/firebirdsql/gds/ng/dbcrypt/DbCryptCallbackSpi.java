@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2018 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.dbcrypt;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Service provider interface for database encryption callback plugins.
@@ -42,6 +44,6 @@ public interface DbCryptCallbackSpi {
      *         Configuration string from connection properties, or {@code null} if absent
      * @return Database encryption callback
      */
-    DbCryptCallback createDbCryptCallback(String dbCryptConfig);
+    DbCryptCallback createDbCryptCallback(@Nullable String dbCryptConfig);
 
 }

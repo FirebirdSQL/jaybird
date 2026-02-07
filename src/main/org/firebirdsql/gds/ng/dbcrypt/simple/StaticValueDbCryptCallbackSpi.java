@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2018-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.dbcrypt.simple;
 
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallbackSpi;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
 
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
  * <ul>
  * <li>value is {@code null}: empty response</li>
  * <li>value starts with {@code "base64:"}: rest of the value is decoded to bytes using base64</li>
+ * <li>value starts with {@code "base64url:"}: rest of the value is decoded to bytes using base64 URL-safe</li>
  * <li>all other values are encoded to bytes using UTF-8</li>
  * </ul>
  *
@@ -36,7 +38,7 @@ public final class StaticValueDbCryptCallbackSpi implements DbCryptCallbackSpi {
     }
 
     @Override
-    public DbCryptCallback createDbCryptCallback(String dbCryptConfig) {
+    public DbCryptCallback createDbCryptCallback(@Nullable String dbCryptConfig) {
         if (dbCryptConfig == null) {
             return StaticValueDbCryptCallback.EMPTY_RESPONSE;
         }

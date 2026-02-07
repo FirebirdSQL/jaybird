@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2018 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.dbcrypt.simple;
 
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptData;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Simple database encryption callback, provides a static value response to the callback
@@ -15,9 +16,9 @@ public final class StaticValueDbCryptCallback implements DbCryptCallback {
 
     static final StaticValueDbCryptCallback EMPTY_RESPONSE = new StaticValueDbCryptCallback(null);
 
-    private final byte[] staticValue;
+    private final byte @Nullable [] staticValue;
 
-    StaticValueDbCryptCallback(byte[] staticValue) {
+    StaticValueDbCryptCallback(byte @Nullable [] staticValue) {
         this.staticValue = staticValue;
     }
 

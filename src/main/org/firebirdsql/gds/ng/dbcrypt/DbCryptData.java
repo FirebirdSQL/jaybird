@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2018 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.dbcrypt;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Data of a database encryption key callback (or reply).
@@ -12,7 +14,7 @@ public final class DbCryptData {
 
     public static final DbCryptData EMPTY_DATA = new DbCryptData(null, 0);
 
-    private final byte[] pluginData;
+    private final byte @Nullable [] pluginData;
     private final int replySize;
 
     /**
@@ -24,7 +26,7 @@ public final class DbCryptData {
      *         Expected reply size (normally use {@code 0} for a reply)
      * @throws IllegalArgumentException when plugin data exceeds maximum length of 32767 bytes
      */
-    public DbCryptData(byte[] pluginData, int replySize) {
+    public DbCryptData(byte @Nullable [] pluginData, int replySize) {
         if (pluginData != null && pluginData.length > Short.MAX_VALUE) {
             throw new IllegalArgumentException(
                     "Length of plugin data exceeds maximum length of 32767 bytes, was: " + pluginData.length);
@@ -36,7 +38,7 @@ public final class DbCryptData {
     /**
      * @return Plugin data (can be {@code null})
      */
-    public byte[] getPluginData() {
+    public byte @Nullable [] getPluginData() {
         return pluginData;
     }
 
@@ -51,8 +53,8 @@ public final class DbCryptData {
      * v14 and higher, this value may be negative, and should then be considered equivalent to {@code 1}.
      * </p>
      * <p>
-     * Plugins can use the value as a hint to the expected size of their reply. However smaller (or larger) replies will
-     * work.
+     * Plugins can use the value as a hint to the expected size of their reply. However, smaller (or larger) replies
+     * will work.
      * </p>
      *
      * @return Expected reply size
@@ -68,7 +70,7 @@ public final class DbCryptData {
      *         Plugin response data
      * @return Crypt data
      */
-    public static DbCryptData createReply(byte[] pluginData) {
+    public static DbCryptData createReply(byte @Nullable [] pluginData) {
         if (pluginData == null) {
             return EMPTY_DATA;
         }
