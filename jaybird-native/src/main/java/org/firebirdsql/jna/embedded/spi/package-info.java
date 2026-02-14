@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2020-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 /**
  * Defines a service provider interface to obtain Firebird Embedded library files from the class path.
@@ -13,4 +13,7 @@
  * @author Mark Rotteveel
  * @since 5
  */
+@NullMarked
 package org.firebirdsql.jna.embedded.spi;
+
+import org.jspecify.annotations.NullMarked;
