@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
+import org.jspecify.annotations.NullMarked;
+
 import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceShutdownDisabled;
 
 /**
@@ -10,6 +12,7 @@ import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceS
  * @author Mark Rotteveel
  * @since 6
  */
+@NullMarked
 public abstract class NativeResourceUnloadAbstractWebListener<T extends java.util.EventObject> {
 
     protected NativeResourceUnloadAbstractWebListener(){
