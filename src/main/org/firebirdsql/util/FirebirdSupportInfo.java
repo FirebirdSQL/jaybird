@@ -520,7 +520,7 @@ public final class FirebirdSupportInfo {
             case 3 -> 50;
             case 4 -> 54;
             case 5 -> 56;
-            case 6 -> 57;
+            case 6 -> 59;
             default -> -1;
         };
     }
