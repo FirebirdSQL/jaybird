@@ -42,7 +42,7 @@ public class JnaParameterConverter extends AbstractParameterConverter<JnaDatabas
         }
 
         String authPlugins = props.getAuthPlugins();
-        if (isNullOrEmpty(authPlugins)) {
+        if (!isNullOrEmpty(authPlugins)) {
             configMap.put("AuthClient", authPlugins);
         }
 
