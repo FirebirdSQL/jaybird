@@ -85,7 +85,7 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      *         if an error occurs while writing to the underlying output stream
      */
     public void writeAlignment(int len) throws IOException {
-        write(ZERO_PADDING, 0, (4 - len) & 3);
+        write(ZERO_PADDING, 0, alignSize(len));
     }
 
     /**
@@ -166,10 +166,11 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      *         if an error occurs while writing to the underlying output stream
      */
     public void writeBuffer(byte @Nullable [] buf) throws IOException {
-        if (buf == null) {
-            writeInt(0);
-        } else {
-            writeBuffer(buf, 0, buf.length);
+        int len = buf == null ? 0 : buf.length;
+        writeInt(len);
+        if (len > 0) {
+            write(buf, 0, len);
+            writeAlignment(len);
         }
     }
 
@@ -192,7 +193,8 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
     public void writeBuffer(byte[] buf, int off, int len) throws IOException {
         Objects.checkFromIndexSize(off, len, buf.length);
         writeInt(len);
-        write(buf, off, len, (4 - len) & 3);
+        write(buf, off, len);
+        writeAlignment(len);
     }
 
     /**
@@ -287,7 +289,10 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      *         number of (blank) padding bytes to write
      * @throws IOException
      *         if an error occurs while writing to the underlying output stream
+     * @deprecated if you really need this, use {@link #write(byte[], int, int)}, and {@link #writeSpacePadding(int)} or
+     * {@link #writeZeroPadding(int)}, will be removed in Jaybird 8 or later
      */
+    @Deprecated(since = "7", forRemoval = true)
     public void write(byte[] b, int off, int len, int pad) throws IOException {
         write(b, off, len);
         // TODO We shouldn't always pad with spaces
@@ -370,4 +375,9 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
             count = 0;
         }
     }
+
+    private static int alignSize(int len) {
+        return (4 - len) & 3;
+    }
+
 }

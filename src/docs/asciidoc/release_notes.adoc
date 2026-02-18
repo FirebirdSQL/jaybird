@@ -901,6 +901,7 @@ The following methods will be removed in Jaybird 8:
 * `WireConnection.getProtocolMinimumType()` -- use `WireConnection.getProtocolType()`
 +
 This method might still be removed before Jaybird 7 final release as this is internal API, and unlikely to be used in user code.
+* `XdrOutputStream.write(byte[], int, int, int)` -- if really needed, use `write(byte[], int, int)`, and `writeSpacePadding(int)` or `writeZeroPadding(int)`
 
 [#removal-of-deprecated-classes-8]
 ===== Removal of deprecated classes
