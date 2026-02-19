@@ -19,7 +19,7 @@ jobs:
         with:
           version: '5.0.3'
           firebird_root_password: 'masterkey'
-          firebird_conf: 'WireCrypt=Enabled,AuthServer=Srp256;Srp;Legacy_Auth'
+          firebird_conf: 'WireCrypt=Enabled,AuthServer=Srp256;Srp;Legacy_Auth,UserManager=Srp;Legacy_UserManager'
       - uses: actions/checkout@v4
       - name: Set up Java 17
         uses: actions/setup-java@v4
