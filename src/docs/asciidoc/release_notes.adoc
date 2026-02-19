@@ -470,7 +470,6 @@ For a more complete list, see the next section.
 [#where-to-get-help]
 === Where to get help
 
-* On https://stackoverflow.com/[Stack Overflow^], please tag your questions with https://stackoverflow.com/questions/tagged/jaybird[_jaybird_^] and https://stackoverflow.com/questions/tagged/firebird[_firebird_^]
 * The {firebird-java}[Firebird-Java group^] and corresponding mailing list firebird-java@googlegroups.com
 +
 You can subscribe to the mailing list by sending an email to link:mailto:firebird-java+subscribe@googlegroups.com[firebird-java+subscribe@googlegroups.com]
