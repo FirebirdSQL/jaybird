@@ -55,6 +55,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
         /**
          * @deprecated use {@link #size()}; this method may be removed in Jaybird 8 or later
          */
+        @Deprecated(since = "7", forRemoval = true)
         public int getSize() {
             return size;
         }
