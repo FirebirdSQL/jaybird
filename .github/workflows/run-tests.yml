@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+# SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 # SPDX-License-Identifier: LGPL-2.1-or-later
 name: run-tests
 on: [push,pull_request]
@@ -15,12 +15,11 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: juarezr/firebirdsql-github-action@v2.0.1
+      - uses: juarezr/firebirdsql-github-action@v2.0.3
         with:
           version: '5.0.3'
           firebird_root_password: 'masterkey'
-          enable_legacy_client_auth: 'true'
-          firebird_conf: 'WireCrypt=Enabled'
+          firebird_conf: 'WireCrypt=Enabled,AuthServer=Srp256;Srp;LegacyAuth'
       - uses: actions/checkout@v4
       - name: Set up Java 17
         uses: actions/setup-java@v4
