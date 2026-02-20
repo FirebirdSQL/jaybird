@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -53,9 +54,9 @@ public final class StatementDetector implements TokenVisitor {
     private final boolean detectReturning;
     private LocalStatementType statementType = LocalStatementType.UNKNOWN;
     private ParserState parserState = ParserState.START;
-    private Token schemaToken;
-    private Token tableNameToken;
-    private ReturningClauseDetector returningClauseDetector;
+    private @Nullable Token schemaToken;
+    private @Nullable Token tableNameToken;
+    private @Nullable ReturningClauseDetector returningClauseDetector;
 
     /**
      * Detect statement type and returning clause.
@@ -140,27 +141,28 @@ public final class StatementDetector implements TokenVisitor {
         return statementType;
     }
 
-    Token getSchemaToken() {
+    @Nullable Token getSchemaToken() {
         return schemaToken;
     }
 
-    Token getTableNameToken() {
+    @Nullable Token getTableNameToken() {
         return tableNameToken;
     }
 
     private void updateStatementType(LocalStatementType statementType) {
         this.statementType = statementType;
         if (statementType == LocalStatementType.OTHER) {
-            // clear any previously set table name
+            // clear any previously set schema and table name
+            setSchemaToken(null);
             setTableNameToken(null);
         }
     }
 
-    private void setSchemaToken(Token schemaToken) {
+    private void setSchemaToken(@Nullable Token schemaToken) {
         this.schemaToken = schemaToken;
     }
 
-    private void setTableNameToken(Token tableNameToken) {
+    private void setTableNameToken(@Nullable Token tableNameToken) {
         this.tableNameToken = tableNameToken;
     }
 

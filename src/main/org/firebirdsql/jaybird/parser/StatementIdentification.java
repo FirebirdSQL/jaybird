@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -20,6 +20,9 @@ import static java.util.Objects.requireNonNull;
 @NullMarked
 public final class StatementIdentification {
 
+    private static final StatementIdentification UNKNOWN_INSTANCE =
+            new StatementIdentification(LocalStatementType.UNKNOWN, null, null, false);
+
     private final LocalStatementType statementType;
     private final @Nullable String schema;
     private final @Nullable String tableName;
@@ -31,6 +34,13 @@ public final class StatementIdentification {
         this.schema = normalizeObjectName(schema);
         this.tableName = normalizeObjectName(tableName);
         this.returningClauseDetected = returningClauseDetected;
+    }
+
+    /**
+     * @return returns an instance with {@link LocalStatementType#UNKNOWN}, no schema+table, no returning clause
+     */
+    public static StatementIdentification unknown() {
+        return UNKNOWN_INSTANCE;
     }
 
     public LocalStatementType getStatementType() {

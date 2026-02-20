@@ -1,8 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2021-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
 import org.assertj.core.api.Assertions;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
@@ -102,7 +104,7 @@ class SqlParserTest {
         final AtomicBoolean parsingValueComplete = new AtomicBoolean();
         TokenVisitor visitor = new AbstractTokenVisitor() {
             @Override
-            protected void visitToken(Token token) {
+            protected void visitToken(@NonNull Token token) {
                 parsingValueVisitToken.set(parser.isParsing());
             }
 
@@ -187,7 +189,7 @@ class SqlParserTest {
             Throwable throwableOnResume;
 
             @Override
-            protected void visitToken(Token token) {
+            protected void visitToken(@NonNull Token token) {
                 try {
                     parser.resumeParsing();
                 } catch (Throwable t) {
@@ -205,7 +207,8 @@ class SqlParserTest {
                 .hasMessageContaining("in progress");
     }
 
-    private static class HaltingVisitor implements TokenVisitor {
+    @NullMarked
+    private static final class HaltingVisitor implements TokenVisitor {
 
         private final Token stopToken;
 

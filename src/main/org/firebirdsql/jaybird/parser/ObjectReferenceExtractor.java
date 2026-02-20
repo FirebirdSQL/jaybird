@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
 import org.firebirdsql.jaybird.util.Identifier;
 import org.firebirdsql.jaybird.util.ObjectReference;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +29,9 @@ public final class ObjectReferenceExtractor implements TokenVisitor {
 
     // pre-sizing at 3, as for current usages we expect at most 3 identifiers (i.e. <schema>.<package>.<procedure>)
     private final List<Identifier> identifiers = new ArrayList<>(3);
-    private Token previousToken;
+    private @Nullable Token previousToken;
     private boolean previousTokenWasScopeSpecifierValue;
-    private UnexpectedTokenException unexpectedTokenException;
+    private @Nullable UnexpectedTokenException unexpectedTokenException;
 
     @Override
     public void visitToken(Token token, VisitorRegistrar visitorRegistrar) {
@@ -94,7 +95,7 @@ public final class ObjectReferenceExtractor implements TokenVisitor {
         unexpectedTokenException = null;
     }
 
-    private boolean isScopeSpecifier(Token token) {
+    private boolean isScopeSpecifier(@Nullable Token token) {
         return token instanceof OperatorToken operatorToken && operatorToken.charAt(0) == '%';
     }
 

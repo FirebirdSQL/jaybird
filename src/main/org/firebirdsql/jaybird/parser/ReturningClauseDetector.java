@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
+
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -75,7 +77,7 @@ class ReturningClauseDetector extends AbstractTokenVisitor {
     // An alternative would be to collect all tokens after RETURNING and see if they match the syntax of
     // a RETURNING clause; considered too much effort for little gain for now
     private int returningClauseTokenCount;
-    private Boolean returningClauseFound;
+    private @Nullable Boolean returningClauseFound;
 
     @Override
     public void visitToken(Token token) {

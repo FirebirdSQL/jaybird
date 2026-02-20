@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -168,33 +168,26 @@ public final class SqlParser implements VisitorRegistrar {
     public static class Builder {
 
         private final SqlTokenizer.Builder tokenizerBuilder;
-        private List<TokenVisitor> visitors;
+        private final List<TokenVisitor> visitors = new ArrayList<>();
 
         private Builder(SqlTokenizer.Builder tokenizerBuilder) {
             this.tokenizerBuilder = tokenizerBuilder;
         }
 
         public Builder withVisitor(TokenVisitor visitor) {
-            if (visitors == null) {
-                visitors = new ArrayList<>();
-            }
             visitors.add(visitor);
             return this;
         }
 
+        @SuppressWarnings("unused")
         public Builder withVisitors(TokenVisitor... visitors) {
-            if (this.visitors == null) {
-                this.visitors = new ArrayList<>();
-            }
             this.visitors.addAll(Arrays.asList(visitors));
             return this;
         }
 
         public SqlParser of(String statementText) {
             SqlParser parser = new SqlParser(tokenizerBuilder.of(statementText));
-            if (visitors != null) {
-                visitors.forEach(parser::addVisitor);
-            }
+            visitors.forEach(parser::addVisitor);
             return parser;
         }
 

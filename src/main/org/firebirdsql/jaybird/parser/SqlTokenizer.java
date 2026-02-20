@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.CharBuffer;
 import java.util.Iterator;
@@ -26,7 +27,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     private final String src;
     private final ReservedWords reservedWords;
     private int pos = 0;
-    private Token next;
+    private @Nullable Token next;
 
     private SqlTokenizer(String src, ReservedWords reservedWords) {
         this.src = src;
@@ -136,7 +137,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     }
 
     @SuppressWarnings({ "java:S1479", "java:S3776" })
-    private Token nextToken() {
+    private @Nullable Token nextToken() {
         if (isClosed()) return null;
         int start = pos;
         int c = read();
