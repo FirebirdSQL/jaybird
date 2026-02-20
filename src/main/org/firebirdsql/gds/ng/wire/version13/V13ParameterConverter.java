@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version13;
 
@@ -60,12 +60,12 @@ public class V13ParameterConverter extends V12ParameterConverter {
     @Override
     protected void populateAuthenticationProperties(final AbstractConnection<?, ?> connection,
             final ConnectionParameterBuffer pb) throws SQLException {
-        if (!(connection instanceof WireConnection)) {
+        if (!(connection instanceof WireConnection<?, ?> wireConnection)) {
             throw new IllegalArgumentException(
                     "populateAuthenticationProperties should have been called with a WireConnection instance, was "
                             + connection.getClass().getName());
         }
-        ClientAuthBlock clientAuthBlock = ((WireConnection<?, ?>) connection).getClientAuthBlock();
+        ClientAuthBlock clientAuthBlock = wireConnection.getClientAuthBlock();
         if (clientAuthBlock == null || clientAuthBlock.isAuthComplete()) {
             return;
         }

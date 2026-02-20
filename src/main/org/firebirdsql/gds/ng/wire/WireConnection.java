@@ -23,7 +23,7 @@ import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import javax.net.SocketFactory;
 import java.io.ByteArrayOutputStream;
@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.System.Logger.Level.DEBUG;
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
@@ -75,21 +76,21 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     // Micro-optimization: we usually expect at most 3 (Firebird 5)
     private final List<KnownServerKey> knownServerKeys = new ArrayList<>(3);
     private final DbAttachInfo dbAttachInfo;
-    private ClientAuthBlock clientAuthBlock;
-    private Socket socket;
-    private ProtocolCollection protocols;
+    private @Nullable ClientAuthBlock clientAuthBlock;
+    private @Nullable Socket socket;
+    private final ProtocolCollection protocols;
     private int protocolVersion;
     private int protocolArchitecture;
     private int protocolType;
 
-    private XdrOutputStream xdrOut;
-    private XdrInputStream xdrIn;
+    private @Nullable XdrOutputStream xdrOut;
+    private @Nullable XdrInputStream xdrIn;
     private final XdrStreamAccess streamAccess = new XdrStreamAccess() {
 
         private final ReentrantLock transmitLock = new ReentrantLock();
 
         @Override
-        public @NonNull XdrInputStream getXdrIn() throws SQLException {
+        public XdrInputStream getXdrIn() throws SQLException {
             if (isConnected() && xdrIn != null) {
                 return xdrIn;
             } else {
@@ -98,7 +99,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         }
 
         @Override
-        public @NonNull XdrOutputStream getXdrOut() throws SQLException {
+        public XdrOutputStream getXdrOut() throws SQLException {
             if (isConnected() && xdrOut != null) {
                 return xdrOut;
             } else {
@@ -107,7 +108,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         }
 
         @Override
-        public void withTransmitLock(@NonNull TransmitAction transmitAction) throws IOException, SQLException {
+        public void withTransmitLock(TransmitAction transmitAction) throws IOException, SQLException {
             transmitLock.lock();
             try {
                 transmitAction.transmit(getXdrOut());
@@ -201,7 +202,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         return protocolType;
     }
 
-    public final ClientAuthBlock getClientAuthBlock() {
+    public final @Nullable ClientAuthBlock getClientAuthBlock() {
         return clientAuthBlock;
     }
 
@@ -230,6 +231,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
      */
     public final void resetSocketTimeout() throws SQLException {
         if (isConnected()) {
+            Socket socket = this.socket;
+            assert socket != null;
             try {
                 final int soTimeout = attachProperties.getSoTimeout();
                 final int desiredTimeout = soTimeout != -1 ? soTimeout : 0;
@@ -365,6 +368,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     @Override
     public final C identify() throws SQLException {
         try {
+            Socket socket = this.socket;
+            assert socket != null;
             xdrIn = new XdrInputStream(socket.getInputStream());
             xdrOut = new XdrOutputStream(socket.getOutputStream());
 
@@ -463,16 +468,19 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             final boolean authComplete = xdrIn.readInt() == 1; // p_acpt_authenticated
             byte[] serverKeys = acceptPacket.p_acpt_keys = xdrIn.readBuffer(); // p_acpt_keys
 
+            assert clientAuthBlock != null;
             clientAuthBlock.setServerData(data);
             clientAuthBlock.setAuthComplete(authComplete);
             addServerKeys(serverKeys);
             clientAuthBlock.resetClient(serverKeys);
             clientAuthBlock.switchPlugin(acceptPacket.p_acpt_plugin);
         } else {
+            assert clientAuthBlock != null;
             clientAuthBlock.resetClient(null);
         }
 
         if (compress) {
+            assert xdrOut != null;
             xdrOut.enableCompression();
             xdrIn.enableDecompression();
         }
@@ -533,6 +541,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
         ByteArrayOutputStream userId = new ByteArrayOutputStream();
 
+        assert clientAuthBlock != null;
         clientAuthBlock.authenticateStep0();
         clientAuthBlock.writePluginDataTo(userId);
 
@@ -553,7 +562,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         return userId.toByteArray();
     }
 
-    void addServerKeys(byte[] serverKeys) throws SQLException {
+    void addServerKeys(byte @Nullable [] serverKeys) throws SQLException {
         final var newKeys = new ClumpletReader(ClumpletReader.Kind.UnTagged, serverKeys);
         for (newKeys.rewind(); !newKeys.isEof(); newKeys.moveNext()) {
             addServerKey(newKeys);
@@ -609,8 +618,10 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     }
 
     private AbstractWireOperations getDefaultWireOperations() {
-        ProtocolDescriptor protocolDescriptor = protocols
-                .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10);
+        // NOTE: If we ever get rid of the protocol 10 implementation, use the lowest available version
+        ProtocolDescriptor protocolDescriptor = requireNonNull(
+                protocols.getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10),
+                "WireOperations of protocol 10 must exist");
         return (AbstractWireOperations) protocolDescriptor.createWireOperations(this, NOOP_WARNING_MESSAGE_CALLBACK);
     }
 
@@ -618,8 +629,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
      * @return Instance of FbWireOperations that can read crypt key callbacks (in practice: v15).
      */
     private FbWireOperations getCryptKeyCallbackWireOperations() {
-        ProtocolDescriptor protocolDescriptor = protocols
-                .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION15);
+        // NOTE: If we want to get rid of protocol 15, we need to carefully check if the crypt key callback
+        // implementation of the higher version is the same
+        ProtocolDescriptor protocolDescriptor = requireNonNull(
+                protocols.getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION15),
+                "WireOperations of protocol 15 must exist");
         return protocolDescriptor.createWireOperations(this, NOOP_WARNING_MESSAGE_CALLBACK);
     }
 
@@ -667,7 +681,6 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             xdrOut = null;
             xdrIn = null;
             socket = null;
-            protocols = null;
         }
     }
 

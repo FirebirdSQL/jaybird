@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
@@ -8,6 +8,7 @@ import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.ByteOrder;
 import java.sql.SQLException;
@@ -130,7 +131,7 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
         return getEncoding().decodeFromCharset(stringData);
     }
 
-    private String getString(ISC_STATUS iscStatus) {
+    private @Nullable String getString(ISC_STATUS iscStatus) {
         long stringPointerAddress = iscStatus.longValue();
         if (stringPointerAddress == 0L) {
             System.getLogger(getClass().getName()).log(WARNING,

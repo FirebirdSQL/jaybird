@@ -13,6 +13,7 @@ import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.SQLStateConstants;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -32,7 +33,7 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  */
 public class V10Database extends AbstractFbWireDatabase implements FbWireDatabase {
 
-    private BlrCalculator blrCalculator;
+    private @Nullable BlrCalculator blrCalculator;
 
     /**
      * Creates a V10Database instance.
@@ -376,7 +377,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     @SuppressWarnings("java:S2095")
-    public final FbStatement createStatement(FbTransaction transaction) throws SQLException {
+    public final FbStatement createStatement(@Nullable FbTransaction transaction) throws SQLException {
         try {
             checkAttached();
             final FbStatement stmt = protocolDescriptor.createStatement(this);
@@ -408,7 +409,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public final void executeImmediate(String statementText, FbTransaction transaction) throws SQLException {
+    public final void executeImmediate(String statementText, @Nullable FbTransaction transaction) throws SQLException {
         // TODO also implement op_exec_immediate2
         try {
             if (isAttached()) {
@@ -429,7 +430,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         }
     }
 
-    private void sendExecuteImmediate(String statementText, FbTransaction transaction) throws SQLException {
+    private void sendExecuteImmediate(String statementText, @Nullable FbTransaction transaction) throws SQLException {
         try {
             withTransmitLock(xdrOut -> {
                 sendExecuteImmediateMsg(xdrOut, transaction, statementText);
@@ -441,7 +442,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     // TODO Make protected? We may need to consider adding support for op_exec_immediate2 before doing that.
-    private void sendExecuteImmediateMsg(XdrOutputStream xdrOut, FbTransaction transaction, String statementText)
+    private void sendExecuteImmediateMsg(XdrOutputStream xdrOut, @Nullable FbTransaction transaction, String statementText)
             throws IOException {
         xdrOut.writeInt(op_exec_immediate);
         xdrOut.writeInt(transaction != null ? transaction.getHandle() : 0); // p_sqlst_transaction
@@ -559,7 +560,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public final void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
+    public final void authReceiveResponse(@Nullable AcceptPacket acceptPacket) throws IOException, SQLException {
         wireOperations.authReceiveResponse(acceptPacket, connection.createDbCryptCallback());
     }
 }

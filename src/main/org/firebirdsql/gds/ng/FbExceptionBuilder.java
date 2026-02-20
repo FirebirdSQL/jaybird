@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -8,7 +8,6 @@ import org.firebirdsql.jaybird.util.CollectionUtils;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.FBSQLExceptionInfo;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -31,7 +30,6 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptNoCryptKeyAvailable;
  *
  * @author Mark Rotteveel
  */
-@NullMarked
 public final class FbExceptionBuilder {
 
     private static final String SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX = "0A";
@@ -460,10 +458,10 @@ public final class FbExceptionBuilder {
      * Sets the cause of the current exception.
      *
      * @param cause
-     *         Throwable with the cause
+     *         throwable with the cause ({@code null} clears current cause)
      * @return this FbExceptionBuilder
      */
-    public FbExceptionBuilder cause(Throwable cause) {
+    public FbExceptionBuilder cause(@Nullable Throwable cause) {
         requireExceptionInformation().setCause(cause);
         return this;
     }
@@ -769,9 +767,9 @@ public final class FbExceptionBuilder {
          * Sets the cause of the exception.
          *
          * @param cause
-         *         cause of the exception
+         *         cause of the exception ({@code null} clears the current cause)
          */
-        void setCause(Throwable cause) {
+        void setCause(@Nullable Throwable cause) {
             this.cause = cause;
         }
 

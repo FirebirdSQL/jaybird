@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.util;
 
-import org.jspecify.annotations.Nullable;
-
 import java.io.Serial;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,11 +39,10 @@ public final class StringDeduplicator {
      * Deduplicates this value if already cached, otherwise caches and returns {@code value}.
      *
      * @param value
-     *         value to deduplicate (can be {@code null})
+     *         value to deduplicate (cannot be {@code null})
      * @return previous cached value equal to {@code value}, or {@code value} itself
      */
-    public @Nullable String get(@Nullable String value) {
-        if (value == null) return null;
+    public String get(String value) {
         if (value.isEmpty()) return "";
         return cache.computeIfAbsent(value, Function.identity());
     }

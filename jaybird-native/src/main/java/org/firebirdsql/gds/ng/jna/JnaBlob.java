@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
@@ -15,6 +15,7 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
@@ -37,7 +38,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     private final IntByReference jnaHandle = new IntByReference(0);
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
     private final FbClientLibrary clientLibrary;
-    private ByteBuffer byteBuffer;
+    private @Nullable ByteBuffer byteBuffer;
 
     /**
      * Creates a blob for output (writing to the database).
@@ -85,8 +86,13 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     }
 
     @Override
-    public JnaTransaction getTransaction() {
+    public @Nullable JnaTransaction getTransaction() {
         return (JnaTransaction) super.getTransaction();
+    }
+
+    @Override
+    protected final JnaTransaction requireActiveTransaction() throws SQLException {
+        return (JnaTransaction) super.requireActiveTransaction();
     }
 
     @Override
@@ -110,25 +116,20 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
                 throw FbExceptionBuilder.toNonTransientException(isc_segstr_no_op);
             }
 
-            final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
-            final byte[] bpb;
-            if (blobParameterBuffer == null || blobParameterBuffer.isEmpty()) {
-                bpb = ByteArrayHelper.emptyByteArray();
-            } else {
-                bpb = blobParameterBuffer.toBytesWithType();
-            }
+            byte[] bpb = getBlobParameterBuffer().toBytesWithType();
             try (var ignored = withLock()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobClosed();
                 clearDeferredException();
 
-                final JnaDatabase db = getDatabase();
+                JnaDatabase db = getDatabase();
+                JnaTransaction transaction = requireActiveTransaction();
                 if (isOutput()) {
-                    clientLibrary.isc_create_blob2(statusVector, db.getJnaHandle(), getTransaction().getJnaHandle(),
+                    clientLibrary.isc_create_blob2(statusVector, db.getJnaHandle(), transaction.getJnaHandle(),
                             getJnaHandle(), blobId, (short) bpb.length, bpb);
                 } else {
-                    clientLibrary.isc_open_blob2(statusVector, db.getJnaHandle(), getTransaction().getJnaHandle(),
+                    clientLibrary.isc_open_blob2(statusVector, db.getJnaHandle(), transaction.getJnaHandle(),
                             getJnaHandle(), blobId, (short) bpb.length, bpb);
                 }
                 processStatusVector();

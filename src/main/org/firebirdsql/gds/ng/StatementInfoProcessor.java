@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -6,6 +6,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.jaybird.util.StringDeduplicator;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -100,7 +101,7 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
     }
 
     /**
-     * Handles a bind description (for <tt>isc_info_sql_select</tt> or <tt>isc_info_sql_bind</tt>.
+     * Handles a bind description (for {@code isc_info_sql_select} or {@code isc_info_sql_bind}).
      *
      * @param info
      *         StatementInfo
@@ -228,8 +229,8 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
         private int currentIndex;
         private byte currentItem;
         private StatementType statementType = StatementType.NONE;
-        private RowDescriptorBuilder fieldBuilder;
-        private RowDescriptorBuilder parameterBuilder;
+        private @Nullable RowDescriptorBuilder fieldBuilder;
+        private @Nullable RowDescriptorBuilder parameterBuilder;
         private byte[] buffer;
 
         private StatementInfo(int initialRequestBufferSize, byte[] initialBuffer) {

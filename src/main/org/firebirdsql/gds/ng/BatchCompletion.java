@@ -3,7 +3,6 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.jaybird.fb.constants.BatchItems;
-import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -45,7 +44,6 @@ import java.util.List;
  * @author Mark Rotteveel
  * @since 5
  */
-@NullMarked
 public record BatchCompletion(int elementCount, int[] updateCounts, List<DetailedError> detailedErrors,
         int[] simplifiedErrors) {
 

@@ -8,7 +8,6 @@ import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
@@ -24,7 +23,6 @@ import static java.util.Collections.unmodifiableMap;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> implements IAttachProperties<T> {
 
     private static final PropertyUpdateListener NULL_LISTENER = new PropertyUpdateListener() {

@@ -5,6 +5,7 @@ package org.firebirdsql.gds.ng.wire.version19;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
+import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.firebirdsql.gds.ng.wire.InlineBlob;
 import org.firebirdsql.gds.ng.wire.InlineBlobResponse;
 import org.firebirdsql.gds.ng.wire.version18.V18Statement;
@@ -39,10 +40,10 @@ public class V19Statement extends V18Statement {
     }
 
     @Override
-    protected void handleInlineBlobResponse(InlineBlobResponse inlineBlobResponse) {
+    protected void handleInlineBlobResponse(InlineBlobResponse inlineBlobResponse, FbWireTransaction transaction) {
         if (getDatabase() instanceof V19Database database) {
             InlineBlob inlineBlob = inlineBlobResponse.toInlineBlob(database);
-            database.registerInlineBlob(getTransaction(), inlineBlob);
+            database.registerInlineBlob(transaction, inlineBlob);
         }
     }
 

@@ -3,10 +3,11 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.*;
-import org.jspecify.annotations.NullMarked;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.jspecify.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
@@ -17,15 +18,10 @@ import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
  * Default BLR calculator for the wire protocol.
- * <p>
- * Most likely this can be used without change for other protocol versions as well, although we may need to investigate
- * the TODOs specified in {@link #calculateBlr(org.firebirdsql.gds.ng.fields.RowDescriptor)}.
- * </p>
  *
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public class DefaultBlrCalculator implements BlrCalculator {
 
     /**
@@ -98,6 +94,7 @@ public class DefaultBlrCalculator implements BlrCalculator {
 
     @Override
     public byte[] calculateBlr(RowDescriptor rowDescriptor) throws SQLException {
+        if (rowDescriptor.getCount() == 0) return ByteArrayHelper.emptyByteArray();
         final ByteArrayOutputStream bout = getByteArrayOutputStream(rowDescriptor.getCount());
 
         for (FieldDescriptor field : rowDescriptor) {
@@ -112,9 +109,17 @@ public class DefaultBlrCalculator implements BlrCalculator {
 
     @Override
     public byte[] calculateBlr(RowDescriptor rowDescriptor, RowValue rowValue) throws SQLException {
+        int count = rowDescriptor.getCount();
+        if (count == 0) return ByteArrayHelper.emptyByteArray();
+        if (rowValue.getCount() != count) {
+            // NOTE: In common usage, this check is already done (AbstractFbStatement.validateParameters)
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidParameterCount)
+                    .messageParameter(count, rowValue.getCount())
+                    .toSQLException();
+        }
         final ByteArrayOutputStream bout = getByteArrayOutputStream(rowValue.getCount());
 
-        for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
+        for (int idx = 0; idx < count; idx++) {
             final byte[] fieldData = rowValue.getFieldData(idx);
             final FieldDescriptor field = rowDescriptor.getFieldDescriptor(idx);
             final int actualDataLength = fieldData != null ? fieldData.length : 0;

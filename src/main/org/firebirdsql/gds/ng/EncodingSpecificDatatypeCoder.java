@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2017-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2017-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -7,6 +7,7 @@ import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.extern.decimal.Decimal64;
+import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -48,7 +49,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeString(String val) {
+    public byte @Nullable [] encodeString(@Nullable String val) {
         return val != null ? encoding.encodeToCharset(val) : null;
     }
 
@@ -58,7 +59,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public String decodeString(byte[] buf) {
+    public @Nullable String decodeString(byte @Nullable [] buf) {
         return buf != null ? encoding.decodeFromCharset(buf) : null;
     }
 
@@ -91,18 +92,13 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof DatatypeCoder)) {
-            return false;
-        }
-        if (o == this) {
-            return true;
-        }
-        if (o instanceof EncodingSpecificDatatypeCoder other) {
-            return encodingDefinition.equals(other.encodingDefinition)
-                   && parentCoder.getClass() == other.parentCoder.getClass();
+    public boolean equals(@Nullable Object o) {
+        if (o == this) return true;
+        if (!(o instanceof DatatypeCoder other)) return false;
+        if (other instanceof EncodingSpecificDatatypeCoder otherSpecific) {
+            return encodingDefinition.equals(otherSpecific.encodingDefinition)
+                   && parentCoder.getClass() == otherSpecific.parentCoder.getClass();
         } else {
-            DatatypeCoder other = (DatatypeCoder) o;
             return encodingDefinition.equals(other.getEncodingDefinition())
                    && parentCoder.getClass() == other.getClass();
         }
@@ -136,7 +132,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public short decodeShort(byte[] buf) {
+    public short decodeShort(byte @Nullable [] buf) {
         return parentCoder.decodeShort(buf);
     }
 
@@ -156,7 +152,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public int decodeInt(byte[] buf) {
+    public int decodeInt(byte @Nullable [] buf) {
         return parentCoder.decodeInt(buf);
     }
 
@@ -171,7 +167,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public long decodeLong(byte[] buf) {
+    public long decodeLong(byte @Nullable [] buf) {
         return parentCoder.decodeLong(buf);
     }
 
@@ -181,7 +177,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public float decodeFloat(byte[] buf) {
+    public float decodeFloat(byte @Nullable [] buf) {
         return parentCoder.decodeFloat(buf);
     }
 
@@ -191,12 +187,12 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public double decodeDouble(byte[] buf) {
+    public double decodeDouble(byte @Nullable [] buf) {
         return parentCoder.decodeDouble(buf);
     }
 
     @Override
-    public boolean decodeBoolean(byte[] buf) {
+    public boolean decodeBoolean(byte @Nullable [] buf) {
         return parentCoder.decodeBoolean(buf);
     }
 
@@ -206,7 +202,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public LocalTime decodeLocalTime(byte[] buf) {
+    public @Nullable LocalTime decodeLocalTime(byte @Nullable [] buf) {
         return parentCoder.decodeLocalTime(buf);
     }
 
@@ -216,7 +212,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeLocalTime(LocalTime val) {
+    public byte @Nullable [] encodeLocalTime(@Nullable LocalTime val) {
         return parentCoder.encodeLocalTime(val);
     }
 
@@ -226,7 +222,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public LocalDate decodeLocalDate(byte[] buf) {
+    public @Nullable LocalDate decodeLocalDate(byte @Nullable [] buf) {
         return parentCoder.decodeLocalDate(buf);
     }
 
@@ -236,7 +232,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeLocalDate(LocalDate val) {
+    public byte @Nullable [] encodeLocalDate(@Nullable LocalDate val) {
         return parentCoder.encodeLocalDate(val);
     }
 
@@ -246,7 +242,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public LocalDateTime decodeLocalDateTime(byte[] buf) {
+    public @Nullable LocalDateTime decodeLocalDateTime(byte @Nullable [] buf) {
         return parentCoder.decodeLocalDateTime(buf);
     }
 
@@ -256,7 +252,7 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeLocalDateTime(LocalDateTime val) {
+    public byte @Nullable [] encodeLocalDateTime(@Nullable LocalDateTime val) {
         return parentCoder.encodeLocalDateTime(val);
     }
 
@@ -266,32 +262,32 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Decimal64 decodeDecimal64(byte[] buf) {
+    public @Nullable Decimal64 decodeDecimal64(byte @Nullable [] buf) {
         return parentCoder.decodeDecimal64(buf);
     }
 
     @Override
-    public byte[] encodeDecimal64(Decimal64 val) {
+    public byte @Nullable [] encodeDecimal64(@Nullable Decimal64 val) {
         return parentCoder.encodeDecimal64(val);
     }
 
     @Override
-    public Decimal128 decodeDecimal128(byte[] buf) {
+    public @Nullable Decimal128 decodeDecimal128(byte @Nullable [] buf) {
         return parentCoder.decodeDecimal128(buf);
     }
 
     @Override
-    public byte[] encodeDecimal128(Decimal128 val) {
+    public byte @Nullable [] encodeDecimal128(@Nullable Decimal128 val) {
         return parentCoder.encodeDecimal128(val);
     }
 
     @Override
-    public BigInteger decodeInt128(byte[] buf) {
+    public @Nullable BigInteger decodeInt128(byte @Nullable [] buf) {
         return parentCoder.decodeInt128(buf);
     }
 
     @Override
-    public byte[] encodeInt128(BigInteger val) {
+    public byte @Nullable [] encodeInt128(@Nullable BigInteger val) {
         return parentCoder.encodeInt128(val);
     }
 

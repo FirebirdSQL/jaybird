@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -8,7 +8,6 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
-import org.jspecify.annotations.NullMarked;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -24,7 +23,6 @@ import static java.util.Collections.unmodifiableSet;
  * @author Mark Rotteveel
  * @since 7
  */
-@NullMarked
 public final class InlineBlobCache implements DatabaseListener, TransactionListener {
 
     private final FbDatabase database;

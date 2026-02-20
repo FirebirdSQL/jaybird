@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2013-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -73,7 +74,7 @@ public interface FbTransaction extends ExceptionListenable {
      *         Transaction recovery information (stored in RDB$TRANSACTION_DESCRIPTION of RDB$TRANSACTIONS),
      *         or {@code null} to prepare without recovery information.
      */
-    void prepare(byte[] recoveryInformation) throws SQLException;
+    void prepare(byte @Nullable [] recoveryInformation) throws SQLException;
 
     /**
      * Request transaction info.
@@ -89,8 +90,8 @@ public interface FbTransaction extends ExceptionListenable {
      * @throws SQLException
      *         For errors retrieving or transforming the response.
      */
-    <T> T getTransactionInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
-            throws SQLException;
+    <T extends @Nullable Object> T getTransactionInfo(byte[] requestItems, int bufferLength,
+            InfoProcessor<T> infoProcessor) throws SQLException;
 
     /**
      * Performs a transaction info request.

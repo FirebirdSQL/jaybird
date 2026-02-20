@@ -4,6 +4,9 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds;
 
+import org.firebirdsql.gds.impl.EmptyBlobParameterBuffer;
+import org.jspecify.annotations.Nullable;
+
 /**
  * Instance of this interface represents a BLOB Parameter Buffer from the
  * Firebird API documentation and specifies attributes for
@@ -22,14 +25,18 @@ package org.firebirdsql.gds;
  * {@link org.firebirdsql.gds.ng.FbBlob#seek(int, org.firebirdsql.gds.ng.FbBlob.SeekMode)}
  * for more details).</li>
  * </ul>
+ * </p>
+ * <p>
+ * Immutable implementations throw {@link UnsupportedOperationException} for mutating operations.
+ * </p>
  */
 public interface BlobParameterBuffer extends ParameterBuffer {
 
     /**
      * Set a void (valueless) parameter on this {@code BlobParameterBuffer}.
      *
-     * @param argumentType The parameter to be set, either an {@code ISCConstants.isc_bpb_*} constant, or one of the
-     *        constants of this interface
+     * @param argumentType
+     *         parameter to be set, an {@link org.firebirdsql.jaybird.fb.constants.BpbItems} constant
      */
     @Override
     void addArgument(int argumentType);
@@ -37,9 +44,10 @@ public interface BlobParameterBuffer extends ParameterBuffer {
     /**
      * Set a {@code String} parameter on this {@code BlobParameterBuffer}.
      *
-     * @param argumentType The parameter to be set, either an {@code ISCConstants.isc_bpb_*} constant, or one of the
-     *        constants of this interface
-     * @param value The value to set for the given parameter
+     * @param argumentType
+     *         parameter to be set, an {@link org.firebirdsql.jaybird.fb.constants.BpbItems} constant
+     * @param value
+     *         value of parameter
      */
     @Override
     void addArgument(int argumentType, String value);
@@ -47,11 +55,36 @@ public interface BlobParameterBuffer extends ParameterBuffer {
     /**
      * Set an {@code int} parameter on this {@code BlobParameterBuffer}.
      *
-     * @param argumentType The parameter to be set, either an {@code ISCConstants.isc_bpb_*} constant, or one of the
-     *        constants of this interface
-     * @param value The value to set for the given parameter
+     * @param argumentType
+     *         parameter to be set, an {@link org.firebirdsql.jaybird.fb.constants.BpbItems} constant
+     * @param value
+     *         value of parameter
      */
     @Override
     void addArgument(int argumentType, int value);
+
+    /**
+     * Returns an empty and immutable blob parameter buffer.
+     *
+     * @return empty and immutable blob parameter buffer
+     * @see #orEmpty(BlobParameterBuffer)
+     * @since 7
+     */
+    static BlobParameterBuffer empty() {
+        return EmptyBlobParameterBuffer.empty();
+    }
+
+    /**
+     * Returns either the input if not {@code null}, or an empty and immutable blob parameter buffer.
+     *
+     * @param blobParameterBuffer
+     *         possibly {@code null} blob parameter buffer
+     * @return either {@code blobParameterBuffer} if not {@code null}, or an empty and immutable blob parameter buffer
+     * @see #empty()
+     * @since 7
+     */
+    static BlobParameterBuffer orEmpty(@Nullable BlobParameterBuffer blobParameterBuffer) {
+        return blobParameterBuffer != null ? blobParameterBuffer : empty();
+    }
 
 }

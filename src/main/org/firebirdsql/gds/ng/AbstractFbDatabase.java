@@ -11,7 +11,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
-import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -239,8 +239,8 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     }
 
     @Override
-    public final <R> R getDatabaseInfo(byte[] requestItems, int bufferLength, InfoProcessor<R> infoProcessor)
-            throws SQLException {
+    public final <R extends @Nullable Object> R getDatabaseInfo(byte[] requestItems, int bufferLength,
+            InfoProcessor<R> infoProcessor) throws SQLException {
         final byte[] responseBuffer = getDatabaseInfo(requestItems, bufferLength);
         try {
             return infoProcessor.process(responseBuffer);
@@ -259,25 +259,23 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     }
 
     @Override
-    @NullMarked
     public final void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
         switch (newState) {
         /* Even if the commit or rollback fails, we no longer consider it an active transaction
            Introduced as the commit/rollback might fail in a shutdown database (at least in FB 2.1) and a
            subsequent close wouldn't as there are "active" transactions.
-           This is acceptable as commit/rollback failure should be limited to situations were the database
+           This is acceptable as commit/rollback failure should be limited to situations where the database
            is either inaccessible and the transaction is likely already rolled back or pending rollback by
            the server, or the transaction was already committed or rolled back.
          */
         case COMMITTING, ROLLING_BACK, PREPARED -> {
-            // TODO for PREPARED, "register" transaction as pendingEnd for debugging?
-            try (LockCloseable ignored = withLock()) {
+            try (var ignored = withLock()) {
                 activeTransactions.remove(transaction);
             }
         }
         case COMMITTED, ROLLED_BACK -> {
-            try (LockCloseable ignored = withLock()) {
+            try (var ignored = withLock()) {
                 activeTransactions.remove(transaction);
                 transaction.removeTransactionListener(this);
                 transaction.removeExceptionListener(exceptionListenerDispatcher);
@@ -331,7 +329,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
         return buf;
     }
 
-    private class DatabaseInformationProcessor implements InfoProcessor<FbDatabase> {
+    private final class DatabaseInformationProcessor implements InfoProcessor<FbDatabase> {
         @Override
         public FbDatabase process(byte[] info) throws SQLException {
             if (info.length == 0) {

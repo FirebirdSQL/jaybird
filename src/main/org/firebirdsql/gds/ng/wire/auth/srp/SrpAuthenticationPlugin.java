@@ -83,7 +83,7 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
     }
 
     @Override
-    public void setServerData(byte[] serverData) {
+    public void setServerData(byte @Nullable [] serverData) {
         this.serverData = serverData;
     }
 

@@ -5,6 +5,7 @@ package org.firebirdsql.gds.ng.jna;
 import com.sun.jna.NativeLibrary;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
@@ -22,7 +23,6 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -40,6 +40,7 @@ class JnaDatabaseConnectionTest {
     private final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void construct_clientLibraryNull_IllegalArgument() {
         assertThrows(NullPointerException.class, () -> new JnaDatabaseConnection(null, connectionInfo));
     }
@@ -61,8 +62,7 @@ class JnaDatabaseConnectionTest {
 
         assertFalse(db.isAttached(), "Expected isAttached() to return false");
         assertThat("Expected zero-valued connection handle", db.getHandle(), equalTo(0));
-        assertNull(db.getServerVersion(), "Expected version string to be null");
-        assertNull(db.getServerVersion(), "Expected version should be null");
+        assertEquals(GDSServerVersion.INVALID_VERSION, db.getServerVersion(), "Expected version to be invalid");
     }
 
     // NOTE: This test only works if it is run in isolation, and requires custom (system specific) paths

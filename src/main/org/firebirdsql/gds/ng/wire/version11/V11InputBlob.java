@@ -12,6 +12,7 @@ import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
 import org.firebirdsql.gds.ng.wire.Response;
 import org.firebirdsql.gds.ng.wire.version10.V10InputBlob;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -67,7 +68,7 @@ public class V11InputBlob extends V10InputBlob {
         sendOpen(BlobOpenOperation.INPUT_BLOB, false);
         getDatabase().enqueueDeferredAction(wrapDeferredResponse(new DeferredResponse<>() {
             @Override
-            public void onResponse(Response response) {
+            public void onResponse(@Nullable Response response) {
                 if (response instanceof GenericResponse genericResponse) {
                     try {
                         processOpenResponse(genericResponse);
@@ -105,7 +106,7 @@ public class V11InputBlob extends V10InputBlob {
         }
         getDatabase().enqueueDeferredAction(wrapDeferredResponse(new DeferredResponse<>() {
             @Override
-            public void onResponse(Response response) {
+            public void onResponse(@Nullable Response response) {
                 if (response instanceof GenericResponse genericResponse) {
                     processBlobInfoOnDeferredOpenResponse(genericResponse);
                 } else {

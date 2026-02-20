@@ -15,6 +15,7 @@ import org.firebirdsql.gds.impl.argument.*;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.jspecify.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
@@ -173,11 +174,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     protected final int getLength() {
-        int length = 0;
-        for (Argument currentArgument : arguments) {
-            length += currentArgument.getLength();
-        }
-        return length;
+        return arguments.stream().mapToInt(Argument::getLength).sum();
     }
 
     protected final List<Argument> getArgumentsList() {
@@ -186,6 +183,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     @Override
     public final byte[] toBytes() {
+        if (isEmpty()) return ByteArrayHelper.emptyByteArray();
         var bout = new ByteArrayOutputStream();
         try {
             writeArgumentsTo(bout);
@@ -197,7 +195,8 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     @Override
     public final byte[] toBytesWithType() {
-        final var bout = new ByteArrayOutputStream();
+        if (isEmpty()) return ByteArrayHelper.emptyByteArray();
+        var bout = new ByteArrayOutputStream();
         try {
             bout.write(getType());
             writeArgumentsTo(bout);

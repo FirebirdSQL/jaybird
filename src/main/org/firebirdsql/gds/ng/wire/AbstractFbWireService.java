@@ -11,6 +11,7 @@ import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -144,7 +145,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     }
 
     @Override
-    public final GenericResponse readGenericResponse(WarningMessageCallback warningCallback)
+    public final GenericResponse readGenericResponse(@Nullable WarningMessageCallback warningCallback)
             throws SQLException, IOException {
         return wireOperations.readGenericResponse(warningCallback);
     }

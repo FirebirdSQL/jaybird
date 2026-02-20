@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
@@ -10,6 +10,7 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.Collection;
@@ -29,7 +30,7 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
     /**
      * @return Transaction currently associated with this statement
      */
-    FbTransaction getTransaction();
+    @Nullable FbTransaction getTransaction();
 
     /**
      * @return The database connection that created this statement
@@ -42,7 +43,7 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * @param transaction
      *         The transaction
      */
-    void setTransaction(FbTransaction transaction) throws SQLException;
+    void setTransaction(@Nullable FbTransaction transaction) throws SQLException;
 
     /**
      * @return descriptor of the parameters of this statement
@@ -303,7 +304,8 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * @throws SQLException
      *         For errors retrieving or transforming the response.
      */
-    <T> T getSqlInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor) throws SQLException;
+    <T extends @Nullable Object> T getSqlInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
+            throws SQLException;
 
     /**
      * Request statement info.
@@ -336,8 +338,8 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * @see #supportsCursorInfo()
      * @since 5
      */
-    default <T> T getCursorInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
-            throws SQLException {
+    default <T extends @Nullable Object> T getCursorInfo(byte[] requestItems, int bufferLength,
+            InfoProcessor<T> infoProcessor) throws SQLException {
         throw new FBDriverNotCapableException("implementation does not support getCursorInfo");
     }
 
@@ -401,9 +403,9 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * The retrieved SQL counts are also notified to all registered {@link StatementListener}s.
      * </p>
      * <p>
-     * In general the {@link FbStatement} will (should) retrieve and notify listeners of the SQL counts automatically
-     * at times where it is relevant (eg after executing a statement that does not produce multiple rows, or after
-     * fetching all rows).
+     * In general, the {@link FbStatement} will (should) retrieve and notify listeners of the SQL counts automatically
+     * when it is relevant (e.g. after executing a statement that does not produce multiple rows, or after fetching all
+     * rows).
      * </p>
      *
      * @return The SQL counts of the last execution of this statement
@@ -576,7 +578,8 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * @see #supportBatchUpdates()
      * @since 5
      */
-    default void deferredBatchSend(Collection<RowValue> rowValues, DeferredResponse<Void> onResponse) throws SQLException {
+    default void deferredBatchSend(Collection<RowValue> rowValues, DeferredResponse<Void> onResponse)
+            throws SQLException {
         throw new FBDriverNotCapableException("implementation does not support deferredBatchSend");
     }
 

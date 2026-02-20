@@ -28,9 +28,6 @@ import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import static java.util.Objects.requireNonNull;
-import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
-
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbStatement} for native client access.
  *
@@ -42,7 +39,6 @@ public class JnaStatement extends AbstractFbStatement {
     private static final System.Logger log = System.getLogger(JnaStatement.class.getName());
 
     private final IntByReference handle = new IntByReference(0);
-    private final JnaDatabase database;
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
     private final FbClientLibrary clientLibrary;
     private XSQLDA inXSqlDa;
@@ -50,18 +46,14 @@ public class JnaStatement extends AbstractFbStatement {
     private Cleaner.Cleanable cleanable = Cleaners.getNoOp();
 
     public JnaStatement(JnaDatabase database) {
-        this.database = requireNonNull(database, "database");
+        super(database);
         clientLibrary = database.getClientLibrary();
-    }
-
-    @Override
-    public final LockCloseable withLock() {
-        return database.withLock();
+        outXSqlDa = inXSqlDa = allocateXSqlDa(database.emptyRowDescriptor());
     }
 
     @Override
     protected void setParameterDescriptor(RowDescriptor parameterDescriptor) {
-        final XSQLDA xsqlda = allocateXSqlDa(parameterDescriptor);
+        XSQLDA xsqlda = allocateXSqlDa(parameterDescriptor);
         try (LockCloseable ignored = withLock()) {
             inXSqlDa = xsqlda;
             super.setParameterDescriptor(parameterDescriptor);
@@ -70,7 +62,7 @@ public class JnaStatement extends AbstractFbStatement {
 
     @Override
     protected void setRowDescriptor(RowDescriptor fieldDescriptor) {
-        final XSQLDA xsqlda = allocateXSqlDa(fieldDescriptor);
+        XSQLDA xsqlda = allocateXSqlDa(fieldDescriptor);
         try (LockCloseable ignored = withLock()) {
             outXSqlDa = xsqlda;
             super.setRowDescriptor(fieldDescriptor);
@@ -99,18 +91,23 @@ public class JnaStatement extends AbstractFbStatement {
     }
 
     @Override
-    public JnaDatabase getDatabase() {
-        return database;
+    public final JnaDatabase getDatabase() {
+        return (JnaDatabase) super.getDatabase();
     }
 
     @Override
-    public int getHandle() {
+    public final int getHandle() {
         return handle.getValue();
     }
 
     @Override
-    public JnaTransaction getTransaction() {
+    public final @Nullable JnaTransaction getTransaction() {
         return (JnaTransaction) super.getTransaction();
+    }
+
+    @Override
+    protected final JnaTransaction requireActiveTransaction() throws SQLException {
+        return (JnaTransaction) super.requireActiveTransaction();
     }
 
     @Override
@@ -119,7 +116,7 @@ public class JnaStatement extends AbstractFbStatement {
             boolean useNulTerminated = false;
             byte[] statementArray = getDatabase().getEncoding().encodeToCharset(statementText);
             if (statementArray.length > JnaDatabase.MAX_STATEMENT_LENGTH) {
-                if (database.hasFeature(FbClientFeature.FB_PING)) {
+                if (hasDbFeature(FbClientFeature.FB_PING)) {
                     // Presence of FB_PING feature means this is a Firebird 3.0 or higher fbclient,
                     // so we can use null-termination to send statement texts longer than 64KB
                     statementArray = Arrays.copyOf(statementArray, statementArray.length + 1);
@@ -152,7 +149,7 @@ public class JnaStatement extends AbstractFbStatement {
         try {
             clientLibrary.isc_dsql_allocate_statement(statusVector, db.getJnaHandle(), handle);
             if (handle.getValue() != 0) {
-                cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(handle, database));
+                cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(handle, db));
             }
             processStatusVector();
             reset();
@@ -168,9 +165,9 @@ public class JnaStatement extends AbstractFbStatement {
         switchState(StatementState.PREPARING);
         try {
             // Information in tempXSqlDa is ignored, as we are retrieving more detailed information using getSqlInfo
-            final XSQLDA tempXSqlDa = new XSQLDA();
+            var tempXSqlDa = new XSQLDA();
             tempXSqlDa.setAutoRead(false);
-            clientLibrary.isc_dsql_prepare(statusVector, getTransaction().getJnaHandle(), handle,
+            clientLibrary.isc_dsql_prepare(statusVector, requireActiveTransaction().getJnaHandle(), handle,
                     useNulTerminated ? 0 : (short) statementArray.length, statementArray,
                     db.getConnectionDialect(), tempXSqlDa);
             processStatusVector();
@@ -191,7 +188,7 @@ public class JnaStatement extends AbstractFbStatement {
         final StatementState initialState = getState();
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
-            checkTransactionActive(getTransaction());
+            IntByReference transactionHandle = requireActiveTransaction().getJnaHandle();
             validateParameters(parameters);
             reset(false);
 
@@ -208,11 +205,10 @@ public class JnaStatement extends AbstractFbStatement {
                     throw FbExceptionBuilder.toException(ISCConstants.isc_cancelled);
                 }
                 if (hasSingletonResult) {
-                    clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
-                            inXSqlDa.version, inXSqlDa, outXSqlDa);
+                    clientLibrary.isc_dsql_execute2(statusVector, transactionHandle, handle, inXSqlDa.version, inXSqlDa,
+                            outXSqlDa);
                 } else {
-                    clientLibrary.isc_dsql_execute(statusVector, getTransaction().getJnaHandle(), handle,
-                            inXSqlDa.version, inXSqlDa);
+                    clientLibrary.isc_dsql_execute(statusVector, transactionHandle, handle, inXSqlDa.version, inXSqlDa);
                 }
 
                 if (hasSingletonResult) {
@@ -296,20 +292,20 @@ public class JnaStatement extends AbstractFbStatement {
      *         The row descriptor
      * @return Allocated XSQLDA without data
      */
-    protected XSQLDA allocateXSqlDa(RowDescriptor rowDescriptor) {
-        if (rowDescriptor == null || rowDescriptor.getCount() == 0) {
-            final XSQLDA xSqlDa = new XSQLDA(1);
+    protected final XSQLDA allocateXSqlDa(RowDescriptor rowDescriptor) {
+        if (rowDescriptor.getCount() == 0) {
+            var xSqlDa = new XSQLDA(1);
             xSqlDa.setAutoSynch(false);
             xSqlDa.sqld = xSqlDa.sqln = 0;
             xSqlDa.write();
             return xSqlDa;
         }
-        final XSQLDA xSqlDa = new XSQLDA(rowDescriptor.getCount());
+        var xSqlDa = new XSQLDA(rowDescriptor.getCount());
         xSqlDa.setAutoSynch(false);
 
         for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
-            final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-            final XSQLVAR xSqlVar = xSqlDa.sqlvar[idx];
+            FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
+            XSQLVAR xSqlVar = xSqlDa.sqlvar[idx];
 
             populateXSqlVar(fieldDescriptor, xSqlVar);
         }
@@ -466,7 +462,7 @@ public class JnaStatement extends AbstractFbStatement {
     }
 
     private void updateStatementTimeout() throws SQLException {
-        if (!database.hasFeature(FbClientFeature.STATEMENT_TIMEOUT)) {
+        if (!hasDbFeature(FbClientFeature.STATEMENT_TIMEOUT)) {
             // no statement timeouts, do nothing
             return;
         }
@@ -475,13 +471,12 @@ public class JnaStatement extends AbstractFbStatement {
         processStatusVector();
     }
 
-    @Override
-    public final RowDescriptor emptyRowDescriptor() {
-        return database.emptyRowDescriptor();
-    }
-
     private void processStatusVector() throws SQLException {
         getDatabase().processStatusVector(statusVector, getStatementWarningCallback());
+    }
+
+    private boolean hasDbFeature(FbClientFeature clientFeature) {
+        return getDatabase().hasFeature(clientFeature);
     }
 
     @NullMarked

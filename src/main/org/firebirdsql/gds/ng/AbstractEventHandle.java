@@ -4,7 +4,6 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
-import org.jspecify.annotations.NullMarked;
 
 import static java.util.Objects.requireNonNull;
 
@@ -14,7 +13,6 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public abstract class AbstractEventHandle implements EventHandle {
 
     private final String eventName;

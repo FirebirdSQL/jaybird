@@ -5,7 +5,6 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ng.monitor.Operation;
 import org.firebirdsql.gds.ng.monitor.OperationAware;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLPermission;
@@ -18,7 +17,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Mark Rotteveel
  * @since 4.0
  */
-@NullMarked
 public final class OperationMonitor {
 
     private static final SQLPermission PERMISSION_INIT_OPERATION_AWARE =

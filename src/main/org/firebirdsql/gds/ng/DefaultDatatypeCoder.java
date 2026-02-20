@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -9,6 +9,7 @@ import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.extern.decimal.Decimal64;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.jaybird.util.FbDatetimeConversion;
+import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,6 +27,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static java.util.Objects.hash;
 import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElseGet;
 
 /**
  * The default datatype coder.
@@ -104,7 +106,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public short decodeShort(byte[] buf) {
+    public short decodeShort(byte @Nullable [] buf) {
         return buf != null ? decodeShort(buf, 0) : 0;
     }
 
@@ -129,7 +131,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public int decodeInt(byte[] buf) {
+    public int decodeInt(byte @Nullable [] buf) {
         return buf != null ? decodeInt(buf, 0) : 0;
     }
 
@@ -156,7 +158,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public long decodeLong(byte[] buf) {
+    public long decodeLong(byte @Nullable [] buf) {
         if (buf == null) return 0;
         return ((long) (buf[0]) << 56) +
                ((buf[1] & 0xFFL) << 48) +
@@ -174,7 +176,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public float decodeFloat(byte[] buf) {
+    public float decodeFloat(byte @Nullable [] buf) {
         return buf != null ? Float.intBitsToFloat(decodeInt(buf)) : 0;
     }
 
@@ -184,12 +186,12 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public double decodeDouble(byte[] buf) {
+    public double decodeDouble(byte @Nullable [] buf) {
         return buf != null ? Double.longBitsToDouble(decodeLong(buf)) : 0;
     }
 
     @Override
-    public final byte[] encodeString(String val) {
+    public final byte @Nullable [] encodeString(@Nullable String val) {
         return val != null ? encoding.encodeToCharset(val) : null;
     }
 
@@ -199,7 +201,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public final String decodeString(byte[] buf) {
+    public final @Nullable String decodeString(byte @Nullable [] buf) {
         return buf != null ? encoding.decodeFromCharset(buf) : null;
     }
 
@@ -209,7 +211,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public boolean decodeBoolean(byte[] buf) {
+    public boolean decodeBoolean(byte @Nullable [] buf) {
         return buf != null && buf[0] != 0;
     }
 
@@ -219,7 +221,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public LocalTime decodeLocalTime(byte[] buf) {
+    public @Nullable LocalTime decodeLocalTime(byte @Nullable [] buf) {
         return buf != null ? decodeLocalTime(buf, 0) : null;
     }
 
@@ -229,7 +231,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeLocalTime(LocalTime val) {
+    public byte @Nullable [] encodeLocalTime(@Nullable LocalTime val) {
         return val != null ? encodeInt(FbDatetimeConversion.toFbTimeUnits(val)) : null;
     }
 
@@ -239,7 +241,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public LocalDate decodeLocalDate(byte[] buf) {
+    public @Nullable LocalDate decodeLocalDate(byte @Nullable [] buf) {
         return buf != null ? decodeLocalDate(buf, 0) : null;
     }
 
@@ -249,7 +251,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeLocalDate(LocalDate val) {
+    public byte @Nullable [] encodeLocalDate(@Nullable LocalDate val) {
         return val != null ? encodeInt(FbDatetimeConversion.toModifiedJulianDate(val)) : null;
     }
 
@@ -259,7 +261,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public LocalDateTime decodeLocalDateTime(byte[] buf) {
+    public @Nullable LocalDateTime decodeLocalDateTime(byte @Nullable [] buf) {
         return buf != null ? decodeLocalDateTime(buf, 0) : null;
     }
 
@@ -270,7 +272,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     @SuppressWarnings("java:S1168")
-    public byte[] encodeLocalDateTime(LocalDateTime val) {
+    public byte @Nullable [] encodeLocalDateTime(@Nullable LocalDateTime val) {
         if (val == null) return null;
         byte[] buf = new byte[8];
         encodeLocalDateTime(val, buf, 0);
@@ -295,38 +297,38 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
      * @return new byte array in network byte order (or {@code buf} if this a big-endian coder, so the array is already
      * network byte order)
      */
-    protected byte[] networkOrder(final byte[] buf) {
+    protected byte[] networkOrder(byte[] buf) {
         return buf;
     }
 
     @Override
-    public Decimal64 decodeDecimal64(byte[] buf) {
+    public @Nullable Decimal64 decodeDecimal64(byte @Nullable [] buf) {
         return buf != null ? Decimal64.parseBytes(networkOrder(buf)) : null;
     }
 
     @Override
-    public byte[] encodeDecimal64(Decimal64 val) {
+    public byte @Nullable [] encodeDecimal64(@Nullable Decimal64 val) {
         return val != null ? networkOrder(val.toBytes()) : null;
     }
 
     @Override
-    public Decimal128 decodeDecimal128(byte[] buf) {
+    public @Nullable Decimal128 decodeDecimal128(byte @Nullable [] buf) {
         return buf != null ? Decimal128.parseBytes(networkOrder(buf)) : null;
     }
 
     @Override
-    public byte[] encodeDecimal128(Decimal128 val) {
+    public byte @Nullable [] encodeDecimal128(@Nullable Decimal128 val) {
         return val != null ? networkOrder(val.toBytes()) : null;
     }
 
     @Override
-    public BigInteger decodeInt128(byte[] buf) {
+    public @Nullable BigInteger decodeInt128(byte @Nullable [] buf) {
         return buf != null ? new BigInteger(networkOrder(buf)) : null;
     }
 
     @Override
     @SuppressWarnings("java:S1168")
-    public byte[] encodeInt128(BigInteger val) {
+    public byte @Nullable [] encodeInt128(@Nullable BigInteger val) {
         if (val == null) return null;
         if (val.bitLength() > 127) {
             throw new IllegalArgumentException("Received BigInteger value requires more than 16 bytes storage");
@@ -373,18 +375,15 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         return this;
     }
 
-    private DatatypeCoder getOrCreateForEncodingDefinition(final EncodingDefinition encodingDefinition) {
-        final DatatypeCoder coder = encodingSpecificDatatypeCoders.get(encodingDefinition);
-        if (coder != null) {
-            // existing instance in cache
-            return coder;
-        }
-        return createForEncodingDefinition(encodingDefinition);
+    private DatatypeCoder getOrCreateForEncodingDefinition(EncodingDefinition encodingDefinition) {
+        return requireNonNullElseGet(
+                encodingSpecificDatatypeCoders.get(encodingDefinition),
+                () -> createForEncodingDefinition(encodingDefinition));
     }
 
-    private DatatypeCoder createForEncodingDefinition(final EncodingDefinition encodingDefinition) {
-        final DatatypeCoder newCoder = new EncodingSpecificDatatypeCoder(this, encodingDefinition);
-        final DatatypeCoder coder = encodingSpecificDatatypeCoders.putIfAbsent(encodingDefinition, newCoder);
+    private DatatypeCoder createForEncodingDefinition(EncodingDefinition encodingDefinition) {
+        var newCoder = new EncodingSpecificDatatypeCoder(this, encodingDefinition);
+        DatatypeCoder coder = encodingSpecificDatatypeCoders.putIfAbsent(encodingDefinition, newCoder);
         if (coder != null) {
             // Other thread already created and added an instance; return that
             return coder;
@@ -419,7 +418,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public final boolean equals(Object o) {
+    public final boolean equals(@Nullable Object o) {
         if (o == this) return true;
         if (!(o instanceof DatatypeCoder other)) return false;
         return getEncodingDefinition().equals(other.getEncodingDefinition())

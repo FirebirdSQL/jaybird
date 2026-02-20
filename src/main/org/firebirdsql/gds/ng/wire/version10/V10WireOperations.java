@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -6,10 +6,14 @@ import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.gds.ng.wire.FbWireAttachment.AcceptPacket;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * @author Mark Rotteveel
@@ -25,11 +29,11 @@ public class V10WireOperations extends AbstractWireOperations {
 
     @Override
     @SuppressWarnings("java:S4274")
-    public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback)
+    public void authReceiveResponse(@Nullable AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback)
             throws IOException, SQLException {
         assert acceptPacket == null : "Should not be called with non-null acceptPacket in V12 or earlier";
         readGenericResponse(null);
-        getClientAuthBlock().setAuthComplete(true);
+        requireNonNull(getClientAuthBlock(), "clientAuthBlock").setAuthComplete(true);
 
         // fbclient also ignores REQUIRED when connecting to FB 2.5 or lower, apply same
         if (getAttachProperties().getWireCryptAsEnum() == WireCrypt.REQUIRED) {

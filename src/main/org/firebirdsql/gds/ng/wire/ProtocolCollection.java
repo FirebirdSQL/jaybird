@@ -1,12 +1,14 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.util.PluginLoader;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.IntConsumer;
 import java.util.stream.Stream;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.FB_PROTOCOL_FLAG;
@@ -60,11 +62,11 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
 
     /**
      * @param protocolVersion
-     *            Version of the protocol
-     * @return ProtocolDescriptor for the specified version, or null if the
-     *         version is not in this ProtocolCollection
+     *         version of the protocol
+     * @return ProtocolDescriptor for the specified version, or {@code null} if the version is not in
+     * this ProtocolCollection
      */
-    public ProtocolDescriptor getProtocolDescriptor(int protocolVersion) {
+    public @Nullable ProtocolDescriptor getProtocolDescriptor(int protocolVersion) {
         return descriptorMap.get(protocolVersion);
     }
     
@@ -176,7 +178,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
      * @return supported protocols and the <em>available</em> additional protocols listed in {@code enableProtocol}
      * @since 6
      */
-    public static ProtocolCollection getProtocols(String enableProtocol) {
+    public static ProtocolCollection getProtocols(@Nullable String enableProtocol) {
         if (enableProtocol == null) return getSupportedProtocols();
         return switch (enableProtocol.trim()) {
             case "" -> getSupportedProtocols();
@@ -186,20 +188,19 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
     }
 
     private static ProtocolCollection getProtocols0(String enableProtocol) {
+        //noinspection RedundantTypeArguments : needed to suppress nullability warning
         return create(
-                Stream.concat(
+                Stream.<ProtocolDescriptor>concat(
                                 SUPPORTED_PROTOCOLS.stream(),
                                 Arrays.stream(enableProtocol.split(","))
-                                        .map(ProtocolCollection::tryParseInt)
-                                        .filter(Objects::nonNull)
-                                        .mapToInt(Integer::intValue)
+                                        .mapMultiToInt(ProtocolCollection::tryParseInt)
                                         .distinct()
                                         .mapToObj(ProtocolCollection::tryGetProtocolDescriptorUnmaskedAndMasked)
                                         .filter(Objects::nonNull))
                         .toList());
     }
 
-    private static ProtocolDescriptor tryGetProtocolDescriptorUnmaskedAndMasked(int version) {
+    private static @Nullable ProtocolDescriptor tryGetProtocolDescriptorUnmaskedAndMasked(int version) {
         ProtocolDescriptor descriptor = AVAILABLE_PROTOCOLS.getProtocolDescriptor(version);
         if (descriptor == null && (version & FB_PROTOCOL_FLAG) != FB_PROTOCOL_FLAG && version != PROTOCOL_VERSION10) {
             descriptor = AVAILABLE_PROTOCOLS.getProtocolDescriptor(FB_PROTOCOL_FLAG | version);
@@ -207,11 +208,11 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
         return descriptor;
     }
 
-    private static Integer tryParseInt(String s) {
+    private static void tryParseInt(String s, IntConsumer intConsumer) {
         try {
-            return Integer.valueOf(s.trim());
-        } catch (NumberFormatException e) {
-            return null;
+            intConsumer.accept(Integer.parseInt(s.trim()));
+        } catch (NumberFormatException ignored) {
         }
     }
+
 }

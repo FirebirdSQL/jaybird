@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2013-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -19,14 +20,14 @@ public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
      * Reads the response from the server.
      *
      * @param callback
-     *         Callback object for warnings, <code>null</code> for default callback
+     *         Callback object for warnings, {@code null} for default callback
      * @return {@link Response} read.
      * @throws SQLException
      *         For errors returned from the server, or when attempting to read
      * @throws IOException
      *         For errors reading the response from the connection.
      */
-    Response readResponse(WarningMessageCallback callback) throws SQLException, IOException;
+    Response readResponse(@Nullable WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
      * Release object.
@@ -42,15 +43,16 @@ public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
      * Convenience method to read a Response to a SqlResponse
      *
      * @param callback
-     *         Callback object for warnings, <code>null</code> for default callback
+     *         Callback object for warnings, {@code null} for default callback
      * @return SqlResponse
      * @throws SQLException
-     *         For errors returned from the server, or when attempting to
-     *         read.
+     *         For errors returned from the server, or when attempting to read
      * @throws IOException
      *         For errors reading the response from the connection.
+     * @deprecated use {@link #readResponse(WarningMessageCallback)}, will be removed in Jaybird 8 or later
      */
-    SqlResponse readSqlResponse(WarningMessageCallback callback) throws SQLException, IOException;
+    @Deprecated
+    SqlResponse readSqlResponse(@Nullable WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
      * @return The {@link BlrCalculator} instance for this database.
@@ -91,10 +93,12 @@ public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
      * package responses).
      * </p>
      *
-     * @param numberOfResponses Number of responses to consume.
-     * @param warningCallback Callback for warnings
+     * @param numberOfResponses
+     *         number of responses to consume.
+     * @param warningCallback
+     *         callback object for warnings, {@code null} for default callback
      */
-    void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback);
+    void consumePackets(int numberOfResponses, @Nullable WarningMessageCallback warningCallback);
 
     /**
      * Generic info request.
@@ -118,6 +122,6 @@ public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
      *         For errors retrieving the information
      */
     byte[] getInfo(int operation, int handle, byte[] requestItems, int maxBufferLength,
-            WarningMessageCallback warningMessageCallback) throws SQLException;
+            @Nullable WarningMessageCallback warningMessageCallback) throws SQLException;
     
 }

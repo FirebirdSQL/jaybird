@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2013-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.wire;
+
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -17,5 +19,6 @@ import java.sql.SQLException;
  * @since 3.0
  */
 @SuppressWarnings("java:S6218")
-public record GenericResponse(int objectHandle, long blobId, byte[] data, SQLException exception) implements Response {
+public record GenericResponse(int objectHandle, long blobId, byte[] data, @Nullable SQLException exception)
+        implements Response {
 }

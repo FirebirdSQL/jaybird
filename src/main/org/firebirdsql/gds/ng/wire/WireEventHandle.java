@@ -6,7 +6,6 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.ng.AbstractEventHandle;
-import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,7 +18,6 @@ import static org.firebirdsql.gds.ISCConstants.EPB_version1;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public final class WireEventHandle extends AbstractEventHandle implements AsynchronousChannelListener {
 
     private static final AtomicInteger localEventId = new AtomicInteger();

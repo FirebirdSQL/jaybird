@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version11;
 
@@ -12,6 +12,7 @@ import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
 import org.firebirdsql.gds.ng.wire.Response;
 import org.firebirdsql.gds.ng.wire.version10.V10OutputBlob;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.function.Function;
@@ -58,7 +59,7 @@ public class V11OutputBlob extends V10OutputBlob {
                 sendOpen(BlobOpenOperation.OUTPUT_BLOB, false);
                 getDatabase().enqueueDeferredAction(wrapDeferredResponse(new DeferredResponse<>() {
                     @Override
-                    public void onResponse(Response response) {
+                    public void onResponse(@Nullable Response response) {
                         if (response instanceof GenericResponse genericResponse) {
                             try {
                                 processOpenResponse(genericResponse);

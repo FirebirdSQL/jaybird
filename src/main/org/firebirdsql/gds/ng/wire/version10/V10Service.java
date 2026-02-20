@@ -8,6 +8,7 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.wire.*;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -150,7 +151,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
     }
 
     @Override
-    public byte[] getServiceInfo(ServiceParameterBuffer serviceParameterBuffer,
+    public byte[] getServiceInfo(@Nullable ServiceParameterBuffer serviceParameterBuffer,
             ServiceRequestBuffer serviceRequestBuffer, int maxBufferLength) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkAttached();
@@ -162,7 +163,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
         }
     }
 
-    private void sendServiceInfo(ServiceParameterBuffer serviceParameterBuffer,
+    private void sendServiceInfo(@Nullable ServiceParameterBuffer serviceParameterBuffer,
             ServiceRequestBuffer serviceRequestBuffer, int maxBufferLength) throws SQLException {
         try {
             withTransmitLock(xdrOut -> {
@@ -192,7 +193,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
      *         for errors writing to the output stream
      * @since 7
      */
-    protected void sendServiceInfoMsg(XdrOutputStream xdrOut, ServiceParameterBuffer serviceParameterBuffer,
+    protected void sendServiceInfoMsg(XdrOutputStream xdrOut, @Nullable ServiceParameterBuffer serviceParameterBuffer,
             ServiceRequestBuffer serviceRequestBuffer, int maxBufferLength) throws IOException {
         xdrOut.writeInt(op_service_info); // p_operation
         xdrOut.writeLong(0); // p_info_object + p_info_incarnation
@@ -262,7 +263,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
     }
 
     @Override
-    public final void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
+    public final void authReceiveResponse(@Nullable AcceptPacket acceptPacket) throws IOException, SQLException {
         wireOperations.authReceiveResponse(acceptPacket, connection.createDbCryptCallback());
     }
 }

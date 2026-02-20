@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2016 Adriano dos Santos Fernandes
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
@@ -13,6 +13,7 @@ import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.ref.Cleaner;
 import java.nio.ByteBuffer;
@@ -274,7 +275,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     }
 
     @Override
-    public JnaStatement createStatement(FbTransaction transaction) throws SQLException {
+    public JnaStatement createStatement(@Nullable FbTransaction transaction) throws SQLException {
         try {
             checkConnected();
             final JnaStatement stmt = new JnaStatement(this);
@@ -288,17 +289,18 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     }
 
     @Override
-    public FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer)
+    public FbBlob createBlobForOutput(FbTransaction transaction, @Nullable BlobParameterBuffer blobParameterBuffer)
             throws SQLException {
-        final JnaBlob jnaBlob = new JnaBlob(this, (JnaTransaction) transaction, blobParameterBuffer);
+        var jnaBlob = new JnaBlob(this, (JnaTransaction) transaction, BlobParameterBuffer.orEmpty(blobParameterBuffer));
         jnaBlob.addExceptionListener(exceptionListenerDispatcher);
         return jnaBlob;
     }
 
     @Override
-    public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId)
-            throws SQLException {
-        final JnaBlob jnaBlob = new JnaBlob(this, (JnaTransaction) transaction, blobParameterBuffer, blobId);
+    public FbBlob createBlobForInput(FbTransaction transaction, @Nullable BlobParameterBuffer blobParameterBuffer,
+            long blobId) throws SQLException {
+        var jnaBlob = new JnaBlob(this, (JnaTransaction) transaction, BlobParameterBuffer.orEmpty(blobParameterBuffer),
+                blobId);
         jnaBlob.addExceptionListener(exceptionListenerDispatcher);
         return jnaBlob;
     }
@@ -322,7 +324,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     }
 
     @Override
-    public void executeImmediate(String statementText, FbTransaction transaction) throws SQLException {
+    public void executeImmediate(String statementText, @Nullable FbTransaction transaction) throws SQLException {
         // TODO also implement op_exec_immediate2
         try {
             if (isAttached()) {
@@ -390,6 +392,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     }
 
     @Override
+    @SuppressWarnings("RedundantThrows")
     public JnaEventHandle createEventHandle(String eventName, EventHandler eventHandler) throws SQLException {
         final JnaEventHandle eventHandle = new JnaEventHandle(eventName, eventHandler, getEncoding());
         try (LockCloseable ignored = withLock()) {
@@ -472,7 +475,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
         processStatusVector(statusVector, getDatabaseWarningCallback());
     }
 
-    public void processStatusVector(ISC_STATUS[] statusVector, WarningMessageCallback warningMessageCallback)
+    public void processStatusVector(ISC_STATUS[] statusVector, @Nullable WarningMessageCallback warningMessageCallback)
             throws SQLException {
         if (warningMessageCallback == null) {
             warningMessageCallback = getDatabaseWarningCallback();

@@ -13,6 +13,7 @@ import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -67,7 +68,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     }
 
     @Override
-    public final SQLException readStatusVector() throws SQLException {
+    public final @Nullable SQLException readStatusVector() throws SQLException {
         return readStatusVector(getXdrIn());
     }
 
@@ -76,12 +77,12 @@ public abstract class AbstractWireOperations implements FbWireOperations {
      *
      * @param xdrIn
      *         XDR input stream to read from
-     * @return SQLException from the status vector
+     * @return SQLException from the status vector, or {@code null} if there is no exception
      * @throws SQLException
      *         for errors reading or processing the status vector
      * @see FbWireOperations#readStatusVector()
      */
-    protected final SQLException readStatusVector(XdrInputStream xdrIn) throws SQLException {
+    protected final @Nullable SQLException readStatusVector(XdrInputStream xdrIn) throws SQLException {
         final FbExceptionBuilder builder = new FbExceptionBuilder();
         try {
             while (true) {
@@ -116,12 +117,13 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     }
 
     @Override
-    public final Response readResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
+    public final Response readResponse(@Nullable WarningMessageCallback warningCallback)
+            throws SQLException, IOException {
         return readOperationResponse(readNextOperation(), warningCallback);
     }
 
     @Override
-    public final Response readOperationResponse(int operationCode, WarningMessageCallback warningCallback)
+    public final Response readOperationResponse(int operationCode, @Nullable WarningMessageCallback warningCallback)
             throws SQLException, IOException {
         Response response = processOperation(operationCode);
         processResponseWarnings(response, warningCallback);
@@ -231,7 +233,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
      * @param response
      *         Response to process
      */
-    public final void processResponseWarnings(final Response response, WarningMessageCallback warningCallback) {
+    public final void processResponseWarnings(Response response, @Nullable WarningMessageCallback warningCallback) {
         if (response instanceof GenericResponse genericResponse
                 && genericResponse.exception() instanceof SQLWarning warning) {
             requireNonNullElse(warningCallback, defaultWarningMessageCallback).processWarning(warning);
@@ -239,13 +241,14 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     }
 
     @Override
-    public final GenericResponse readGenericResponse(WarningMessageCallback warningCallback)
+    public final GenericResponse readGenericResponse(@Nullable WarningMessageCallback warningCallback)
             throws SQLException, IOException {
         return (GenericResponse) readResponse(warningCallback);
     }
 
     @Override
-    public final SqlResponse readSqlResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
+    public final SqlResponse readSqlResponse(@Nullable WarningMessageCallback warningCallback)
+            throws SQLException, IOException {
         return (SqlResponse) readResponse(warningCallback);
     }
 
@@ -255,7 +258,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     }
 
     @Override
-    public final void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback) {
+    public final void consumePackets(int numberOfResponses, @Nullable WarningMessageCallback warningCallback) {
         while (numberOfResponses-- > 0) {
             try {
                 readResponse(warningCallback);
@@ -280,7 +283,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         return connection.withLockProxy();
     }
 
-    protected final void addServerKeys(byte[] serverKeys) throws SQLException {
+    protected final void addServerKeys(byte @Nullable [] serverKeys) throws SQLException {
         connection.addServerKeys(serverKeys);
     }
 
@@ -288,7 +291,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         connection.clearServerKeys();
     }
 
-    protected final ClientAuthBlock getClientAuthBlock() {
+    protected final @Nullable ClientAuthBlock getClientAuthBlock() {
         return connection.getClientAuthBlock();
     }
 

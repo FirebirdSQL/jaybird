@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2019-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
@@ -79,12 +79,11 @@ class FbClientFeatureAccessHandler implements InvocationHandler {
                     "Could not decorate client library with FbClientFeatureAccess: not a proxy");
         }
         InvocationHandler ih = Proxy.getInvocationHandler(library);
-        if (!(ih instanceof Library.Handler)) {
+        if (!(ih instanceof Library.Handler originalHandler)) {
             throw new IllegalArgumentException("Could not decorate client library with FbClientFeatureAccess: "
                     + "unexpected invocation handler type " + ih.getClass());
         }
 
-        Library.Handler originalHandler = (Library.Handler) ih;
         NativeLibrary nativeLibrary = originalHandler.getNativeLibrary();
         Set<FbClientFeature> clientFeatures = determineClientFeatures(nativeLibrary);
 

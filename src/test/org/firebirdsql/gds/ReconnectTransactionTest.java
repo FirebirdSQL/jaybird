@@ -8,6 +8,7 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.FBTpbMapper;
@@ -100,8 +101,9 @@ class ReconnectTransactionTest {
             DataProvider dataProvider0 = new DataProvider(rows, 0);
             DataProvider dataProvider1 = new DataProvider(rows, 1);
 
-            FBField field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
-            FBField field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
+            RowDescriptor rowDescriptor = stmtHandle2.getRowDescriptor();
+            FBField field0 = FBField.createField(rowDescriptor.getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
+            FBField field1 = FBField.createField(rowDescriptor.getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
 
             boolean foundInLimboTx = false;
             int row = 0;

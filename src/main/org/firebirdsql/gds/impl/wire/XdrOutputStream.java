@@ -132,13 +132,14 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      * @see #writeZeroPadding(int)
      */
     public void writePadding(int len, int padByte) throws IOException {
-        if (padByte == SPACE_BYTE) {
-            writeSpacePadding(len);
-        } else if (padByte == NULL_BYTE) {
-            writeZeroPadding(len);
-        } else {
+        if (len == 0) return;
+        switch (padByte) {
+        case SPACE_BYTE -> writeSpacePadding(len);
+        case NULL_BYTE -> writeZeroPadding(len);
+        default -> {
             byte[] padding = createPadding(len, (byte) padByte);
             write(padding, 0, len);
+        }
         }
     }
 
@@ -193,7 +194,35 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
     public void writeBuffer(byte[] buf, int off, int len) throws IOException {
         Objects.checkFromIndexSize(off, len, buf.length);
         writeInt(len);
-        write(buf, off, len);
+        if (len > 0) {
+            write(buf, off, len);
+            writeAlignment(len);
+        }
+    }
+
+    /**
+     * Writes at most {@code len} bytes from {@code buf}, padding with {@code paddingByte} up to {@code len} if
+     * the buffer is shorter or {@code null}, followed by the buffer alignment padding.
+     * <p>
+     * Contrary to {@link #writeBuffer(byte[])} and {@link #writeBuffer(byte[], int, int)}, it is not prefixed with
+     * length; the length is expected to either have been written already, or follow from the protocol or some other
+     * specification (e.g. the parameter BLR).
+     * </p>
+     *
+     * @param buf
+     *         bytes to be written
+     * @param len
+     *         length to write, if {@code buf} is shorter or {@code null}, the difference is written as {@code padByte}
+     * @param padByte
+     *         padding byte to use (generally either space (0x20) or NUL (0x00))
+     * @since 7
+     */
+    public void writePaddedBuffer(byte @Nullable [] buf, int len, int padByte) throws IOException {
+        int buflen = buf != null ? Math.min(buf.length, len) : 0;
+        if (buflen > 0) {
+            write(buf, 0, buflen);
+        }
+        writePadding(len - buflen, padByte);
         writeAlignment(len);
     }
 
@@ -216,15 +245,10 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      *         if an error occurs while writing to the underlying output stream
      */
     public void writeTyped(int type, @Nullable Xdrable item) throws IOException {
-        int size;
-        if (item == null) {
-            writeInt(1);
-            write(type); //e.g. isc_tpb_version3
-            size = 1;
-        } else {
-            size = item.getLength() + 1;
-            writeInt(size);
-            write(type); //e.g. isc_tpb_version3
+        int size = 1 + (item != null ? item.getLength() : 0);
+        writeInt(size);
+        write(type); //e.g. isc_tpb_version3
+        if (size > 1) {
             item.write(this);
         }
         writeAlignment(size);

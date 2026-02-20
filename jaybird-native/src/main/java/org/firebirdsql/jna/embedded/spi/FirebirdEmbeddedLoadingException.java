@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jna.embedded.spi;
 
+import java.io.Serial;
+
 /**
  * Exception to signal errors when loading or identifying a Firebird Embedded library.
  *
@@ -10,6 +12,7 @@ package org.firebirdsql.jna.embedded.spi;
  */
 public class FirebirdEmbeddedLoadingException extends Exception {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     public FirebirdEmbeddedLoadingException(String message) {

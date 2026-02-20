@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
@@ -6,6 +6,7 @@ import com.sun.jna.NativeLibrary;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -28,7 +29,7 @@ import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.registerNativeRes
 public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory {
 
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-    private FbClientResource resource;
+    private @Nullable FbClientResource resource;
 
     @Override
     public JnaDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
@@ -179,7 +180,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
         }
     }
 
-    private String resolvePathForJna(String nativeLibraryPath) {
+    private @Nullable String resolvePathForJna(String nativeLibraryPath) {
         var log = System.getLogger(getClass().getName());
         try {
             Path actualPath = Path.of(nativeLibraryPath).toAbsolutePath();

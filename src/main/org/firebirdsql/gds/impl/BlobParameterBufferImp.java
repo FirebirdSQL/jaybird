@@ -22,7 +22,7 @@ public class BlobParameterBufferImp extends ParameterBufferBase implements BlobP
         super(BpbMetaData.BPB_VERSION_1);
     }
 
-    private enum BpbMetaData implements ParameterBufferMetaData {
+    enum BpbMetaData implements ParameterBufferMetaData {
 
         BPB_VERSION_1(BpbItems.isc_bpb_version1);
 

@@ -96,7 +96,10 @@ public class V16WireOperations extends V15WireOperations {
         for (int i = 0; i < detailedErrorsCount; i++) {
             int element = xdrIn.readInt();
             SQLException error = readStatusVector(xdrIn);
-            detailedErrors.add(new BatchCompletion.DetailedError(element, error));
+            if (error != null) {
+                // null-check to suppress warning; in practice it won't be null here
+                detailedErrors.add(new BatchCompletion.DetailedError(element, error));
+            }
         }
 
         int[] simplifiedErrors = new int[simplifiedErrorsCount];

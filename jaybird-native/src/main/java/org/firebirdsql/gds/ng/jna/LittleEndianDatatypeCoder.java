@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Datatype encoder and decoder for little endian platforms, specifically for use with the Firebird client library.
@@ -90,7 +91,7 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
     }
 
     @Override
-    public long decodeLong(byte[] buf) {
+    public long decodeLong(byte @Nullable [] buf) {
         if (buf == null) return 0;
         return (buf[0] & 0xFFL) +
                ((buf[1] & 0xFFL) << 8) +
@@ -104,8 +105,7 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
 
     @Override
     @SuppressWarnings("java:S1168")
-    protected byte[] networkOrder(final byte[] buf) {
-        if (buf == null) return null;
+    protected byte[] networkOrder(byte[] buf) {
         final byte[] newArray = new byte[buf.length];
         final int maxIndex = newArray.length - 1;
         for (int idx = 0; idx <= maxIndex; idx++) {

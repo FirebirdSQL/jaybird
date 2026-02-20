@@ -118,6 +118,7 @@ public interface ParameterBuffer extends Iterable<Parameter>, Serializable {
      *         type of argument to find.
      * @return argument as string or {@code null} if nothing found.
      */
+    @SuppressWarnings("unused")
     @Nullable String getArgumentAsString(int argumentType);
 
     /**
@@ -168,7 +169,9 @@ public interface ParameterBuffer extends Iterable<Parameter>, Serializable {
     /**
      * Converts this parameter buffer to a byte array.
      * <p>
-     * This byte array includes the extra header-bytes (if any), but does not include the type information
+     * This byte array includes the extra header-bytes (if any), but does not include the type information. If
+     * the parameter buffer is empty, implementations may return either an empty byte array or an array with only
+     * the extra header bytes.
      * </p>
      *
      * @return Byte array with serialization of this parameter buffer
@@ -179,7 +182,9 @@ public interface ParameterBuffer extends Iterable<Parameter>, Serializable {
     /**
      * Converts this parameter buffer to a byte array with type information.
      * <p>
-     * This byte array includes the type information and the extra header bytes (if any).
+     * This byte array includes the type information and the extra header bytes (if any). If the parameter buffer is
+     * empty, implementations may return either an empty byte array or an array with only the type and extra header
+     * bytes.
      * </p>
      *
      * @return Byte array with serialization of this parameter buffer

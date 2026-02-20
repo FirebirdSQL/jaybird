@@ -7,7 +7,7 @@ import org.jspecify.annotations.Nullable;
 import java.sql.SQLException;
 
 /**
- * Interface for calculating the blr (binary language representation) of a row.
+ * Interface for calculating the BLR (Binary Language Representation) of a row.
  *
  * @author Mark Rotteveel
  * @since 3.0
@@ -15,18 +15,18 @@ import java.sql.SQLException;
 public interface BlrCalculator {
 
     /**
-     * Calculates the blr for the row descriptor.
+     * Calculates the BLR for the row descriptor.
      *
      * @param rowDescriptor
      *         Row descriptor
-     * @return Byte array with the blr
+     * @return Byte array with the BLR, if the row descriptor has no fields, an empty array is returned
      * @throws SQLException
      *         When the {@link RowDescriptor} contains an unsupported field type.
      */
     byte[] calculateBlr(RowDescriptor rowDescriptor) throws SQLException;
 
     /**
-     * Calculates the blr for a specific row value.
+     * Calculates the BLR for a specific row value.
      * <p>
      * This allows to optimize for the actual length of the field.
      * </p>
@@ -35,9 +35,10 @@ public interface BlrCalculator {
      *         Row descriptor
      * @param rowValue
      *         Row value
-     * @return Byte array with the blr
+     * @return Byte array with the BLR, if the row descriptor has no fields, an empty array is returned
      * @throws SQLException
-     *         When the {@link RowValue} contains an unsupported field type.
+     *         When the {@link RowValue} contains an unsupported field type, or the field count of {@code rowDescriptor}
+     *         and {@code rowValue} do not match
      */
     byte[] calculateBlr(RowDescriptor rowDescriptor, RowValue rowValue) throws SQLException;
 

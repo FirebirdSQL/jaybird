@@ -695,9 +695,10 @@ public final class FBManagedConnection implements ExceptionListener {
 
                 stmtHandle.execute(RowValue.EMPTY_ROW_VALUE);
 
-                var field0 = FBField.createField(stmtHandle.getRowDescriptor().getFieldDescriptor(0),
+                RowDescriptor rowDescriptor = stmtHandle.getRowDescriptor();
+                var field0 = FBField.createField(rowDescriptor.getFieldDescriptor(0),
                         dataProvider.asFieldDataProvider(0), gdsHelper, false);
-                var field1 = FBField.createField(stmtHandle.getRowDescriptor().getFieldDescriptor(1),
+                var field1 = FBField.createField(rowDescriptor.getFieldDescriptor(1),
                         dataProvider.asFieldDataProvider(1), gdsHelper, false);
 
                 while (dataProvider.next()) {
@@ -757,9 +758,10 @@ public final class FBManagedConnection implements ExceptionListener {
                 var tempXid = new FBXid(externalXid);
                 stmtHandle.execute(RowValue.of(stmtHandle.getParameterDescriptor(), tempXid.toBytes()));
 
-                var field0 = FBField.createField(stmtHandle.getRowDescriptor().getFieldDescriptor(0),
+                RowDescriptor rowDescriptor = stmtHandle.getRowDescriptor();
+                var field0 = FBField.createField(rowDescriptor.getFieldDescriptor(0),
                         dataProvider.asFieldDataProvider(0), gdsHelper, false);
-                var field1 = FBField.createField(stmtHandle.getRowDescriptor().getFieldDescriptor(1),
+                var field1 = FBField.createField(rowDescriptor.getFieldDescriptor(1),
                         dataProvider.asFieldDataProvider(1), gdsHelper, false);
 
                 stmtHandle.fetchRows(1);
@@ -1165,6 +1167,7 @@ public final class FBManagedConnection implements ExceptionListener {
      * @see java.sql.Connection
      * @see #setTransactionIsolation(int)
      */
+    @SuppressWarnings("RedundantThrows")
     public int getTransactionIsolation() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             return transactionIsolation;
@@ -1245,6 +1248,7 @@ public final class FBManagedConnection implements ExceptionListener {
      * @see #setTpbAutoCommit(boolean)
      * @since 6
      */
+    @SuppressWarnings("unused")
     public boolean isTpbAutoCommit() {
         return tpb.isAutoCommit();
     }

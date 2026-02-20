@@ -1,11 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ClumpletReader;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
-import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,7 +30,6 @@ import static org.firebirdsql.gds.ISCConstants.isc_info_end;
  * @author Mark Rotteveel
  * @since 7
  */
-@NullMarked
 public record CachedInfoResponse(byte[] infoResponse) {
 
     private static final System.Logger logger = System.getLogger(CachedInfoResponse.class.getName());
@@ -127,7 +126,7 @@ public record CachedInfoResponse(byte[] infoResponse) {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         return obj instanceof CachedInfoResponse that && Arrays.equals(this.infoResponse, that.infoResponse);
     }
 

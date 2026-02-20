@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
@@ -14,10 +14,12 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.ref.Cleaner;
 import java.nio.ByteBuffer;
@@ -77,20 +79,17 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
     }
 
     @Override
-    public byte[] getServiceInfo(ServiceParameterBuffer serviceParameterBuffer,
+    public byte[] getServiceInfo(@Nullable ServiceParameterBuffer serviceParameterBuffer,
             ServiceRequestBuffer serviceRequestBuffer, int maxBufferLength) throws SQLException {
         try {
-            final byte[] serviceParameterBufferBytes = serviceParameterBuffer == null ? null
-                    : serviceParameterBuffer.toBytes();
-            final byte[] serviceRequestBufferBytes =
-                    serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
-            final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
+            byte[] serviceParameterBufferBytes = serviceParameterBuffer != null ? serviceParameterBuffer.toBytes()
+                            : ByteArrayHelper.emptyByteArray();
+            byte[] serviceRequestBufferBytes = serviceRequestBuffer.toBytes();
+            var responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
             try (LockCloseable ignored = withLock()) {
                 clientLibrary.isc_service_query(statusVector, handle, new IntByReference(0),
-                        (short) (serviceParameterBufferBytes != null ? serviceParameterBufferBytes.length
-                                : 0), serviceParameterBufferBytes,
-                        (short) (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length
-                                : 0), serviceRequestBufferBytes,
+                        (short) serviceParameterBufferBytes.length, serviceParameterBufferBytes,
+                        (short) serviceRequestBufferBytes.length, serviceRequestBufferBytes,
                         (short) maxBufferLength, responseBuffer);
                 processStatusVector();
             }
@@ -105,11 +104,10 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
 
     @Override
     public void startServiceAction(ServiceRequestBuffer serviceRequestBuffer) throws SQLException {
-        byte[] serviceRequestBufferBytes = serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
+        byte[] serviceRequestBufferBytes = serviceRequestBuffer.toBytes();
         try (LockCloseable ignored = withLock()) {
             clientLibrary.isc_service_start(statusVector, handle, new IntByReference(0),
-                    (short) (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length : 0),
-                    serviceRequestBufferBytes);
+                    (short) serviceRequestBufferBytes.length, serviceRequestBufferBytes);
             processStatusVector();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -193,6 +191,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
         return handle.getValue();
     }
 
+    @SuppressWarnings("unused")
     public IntByReference getJnaHandle() {
         return handle;
     }
@@ -213,12 +212,10 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
         processStatusVector(statusVector, getServiceWarningCallback());
     }
 
-    public void processStatusVector(ISC_STATUS[] statusVector, WarningMessageCallback warningMessageCallback)
+    public void processStatusVector(ISC_STATUS[] statusVector, @Nullable WarningMessageCallback warningMessageCallback)
             throws SQLException {
-        if (warningMessageCallback == null) {
-            warningMessageCallback = getServiceWarningCallback();
-        }
-        connection.processStatusVector(statusVector, warningMessageCallback);
+        connection.processStatusVector(statusVector,
+                warningMessageCallback != null ? warningMessageCallback : getServiceWarningCallback());
     }
 
     private record CleanupAction(IntByReference handle, FbClientLibrary library) implements Runnable {

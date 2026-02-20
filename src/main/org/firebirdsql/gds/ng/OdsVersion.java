@@ -1,9 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2024-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.AbstractVersion;
-import org.jspecify.annotations.NullMarked;
 
 import java.io.Serial;
 import java.util.Map;
@@ -18,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Mark Rotteveel
  * @since 6
  */
-@NullMarked
 public final class OdsVersion extends AbstractVersion {
 
     @Serial

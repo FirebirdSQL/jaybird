@@ -154,7 +154,7 @@ public final class ClientAuthBlock {
         }
     }
 
-    public void setServerData(byte[] serverData) {
+    public void setServerData(byte @Nullable [] serverData) {
         if (currentPlugin == null) {
             log.log(DEBUG, "Received server data without current plugin");
         } else {
@@ -208,6 +208,7 @@ public final class ClientAuthBlock {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void addMultiPartConnectParameter(OutputStream userId, int paramType, byte[] specificDataBytes)
             throws IOException {
         // write specific data

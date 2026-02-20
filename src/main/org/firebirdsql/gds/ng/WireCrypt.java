@@ -3,7 +3,6 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
@@ -11,7 +10,6 @@ import java.util.Locale;
 /**
  * @author Mark Rotteveel
  */
-@NullMarked
 public enum WireCrypt {
     REQUIRED(WireProtocolConstants.WIRE_CRYPT_REQUIRED),
     ENABLED(WireProtocolConstants.WIRE_CRYPT_ENABLED),

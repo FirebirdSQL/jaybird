@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.FbAttachment;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -36,7 +37,7 @@ public interface FbWireAttachment extends FbAttachment {
      * @throws IOException
      *         For errors reading the response from the connection.
      */
-    GenericResponse readGenericResponse(WarningMessageCallback callback) throws SQLException, IOException;
+    GenericResponse readGenericResponse(@Nullable WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
      * Receive authentication response from the server.
@@ -53,7 +54,7 @@ public interface FbWireAttachment extends FbAttachment {
      *         For errors returned from the server, or when attempting to
      *         read.
      */
-    void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException;
+    void authReceiveResponse(@Nullable AcceptPacket acceptPacket) throws IOException, SQLException;
 
     /**
      * Struct-like class, reduced equivalent of Firebird p_acpd to store data for handling op_cond_accept.
@@ -61,8 +62,8 @@ public interface FbWireAttachment extends FbAttachment {
     @SuppressWarnings({ "java:S116", "java:S1104" })
     class AcceptPacket {
         public int operation;
-        public byte[] p_acpt_data;
-        public String p_acpt_plugin;
-        public byte[] p_acpt_keys;
+        public byte @Nullable [] p_acpt_data;
+        public @Nullable String p_acpt_plugin;
+        public byte @Nullable [] p_acpt_keys;
     }
 }

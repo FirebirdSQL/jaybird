@@ -4,6 +4,7 @@ package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
@@ -27,7 +28,8 @@ class JnaServiceConnectionTest {
             (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
     private final FbServiceProperties connectionInfo = getDefaultServiceProperties();
 
-    @Test
+    @Test@SuppressWarnings("DataFlowIssue")
+
     void construct_clientLibraryNull_IllegalArgument() {
         assertThrows(NullPointerException.class, () -> new JnaServiceConnection(null, connectionInfo));
     }
@@ -48,8 +50,7 @@ class JnaServiceConnectionTest {
         try {
             assertFalse(db.isAttached(), "Expected isAttached() to return false");
             assertEquals(0, db.getHandle(), "Expected zero-valued connection handle");
-            assertNull(db.getServerVersion(), "Expected version string to be null");
-            assertNull(db.getServerVersion(), "Expected version should be null");
+            assertEquals(GDSServerVersion.INVALID_VERSION, db.getServerVersion(), "Expected version to be invalid");
         } finally {
             closeQuietly(db);
         }

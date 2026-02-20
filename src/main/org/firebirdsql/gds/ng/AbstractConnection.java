@@ -4,6 +4,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingDefinition;
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallbackSpi;
@@ -37,26 +38,28 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
 
     protected AbstractConnection(T attachProperties, IEncodingFactory encodingFactory) throws SQLException {
         this.attachProperties = attachProperties.asNewMutable();
-        final String firebirdEncodingName = attachProperties.getEncoding();
-        final String javaCharsetAlias = attachProperties.getCharSet();
-
-        EncodingDefinition tempEncodingDefinition = encodingFactory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
-        if (tempEncodingDefinition == null || tempEncodingDefinition.isInformationOnly()) {
-            if (firebirdEncodingName == null && javaCharsetAlias == null) {
-                // TODO Can we use a different method that is not nullable to get NONE (which should always exist)
-                tempEncodingDefinition = encodingFactory.getEncodingDefinition("NONE", null);
-                assert tempEncodingDefinition != null;
-            } else {
-                throw FbExceptionBuilder.forNonTransientConnectionException(jb_invalidConnectionEncoding)
-                        .messageParameter(firebirdEncodingName, javaCharsetAlias)
-                        .toSQLException();
-            }
-        }
-        encodingDefinition = tempEncodingDefinition;
+        encodingDefinition = resolveEncodingDefinition(attachProperties, encodingFactory);
         this.encodingFactory = encodingFactory.withDefaultEncodingDefinition(encodingDefinition);
         // Overwrite with normalized values and specify missing values, eg if only charSet was specified, encoding will be set
         this.attachProperties.setEncoding(encodingDefinition.getFirebirdEncodingName());
         this.attachProperties.setCharSet(encodingDefinition.getJavaEncodingName());
+    }
+
+    private static EncodingDefinition resolveEncodingDefinition(IAttachProperties<?> attachProperties,
+            IEncodingFactory encodingFactory) throws SQLException {
+        String fbEncodingName = attachProperties.getEncoding();
+        String javaCharSet = attachProperties.getCharSet();
+        // fallback to NONE if no encoding nor charset is provided
+        fbEncodingName =
+                fbEncodingName == null && javaCharSet == null ? EncodingFactory.ENCODING_NAME_NONE : fbEncodingName;
+        EncodingDefinition encodingDefinition = encodingFactory.getEncodingDefinition(fbEncodingName, javaCharSet);
+        if (encodingDefinition == null || encodingDefinition.isInformationOnly()) {
+            throw FbExceptionBuilder.forNonTransientConnectionException(jb_invalidConnectionEncoding)
+                    // report original value of encoding
+                    .messageParameter(attachProperties.getEncoding(), javaCharSet)
+                    .toSQLException();
+        }
+        return encodingDefinition;
     }
 
     /**
@@ -95,6 +98,7 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
     }
 
     public final Encoding getEncoding() {
+        //noinspection DataFlowIssue : encoding is not null for the connection encoding
         return this.encodingDefinition.getEncoding();
     }
 

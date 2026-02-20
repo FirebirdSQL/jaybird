@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -7,6 +7,7 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.ng.listeners.ServiceListener;
 import org.firebirdsql.gds.ng.listeners.ServiceListenerDispatcher;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -33,7 +34,7 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
     }
 
     @Override
-    public final <R> R getServiceInfo(ServiceParameterBuffer serviceParameterBuffer,
+    public final <R extends @Nullable Object> R getServiceInfo(@Nullable ServiceParameterBuffer serviceParameterBuffer,
             ServiceRequestBuffer serviceRequestBuffer, int bufferLength, InfoProcessor<R> infoProcessor)
             throws SQLException {
         final byte[] responseBuffer = getServiceInfo(serviceParameterBuffer, serviceRequestBuffer, bufferLength);
@@ -109,7 +110,7 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
         return new ServiceInformationProcessor();
     }
 
-    private class ServiceInformationProcessor implements InfoProcessor<FbService> {
+    private final class ServiceInformationProcessor implements InfoProcessor<FbService> {
         @Override
         public FbService process(byte[] info) throws SQLException {
             if (info.length == 0) {

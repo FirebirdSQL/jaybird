@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2013-2014 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
+
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -57,7 +59,7 @@ public enum TransactionState {
         }
     };
 
-    private Set<TransactionState> validTransitions;
+    private @Nullable Set<TransactionState> validTransitions;
 
     /**
      * Is the transition to <code>toState</code> valid from this state.

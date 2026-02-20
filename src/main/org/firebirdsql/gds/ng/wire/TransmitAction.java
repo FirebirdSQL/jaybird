@@ -3,7 +3,6 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -18,7 +17,6 @@ import java.sql.SQLException;
  * @since 7
  */
 @FunctionalInterface
-@NullMarked
 public interface TransmitAction {
 
     /**

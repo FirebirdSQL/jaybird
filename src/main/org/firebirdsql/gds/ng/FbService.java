@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2016 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
 
@@ -6,6 +6,7 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 import org.firebirdsql.gds.ng.listeners.ServiceListener;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -32,7 +33,7 @@ public interface FbService extends FbAttachment {
      * Request service info (service query).
      *
      * @param serviceParameterBuffer
-     *         Service parameters
+     *         Service parameters (can be null)
      * @param serviceRequestBuffer
      *         Service request info
      * @param bufferLength
@@ -44,8 +45,8 @@ public interface FbService extends FbAttachment {
      * @throws SQLException
      *         For errors retrieving or transforming the response.
      */
-    <T> T getServiceInfo(ServiceParameterBuffer serviceParameterBuffer, ServiceRequestBuffer serviceRequestBuffer,
-            int bufferLength, InfoProcessor<T> infoProcessor)
+    <T extends @Nullable Object> T getServiceInfo(@Nullable ServiceParameterBuffer serviceParameterBuffer,
+            ServiceRequestBuffer serviceRequestBuffer, int bufferLength, InfoProcessor<T> infoProcessor)
             throws SQLException;
 
     /**
@@ -61,8 +62,8 @@ public interface FbService extends FbAttachment {
      * @throws SQLException
      *         For errors retrieving the information.
      */
-    byte[] getServiceInfo(ServiceParameterBuffer serviceParameterBuffer, ServiceRequestBuffer serviceRequestBuffer,
-            int maxBufferLength) throws SQLException;
+    byte[] getServiceInfo(@Nullable ServiceParameterBuffer serviceParameterBuffer,
+            ServiceRequestBuffer serviceRequestBuffer, int maxBufferLength) throws SQLException;
 
     /**
      * Starts a service action.
@@ -96,6 +97,7 @@ public interface FbService extends FbAttachment {
      * @param listener
      *         Database listener
      */
+    @SuppressWarnings("unused")
     void addServiceListener(ServiceListener listener);
 
     /**
@@ -104,5 +106,6 @@ public interface FbService extends FbAttachment {
      * @param listener
      *         Database Listener
      */
+    @SuppressWarnings("unused")
     void removeServiceListener(ServiceListener listener);
 }

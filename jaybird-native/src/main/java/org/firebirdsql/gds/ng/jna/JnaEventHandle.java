@@ -13,7 +13,6 @@ import org.firebirdsql.gds.ng.AbstractEventHandle;
 import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -22,7 +21,6 @@ import org.jspecify.annotations.Nullable;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public final class JnaEventHandle extends AbstractEventHandle {
 
     private static final System.Logger log = System.getLogger(JnaEventHandle.class.getName());

@@ -6,7 +6,6 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import static java.util.Objects.requireNonNull;
@@ -17,7 +16,6 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public interface IAttachProperties<T extends IAttachProperties<T>> extends AttachmentProperties {
 
     int DEFAULT_SOCKET_BUFFER_SIZE = PropertyConstants.BUFFER_SIZE_NOT_SET;

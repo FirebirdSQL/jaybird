@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -12,7 +11,6 @@ import org.jspecify.annotations.Nullable;
  * @see FbImmutableServiceProperties
  * @since 3.0
  */
-@NullMarked
 public final class FbServiceProperties extends AbstractAttachProperties<IServiceProperties>
         implements IServiceProperties {
 

@@ -3,7 +3,6 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
-import org.jspecify.annotations.NullMarked;
 
 /**
  * Connection properties for a Firebird service attachment.
@@ -11,7 +10,6 @@ import org.jspecify.annotations.NullMarked;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public interface IServiceProperties extends IAttachProperties<IServiceProperties>, ServiceConnectionProperties {
 
     /**

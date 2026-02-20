@@ -12,7 +12,6 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.ref.Cleaner;
@@ -103,7 +102,7 @@ public class JnaTransaction extends AbstractFbTransaction {
     }
 
     @Override
-    public void prepare(byte[] recoveryInformation) throws SQLException {
+    public void prepare(byte @Nullable [] recoveryInformation) throws SQLException {
         boolean noRecoveryInfo = recoveryInformation == null || recoveryInformation.length == 0;
         try (LockCloseable ignored = withLock()) {
             final JnaDatabase db = getDatabase();
@@ -149,7 +148,6 @@ public class JnaTransaction extends AbstractFbTransaction {
         getDatabase().processStatusVector(statusVector, null);
     }
 
-    @NullMarked
     private static final class CleanupAction implements Runnable, DatabaseListener {
 
         private final IntByReference handle;

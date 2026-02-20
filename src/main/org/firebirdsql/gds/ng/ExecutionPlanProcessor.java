@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
@@ -49,8 +49,8 @@ public final class ExecutionPlanProcessor implements InfoProcessor<String> {
         if (buffer[0] == ISCConstants.isc_info_truncated) {
             buffer = statement.getSqlInfo(getDescribePlanInfoItems(), statement.getMaxSqlInfoSize());
             if (buffer[0] == ISCConstants.isc_info_truncated) {
-                // TODO Throw truncation exception instead
-                return null;
+                throw new InfoTruncatedException(
+                        "Received isc_info_truncated after fallback to simple execution plan with maximum size", 0);
             }
         }
 

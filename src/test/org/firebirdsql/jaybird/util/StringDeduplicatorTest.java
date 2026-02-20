@@ -15,7 +15,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -62,13 +61,6 @@ class StringDeduplicatorTest {
         });
 
         assertSame(value1Copy, deduplicator.get(value1Copy), "expected value1Copy as value1 has been evicted");
-    }
-
-    @Test
-    void deduplicateNull() {
-        var deduplicator = StringDeduplicator.of();
-
-        assertNull(deduplicator.get(null));
     }
 
     @Test

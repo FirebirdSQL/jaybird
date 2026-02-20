@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2015-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
+
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +14,7 @@ import java.util.List;
  * @author Mark Rotteveel
  * @since 3.0
  */
+@NullMarked
 public final class SimpleChannelListener implements AsynchronousChannelListener {
 
     private volatile boolean receivedChannelClosing;

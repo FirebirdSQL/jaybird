@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2019-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.gds.JaybirdSystemProperties;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.ref.Cleaner;
 import java.lang.ref.Reference;
@@ -31,7 +32,7 @@ public final class NativeResourceTracker {
     // - null (no shutdown thread registered),
     // - a Thread (shutdown thread registered),
     // - or an Object (shutdown thread disabled, eg by NativeLibraryUnloadWebListener)
-    private static final AtomicReference<Object> shutdownThread = new AtomicReference<>();
+    private static final AtomicReference<@Nullable Object> shutdownThread = new AtomicReference<>();
 
     private NativeResourceTracker() {
         // no instances
@@ -64,6 +65,7 @@ public final class NativeResourceTracker {
      * @return Value of {@code resource}
      * @see #registerNativeResource(NativeResource)
      */
+    @SuppressWarnings("UnusedReturnValue")
     static <T extends NativeResource> T strongRegisterNativeResource(T resource) {
         registerShutdownThreadIfNecessary();
         synchronized (strongRegisteredNativeResources) {

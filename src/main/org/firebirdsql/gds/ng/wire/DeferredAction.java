@@ -4,7 +4,6 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
@@ -22,7 +21,6 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public interface DeferredAction {
 
     /**

@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -26,7 +27,7 @@ public final class TransactionHelper {
      * @throws SQLException
      *         when {@code transaction} is {@code null}, or its state is not active
      */
-    public static void checkTransactionActive(FbTransaction transaction) throws SQLException {
+    public static void checkTransactionActive(@Nullable FbTransaction transaction) throws SQLException {
         checkTransactionActive(transaction, JaybirdErrorCodes.jb_noActiveTransaction);
     }
 
@@ -40,7 +41,7 @@ public final class TransactionHelper {
      * @throws SQLException
      *         when {@code transaction} is {@code null}, or its state is not active
      */
-    public static void checkTransactionActive(FbTransaction transaction, final int fbErrorCode) throws SQLException {
+    public static void checkTransactionActive(@Nullable FbTransaction transaction, final int fbErrorCode) throws SQLException {
         if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
             throw FbExceptionBuilder.toNonTransientException(fbErrorCode);
         }
@@ -56,7 +57,7 @@ public final class TransactionHelper {
      * {@code false} (including when {@code transaction} is {@code null})
      * @since 6
      */
-    public static boolean isTransactionEnding(FbTransaction transaction) {
+    public static boolean isTransactionEnding(@Nullable FbTransaction transaction) {
         if (transaction == null) return false;
         return switch(transaction.getState()) {
             case COMMITTING, ROLLING_BACK, PREPARING -> true;

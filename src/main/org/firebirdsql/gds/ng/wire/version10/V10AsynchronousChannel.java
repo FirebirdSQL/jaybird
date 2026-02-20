@@ -12,7 +12,7 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.jaybird.util.UncheckedSQLException;
-import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -72,7 +72,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     private final ChannelDatabaseListener databaseListener = new ChannelDatabaseListener();
     private final FbWireDatabase database;
     private final ByteBuffer eventBuffer = ByteBuffer.allocate(EVENT_BUFFER_SIZE);
-    private SocketChannel socketChannel;
+    private @Nullable SocketChannel socketChannel;
 
     public V10AsynchronousChannel(FbWireDatabase database) {
         this.database = requireNonNull(database, "database");
@@ -111,6 +111,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             try {
                 if (!isConnected()) return;
                 channelListenerDispatcher.channelClosing(this);
+                assert socketChannel != null; // null-case covered by isConnected()
                 socketChannel.close();
             } catch (IOException ex) {
                 throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_errorAsynchronousEventChannelClose)
@@ -143,6 +144,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     @Override
     public SocketChannel getSocketChannel() throws SQLException {
         if (!isConnected()) throw FbExceptionBuilder.toNonTransientException(jb_asyncChannelNotConnected);
+        assert socketChannel != null; // null-case covered by isConnected()
         return socketChannel;
     }
 
@@ -346,7 +348,6 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         }
     }
 
-    @NullMarked
     private final class ChannelDatabaseListener implements DatabaseListener {
 
         @Override

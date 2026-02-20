@@ -10,6 +10,7 @@ import org.firebirdsql.gds.ng.AbstractFbBlob;
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -128,15 +129,17 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
      *         for errors writing to the output stream
      * @since 7
      */
-    protected void sendOpenMsg(XdrOutputStream xdrOut, BlobOpenOperation openOperation) throws IOException {
+    protected void sendOpenMsg(XdrOutputStream xdrOut, BlobOpenOperation openOperation)
+            throws SQLException, IOException {
+        int transactionHandle = requireActiveTransaction().getHandle();
         BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
-        if (blobParameterBuffer == null || blobParameterBuffer.isEmpty()) {
+        if (blobParameterBuffer.isEmpty()) {
             xdrOut.writeInt(openOperation.opCodeWithoutBpb()); // p_operation
         } else {
             xdrOut.writeInt(openOperation.opCodeWithBpb()); // p_operation
             xdrOut.writeTyped(blobParameterBuffer); // p_blob_bpb
         }
-        xdrOut.writeInt(getTransaction().getHandle()); // p_blob_transaction
+        xdrOut.writeInt(transactionHandle); // p_blob_transaction
         xdrOut.writeLong(getBlobId()); // p_blob_id
     }
 
@@ -231,8 +234,8 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
      * @return deferred action
      * @since 5.0.7
      */
-    protected final <T> DeferredAction wrapDeferredResponse(DeferredResponse<T> deferredResponse,
-            Function<Response, T> responseMapper) {
+    protected final <T extends @Nullable Object> DeferredAction wrapDeferredResponse(
+            DeferredResponse<T> deferredResponse, Function<Response, T> responseMapper) {
         return DeferredAction.wrapDeferredResponse(deferredResponse, responseMapper, null,
                 this::deferredExceptionHandler, false);
     }

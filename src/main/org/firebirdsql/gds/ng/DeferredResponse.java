@@ -1,13 +1,15 @@
-// SPDX-FileCopyrightText: Copyright 2022-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Interface for receiving deferred/async responses.
  * <p>
  * GDS-ng implementations which are not capable of asynchronous or delayed processing of responses are expected to
- * synchronously invoke the {@link #onResponse(Object)} and - optionally - {@link #onException(Exception)}
- * methods within the method call.
+ * synchronously invoke the {@link #onResponse(Object)} method, and either throw the exception <em>or</em> call
+ * {@link #onException(Exception)} within the method call.
  * </p>
  *
  * @param <T>
@@ -15,7 +17,7 @@ package org.firebirdsql.gds.ng;
  * @author Mark Rotteveel
  * @since 5
  */
-public interface DeferredResponse<T> {
+public interface DeferredResponse<T extends @Nullable Object> {
 
     /**
      * Called with successful response.
@@ -33,8 +35,8 @@ public interface DeferredResponse<T> {
      * The default implementation only logs the exception on debug level.
      * </p>
      * <p>
-     * For GDS-ng implementations that can only perform synchronous processing, it is implementation-defined whether
-     * or not this method is called, or if the exception is thrown directly from the invoked method.
+     * For GDS-ng implementations that can only perform synchronous processing, it is implementation-defined if this
+     * method is called, or if the exception is thrown directly from the invoked method.
      * </p>
      *
      * @param exception

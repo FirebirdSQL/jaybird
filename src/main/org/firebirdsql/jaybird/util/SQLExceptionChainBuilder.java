@@ -1,8 +1,7 @@
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.util;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -55,6 +54,7 @@ public final class SQLExceptionChainBuilder {
      * @return this SQLExceptionChainBuilder
      * @since 5
      */
+    @SuppressWarnings("UnusedReturnValue")
     public SQLExceptionChainBuilder addFirst(SQLException sqle) {
         SQLException originalRoot = root;
         if (originalRoot != null) {
@@ -82,8 +82,9 @@ public final class SQLExceptionChainBuilder {
      * @return the root SQLException or empty if no SQLException was added to this SQLExceptionChainBuilder
      * @since 6
      */
-    public @NonNull Optional<SQLException> optException() {
-        return Optional.ofNullable(root);
+    public Optional<SQLException> optException() {
+        //noinspection RedundantTypeArguments : needed to suppress nullability warning
+        return Optional.<SQLException>ofNullable(root);
     }
 
     /**

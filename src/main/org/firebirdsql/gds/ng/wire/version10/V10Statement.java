@@ -10,13 +10,12 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.gds.ng.wire.*;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-
-import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
  * {@link org.firebirdsql.gds.ng.wire.FbWireStatement} implementation for the version 10 wire protocol.
@@ -188,9 +187,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @param statementText
      *         Statement
      */
-    protected void sendPrepareMsg(XdrOutputStream xdrOut, String statementText) throws IOException {
+    protected void sendPrepareMsg(XdrOutputStream xdrOut, String statementText) throws SQLException, IOException {
+        int transactionHandle = requireActiveTransaction().getHandle();
         xdrOut.writeInt(WireProtocolConstants.op_prepare_statement); // p_operation
-        xdrOut.writeInt(getTransaction().getHandle()); // p_sqlst_transaction
+        xdrOut.writeInt(transactionHandle); // p_sqlst_transaction
         xdrOut.writeInt(getHandle()); // p_sqlst_statement
         xdrOut.writeInt(getDatabase().getConnectionDialect()); // p_sqlst_SQL_dialect
         xdrOut.writeString(statementText, getDatabase().getEncoding()); // p_sqlst_SQL_str
@@ -255,7 +255,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         final StatementState initialState = getState();
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
-            checkTransactionActive(getTransaction());
+            FbWireTransaction transaction = requireActiveTransaction();
             validateParameters(parameters);
             reset(false);
 
@@ -301,7 +301,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                             statementListenerDispatcher.statementExecuted(this, false, true);
                             // NOTE: Inline blobs are supported since v19, but handling it here is simpler
                             while (response instanceof InlineBlobResponse inlineBlobResponse) {
-                                handleInlineBlobResponse(inlineBlobResponse);
+                                handleInlineBlobResponse(inlineBlobResponse, transaction);
                                 response = db.readResponse(statementWarningCallback);
                             }
                             if (response instanceof SqlResponse sqlResponse) {
@@ -368,11 +368,12 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     protected void sendExecuteMsg(XdrOutputStream xdrOut, int operation, RowValue parameters)
             throws IOException, SQLException {
         assert operation == WireProtocolConstants.op_execute || operation == WireProtocolConstants.op_execute2 : "Needs to be called with operation op_execute or op_execute2";
+        int transactionHandle = requireActiveTransaction().getHandle();
         xdrOut.writeInt(operation); // p_operation
         xdrOut.writeInt(getHandle()); // p_sqldata_statement
-        xdrOut.writeInt(getTransaction().getHandle()); // p_sqldata_transaction
+        xdrOut.writeInt(transactionHandle); // p_sqldata_transaction
 
-        if (parameters != null && parameters.getCount() > 0) {
+        if (parameters.getCount() > 0) {
             final RowDescriptor parameterDescriptor = getParameterDescriptor();
             xdrOut.writeBuffer(calculateBlr(parameterDescriptor, parameters)); // p_sqldata_blr
             xdrOut.writeInt(0); // p_sqldata_message_number
@@ -385,8 +386,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
         if (operation == WireProtocolConstants.op_execute2) {
             final RowDescriptor fieldDescriptor = getRowDescriptor();
-            xdrOut.writeBuffer(
-                    fieldDescriptor != null && fieldDescriptor.getCount() > 0 ? calculateBlr(fieldDescriptor) : null); // p_sqldata_out_blr
+            xdrOut.writeBuffer(calculateBlr(fieldDescriptor)); // p_sqldata_out_blr
             xdrOut.writeInt(0); // p_sqldata_out_message_number
         }
     }
@@ -472,11 +472,13 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *
      * @param direction
      *         fetch direction
-     * @param response initial response, or {@code null} to retrieve initial response
+     * @param response
+     *         initial response, or {@code null} to retrieve initial response
      */
-    protected void processFetchResponse(FetchDirection direction, Response response) throws IOException, SQLException {
+    protected void processFetchResponse(FetchDirection direction, @Nullable Response response) throws IOException, SQLException {
         int rowsFetched = 0;
         FbWireDatabase database = getDatabase();
+        FbWireTransaction transaction = requireActiveTransaction();
         WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
         if (response == null) {
             response = database.readResponse(statementWarningCallback);
@@ -484,7 +486,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         do {
             // NOTE: Inline blobs are supported since v19, but handling it here is simpler
             while (response instanceof InlineBlobResponse inlineBlobResponse) {
-                handleInlineBlobResponse(inlineBlobResponse);
+                handleInlineBlobResponse(inlineBlobResponse, transaction);
                 response = database.readResponse(statementWarningCallback);
             }
             if (!(response instanceof FetchResponse fetchResponse)) break;
@@ -639,8 +641,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * The caller is responsible for obtaining and releasing the transmit lock.
      * </p>
      */
-    protected void writeColumnData(XdrOutputStream xdrOut, int len, byte[] buffer, FieldDescriptor fieldDescriptor)
-            throws IOException {
+    protected void writeColumnData(XdrOutputStream xdrOut, int len, byte @Nullable [] buffer,
+            FieldDescriptor fieldDescriptor) throws IOException {
         // Nothing to write for SQL_NULL (except null indicator in v10 - v12, which happens at end in writeSqlData)
         if (fieldDescriptor.isFbType(ISCConstants.SQL_NULL)) return;
 
@@ -650,7 +652,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             writeFixedLengthBuffer(xdrOut, -len, buffer);
         } else {
             // decrement length because it was incremented before; increment happens in BlrCalculator.calculateIoLength
-            writePaddedBuffer(xdrOut, len - 1, buffer, fieldDescriptor);
+            xdrOut.writePaddedBuffer(buffer, len - 1, fieldDescriptor.getPaddingByte());
         }
     }
 
@@ -660,7 +662,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * The caller is responsible for obtaining and releasing the transmit lock.
      * </p>
      */
-    private static void writeLengthPrefixedBuffer(XdrOutputStream xdrOut, byte[] buffer,
+    private static void writeLengthPrefixedBuffer(XdrOutputStream xdrOut, byte @Nullable [] buffer,
             FieldDescriptor fieldDescriptor) throws IOException {
         if (buffer != null) {
             int len = buffer.length;
@@ -678,34 +680,12 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * The caller is responsible for obtaining and releasing the transmit lock.
      * </p>
      */
-    private static void writeFixedLengthBuffer(XdrOutputStream xdrOut, int len, byte[] buffer) throws IOException {
+    private static void writeFixedLengthBuffer(XdrOutputStream xdrOut, int len, byte @Nullable [] buffer)
+            throws IOException {
         if (buffer != null) {
             xdrOut.write(buffer, 0, len);
         } else {
             xdrOut.writeZeroPadding(len);
-        }
-    }
-
-    /**
-     * Writes at most {@code len} bytes from {@code buffer}, padding upto {@code len} if the buffer is shorter or
-     * {@code null}, suffixed with the normal buffer padding. Padding is done with the padding byte from the descriptor.
-     * <p>
-     * The caller is responsible for obtaining and releasing the transmit lock.
-     * </p>
-     */
-    private static void writePaddedBuffer(XdrOutputStream xdrOut, int len, byte[] buffer,
-            FieldDescriptor fieldDescriptor) throws IOException {
-        if (buffer != null) {
-            final int buflen = buffer.length;
-            if (buflen >= len) {
-                xdrOut.write(buffer, 0, len);
-                xdrOut.writePadding((4 - len) & 3, fieldDescriptor.getPaddingByte());
-            } else {
-                xdrOut.write(buffer, 0, buflen);
-                xdrOut.writePadding(len - buflen + ((4 - len) & 3), fieldDescriptor.getPaddingByte());
-            }
-        } else {
-            xdrOut.writePadding(len + ((4 - len) & 3), fieldDescriptor.getPaddingByte());
         }
     }
 

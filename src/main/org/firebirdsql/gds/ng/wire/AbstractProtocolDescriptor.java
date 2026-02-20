@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -6,6 +6,7 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.Objects;
@@ -105,7 +106,7 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
      * </p>
      */
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         return other != null && this.getClass() == other.getClass();
     }
 

@@ -41,7 +41,9 @@ import java.sql.Date;
 import java.util.*;
 
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_GENERAL_ERROR;
+import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID;
 
 /**
  * Implementation of {@link java.sql.PreparedStatement}.
@@ -363,22 +365,29 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      *
      * @param columnIndex 1-based index of the parameter
      * @return Field descriptor
+     * @deprecated no replacement, will be removed in Jaybird 8 or later
      */
+    @Deprecated
     protected FieldDescriptor getParameterDescriptor(int columnIndex) {
         return fbStatement.getParameterDescriptor().getFieldDescriptor(columnIndex - 1);
     }
 
     /**
-     * Factory method for the field access objects
+     * Getter for field access objects.
+     *
+     * @param columnIndex
+     *         1-based index of the column
+     * @return field instance
+     * @throws SQLException
+     *         if this statement is closed, or {@code columnIndex} is less than 1 or greater than column count
      */
-    protected FBField getField(int columnIndex) throws SQLException {
+    protected final FBField getField(int columnIndex) throws SQLException {
         checkValidity();
-        if (columnIndex > fields.length) {
-            throw new SQLException("Invalid column index: " + columnIndex,
-                    SQLStateConstants.SQL_STATE_INVALID_DESC_FIELD_ID);
+        try {
+            return fields[columnIndex - 1];
+        } catch (IndexOutOfBoundsException e) {
+            throw new SQLException("Invalid column index: " + columnIndex, SQL_STATE_INVALID_DESC_FIELD_ID);
         }
-
-        return fields[columnIndex - 1];
     }
 
     /**
@@ -781,24 +790,22 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     protected void prepareFixedStatement(String sql) throws SQLException {
         super.prepareFixedStatement(sql);
 
-        RowDescriptor rowDescriptor = fbStatement.getParameterDescriptor();
-        assert rowDescriptor != null : "RowDescriptor should not be null after prepare";
-
-        fieldValues = rowDescriptor.createDefaultFieldValues();
-        fields = createFields(rowDescriptor.getCount());
-
+        RowDescriptor parameterDescriptor = fbStatement.getParameterDescriptor();
+        fieldValues = parameterDescriptor.createDefaultFieldValues();
+        fields = createFields(parameterDescriptor);
         this.isExecuteProcedureStatement = fbStatement.getType() == StatementType.STORED_PROCEDURE;
     }
 
-    private FBField[] createFields(final int fieldCount) throws SQLException {
+    private FBField[] createFields(RowDescriptor parameterDescriptor) throws SQLException {
+        int fieldCount = parameterDescriptor.getCount();
         var fields = new FBField[fieldCount];
         for (int fieldPosition = 0; fieldPosition < fieldCount; fieldPosition++) {
-            fields[fieldPosition] = createField(fieldPosition);
+            fields[fieldPosition] = createField(fieldPosition, parameterDescriptor.getFieldDescriptor(fieldPosition));
         }
         return fields;
     }
 
-    private FBField createField(final int fieldPosition) throws SQLException {
+    private FBField createField(int fieldPosition, FieldDescriptor fieldDescriptor) throws SQLException {
         var dataProvider = new FieldDataProvider() {
             public byte @Nullable [] getFieldData() {
                 return fieldValues.getFieldData(fieldPosition);
@@ -810,7 +817,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         };
 
         // TODO check if we can safely pass cached here
-        var field = FBField.createField(getParameterDescriptor(fieldPosition + 1), dataProvider, gdsHelper, false);
+        var field = FBField.createField(fieldDescriptor, dataProvider, gdsHelper, false);
         if (field instanceof BlobField blobField) {
             blobField.setBlobListener(blobListener);
         }
@@ -917,6 +924,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
     @NullMarked
+    @SuppressWarnings("ClassCanBeRecord")
     private static final class BatchStatementListener implements StatementListener {
 
         private final List<RowValue> rows;
@@ -981,7 +989,8 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
                 fieldValues = rowValue;
                 for (int i = 0; i < fieldValues.getCount(); i++) {
                     if (getField(i + 1) instanceof FBFlushableField flushableField) {
-                        flushableField.setCachedObject((CachedObject) getCachedObject(i));
+                        flushableField.setCachedObject(
+                                (CachedObject) requireNonNull(getCachedObject(i), "cachedObject"));
                     }
                 }
                 flushFields();

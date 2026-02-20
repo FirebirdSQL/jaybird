@@ -8,7 +8,7 @@ import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListenerDispatcher;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -94,19 +94,19 @@ public abstract class AbstractFbTransaction implements FbTransaction {
     }
 
     @Override
-    public final void addExceptionListener(@NonNull ExceptionListener listener) {
+    public final void addExceptionListener(ExceptionListener listener) {
         exceptionListenerDispatcher.addListener(listener);
     }
 
     @Override
-    public final void removeExceptionListener(@NonNull ExceptionListener listener) {
+    public final void removeExceptionListener(ExceptionListener listener) {
         exceptionListenerDispatcher.removeListener(listener);
     }
 
     @Override
-    public <T> T getTransactionInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
-            throws SQLException {
-        final byte[] responseBuffer = getTransactionInfo(requestItems, bufferLength);
+    public <T extends @Nullable Object> T getTransactionInfo(byte[] requestItems, int bufferLength,
+            InfoProcessor<T> infoProcessor) throws SQLException {
+        byte[] responseBuffer = getTransactionInfo(requestItems, bufferLength);
         try {
             return infoProcessor.process(responseBuffer);
         } catch (SQLException e) {

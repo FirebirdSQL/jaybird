@@ -124,6 +124,7 @@ public abstract class AbstractParameterConverter<D extends AbstractConnection<IC
         for (Map.Entry<ConnectionProperty, Object> entry : connectionProperties.entrySet()) {
             ConnectionProperty property = entry.getKey();
             Object propertyValue = entry.getValue();
+            //noinspection ConstantValue : null-check for robustness
             if (propertyValue == null || !hasPbItem.test(property)) continue;
             ConnectionPropertyType propertyType = property.type();
             int pbItem = getPbItem.applyAsInt(property);

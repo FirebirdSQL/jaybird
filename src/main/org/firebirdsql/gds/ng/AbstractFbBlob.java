@@ -9,8 +9,7 @@ import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -33,19 +32,19 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final BlobParameterBuffer blobParameterBuffer;
     private final int maximumSegmentSize;
-    private FbTransaction transaction;
-    private FbDatabase database;
+    private @Nullable FbTransaction transaction;
+    private final FbDatabase database;
     private BlobState state = BlobState.NEW;
     private boolean eof;
-    private SQLException deferredException;
+    private @Nullable SQLException deferredException;
 
     protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, BlobParameterBuffer blobParameterBuffer)
             throws SQLException {
-        this.database = database;
-        this.transaction = transaction;
+        this.database = requireNonNull(database, "database");
+        this.transaction = requireNonNull(transaction, "transaction");
         checkDatabaseAttached();
         checkTransactionActive();
-        this.blobParameterBuffer = blobParameterBuffer;
+        this.blobParameterBuffer = BlobParameterBuffer.orEmpty(blobParameterBuffer);
         maximumSegmentSize = maximumSegmentSize(database);
         transaction.addWeakTransactionListener(this);
     }
@@ -104,20 +103,15 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     protected final void setState(BlobState newState) {
         // TODO Verify reopen behaviour, especially given close() shuts down exceptionListenerDispatcher
         try (var ignored = withLock()) {
-            final BlobState previousState = this.state;
-            final FbDatabase database = this.database;
-            if (database != null) {
-                if (newState.isClosed()) {
-                    database.removeDatabaseListener(this);
-                } else if (previousState.isClosed()) {
-                    database.addWeakDatabaseListener(this);
-                }
-            }
             if (newState.isClosed()) {
-                final FbTransaction transaction = this.transaction;
+                database.removeDatabaseListener(this);
+                FbTransaction transaction = this.transaction;
                 if (transaction != null) {
                     transaction.removeTransactionListener(this);
                 }
+            } else if (state.isClosed()) {
+                // Going from closed to open
+                database.addWeakDatabaseListener(this);
             }
             this.state = newState;
         }
@@ -307,16 +301,10 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      * @see FbAttachment#withLock() 
      */
     protected final LockCloseable withLock() {
-        FbDatabase database = this.database;
-        if (database != null) {
-            return database.withLock();
-        }
-        // No need or operation to lock, so return a no-op to unlock.
-        return LockCloseable.NO_OP;
+        return database.withLock();
     }
 
     @Override
-    @NullMarked
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
         if (getTransaction() != transaction) {
@@ -342,11 +330,10 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             // Do nothing
         }
         }
-        // TODO Need additional handling for other transitions?
     }
 
     @Override
-    public void detaching(@NonNull FbDatabase database) {
+    public void detaching(FbDatabase database) {
         if (this.database != database) {
             database.removeDatabaseListener(this);
             return;
@@ -364,11 +351,11 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     @Override
-    public void detached(@NonNull FbDatabase database) {
+    public void detached(FbDatabase database) {
         try (var ignored = withLock()) {
             if (this.database == database) {
                 state = BlobState.CLOSED;
-                clearDatabase();
+                unregisterFromDb();
                 clearTransaction();
                 releaseResources();
             }
@@ -378,7 +365,6 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     @Override
-    @NullMarked
     public void warningReceived(FbDatabase database, SQLWarning warning) {
         // Do nothing
     }
@@ -403,8 +389,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      *         when no database is set, or the database is not attached
      */
     protected final void checkDatabaseAttached() throws SQLException {
-        FbDatabase database = this.database;
-        if (database == null || !database.isAttached()) {
+        if (!database.isAttached()) {
             throw FbExceptionBuilder.toNonTransientException(ISCConstants.isc_segstr_wrong_db);
         }
     }
@@ -430,10 +415,22 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         BlobHelper.checkBlobClosed(this);
     }
 
-    protected FbTransaction getTransaction() {
-        try (LockCloseable ignored = withLock()) {
+    protected @Nullable FbTransaction getTransaction() {
+        try (var ignored = withLock()) {
             return transaction;
         }
+    }
+
+    /**
+     * @return transaction, if this blob has an active transaction
+     * @throws SQLException
+     *         if this blob has no transaction, or the transaction is not active
+     * @since 7
+     */
+    protected FbTransaction requireActiveTransaction() throws SQLException {
+        FbTransaction transaction = getTransaction();
+        TransactionHelper.checkTransactionActive(transaction, ISCConstants.isc_segstr_no_trans);
+        return transaction;
     }
 
     protected final void clearTransaction() {
@@ -455,9 +452,9 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     @Override
-    public <T> T getBlobInfo(final byte[] requestItems, final int bufferLength, final InfoProcessor<T> infoProcessor)
-            throws SQLException {
-        final byte[] blobInfo = getBlobInfo(requestItems, bufferLength);
+    public <T extends @Nullable Object> T getBlobInfo(byte[] requestItems, int bufferLength,
+            InfoProcessor<T> infoProcessor) throws SQLException {
+        byte[] blobInfo = getBlobInfo(requestItems, bufferLength);
         try {
             return infoProcessor.process(blobInfo);
         } catch (SQLException e) {
@@ -509,24 +506,17 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     @Override
-    public final void addExceptionListener(@NonNull ExceptionListener listener) {
+    public final void addExceptionListener(ExceptionListener listener) {
         exceptionListenerDispatcher.addListener(listener);
     }
 
     @Override
-    public final void removeExceptionListener(@NonNull ExceptionListener listener) {
+    public final void removeExceptionListener(ExceptionListener listener) {
         exceptionListenerDispatcher.removeListener(listener);
     }
 
-    protected final void clearDatabase() {
-        final FbDatabase database;
-        try (LockCloseable ignored = withLock()) {
-            database = this.database;
-            this.database = null;
-        }
-        if (database != null) {
-            database.removeDatabaseListener(this);
-        }
+    protected final void unregisterFromDb() {
+        database.removeDatabaseListener(this);
     }
 
     /**
@@ -553,6 +543,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
            Firebird 2.1 and 2.5 have issues with conversion from SSHORT to 32-bit (applying sign extension), leading to
            incorrect buffer sizes, instead of addressing that, we only apply the higher limit for Firebird 3.0 and
            higher. */
+        //noinspection ConstantValue : null-check for robustness
         if (db != null && db.getServerVersion().isEqualOrAbove(3)) {
             /* NOTE: getSegment can retrieve at most 65533 bytes of blob data as the buffer to receive segments is
                max 65535 bytes, but the contents of the buffer are one or more segments prefixed with 2-byte lengths;

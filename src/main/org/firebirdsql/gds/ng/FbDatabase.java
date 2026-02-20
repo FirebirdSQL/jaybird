@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
@@ -10,6 +10,7 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -107,7 +108,7 @@ public interface FbDatabase extends FbAttachment {
      *         FbTransaction to associate with this statement (can be {@code null})
      * @return FbStatement
      */
-    FbStatement createStatement(FbTransaction transaction) throws SQLException;
+    FbStatement createStatement(@Nullable FbTransaction transaction) throws SQLException;
 
     /**
      * Creates a blob for write access to a new blob on the server.
@@ -123,7 +124,8 @@ public interface FbDatabase extends FbAttachment {
      * @throws SQLException
      *         if the database is not attached or the transaction is not active
      */
-    FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) throws SQLException;
+    FbBlob createBlobForOutput(FbTransaction transaction, @Nullable BlobParameterBuffer blobParameterBuffer)
+            throws SQLException;
 
     /**
      * Creates a blob for write access to a new blob on the server.
@@ -188,7 +190,7 @@ public interface FbDatabase extends FbAttachment {
      * @throws SQLException
      *         if the database is not attached or the transaction is not active
      */
-    FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId)
+    FbBlob createBlobForInput(FbTransaction transaction, @Nullable BlobParameterBuffer blobParameterBuffer, long blobId)
             throws SQLException;
 
     /**
@@ -268,8 +270,8 @@ public interface FbDatabase extends FbAttachment {
      * @throws SQLException
      *         For errors retrieving or transforming the response.
      */
-    <T> T getDatabaseInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
-            throws SQLException;
+    <T extends @Nullable Object> T getDatabaseInfo(byte[] requestItems, int bufferLength,
+            InfoProcessor<T> infoProcessor) throws SQLException;
 
     /**
      * Performs a database info request.
@@ -298,7 +300,7 @@ public interface FbDatabase extends FbAttachment {
      *         For errors executing the statement, or if {@code transaction} is {@code null} when the database is
      *         attached or not {@code null} when the database is not attached
      */
-    void executeImmediate(String statementText, FbTransaction transaction) throws SQLException;
+    void executeImmediate(String statementText, @Nullable FbTransaction transaction) throws SQLException;
 
     /**
      * @return The database dialect

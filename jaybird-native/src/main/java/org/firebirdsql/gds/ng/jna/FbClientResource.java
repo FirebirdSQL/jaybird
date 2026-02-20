@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2019-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.NativeLibrary;
 import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.System.Logger.Level;
 import java.lang.ref.Cleaner;
@@ -24,7 +25,7 @@ import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceS
 final class FbClientResource extends NativeResourceTracker.NativeResource {
 
     @SuppressWarnings("java:S3077")
-    private volatile FbClientLibrary library;
+    private volatile @Nullable FbClientLibrary library;
     private final AbstractNativeDatabaseFactory owner;
     private final Cleaner.Cleanable cleanable;
 

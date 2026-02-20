@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 /**
  * The Jaybird GDS-ng API provides the abstraction for connecting to Firebird either through a wire protocol
@@ -20,6 +20,8 @@
  * @since 3
  */
 @InternalApi
+@NullMarked
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;

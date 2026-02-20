@@ -11,6 +11,7 @@ import org.firebirdsql.gds.ng.wire.InlineBlobCache;
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.version18.V18Database;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.Optional;
@@ -44,8 +45,9 @@ public class V19Database extends V18Database {
     }
 
     @Override
-    public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId)
-            throws SQLException {
+    public FbBlob createBlobForInput(FbTransaction transaction, @Nullable BlobParameterBuffer blobParameterBuffer,
+            long blobId) throws SQLException {
+        // only use cache for null or empty BPB, otherwise a different transformation might be requested
         boolean useCache = blobParameterBuffer == null || blobParameterBuffer.isEmpty();
         if (useCache) {
             Optional<InlineBlob> cachedBlob = blobCache.getAndRemove(transaction, blobId);

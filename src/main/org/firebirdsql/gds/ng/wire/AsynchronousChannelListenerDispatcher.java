@@ -3,7 +3,6 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.listeners.AbstractListenerDispatcher;
-import org.jspecify.annotations.NullMarked;
 
 /**
  * Dispatcher for {@link org.firebirdsql.gds.ng.wire.AsynchronousChannelListener}.
@@ -11,8 +10,7 @@ import org.jspecify.annotations.NullMarked;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
-public class AsynchronousChannelListenerDispatcher extends AbstractListenerDispatcher<AsynchronousChannelListener>
+public final class AsynchronousChannelListenerDispatcher extends AbstractListenerDispatcher<AsynchronousChannelListener>
         implements AsynchronousChannelListener {
 
     private static final System.Logger log = System.getLogger(AsynchronousChannelListenerDispatcher.class.getName());

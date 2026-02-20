@@ -5,7 +5,6 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
@@ -25,7 +24,6 @@ import static java.util.Collections.unmodifiableMap;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public abstract class AbstractImmutableAttachProperties<T extends IAttachProperties<T>>
         implements IAttachProperties<T> {
 

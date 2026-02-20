@@ -4,6 +4,8 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
+import org.firebirdsql.gds.ng.wire.FbWireAttachment.AcceptPacket;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -30,24 +32,24 @@ public interface FbWireOperations {
      * processing the status vector.
      * </p>
      *
-     * @return SQLException from the status vector
+     * @return SQLException from the status vector, or {@code null} if there is no exception
      * @throws SQLException
      *         for errors reading or processing the status vector
      */
-    SQLException readStatusVector() throws SQLException;
+    @Nullable SQLException readStatusVector() throws SQLException;
 
     /**
      * Reads the response from the server.
      *
      * @param callback
-     *         Callback object for warnings, <code>null</code> for default callback
+     *         Callback object for warnings, {@code null} for default callback
      * @return {@link Response} read.
      * @throws SQLException
      *         For errors returned from the server, or when attempting to read
      * @throws IOException
      *         For errors reading the response from the connection.
      */
-    Response readResponse(WarningMessageCallback callback) throws SQLException, IOException;
+    Response readResponse(@Nullable WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
      * Reads the next operation code, after processing deferred packets.
@@ -73,7 +75,7 @@ public interface FbWireOperations {
      * @param operationCode
      *         The operation code
      * @param callback
-     *         Callback object for warnings, <code>null</code> for default callback
+     *         Callback object for warnings, {@code null} for default callback
      * @return {@link Response} read.
      * @throws SQLException
      *         For errors returned from the server, or when attempting to read
@@ -81,27 +83,27 @@ public interface FbWireOperations {
      *         For errors reading the response from the connection.
      * @see #readResponse(WarningMessageCallback)
      */
-    Response readOperationResponse(int operationCode, WarningMessageCallback callback) throws SQLException, IOException;
+    Response readOperationResponse(int operationCode, @Nullable WarningMessageCallback callback)
+            throws SQLException, IOException;
 
     /**
      * Convenience method to read a Response to a GenericResponse
      *
      * @param callback
-     *         Callback object for warnings, <code>null</code> for default callback
+     *         Callback object for warnings, {@code null} for default callback
      * @return GenericResponse
      * @throws SQLException
-     *         For errors returned from the server, or when attempting to
-     *         read.
+     *         For errors returned from the server, or when attempting to read.
      * @throws IOException
      *         For errors reading the response from the connection.
      */
-    GenericResponse readGenericResponse(WarningMessageCallback callback) throws SQLException, IOException;
+    GenericResponse readGenericResponse(@Nullable WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
      * Convenience method to read a Response to a SqlResponse
      *
      * @param callback
-     *         Callback object for warnings, <code>null</code> for default callback
+     *         Callback object for warnings, {@code null} for default callback
      * @return SqlResponse
      * @throws SQLException
      *         For errors returned from the server, or when attempting to
@@ -109,7 +111,7 @@ public interface FbWireOperations {
      * @throws IOException
      *         For errors reading the response from the connection.
      */
-    SqlResponse readSqlResponse(WarningMessageCallback callback) throws SQLException, IOException;
+    SqlResponse readSqlResponse(@Nullable WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
      * Handles the database encryption key callback.
@@ -167,9 +169,9 @@ public interface FbWireOperations {
      * @param numberOfResponses
      *         Number of responses to consume.
      * @param warningCallback
-     *         Callback for warnings
+     *         Callback for warnings, or {@code null} for default callback
      */
-    void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback);
+    void consumePackets(int numberOfResponses, @Nullable WarningMessageCallback warningCallback);
 
     /**
      * Processes any deferred actions. Protocol versions that do not support deferred actions should simply do nothing.
@@ -194,8 +196,10 @@ public interface FbWireOperations {
      *
      * @param response
      *         Response to process
+     * @param warningCallback
+     *         Callback for warnings, or {@code null} for default callback
      */
-    void processResponseWarnings(Response response, WarningMessageCallback warningCallback);
+    void processResponseWarnings(Response response, @Nullable WarningMessageCallback warningCallback);
 
     /**
      * Receive authentication response from the server.
@@ -210,7 +214,7 @@ public interface FbWireOperations {
      * @throws SQLException
      *         for errors returned from the server, or when attempting to read
      */
-    void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback)
+    void authReceiveResponse(@Nullable AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback)
             throws IOException, SQLException;
 
     /**

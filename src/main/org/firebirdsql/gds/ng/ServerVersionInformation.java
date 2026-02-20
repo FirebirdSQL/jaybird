@@ -1,8 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.AbstractVersion;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -114,7 +114,7 @@ enum ServerVersionInformation {
      * @param majorVersion Required major version
      * @param minorVersion Required minor version
      * @return Instance
-     * @see #getForVersion(org.firebirdsql.gds.impl.GDSServerVersion)
+     * @see #getForVersion(AbstractVersion)
      */
     public static ServerVersionInformation getForVersion(int majorVersion, int minorVersion) {
         // NOTE: This depends on the contract of Enum.values() and the ordering of the definition of enums
@@ -139,8 +139,16 @@ enum ServerVersionInformation {
      * @return Instance
      * @see #getForVersion(int, int)
      */
-    public static ServerVersionInformation getForVersion(GDSServerVersion serverVersion) {
-        return getForVersion(serverVersion.getMajorVersion(), serverVersion.getMinorVersion());
+    public static ServerVersionInformation getForVersion(AbstractVersion serverVersion) {
+        return getForVersion(serverVersion.major(), serverVersion.minor());
+    }
+
+    /**
+     * @return default server version information (suitable for the lowest supported Firebird version)
+     */
+    public static ServerVersionInformation getDefault() {
+        // Covers supported versions 3.0 ... 5.0
+        return VERSION_2_0;
     }
 
     private static final class Constants {

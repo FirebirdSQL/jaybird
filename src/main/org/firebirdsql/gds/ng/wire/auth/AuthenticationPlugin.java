@@ -48,7 +48,7 @@ public interface AuthenticationPlugin {
      * @param serverData
      *         Server data
      */
-    void setServerData(byte[] serverData);
+    void setServerData(byte @Nullable [] serverData);
 
     /**
      * @return {@code true} if plugin has non-null and non-empty server data

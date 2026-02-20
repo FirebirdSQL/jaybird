@@ -180,6 +180,7 @@ final class RowValueBuilder {
      * @throws java.lang.IndexOutOfBoundsException
      *         When @{code index} is not between 0 (inclusive) and {@link #getSize()} (exclusive)
      */
+    @SuppressWarnings("unused")
     byte @Nullable [] get(int index) {
         checkBounds(index);
         return rowValue.getFieldData(index);
@@ -198,6 +199,7 @@ final class RowValueBuilder {
     /**
      * @return Number of fields in the row
      */
+    @SuppressWarnings("unused")
     int getSize() {
         return rowDescriptor.getCount();
     }

@@ -21,8 +21,10 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.BatchCompletionResponse;
 import org.firebirdsql.gds.ng.wire.DeferredAction;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
+import org.firebirdsql.gds.ng.wire.Response;
 import org.firebirdsql.gds.ng.wire.version13.V13Statement;
 import org.firebirdsql.jaybird.util.CollectionUtils;
+import org.jspecify.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,6 +33,7 @@ import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.function.Function;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_batch_cancel;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_batch_rls;
@@ -41,6 +44,8 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * @since 4.0
  */
 public class V16Statement extends V13Statement {
+
+    private static final Function<Response, @Nullable Void> NULL_RESPONSE = r -> null;
 
     /**
      * Creates a new instance of V16Statement for the specified database.
@@ -77,7 +82,7 @@ public class V16Statement extends V13Statement {
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
             sendBatchCreate0(batchConfig);
-            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null, true));
+            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, NULL_RESPONSE, true));
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -138,7 +143,7 @@ public class V16Statement extends V13Statement {
     public void deferredBatchSend(Collection<RowValue> rowValues, DeferredResponse<Void> onResponse) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
-            DeferredAction deferredAction = wrapDeferredResponse(onResponse, r -> null, true);
+            DeferredAction deferredAction = wrapDeferredResponse(onResponse, NULL_RESPONSE, true);
             try {
                 RowDescriptor parameterDescriptor = getParameterDescriptor();
                 registerBlobs(parameterDescriptor, rowValues, deferredAction);
@@ -344,7 +349,7 @@ public class V16Statement extends V13Statement {
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
             sendBatchRelease(op_batch_rls);
-            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null, true));
+            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, NULL_RESPONSE, true));
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;

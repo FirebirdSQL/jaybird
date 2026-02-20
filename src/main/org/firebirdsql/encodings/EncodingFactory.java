@@ -259,9 +259,8 @@ public final class EncodingFactory implements IEncodingFactory {
 
             if (encodingDefinition == null) {
                 return null;
-            } else //noinspection DataFlowIssue : getJavaCharset() is not null if not information-only
-                if (!encodingDefinition.isInformationOnly()
-                    && (charset == null || encodingDefinition.getJavaCharset().equals(charset))) {
+            } else if (!encodingDefinition.isInformationOnly()
+                    && (charset == null || Objects.equals(encodingDefinition.getJavaCharset(), charset))) {
                 // Normal encoding definition
                 return encodingDefinition;
             } else if (charset != null) {

@@ -9,7 +9,6 @@ import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSServerVersionException;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
-import org.jspecify.annotations.NonNull;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -31,12 +30,12 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     protected final T connection;
     private final DatatypeCoder datatypeCoder;
-    private GDSServerVersion serverVersion;
-    private ServerVersionInformation serverVersionInformation;
+    private GDSServerVersion serverVersion = GDSServerVersion.INVALID_VERSION;
+    private ServerVersionInformation serverVersionInformation = ServerVersionInformation.getDefault();
 
     protected AbstractFbAttachment(T connection, DatatypeCoder datatypeCoder) {
-        this.connection = requireNonNull(connection, "parameter connection should be non-null");
-        this.datatypeCoder = requireNonNull(datatypeCoder, "parameter datatypeCoder should be non-null");
+        this.connection = requireNonNull(connection, "connection");
+        this.datatypeCoder = requireNonNull(datatypeCoder, "datatypeCoder");
     }
 
     @Override
@@ -139,12 +138,12 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     }
 
     @Override
-    public final void addExceptionListener(@NonNull ExceptionListener listener) {
+    public final void addExceptionListener(ExceptionListener listener) {
         exceptionListenerDispatcher.addListener(listener);
     }
 
     @Override
-    public final void removeExceptionListener(@NonNull ExceptionListener listener) {
+    public final void removeExceptionListener(ExceptionListener listener) {
         exceptionListenerDispatcher.removeListener(listener);
     }
 

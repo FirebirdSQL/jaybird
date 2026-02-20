@@ -8,6 +8,7 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.wire.ProtocolDescriptor} that returns null for the
@@ -19,6 +20,9 @@ import org.firebirdsql.gds.ng.wire.*;
  * @author Mark Rotteveel
  * @since 3.0
  */
+// Nullability problems are not relevant for tests using this class
+@SuppressWarnings("DataFlowIssue")
+@NullMarked
 public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
 
     public EmptyProtocolDescriptor(final int version, final int architecture, final int minimumType,
@@ -87,7 +91,7 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
 
     @Override
     protected ParameterConverter<WireDatabaseConnection, WireServiceConnection> getParameterConverter() {
-        return new ParameterConverter<WireDatabaseConnection, WireServiceConnection>() {
+        return new ParameterConverter<>() {
             @Override
             public DatabaseParameterBuffer toDatabaseParameterBuffer(WireDatabaseConnection connection) {
                 return null;

@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: Copyright 2013-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -283,7 +284,7 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
      * @throws SQLException
      *         For errors retrieving or transforming the response.
      */
-    <T> T getBlobInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
+    <T extends @Nullable Object> T getBlobInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
             throws SQLException;
 
     /**

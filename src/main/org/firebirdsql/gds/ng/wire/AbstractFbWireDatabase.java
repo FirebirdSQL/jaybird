@@ -6,7 +6,7 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
-import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -34,7 +34,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
 
     protected final ProtocolDescriptor protocolDescriptor;
     protected final FbWireOperations wireOperations;
-    private FbWireAsynchronousChannel asynchronousChannel;
+    private @Nullable FbWireAsynchronousChannel asynchronousChannel;
 
     /**
      * Creates an AbstractFbWireDatabase instance.
@@ -172,42 +172,42 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     @Override
-    public final FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer)
-            throws SQLException {
-        final FbWireBlob outputBlob =
-                protocolDescriptor.createOutputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer);
+    public final FbBlob createBlobForOutput(FbTransaction transaction,
+            @Nullable BlobParameterBuffer blobParameterBuffer) throws SQLException {
+        FbWireBlob outputBlob = protocolDescriptor.createOutputBlob(this, (FbWireTransaction) transaction,
+                BlobParameterBuffer.orEmpty(blobParameterBuffer));
         outputBlob.addExceptionListener(exceptionListenerDispatcher);
         return outputBlob;
     }
 
     @Override
-    public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer,
+    public FbBlob createBlobForInput(FbTransaction transaction, @Nullable BlobParameterBuffer blobParameterBuffer,
             long blobId) throws SQLException {
-        final FbWireBlob inputBlob =
-                protocolDescriptor.createInputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer, blobId);
+        FbWireBlob inputBlob = protocolDescriptor.createInputBlob(this, (FbWireTransaction) transaction,
+                BlobParameterBuffer.orEmpty(blobParameterBuffer), blobId);
         inputBlob.addExceptionListener(exceptionListenerDispatcher);
         return inputBlob;
     }
 
     @Override
-    public final void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback) {
+    public final void consumePackets(int numberOfResponses, @Nullable WarningMessageCallback warningCallback) {
         // TODO Should consumePackets notify the exception listener or not?
         wireOperations.consumePackets(numberOfResponses, warningCallback);
     }
 
     @Override
-    public final GenericResponse readGenericResponse(WarningMessageCallback warningCallback)
+    public final GenericResponse readGenericResponse(@Nullable WarningMessageCallback warningCallback)
             throws SQLException, IOException {
         return wireOperations.readGenericResponse(warningCallback);
     }
 
     @Override
-    public final SqlResponse readSqlResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
+    public final SqlResponse readSqlResponse(@Nullable WarningMessageCallback warningCallback) throws SQLException, IOException {
         return wireOperations.readSqlResponse(warningCallback);
     }
 
     @Override
-    public final Response readResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
+    public final Response readResponse(@Nullable WarningMessageCallback warningCallback) throws SQLException, IOException {
         return wireOperations.readResponse(warningCallback);
     }
 
@@ -224,7 +224,6 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
         wireOperations.enqueueDeferredAction(decorateWithExceptionNotification(deferredAction));
     }
 
-    @NullMarked
     private DeferredAction decorateWithExceptionNotification(DeferredAction deferredAction) {
         return deferredAction instanceof ExceptionNotifyingDeferredAction
                 // Don't decorate again
@@ -232,7 +231,6 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
                 : new ExceptionNotifyingDeferredAction(deferredAction);
     }
 
-    @NullMarked
     private final class ExceptionNotifyingDeferredAction extends DeferredAction.DelegatingDeferredAction {
 
         ExceptionNotifyingDeferredAction(DeferredAction delegate) {
@@ -334,7 +332,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     @Override
     @SuppressWarnings("java:S4274")
     public byte[] getInfo(int operation, int handle, byte[] requestItems, int maxBufferLength,
-            WarningMessageCallback warningMessageCallback) throws SQLException {
+            @Nullable WarningMessageCallback warningMessageCallback) throws SQLException {
         try (var ignored = withLock()) {
             try {
                 withTransmitLock(xdrOut -> {

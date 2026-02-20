@@ -1,8 +1,6 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
-
-import org.jspecify.annotations.NullMarked;
 
 /**
  * Response instance for an inline blob ({@code op_inline_blob}) response.
@@ -18,7 +16,6 @@ import org.jspecify.annotations.NullMarked;
  * @author Mark Rotteveel
  * @since 7
  */
-@NullMarked
 public record InlineBlobResponse(int transactionHandle, long blobId, byte[] info, byte[] data) implements Response {
 
     public InlineBlob toInlineBlob(FbWireDatabase database) {

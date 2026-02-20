@@ -6,7 +6,6 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.monitor.Operation;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -23,7 +22,6 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 4.0
  */
-@NullMarked
 final class FbDatabaseOperation implements Operation, OperationCloseHandle {
 
     private static final Runnable NO_OP = () -> {};

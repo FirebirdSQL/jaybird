@@ -4,7 +4,6 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -15,7 +14,6 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@NullMarked
 public interface XdrStreamAccess {
 
     /**

@@ -10,8 +10,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.*;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -21,6 +20,7 @@ import java.util.Set;
 
 import static java.lang.String.format;
 import static java.lang.System.Logger.Level.DEBUG;
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
@@ -43,6 +43,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     private static final int IN_CURSOR = 0;
     private static final int AFTER_LAST = 1;
 
+    private final FbDatabase database;
     protected final StatementListenerDispatcher statementListenerDispatcher = new StatementListenerDispatcher();
     private final WarningMessageCallback warningCallback = warning ->
             statementListenerDispatcher.warningReceived(AbstractFbStatement.this, warning);
@@ -57,15 +58,14 @@ public abstract class AbstractFbStatement implements FbStatement {
     @SuppressWarnings("java:S3077")
     private volatile RowDescriptor fieldDescriptor;
     @SuppressWarnings("java:S3077")
-    private volatile FbTransaction transaction;
-    private String cursorName;
+    private volatile @Nullable FbTransaction transaction;
+    private @Nullable String cursorName;
     private int maxFieldSize;
     private long timeout;
 
     private final TransactionListener transactionListener = new TransactionListener() {
         @Override
         @SuppressWarnings({ "ThrowFromFinallyBlock", "java:S1143", "java:S1163" })
-        @NullMarked
         public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
                 TransactionState previousState) {
             if (getTransaction() != transaction) {
@@ -97,9 +97,27 @@ public abstract class AbstractFbStatement implements FbStatement {
         }
     };
 
-    protected AbstractFbStatement() {
+    protected AbstractFbStatement(FbDatabase database) {
+        this.database = requireNonNull(database, "database");
         exceptionListenerDispatcher.addListener(new StatementCancelledListener());
         statementListenerDispatcher.addListener(new SelfListener());
+        parameterDescriptor = database.emptyRowDescriptor();
+        fieldDescriptor = database.emptyRowDescriptor();
+    }
+
+    @Override
+    public FbDatabase getDatabase() {
+        return database;
+    }
+
+    @Override
+    public final LockCloseable withLock() {
+        return database.withLock();
+    }
+
+    @Override
+    public final RowDescriptor emptyRowDescriptor() {
+        return database.emptyRowDescriptor();
     }
 
     /**
@@ -369,8 +387,8 @@ public abstract class AbstractFbStatement implements FbStatement {
             setBeforeFirst(statementType.isTypeWithCursor() || statementType.isTypeWithSingletonResult());
 
             if (resetAll) {
-                setParameterDescriptor(null);
-                setRowDescriptor(null);
+                setParameterDescriptor(emptyRowDescriptor());
+                setRowDescriptor(emptyRowDescriptor());
                 setType(StatementType.NONE);
             }
         }
@@ -512,9 +530,9 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         For errors retrieving or transforming the response.
      */
     @Override
-    public final <T> T getSqlInfo(final byte[] requestItems, final int bufferLength,
-            final InfoProcessor<T> infoProcessor) throws SQLException {
-        final byte[] sqlInfo = getSqlInfo(requestItems, bufferLength);
+    public final <T extends @Nullable Object> T getSqlInfo(byte[] requestItems, int bufferLength,
+            InfoProcessor<T> infoProcessor) throws SQLException {
+        byte[] sqlInfo = getSqlInfo(requestItems, bufferLength);
         try {
             return infoProcessor.process(sqlInfo);
         } catch (SQLException e) {
@@ -524,9 +542,9 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    public final <T> T getCursorInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
-            throws SQLException {
-        final byte[] sqlInfo = getCursorInfo(requestItems, bufferLength);
+    public final <T extends @Nullable Object> T getCursorInfo(byte[] requestItems, int bufferLength,
+            InfoProcessor<T> infoProcessor) throws SQLException {
+        byte[] sqlInfo = getCursorInfo(requestItems, bufferLength);
         try {
             return infoProcessor.process(sqlInfo);
         } catch (SQLException e) {
@@ -636,7 +654,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     @Override
     public final void validateParameters(final RowValue parameters) throws SQLException {
         final RowDescriptor parameterDescriptor = getParameterDescriptor();
-        final int expectedSize = parameterDescriptor != null ? parameterDescriptor.getCount() : 0;
+        final int expectedSize = parameterDescriptor.getCount();
         final int actualSize = parameters.getCount();
         if (actualSize != expectedSize) {
             throw FbExceptionBuilder.forNonTransientException(JaybirdErrorCodes.jb_invalidParameterCount)
@@ -671,12 +689,12 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    public final void addExceptionListener(@NonNull ExceptionListener listener) {
+    public final void addExceptionListener(ExceptionListener listener) {
         exceptionListenerDispatcher.addListener(listener);
     }
 
     @Override
-    public final void removeExceptionListener(@NonNull ExceptionListener listener) {
+    public final void removeExceptionListener(ExceptionListener listener) {
         exceptionListenerDispatcher.removeListener(listener);
     }
 
@@ -709,6 +727,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @throws SQLException
      *         when this statement is closed or in error state
      */
+    @SuppressWarnings("SameParameterValue")
     protected final void checkStatementValid(StatementState ignoreState) throws SQLException {
         if (ignoreState != getState()) {
             checkStatementValid();
@@ -731,7 +750,19 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    public FbTransaction getTransaction() {
+    public @Nullable FbTransaction getTransaction() {
+        return transaction;
+    }
+
+    /**
+     * @return transaction, if this statement has an active transaction
+     * @throws SQLException
+     *         if this statement has no transaction, or the transaction is not active
+     * @since 7
+     */
+    protected FbTransaction requireActiveTransaction() throws SQLException {
+        FbTransaction transaction = getTransaction();
+        TransactionHelper.checkTransactionActive(transaction);
         return transaction;
     }
 
@@ -749,16 +780,17 @@ public abstract class AbstractFbStatement implements FbStatement {
     protected abstract boolean isValidTransactionClass(Class<? extends FbTransaction> transactionClass);
 
     @Override
-    public final void setTransaction(final FbTransaction newTransaction) throws SQLException {
+    public final void setTransaction(@Nullable FbTransaction newTransaction) throws SQLException {
         // TODO Should we really notify the exception listener for errors here?
         try {
             if (newTransaction == null || isValidTransactionClass(newTransaction.getClass())) {
                 // TODO Is there a statement or transaction state where we should not be switching transactions?
                 // Probably an error to switch when newTransaction is not null and current state is ERROR, CURSOR_OPEN, EXECUTING, CLOSING or CLOSED
                 try (LockCloseable ignored = withLock()) {
-                    if (newTransaction == transaction) return;
-                    if (transaction != null) {
-                        transaction.removeTransactionListener(getTransactionListener());
+                    FbTransaction oldTransaction = this.transaction;
+                    if (newTransaction == oldTransaction) return;
+                    if (oldTransaction != null) {
+                        oldTransaction.removeTransactionListener(getTransactionListener());
                     }
                     transaction = newTransaction;
                     if (newTransaction != null) {
@@ -845,10 +877,10 @@ public abstract class AbstractFbStatement implements FbStatement {
      * The cursor name is cleared by a new statement prepare.
      * </p>
      *
-     * @return the current cursor name
+     * @return the current cursor name or {@code null} if no cursor name was set
      * @since 6
      */
-    protected final String getCursorName() {
+    protected final @Nullable String getCursorName() {
         return cursorName;
     }
 
@@ -933,8 +965,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @return {@code true} if this statement has at least one output field (either singleton or result set)
      */
     protected final boolean hasFields() {
-        RowDescriptor fieldDescriptor = getRowDescriptor();
-        return fieldDescriptor != null && fieldDescriptor.getCount() > 0;
+        return fieldDescriptor.getCount() > 0;
     }
 
     /**
@@ -970,7 +1001,6 @@ public abstract class AbstractFbStatement implements FbStatement {
     /**
      * Listener to reset the statement state when it has been cancelled due to statement timeout.
      */
-    @NullMarked
     private final class StatementCancelledListener implements ExceptionListener {
 
         @SuppressWarnings("java:S1301")
@@ -999,7 +1029,6 @@ public abstract class AbstractFbStatement implements FbStatement {
     /**
      * Listener that allows a statement to listen to itself, so it can react to its own actions or state transitions.
      */
-    @NullMarked
     private final class SelfListener implements StatementListener {
         @Override
         public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {

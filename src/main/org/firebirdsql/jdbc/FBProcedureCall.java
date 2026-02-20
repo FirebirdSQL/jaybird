@@ -183,7 +183,8 @@ public class FBProcedureCall {
      * @since 7
      */
     public Optional<ObjectReference> getObjectReference() {
-        return Optional.ofNullable(objectReference);
+        //noinspection RedundantTypeArguments : needed to suppress nullability warning
+        return Optional.<ObjectReference>ofNullable(objectReference);
     }
 
     /**
@@ -470,7 +471,7 @@ public class FBProcedureCall {
      * @return {@code true} if {@code obj}is instance of this class representing the same procedure with the same
      * parameters
      */
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (obj == this) return true;
         return obj instanceof FBProcedureCall other
                 && Objects.equals(name, other.name)

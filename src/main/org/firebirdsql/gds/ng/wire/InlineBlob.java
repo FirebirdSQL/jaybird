@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire;
 
@@ -13,7 +13,7 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
-import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -33,7 +33,6 @@ import static org.firebirdsql.jaybird.util.ByteArrayHelper.validateBufferLength;
  * @author Mark Rotteveel
  * @since 7
  */
-@NullMarked
 public final class InlineBlob implements FbBlob {
 
     private static final int LAST_REAL_HANDLE_ID = 0xFFFF;
@@ -103,9 +102,7 @@ public final class InlineBlob implements FbBlob {
 
     @Override
     public FbDatabase getDatabase() {
-        try (var ignored = withLock()) {
-            return database;
-        }
+        return database;
     }
 
     @Override
@@ -233,8 +230,8 @@ public final class InlineBlob implements FbBlob {
     }
 
     @Override
-    public <T> T getBlobInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
-            throws SQLException {
+    public <T extends @Nullable Object> T getBlobInfo(byte[] requestItems, int bufferLength,
+            InfoProcessor<T> infoProcessor) throws SQLException {
         final byte[] blobInfo = getBlobInfo(requestItems, bufferLength);
         try {
             return infoProcessor.process(blobInfo);

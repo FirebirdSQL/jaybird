@@ -57,14 +57,7 @@ public class V13Statement extends V12Statement {
         for (int idx = 0; idx < fieldValues.getCount(); idx++) {
             nullBits.set(idx, fieldValues.getFieldData(idx) == null);
         }
-        final byte[] nullBitsBytes = nullBits.toByteArray(); // Note only amount of bytes necessary for highest bit set
-        xdrOut.write(nullBitsBytes);
-        final int requiredBytes = (rowDescriptor.getCount() + 7) / 8;
-        final int remainingBytes = requiredBytes - nullBitsBytes.length;
-        if (remainingBytes > 0) {
-            xdrOut.write(new byte[remainingBytes]);
-        }
-        xdrOut.writeAlignment(requiredBytes);
+        xdrOut.writePaddedBuffer(nullBits.toByteArray(), (rowDescriptor.getCount() + 7) / 8, XdrOutputStream.NULL_BYTE);
 
         for (int idx = 0; idx < fieldValues.getCount(); idx++) {
             if (!nullBits.get(idx)) {

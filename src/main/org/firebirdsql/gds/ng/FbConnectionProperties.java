@@ -8,7 +8,6 @@ import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 import org.firebirdsql.jaybird.util.CollectionUtils;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.InvalidObjectException;
@@ -31,7 +30,6 @@ import static org.firebirdsql.gds.JaybirdSystemProperties.getDefaultReportSQLWar
  * @see FbImmutableConnectionProperties
  * @since 3.0
  */
-@NullMarked
 public final class FbConnectionProperties extends AbstractAttachProperties<IConnectionProperties>
         implements IConnectionProperties, Serializable {
 

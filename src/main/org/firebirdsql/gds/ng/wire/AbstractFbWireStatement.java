@@ -17,8 +17,8 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.jaybird.util.Cleaners;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -29,8 +29,6 @@ import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Function;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * @author Mark Rotteveel
  * @since 3.0
@@ -39,16 +37,10 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
 
     private final Map<RowDescriptor, byte[]> blrCache = new WeakHashMap<>();
     private volatile int handle = WireProtocolConstants.INVALID_OBJECT;
-    private final FbWireDatabase database;
     private Cleaner.Cleanable cleanable = Cleaners.getNoOp();
 
     protected AbstractFbWireStatement(FbWireDatabase database) {
-        this.database = requireNonNull(database, "database");
-    }
-
-    @Override
-    public final LockCloseable withLock() {
-        return database.withLock();
+        super(database);
     }
 
     /**
@@ -67,12 +59,12 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     private XdrStreamAccess getXdrStreamAccess() {
-        return database.getXdrStreamAccess();
+        return getDatabase().getXdrStreamAccess();
     }
 
     @Override
     public final FbWireDatabase getDatabase() {
-        return database;
+        return (FbWireDatabase) super.getDatabase();
     }
 
     @Override
@@ -86,22 +78,28 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     @Override
-    public FbWireTransaction getTransaction() {
+    public final @Nullable FbWireTransaction getTransaction() {
         return (FbWireTransaction) super.getTransaction();
     }
 
+    @Override
+    protected final FbWireTransaction requireActiveTransaction() throws SQLException {
+        return (FbWireTransaction) super.requireActiveTransaction();
+    }
+
     /**
-     * Returns the (possibly cached) blr byte array for a {@link RowDescriptor}, or {@code null} if the parameter is null.
+     * Returns the (possibly cached) blr byte array for a {@link RowDescriptor}, or empty if the row descriptor has
+     * no fields.
      *
      * @param rowDescriptor
-     *         The row descriptor.
-     * @return blr byte array or {@code null} when {@code rowDescriptor} is {@code null}
+     *         row descriptor
+     * @return blr byte array (empty when {@code rowDescriptor} has no fields)
      * @throws SQLException
      *         When the {@link RowDescriptor} contains an unsupported field type.
      */
     @SuppressWarnings("java:S1168")
     protected final byte[] calculateBlr(RowDescriptor rowDescriptor) throws SQLException {
-        if (rowDescriptor == null) return null;
+        if (rowDescriptor.getCount() == 0) return ByteArrayHelper.emptyByteArray();
         byte[] blr = blrCache.get(rowDescriptor);
         if (blr == null) {
             blr = getBlrCalculator().calculateBlr(rowDescriptor);
@@ -125,13 +123,11 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
      */
     @SuppressWarnings("java:S1168")
     protected final byte[] calculateBlr(RowDescriptor rowDescriptor, RowValue rowValue) throws SQLException {
-        if (rowDescriptor == null || rowValue == null) return null;
         return getBlrCalculator().calculateBlr(rowDescriptor, rowValue);
     }
 
     /**
-     * @return The {@link BlrCalculator} instance for this statement (currently always the one from
-     * the {@link FbWireDatabase} instance).
+     * @return the {@link BlrCalculator} instance for this statement
      */
     protected final BlrCalculator getBlrCalculator() {
         return getDatabase().getBlrCalculator();
@@ -156,11 +152,6 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     @Override
-    public final RowDescriptor emptyRowDescriptor() {
-        return database.emptyRowDescriptor();
-    }
-
-    @Override
     public byte[] getSqlInfo(byte[] requestItems, int bufferLength) throws SQLException {
         try {
             checkStatementValid();
@@ -180,9 +171,11 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
      *
      * @param inlineBlobResponse
      *         inline blob response
+     * @param transaction
+     *         active transaction
      * @since 7
      */
-    protected void handleInlineBlobResponse(InlineBlobResponse inlineBlobResponse) {
+    protected void handleInlineBlobResponse(InlineBlobResponse inlineBlobResponse, FbWireTransaction transaction) {
         // ignored
     }
 
@@ -201,8 +194,8 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
      *         type of deferred response
      * @return deferred action
      */
-    protected final <T> DeferredAction wrapDeferredResponse(DeferredResponse<T> deferredResponse,
-            Function<Response, T> responseMapper, boolean requiresSync) {
+    protected final <T extends @Nullable Object> DeferredAction wrapDeferredResponse(
+            DeferredResponse<T> deferredResponse, Function<Response, T> responseMapper, boolean requiresSync) {
         return DeferredAction.wrapDeferredResponse(deferredResponse, responseMapper, getStatementWarningCallback(),
                 this::deferredExceptionHandler, requiresSync);
     }
@@ -226,7 +219,6 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     @SuppressWarnings("resource")
-    @NullMarked
     private static final class CleanupAction implements Runnable, StatementListener, DatabaseListener {
 
         private static final AtomicReferenceFieldUpdater<CleanupAction, @Nullable FbWireDatabase> databaseUpdater =

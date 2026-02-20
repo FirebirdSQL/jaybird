@@ -12,7 +12,7 @@ import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptData;
-import org.firebirdsql.gds.ng.wire.FbWireAttachment;
+import org.firebirdsql.gds.ng.wire.FbWireAttachment.AcceptPacket;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
 import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
@@ -27,6 +27,7 @@ import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
 import org.firebirdsql.jaybird.util.ExceptionHelper;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -38,6 +39,7 @@ import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.ERROR;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.lang.System.Logger.Level.WARNING;
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptNoCryptKeyAvailable;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_receiveTrustedAuth_NotSupported;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -55,12 +57,12 @@ public class V13WireOperations extends V11WireOperations {
     }
 
     @Override
-    public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback)
+    public void authReceiveResponse(@Nullable AcceptPacket acceptPacket, DbCryptCallback dbCryptCallback)
             throws SQLException, IOException {
         assert acceptPacket == null || acceptPacket.operation == op_cond_accept
                 : "Unexpected operation in AcceptPacket";
         final XdrInputStream xdrIn = getXdrIn();
-        final ClientAuthBlock clientAuthBlock = getClientAuthBlock();
+        final ClientAuthBlock clientAuthBlock = requireNonNull(getClientAuthBlock(), "clientAuthBlock");
         final Encoding encoding = getEncoding();
         while (true) {
             String pluginName;
@@ -175,7 +177,9 @@ public class V13WireOperations extends V11WireOperations {
     private CryptSessionConfig getCryptSessionConfig(EncryptionIdentifier encryptionIdentifier, byte[] specificData)
             throws SQLException {
         ClientAuthBlock clientAuthBlock = getClientAuthBlock();
-        if (!clientAuthBlock.supportsEncryption() || !encryptionIdentifier.isTypeSymmetric()) {
+        if (clientAuthBlock == null
+                || !clientAuthBlock.supportsEncryption()
+                || !encryptionIdentifier.isTypeSymmetric()) {
             throw FbExceptionBuilder.forNonTransientException(jb_cryptNoCryptKeyAvailable)
                     .messageParameter(encryptionIdentifier)
                     .toSQLException();
@@ -246,7 +250,7 @@ public class V13WireOperations extends V11WireOperations {
         return Optional.empty();
     }
 
-    private void throwIfWireCryptRequired(SQLException encryptionException) throws SQLException {
+    private void throwIfWireCryptRequired(@Nullable SQLException encryptionException) throws SQLException {
         if (getAttachProperties().getWireCryptAsEnum() == WireCrypt.REQUIRED) {
             throw FbExceptionBuilder.forNonTransientException(ISCConstants.isc_wirecrypt_incompatible)
                     .cause(encryptionException)
@@ -256,7 +260,7 @@ public class V13WireOperations extends V11WireOperations {
 
     @SuppressWarnings("DataFlowIssue")
     private static void logWireCryptPluginFailures(SQLExceptionChainBuilder chainBuilder,
-            EncryptionIdentifier selectedEncryption) {
+            @Nullable EncryptionIdentifier selectedEncryption) {
         if (chainBuilder.hasException() && log.isLoggable(WARNING)) {
             if (selectedEncryption == null) {
                 log.log(WARNING, "No wire encryption established because of plugin failures; see debug level for stacktraces:\n{0}",

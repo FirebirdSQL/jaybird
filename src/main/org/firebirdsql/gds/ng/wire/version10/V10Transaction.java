@@ -8,6 +8,7 @@ import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.firebirdsql.gds.ng.wire.TransmitAction;
 import org.firebirdsql.gds.ng.wire.XdrStreamAccess;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -113,7 +114,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     }
 
     @Override
-    public void prepare(byte[] recoveryInformation) throws SQLException {
+    public void prepare(byte @Nullable [] recoveryInformation) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             switchState(TransactionState.PREPARING);
             sendPrepare(recoveryInformation);
@@ -126,7 +127,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         }
     }
 
-    private void sendPrepare(byte[] recoveryInformation) throws SQLException {
+    private void sendPrepare(byte @Nullable [] recoveryInformation) throws SQLException {
         try {
             withTransmitLock(xdrOut -> {
                 sendPrepareMsg(xdrOut, recoveryInformation);
@@ -152,7 +153,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
      *         for errors writing to the output stream
      * @since 7
      */
-    protected void sendPrepareMsg(XdrOutputStream xdrOut, byte[] recoveryInformation) throws IOException {
+    protected void sendPrepareMsg(XdrOutputStream xdrOut, byte @Nullable [] recoveryInformation) throws IOException {
         if (recoveryInformation != null) {
             xdrOut.writeInt(op_prepare2); // p_operation
             xdrOut.writeInt(handle); // p_prep_transaction

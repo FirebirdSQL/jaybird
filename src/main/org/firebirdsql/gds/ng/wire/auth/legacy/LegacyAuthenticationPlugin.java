@@ -39,8 +39,7 @@ final class LegacyAuthenticationPlugin implements AuthenticationPlugin {
     }
 
     @Override
-    public void setServerData(byte[] serverData) {
-        //noinspection ConstantValue : null-check for robustness
+    public void setServerData(byte @Nullable [] serverData) {
         hasServerData = serverData != null && serverData.length > 0;
     }
 

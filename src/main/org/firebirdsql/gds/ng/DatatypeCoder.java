@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
@@ -8,6 +8,7 @@ import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.extern.decimal.Decimal64;
 import org.firebirdsql.jaybird.util.FbDatetimeConversion;
+import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,6 +28,7 @@ import java.time.LocalTime;
 public interface DatatypeCoder {
 
     // A fraction is 100 microseconds
+    @SuppressWarnings("unused")
     int NANOSECONDS_PER_FRACTION = (int) FbDatetimeConversion.NANOS_PER_UNIT;
     int FRACTIONS_PER_MILLISECOND = 10;
     int FRACTIONS_PER_SECOND = 1000 * FRACTIONS_PER_MILLISECOND;
@@ -87,7 +89,7 @@ public interface DatatypeCoder {
      *         byte array of sufficient size (warning: this is datatype coder specific, see {@link #sizeOfShort()})
      * @return short value from {@code buf}, or {@code 0} when {@code buf} is {@code null}
      */
-    short decodeShort(byte[] buf);
+    short decodeShort(byte @Nullable [] buf);
 
     /**
      * Decode a short value from {@code buf} starting at offset {@code off} for {@link #sizeOfShort()} bytes.
@@ -107,7 +109,7 @@ public interface DatatypeCoder {
      *
      * @param val
      *         value to be encoded
-     * @return {@code val} encoded as a byte array, or {@code 0} when {@code buf} is {@code null}
+     * @return {@code val} encoded as a byte array
      */
     byte[] encodeInt(int val);
 
@@ -131,7 +133,7 @@ public interface DatatypeCoder {
      *         byte array of sufficient size
      * @return int value decoded from {@code buf}, or {@code 0} when {@code buf} is {@code null}
      */
-    int decodeInt(byte[] buf);
+    int decodeInt(byte @Nullable [] buf);
 
     /**
      * Decode an int value from {@code buf} starting at offset {@code off} for 4 bytes.
@@ -161,7 +163,7 @@ public interface DatatypeCoder {
      *         byte array of sufficient size, or {@code 0} when {@code buf} is {@code null}
      * @return long value decoded from {@code buf}
      */
-    long decodeLong(byte[] buf);
+    long decodeLong(byte @Nullable [] buf);
 
     /**
      * Encode a float value as a byte array of 4 bytes.
@@ -179,7 +181,7 @@ public interface DatatypeCoder {
      *         byte array of sufficient size, or {@code 0} when {@code buf} is {@code null}
      * @return float value decoded from {@code buf}
      */
-    float decodeFloat(byte[] buf);
+    float decodeFloat(byte @Nullable [] buf);
 
     /**
      * Encode a double value as a byte array of 8 bytes.
@@ -197,7 +199,7 @@ public interface DatatypeCoder {
      *         byte array of sufficient size, or {@code 0} when {@code buf} is {@code null}
      * @return double value decoded from {@code buf}
      */
-    double decodeDouble(byte[] buf);
+    double decodeDouble(byte @Nullable [] buf);
 
     /**
      * Encode a {@code String} value as a byte array using the encoding of this datatype coder.
@@ -207,7 +209,7 @@ public interface DatatypeCoder {
      * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      * @since 4
      */
-    byte[] encodeString(String val);
+    byte @Nullable [] encodeString(@Nullable String val);
 
     /**
      * Creates a writer wrapping an input stream.
@@ -227,7 +229,7 @@ public interface DatatypeCoder {
      * @return {@code String} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      * @since 4
      */
-    String decodeString(byte[] buf);
+    @Nullable String decodeString(byte @Nullable [] buf);
 
     /**
      * Creates a reader wrapping an input stream.
@@ -243,10 +245,10 @@ public interface DatatypeCoder {
      * Decode a boolean from {@code buf} from the first byte.
      *
      * @param buf
-     *         (expected) 1 bytes
+     *         (expected) 1 byte
      * @return {@code false} when 0, {@code true} for all other values, or {@code false} if {@code buf} is {@code null}
      */
-    boolean decodeBoolean(byte[] buf);
+    boolean decodeBoolean(byte @Nullable [] buf);
 
     /**
      * Encodes boolean as a byte array of 1 byte.
@@ -265,7 +267,7 @@ public interface DatatypeCoder {
      * @return {@code LocalTime} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      * @since 5
      */
-    LocalTime decodeLocalTime(byte[] buf);
+    @Nullable LocalTime decodeLocalTime(byte @Nullable [] buf);
 
     /**
      * Decode {@code java.time.LocalTime} from {@code buf} from the 4 bytes starting at {@code off}.
@@ -287,7 +289,7 @@ public interface DatatypeCoder {
      * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      * @since 5
      */
-    byte[] encodeLocalTime(LocalTime val);
+    byte @Nullable [] encodeLocalTime(@Nullable LocalTime val);
 
     /**
      * Encode a {@code java.time.LocalTime} to a byte array, requiring 4 bytes.
@@ -310,7 +312,7 @@ public interface DatatypeCoder {
      * @return {@code LocalDate} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      * @since 5
      */
-    LocalDate decodeLocalDate(byte[] buf);
+    @Nullable LocalDate decodeLocalDate(byte @Nullable [] buf);
 
     /**
      * Decode {@code java.time.LocalDate} from {@code buf} from the 4 bytes starting at {@code off}.
@@ -332,7 +334,7 @@ public interface DatatypeCoder {
      * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      * @since 5
      */
-    byte[] encodeLocalDate(LocalDate val);
+    byte @Nullable [] encodeLocalDate(@Nullable LocalDate val);
 
     /**
      * Encode a {@code java.time.LocalDate} to a byte array, requiring 4 bytes.
@@ -355,7 +357,7 @@ public interface DatatypeCoder {
      * @return {@code LocalDateTime} decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      * @since 5
      */
-    LocalDateTime decodeLocalDateTime(byte[] buf);
+    @Nullable LocalDateTime decodeLocalDateTime(byte @Nullable [] buf);
 
     /**
      * Decode {@code java.time.LocalDateTime} from {@code buf} from the 8 bytes starting at {@code off}.
@@ -377,7 +379,7 @@ public interface DatatypeCoder {
      * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      * @since 5
      */
-    byte[] encodeLocalDateTime(LocalDateTime val);
+    byte @Nullable [] encodeLocalDateTime(@Nullable LocalDateTime val);
 
     /**
      * Encode a {@code java.time.LocalDateTime} to a byte array, requiring 8 bytes.
@@ -399,7 +401,7 @@ public interface DatatypeCoder {
      *         data to decode (expects exactly 8 bytes)
      * @return Decimal64 decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      */
-    Decimal64 decodeDecimal64(byte[] buf);
+    @Nullable Decimal64 decodeDecimal64(byte @Nullable [] buf);
 
     /**
      * Encodes a decimal64 as a byte array of 8 bytes.
@@ -408,7 +410,7 @@ public interface DatatypeCoder {
      *         value to be encoded
      * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
-    byte[] encodeDecimal64(Decimal64 val);
+    byte @Nullable [] encodeDecimal64(@Nullable Decimal64 val);
 
     /**
      * Decodes a decimal128 from a byte array of 16 bytes.
@@ -417,7 +419,7 @@ public interface DatatypeCoder {
      *         data to decode (expects exactly 16 bytes)
      * @return Decimal128 decoded from {@code buf}, or {@code null} if {@code buf} is {@code null}
      */
-    Decimal128 decodeDecimal128(byte[] buf);
+    @Nullable Decimal128 decodeDecimal128(byte @Nullable [] buf);
 
     /**
      * Encodes a decimal128 as a byte array of 16 bytes.
@@ -426,7 +428,7 @@ public interface DatatypeCoder {
      *         value to be encoded
      * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
-    byte[] encodeDecimal128(Decimal128 val);
+    byte @Nullable [] encodeDecimal128(@Nullable Decimal128 val);
 
     /**
      * Decodes a BigInteger from a byte array of 16 bytes (int128 format).
@@ -435,7 +437,7 @@ public interface DatatypeCoder {
      *         data to decode (expects exactly 16 bytes)
      * @return BigInteger decoded from {@code buf}, or {@code null} if {@code val} is {@code null}
      */
-    BigInteger decodeInt128(byte[] buf);
+    @Nullable BigInteger decodeInt128(byte @Nullable [] buf);
 
     /**
      * Encodes a BigInteger as a byte array of 16 bytes (int128 format).
@@ -448,7 +450,7 @@ public interface DatatypeCoder {
      *         value to be encoded
      * @return {@code val} encoded as a byte array, or {@code null} if {@code val} is {@code null}
      */
-    byte[] encodeInt128(BigInteger val);
+    byte @Nullable [] encodeInt128(@Nullable BigInteger val);
 
     /**
      * @return encoding factory.
@@ -498,7 +500,7 @@ public interface DatatypeCoder {
      * @return {@code true} if other is an equivalent datatype coder.
      */
     @Override
-    boolean equals(Object other);
+    boolean equals(@Nullable Object other);
 
     @Override
     int hashCode();
