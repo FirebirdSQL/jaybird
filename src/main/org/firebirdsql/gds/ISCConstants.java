@@ -2406,7 +2406,8 @@ public interface ISCConstants {
 
     // Other stuff
     int CS_NONE    = 0; /* No Character Set */
-    int CS_BINARY  = 1; /* BINARY BYTES */
+    int CS_BINARY  = 1;
+    int CS_UTF8    = 4;
     int CS_dynamic = 127; // Pseudo number for runtime charset (see intl\charsets.h and references to it in Firebird)
 
     int BLOB_SUB_TYPE_BINARY = StandardBlobTypes.isc_blob_untyped;

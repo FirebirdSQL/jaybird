@@ -10,6 +10,7 @@ import java.util.List;
 
 import static org.firebirdsql.gds.ISCConstants.CS_BINARY;
 import static org.firebirdsql.gds.ISCConstants.CS_NONE;
+import static org.firebirdsql.gds.ISCConstants.CS_UTF8;
 
 /**
  * The default encoding set for Jaybird.
@@ -44,7 +45,7 @@ public final class DefaultEncodingSet implements EncodingSet {
                 new DefaultEncodingDefinition("OCTETS", NO_CHARSET, 1, CS_BINARY, false),
                 new DefaultEncodingDefinition("ASCII", StandardCharsets.US_ASCII, 1, 2, false),
                 new DefaultEncodingDefinition("UNICODE_FSS", StandardCharsets.UTF_8, 3, 3, true),
-                new DefaultEncodingDefinition("UTF8", StandardCharsets.UTF_8, 4, 4, false),
+                new DefaultEncodingDefinition("UTF8", StandardCharsets.UTF_8, 4, CS_UTF8, false),
                 new DefaultEncodingDefinition("SJIS_0208", "MS932", 2, 5, false),
                 new DefaultEncodingDefinition("EUCJ_0208", "EUC_JP", 2, 6, false),
                 new DefaultEncodingDefinition("DOS737", "Cp737", 1, 9, false),

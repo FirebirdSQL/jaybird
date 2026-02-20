@@ -3,7 +3,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2002 David Jencks
  SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2020 Vasiliy Yashkov
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
@@ -18,7 +18,6 @@ import org.firebirdsql.jaybird.util.LegacyDatetimeConversions;
 import org.firebirdsql.jdbc.*;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
@@ -42,7 +41,6 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_USE_NULL;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
-@NullUnmarked
 public abstract class FBField {
 
     static final String SQL_TYPE_NOT_SUPPORTED = "SQL type for this field is not yet supported";
@@ -81,8 +79,8 @@ public abstract class FBField {
     protected GDSHelper gdsHelper;
     protected int requiredType;
 
-    FBField(@NonNull FieldDescriptor fieldDescriptor, @NonNull FieldDataProvider dataProvider, int requiredType)
-            throws SQLException {
+    @NullMarked
+    FBField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         if (fieldDescriptor == null) {
             throw new SQLNonTransientException("Cannot create FBField instance with fieldDescriptor null",
                     SQL_STATE_INVALID_USE_NULL);
@@ -730,6 +728,7 @@ public abstract class FBField {
     }
 
     @NullMarked
+    @SuppressWarnings("SameParameterValue")
     final SQLException invalidGetConversion(Class<?> requestedType, @Nullable String reason) {
         return invalidGetConversion(requestedType, reason, null);
     }

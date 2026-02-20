@@ -2,22 +2,23 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2002 David Jencks
  SPDX-FileCopyrightText: Copyright 2003 Blas Rodriguez Somoza
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.jdbc.SQLStateConstants;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.Serial;
 import java.sql.SQLNonTransientException;
 
 /**
- * This exception is thrown when the requested type conversion cannot be
- * performed.
+ * This exception is thrown when the requested type conversion cannot be performed.
+ *
  * @author Roman Rokytskyy
- * @version 1.0
  */
+@NullMarked
 public class TypeConversionException extends SQLNonTransientException {
 
     @Serial

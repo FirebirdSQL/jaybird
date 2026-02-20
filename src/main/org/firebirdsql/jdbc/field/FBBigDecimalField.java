@@ -290,6 +290,7 @@ final class FBBigDecimalField extends FBField {
             protected @Nullable BigDecimal decode(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData) {
                 if (fieldData == null) return null;
                 BigInteger int128Value = fieldDescriptor.getDatatypeCoder().decodeInt128(fieldData);
+                //noinspection DataFlowIssue : already covered by fieldData == null
                 return new BigDecimal(int128Value, -1 * fieldDescriptor.getScale());
             }
 

@@ -1,10 +1,12 @@
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.util.InternalApi;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 
 /**
  * Trim behaviour of {@code getString} in string fields.
@@ -41,9 +43,7 @@ public interface TrimmableField {
      * @return value without trailing spaces, {@code null} if {@code value} was null
      */
     static @Nullable String trimTrailing(@Nullable String value) {
-        if (value == null || value.isEmpty()) {
-            return value;
-        }
+        if (isNullOrEmpty(value)) return value;
         for (int idx = value.length() - 1; idx >= 0; idx--) {
             if (value.charAt(idx) != ' ') {
                 return value.substring(0, idx + 1);

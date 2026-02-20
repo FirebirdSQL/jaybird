@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2018-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.field;
 
@@ -13,6 +13,7 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -32,7 +33,7 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
     private static final BigDecimal BD_MIN_LONG = BigDecimal.valueOf(Long.MIN_VALUE);
 
     private final @NonNull Class<T> decimalType;
-    private final @NonNull DecimalHandling<T> decimalHandling;
+    private final @NonNull DecimalHandling<@NonNull T> decimalHandling;
 
     @NullMarked
     FBDecfloatField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType,
@@ -210,23 +211,24 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
     @SuppressWarnings("unchecked")
     @NullMarked
-    private DecimalHandling<T> getDecimalHandling(FieldDescriptor fieldDescriptor, Class<T> decimalType)
+    private DecimalHandling<@NonNull T> getDecimalHandling(FieldDescriptor fieldDescriptor, Class<T> decimalType)
             throws FBDriverNotCapableException {
         if (decimalType == Decimal64.class && fieldDescriptor.isFbType(ISCConstants.SQL_DEC16)) {
-            return (DecimalHandling<T>) Decimal64Handling.INSTANCE;
+            return (DecimalHandling<@NonNull T>) Decimal64Handling.INSTANCE;
         } else if (decimalType == Decimal128.class && fieldDescriptor.isFbType(ISCConstants.SQL_DEC34)) {
-            return (DecimalHandling<T>) Decimal128Handling.INSTANCE;
+            return (DecimalHandling<@NonNull T>) Decimal128Handling.INSTANCE;
         } else {
             throw new FBDriverNotCapableException("Unsupported type " + decimalType.getName() + " and/or field type " +
                     fieldDescriptor.getType());
         }
     }
 
+    @NullMarked
     private interface DecimalHandling<T extends Decimal<T>> {
 
-        byte[] encode(FieldDescriptor fieldDescriptor, T value);
+        byte @Nullable [] encode(FieldDescriptor fieldDescriptor, @Nullable T value);
 
-        T decode(FieldDescriptor fieldDescriptor, byte[] fieldData);
+        @Nullable T decode(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData);
 
         T valueOf(double value);
 
@@ -236,17 +238,18 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
     }
 
+    @NullMarked
     private static final class Decimal64Handling implements DecimalHandling<Decimal64> {
 
         private static final Decimal64Handling INSTANCE = new Decimal64Handling();
 
         @Override
-        public byte[] encode(FieldDescriptor fieldDescriptor, Decimal64 value) {
+        public byte @Nullable[] encode(FieldDescriptor fieldDescriptor, @Nullable Decimal64 value) {
             return fieldDescriptor.getDatatypeCoder().encodeDecimal64(value);
         }
 
         @Override
-        public Decimal64 decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
+        public @Nullable Decimal64 decode(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData) {
             return fieldDescriptor.getDatatypeCoder().decodeDecimal64(fieldData);
         }
 
@@ -267,17 +270,18 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
     }
 
+    @NullMarked
     private static final class Decimal128Handling implements DecimalHandling<Decimal128> {
 
         private static final Decimal128Handling INSTANCE = new Decimal128Handling();
 
         @Override
-        public byte[] encode(FieldDescriptor fieldDescriptor, Decimal128 value) {
+        public byte @Nullable [] encode(FieldDescriptor fieldDescriptor, @Nullable Decimal128 value) {
             return fieldDescriptor.getDatatypeCoder().encodeDecimal128(value);
         }
 
         @Override
-        public Decimal128 decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
+        public @Nullable Decimal128 decode(FieldDescriptor fieldDescriptor, byte @Nullable [] fieldData) {
             return fieldDescriptor.getDatatypeCoder().decodeDecimal128(fieldData);
         }
 
