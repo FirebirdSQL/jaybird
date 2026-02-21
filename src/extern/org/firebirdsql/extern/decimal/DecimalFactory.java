@@ -1,4 +1,4 @@
-// SPDX-FileCopyright: Copyright 2018 Firebird development team and individual contributors
+// SPDX-FileCopyright: Copyright 2018-2023 Firebird development team and individual contributors
 // SPDX-FileContributor: Mark Rotteveel
 // SPDX-License-Identifier: MIT
 package org.firebirdsql.extern.decimal;

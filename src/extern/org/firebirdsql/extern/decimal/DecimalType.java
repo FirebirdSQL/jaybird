@@ -1,4 +1,4 @@
-// SPDX-FileCopyright: Copyright 2018 Firebird development team and individual contributors
+// SPDX-FileCopyright: Copyright 2018-2023 Firebird development team and individual contributors
 // SPDX-FileContributor: Mark Rotteveel
 // SPDX-License-Identifier: MIT
 package org.firebirdsql.extern.decimal;
@@ -42,7 +42,7 @@ public enum DecimalType {
     private static final int NAN_SIGNAL = 0b0_11111_10;
 
     /**
-     * @return Bit combination of this special.
+     * @return Bit-combination of this special.
      * @throws IllegalStateException
      *         If this is type FINITE instead
      */
@@ -65,21 +65,15 @@ public enum DecimalType {
      */
     static DecimalType fromFirstByte(int firstByte) {
         final int type = firstByte & TYPE_MASK;
-        switch (type) {
-        case INFINITY_0:
-        case INFINITY_2:
-            return INFINITY;
-
-        case NAN_QUIET:
-            return NAN;
-
-        case NAN_SIGNAL:
-            return SIGNALING_NAN;
-
-        default:
-            assert (firstByte & 0b0_11110_00) != 0b0_11110_00 : "Invalid special " + firstByte;
-            return FINITE;
-        }
+        return switch (type) {
+            case INFINITY_0, INFINITY_2 -> INFINITY;
+            case NAN_QUIET -> NAN;
+            case NAN_SIGNAL -> SIGNALING_NAN;
+            default -> {
+                assert (firstByte & 0b0_11110_00) != 0b0_11110_00 : "Invalid special " + firstByte;
+                yield FINITE;
+            }
+        };
     }
 
 }

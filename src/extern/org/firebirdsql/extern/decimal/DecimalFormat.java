@@ -1,4 +1,4 @@
-// SPDX-FileCopyright: Copyright 2018 Firebird development team and individual contributors
+// SPDX-FileCopyright: Copyright 2018-2023 Firebird development team and individual contributors
 // SPDX-FileContributor: Mark Rotteveel
 // SPDX-License-Identifier: MIT
 package org.firebirdsql.extern.decimal;
@@ -47,7 +47,7 @@ enum DecimalFormat {
         exponentContinuationBits = calculateExponentContinuationBits(formatBitLength, coefficientContinuationBits);
         eLimit = calculateExponentLimit(exponentContinuationBits);
         int eMin = -eLimit / 2;
-        // int eMax = -eMin + 1;
+        //int eMax = -eMin + 1;
         exponentBias = -eMin + coefficientDigits - 1;
         char[] digits = new char[coefficientDigits];
         Arrays.fill(digits, '9');

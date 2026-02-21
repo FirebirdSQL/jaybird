@@ -1,4 +1,4 @@
-// SPDX-FileCopyright: Copyright 2018 Firebird development team and individual contributors
+// SPDX-FileCopyright: Copyright 2018-2026 Firebird development team and individual contributors
 // SPDX-FileContributor: Mark Rotteveel
 // SPDX-License-Identifier: MIT
 /**
@@ -8,6 +8,8 @@
  * </p>
  */
 @InternalApi
+@NullMarked
 package org.firebirdsql.extern.decimal;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.NullMarked;

@@ -633,6 +633,7 @@ Maintainers of Jaybird forks, or implementers of custom wire protocol implementa
 The change also lead to incompatible changes to protected methods in the various protocol implementation classes, like adding an `XdrOutputStream` parameter to various methods, and methods renamed for consistency.
 +
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-01-additional-locking-for-sending-in-wire-protocol.adoc[jdp-2026-01: Additional locking for sending in wire protocol].
+* Upgraded `org.firebirdsql.extern.decimal` to https://github.com/FirebirdSQL/decimal-java[decimal-java 2.0.1^]
 * ...
 
 [#compatibility-changes]
