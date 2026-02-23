@@ -16,6 +16,7 @@ import java.util.Properties;
 import static java.lang.String.format;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
+import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,12 +40,11 @@ class UseFirebirdAutocommitTest {
             "?encoding=NONE&useFirebirdAutocommit=true,  true"
     })
     void checkFirebirdAutocommitValue(String properties, boolean expectedUseFirebirdAutocommit) throws SQLException {
+        Properties props = getDefaultPropertiesForConnection();
+        props.remove("lc_ctype");
+        props.remove("useFirebirdAutocommit");
         String url = FBTestProperties.getUrl() + properties;
-        if (FBTestProperties.ENABLE_PROTOCOL != null) {
-            url += "&enableProtocol=" + FBTestProperties.ENABLE_PROTOCOL;
-        }
-        try (FBConnection connection = (FBConnection) DriverManager.getConnection(url, FBTestProperties.DB_USER,
-                FBTestProperties.DB_PASSWORD)) {
+        try (FBConnection connection = (FBConnection) DriverManager.getConnection(url, props)) {
             FBManagedConnectionFactory managedConnectionFactory = connection
                     .getManagedConnection().getManagedConnectionFactory();
             assertEquals(expectedUseFirebirdAutocommit, managedConnectionFactory.isUseFirebirdAutocommit(),

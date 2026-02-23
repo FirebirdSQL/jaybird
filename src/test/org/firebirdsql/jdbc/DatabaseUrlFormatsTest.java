@@ -39,10 +39,7 @@ class DatabaseUrlFormatsTest {
     @ParameterizedTest
     @MethodSource
     void testConnectionWithDriverManager(String url) throws Exception {
-        if (ENABLE_PROTOCOL != null) {
-            url += (url.contains("?") ? '&' : "?") + "enableProtocol=" + ENABLE_PROTOCOL;
-        }
-        try (Connection connection = DriverManager.getConnection(url, DB_USER, FBTestProperties.DB_PASSWORD)) {
+        try (var connection = DriverManager.getConnection(url, getDefaultPropertiesForConnection())) {
             assertTrue(connection.isValid(1000));
         }
     }
@@ -144,20 +141,25 @@ class DatabaseUrlFormatsTest {
             urlFormats.add("doesnotexist/1234:nopath?databaseName=//%1$s:%2$d/%3$s");
 
             if (isOtherNativeType().matches(gdsTypeName)) {
+                final boolean supportsNativeModernUrls = supportsNativeModernUrls();
                 // NOTE: This test assumes a Firebird 3.0 or higher client library is used
-                urlFormats.add("inet://%1$s:%2$d/%3$s");
-                // Not testing inet4/inet6
+                if (supportsNativeModernUrls) {
+                    urlFormats.add("inet://%1$s:%2$d/%3$s");
+                    // Not testing inet4/inet6
+                }
                 FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
                 if (supportInfo.isWindows() && isWindowsSystem()) {
                     if (supportInfo.supportsWnet()) {
                         // NOTE: This assumes the default WNET service name is used
-                        urlFormats.add("wnet://%1$s/%3$s");
                         urlFormats.add("\\\\%4$s\\%3$s");
-                        if (localhost) {
-                            urlFormats.add("wnet://%3$s");
+                        if (supportsNativeModernUrls) {
+                            urlFormats.add("wnet://%1$s/%3$s");
+                            if (localhost) {
+                                urlFormats.add("wnet://%3$s");
+                            }
                         }
                     }
-                    if (localhost) {
+                    if (supportsNativeModernUrls && localhost) {
                         urlFormats.add("xnet://%3$s");
                     }
                 }

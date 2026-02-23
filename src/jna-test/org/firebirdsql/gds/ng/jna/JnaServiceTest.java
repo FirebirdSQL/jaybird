@@ -89,6 +89,7 @@ class JnaServiceTest {
 
     @Test
     void testBasicStatusVectorProcessing_wrongService() throws Exception {
+        // Test may also fail when using fbclient of Firebird 4.0 or higher for NATIVE tests
         assumeTrue(getDefaultSupportInfo().isVersionBelow(4), "Incorrect service name ignored in Firebird 4+");
         // set invalid database
         final String invalidServiceName = "doesnotexist";
