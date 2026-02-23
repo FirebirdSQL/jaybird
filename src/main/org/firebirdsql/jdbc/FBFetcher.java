@@ -1,13 +1,12 @@
 // SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
 // SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,7 +19,6 @@ import java.sql.SQLException;
  * </p>
  */
 @InternalApi
-@NullMarked
 public sealed interface FBFetcher permits AbstractFetcher, FBCachedFetcher, FBServerScrollFetcher, FBStatementFetcher,
         FBUpdatableFetcher, ForwardOnlyFetcherDecorator {
 

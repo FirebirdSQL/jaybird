@@ -16,7 +16,6 @@ import org.firebirdsql.jaybird.util.UncheckedSQLException;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.DatabaseMetaData;
@@ -56,7 +55,6 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_CURSOR_ST
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
-@NullMarked
 final class FBRowUpdater implements FirebirdRowUpdater {
 
     // Estimated average column length of 10 + 2 quote characters + comma (for pre-sizing string builders).
@@ -633,7 +631,6 @@ final class FBRowUpdater implements FirebirdRowUpdater {
         newRow.reset();
     }
 
-    @NullMarked
     private static final class RowListener implements StatementListener {
         // expect 0 or 1 rows (2 or more would mean the key columns didn't identify a row uniquely)
         private final List<RowValue> rows = new ArrayList<>(1);

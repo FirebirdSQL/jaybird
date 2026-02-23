@@ -1,9 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.jaybird.util.SearchPathHelper;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLDataException;
@@ -23,7 +22,6 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  * @author Mark Rotteveel
  * @since 7
  */
-@NullMarked
 sealed abstract class SchemaChanger {
 
     /**

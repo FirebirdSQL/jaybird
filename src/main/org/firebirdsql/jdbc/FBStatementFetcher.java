@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
 // SPDX-FileCopyrightText: Copyright 2003-2006 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -15,7 +15,6 @@ import org.firebirdsql.gds.ng.FetchDirection;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -27,7 +26,6 @@ import java.util.Deque;
  * by the cursor position after {@link #next()} call. This class changes cursor
  * position to point to the next row.
  */
-@NullMarked
 sealed class FBStatementFetcher extends AbstractFetcher implements FBFetcher permits FBUpdatableCursorFetcher {
 
     private static final int NO_ASYNC_FETCH = -1;
@@ -297,7 +295,6 @@ sealed class FBStatementFetcher extends AbstractFetcher implements FBFetcher per
         return stmt.withLock();
     }
 
-    @NullMarked
     private final class RowListener implements StatementListener {
         @Override
         public void receivedRow(FbStatement sender, RowValue rowValue) {

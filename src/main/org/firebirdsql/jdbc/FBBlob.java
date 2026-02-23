@@ -64,7 +64,6 @@ import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_type;
  * </p>
  */
 @InternalApi
-@NullMarked
 public final class FBBlob implements FirebirdBlob, TransactionListener {
 
     private static final System.Logger logger = System.getLogger(FBBlob.class.getName());
@@ -649,7 +648,6 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
     }
 
     @Override
-    @NullMarked
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
         if (newState == TransactionState.COMMITTED || newState == TransactionState.ROLLED_BACK) {

@@ -12,7 +12,6 @@ import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jaybird.fb.constants.BatchItems;
 import org.firebirdsql.jaybird.util.Primitives;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
-import org.jspecify.annotations.NullMarked;
 
 import java.sql.BatchUpdateException;
 import java.sql.SQLException;
@@ -39,7 +38,6 @@ import static java.util.Collections.emptyList;
  * @author Mark Rotteveel
  * @since 5
  */
-@NullMarked
 final class ServerBatch implements Batch, StatementListener {
 
     private static final System.Logger log = System.getLogger(ServerBatch.class.getName());

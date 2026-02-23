@@ -21,7 +21,6 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.util.Primitives;
 import org.firebirdsql.jaybird.util.SQLExceptionThrowingFunction;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.*;
@@ -49,7 +48,6 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  */
 @SuppressWarnings({ "RedundantThrows", "SqlSourceToSinkFlow" })
 @InternalApi
-@NullMarked
 public class FBStatement extends AbstractStatement implements FirebirdStatement {
 
     private static final System.Logger log = System.getLogger(FBStatement.class.getName());
@@ -1069,7 +1067,6 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
         return new FBStatementListener();
     }
 
-    @NullMarked
     private final class FBStatementListener implements StatementListener {
         @Override
         public void receivedRow(FbStatement sender, RowValue rowValue) {

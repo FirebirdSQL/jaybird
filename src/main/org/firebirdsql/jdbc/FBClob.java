@@ -8,7 +8,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -36,7 +35,6 @@ import java.sql.SQLNonTransientException;
  * @version 1.0
  */
 @InternalApi
-@NullMarked
 public final class FBClob implements FirebirdClob, NClob {
 
 	private final FBBlob wrappedBlob;

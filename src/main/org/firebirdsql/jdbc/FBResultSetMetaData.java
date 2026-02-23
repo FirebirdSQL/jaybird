@@ -17,7 +17,6 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
@@ -41,7 +40,6 @@ import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
  */
 @SuppressWarnings("RedundantThrows")
 @InternalApi
-@NullMarked
 public class FBResultSetMetaData extends AbstractFieldMetaData implements FirebirdResultSetMetaData {
 
     private final ColumnStrategy columnStrategy;
@@ -73,7 +71,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
             return false;
         }
         GDSHelper gdsHelper = connection.getGDSHelper();
-        return gdsHelper != null && gdsHelper.getConnectionProperties().isColumnLabelForName();
+        return gdsHelper.getConnectionProperties().isColumnLabelForName();
     }
 
     @Override

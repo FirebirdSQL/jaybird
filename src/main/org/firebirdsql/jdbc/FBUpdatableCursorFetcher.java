@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -7,7 +7,6 @@ import java.sql.SQLException;
 
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
-import org.jspecify.annotations.NullMarked;
 
 /**
  * Statement fetcher for updatable cursor case. This fetcher keeps cursor
@@ -17,7 +16,6 @@ import org.jspecify.annotations.NullMarked;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
-@NullMarked
 final class FBUpdatableCursorFetcher extends FBStatementFetcher {
 
     FBUpdatableCursorFetcher(GDSHelper gdsHelper, FetchConfig fetchConfig, FbStatement stmth,

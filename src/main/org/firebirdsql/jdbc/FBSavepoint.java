@@ -1,43 +1,34 @@
 // SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
+import java.sql.Savepoint;
+import java.util.Objects;
+
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrBlank;
 
 /**
  * Savepoint implementation.
  * <p>
  * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
- * For the public API, refer to the {@link java.sql.Savepoint} and {@link FirebirdSavepoint} interfaces.
+ * For the public API, refer to the {@link Savepoint} and {@link FirebirdSavepoint} interfaces.
  * </p>
  *
- * @param savepointId
- *         numeric savepoint id (must be non-{@code null} if {@code name} is {@code null}).
- * @param name
- *         savepoint name (must be non-{@code null} if {@code savepointId} is {@code null})
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
 @InternalApi
-public record FBSavepoint(Integer savepointId, String name) implements FirebirdSavepoint {
+public final class FBSavepoint implements FirebirdSavepoint {
 
     private static final String SAVEPOINT_ID_PREFIX = "SVPT";
-
-    public FBSavepoint {
-        if (savepointId == null && name == null) {
-            throw new NullPointerException("savepointId and name cannot both be null");
-        } else if (name == null) {
-            name = generateSavepointName(savepointId);
-        } else if (savepointId != null) {
-            throw new IllegalArgumentException("savepointId cannot be non-null if name is not null");
-        } else if (name.isBlank()) {
-            throw new IllegalArgumentException("name must be non-blank");
-        }
-    }
+    private final @Nullable Integer savepointId;
+    private final String name;
 
     /**
      * Create an unnamed savepoint.
@@ -46,7 +37,8 @@ public record FBSavepoint(Integer savepointId, String name) implements FirebirdS
      *         ID of the savepoint
      */
     public FBSavepoint(int savepointId) {
-        this(savepointId, null);
+        this.savepointId = savepointId;
+        name = generateSavepointName(savepointId);
     }
 
     /**
@@ -56,7 +48,11 @@ public record FBSavepoint(Integer savepointId, String name) implements FirebirdS
      *         name of the savepoint
      */
     public FBSavepoint(String name) {
-        this(null, name);
+        if (isNullOrBlank(name)) {
+            throw new IllegalArgumentException("name must be non-null and non-blank");
+        }
+        this.savepointId = null;
+        this.name = name;
     }
 
     /**
@@ -99,6 +95,26 @@ public record FBSavepoint(Integer savepointId, String name) implements FirebirdS
 
     String toReleaseStatement(QuoteStrategy quoteStrategy) {
         return "RELEASE SAVEPOINT " + quoteStrategy.quoteObjectName(name) + " ONLY";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (!(obj instanceof FBSavepoint that)) return false;
+        return Objects.equals(this.savepointId, that.savepointId) &&
+                this.name.equals(that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "FBSavepoint[" +
+                "savepointId=" + savepointId + ", " +
+                "name=" + name + ']';
     }
 
 }

@@ -14,7 +14,6 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -36,7 +35,6 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_ATTR_VALU
  * @since 6
  */
 @InternalApi
-@NullMarked
 public abstract class AbstractStatement implements Statement, FirebirdStatement {
 
     private static final AtomicInteger STATEMENT_ID_GENERATOR = new AtomicInteger();

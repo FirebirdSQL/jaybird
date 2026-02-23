@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ClientInfoStatus;
 import java.sql.SQLClientInfoException;
@@ -55,7 +56,7 @@ final class ClientInfoProvider {
     // Holds statement used for setting or retrieving client info properties.
     private final MetadataStatementHolder statementHolder;
     // if null, use DEFAULT_CLIENT_INFO_PROPERTIES
-    private Set<ClientInfoProperty> knownProperties;
+    private @Nullable Set<ClientInfoProperty> knownProperties;
 
     ClientInfoProvider(FBConnection connection) throws SQLException {
         connection.checkValidity();
@@ -154,7 +155,7 @@ final class ClientInfoProvider {
      * Implementation of {@link FBConnection#getClientInfo(String)}.
      */
     @SuppressWarnings("SqlSourceToSinkFlow")
-    public String getClientInfo(String name) throws SQLException {
+    public @Nullable String getClientInfo(String name) throws SQLException {
         ClientInfoProperty property;
         try {
             property = ClientInfoProperty.parse(name);
@@ -270,6 +271,7 @@ final class ClientInfoProvider {
             SQLException forMessage = FbExceptionBuilder.forException(jb_clientInfoInvalidPropertyName)
                     .messageParameter(name)
                     .toSQLException();
+            //noinspection DataFlowIssue : null-check for robustness
             throw new SQLClientInfoException(forMessage.getMessage(), forMessage.getSQLState(),
                     forMessage.getErrorCode(),
                     Map.of(requireNonNullElse(name, "<null>"), ClientInfoStatus.REASON_UNKNOWN), e);
@@ -298,7 +300,7 @@ final class ClientInfoProvider {
         // Include USER_SESSION, and USER_TRANSACTION if not in auto-commit
         Predicate<ClientInfoProperty> includePropertyPredicate = property ->
                 USER_SESSION.equals(property.context) || !autoCommit && USER_TRANSACTION.equals(property.context);
-        var propertyValues = new HashMap<ClientInfoProperty, String>();
+        var propertyValues = new HashMap<ClientInfoProperty, @Nullable String>();
         // Populating with null to clear properties not included in parameter properties
         getKnownProperties().stream()
                 .filter(includePropertyPredicate)
@@ -316,7 +318,7 @@ final class ClientInfoProvider {
     }
 
     @SuppressWarnings("SqlSourceToSinkFlow")
-    private void executeSetClientInfo(Map<ClientInfoProperty, String> propertyValues) throws SQLException {
+    private void executeSetClientInfo(Map<ClientInfoProperty, @Nullable String> propertyValues) throws SQLException {
         QuoteStrategy quoteStrategy = connection.getQuoteStrategy();
         var sb = new StringBuilder("""
                 execute block
@@ -437,7 +439,7 @@ final class ClientInfoProvider {
          *         value to set, use {@code null} to set SQL {@code NULL}
          * @return {@code sb} for chaining calls
          */
-        StringBuilder appendAsSetContext(StringBuilder sb, QuoteStrategy quoteStrategy, String value) {
+        StringBuilder appendAsSetContext(StringBuilder sb, QuoteStrategy quoteStrategy, @Nullable String value) {
             // 30 = 16 (prefix) + 9 (6 quotes, 2 commas, and closing parenthesis) + space for five quotes to escape
             sb.ensureCapacity(
                     sb.length() + 30 + context.length() + name.length() + (value != null ? value.length() : 4));

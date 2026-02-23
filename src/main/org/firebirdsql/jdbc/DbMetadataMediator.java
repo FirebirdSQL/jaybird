@@ -10,7 +10,6 @@ import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 
 import java.nio.charset.StandardCharsets;
@@ -31,7 +30,6 @@ import static java.util.Objects.requireNonNull;
  * @since 4.0
  */
 @InternalApi
-@NullMarked
 public abstract class DbMetadataMediator {
 
     private static final DatatypeCoder datatypeCoder =
@@ -70,7 +68,7 @@ public abstract class DbMetadataMediator {
      * @return GDSType of the current connection
      */
     @NullUnmarked
-    public abstract GDSType getGDSType();
+    public abstract GDSType getGDSType() throws SQLException;
 
     /**
      * @return value of the {@code useCatalogAsPackage} connection property if packages are supported, otherwise

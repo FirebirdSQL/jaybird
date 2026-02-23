@@ -14,6 +14,8 @@ import org.jspecify.annotations.Nullable;
 public final class FbImmutableConnectionProperties extends AbstractImmutableAttachProperties<IConnectionProperties>
         implements IConnectionProperties {
 
+    private static final FbImmutableConnectionProperties EMPTY = new FbImmutableConnectionProperties();
+
     /**
      * Copy constructor for FbConnectionProperties.
      * <p>
@@ -26,6 +28,22 @@ public final class FbImmutableConnectionProperties extends AbstractImmutableAtta
      */
     public FbImmutableConnectionProperties(IConnectionProperties src) {
         super(src);
+    }
+
+    /**
+     * Constructor for an empty immutable connection properties instance.
+     *
+     * @since 7
+     */
+    private FbImmutableConnectionProperties() {
+    }
+
+    /**
+     * @return a possibly cached empty immutable connection properties instance
+     * @since 7
+     */
+    public static FbImmutableConnectionProperties empty() {
+        return EMPTY;
     }
 
     @Override

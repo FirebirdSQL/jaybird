@@ -20,7 +20,6 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -30,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
-@NullMarked
 final class FBCachedFetcher extends AbstractFetcher implements FBFetcher {
 
     private List<RowValue> rows;
@@ -321,7 +319,6 @@ final class FBCachedFetcher extends AbstractFetcher implements FBFetcher {
         return lockAction.get();
     }
 
-    @NullMarked
     private static final class RowListener implements StatementListener {
         private final List<RowValue> rows = new ArrayList<>();
         private boolean allRowsFetched = false;

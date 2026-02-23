@@ -1,11 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2007 Gabriel Reid
-// SPDX-FileCopyrightText: Copyright 2022-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 
@@ -17,7 +16,6 @@ import java.sql.SQLException;
  * </p>
  */
 @InternalApi
-@NullMarked
 public sealed interface StoredProcedureMetaData
         permits DummyStoredProcedureMetaData, PackageAwareStoredProcedureMetaData, SchemaAwareStoredProcedureMetaData {
 

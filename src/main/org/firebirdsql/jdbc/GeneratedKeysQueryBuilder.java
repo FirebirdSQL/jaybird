@@ -38,6 +38,8 @@ final class GeneratedKeysQueryBuilder {
         temp.put(LocalStatementType.DELETE, GeneratedKeysSupport.QueryType.DELETE);
         temp.put(LocalStatementType.UPDATE_OR_INSERT, GeneratedKeysSupport.QueryType.UPDATE_OR_INSERT);
         temp.put(LocalStatementType.MERGE, GeneratedKeysSupport.QueryType.MERGE);
+        temp.put(LocalStatementType.OTHER, GeneratedKeysSupport.QueryType.UNSUPPORTED);
+        temp.put(LocalStatementType.UNKNOWN, GeneratedKeysSupport.QueryType.UNSUPPORTED);
         statementTypeToQueryType = Collections.unmodifiableMap(temp);
     }
 
@@ -72,7 +74,7 @@ final class GeneratedKeysQueryBuilder {
      *         Original statement text
      */
     private GeneratedKeysQueryBuilder(String originalSql) {
-        this(originalSql, null, Collections.emptySet());
+        this(originalSql, StatementIdentification.unknown(), Collections.emptySet());
     }
 
     /**
@@ -107,9 +109,6 @@ final class GeneratedKeysQueryBuilder {
      * @return {@code true} when the query type is supported for returning generated keys
      */
     boolean isSupportedType() {
-        if (statementIdentification == null) {
-            return false;
-        }
         LocalStatementType statementType = statementIdentification.getStatementType();
         GeneratedKeysSupport.QueryType queryType =
                 statementTypeToQueryType.getOrDefault(statementType, GeneratedKeysSupport.QueryType.UNSUPPORTED);
@@ -188,7 +187,7 @@ final class GeneratedKeysQueryBuilder {
     }
 
     private boolean hasReturning() {
-        return statementIdentification != null && statementIdentification.returningClauseDetected();
+        return statementIdentification.returningClauseDetected();
     }
 
     /**

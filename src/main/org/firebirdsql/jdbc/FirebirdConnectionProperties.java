@@ -5,13 +5,11 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
  * Connection properties for a Firebird connection.
  */
-@NullMarked
 public interface FirebirdConnectionProperties extends DatabaseConnectionProperties {
 
     /**

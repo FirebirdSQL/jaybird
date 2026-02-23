@@ -3,7 +3,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.jspecify.annotations.NullMarked;
 
 import java.sql.BatchUpdateException;
 import java.sql.SQLException;
@@ -15,7 +14,6 @@ import java.util.List;
  * @author Mark Rotteveel
  * @since 5
  */
-@NullMarked
 interface Batch {
 
     /**

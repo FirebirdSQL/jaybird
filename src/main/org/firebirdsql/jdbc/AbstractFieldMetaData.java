@@ -19,7 +19,6 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -44,7 +43,6 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  * @since 3.0
  */
 @InternalApi
-@NullMarked
 public abstract class AbstractFieldMetaData implements Wrapper {
 
     private final RowDescriptor rowDescriptor;

@@ -11,7 +11,6 @@ import org.firebirdsql.gds.ng.FetchType;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -31,7 +30,6 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  * @author Mark Rotteveel
  * @since 5
  */
-@NullMarked
 final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
 
     private static final int CURSOR_SIZE_UNKNOWN = -1;
@@ -436,6 +434,7 @@ final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
     }
 
     private int retrieveServerCursorSize() throws SQLException {
+        // TODO Can we fix the nullability inspection problem somehow?
         return stmt.getCursorInfo(new byte[] { (byte) INF_RECORD_COUNT, isc_info_end }, 10, buffer -> {
             if (buffer[0] != INF_RECORD_COUNT) {
                 throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
@@ -473,7 +472,6 @@ final class FBServerScrollFetcher extends AbstractFetcher implements FBFetcher {
         return stmt.withLock();
     }
 
-    @NullMarked
     private static final class RowListener implements StatementListener {
         boolean beforeFirst;
         boolean afterLast;

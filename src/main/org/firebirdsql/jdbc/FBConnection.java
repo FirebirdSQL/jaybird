@@ -15,6 +15,7 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.FbImmutableConnectionProperties;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.parser.LocalStatementClass;
@@ -29,7 +30,7 @@ import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.*;
 import java.util.*;
@@ -72,14 +73,14 @@ public class FBConnection implements FirebirdConnection {
     private static final SQLPermission PERMISSION_CALL_ABORT = new SQLPermission("callAbort");
 
     @SuppressWarnings("java:S3077")
-    protected volatile FBManagedConnection mc;
+    protected volatile @Nullable FBManagedConnection mc;
 
-    private FBLocalTransaction localTransaction;
-    private FBDatabaseMetaData metaData;
+    private @Nullable FBLocalTransaction localTransaction;
+    private @Nullable FBDatabaseMetaData metaData;
 
     protected final InternalTransactionCoordinator txCoordinator;
 
-    private SQLWarning firstWarning;
+    private @Nullable SQLWarning firstWarning;
 
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
@@ -87,10 +88,10 @@ public class FBConnection implements FirebirdConnection {
 
     private int resultSetHoldability;
 
-    private StoredProcedureMetaData storedProcedureMetaData;
-    private GeneratedKeysSupport generatedKeysSupport;
-    private ClientInfoProvider clientInfoProvider;
-    private SchemaChanger schemaChanger;
+    private @Nullable StoredProcedureMetaData storedProcedureMetaData;
+    private @Nullable GeneratedKeysSupport generatedKeysSupport;
+    private @Nullable ClientInfoProvider clientInfoProvider;
+    private @Nullable SchemaChanger schemaChanger;
     private boolean readOnly;
 
     /**
@@ -191,23 +192,38 @@ public class FBConnection implements FirebirdConnection {
      * @param mc
      *         The FBManagedConnection around which this connection is based
      */
-    public void setManagedConnection(FBManagedConnection mc) {
+    public void setManagedConnection(@Nullable FBManagedConnection mc) {
         if (mc == null && this.mc == null) return;
-        try (LockCloseable ignored = withLock()) {
-            //close any prepared statements we may have executed.
-            if (this.mc != mc && metaData != null) {
-                try {
-                    metaData.close();
-                } finally {
-                    metaData = null;
-                }
-            }
+        try (var ignored = withLock()) {
+            if (this.mc == mc) return;
+            releaseMetaData();
             this.mc = mc;
         }
     }
 
-    public FBManagedConnection getManagedConnection() {
+    private void releaseMetaData() {
+        FirebirdDatabaseMetaData metaData = this.metaData;
+        if (metaData == null) return;
+        try {
+            metaData.close();
+        } finally {
+            this.metaData = null;
+        }
+    }
+
+    /**
+     * Gets the current managed connection.
+     *
+     * @return current managed connection
+     * @throws SQLException
+     *         if the connection is closed (there is no current managed connection)
+     */
+    public FBManagedConnection getManagedConnection() throws SQLException {
         try (LockCloseable ignored = withLock()) {
+            FBManagedConnection mc = this.mc;
+            if (mc == null) {
+                throw FbExceptionBuilder.connectionClosed();
+            }
             return mc;
         }
     }
@@ -224,7 +240,10 @@ public class FBConnection implements FirebirdConnection {
      */
     public DatabaseConnectionProperties connectionProperties() {
         // TODO Obtain elsewhere than from getConnectionRequestInfo()
-        return mc != null ? mc.getConnectionRequestInfo().asIConnectionProperties().asImmutable() : null;
+        FBManagedConnection mc = this.mc;
+        return mc != null
+                ? mc.getConnectionRequestInfo().asIConnectionProperties().asImmutable()
+                : FbImmutableConnectionProperties.empty();
     }
 
     @Deprecated(since = "2")
@@ -243,10 +262,10 @@ public class FBConnection implements FirebirdConnection {
     }
 
     @Override
-    public TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException {
+    // TODO The nullability is questionable and might need to be defined to @NonNull
+    public @Nullable TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkValidity();
-            return mc.getTransactionParameters(isolationLevel);
+            return getManagedConnection().getTransactionParameters(isolationLevel);
         }
     }
 
@@ -261,7 +280,7 @@ public class FBConnection implements FirebirdConnection {
     @Override
     public void setTransactionParameters(int isolationLevel, TransactionParameterBuffer tpb) throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkValidity();
+            FBManagedConnection mc = getManagedConnection();
             if (mc.isManagedEnvironment()) {
                 throw new SQLException("Cannot set transaction parameters in managed environment.",
                         SQL_STATE_GENERAL_ERROR);
@@ -274,7 +293,7 @@ public class FBConnection implements FirebirdConnection {
     @Override
     public void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkValidity();
+            FBManagedConnection mc = getManagedConnection();
             if (getLocalTransaction().inTransaction()) {
                 // TODO More specific exception, jaybird error code
                 throw new SQLException("Cannot set transaction parameters when transaction is already started.",
@@ -396,7 +415,8 @@ public class FBConnection implements FirebirdConnection {
     @Override
     public void commit() throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            if (isClosed()) {
+            FBManagedConnection mc = this.mc;
+            if (mc == null) {
                 throw new SQLNonTransientConnectionException("You cannot commit a closed connection.",
                         SQL_STATE_TX_RESOLUTION_UNKNOWN);
             }
@@ -417,7 +437,8 @@ public class FBConnection implements FirebirdConnection {
     @Override
     public void rollback() throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            if (isClosed()) {
+            FBManagedConnection mc = this.mc;
+            if (mc == null) {
                 throw new SQLNonTransientConnectionException("You cannot rollback closed connection.",
                         SQL_STATE_TX_RESOLUTION_UNKNOWN);
             }
@@ -440,8 +461,7 @@ public class FBConnection implements FirebirdConnection {
     }
 
     boolean isAllowTxStmts() {
-        DatabaseConnectionProperties props = connectionProperties();
-        return props != null && props.isAllowTxStmts();
+        return connectionProperties().isAllowTxStmts();
     }
 
     void handleHardCommitStatement() throws SQLException {
@@ -606,7 +626,7 @@ public class FBConnection implements FirebirdConnection {
     @Override
     public void setReadOnly(boolean readOnly) throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkValidity();
+            FBManagedConnection mc = getManagedConnection();
             if (getLocalTransaction().inTransaction() && !mc.isManagedEnvironment()) {
                 // TODO More specific exception, jaybird error code
                 throw new SQLException(
@@ -644,7 +664,7 @@ public class FBConnection implements FirebirdConnection {
      */
     @Override
     @SuppressWarnings("java:S4144")
-    public String getCatalog() throws SQLException {
+    public @Nullable String getCatalog() throws SQLException {
         checkValidity();
         return null;
     }
@@ -652,7 +672,7 @@ public class FBConnection implements FirebirdConnection {
     @Override
     public void setTransactionIsolation(int level) throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkValidity();
+            FBManagedConnection mc = getManagedConnection();
             if (!getAutoCommit() && !mc.isManagedEnvironment()) {
                 txCoordinator.commit();
             }
@@ -664,8 +684,7 @@ public class FBConnection implements FirebirdConnection {
     @Override
     public int getTransactionIsolation() throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkValidity();
-            return mc.getTransactionIsolation();
+            return getManagedConnection().getTransactionIsolation();
         }
     }
 
@@ -677,7 +696,7 @@ public class FBConnection implements FirebirdConnection {
      * </p>
      */
     @Override
-    public SQLWarning getWarnings() throws SQLException {
+    public @Nullable SQLWarning getWarnings() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
             return firstWarning;
@@ -923,8 +942,7 @@ public class FBConnection implements FirebirdConnection {
 
     @Override
     public Savepoint setSavepoint() throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            checkValidity();
+        try (var ignored = withLock()) {
             FBSavepoint savepoint = new FBSavepoint(getNextSavepointCounter());
             setSavepoint(savepoint);
 
@@ -941,6 +959,7 @@ public class FBConnection implements FirebirdConnection {
      *         if something went wrong
      */
     private void setSavepoint(FBSavepoint savepoint) throws SQLException {
+        FBManagedConnection mc = getManagedConnection();
         if (getAutoCommit()) {
             throw new SQLException("Connection.setSavepoint() method cannot be used in auto-commit mode",
                     SQL_STATE_INVALID_TX_STATE);
@@ -982,8 +1001,7 @@ public class FBConnection implements FirebirdConnection {
      */
     @Override
     public Savepoint setSavepoint(String name) throws SQLException {
-        try (LockCloseable ignored = withLock()) {
-            checkValidity();
+        try (var ignored = withLock()) {
             FBSavepoint savepoint = new FBSavepoint(name);
             setSavepoint(savepoint);
 
@@ -994,7 +1012,7 @@ public class FBConnection implements FirebirdConnection {
     @Override
     public void rollback(Savepoint savepoint) throws SQLException {
         try (LockCloseable ignored = withLock()) {
-            checkValidity();
+            FBManagedConnection mc = getManagedConnection();
             if (getAutoCommit()) {
                 throw new SQLException("Connection.rollback(Savepoint) method cannot be used in auto-commit mode",
                         SQL_STATE_INVALID_TX_STATE);
@@ -1049,10 +1067,10 @@ public class FBConnection implements FirebirdConnection {
      * Returns a FBLocalTransaction instance that enables a component to
      * demarcate resource manager local transactions on this connection.
      */
-    public FBLocalTransaction getLocalTransaction() {
+    public FBLocalTransaction getLocalTransaction() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             if (localTransaction == null) {
-                localTransaction = mc.getLocalTransaction();
+                localTransaction = getManagedConnection().getLocalTransaction();
             }
             return localTransaction;
         }
@@ -1060,12 +1078,14 @@ public class FBConnection implements FirebirdConnection {
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        //noinspection ConstantValue : null-check for robustness
         return iface != null && iface.isAssignableFrom(FBConnection.class);
     }
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
+            //noinspection ConstantValue : null-check for robustness
             throw FbExceptionBuilder.forException(jb_unableToUnwrap)
                     .messageParameter(iface != null ? iface.getName() : "(null)")
                     .toSQLException();
@@ -1113,12 +1133,12 @@ public class FBConnection implements FirebirdConnection {
      * @return the current schema; on Firebird 5.0 and older always {@code null} as schemas ar not supported
      */
     @Override
-    public final String getSchema() throws SQLException {
+    public final @Nullable String getSchema() throws SQLException {
         return getSchemaInfo().schema();
     }
 
     @Override
-    public final String getSearchPath() throws SQLException {
+    public final @Nullable String getSearchPath() throws SQLException {
         return getSchemaInfo().searchPath();
     }
 
@@ -1182,8 +1202,10 @@ public class FBConnection implements FirebirdConnection {
     }
 
     public GDSHelper getGDSHelper() throws SQLException {
+        FBManagedConnection mc = this.mc;
         if (mc == null)
-            // TODO Right error code?
+            // TODO Right error code? Replacing this with getManagedConnection (which throws jb_connectionClosed) causes
+            //  FBPreparedStatement.testCancelStatement to fail
             throw FbExceptionBuilder.toException(ISCConstants.isc_req_no_trans);
 
         return mc.getGDSHelper();
@@ -1191,8 +1213,7 @@ public class FBConnection implements FirebirdConnection {
 
     @Override
     public boolean isUseFirebirdAutoCommit() {
-        DatabaseConnectionProperties props = connectionProperties();
-        return props != null && props.isUseFirebirdAutocommit();
+        return connectionProperties().isUseFirebirdAutocommit();
     }
 
     /**
@@ -1264,7 +1285,7 @@ public class FBConnection implements FirebirdConnection {
      * </p>
      */
     @Override
-    public String getClientInfo(String name) throws SQLException {
+    public @Nullable String getClientInfo(String name) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             return getClientInfoProvider().getClientInfo(name);
         }
@@ -1421,12 +1442,12 @@ public class FBConnection implements FirebirdConnection {
     }
 
     @Override
-    public final @NonNull String enquoteLiteral(@NonNull String val) throws SQLException {
+    public final String enquoteLiteral(String val) throws SQLException {
         return getQuoteStrategy().quoteLiteral(requireNonNull(val, "val"));
     }
 
     @Override
-    public final @NonNull String enquoteNCharLiteral(@NonNull String val) throws SQLException {
+    public final String enquoteNCharLiteral(String val) throws SQLException {
         return enquoteLiteral(val);
     }
 
@@ -1434,7 +1455,7 @@ public class FBConnection implements FirebirdConnection {
     private static final Pattern SIMPLE_IDENTIFIER_PATTERN = Pattern.compile("\\p{Alpha}[\\p{Alnum}_$]*");
 
     @Override
-    public final @NonNull String enquoteIdentifier(@NonNull String identifier, boolean alwaysDelimit) throws SQLException {
+    public final String enquoteIdentifier(String identifier, boolean alwaysDelimit) throws SQLException {
         int len = identifier.length();
         // See also comment in isSimpleIdentifier(String) regarding length check
         if (len < 1 || len > getMetaData().getMaxColumnNameLength()) {
@@ -1460,7 +1481,7 @@ public class FBConnection implements FirebirdConnection {
     }
 
     @Override
-    public final boolean isSimpleIdentifier(@NonNull String identifier) throws SQLException {
+    public final boolean isSimpleIdentifier(String identifier) throws SQLException {
         int len = identifier.length();
         /* This length check can be incorrect for Firebird 3.0 and lower, if the identifier contains non-ASCII (limit is
          * 31 characters UNICODE_FSS and 31 bytes).
@@ -1514,14 +1535,12 @@ public class FBConnection implements FirebirdConnection {
         return generatedKeysSupport;
     }
 
-    private String getGeneratedKeysEnabled() {
-        DatabaseConnectionProperties props = connectionProperties();
-        return props != null ? props.getGeneratedKeysEnabled() : null;
+    private @Nullable String getGeneratedKeysEnabled() {
+        return connectionProperties().getGeneratedKeysEnabled();
     }
 
     boolean isIgnoreProcedureType() {
-        DatabaseConnectionProperties props = connectionProperties();
-        return props != null && props.isIgnoreProcedureType();
+        return connectionProperties().isIgnoreProcedureType();
     }
 
     /**
@@ -1536,31 +1555,27 @@ public class FBConnection implements FirebirdConnection {
      * @return {@code true} if the {@code scrollableCursor} connection property matches the specified value,
      * {@code false} otherwise.
      */
-    boolean isScrollableCursor(String scrollableCursor) {
-        DatabaseConnectionProperties props = connectionProperties();
-        return props != null && scrollableCursor != null
-                && scrollableCursor.equalsIgnoreCase(props.getScrollableCursor());
+    @SuppressWarnings("SameParameterValue")
+    boolean isScrollableCursor(@Nullable String scrollableCursor) {
+        return scrollableCursor != null
+                && scrollableCursor.equalsIgnoreCase(connectionProperties().getScrollableCursor());
     }
 
     boolean isUseServerBatch() {
-        DatabaseConnectionProperties props = connectionProperties();
-        return props != null && props.isUseServerBatch();
+        return connectionProperties().isUseServerBatch();
     }
 
     int getServerBatchBufferSize() {
-        DatabaseConnectionProperties props = connectionProperties();
-        return props != null ? props.getServerBatchBufferSize() : PropertyConstants.DEFAULT_SERVER_BATCH_BUFFER_SIZE;
+        return connectionProperties().getServerBatchBufferSize();
     }
 
     boolean isExtendedMetadata() {
-        DatabaseConnectionProperties props = connectionProperties();
-        return props != null && props.isExtendedMetadata();
+        return connectionProperties().isExtendedMetadata();
     }
 
     boolean isIgnoreSQLWarnings() {
-        DatabaseConnectionProperties props = connectionProperties();
-        return props != null
-               && PropertyConstants.REPORT_SQL_WARNINGS_NONE.equalsIgnoreCase(props.getReportSQLWarnings());
+        return PropertyConstants.REPORT_SQL_WARNINGS_NONE
+                .equalsIgnoreCase(connectionProperties().getReportSQLWarnings());
     }
 
 }

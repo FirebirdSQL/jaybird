@@ -1,11 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2005-2006 Steven Jardine
-// SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -19,7 +18,6 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_PARAM_TYP
  * </p>
  */
 @InternalApi
-@NullMarked
 public class FBProcedureParam implements Cloneable {
 
     private final boolean isParam;

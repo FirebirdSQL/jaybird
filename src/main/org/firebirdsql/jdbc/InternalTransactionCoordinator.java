@@ -647,7 +647,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         private final InternalTransactionCoordinator tc;
 
-        public MetaDataTransactionCoordinator(InternalTransactionCoordinator tc) {
+        public MetaDataTransactionCoordinator(InternalTransactionCoordinator tc) throws SQLException {
             super(tc.connection, tc.connection.getLocalTransaction());
             this.tc = tc;
         }

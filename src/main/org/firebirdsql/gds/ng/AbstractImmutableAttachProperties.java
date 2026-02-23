@@ -48,6 +48,15 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
                 : unmodifiableMap(new HashMap<>(src.connectionPropertyValues()));
     }
 
+    /**
+     * Constructor for an empty immutable attach properties instance.
+     *
+     * @since 7
+     */
+    AbstractImmutableAttachProperties() {
+        propValues = Map.of();
+    }
+
     @Override
     public final @Nullable String getProperty(String name) {
         ConnectionProperty property = property(name);

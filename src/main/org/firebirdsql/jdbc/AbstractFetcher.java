@@ -4,7 +4,7 @@
  SPDX-FileCopyrightText: Copyright 2002 Nikolay Samofatov
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -16,7 +16,6 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.FBObjectListener.FetcherListener;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -30,7 +29,6 @@ import static java.util.Objects.requireNonNull;
  * @since 6
  */
 @InternalApi
-@NullMarked
 abstract sealed class AbstractFetcher implements FBFetcher
         permits FBCachedFetcher, FBServerScrollFetcher, FBStatementFetcher {
 

@@ -4,7 +4,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 
 /**
  * Strategy for quoting object names and literals (or no quoting of object names in the case of dialect 1).
@@ -14,7 +13,6 @@ import org.jspecify.annotations.NullMarked;
  *
  * @since 2.2
  */
-@NullMarked
 @InternalApi
 public enum QuoteStrategy {
     /**

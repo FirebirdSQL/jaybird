@@ -27,7 +27,6 @@ import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
@@ -53,7 +52,6 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
  */
 @SuppressWarnings("RedundantThrows")
 @InternalApi
-@NullMarked
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private static final System.Logger log = System.getLogger(FBDatabaseMetaData.class.getName());

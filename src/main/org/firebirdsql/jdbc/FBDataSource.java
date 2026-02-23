@@ -15,6 +15,7 @@ import org.firebirdsql.jaybird.xca.FBConnectionRequestInfo;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jaybird.xca.XcaConnectionManager;
 import org.firebirdsql.util.InternalApi;
+import org.jspecify.annotations.Nullable;
 
 import javax.sql.DataSource;
 import java.io.Serial;
@@ -58,7 +59,7 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
     }
 
     @Override
-    public Connection getConnection(String username, String password) throws SQLException {
+    public Connection getConnection(@Nullable String username, @Nullable String password) throws SQLException {
         //mcf makes a copy for us.
         FBConnectionRequestInfo subjectCri = mcf.getDefaultConnectionRequestInfo();
         subjectCri.setUserName(username);
@@ -78,12 +79,14 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        //noinspection ConstantValue : null-check for robustness
         return iface != null && iface.isAssignableFrom(getClass());
     }
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
+            //noinspection ConstantValue : null-check for robustness
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unableToUnwrap)
                     .messageParameter(iface != null ? iface.getName() : "(null)")
                     .toSQLException();

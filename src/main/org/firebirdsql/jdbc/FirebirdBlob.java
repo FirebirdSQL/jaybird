@@ -4,7 +4,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.Blob;
@@ -18,7 +17,6 @@ import java.io.*;
  * 
  * @author Roman Rokytskyy
  */
-@NullMarked
 public interface FirebirdBlob extends Blob {
     
     /**

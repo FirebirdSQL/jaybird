@@ -29,7 +29,6 @@ import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
@@ -58,7 +57,6 @@ import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_INVALID_DESC_FIEL
  */
 @SuppressWarnings("RedundantThrows")
 @InternalApi
-@NullMarked
 public class FBPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
 
     public static final String METHOD_NOT_SUPPORTED =
@@ -923,7 +921,6 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         return fields != FIELDS_NOT_INITIALIZED;
     }
 
-    @NullMarked
     @SuppressWarnings("ClassCanBeRecord")
     private static final class BatchStatementListener implements StatementListener {
 
@@ -1009,7 +1006,6 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * statement is closed or not.
      * </p>
      */
-    @NullMarked
     private final class EmulatedPreparedStatementBatch implements Batch {
 
         private final Deque<BatchRowValue> batchRowValues = new ArrayDeque<>();

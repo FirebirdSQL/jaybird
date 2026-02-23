@@ -7,7 +7,6 @@ import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -23,7 +22,6 @@ import java.util.Objects;
  * </p>
  */
 @InternalApi
-@NullMarked
 public final class FBBlobOutputStream extends OutputStream implements FirebirdBlob.BlobOutputStream {
 
     private @Nullable FbBlob blobHandle;

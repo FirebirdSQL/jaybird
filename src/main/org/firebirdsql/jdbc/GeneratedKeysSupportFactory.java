@@ -4,6 +4,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -83,8 +84,8 @@ final class GeneratedKeysSupportFactory {
      * @throws SQLException
      *         if a database access error occurs while determining feature support
      */
-    static GeneratedKeysSupport createFor(String generatedKeysEnabled, FirebirdDatabaseMetaData fbDatabaseMetaData)
-            throws SQLException {
+    static GeneratedKeysSupport createFor(@Nullable String generatedKeysEnabled,
+            FirebirdDatabaseMetaData fbDatabaseMetaData) throws SQLException {
         String normalizedConfigValue = generatedKeysEnabled != null && !generatedKeysEnabled.isEmpty()
                 ? generatedKeysEnabled.toLowerCase(Locale.ROOT)
                 : GENERATED_KEYS_ENABLED_DEFAULT;

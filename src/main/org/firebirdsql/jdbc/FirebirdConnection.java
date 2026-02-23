@@ -7,7 +7,7 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jaybird.util.SearchPathHelper;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.Blob;
 import java.sql.SQLException;
@@ -54,7 +54,8 @@ public interface FirebirdConnection extends java.sql.Connection {
      *         if an error occurred obtaining transaction parameters
      * @since 2
      */
-    TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException;
+    // TODO The nullability is questionable and might need to be defined to @NonNull
+    @Nullable TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException;
 
     /**
      * Create new instance of {@link TransactionParameterBuffer}.
@@ -156,7 +157,7 @@ public interface FirebirdConnection extends java.sql.Connection {
      * @see #getSearchPathList()
      * @since 7
      */
-    String getSearchPath() throws SQLException;
+    @Nullable String getSearchPath() throws SQLException;
 
     /**
      * Sets the search path as if executing {@code SET SEARCH_PATH TO ...}.
@@ -229,7 +230,7 @@ public interface FirebirdConnection extends java.sql.Connection {
      *         for database access errors
      * @since 7
      */
-    @NonNull String enquoteLiteral(@NonNull String val) throws SQLException;
+    String enquoteLiteral(String val) throws SQLException;
 
     /**
      * Returns a string appropriately quoted as a string literal for the connection dialect.
@@ -255,7 +256,7 @@ public interface FirebirdConnection extends java.sql.Connection {
      * @see #enquoteLiteral(String)
      * @since 7
      */
-    @NonNull String enquoteNCharLiteral(@NonNull String val) throws SQLException;
+    String enquoteNCharLiteral(String val) throws SQLException;
 
     /**
      * Returns a simple SQL identifier or a delimited identifier, as appropriate for the connection dialect.
@@ -289,7 +290,7 @@ public interface FirebirdConnection extends java.sql.Connection {
      * @see #isSimpleIdentifier(String)
      * @since 7
      */
-    @NonNull String enquoteIdentifier(@NonNull String identifier, boolean alwaysDelimit) throws SQLException;
+    String enquoteIdentifier(String identifier, boolean alwaysDelimit) throws SQLException;
 
     /**
      * Returns whether {@code identifier} is a simple identifier.
@@ -310,6 +311,6 @@ public interface FirebirdConnection extends java.sql.Connection {
      *         for database access errors
      * @since 7
      */
-    boolean isSimpleIdentifier(@NonNull String identifier) throws SQLException;
+    boolean isSimpleIdentifier(String identifier) throws SQLException;
 
 }

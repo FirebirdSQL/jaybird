@@ -9,7 +9,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.ParameterMetaData;
@@ -31,7 +30,6 @@ import java.util.Map;
  */
 @SuppressWarnings("RedundantThrows")
 @InternalApi
-@NullMarked
 public class FBParameterMetaData extends AbstractFieldMetaData implements FirebirdParameterMetaData {
 
     /**

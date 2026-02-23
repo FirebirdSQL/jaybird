@@ -10,7 +10,6 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 import java.sql.Blob;
@@ -26,7 +25,6 @@ import static java.util.Objects.requireNonNull;
  * </p>
  */
 @InternalApi
-@NullMarked
 public final class FBCachedBlob implements FirebirdBlob {
 
     // NOTE: Do not assign ByteArrayHelper.empty(), as this must be a unique instance

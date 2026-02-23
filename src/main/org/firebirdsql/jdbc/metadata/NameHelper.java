@@ -1,9 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2023-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2023-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.jaybird.util.ObjectReference;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
@@ -14,7 +13,6 @@ import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
  * @author Mark Rotteveel
  * @since 6
  */
-@NullMarked
 final class NameHelper {
 
     private NameHelper() {

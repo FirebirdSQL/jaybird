@@ -1,14 +1,12 @@
 // SPDX-FileCopyrightText: Copyright 2005-2008 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -17,7 +15,6 @@ import java.sql.Statement;
  * 
  * @author Roman Rokytskyy
  */
-@NullMarked
 public interface FirebirdStatement extends Statement {
 
     /**

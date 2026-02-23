@@ -11,7 +11,6 @@ import org.firebirdsql.jdbc.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.jdbc.metadata.GetProcedures;
 import org.firebirdsql.jdbc.metadata.MetadataPattern;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
@@ -30,7 +29,6 @@ import static org.firebirdsql.jaybird.util.ConditionalHelpers.firstNonNull;
 /**
  * Factory to retrieve metadata on stored procedures in a Firebird database.
  */
-@NullMarked
 final class StoredProcedureMetaDataFactory {
 
     private StoredProcedureMetaDataFactory() {
@@ -69,7 +67,6 @@ final class StoredProcedureMetaDataFactory {
  * Implementation of {@link StoredProcedureMetaData} that is schema-aware and package-aware. It can resolve scope
  * ambiguity and find procedures on the search path.
  */
-@NullMarked
 final class SchemaAwareStoredProcedureMetaData implements StoredProcedureMetaData {
 
     /**
@@ -202,7 +199,6 @@ final class SchemaAwareStoredProcedureMetaData implements StoredProcedureMetaDat
  *
  * @since 7
  */
-@NullMarked
 final class PackageAwareStoredProcedureMetaData implements StoredProcedureMetaData {
 
     // Thread-safety assumption: access is always under lock on the connection by the caller.
@@ -313,7 +309,7 @@ final class PackageAwareStoredProcedureMetaData implements StoredProcedureMetaDa
 
         @Override
         @NullUnmarked
-        public GDSType getGDSType() {
+        public GDSType getGDSType() throws SQLException {
             return mediator.getGDSType();
         }
 
@@ -347,7 +343,6 @@ final class PackageAwareStoredProcedureMetaData implements StoredProcedureMetaDa
  *
  * @since 7
  */
-@NullMarked
 final class DummyStoredProcedureMetaData implements StoredProcedureMetaData {
 
     @Override

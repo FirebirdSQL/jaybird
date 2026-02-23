@@ -1,11 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2024-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.jspecify.annotations.NullMarked;
 
 import java.sql.SQLException;
 
@@ -17,7 +16,6 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 6
  */
-@NullMarked
 final class ForwardOnlyFetcherDecorator implements FBFetcher {
 
     private final FBFetcher fetcher;

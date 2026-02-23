@@ -8,13 +8,11 @@ import java.sql.SQLException;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 
 /**
  * Interface for the clean separation of the classes between result set and corresponding row updater.
  */
 @InternalApi
-@NullMarked
 public sealed interface FirebirdRowUpdater permits FBRowUpdater {
 
     void cancelRowUpdates() throws SQLException;

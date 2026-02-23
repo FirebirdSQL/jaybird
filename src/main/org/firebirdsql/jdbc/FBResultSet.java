@@ -28,7 +28,6 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.jdbc.field.TrimmableField;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.InputStream;
@@ -62,7 +61,6 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_concurrencyResetReadOnlyR
  */
 @SuppressWarnings("RedundantThrows")
 @InternalApi
-@NullMarked
 public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListener.FetcherListener {
 
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported";

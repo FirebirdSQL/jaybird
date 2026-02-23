@@ -4,7 +4,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2002 Mark O'Donohue
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -16,6 +16,7 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jaybird.props.InvalidPropertyValueException;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -56,7 +57,7 @@ public class FBDriver implements FirebirdDriver {
     }
 
     @Override
-    public Connection connect(String url, final Properties info) throws SQLException {
+    public @Nullable Connection connect(String url, final Properties info) throws SQLException {
         if (url == null) {
             throw new SQLException("url is null");
         }
@@ -121,7 +122,7 @@ public class FBDriver implements FirebirdDriver {
         }
     }
 
-    private FBDataSource dataSourceFromCache(final FBConnectionProperties cacheKey) {
+    private @Nullable FBDataSource dataSourceFromCache(final FBConnectionProperties cacheKey) {
         final Reference<FBDataSource> dataSourceReference = mcfToDataSourceMap.get(cacheKey);
         return dataSourceReference != null ? dataSourceReference.get() : null;
     }
@@ -215,7 +216,7 @@ public class FBDriver implements FirebirdDriver {
      * @throws SQLException
      *         For failures to extract connection properties from {@code jdbcUrl} (URL decoding errors)
      */
-    private static Map<String, String> mergeProperties(String jdbcUrl, Properties connectionProperties)
+    private static Map<String, String> mergeProperties(String jdbcUrl, @Nullable Properties connectionProperties)
             throws SQLException {
         Map<String, String> mergedProperties = new HashMap<>();
         if (connectionProperties != null) {
@@ -239,7 +240,7 @@ public class FBDriver implements FirebirdDriver {
      * @throws SQLException
      *         For failures to extract connection properties from {@code url} (URL decoding errors)
      */
-    private static void convertUrlParams(String url, Map<String, String> info) throws SQLException {
+    private static void convertUrlParams(@Nullable String url, Map<String, String> info) throws SQLException {
         if (url == null) {
             return;
         }

@@ -1,10 +1,9 @@
 // SPDX-FileCopyrightText: Copyright 2003-2004 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2022-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
@@ -32,7 +31,6 @@ import static java.util.Collections.emptyMap;
  *
  * @since 5
  */
-@NullMarked
 final class FBUpdatableFetcher implements FBFetcher {
 
     private final FBFetcher fetcher;

@@ -8,7 +8,6 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.OdsVersion;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.sql.DatabaseMetaData;
@@ -22,7 +21,6 @@ import java.util.Optional;
  * @author Mark Rotteveel
  */
 @SuppressWarnings("unused")
-@NullMarked
 public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
 
     /**

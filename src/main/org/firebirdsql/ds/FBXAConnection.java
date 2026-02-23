@@ -24,7 +24,7 @@ public final class FBXAConnection extends FBPooledConnection implements XAConnec
     
     private final WeakReference<FBManagedConnection> mc;
     
-    FBXAConnection(FBConnection connection) {
+    FBXAConnection(FBConnection connection) throws SQLException {
         super(connection);
         mc = new WeakReference<>(connection.getManagedConnection());
     }
