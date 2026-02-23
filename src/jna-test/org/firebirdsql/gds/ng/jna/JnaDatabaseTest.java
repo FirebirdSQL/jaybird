@@ -152,7 +152,7 @@ class JnaDatabaseTest {
         try {
             db.createDatabase();
             assertTrue(db.isAttached(), "Database should be attached after create");
-            assertTrue(dbFile.exists() || !FBTestProperties.DB_SERVER_URL.equalsIgnoreCase("localhost"),
+            assertTrue(dbFile.exists() || !FBTestProperties.isLocalhost(),
                     "Expected database file to exist (NOTE: only works on localhost)");
 
             db.dropDatabase();
