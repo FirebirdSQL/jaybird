@@ -11,7 +11,7 @@
 package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.jaybird.util.ByteArrayHelper;
-import org.junit.jupiter.params.shadow.de.siegmar.fastcsv.util.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import javax.transaction.xa.Xid;
 import java.io.Serial;

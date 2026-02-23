@@ -3,13 +3,13 @@
 package org.firebirdsql.jdbc.escape;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.shadow.de.siegmar.fastcsv.util.Nullable;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
