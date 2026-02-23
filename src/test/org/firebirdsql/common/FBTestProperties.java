@@ -26,6 +26,9 @@ import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbServiceProperties;
+import org.firebirdsql.gds.ng.jna.AbstractNativeDatabaseFactory;
+import org.firebirdsql.gds.ng.jna.FbClientFeature;
+import org.firebirdsql.gds.ng.jna.FbClientFeatureAccess;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
@@ -33,11 +36,13 @@ import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
+import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBServiceManager;
 import org.firebirdsql.management.ServiceManager;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -47,6 +52,8 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 import static org.hamcrest.Matchers.not;
 
@@ -95,6 +102,10 @@ public final class FBTestProperties {
     public static final boolean USE_FIREBIRD_AUTOCOMMIT =
             Boolean.parseBoolean(getProperty("test.use_firebird_autocommit", "false"));
     public static final String ENABLE_PROTOCOL = trimToNull(getProperty("test.enableProtocol", "*"));
+    // Allows running native tests against Firebird 2.5 or older with a Firebird 3.0 or newer fbclient.
+    private static final boolean NATIVE_LEGACY_AUTH_COMPAT =
+            Boolean.parseBoolean(getProperty("test.native_legacy_auth_compat", "false"));
+    private static final String NATIVE_LEGACY_AUTH_COMPAT_AUTH_PLUGINS = "Legacy_Auth";
 
     public static boolean isLocalhost() {
         return "localhost".equals(DB_SERVER_URL) || "127.0.0.1".equals(DB_SERVER_URL);
@@ -139,6 +150,9 @@ public final class FBTestProperties {
         }
         if (ENABLE_PROTOCOL != null) {
             props.setProperty("enableProtocol", ENABLE_PROTOCOL);
+        }
+        if (isEnableNativeLegacyAuthCompat()) {
+            props.setProperty("authPlugins", NATIVE_LEGACY_AUTH_COMPAT_AUTH_PLUGINS);
         }
 
         return props;
@@ -200,6 +214,9 @@ public final class FBTestProperties {
         connectionInfo.setPassword(DB_PASSWORD);
         connectionInfo.setEncoding(DB_LC_CTYPE);
         connectionInfo.setEnableProtocol(ENABLE_PROTOCOL);
+        if (isEnableNativeLegacyAuthCompat()) {
+            connectionInfo.setAuthPlugins(NATIVE_LEGACY_AUTH_COMPAT_AUTH_PLUGINS);
+        }
         return connectionInfo;
     }
 
@@ -314,6 +331,9 @@ public final class FBTestProperties {
     public static FBManager createFBManager() {
         FBManager fbManager = new FBManager(getGdsType());
         fbManager.setEnableProtocol(ENABLE_PROTOCOL);
+        if (isEnableNativeLegacyAuthCompat()) {
+            fbManager.setAuthPlugins(NATIVE_LEGACY_AUTH_COMPAT_AUTH_PLUGINS);
+        }
         return fbManager;
     }
 
@@ -378,6 +398,35 @@ public final class FBTestProperties {
         } finally {
             fbManager.stop();
         }
+    }
+
+    /**
+     * @return {@code true} if modern URLs (e.g. inet:// ...) are supported, {@code false} otherwise (i.e. a native test
+     * where a client library of Firebird 2.5 or older is used, or for pure Java)
+     */
+    public static boolean supportsNativeModernUrls() {
+        if (isPureJavaType().matches(GDS_TYPE)) {
+            return false;
+        } else {
+            try {
+                Method getClientLibrary = AbstractNativeDatabaseFactory.class.getDeclaredMethod("getClientLibrary");
+                getClientLibrary.setAccessible(true);
+                FbClientLibrary clientLibrary = (FbClientLibrary) getClientLibrary.invoke(
+                        FBTestProperties.getFbDatabaseFactory());
+                if (clientLibrary instanceof FbClientFeatureAccess) {
+                    return ((FbClientFeatureAccess) clientLibrary).hasFeature(FbClientFeature.FB_PING);
+                }
+                return false;
+            } catch (RuntimeException | Error e) {
+                throw e;
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private static boolean isEnableNativeLegacyAuthCompat() {
+        return NATIVE_LEGACY_AUTH_COMPAT && isOtherNativeType().matches(GDS_TYPE);
     }
 
     /**
