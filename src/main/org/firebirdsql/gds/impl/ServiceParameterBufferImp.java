@@ -79,6 +79,16 @@ public class ServiceParameterBufferImp extends ParameterBufferBase implements Se
                 }
                 return ArgumentType.TraditionalDpb;
             }
+
+            @Override
+            public boolean isUpgradable() {
+                return true;
+            }
+
+            @Override
+            public ParameterBufferMetaData upgradeMetaData() {
+                return SPB_VERSION_3_ATTACH;
+            }
         },
         // Technically this has nothing to do with SPB version 2/3
         SPB_VERSION_2(ISCConstants.isc_spb_current_version) {

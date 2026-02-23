@@ -37,4 +37,10 @@ public abstract class TypedArgument extends Argument {
         super(type);
         this.argumentType = argumentType;
     }
+
+    // Primarily intended for testing purposes
+    public ArgumentType getArgumentType() {
+        return argumentType;
+    }
+
 }

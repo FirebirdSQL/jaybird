@@ -108,4 +108,31 @@ public interface ParameterBufferMetaData extends Serializable {
         return getIntegerArgumentType(tag);
     }
 
+    /**
+     * Returns if this metadata type is upgradable.
+     * <p>
+     * The default implementation always returns {@code false}.
+     * </p>
+     *
+     * @return {@code true} if this type is upgradable
+     * @see #upgradeMetaData()
+     * @since 6.0.5
+     */
+    default boolean isUpgradable() {
+        return false;
+    }
+
+    /**
+     * The parameter buffer metadata that can be upgraded to.
+     * <p>
+     * The default implementation always returns {@code this}.
+     * </p>
+     *
+     * @return the upgrade buffer metadata, returns this instance if {@link #isUpgradable()} returns {@code false}
+     * @since 6.0.5
+     */
+    default ParameterBufferMetaData upgradeMetaData() {
+        return this;
+    }
+
 }

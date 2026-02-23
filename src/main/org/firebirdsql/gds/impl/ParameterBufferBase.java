@@ -50,7 +50,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     private final List<Argument> arguments = new ArrayList<>();
 
     private final String defaultEncodingName;
-    private final ParameterBufferMetaData parameterBufferMetaData;
+    private ParameterBufferMetaData parameterBufferMetaData;
     private transient Encoding defaultEncoding;
 
     /**
@@ -99,8 +99,21 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     @Override
     public final void addArgument(int argumentType, String value, Encoding encoding) {
-        addArgument(new StringArgument(
-                argumentType, parameterBufferMetaData.getStringArgumentType(argumentType), value, encoding));
+        addArgument(createStringArgument(argumentType, value, encoding));
+    }
+
+    private StringArgument createStringArgument(int argumentType, String value, Encoding encoding) {
+        try {
+            return new StringArgument(
+                    argumentType, parameterBufferMetaData.getStringArgumentType(argumentType), value, encoding);
+        } catch (LengthOverflowException e) {
+            if (tryUpgradeMetaData()) {
+                // Do not inline parameterBufferMetaData or argument type; they might be different here than in the try
+                return new StringArgument(
+                        argumentType, parameterBufferMetaData.getStringArgumentType(argumentType), value, encoding);
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -127,7 +140,19 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     @Override
     public final void addArgument(int type, byte[] content) {
-        addArgument(new ByteArrayArgument(type, parameterBufferMetaData.getByteArrayArgumentType(type), content));
+        addArgument(createByteArrayArgument(type, content));
+    }
+
+    private ByteArrayArgument createByteArrayArgument(int type, byte[] content) {
+        try {
+            return new ByteArrayArgument(type, parameterBufferMetaData.getByteArrayArgumentType(type), content);
+        } catch (LengthOverflowException e) {
+            if (tryUpgradeMetaData()) {
+                // Do not inline parameterBufferMetaData or argument type; they might be different here than in the try
+                return new ByteArrayArgument(type, parameterBufferMetaData.getByteArrayArgumentType(type), content);
+            }
+            throw e;
+        }
     }
 
     protected final void addArgument(Argument argument) {
@@ -225,6 +250,22 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     @Override
     public final boolean isEmpty() {
         return arguments.isEmpty();
+    }
+
+    private boolean tryUpgradeMetaData() {
+        if (!parameterBufferMetaData.isUpgradable()) return false;
+        try {
+            ParameterBufferMetaData newParameterBufferMetaData = parameterBufferMetaData.upgradeMetaData();
+            List<Argument> newArguments = arguments.stream()
+                    .map(argument -> argument.transformTo(newParameterBufferMetaData))
+                    .toList();
+            arguments.clear();
+            arguments.addAll(newArguments);
+            parameterBufferMetaData = newParameterBufferMetaData;
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     @Override

@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.impl.argument;
 
 import org.firebirdsql.gds.Parameter;
+import org.firebirdsql.gds.impl.ParameterBufferMetaData;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -86,5 +87,18 @@ public abstract class Argument implements Parameter, Serializable {
      * This includes the item, the value and other items contributing to the total length (e.g. the length of the value).
      */
     public abstract int getLength();
+
+    /**
+     * If needed, returns a new argument to transform to a suitable argument type, otherwise returns this instance.
+     *
+     * @param parameterBufferMetaData
+     *         parameter buffer metadata (used to determine the needed argument type)
+     * @return either a new argument if transformation is needed, or this instance
+     * @throws IllegalArgumentException
+     *         if transformation is needed, but the creation of the new instance fails (e.g. downgrading from
+     *         {@link ArgumentType#Wide} to {@link ArgumentType#TraditionalDpb}, and the value is too long)
+     * @since 6.0.5
+     */
+    public abstract Argument transformTo(ParameterBufferMetaData parameterBufferMetaData);
 
 }
