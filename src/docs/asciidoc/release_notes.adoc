@@ -53,6 +53,7 @@ This results in two minor breaking changes:
 ** Presence of the NUL character (U+0000) in an identifier passed to `enquoteIdentifier` will result in a `SQLSyntaxErrorException`
 * Fixed: JDBC escapes should not be parsed inside dialect 3 delimited identifiers or dialect 1 string literals (https://github.com/FirebirdSQL/jaybird/issues/922[#922])
 * Fixed: `IndexOutOfBoundsException` in `FBCachedBlob.getBytes(long, int)` for position or length beyond end of data (https://github.com/FirebirdSQL/jaybird/issues/924[#924])
+* Fixed: Using native client, password is limited to 255 bytes (https://github.com/FirebirdSQL/jaybird/issues/926[#926])
 
 [#jaybird-5-0-11-changelog]
 === Jaybird 5.0.11

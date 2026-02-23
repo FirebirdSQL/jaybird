@@ -21,6 +21,7 @@ package org.firebirdsql.gds.impl.argument;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ParameterBuffer;
+import org.firebirdsql.gds.impl.ParameterBufferMetaData;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -47,24 +48,43 @@ public final class StringArgument extends TypedArgument {
         this(type, argumentType, value, EncodingFactory.getPlatformEncoding());
     }
 
+    /**
+     * Initialises an instance of StringArgument.
+     *
+     * @param type
+     *         parameter type
+     * @param argumentType
+     *         argument type
+     * @param value
+     *         string value
+     * @param encoding
+     *         encoding to use to convert the string to bytes
+     * @throws IllegalArgumentException
+     *         if {@code type} is not valid for string values, or if {@code value} is {@code null}
+     * @throws LengthOverflowException
+     *         if the encoded length of {@code value} exceeds {@link ArgumentType#getMaxLength()}
+     */
     public StringArgument(int type, ArgumentType argumentType, String value, Encoding encoding) {
+        this(type, argumentType, value, null, encoding);
+    }
+
+    private StringArgument(int type, ArgumentType argumentType, String value, byte[] asBytes,
+            Encoding encoding) {
         super(type, argumentType);
         if (!SUPPORTED_ARGUMENT_TYPES.contains(argumentType)) {
             throw new IllegalArgumentException("Invalid argument type: " + argumentType);
-        }
-        if (encoding == null) {
+        } else if (encoding == null) {
             throw new IllegalArgumentException("Encoding is required");
-        }
-        if (value == null) {
+        } else if (value == null) {
             throw new IllegalArgumentException("String value should not be null");
         }
         this.value = value;
-        asBytes = encoding.encodeToCharset(value);
+        this.asBytes = asBytes != null ? asBytes : encoding.encodeToCharset(value);
         this.encoding = encoding;
-        if (asBytes.length > argumentType.getMaxLength()) {
-            throw new IllegalArgumentException(String.format(
+        if (this.asBytes.length > argumentType.getMaxLength()) {
+            throw new LengthOverflowException(String.format(
                     "byte array derived from String value should not be longer than %d bytes, length was %d",
-                    argumentType.getMaxLength(), asBytes.length));
+                    argumentType.getMaxLength(), this.asBytes.length));
         }
     }
 
@@ -93,6 +113,13 @@ public final class StringArgument extends TypedArgument {
     @Override
     public void copyTo(ParameterBuffer buffer, Encoding stringEncoding) {
         buffer.addArgument(getType(), value, stringEncoding != null ? stringEncoding : encoding);
+    }
+
+    @Override
+    public StringArgument transformTo(ParameterBufferMetaData parameterBufferMetaData) {
+        ArgumentType newArgumentType = parameterBufferMetaData.getStringArgumentType(getType());
+        if (newArgumentType == argumentType) return this;
+        return new StringArgument(getType(), newArgumentType, value, asBytes, encoding);
     }
 
     @Override

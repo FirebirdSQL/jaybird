@@ -19,15 +19,21 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.DatabaseUserExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
@@ -47,6 +53,8 @@ import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link org.firebirdsql.management.FBServiceManager}.
@@ -57,6 +65,12 @@ import static org.hamcrest.core.IsNull.notNullValue;
 class FBServiceManagerTest {
 
     // NOTE Some of these tests may fail when using a Firebird 3.0 or earlier client library with the NATIVE protocol
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
+
+    @RegisterExtension
+    final DatabaseUserExtension databaseUser = DatabaseUserExtension.withDatabaseUser();
 
     @ParameterizedTest
     @MethodSource
@@ -171,4 +185,21 @@ class FBServiceManagerTest {
     private static boolean isWindowsSystem() {
         return System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
     }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 255, 256, 1024 })
+    void canConnectWithPasswordGreaterThan255(int length) throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsAuthenticationPlugin("Srp"), "Test requires Srp support");
+        byte[] passwordBytes = new byte[length];
+        Arrays.fill(passwordBytes, (byte) 'a');
+        String password = new String(passwordBytes, StandardCharsets.US_ASCII);
+        databaseUser.createUser("WITH_LONG_PW", password, "Srp");
+        FBServiceManager fbServiceManager =
+                configureServiceManager(new FBServiceManager(FBTestProperties.getGdsType()));
+        fbServiceManager.setUser("WITH_LONG_PW");
+        fbServiceManager.setPassword(password);
+
+        assertDoesNotThrow(fbServiceManager::getServerVersion);
+    }
+
 }

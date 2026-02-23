@@ -35,6 +35,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Stream;
@@ -487,5 +488,26 @@ class FBDriverTest {
             assertTrue(connection.isValid(1000));
         }
     }
+
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/925">jaybird#925</a>.
+     */
+    @ParameterizedTest
+    @ValueSource(ints = { 255, 256, 1024 })
+    void canConnectWithPasswordGreaterThan255(int length) throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsAuthenticationPlugin("Srp"), "Test requires Srp support");
+        byte[] passwordBytes = new byte[length];
+        Arrays.fill(passwordBytes, (byte) 'a');
+        String password = new String(passwordBytes, StandardCharsets.US_ASCII);
+        databaseUser.createUser("WITH_LONG_PW", password, "Srp");
+
+        Map<String, String> props = new HashMap<>();
+        props.put("user", "WITH_LONG_PW");
+        props.put("password", password);
+        try (Connection connection = getConnectionViaDriverManager(props)) {
+            assertTrue(connection.isValid(0));
+        }
+    }
+
 }
 
