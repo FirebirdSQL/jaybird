@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
 // SPDX-FileCopyrightText: Copyright 2005-2006 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.impl;
 
@@ -41,7 +41,17 @@ public final class DatabaseParameterBufferImp extends ParameterBufferBase implem
     }
 
     public enum DpbMetaData implements ParameterBufferMetaData {
-        DPB_VERSION_1(ISCConstants.isc_dpb_version1, ArgumentType.TraditionalDpb),
+        DPB_VERSION_1(ISCConstants.isc_dpb_version1, ArgumentType.TraditionalDpb) {
+            @Override
+            public boolean isUpgradable() {
+                return true;
+            }
+
+            @Override
+            public ParameterBufferMetaData upgradeMetaData() {
+                return DPB_VERSION_2;
+            }
+        },
         DPB_VERSION_2(ISCConstants.isc_dpb_version2, ArgumentType.Wide);
 
         private final int dpbVersion;

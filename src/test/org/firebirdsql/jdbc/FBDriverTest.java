@@ -4,7 +4,7 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2007 Gabriel reid
- SPDX-FileCopyrightText: Copyright 2011-2024 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -18,6 +18,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.wire.auth.legacy.LegacyAuthenticationPluginSpi;
 import org.firebirdsql.gds.ng.wire.auth.srp.*;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,6 +32,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.assertions.CustomAssertions.assertThrowsForAutoCloseable;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
@@ -482,6 +484,22 @@ class FBDriverTest {
 
         try (Connection connection = DriverManager.getConnection(getUrl(), connectionProperties)) {
             assertTrue(connection.isValid(1000));
+        }
+    }
+
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/925">jaybird#925</a>.
+     */
+    @ParameterizedTest
+    @ValueSource(ints = { 255, 256, 1024 })
+    void canConnectWithPasswordGreaterThan255(int length) throws Exception {
+        assumeFeature((FirebirdSupportInfo info) -> info.supportsAuthenticationPlugin("Srp"),
+                "Test requires Srp support");
+        String password = "a".repeat(length);
+        databaseUser.createUser("WITH_LONG_PW", password, "Srp");
+
+        try (var connection = getConnectionViaDriverManager(Map.of("user", "WITH_LONG_PW", "password", password))) {
+            assertTrue(connection.isValid(0));
         }
     }
 }

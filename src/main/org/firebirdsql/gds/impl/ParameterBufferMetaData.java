@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2015-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2015-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.impl;
 
@@ -90,6 +90,33 @@ public interface ParameterBufferMetaData extends Serializable {
      */
     default ArgumentType getByteArgumentType(int tag) {
         return getIntegerArgumentType(tag);
+    }
+
+    /**
+     * Returns if this metadata type is upgradable.
+     * <p>
+     * The default implementation always returns {@code false}.
+     * </p>
+     *
+     * @return {@code true} if this type is upgradable
+     * @see #upgradeMetaData()
+     * @since 7
+     */
+    default boolean isUpgradable() {
+        return false;
+    }
+
+    /**
+     * The parameter buffer metadata that can be upgraded to.
+     * <p>
+     * The default implementation always returns {@code this}.
+     * </p>
+     *
+     * @return the upgrade buffer metadata, returns this instance if {@link #isUpgradable()} returns {@code false}
+     * @since 7
+     */
+    default ParameterBufferMetaData upgradeMetaData() {
+        return this;
     }
 
 }

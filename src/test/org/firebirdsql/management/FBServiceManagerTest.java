@@ -1,16 +1,20 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.DatabaseUserExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -30,6 +34,7 @@ import static org.firebirdsql.common.FBTestProperties.configureServiceManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.isLocalhost;
 import static org.firebirdsql.common.FBTestProperties.supportsNativeModernUrls;
+import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_SERVICE_NAME;
@@ -38,6 +43,7 @@ import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -49,6 +55,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class FBServiceManagerTest {
 
     // NOTE Some of these tests may fail when using a Firebird 3.0 or earlier client library with the NATIVE protocol
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
+
+    @RegisterExtension
+    final DatabaseUserExtension databaseUser = DatabaseUserExtension.withDatabaseUser();
 
     @ParameterizedTest
     @MethodSource
@@ -186,6 +198,21 @@ class FBServiceManagerTest {
         return Stream.of(serviceManagerBeanInfo.getPropertyDescriptors())
                 .filter(property -> !excludedProperties.contains(property.getName()))
                 .map(Arguments::of);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 255, 256, 1024 })
+    void canConnectWithPasswordGreaterThan255(int length) throws Exception {
+        assumeFeature((FirebirdSupportInfo info) -> info.supportsAuthenticationPlugin("Srp"),
+                "Test requires Srp support");
+        String password = "a".repeat(length);
+        databaseUser.createUser("WITH_LONG_PW", password, "Srp");
+        FBServiceManager fbServiceManager =
+                configureServiceManager(new FBServiceManager(FBTestProperties.getGdsType()));
+        fbServiceManager.setUser("WITH_LONG_PW");
+        fbServiceManager.setPassword(password);
+
+        assertDoesNotThrow(fbServiceManager::getServerVersion);
     }
 
     private static Object generateTestValue(PropertyDescriptor beanProperty, Object originalValue) {

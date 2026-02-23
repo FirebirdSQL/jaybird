@@ -2,12 +2,13 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2023 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.gds.impl.argument;
 
 import org.firebirdsql.gds.Parameter;
+import org.firebirdsql.gds.impl.ParameterBufferMetaData;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -75,5 +76,18 @@ public abstract class Argument implements Parameter, Serializable {
      * This includes the item, the value and other items contributing to the total length (e.g. the length of the value).
      */
     public abstract int getLength();
+
+    /**
+     * If needed, returns a new argument to transform to a suitable argument type, otherwise returns this instance.
+     *
+     * @param parameterBufferMetaData
+     *         parameter buffer metadata (used to determine the needed argument type)
+     * @return either a new argument if transformation is needed, or this instance
+     * @throws IllegalArgumentException
+     *         if transformation is needed, but the creation of the new instance fails (e.g. downgrading from
+     *         {@link ArgumentType#Wide} to {@link ArgumentType#TraditionalDpb}, and the value is too long)
+     * @since 7
+     */
+    public abstract Argument transformTo(ParameterBufferMetaData parameterBufferMetaData);
 
 }

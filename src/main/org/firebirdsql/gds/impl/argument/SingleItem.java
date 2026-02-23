@@ -9,6 +9,7 @@ package org.firebirdsql.gds.impl.argument;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ParameterBuffer;
+import org.firebirdsql.gds.impl.ParameterBufferMetaData;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -40,6 +41,13 @@ public final class SingleItem extends TypedArgument {
 
     public int getLength() {
         return 1 + argumentType.getLengthSize();
+    }
+
+    @Override
+    public SingleItem transformTo(ParameterBufferMetaData parameterBufferMetaData) {
+        ArgumentType newArgumentType = parameterBufferMetaData.getSingleArgumentType(getType());
+        if (newArgumentType == argumentType) return this;
+        return new SingleItem(getType(), newArgumentType);
     }
 
     @Override

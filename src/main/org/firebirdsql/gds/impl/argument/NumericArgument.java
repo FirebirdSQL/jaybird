@@ -10,6 +10,7 @@ package org.firebirdsql.gds.impl.argument;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.VaxEncoding;
+import org.firebirdsql.gds.impl.ParameterBufferMetaData;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -74,6 +75,13 @@ public final class NumericArgument extends TypedArgument {
     @Override
     public void copyTo(ParameterBuffer buffer, @Nullable Encoding encoding) {
         buffer.addArgument(getType(), value);
+    }
+
+    @Override
+    public NumericArgument transformTo(ParameterBufferMetaData parameterBufferMetaData) {
+        ArgumentType newArgumentType = parameterBufferMetaData.getIntegerArgumentType(getType());
+        if (newArgumentType == argumentType) return this;
+        return new NumericArgument(getType(), newArgumentType, value);
     }
 
     @Override

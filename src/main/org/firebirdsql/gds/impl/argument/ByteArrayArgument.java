@@ -10,6 +10,7 @@ package org.firebirdsql.gds.impl.argument;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ParameterBuffer;
+import org.firebirdsql.gds.impl.ParameterBufferMetaData;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -37,12 +38,18 @@ public final class ByteArrayArgument extends TypedArgument {
     private final byte[] value;
 
     /**
-     * Initializes an instance of ByteArrayArgument.
+     * Initialises an instance of ByteArrayArgument.
      *
      * @param type
-     *        Parameter type
+     *         parameter type
+     * @param argumentType
+     *         argument type
      * @param value
-     *        Byte array with a maximum length defined by {@code argumentType}.
+     *         byte array
+     * @throws IllegalArgumentException
+     *         if {@code type} is not valid for byte arrays, or if {@code value} is {@code null}
+     * @throws LengthOverflowException
+     *         if the length of {@code value} exceeds {@link ArgumentType#getMaxLength()}
      */
     public ByteArrayArgument(int type, ArgumentType argumentType, byte[] value) {
         super(type, checkArgumentType(argumentType, SUPPORTED_ARGUMENT_TYPES));
@@ -50,7 +57,7 @@ public final class ByteArrayArgument extends TypedArgument {
             throw new IllegalArgumentException("byte array value should not be null");
         }
         if (value.length > argumentType.getMaxLength()) {
-            throw new IllegalArgumentException(
+            throw new LengthOverflowException(
                     String.format("byte array value should not be longer than %d bytes, length was %d",
                             argumentType.getMaxLength(), value.length));
         }
@@ -78,9 +85,21 @@ public final class ByteArrayArgument extends TypedArgument {
         }
     }
 
+    // primarily intended for testing purposes
+    public byte[] getValueAsBytes() {
+        return value.clone();
+    }
+
     @Override
     public void copyTo(ParameterBuffer buffer, @Nullable Encoding encoding) {
         buffer.addArgument(getType(), value.clone());
+    }
+
+    @Override
+    public ByteArrayArgument transformTo(ParameterBufferMetaData parameterBufferMetaData) {
+        ArgumentType newArgumentType = parameterBufferMetaData.getByteArrayArgumentType(getType());
+        if (newArgumentType == argumentType) return this;
+        return new ByteArrayArgument(getType(), newArgumentType, value);
     }
 
     @Override

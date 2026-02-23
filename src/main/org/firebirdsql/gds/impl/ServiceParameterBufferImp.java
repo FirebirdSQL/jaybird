@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
 // SPDX-FileCopyrightText: Copyright 2005 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.impl;
 
@@ -64,6 +64,16 @@ public class ServiceParameterBufferImp extends ParameterBufferBase implements Se
                     return ArgumentType.SingleTpb;
                 }
                 return ArgumentType.TraditionalDpb;
+            }
+
+            @Override
+            public boolean isUpgradable() {
+                return true;
+            }
+
+            @Override
+            public ParameterBufferMetaData upgradeMetaData() {
+                return SPB_VERSION_3_ATTACH;
             }
         },
         // Technically this has nothing to do with SPB version 2/3

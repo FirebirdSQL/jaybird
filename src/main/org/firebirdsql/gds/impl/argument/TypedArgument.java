@@ -23,6 +23,11 @@ public abstract class TypedArgument extends Argument {
         this.argumentType = argumentType;
     }
 
+    // Primarily intended for testing purposes
+    public ArgumentType getArgumentType() {
+        return argumentType;
+    }
+
     /**
      * Checks if {@code argumentType} is contained in {@code supportedArgumentTypes}.
      *
