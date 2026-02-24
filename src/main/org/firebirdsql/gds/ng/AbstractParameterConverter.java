@@ -1,11 +1,13 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferImp.DpbMetaData;
 import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
+import org.firebirdsql.gds.impl.ServiceParameterBufferImp.SpbMetaData;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.def.ConnectionPropertyType;
 
@@ -30,13 +32,11 @@ public abstract class AbstractParameterConverter<D extends AbstractConnection<IC
         implements ParameterConverter<D, S> {
 
     protected DatabaseParameterBuffer createDatabaseParameterBuffer(final D connection) {
-        return new DatabaseParameterBufferImp(DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1,
-                connection.getEncoding());
+        return new DatabaseParameterBufferImp(DpbMetaData.DPB_VERSION_1, connection.getEncoding());
     }
 
     protected ServiceParameterBuffer createServiceParameterBuffer(final S connection) {
-        return new ServiceParameterBufferImp(ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_2_ATTACH,
-                connection.getEncoding());
+        return new ServiceParameterBufferImp(SpbMetaData.SPB_VERSION_2_ATTACH, connection.getEncoding());
     }
 
     @Override

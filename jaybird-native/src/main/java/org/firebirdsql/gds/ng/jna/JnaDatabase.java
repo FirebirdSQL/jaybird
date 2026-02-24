@@ -5,9 +5,11 @@ package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.Platform;
 import com.sun.jna.ptr.IntByReference;
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.firebirdsql.jaybird.fb.constants.DpbItems;
 import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
@@ -20,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.util.Set;
 
-import static java.util.Collections.emptySet;
 import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_executeImmediateRequiresTransactionAttached;
@@ -41,7 +42,6 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
 
     private final FbClientLibrary clientLibrary;
-    private final Set<FbClientFeature> clientFeatures;
     protected final IntByReference handle = new IntByReference(0);
     protected final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
     private Cleaner.Cleanable cleanable = Cleaners.getNoOp();
@@ -49,9 +49,6 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public JnaDatabase(JnaDatabaseConnection connection) {
         super(connection, connection.createDatatypeCoder());
         clientLibrary = connection.getClientLibrary();
-        clientFeatures = clientLibrary instanceof FbClientFeatureAccess featureAccess
-                ? featureAccess.getFeatures()
-                : emptySet();
     }
 
     /**
@@ -114,7 +111,11 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     protected void attachOrCreate(final DatabaseParameterBuffer dpb, final boolean create) throws SQLException {
         requireNotAttached();
-        final byte[] dbName = getEncoding().encodeToCharset(connection.getAttachUrl());
+        Encoding dbNameEncoding = dpb.hasArgument(DpbItems.isc_dpb_utf8_filename)
+                ? getEncodingFactory().getEncodingForFirebirdName("UTF8")
+                : getEncoding();
+
+        final byte[] dbName = dbNameEncoding.encodeToCharset(connection.getAttachUrl());
         final byte[] dpbArray = dpb.toBytesWithType();
 
         try (LockCloseable ignored = withLock()) {
@@ -484,13 +485,13 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     }
 
     @Override
-    public boolean hasFeature(FbClientFeature clientFeature) {
-        return clientFeatures.contains(clientFeature);
+    public final boolean hasFeature(FbClientFeature clientFeature) {
+        return connection.hasFeature(clientFeature);
     }
 
     @Override
-    public Set<FbClientFeature> getFeatures() {
-        return clientFeatures;
+    public final Set<FbClientFeature> getFeatures() {
+        return connection.getFeatures();
     }
 
     private record CleanupAction(IntByReference handle, FbClientLibrary library) implements Runnable {

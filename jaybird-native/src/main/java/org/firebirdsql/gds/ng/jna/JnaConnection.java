@@ -13,6 +13,7 @@ import org.jspecify.annotations.Nullable;
 import java.nio.ByteOrder;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.util.Set;
 
 import static java.lang.System.Logger.Level.WARNING;
 import static java.util.Objects.requireNonNull;
@@ -29,7 +30,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * @since 3.0
  */
 public abstract class JnaConnection<T extends IAttachProperties<T>, C extends JnaAttachment>
-        extends AbstractConnection<T, C> {
+        extends AbstractConnection<T, C> implements FbClientFeatureAccess {
 
     private static final boolean BIG_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
 
@@ -51,6 +52,18 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
         super(attachProperties, encodingFactory);
         this.clientLibrary = requireNonNull(clientLibrary, "parameter clientLibrary cannot be null");
         this.attachUrl = createAttachUrl(toDbAttachInfo(attachProperties), attachProperties);
+    }
+
+    @Override
+    public final boolean hasFeature(FbClientFeature clientFeature) {
+        return getFeatures().contains(clientFeature);
+    }
+
+    @Override
+    public final Set<FbClientFeature> getFeatures() {
+        return clientLibrary instanceof FbClientFeatureAccess clientFeatureAccess
+                ? clientFeatureAccess.getFeatures()
+                : Set.of();
     }
 
     private DbAttachInfo toDbAttachInfo(T attachProperties) throws SQLException {

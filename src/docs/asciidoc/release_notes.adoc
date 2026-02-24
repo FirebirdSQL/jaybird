@@ -883,7 +883,7 @@ Methods to obtain the ciphers are only available in the `Success` subclass, the 
 
 The following changes might cause issues, though we think this is unlikely:
 
-// TODO Document unlikely breaking changes, or comment out this section
+* Native connections now use `isc_dpb_utf8_filename` or `isc_spb_utf8_filename` and UTF-8 for the database and service parameter buffer during attach _if_ the client is Firebird 3.0 or higher.
 
 [#breaking-changes-for-jaybird-8]
 === Breaking changes for Jaybird 8
