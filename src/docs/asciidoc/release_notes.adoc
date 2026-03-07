@@ -51,6 +51,7 @@ This results in two minor breaking changes:
 * Fixed: JDBC escapes should not be parsed inside dialect 3 delimited identifiers or dialect 1 string literals (https://github.com/FirebirdSQL/jaybird/issues/921[#921])
 * Fixed: `IndexOutOfBoundsException` in `FBCachedBlob.getBytes(long, int)` for position or length beyond end of data (https://github.com/FirebirdSQL/jaybird/issues/923[#923])
 * Fixed: Using native client, password is limited to 255 bytes (https://github.com/FirebirdSQL/jaybird/issues/925[#925])
+* Fixed: Infinite loop in `FBPooledConnection#fireConnectionError(SQLException)` if the exception has a chained exception and neither is fatal (https://github.com/FirebirdSQL/jaybird/issues/927[#927])
 
 === Jaybird 6.0.4
 
