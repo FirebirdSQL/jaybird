@@ -151,7 +151,7 @@ sealed class FBPooledConnection implements PooledConnection permits FBXAConnecti
                 fireFatalConnectionError(ex);
                 return;
             }
-            currentException = ex.getNextException();
+            currentException = currentException.getNextException();
         }
     }
 
