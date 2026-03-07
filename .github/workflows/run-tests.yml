@@ -34,7 +34,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
         with:
-          gradle-version: wrapper
+          gradle-version: '8.14.3'
           cache-read-only: ${{ github.ref != 'refs/heads/Branch_5_0' }}
       - name: Build with Gradle
         run: ./gradlew test -PbuildProfile=${{ matrix.java.profile }} -Ptest.dbondocker=true -Ptest.db.dir=/var/lib/firebird/data
