@@ -20,6 +20,7 @@ package org.firebirdsql.ds;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
@@ -27,6 +28,7 @@ import javax.sql.ConnectionEventListener;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -190,4 +192,24 @@ class FBPooledConnectionMockTest {
 
         verify(physical).setAutoCommit(true);
     }
+
+    /**
+     * See also <a href="https://github.com/FirebirdSQL/jaybird/issues/927">#927</a>.
+     */
+    @Test
+    @Timeout(value = 200, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void noInfiniteLoopWithNonFatalChainedExceptions(@Mock ConnectionEventListener cel) throws Exception {
+        pooled.addConnectionEventListener(cel);
+        Connection connection = pooled.getConnection();
+
+        SQLException nonFatalChainedException = new SQLException("Not fatal");
+        nonFatalChainedException.setNextException(new SQLException("Not fatal either"));
+        doThrow(nonFatalChainedException).when(physical).setAutoCommit(false);
+
+        SQLException exception = assertThrows(SQLException.class, () -> connection.setAutoCommit(false));
+        assertSame(nonFatalChainedException, exception);
+
+        verify(cel, never()).connectionErrorOccurred(any(ConnectionEvent.class));
+    }
+
 }

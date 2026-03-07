@@ -161,7 +161,7 @@ public class FBPooledConnection implements PooledConnection {
                 fireFatalConnectionError(ex);
                 return;
             }
-            currentException = ex.getNextException();
+            currentException = currentException.getNextException();
         }
     }
 
