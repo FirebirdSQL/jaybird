@@ -97,9 +97,9 @@ public class RunEnvironmentExtension implements BeforeAllCallback {
         ALL_SRP_PLUGINS {
             @Override
             public boolean isMet() {
-                // Enabling all SRP plugins is messy in the jacobalberty/firebird Docker image,
-                // so assume it is not available
-                return !DB_ON_DOCKER;
+                // NOTE: This requirement exist for historic reasons; configuring all plugins on
+                // the jacobalberty/firebird image was hard to do (especially using juarezr/firebirdsql-github-action)
+                return true;
             }
         }
         ;
