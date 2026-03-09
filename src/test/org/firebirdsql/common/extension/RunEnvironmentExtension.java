@@ -81,7 +81,7 @@ public class RunEnvironmentExtension implements BeforeAllCallback {
         ALL_SRP_PLUGINS {
             @Override
             public boolean isMet() {
-                // NOTE: This requirement exist for historic reasons; configuring all plugins on
+                // NOTE: This requirement exists for historic reasons; configuring all plugins on
                 // the jacobalberty/firebird image was hard to do (especially using juarezr/firebirdsql-github-action)
                 return true;
             }
