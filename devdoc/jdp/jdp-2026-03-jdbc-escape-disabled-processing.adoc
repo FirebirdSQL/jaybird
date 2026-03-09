@@ -1,0 +1,91 @@
+= jdp-2026-03: JDBC escape disabled processing
+
+// SPDX-FileCopyrightText: Copyright 2026 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 5.0.12, Jaybird 6.0.5, Jaybird 7
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+JDBC 4.5, to be introduced with Java 26, features a new JDBC escape which can be used to selectively disable other JDBC escape processing and parameter parsing.
+For details, see also chapter 6 in https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/JDBC4.5MR-November_2025.pdf[JDBC 4.5 List of proposed changes].
+
+Unfortunately, the proposed syntax for this escape has an ambiguity, and discussion with the JDBC spec lead and others did not resolve that ambiguity.
+This design proposal serves to document our interpretation of the "`escape disabled`" escape, identify the ambiguity, and document our decision how to handle it.
+
+=== The "`escape disabled`" escape
+
+The "`escape disabled`" escape (referred to below as "`the escape`") starts with `++{\++` and ends with `++\}++`.
+As a Java literal, it's `"++{\\ \\}++"`.
+
+Within the escape:
+
+* Other JDBC escapes are to be ignored (i.e. added to the resulting statement text without processing).
+* For drivers that need it, processing/transformation of parameter placeholders (`?`) should not be performed (i.e. the question mark should remain a question mark n the resulting statement text).
+* Any occurrence of `\` (backslash) that are not part of the end of the escape must be escaped by doubling, even in comments, literals and delimited identifiers.
++
+See also the examples (sometimes badly formatted) in chapter 6 of https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/JDBC4.5MR-November_2025.pdf[JDBC 4.5 List of proposed changes].
+
+The fact the backslash must be escaped everywhere inside the escape, except for the end of escape marker gives rise to the ambiguity as we see it.
+Other JDBC escapes are not processed inside comments, literals, and identifiers.
+The presence of `++\}++` ends the escape, and that -- in our opinion -- means that it's unescaped presence inside a comment, literal or delimited identifier would also end the escape.
+Otherwise, it shouldn't be necessary to escape the backslash inside comments, literals. and identifiers, and the proposed change explicitly shows it must be escaped everywhere.
+
+For example, the statement text `++{\'ends in \}literal'++`, this could be parsed in several ways:
+
+. Allow the escape to end inside the literal: ``'ends in literal'``
+. Raise an error (e.g. "`unescaped backslash: end of escape disabled (++\}++) not allowed in literal`")
+. Ignore the escape end marker inside the literal and process it as if the backslash was escaped.
+This will either
+.. Raise an error (e.g. "`unexpected end of input before end of escape`") if there is no `++\}++` later in the statement text to actually end the escape
+.. Produce statement text `++'end in \} literal'++`
+. Interpret the `\` to escape the end-brace: `++'end in } literal'++`
+
+The third option goes directly against the requirement that backslashes must be escaped.
+The fourth option invents a parser rule that is not defined in the specification, and would be inconsistent with handling outside of comments, literals, and identifiers.
+
+That leaves options one and two.
+Option one seems to be the most literal interpretation of the specification, but option two seems to match closer with behaviour of other JDBC escapes, and probably has the least unexpected consequences.
+
+[#decision]
+== Decision
+
+We choose option two, raising an error if the escape ends within a comment, literal, or identifier.
+It will be less confusing, and it prevents unexpected problems, especially with literals containing values the developer did not intend.
+
+The documentation in release notes and the Jaybird manual will contain a warning about the ambiguity and recommendations how to avoid it.
+
+If consensus is reached at a later date, either in the JDBC Expert Group, or from common implementation in other drivers, we will reconsider the decision as documented here.
+
+== Consequences
+
+See <<#decision>>.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2026-03: JDBC escape disabled processing".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2026.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
