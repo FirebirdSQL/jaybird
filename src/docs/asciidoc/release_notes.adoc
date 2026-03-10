@@ -51,6 +51,9 @@ This results in two minor breaking changes:
 +
 ** Reserved words are no longer considered simple identifiers by `enquoteIdentifier` and `isSimpleIdentifier` and will be quoted (or -- for dialect 1 -- result in a `SQLFeatureNotSupportedException`)
 ** Presence of the NUL character (U+0000) in an identifier passed to `enquoteIdentifier` will result in a `SQLSyntaxErrorException`
+* JDBC 4.5 support: implemented "`disable escape processing`" JDBC escape (`++{\...\}++`) (https://github.com/FirebirdSQL/jaybird/issues/920[#920])
++
+See also <<jdbc-escape-disable-proc>>.
 * Fixed: JDBC escapes should not be parsed inside dialect 3 delimited identifiers or dialect 1 string literals (https://github.com/FirebirdSQL/jaybird/issues/922[#922])
 * Fixed: `IndexOutOfBoundsException` in `FBCachedBlob.getBytes(long, int)` for position or length beyond end of data (https://github.com/FirebirdSQL/jaybird/issues/924[#924])
 * Fixed: Using native client, password is limited to 255 bytes (https://github.com/FirebirdSQL/jaybird/issues/926[#926])
@@ -362,6 +365,7 @@ The major changes and new features in Jaybird 5 are:
 * <<embedded-locator-service-provider>>
 * <<table-statistics-manager>>
 * <<blob-performance>> (since Jaybird 5.0.7)
+* <<jdbc-escape-disable-proc>> (since Jaybird 5.0.12)
 
 Upgrading from Jaybird 4 to 5 should be simple, but please make sure to read <<compatibility-changes>> before using Jaybird 5.
 See also <<upgrading-from-jaybird-4-to-jaybird-5>>.
@@ -1160,6 +1164,83 @@ sends data from array `b` to the blob, starting at `off`, for the requested `len
 
 The documentation of method `FbBlob.putSegment(byte[])` contradicted itself, by requiring implementations to batch larger arrays, but also requiring them to throw an exception for larger arrays, and the actual implementations provided by Jaybird threw an exception.
 This contradiction has been removed, and the implementations will now send arrays longer than the maximum segment size to the server in multiple _put_ requests.
+
+[#jdbc-escape-disable-proc]
+=== JDBC 4.5 support: JDBC escape to disable escape processing
+
+JDBC 4.5 (Java 26) introduces a new JDBC escape to disable escape processing and parameter parsing within part of a statement text.
+This JDBC escape has been implemented in Jaybird 5.0.12 (backported from Jaybird 6.0.5).
+The escape is always parsed if escape processing is enabled (the default), no matter the Java version and the JDBC minor version reported by `DatabaseMetaData#getJDBCMinorVersion()`.
+
+The "`disable escape processing`" escape starts with `++{\++` and ends with `++\}++`.
+Within the escape, *all* occurrences of a backslash (`\`) *must* be escaped by doubling.
+Unescaped backslashes inside the escape will result in a `FBSQLParseException`.
+
+.Some examples
+[listing]
+----
+-- Input:
+select {\"N\\A"\} from SOME_TABLE
+-- Sent to server:
+select "N\A" from SOME_TABLE
+
+-- Input:
+select {\{fn EXP(2)}\} from SOME_TABLE
+-- Sent to server (results in a syntax error)
+select {fn EXP(2)} from SOME_TABLE
+----
+
+.Same examples, but as Java string literals
+----
+-- Input:
+"select {\\\"N\\\\A\"\\} from SOME_TABLE"
+-- Sent to server:
+"select \"N\\A\" from SOME_TABLE"
+
+-- Input:
+"select {\\{fn EXP(2)}\\} from SOME_TABLE"
+-- Sent to server (results in a syntax error)
+"select {fn EXP(2)} from SOME_TABLE"
+----
+
+We think the use case for this escape is extremely limited, even non-existent, for Jaybird.
+Jaybird always offloads parameter parsing to Firebird, and Firebird currently has no syntax that could conflict with the definition of JDBC escapes.
+
+.Possible ambiguity for comments, literals, and delimited identifiers
+[CAUTION]
+====
+Given the backslash must be escaped everywhere inside the escape, the definition in the JDBC 4.5 specification can be interpreted to mean that the escape can end inside a comment, literal, or delimited identifier (quoted identifier).
+Allowing this would conflict with the fact that other JDBC escapes are not parsed inside comments, literals, and delimited identifiers.
+Discussion with the JDBC spec lead and others did not resolve this ambiguity.
+
+For Jaybird, we decide to reject attempts to end the escape in a comment, literal, or delimited identifier.
+Attempts to do so (e.g. `++{\ends/*in\}comment*/++`) will raise a `FBSQLParseException`.
+Valid alternatives would be:
+
+* End it before the comment: +
+`++{\ends\}/*in\}comment*/++`
+* End it after the comment and escape the backslash in the comment: +
+`++{\ends/*in\\}comment*/\}++`
+* Or, don't use the escape: +
+`++ends/*in\}comment*/++`
+
+If a consensus is reached in the JDBC Expert Group, or a community consensus arises, we may revisit this decision.
+
+Further details can be found in https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-03-jdbc-escape-to-disable-escape-processing.adoc[jdp-2026-03: JDBC escape to disable escape processing]
+====
+
+Given above ambiguity, and the lack of a real need to use it for Jaybird/Firebird, we recommend avoiding use of this escape unless absolutely necessary.
+If it is used, we recommend only using it for the shortest substring needed.
+
+For example, the last example (passing the `++{fn EXP(2)}++` to the server) could also be achieved by only disabling escape processing for the braces:
+
+[listing]
+----
+-- Input:
+select {\{\}fn EXP(2){\}\} from SOME_TABLE
+-- Sent to server (results in a syntax error)
+select {fn EXP(2)} from SOME_TABLE
+----
 
 [#potentially-breaking-changes]
 === Potentially breaking changes
