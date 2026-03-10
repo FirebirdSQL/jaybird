@@ -6,13 +6,17 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.jdbc.QuoteStrategy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.SQLException;
+import java.util.stream.Stream;
 
 import static org.firebirdsql.jdbc.escape.EscapeFunctionAsserts.assertParseException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for {@link FBEscapedParser}.
@@ -166,7 +170,7 @@ class FBEscapedParserTest {
 
     @ParameterizedTest
     @ValueSource(strings = { "call", "CALL" })
-    void testQuestionmarkCallEscape(String call) throws Exception {
+    void testQuestionMarkCallEscape(String call) throws Exception {
         final String input = "{?=" + call + " FUNC(?,?)}";
         final String expectedOutput = "EXECUTE PROCEDURE \"FUNC\"(?,?,?)";
 
@@ -174,7 +178,7 @@ class FBEscapedParserTest {
     }
 
     @Test
-    void testQuestionmarkCallEscapeExtraWhitespace() throws Exception {
+    void testQuestionMarkCallEscapeExtraWhitespace() throws Exception {
         final String input = "{? = call FUNC(?,?)}";
         final String expectedOutput = "EXECUTE PROCEDURE \"FUNC\"(?,?,?)";
 
@@ -186,8 +190,7 @@ class FBEscapedParserTest {
         // NOTE: need to include an existent keyword, otherwise string isn't parsed at all
         final String input = "{fn ABS(?)} {doesnotexist xyz}";
 
-        assertParseException(() -> toNative(input),
-                "Unknown keyword doesnotexist for escaped syntax.");
+        assertParseException(() -> toNative(input), "Unknown keyword doesnotexist for escaped syntax.");
     }
 
     @Test
@@ -209,8 +212,7 @@ class FBEscapedParserTest {
         // NOTE: need to include an existent keyword, otherwise string isn't parsed at all
         final String input = "{escape '&'} {}";
 
-        assertParseException(() -> toNative(input),
-                "Unexpected first character inside JDBC escape: }");
+        assertParseException(() -> toNative(input), "Unexpected first character inside JDBC escape: }");
     }
 
     @Test
@@ -356,6 +358,96 @@ class FBEscapedParserTest {
     })
     void escapesInLiteralsOrDelimitedIdentifiers_notAnEscape(String input) throws Exception {
         assertEquals(input, toNative(input), "Unexpected output");
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, quoteCharacter = '|', textBlock = """
+            input,                                     expectedOutput
+            # cases from JDBC 4.5 specification
+            {\\_foo_\\},                               _foo_
+            {\\q'{\\\\ foo \\\\}'\\},                  q'{\\ foo \\}'
+            {\\ {ts '1999-01-09 20:11:11.123455'} \\}, | {ts '1999-01-09 20:11:11.123455'} |
+            {\\ ? \\},                                 | ? |
+            {\\ /* \\\\} */ \\},                       | /* \\} */ |
+            |{\\ // \\\\} \n hi\\}|,                   | // \\} \n hi|
+            {\\ '\\\\' \\},                            | '\\' |
+            {\\ "\\\\" \\},                            | "\\" |
+            {\\ '\\\\}' \\},                           | '\\}' |
+            {\\ "\\\\}" \\},                           | "\\}" |
+            {\\ \\\\ \\},                              | \\ |
+            {\\q'{\\\\abc\\\\}'\\},                    q'{\\abc\\}'
+            {\\'literal with {\\\\..\\\\}'\\},         'literal with {\\..\\}'
+            # empty case
+            {\\\\},                                    ||
+            # JDBC escape not expanded
+            {\\{fn EXP(2)}\\},                         {fn EXP(2)}
+            # Not a disable escape
+            '{\\...\\}',                               '{\\...\\}'
+            "{\\...\\}",                               "{\\...\\}"
+            """)
+    @MethodSource
+    void disableEscapeProcessing_happyPath(String input, String expectedOutput) throws Exception {
+        assertEquals(expectedOutput, toNative(input), "Unexpected output");
+    }
+
+    /**
+     * Additional test cases for {@link #disableEscapeProcessing_happyPath(String, String)}.
+     */
+    static Stream<Arguments> disableEscapeProcessing_happyPath() {
+        return Stream.of(
+                Arguments.of("""
+                        select {\\column1 as X,
+                          /* comment with \\\\} */
+                          column2 as Y,
+                          "QUOTED\\\\}ID",
+                          "ALTERNATE\\\\ID",
+                          'literal\\\\value\\\\}',
+                          q'#literal\\\\value\\\\}#',
+                          ?,
+                          -- line comment with \\\\}
+                        \\}
+                        from SOME_TABLE
+                        """,
+                        """
+                        select column1 as X,
+                          /* comment with \\} */
+                          column2 as Y,
+                          "QUOTED\\}ID",
+                          "ALTERNATE\\ID",
+                          'literal\\value\\}',
+                          q'#literal\\value\\}#',
+                          ?,
+                          -- line comment with \\}
+                        
+                        from SOME_TABLE
+                        """
+                ),
+                Arguments.of("select {\\{\\}fn EXP(2){\\}\\} from SOME_TABLE", "select {fn EXP(2)} from SOME_TABLE")
+        );
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            // cases from JDBC 4.5 specification
+            "{\\ \\ \\}",
+            "{\\ q'{\\abc\\}'\\}",
+            // disable escape not ended
+            "{\\no end disable escape",
+            // end disable escape is escaped
+            "{\\disable escape escaped\\\\}",
+            // Disallow escape to end inside identifier
+            "{\\\"QUOTED\\}ID\"",
+            // Disallow escape to end inside literal
+            "{\\'literal\\}value'",
+            // Disallow escape to end inside Q-literal
+            "{\\q'#literal\\}value#'",
+            // Disallow escape to end inside line comment
+            "{\\-- line\\}comment",
+            // Disallow escape to end inside block comment
+            "{\\/* block\\}comment */",
+    })
+    void disableEscapeProcessing_failureCases(String input) {
+        assertThrows(FBSQLParseException.class, () -> toNative(input), "Expected exception for input");
     }
 
 }
