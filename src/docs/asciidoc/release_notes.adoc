@@ -51,6 +51,7 @@ This results in two minor breaking changes:
 * JDBC 4.5 support: implemented "`disable escape processing`" JDBC escape (`++{\...\}++`) (https://github.com/FirebirdSQL/jaybird/issues/909[#909])
 +
 See also <<jdbc-escape-disable-proc>>.
+* JDBC 4.5 support: `FBDatabaseMetaData.getJDBCMinorVersion()` should report 5 (for JDBC 4.5) on Java 25 and higher (https://github.com/FirebirdSQL/jaybird/issues/915[#915])
 * Fixed: JDBC escapes should not be parsed inside dialect 3 delimited identifiers or dialect 1 string literals (https://github.com/FirebirdSQL/jaybird/issues/921[#921])
 * Fixed: `IndexOutOfBoundsException` in `FBCachedBlob.getBytes(long, int)` for position or length beyond end of data (https://github.com/FirebirdSQL/jaybird/issues/923[#923])
 * Fixed: Using native client, password is limited to 255 bytes (https://github.com/FirebirdSQL/jaybird/issues/925[#925])
