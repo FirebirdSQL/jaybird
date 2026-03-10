@@ -1,4 +1,4 @@
-= jdp-2026-03: JDBC escape disabled processing
+= jdp-2026-03: JDBC escape to disable escape processing
 
 // SPDX-FileCopyrightText: Copyright 2026 Mark Rotteveel
 // SPDX-License-Identifier: LicenseRef-PDL-1.0
@@ -18,27 +18,30 @@ JDBC 4.5, to be introduced with Java 26, features a new JDBC escape which can be
 For details, see also chapter 6 in https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/JDBC4.5MR-November_2025.pdf[JDBC 4.5 List of proposed changes].
 
 Unfortunately, the proposed syntax for this escape has an ambiguity, and discussion with the JDBC spec lead and others did not resolve that ambiguity.
-This design proposal serves to document our interpretation of the "`escape disabled`" escape, identify the ambiguity, and document our decision how to handle it.
+This design proposal serves to document our interpretation of the "`disable escape processing`" escape or "`disabled escape`" (referenced as _the escape_ in the remainder of this document), identify the ambiguity, and document our decision how to handle it.
 
-=== The "`escape disabled`" escape
+=== The "`disable escape processing`" escape
 
-The "`escape disabled`" escape (referred to below as "`the escape`") starts with `++{\++` and ends with `++\}++`.
+The escape starts with `++{\++` and ends with `++\}++`.
 As a Java literal, it's `"++{\\ \\}++"`.
 
 Within the escape:
 
 * Other JDBC escapes are to be ignored (i.e. added to the resulting statement text without processing).
-* For drivers that need it, processing/transformation of parameter placeholders (`?`) should not be performed (i.e. the question mark should remain a question mark n the resulting statement text).
-* Any occurrence of `\` (backslash) that are not part of the end of the escape must be escaped by doubling, even in comments, literals and delimited identifiers.
+* For drivers that need it, processing/transformation of parameter placeholders (`?`) should not be performed.
+That is, the question mark should remain a question mark in the resulting statement text.
++
+Jaybird doesn't need this, as processing of question marks is handled by Firebird.
+* Any occurrence of `\` (backslash) that are not part of the end of the escape must be escaped by doubling, even in comments, literals, and delimited identifiers (quoted identifiers).
 +
 See also the examples (sometimes badly formatted) in chapter 6 of https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/JDBC4.5MR-November_2025.pdf[JDBC 4.5 List of proposed changes].
 
-The fact the backslash must be escaped everywhere inside the escape, except for the end of escape marker gives rise to the ambiguity as we see it.
+The fact the backslash must be escaped everywhere inside the escape, except for the end of escape marker gives rise to an ambiguity, in our opinion.
 Other JDBC escapes are not processed inside comments, literals, and identifiers.
 The presence of `++\}++` ends the escape, and that -- in our opinion -- means that it's unescaped presence inside a comment, literal or delimited identifier would also end the escape.
 Otherwise, it shouldn't be necessary to escape the backslash inside comments, literals. and identifiers, and the proposed change explicitly shows it must be escaped everywhere.
 
-For example, the statement text `++{\'ends in \}literal'++`, this could be parsed in several ways:
+For example, the statement text `++{\'ends in \}literal'++` could be parsed in several ways:
 
 . Allow the escape to end inside the literal: ``'ends in literal'``
 . Raise an error (e.g. "`unescaped backslash: end of escape disabled (++\}++) not allowed in literal`")
@@ -58,7 +61,7 @@ Option one seems to be the most literal interpretation of the specification, but
 == Decision
 
 We choose option two, raising an error if the escape ends within a comment, literal, or identifier.
-It will be less confusing, and it prevents unexpected problems, especially with literals containing values the developer did not intend.
+It will be less confusing, and it prevents unexpected problems, especially with literals containing values after processing that the developer did not intend.
 
 The documentation in release notes and the Jaybird manual will contain a warning about the ambiguity and recommendations how to avoid it.
 
@@ -75,7 +78,7 @@ The contents of this Documentation are subject to the Public Documentation Licen
 you may only use this Documentation if you comply with the terms of this License.
 A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
 
-The Original Documentation is "`jdp-2026-03: JDBC escape disabled processing".
+The Original Documentation is "`jdp-2026-03: JDBC escape to disable escape processing`".
 The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2026.
 All Rights Reserved.
 (Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
