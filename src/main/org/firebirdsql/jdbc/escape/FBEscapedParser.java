@@ -51,15 +51,14 @@ public final class FBEscapedParser {
     private static final String ESCAPE_ESCAPE_KEYWORD = "escape";
     private static final String ESCAPE_OUTERJOIN_KEYWORD = "oj";
     private static final String ESCAPE_LIMIT_KEYWORD = "limit";
+    // NOTE: The "disable escape processing" escape ({\ ... \}) a.k.a. "disabled escape" is handled separately
 
     /**
-     * Regular expression to check for existence of JDBC escapes, is used to
-     * stop processing the entire SQL statement if it does not contain any of
-     * the escape introducers.
+     * Regular expression to check for existence of JDBC escapes. It is used to skip processing the entire SQL statement
+     * if it does not contain any of the escape introducers.
      */
     private static final Pattern CHECK_ESCAPE_PATTERN = Pattern.compile(
-            "\\{(?:(?:\\?\\s*=\\s*)?call|d|ts?|escape|fn|oj|limit)\\s",
-            Pattern.CASE_INSENSITIVE);
+            "\\{(?:(?:(?:\\?\\s*=\\s*)?call|d|ts?|escape|fn|oj|limit)\\s|\\\\)", Pattern.CASE_INSENSITIVE);
 
     private static final String LIMIT_OFFSET_CLAUSE = " offset ";
 
@@ -104,13 +103,14 @@ public final class FBEscapedParser {
         if (!checkForEscapes(sql)) return sql;
 
         ParserState state = ParserState.INITIAL_STATE;
-        // Note initialising to 8 as that is the minimum size in Oracle Java, and we (usually) need less than the default of 16
+        // Note initialising to 8 as that was the minimum size in Oracle Java at some point, and we (usually) need less
+        // than the default of 16
         final var bufferStack = new ArrayDeque<StringBuilder>(8);
-        final int sqlLength = sql.length();
-        var buffer = new StringBuilder(sqlLength);
+        final var charAccess = new CharAccess(sql);
+        var buffer = new StringBuilder(sql.length());
 
-        for (int i = 0; i < sqlLength; i++) {
-            char currentChar = sql.charAt(i);
+        while (charAccess.hasNext()) {
+            char currentChar = charAccess.next(state);
             state = state.nextState(currentChar);
             switch (state) {
             case INITIAL_STATE -> {
@@ -120,8 +120,14 @@ public final class FBEscapedParser {
                     START_LINE_COMMENT, LINE_COMMENT, START_BLOCK_COMMENT, BLOCK_COMMENT, END_BLOCK_COMMENT,
                     POSSIBLE_Q_LITERAL_ENTER -> buffer.append(currentChar);
             case ESCAPE_ENTER_STATE -> {
-                bufferStack.push(buffer);
-                buffer = new StringBuilder();
+                if (charAccess.hasNext() && charAccess.peekNext(state) == '\\') {
+                    // Disable escape processing
+                    charAccess.skipNext();
+                    state = processDisabledEscape(charAccess, buffer);
+                } else {
+                    bufferStack.push(buffer);
+                    buffer = new StringBuilder();
+                }
             }
             case ESCAPE_EXIT_STATE -> {
                 if (bufferStack.isEmpty()) {
@@ -133,21 +139,19 @@ public final class FBEscapedParser {
             }
             case Q_LITERAL_START -> {
                 buffer.append(currentChar);
-                if (++i >= sqlLength) {
-                    throw new FBSQLParseException("Unexpected end of string at parser state " + state);
-                }
-                final char alternateStartChar = sql.charAt(i);
+                final char alternateStartChar = charAccess.next(state);
                 buffer.append(alternateStartChar);
-                final char alternateEndChar = qLiteralEndChar(alternateStartChar);
-                for (i++; i < sqlLength; i++) {
-                    currentChar = sql.charAt(i);
+                var qLiteralParser = new QLiteralParser(alternateStartChar);
+                while (charAccess.hasNext()) {
+                    currentChar = charAccess.next(state);
                     buffer.append(currentChar);
-                    if (currentChar == alternateEndChar && i + 1 < sqlLength && sql.charAt(i + 1) == '\'') {
-                        state = ParserState.Q_LITERAL_END;
+
+                    if (qLiteralParser.isQLiteralEnd(currentChar)) {
+                        state = ParserState.NORMAL_STATE;
                         break;
                     }
                 }
-                if (i == sqlLength) {
+                if (state == ParserState.Q_LITERAL_START) {
                     throw new FBSQLParseException("Unexpected end of string at parser state " + state);
                 }
             }
@@ -158,16 +162,6 @@ public final class FBEscapedParser {
             throw new FBSQLParseException("Unbalanced JDBC escape, too many '{'");
         }
         return buffer.toString();
-    }
-
-    private static char qLiteralEndChar(char startChar) {
-        return switch (startChar) {
-            case '(' -> ')';
-            case '{' -> '}';
-            case '[' -> ']';
-            case '<' -> '>';
-            default -> startChar;
-        };
     }
 
     private static void processEscaped(final String escaped, final StringBuilder keyword, final StringBuilder payload) {
@@ -357,6 +351,100 @@ public final class FBEscapedParser {
         target.append(templateResult != null ? templateResult : escapedFunction);
     }
 
+    private static ParserState processDisabledEscape(CharAccess charAccess, StringBuilder buffer)
+            throws FBSQLParseException {
+        ParserState state = ParserState.NORMAL_STATE;
+
+        boolean inEscape = true;
+        while (charAccess.hasNext()) {
+            char currentChar = charAccess.next(state, ParserState.DISABLED_ESCAPE);
+            if (currentChar == '\\') {
+                currentChar = charAccess.next(state, ParserState.DISABLED_ESCAPE);
+                if (currentChar == '}'
+                        && (state == ParserState.NORMAL_STATE || state == ParserState.POSSIBLE_Q_LITERAL_ENTER)) {
+                    // End of disabled escape
+                    inEscape = false;
+                    break;
+                }
+                checkEscapeInDisabledEscape(currentChar, charAccess.position(), state);
+            }
+            state = nextDisabledEscapeParserState(state, currentChar);
+            switch (state) {
+            case NORMAL_STATE, LITERAL_STATE, DELIMITED_IDENTIFIER,
+                 START_LINE_COMMENT, LINE_COMMENT, START_BLOCK_COMMENT, BLOCK_COMMENT, END_BLOCK_COMMENT,
+                 POSSIBLE_Q_LITERAL_ENTER -> buffer.append(currentChar);
+            case Q_LITERAL_START -> {
+                buffer.append(currentChar);
+                currentChar = charAccess.next(state, ParserState.DISABLED_ESCAPE);
+                if (currentChar == '\\') {
+                    currentChar = charAccess.next(state, ParserState.DISABLED_ESCAPE);
+                    checkEscapeInDisabledEscape(currentChar, charAccess.position(), state);
+                }
+                buffer.append(currentChar);
+                var qLiteralParser = new QLiteralParser(currentChar);
+                while (charAccess.hasNext()) {
+                    currentChar = charAccess.next(state, ParserState.DISABLED_ESCAPE);
+                    if (currentChar == '\\') {
+                        currentChar = charAccess.next(state, ParserState.DISABLED_ESCAPE);
+                        checkEscapeInDisabledEscape(currentChar, charAccess.position(), state);
+                    }
+                    buffer.append(currentChar);
+
+                    if (qLiteralParser.isQLiteralEnd(currentChar)) {
+                        state = ParserState.NORMAL_STATE;
+                        break;
+                    }
+                }
+                if (state == ParserState.Q_LITERAL_START) {
+                    throw new FBSQLParseException(
+                            "Unexpected end of string at parser state " + state + " at " + ParserState.DISABLED_ESCAPE);
+                }
+            }
+            default -> throw new FBSQLParseException("Unexpected parser state " + state + " at "
+                    + ParserState.DISABLED_ESCAPE);
+            }
+        }
+
+        if (inEscape) {
+            throw new FBSQLParseException("Unexpected end of string at parser state " + state + " at "
+                    + ParserState.DISABLED_ESCAPE);
+        }
+
+        return state;
+    }
+
+    private static void checkEscapeInDisabledEscape(char ch, int position, ParserState state)
+            throws FBSQLParseException {
+        if (ch == '}') {
+            // This only covers cases within a comment, literal or quoted identifier (see jdp-2026-03); the callers
+            // handle the case where '}' is valid and does end the escape.
+            throw new FBSQLParseException("Unescaped backslash: occurrence of unescaped \\} in comment, literal, or "
+                    + "quoted identifier is not valid");
+        } else if (ch != '\\') {
+            throw new FBSQLParseException("Unescaped backslash at position " + (position - 1) + " at parser state "
+                    + state + " at " + ParserState.DISABLED_ESCAPE);
+        }
+    }
+
+    /**
+     * Remaps normal parser state values to parser state values during disabled escape processing.
+     *
+     * @param currentState
+     *         current parser state
+     * @param inputChar
+     *         character for next state
+     * @return state for disabled escape processing
+     */
+    private static ParserState nextDisabledEscapeParserState(ParserState currentState, char inputChar)
+            throws FBSQLParseException {
+        ParserState nextState = currentState.nextState(inputChar);
+        return switch (nextState) {
+            // No JDBC escape processing inside disabled escape
+            case ESCAPE_ENTER_STATE, ESCAPE_EXIT_STATE -> ParserState.NORMAL_STATE;
+            default -> nextState;
+        };
+    }
+
     private enum ParserState {
         /**
          * Initial parser state (to ignore leading whitespace)
@@ -404,7 +492,7 @@ public final class FBEscapedParser {
             }
         },
         /**
-         * Start of JDBC escape ({ character encountered).
+         * Start of JDBC escape (<code>"&#123;"</code> character encountered).
          */
         ESCAPE_ENTER_STATE {
             @Override
@@ -434,7 +522,7 @@ public final class FBEscapedParser {
             }
         },
         /**
-         * End of JDBC escape (} character encountered)
+         * End of JDBC escape (<code>"&#125;"</code> character encountered)
          */
         ESCAPE_EXIT_STATE {
             @Override
@@ -506,13 +594,16 @@ public final class FBEscapedParser {
                 throw new FBSQLParseException("Q-literal handling needs to be performed separately");
             }
         },
-        Q_LITERAL_END {
+        /**
+         * Processing the "disabled escape" (<code>&#123;\...\&#125;</code>).
+         * <p>
+         * This state is not used during parsing, but only used for reporting a state name in exception messages.
+         * </p>
+         */
+        DISABLED_ESCAPE {
             @Override
             protected ParserState nextState(char inputChar) throws FBSQLParseException {
-                if (inputChar != '\'') {
-                    throw new FBSQLParseException("Invalid char " + inputChar + " for state Q_LITERAL_END");
-                }
-                return NORMAL_STATE;
+                throw new FBSQLParseException("Disabled escape handling needs to be performed separately");
             }
         };
 
@@ -527,4 +618,110 @@ public final class FBEscapedParser {
          */
         protected abstract ParserState nextState(char inputChar) throws FBSQLParseException;
     }
+
+    private static final class QLiteralParser {
+
+        private final char endChar;
+        private boolean possibleEnd = false;
+
+        QLiteralParser(char startChar) {
+            this.endChar = endChar(startChar);
+        }
+
+        boolean isQLiteralEnd(char ch) {
+            if (possibleEnd && ch == '\'') return true;
+            possibleEnd = ch == endChar;
+            return false;
+        }
+
+        private static char endChar(char startChar) {
+            return switch (startChar) {
+                case '(' -> ')';
+                case '{' -> '}';
+                case '[' -> ']';
+                case '<' -> '>';
+                default -> startChar;
+            };
+        }
+
+    }
+
+    private static final class CharAccess {
+
+        private final String sql;
+        private final int length;
+        // Position of the next character to be returned
+        private int pos;
+
+        CharAccess(String sql) {
+            this(sql, 0);
+        }
+
+        CharAccess(String sql, int startPosition) {
+            if (startPosition < 0) {
+                throw new IllegalArgumentException("startPosition must be >= 0, was " + startPosition);
+            }
+            this.sql = sql;
+            length = sql.length();
+            pos = startPosition;
+        }
+
+        boolean hasNext() {
+            return pos < length;
+        }
+
+        /**
+         * Skip the next character.
+         * <p>
+         * Attempts to position beyond the end of the contained string will position at the end of string.
+         * </p>
+         */
+        void skipNext() {
+            pos = Math.min(pos + 1, length);
+        }
+
+        void checkPosition(ParserState state) throws FBSQLParseException {
+            if (pos >= length) {
+                throw new FBSQLParseException("Unexpected end of string at parser state " + state);
+            }
+        }
+
+        void checkPosition(ParserState state, ParserState outerState) throws FBSQLParseException {
+            if (pos >= length) {
+                throw new FBSQLParseException(
+                        "Unexpected end of string at parser state " + state + " at " + outerState);
+            }
+        }
+
+        char next(ParserState state) throws FBSQLParseException {
+            checkPosition(state);
+            return sql.charAt(pos++);
+        }
+
+        char next(ParserState state, ParserState outerState) throws FBSQLParseException {
+            checkPosition(state, outerState);
+            return sql.charAt(pos++);
+        }
+
+        char peekNext(ParserState state) throws FBSQLParseException {
+            checkPosition(state);
+            return sql.charAt(pos);
+        }
+
+        /**
+         * Position of the last returned character, or the position immediately before the next character.
+         * <p>
+         * The return value can be {@code -1} if {@link #CharAccess(String)} was called, or
+         * {@link #CharAccess(String, int)} with {@code startPosition = 0}, and {@link #next(ParserState)} or
+         * {@link #next(ParserState, ParserState)} was never called.
+         * </p>
+         *
+         * @return position of the last character returned by {@code next}
+         */
+        int position() {
+            return pos - 1;
+        }
+
+    }
+
 }
