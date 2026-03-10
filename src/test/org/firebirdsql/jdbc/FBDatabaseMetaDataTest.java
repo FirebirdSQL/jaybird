@@ -2,13 +2,12 @@
  SPDX-FileCopyrightText: Copyright 2001-2002 David Jencks
  SPDX-FileCopyrightText: Copyright 2002-2010 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
- SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.AfterAll;
@@ -760,7 +759,8 @@ class FBDatabaseMetaDataTest {
 
     @Test
     void testGetJDBCMinorVersion() throws Exception {
-        final int expectedMinor = FBTestProperties.getJavaFeatureVersion() >= 24 ? 4 : 3;
+        int javaFeatureVersion = getJavaFeatureVersion();
+        final int expectedMinor = javaFeatureVersion >= 26 ? 5 : (javaFeatureVersion >= 24 ? 4 : 3);
         assertEquals(expectedMinor, dmd.getJDBCMinorVersion(), "JDBCMinorVersion");
     }
 
