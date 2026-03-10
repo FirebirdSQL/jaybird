@@ -41,7 +41,7 @@ The following was fixed or changed since Jaybird 6.0.4:
 +
 Applications referencing this constant may need to be recompiled to function correctly with Jaybird 6.0.5 and higher.
 If you use Java 26 or higher, we recommend using `java.sql.Type.DECFLOAT` and `java.sql.JDBCType.DECFLOAT` instead.
-* JDBC 4.5 support: implemented methods `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier` on `FBConnection`, and added them to interface `FirebirdConnection` so for older Java versions (https://github.com/FirebirdSQL/jaybird/issues/918[#918])
+* JDBC 4.5 support: implemented methods `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier` on `FBConnection`, and added them to interface `FirebirdConnection` so for older Java versions (https://github.com/FirebirdSQL/jaybird/issues/908[#908])
 +
 The methods of the same name in the `java.sql.Statement` implementations now call the methods on the connection.
 This results in two minor breaking changes:
