@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -858,9 +857,11 @@ class FBDatabaseMetaDataTest {
 
     @Test
     void testGetJDBCMinorVersion() throws Exception {
-        int javaMajor = FBTestProperties.getJavaFeatureVersion();
+        int javaMajor = getJavaFeatureVersion();
         int expectedMinor;
-        if (javaMajor >= 24) {
+        if (javaMajor >= 26) {
+            expectedMinor = 5;
+        } else if (javaMajor >= 24) {
             expectedMinor = 4;
         } else if (javaMajor >= 9) {
             expectedMinor = 3;

@@ -58,6 +58,7 @@ See also <<jdbc-escape-disable-proc>>.
 * Fixed: `IndexOutOfBoundsException` in `FBCachedBlob.getBytes(long, int)` for position or length beyond end of data (https://github.com/FirebirdSQL/jaybird/issues/924[#924])
 * Fixed: Using native client, password is limited to 255 bytes (https://github.com/FirebirdSQL/jaybird/issues/926[#926])
 * Fixed: Infinite loop in `FBPooledConnection#fireConnectionError(SQLException)` if the exception has a chained exception and neither is fatal (https://github.com/FirebirdSQL/jaybird/issues/928[#928])
+* JDBC 4.5 support: `FBDatabaseMetaData.getJDBCMinorVersion()` should report 5 (for JDBC 4.5) on Java 25 and higher (https://github.com/FirebirdSQL/jaybird/issues/929[#929])
 
 [#jaybird-5-0-11-changelog]
 === Jaybird 5.0.11
