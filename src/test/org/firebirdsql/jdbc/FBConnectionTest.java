@@ -71,7 +71,6 @@ import static org.junit.jupiter.api.Assumptions.*;
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
  */
-@ExtendWith(MockitoExtension.class)
 class FBConnectionTest {
 
     private static final String CREATE_TABLE = """
@@ -734,6 +733,7 @@ class FBConnectionTest {
         assertThat(exception, errorCodeEquals(ISCConstants.isc_login));
     }
 
+    @ExtendWith(MockitoExtension.class)
     @Test
     @Timeout(10)
     void setNetworkTimeout_isUsed(@Mock ExecutorService executor) throws Exception {
@@ -769,6 +769,7 @@ class FBConnectionTest {
         }
     }
 
+    @ExtendWith(MockitoExtension.class)
     @Test
     void setNetworkTimeout_invalidTimeout(@Mock ExecutorService executor) throws Exception {
         try (var connection = getConnectionViaDriverManager()) {
@@ -785,6 +786,7 @@ class FBConnectionTest {
         }
     }
 
+    @ExtendWith(MockitoExtension.class)
     @Test
     void setNetworkTimeout_getAndSetSeries(@Mock ExecutorService executor) throws Exception {
         assumeThat("Type is pure Java", GDS_TYPE, isPureJavaType());
