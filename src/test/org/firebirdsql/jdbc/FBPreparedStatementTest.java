@@ -1577,6 +1577,28 @@ class FBPreparedStatementTest {
         }
     }
 
+    /**
+     * Intended to verify that the failure expected in {@link #escapeProcessing_disabled()} is indeed due to disabling
+     * escape processing.
+     */
+    @Test
+    void escapeProcessing_default() throws Exception {
+        try (var connection = getConnectionViaDriverManager()) {
+            //noinspection resource
+            assertDoesNotThrow(() -> connection.prepareStatement("select {fn EXP(2)} from RDB$DATABASE"));
+        }
+    }
+
+    @Test
+    void escapeProcessing_disabled() throws Exception {
+        try (var connection = getConnectionViaDriverManager(PropertyNames.escapeProcessing, "false")) {
+            var exception = assertThrows(SQLException.class,
+                    () -> connection.prepareStatement("select {fn EXP(2)} from RDB$DATABASE"));
+            // NOTE: {fn is interpreted as a column reference, EXP as an alias, then ( is an unexpected token
+            assertThat(exception, message(containsString("Token unknown - line 1, column 15; (")));
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);
         try (var pstmt = con.prepareStatement(INSERT_DATA)) {

@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  */
 @SuppressWarnings("ClassCanBeRecord")
 @InternalApi
-public final class FBEscapedParser {
+public final class FBEscapedParser implements JdbcEscapeParser {
 
     /*
      Stored procedure calls support both following syntax:

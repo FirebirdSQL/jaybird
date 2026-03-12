@@ -54,7 +54,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             StoredProcedureMetaData storedProcMetaData, FBObjectListener.StatementListener statementListener,
             FBObjectListener.BlobListener blobListener) throws SQLException {
         super(connection, rsBehavior, statementListener, blobListener);
-        var parser = new FBEscapedCallParser(connection.getEscapedParser());
+        var parser = new FBEscapedCallParser(getEscapeParser(), connection.getServerVersion());
 
         // here statement is parsed twice, once in c.nativeSQL(...)
         // and second time in parser.parseCall(...)... not nice, maybe

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2020-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jaybird.props;
 
@@ -70,6 +70,7 @@ public final class PropertyNames {
     public static final String maxInlineBlobSize = "maxInlineBlobSize";
     public static final String maxBlobCacheSize = "maxBlobCacheSize";
     public static final String searchPath = "searchPath";
+    public static final String escapeProcessing = "escapeProcessing";
 
     // service connection
     public static final String expectedDb = "expectedDb";

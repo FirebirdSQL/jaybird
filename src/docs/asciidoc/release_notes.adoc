@@ -619,6 +619,34 @@ Subsequent use of a larger `maxFieldSize` will continue to return the shorter va
 
 For further details, see https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2025-07-statement-max-field-size.adoc[jdp-2025-07: Statement Max Field Size].
 
+[#connection-escape-processing]
+=== Connection property `escapeProcessing`
+
+A Boolean connection property `escapeProcessing` was added to control the default JDBC escape processing behaviour of `Statement` objects created by a `Connection`.
+This connection property is defined in JDBC 4.2.
+Support is available through `DriverManager` and on Jaybird's data source implementations.
+
+It's default value is `true`, meaning JDBC escape processing is enabled.
+When set to `false`, JDBC escapes are not processed, and sent as is to the server (which will usually result in a syntax error like a "`Token unknown`").
+
+Use of this property is the only way to disable escape processing for `PreparedStatement` and `CallableStatement`.
+For `Statement` -- but not `PreparedStatement` and `CallableStatement` (but see note below) -- the escape processing behaviour can be changed dynamically using `Statement#setEscapeProcessing(boolean)`.
+
+Disabling escape processing can have a small performance benefit when your statements never contain any JDBC escapes.
+
+.`CallableStatement` deviation for JDBC call-escape
+[NOTE]
+====
+In its current implementation, the escape processing behaviour of `CallableStatement` has a deviation from the JDBC-specified behaviour.
+Specifically, when `escapeProcessing=false`, `Connection#prepareCall(...)` will parse and transform the JDBC call escape ([.nowrap]`++{++[?=]call __procedure-name__++[(<parameters>)]}++`) anyway.
+It will not process other JDBC escapes when escape processing is disabled.
+
+Given further changes to and potentially a fundamental rewrite of the `CallableStatement` implementation are in the works, we didn't want to touch the code responsible for this deviation at this time.
+This non-standard behaviour may change before Jaybird 7.0.0 release, or in a later major release.
+// TODO Revise above, depending on https://github.com/FirebirdSQL/jaybird/issues/343 or maybe https://github.com/FirebirdSQL/jaybird/issues/833
+====
+
+
 // TODO add major changes
 
 [#other-fixes-and-changes]

@@ -5,7 +5,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2005-2007 Gabriel Reid
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2011-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2011-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
@@ -14,6 +14,7 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.List;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -1272,6 +1274,70 @@ class FBCallableStatementTest {
         try (var cstmt = con.prepareCall("{call test_pkg.test_selectability(?)}")
                 .unwrap(FirebirdCallableStatement.class)) {
             assertEquals(selectable, cstmt.isSelectableProcedure(), "selectable");
+        }
+    }
+
+    /**
+     * Intended to verify that the failures expected in {@link #escapeProcessing_disabled()} and
+     * {@link #escapeProcessing_disabled_callEscapeWorks()} are indeed due to disabling escape processing.
+     */
+    @Test
+    void escapeProcessing_default() throws Exception {
+        try (var connection = getConnectionViaDriverManager()) {
+            executeDDL(connection,
+                    "create procedure test_simple(in_val double precision) as begin /* does nothing */ end");
+
+            for (String procedureCall : List.of(
+                    "execute procedure test_simple({fn EXP(2)})",
+                    "{call test_simple({fn EXP(2)})}")) {
+                try (var cstmt = connection.prepareCall(procedureCall)) {
+                    assertDoesNotThrow(() -> cstmt.execute());
+                }
+            }
+        }
+    }
+
+    @Test
+    void escapeProcessing_disabled() throws Exception {
+        try (var connection = getConnectionViaDriverManager(PropertyNames.escapeProcessing, "false")) {
+            executeDDL(connection,
+                    "create procedure test_simple(in_val double precision) as begin /* does nothing */ end");
+            try (var cstmt = connection.prepareCall("execute procedure test_simple({fn EXP(2)})")) {
+                var exception = assertThrows(SQLException.class, cstmt::execute);
+                // NOTE: {fn is interpreted as an identifier, then EXP is an unexpected token
+                assertThat(exception, message(CoreMatchers.containsString("Token unknown - line 1, column 37; EXP")));
+            }
+        }
+    }
+
+    /**
+     * Tests current behaviour that is formally incorrect (disabling escape processing should mean the call-escape is
+     * not transformed).
+     */
+    @Test
+    void escapeProcessing_disabled_callEscapeWorks() throws Exception {
+        try (var connection = getConnectionViaDriverManager(PropertyNames.escapeProcessing, "false")) {
+            executeDDL(connection,
+                    "create procedure test_simple(in_val double precision) as begin /* does nothing */ end");
+            try (var cstmt = connection.prepareCall("{call test_simple(EXP(2))}")) {
+                assertDoesNotThrow(() -> cstmt.execute());
+            }
+
+            try (var cstmt = connection.prepareCall("{call test_simple({fn EXP(2)})}")) {
+                var exception = assertThrows(SQLException.class, cstmt::execute);
+                // NOTE: {fn is interpreted as an identifier, then EXP is an unexpected token
+                assertThat(exception, message(CoreMatchers.containsString("Token unknown - line 1, column 37; EXP")));
+            }
+
+            /* Originally, switching escapeProcessing to true would process the function escape anyway, as prepare is
+               delayed until execute, and that would transform the JDBC escape. See also comment in
+               FBPreparedStatement#setEscapeProcessing(boolean). */
+            try (var cstmt = connection.prepareCall("{call test_simple({fn EXP(2)})}")) {
+                cstmt.setEscapeProcessing(true);
+                var exception = assertThrows(SQLException.class, cstmt::execute);
+                // NOTE: {fn is interpreted as an identifier, then EXP is an unexpected token
+                assertThat(exception, message(CoreMatchers.containsString("Token unknown - line 1, column 37; EXP")));
+            }
         }
     }
 

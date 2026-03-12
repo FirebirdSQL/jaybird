@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.props.internal;
 
@@ -106,6 +106,7 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder(maxBlobCacheSize).type(INT).aliases("max_blob_cache_size", "isc_dpb_max_blob_cache_size")
                         .dpbItem(isc_dpb_max_blob_cache_size),
                 builder(searchPath).aliases("search_path", "isc_dpb_search_path").dpbItem(isc_dpb_search_path),
+                builder(escapeProcessing).type(BOOLEAN),
 
                 // TODO Consider removing this property, otherwise formally add it to PropertyNames
                 builder("filename_charset"),

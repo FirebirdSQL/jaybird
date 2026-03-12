@@ -13,6 +13,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbImmutableConnectionProperties;
@@ -355,24 +356,36 @@ public class FBConnection implements FirebirdConnection {
         throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This method always processes JDBC escapes, even if the connection property {@code escapeProcessing} is
+     * {@code false}.
+     * </p>
+     */
     @Override
     public String nativeSQL(String sql) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            return getEscapedParser().toNative(sql);
+            return getEscapeParser().toNative(sql);
         }
     }
 
     /**
      * Get an {@link FBEscapedParser} for this connection.
+     * <p>
+     * The returned parser always processes JDBC escapes, even if the connection property {@code escapeProcessing} is
+     * {@code false}.
+     * </p>
      *
      * @return an {@link FBEscapedParser} configured for the version and dialect of this connection
-     * @throws SQLException if the connection is closed
+     * @throws SQLException
+     *         if the connection is closed
      * @since 7
      */
-    FBEscapedParser getEscapedParser() throws SQLException {
+    final FBEscapedParser getEscapeParser() throws SQLException {
         // We're not caching it, as it has no real state and is cheap to create
-        return FBEscapedParser.of(getGDSHelper().getServerVersion(), getQuoteStrategy());
+        return FBEscapedParser.of(getServerVersion(), getQuoteStrategy());
     }
 
     @Override
@@ -1523,11 +1536,11 @@ public class FBConnection implements FirebirdConnection {
      * @throws SQLException
      *         If the connection is closed
      */
-    QuoteStrategy getQuoteStrategy() throws SQLException {
+    final QuoteStrategy getQuoteStrategy() throws SQLException {
         return QuoteStrategy.forDialect(getGDSHelper().getDialect());
     }
 
-    GeneratedKeysSupport getGeneratedKeysSupport() throws SQLException {
+    final GeneratedKeysSupport getGeneratedKeysSupport() throws SQLException {
         if (generatedKeysSupport == null) {
             generatedKeysSupport = GeneratedKeysSupportFactory
                     .createFor(getGeneratedKeysEnabled(), getMetaData());
@@ -1539,7 +1552,7 @@ public class FBConnection implements FirebirdConnection {
         return connectionProperties().getGeneratedKeysEnabled();
     }
 
-    boolean isIgnoreProcedureType() {
+    final boolean isIgnoreProcedureType() {
         return connectionProperties().isIgnoreProcedureType();
     }
 
@@ -1556,26 +1569,34 @@ public class FBConnection implements FirebirdConnection {
      * {@code false} otherwise.
      */
     @SuppressWarnings("SameParameterValue")
-    boolean isScrollableCursor(@Nullable String scrollableCursor) {
+    final boolean isScrollableCursor(@Nullable String scrollableCursor) {
         return scrollableCursor != null
                 && scrollableCursor.equalsIgnoreCase(connectionProperties().getScrollableCursor());
     }
 
-    boolean isUseServerBatch() {
+    final boolean isUseServerBatch() {
         return connectionProperties().isUseServerBatch();
     }
 
-    int getServerBatchBufferSize() {
+    final int getServerBatchBufferSize() {
         return connectionProperties().getServerBatchBufferSize();
     }
 
-    boolean isExtendedMetadata() {
+    final boolean isExtendedMetadata() {
         return connectionProperties().isExtendedMetadata();
     }
 
-    boolean isIgnoreSQLWarnings() {
+    final boolean isIgnoreSQLWarnings() {
         return PropertyConstants.REPORT_SQL_WARNINGS_NONE
                 .equalsIgnoreCase(connectionProperties().getReportSQLWarnings());
+    }
+
+    final boolean isEscapeProcessing() {
+        return connectionProperties().isEscapeProcessing();
+    }
+
+    final GDSServerVersion getServerVersion() throws SQLException {
+        return getGDSHelper().getServerVersion();
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  SPDX-FileCopyrightText: Copyright 2003-2005 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc.escape;
@@ -20,6 +20,7 @@ import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_SYNTAX_ERROR;
 import static org.firebirdsql.jdbc.escape.FBEscapedCallParser.ParserState.*;
 
@@ -34,7 +35,7 @@ public final class FBEscapedCallParser {
 
     private static final int INITIAL_CAPACITY = 32;
 
-    private final FBEscapedParser escapedParser;
+    private final JdbcEscapeParser escapeParser;
     private final SyntaxVersion syntaxVersion;
 
     private ParserState state = NORMAL_STATE;
@@ -49,15 +50,32 @@ public final class FBEscapedCallParser {
     private FBProcedureCall procedureCall = new FBProcedureCall();
 
     /**
-     * Creates an escaped call parser using {@code escapedParser}.
+     * Creates an escaped call parser using {@code escapeParser}.
+     * <p>
+     * This constructor is equivalent to calling {@link #FBEscapedCallParser(JdbcEscapeParser, AbstractVersion)} as
+     * {@code new FBEscapedCallParser(escapeParser, escapeParser.firebirdVersion())}.
+     * </p>
      *
-     * @param escapedParser
-     *         escaped parser
+     * @param escapeParser
+     *         escape parser
      * @since 7
      */
-    public FBEscapedCallParser(FBEscapedParser escapedParser) {
-        this.escapedParser = escapedParser;
-        syntaxVersion = SyntaxVersion.of(escapedParser.firebirdVersion());
+    public FBEscapedCallParser(FBEscapedParser escapeParser) {
+        this(escapeParser, escapeParser.firebirdVersion());
+    }
+
+    /**
+     * Creates an escaped call parser using {@code jdbcEscapeParser} and {@code firebirdVersion}.
+     *
+     * @param jdbcEscapeParser
+     *         JDBC escape parser instance
+     * @param firebirdVersion
+     *         Firebird version to configure syntax parsing
+     * @since 7
+     */
+    public FBEscapedCallParser(JdbcEscapeParser jdbcEscapeParser, AbstractVersion firebirdVersion) {
+        escapeParser = requireNonNull(jdbcEscapeParser, "jdbcEscapeParser");
+        syntaxVersion = SyntaxVersion.of(requireNonNull(firebirdVersion, "firebirdVersion"));
     }
 
     /**
@@ -371,7 +389,7 @@ public final class FBEscapedCallParser {
      *         if parameter cannot be correctly parsed
      */
     String processParam(String param) throws SQLException {
-        return escapedParser.toNative(param);
+        return escapeParser.toNative(param);
     }
 
     /**

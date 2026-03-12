@@ -20,6 +20,7 @@ import org.firebirdsql.jaybird.parser.StatementDetector;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.util.Primitives;
 import org.firebirdsql.jaybird.util.SQLExceptionThrowingFunction;
+import org.firebirdsql.jdbc.escape.JdbcEscapeParser;
 import org.firebirdsql.util.InternalApi;
 import org.jspecify.annotations.Nullable;
 
@@ -63,7 +64,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     private @Nullable SqlCountHolder sqlCountHolder;
 
     private boolean completed = true;
-    private boolean escapedProcessing = true;
+    private boolean escapeProcessing;
     private boolean currentStatementGeneratedKeys;
 
     // Currently only determined for Firebird statement type SELECT and STORED_PROCEDURE
@@ -128,10 +129,11 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     protected FBStatement(FBConnection connection, ResultSetBehavior rsBehavior,
             FBObjectListener.StatementListener statementListener) throws SQLException {
         super(connection, rsBehavior);
-        this.gdsHelper = connection.getGDSHelper();
+        gdsHelper = connection.getGDSHelper();
         this.statementListener = statementListener;
 
         try (var ignored = connection.withLock()) {
+            escapeProcessing = connection.isEscapeProcessing();
             fbStatement = gdsHelper.allocateStatement();
             fbStatement.addStatementListener(createStatementListener());
             if (needsScrollableCursorEnabled()) {
@@ -460,8 +462,13 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
     }
 
     @Override
-    public void setEscapeProcessing(boolean enable) throws  SQLException {
-        escapedProcessing = enable;
+    public void setEscapeProcessing(boolean enable) throws SQLException {
+        checkValidity();
+        escapeProcessing = enable;
+    }
+
+    final boolean isEscapeProcessing() {
+        return escapeProcessing;
     }
 
     /**
@@ -876,7 +883,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
 
     protected void prepareFixedStatement(String sql) throws SQLException {
         fbStatement.setTransaction(gdsHelper.getCurrentTransaction());
-        String statementText = escapedProcessing ? nativeSQL(sql) : sql;
+        String statementText = nativeSQL(sql);
         fbStatement.prepare(statementText);
         StatementType fbStatementType = fbStatement.getType();
         jbStatementType = fbStatementType == StatementType.SELECT || fbStatementType == StatementType.STORED_PROCEDURE
@@ -890,8 +897,24 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
                && fbStatement.supportsFetchScroll();
     }
 
-    protected String nativeSQL(String sql) throws SQLException {
-        return connection.nativeSQL(sql);
+    final JdbcEscapeParser getEscapeParser() throws SQLException {
+        return isEscapeProcessing() ? connection.getEscapeParser() : JdbcEscapeParser.noEscapeParser();
+    }
+
+    /**
+     * Transforms {@code sql} to native SQL using the current value of {@code escapeProcessing}.
+     * <p>
+     * Contrary to {@link Connection#nativeSQL(String)}, this method follows the {@code escapProcessing} property.
+     * </p>
+     *
+     * @param sql
+     *         statement text to transform
+     * @return transformed statement text, or {@code sql} if escape processing is disabled
+     * @throws SQLException
+     *         for errors parsing or transforming the statement text
+     */
+    protected final String nativeSQL(String sql) throws SQLException {
+        return getEscapeParser().toNative(sql);
     }
 
     /**

@@ -239,6 +239,14 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         }
     }
 
+    @Override
+    public final void setEscapeProcessing(boolean enable) throws SQLException {
+        checkValidity();
+        /* JDBC explicitly says changing it has no effect for PreparedStatement and CallableStatement. However, we
+           cannot guarantee that for FBCallableStatement if the connection property escapeProcessing=false. Ignoring
+           change of escapeProcessing will ensure that we comply with the specified behaviour. */
+    }
+
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
         return new FBParameterMetaData(fbStatement.getParameterDescriptor(), connection);
     }

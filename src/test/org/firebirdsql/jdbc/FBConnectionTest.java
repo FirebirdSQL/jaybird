@@ -159,6 +159,7 @@ class FBConnectionTest {
 
             try (Statement stmt = connection.createStatement()) {
                 stmt.executeQuery("SELECT * FROM rdb$database");
+                //noinspection resource
                 assertDoesNotThrow(() -> stmt.executeQuery("SELECT * FROM rdb$database"));
             }
         }
@@ -1157,6 +1158,44 @@ class FBConnectionTest {
     void isSimpleIdentifier(String identifier, boolean expectedIsSimple) throws Exception {
         try (var connection = getConnectionViaDriverManager()) {
             assertEquals(expectedIsSimple, connection.isSimpleIdentifier(identifier), "isSimpleIdentifier");
+        }
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = { "true" })
+    void escapeProcessing_enabled(String escapeProcessing) throws Exception {
+        try (FBConnection connection = getConnectionViaDriverManager(PropertyNames.escapeProcessing, escapeProcessing)
+                .unwrap(FBConnection.class)) {
+            assertTrue(connection.isEscapeProcessing(), "Unexpected value for escapeProcessing");
+            try (FBStatement statement = connection.createStatement().unwrap(FBStatement.class)) {
+                assertTrue(statement.isEscapeProcessing(), "Unexpected statement default for escapeProcessing");
+                assertEquals("EXP(2)", statement.nativeSQL("{fn EXP(2)}"), "Expected JDBC escape to be transformed");
+
+                statement.setEscapeProcessing(false);
+
+                assertFalse(statement.isEscapeProcessing(), "Unexpected statement value for escapeProcessing");
+                assertEquals("{fn EXP(2)}", statement.nativeSQL("{fn EXP(2)}"),
+                        "Expected JDBC escape to not be transformed");
+            }
+        }
+    }
+
+    @Test
+    void escapeProcessing_disabled() throws Exception {
+        try (FBConnection connection = getConnectionViaDriverManager(PropertyNames.escapeProcessing, "false")
+                .unwrap(FBConnection.class)) {
+            assertFalse(connection.isEscapeProcessing(), "Unexpected value for escapeProcessing");
+            try (FBStatement statement = connection.createStatement().unwrap(FBStatement.class)) {
+                assertFalse(statement.isEscapeProcessing(), "Unexpected statement default for escapeProcessing");
+                assertEquals("{fn EXP(2)}", statement.nativeSQL("{fn EXP(2)}"),
+                        "Expected JDBC escape to not be transformed");
+
+                statement.setEscapeProcessing(true);
+
+                assertTrue(statement.isEscapeProcessing(), "Unexpected statement value for escapeProcessing");
+                assertEquals("EXP(2)", statement.nativeSQL("{fn EXP(2)}"), "Expected JDBC escape to be transformed");
+            }
         }
     }
 

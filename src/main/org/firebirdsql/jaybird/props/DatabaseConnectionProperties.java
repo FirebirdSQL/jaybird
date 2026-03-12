@@ -861,4 +861,36 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
         setProperty(PropertyNames.searchPath, searchPath);
     }
 
+    /**
+     * @return default escape processing behaviour of statements
+     * @see #setEscapeProcessing(boolean)
+     * @since 7
+     */
+    default boolean isEscapeProcessing() {
+        return getBooleanProperty(PropertyNames.escapeProcessing, PropertyConstants.DEFAULT_ESCAPE_PROCESSING);
+    }
+
+    /**
+     * Configures the default escape processing behaviour of statements created by a connection.
+     * <p>
+     * If not explicitly set, escape processing is enabled, as required by the JDBC specification. For plain
+     * {@code Statement} objects, the default established by this property can be overridden with
+     * {@link java.sql.Statement#setEscapeProcessing(boolean)}. For {@code PreparedStatement} and
+     * {@code CallableStatement} objects, this default can not be overridden as escape processing is performed during
+     * creation of the object.
+     * </p>
+     * <p>
+     * Escape processing refers to the parsing and transformation of JDBC escapes to database-specific syntax. Disabling
+     * escape processing may improve performance slightly. If statements actually do contain JDBC escapes, disabling it
+     * will result in syntax errors (e.g. Token unknown) when the statement is sent to the server.
+     * </p>
+     *
+     * @param escapeProcessing
+     *         {@code true} (the default) enable escape processing, {@code false} disable escape processing
+     * @since 7
+     */
+    default void setEscapeProcessing(boolean escapeProcessing) {
+        setBooleanProperty(PropertyNames.escapeProcessing, escapeProcessing);
+    }
+
 }

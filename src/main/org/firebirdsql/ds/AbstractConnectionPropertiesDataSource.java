@@ -531,6 +531,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setSearchPath(searchPath);
     }
 
+    @Override
+    public boolean isEscapeProcessing() {
+        return FirebirdConnectionProperties.super.isEscapeProcessing();
+    }
+
+    @Override
+    public void setEscapeProcessing(boolean escapeProcessing) {
+        FirebirdConnectionProperties.super.setEscapeProcessing(escapeProcessing);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated(since = "5")
     @Override

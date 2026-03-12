@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.props;
 
@@ -60,6 +60,9 @@ public final class PropertyConstants {
 
     public static final int DEFAULT_MAX_INLINE_BLOB_SIZE = 64 * 1024;
     public static final int DEFAULT_MAX_BLOB_CACHE_SIZE = 10 * 1024 * 1024;
+
+    // Default of true defined by JDBC (see Statement#setEscapeProcessing(boolean))
+    static final boolean DEFAULT_ESCAPE_PROCESSING = true;
 
     public static final int TIMEOUT_NOT_SET = -1;
     public static final int BUFFER_SIZE_NOT_SET = -1;
