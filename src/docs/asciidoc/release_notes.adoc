@@ -10,7 +10,7 @@
 :sectnums:
 :bc-version: 1.83
 :jna-version: 5.18.1
-:jaybird-fbclient-version: 5.0.2.0
+:jaybird-fbclient-version: 5.0.3.0
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
@@ -41,7 +41,7 @@ The following was fixed or changed since Jaybird 6.0.4:
 +
 Applications referencing this constant may need to be recompiled to function correctly with Jaybird 6.0.5 and higher.
 If you use Java 26 or higher, we recommend using `java.sql.Type.DECFLOAT` and `java.sql.JDBCType.DECFLOAT` instead.
-* JDBC 4.5 support: implemented methods `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier` on `FBConnection`, and added them to interface `FirebirdConnection` so for older Java versions (https://github.com/FirebirdSQL/jaybird/issues/908[#908])
+* JDBC 4.5 support: implemented methods `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier` on `FBConnection`, and added them to interface `FirebirdConnection` for access in older Java versions (https://github.com/FirebirdSQL/jaybird/issues/908[#908])
 +
 The methods of the same name in the `java.sql.Statement` implementations now call the methods on the connection.
 This results in two minor breaking changes:
@@ -51,7 +51,7 @@ This results in two minor breaking changes:
 * JDBC 4.5 support: implemented "`disable escape processing`" JDBC escape (`++{\...\}++`) (https://github.com/FirebirdSQL/jaybird/issues/909[#909])
 +
 See also <<jdbc-escape-disable-proc>>.
-* JDBC 4.5 support: `FBDatabaseMetaData.getJDBCMinorVersion()` should report 5 (for JDBC 4.5) on Java 25 and higher (https://github.com/FirebirdSQL/jaybird/issues/915[#915])
+* JDBC 4.5 support: `FBDatabaseMetaData.getJDBCMinorVersion()` should report 5 (for JDBC 4.5) on Java 26 and higher (https://github.com/FirebirdSQL/jaybird/issues/915[#915])
 * Fixed: JDBC escapes should not be parsed inside dialect 3 delimited identifiers or dialect 1 string literals (https://github.com/FirebirdSQL/jaybird/issues/921[#921])
 * Fixed: `IndexOutOfBoundsException` in `FBCachedBlob.getBytes(long, int)` for position or length beyond end of data (https://github.com/FirebirdSQL/jaybird/issues/923[#923])
 * Fixed: Using native client, password is limited to 255 bytes (https://github.com/FirebirdSQL/jaybird/issues/925[#925])
@@ -59,8 +59,8 @@ See also <<jdbc-escape-disable-proc>>.
 
 === Jaybird 6.0.4
 
-This release is not fully compatible with the upcoming JDBC 4.5 Specification to be introduced with Java 26.
-See <<jdbc45-compat>> for more information.
+This release is not fully compatible with the JDBC 4.5 Specification.
+For JDBC 4.5 support, upgrade to Jaybird 6.0.5 or higher.
 
 The following was fixed or changed since Jaybird 6.0.3:
 
@@ -295,6 +295,9 @@ Jaybird supports the following specifications:
 |===
 |Specification |Notes
 
+|JDBC 4.5
+|All JDBC 4.5 methods for features supported by Firebird.
+
 |JDBC 4.4
 |If a security manager is available, the driver still performs `SQLPermission` checks.
 
@@ -306,32 +309,10 @@ Jaybird supports the following specifications:
 |===
 
 [discrete#jdbc45-compat]
-==== Incompatibilities with upcoming JDBC 4.5 Specification
+==== Compatibility with the JDBC 4.5 Specification
 
-// TODO Revise/rename with state for Jaybird 6.0.5 once https://github.com/FirebirdSQL/jaybird/issues/907 is complete
-
-This section applies to Jaybird 6.0.4 and earlier.
-
-Java 26 (expected in March 2026) will introduce https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5^] (link to draft).
-Jaybird is not yet compatible with some of the specified changes.
-
-Specifically affected are:
-
-* Introduction of `java.sql.JDBCType.DECFLOAT` and `java.sql.Types.DECFLOAT` (value `2015`).
-+
-At this time, Jaybird still uses its own constants in `JaybirdType.DECFLOAT` and `JaybirdTypeCodes.DECFLOAT` with value `-6001`.
-This value will be changed to match the JDBC specified value, and the constants deprecated, in a future maintenance release of Jaybird.
-+
-Addressed in Jaybird 6.0.5.
-* Introduction of new methods on `java.sql.Connection` -- `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier`
-+
-The default implementation provided is not sufficient for Firebird, especially not when connecting to a dialect 1 database.
-For the time being, we recommend using the equivalent JDBC 4.3 methods (with the same name) on a `java.sql.Statement` instance of the connection.
-+
-Addressed in Jaybird 6.0.5.
-* The JDBC escape to selectively disable escape processing ([.nowrap]`++{\ ... \}++`) is not yet implemented.
-
-We plan to address these issues in Jaybird 5 and Jaybird 6 maintenance releases _after_ the release of Java 26 (tracked by https://github.com/FirebirdSQL/jaybird/issues/907[#907]).
+Java 26 (March 2026) introduced https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5^] (link to draft).
+Since Jaybird 6.0.5 (and Jaybird 5.0.12), Jaybird is compatible with the specified changes.
 
 [#support]
 == Support
