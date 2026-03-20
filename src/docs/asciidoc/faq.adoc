@@ -436,7 +436,7 @@ ChaCha64 wire encryption implementation (`chacha64-plugin-{jaybird6-full-version
 native and embedded protocol implementation using JNA (`jaybird-native-{jaybird6-full-version}.jar`)
 
 Jaybird 5 and older are not modularized.
-To ensure a stable module name, Jaybird 5 and older, since versions 2.2.14 and 3.0.3, declares the automatic module name `org.firebirdsql.jaybird`.
+To ensure a stable module name, Jaybird 5 and older, since versions 2.2.14 and 3.0.3, declare the automatic module name `org.firebirdsql.jaybird`.
 
 [#which-firebird-versions-are-supported]
 == Which Firebird versions are supported?
@@ -529,7 +529,7 @@ Apart from this FAQ, you can get additional information from:
 * {jaybird-manual}[Jaybird JDBC Driver Java Programmer's Manual] (HTML, https://firebirdsql.github.io/jaybird-manual/jaybird_manual.pdf[PDF version]) (covers Jaybird 4 and higher)
 * https://firebirdsql.org/en/jdbc-driver/[Firebird website: Downloads, Connectivity, JDBC Driver]
 * https://firebirdsql.org/en/devel-jdbc-driver/[Firebird website: Development, JDBC Driver]
-* https://github.com/FirebirdSQL/jaybird/wiki/[Jaybird wiki]
+* https://github.com/FirebirdSQL/jaybird/wiki/[Jaybird wiki] ("`archived`")
 
 For version specific details, consult the release notes
 
@@ -912,6 +912,7 @@ Actively supported Jaybird versions -- Jaybird 5 and Jaybird 6 -- support the fo
 - https://jcp.org/aboutJava/communityprocess/mrel/jsr221/index2.html[JDBC 4.2^] (Java 8) -- Jaybird 5 onlyfootnote:[Jaybird 6 doesn't support JDBC 4.2 as it doesn't support Java 8, but everything defined in JDBC 4.2 is also defined in JDBC 4.3.]
 - https://jcp.org/aboutJava/communityprocess/mrel/jsr221/index3.html[JDBC 4.3^] (Java 9 - Java 23)
 - https://jcp.org/aboutJava/communityprocess/mrel/jsr221/index4.html[JDBC 4.4^] (Java 24 - Java 25) -- see caveats in <<jdbc44-support>>
+- https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5^] (link to draft) (Java 26 and higher) -- see also <<jdbc45-support>>
 
 [#jdbc44-support]
 == Is JDBC 4.4 supported?
@@ -935,32 +936,23 @@ This is fixed in Jaybird 6.0.3 and higher (see https://github.com/FirebirdSQL/ja
 [#jdbc45-support]
 == Is JDBC 4.5 supported?
 
-Not yet -- for Jaybird 5.0.11 and older, and Jaybird 6.0.4 and older. +
-No -- for Jaybird 4 and older.
+Yes, https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5^] (link to draft) is supported by Jaybird 5.0.12 and higher and Jaybird 6.0.5 and higher.
+No -- for Jaybird 4 and older, and Jaybird 5.0.11 and older and Jaybird 6.0.4 and older.
 
-Java 26 (expected in March 2026) will introduce https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5^] (link to draft).
-Jaybird is not yet compatible with some of the specified changes.
+JDBC 4.5 was introduced with Java 26.
 
-Specifically affected are:
+Notable changes -- for Jaybird and Firebird -- are:
 
 * Introduction of `java.sql.JDBCType.DECFLOAT` and `java.sql.Types.DECFLOAT` (value `2015`).
-+
-At this time, Jaybird still uses its own constants in `JaybirdType.DECFLOAT` and `JaybirdTypeCodes.DECFLOAT` with value `-6001`.
-This value will be changed to match the JDBC specified value, and the constants deprecated, in a future maintenance release of Jaybird.
 * Introduction of new methods on `java.sql.Connection` -- `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier`
-+
-The default implementation provided is not sufficient for Firebird, especially not when connecting to a dialect 1 database.
-For the time being, we recommend using the equivalent JDBC 4.3 methods (with the same name) on a `java.sql.Statement` instance of the connection.
 * The JDBC escape to selectively disable escape processing ([.nowrap]`++{\ ... \}++`) is not yet implemented.
-
-We plan to address these issues in Jaybird 5 and Jaybird 6 maintenance releases _after_ the release of Java 26 (tracked by https://github.com/FirebirdSQL/jaybird/issues/907[#907]).
 
 [#how-much-of-jdbc-is-supported-by-jaybird]
 == How much of JDBC is supported by Jaybird?
 
 *WARNING* The information in this section is not 100% up-to-date
 
-Jaybird 6 follows the https://jcp.org/aboutJava/communityprocess/mrel/jsr221/index3.html[JDBC 4.3 Specification^] and https://jcp.org/aboutJava/communityprocess/mrel/jsr221/index4.html[JDBC 4.4 Specification^]footnote:[JDBC 4.4 was only a Java/javadoc change, and has no published Specification document, refer to JDBC 4.3 for that] with some features and methods not implemented as they are not supported by Firebird.
+Jaybird 6 follows the https://jcp.org/aboutJava/communityprocess/mrel/jsr221/index3.html[JDBC 4.3 Specification^], https://jcp.org/aboutJava/communityprocess/mrel/jsr221/index4.html[JDBC 4.4 Specification^]footnote:[JDBC 4.4 was only a Java/javadoc change, and has no published Specification document, refer to JDBC 4.3 for that], and https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5 Specification^]footnote:[The full specification document has not been published yet] with some features and methods not implemented as they are not supported by Firebird.
 
 Implemented features:
 
@@ -970,7 +962,6 @@ Implemented features:
 * `DataSource` implementation `org.firebirdsql.ds.FBSimpleDataSource` (no pooling).
 * `ConnectionPoolDataSource` implementation `org.firebirdsql.ds.FBConnectionPoolDataSource` (please be aware, contrary to suggested by the naming, this does not provide connection pooling, this is intended as a factory of connections for use by a connection pool, e.g. as provided by a Java EE/Jakarta EE application server)
 * Complete access to all Firebird database parameter block and transaction parameter block settings.
-* JMX mbean for database management (so far just database create and drop).
 
 [#what-parts-of-jdbc-are-not-supported-by-jaybird]
 == What parts of JDBC are NOT supported by Jaybird?
@@ -1016,7 +1007,6 @@ The following methods are implemented, but do not work as expected:
 
 * `java.sql.Statement`
 ** `get/setMaxFieldSize` does nothing (support will be introduced in Jaybird 7)
-** `get/setQueryTimeout` supported since Jaybird 4 with Firebird 4.0 and higher
 * `java.sql.PreparedStatement`
 ** `setObject(index,object,type)` This method is implemented but behaves as `setObject(index,object)`
 ** `setObject(index,object,type,scaleOrLength)` This method is implemented but behaves as `setObject(index,object)`, except if `object` is a `Reader` or `InputStream`, then it is directed to the `setBinaryStream` or `setCharacterStream` method accepting a length.
