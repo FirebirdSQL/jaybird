@@ -1684,7 +1684,7 @@ We have avoided most of the breaking changes that we made in Jaybird 7, but the 
 +
 If you do continue to override `sendExecute(int, RowValue)`, make sure the transmit lock covers the entire message.
 
-Other breaking changes to the internal API in Jaybird 6.0.4 unrelated to the transmit lock:
+Other breaking changes to the internal API in Jaybird 5.0.11 unrelated to the transmit lock:
 
 * `WireConnection`
 ** `readNextOperation` now also throws `SQLException` -- if the connection is closed.
