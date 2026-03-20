@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2020-2025 Mark Rotteveel
+SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 SPDX-License-Identifier: LicenseRef-PDL-1.0
 -->
 Publishing
@@ -8,7 +8,7 @@ Publishing
 To publish to Maven use
 
 ```
-gradlew clean dist assemble publish -PcredentialsPassphrase=<credentials password>
+./gradlew clean dist assemble publish -PbuildProfile={java8|java11} -PcredentialsPassphrase=<credentials password>
 ```
 Where `<credentials password>` is the password used to add the credentials (see
 also below).
@@ -33,6 +33,8 @@ signing.secretKeyRingFile=<path to your secring.gpg>
 centralUsername=<Central Portal usertoken name>
 ```
 
+See also [Gradle: The Signing Plugin](https://docs.gradle.org/current/userguide/signing_plugin.html).
+
 In addition, you need to set the following credentials
 
 ```
@@ -52,7 +54,7 @@ comply with the terms of this License. A copy of the License is available at
 
 The Original Documentation is "Publishing".
 The Initial Writer of the Original Documentation is Mark Rotteveel,
-Copyright © 2020-2025. All Rights Reserved. (Initial Writer contact(s):
+Copyright © 2020-2026. All Rights Reserved. (Initial Writer contact(s):
 mark (at) lawinegevaar (dot) nl).
 
 <!--
