@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2005 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.impl;
 
@@ -20,7 +20,8 @@ import java.util.List;
  * </p>
  * <p>
  * Additional protocols can be registered by creating a service definition in
- * {@code META-INF/services/org.firebirdsql.gds.impl.GDSFactoryPlugin}.
+ * {@code META-INF/services/org.firebirdsql.gds.impl.GDSFactoryPlugin} <b>and</b> defining a {@code provides} entry in
+ * {@code module-info.java}.
  * </p>
  */
 public interface GDSFactoryPlugin {
@@ -61,9 +62,9 @@ public interface GDSFactoryPlugin {
     Class<?> getConnectionClass();
 
     /**
-     * The default protocol prefix for this type (for example, for PURE_JAVA, it's {@code "jdbc:firebirdsql:"}.
+     * The default protocol prefix for this type (for example, for PURE_JAVA, it's {@code "jdbc:firebirdsql:"}).
      * <p>
-     * The protocol prefix must be distinct from other plugins.
+     * The protocol prefix <b>must</b> be distinct from other plugins.
      * </p>
      *
      * @return default protocol name
@@ -75,7 +76,7 @@ public interface GDSFactoryPlugin {
      * supported protocols {@code ["jdbc:firebirdsql:java:", "jdbc:firebird:java:", "jdbc:firebird:", "jdbc:firebirdsql:"]}.
      * <p>
      * In general, one protocol should suffice. An exception can be made if the default is
-     * {@code "jdbc:firebirdsql:subtype:"} to also define {@code "jdbc:firebird:subtype"}.
+     * {@code "jdbc:firebirdsql:subtype:"} to also define {@code "jdbc:firebird:subtype:"} (or vice versa).
      * </p>
      *
      * @return list of type aliases (must include the value of {@link #getDefaultProtocol()})

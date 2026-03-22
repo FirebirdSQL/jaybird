@@ -15,16 +15,15 @@ import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.jaybird.util.PluginLoader;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.System.Logger.Level;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.Map.Entry;
 
 /**
- * The class {@code GDSFactory} exists to provide a way to obtain objects
- * implementing GDS and Clumplet.
+ * The class {@code GDSFactory} exists to provide a way to obtain objects implementing {@link GDSFactoryPlugin}.
  *
  * @author David Jencks
  * @author Mark Rotteveel
@@ -39,16 +38,28 @@ public final class GDSFactory {
      */
     private static final TreeMap<String, GDSFactoryPlugin> jdbcUrlToPluginMap = new TreeMap<>(Comparator.reverseOrder());
 
-    private static @Nullable GDSType defaultType;
+    private static final GDSType defaultType;
     static {
         PluginLoader.findPlugins(GDSFactoryPlugin.class, List.of("org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin"))
                 .forEach(GDSFactory::registerPlugin);
 
         GDSType pureJavaType = GDSType.getType(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME);
-        // TODO Shouldn't this cause a hard failure instead, or fallback to a different plugin?
-        if (pureJavaType != null && defaultType != pureJavaType && typeToPluginMap.containsKey(pureJavaType)) {
+        if (pureJavaType != null && typeToPluginMap.containsKey(pureJavaType)) {
             // ensure defaultType is PURE_JAVA if that plugin was registered
             defaultType = pureJavaType;
+        } else {
+            // fallback to any other type (we don't expect this to happen in practice)
+            var log = System.getLogger(GDSFactory.class.getName());
+            log.log(Level.WARNING,
+                    "The PURE_JAVA GDSType was not loaded, trying fallback to a different GDSType as default");
+            Optional<GDSType> typeOpt = typeToPluginMap.keySet().stream().findAny();
+            if (typeOpt.isPresent()) {
+                defaultType = typeOpt.get();
+                log.log(Level.INFO, "Fallback to GDSType {0}", defaultType);
+            } else {
+                log.log(Level.ERROR, "No GDSType found as fallback");
+                throw new IllegalStateException("Jaybird JDBC driver did not load any GDSFactoryPlugin");
+            }
         }
     }
 
@@ -73,9 +84,6 @@ public final class GDSFactory {
         GDSType type = GDSType.registerType(plugin.getTypeName());
         typeToPluginMap.put(type, plugin);
 
-        // set the default type (see also the static initializer which ensures PURE_JAVA will be default if available)
-        if (defaultType == null) defaultType = type;
-
         // register aliases
         for (String alias : plugin.getTypeAliasList()) {
             GDSType aliasType = GDSType.registerType(alias);
@@ -93,12 +101,10 @@ public final class GDSFactory {
     }
 
     /**
-     * Get default GDS type.
+     * Get the default GDS type.
      *
-     * @return instance of {@link GDSType}; can be {@code null} if the pure Java implementation was not found
+     * @return instance of {@link GDSType}; cannot be {@code null}
      */
-    // TODO The fact this can be null is highly questionable; find a way to "fix" that
-    @NullUnmarked
     public static GDSType getDefaultGDSType() {
         return defaultType;
     }
