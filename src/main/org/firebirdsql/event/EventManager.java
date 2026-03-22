@@ -6,7 +6,6 @@ package org.firebirdsql.event;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
@@ -19,7 +18,6 @@ import java.sql.SQLException;
  * @author Mark Rotteveel
  */
 @SuppressWarnings("unused")
-@NullMarked
 public interface EventManager extends AttachmentProperties, AutoCloseable {
 
     /**

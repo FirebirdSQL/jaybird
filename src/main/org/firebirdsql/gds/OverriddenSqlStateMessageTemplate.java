@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
-import org.jspecify.annotations.NullMarked;
-
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jna.fbclient;
 
@@ -33,7 +33,7 @@ public interface FbClientLibrary extends com.sun.jna.Library {
     /**
      * FbShutdown callback.
      * <p>
-     * <b>Important:</b> On windows, use {@link org.firebirdsql.jna.fbclient.WinFbClientLibrary.FbShutdownStdCallback}
+     * <b>Important:</b> On Windows, use {@link org.firebirdsql.jna.fbclient.WinFbClientLibrary.FbShutdownStdCallback}
      * </p>
      */
 	interface FbShutdownCallback extends Callback {
@@ -42,7 +42,7 @@ public interface FbClientLibrary extends com.sun.jna.Library {
     /**
      * IscEvent callback.
      * <p>
-     * <b>Important:</b> On windows, use {@link org.firebirdsql.jna.fbclient.WinFbClientLibrary.IscEventStdCallback}
+     * <b>Important:</b> On Windows, use {@link org.firebirdsql.jna.fbclient.WinFbClientLibrary.IscEventStdCallback}
      * </p>
      */
 	interface IscEventCallback extends Callback {

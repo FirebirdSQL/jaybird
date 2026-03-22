@@ -7,8 +7,8 @@ package org.firebirdsql.jna.embedded.spi;
  * <p>
  * Implementations that provide a Firebird Embedded library need to implement this interface to provide the necessary
  * information to identify if it is a suitable implementation. The implementations of this interface need to be listed
- * in {@code META-INF/services/org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedProvider} inside the jar that provides
- * the implementation.
+ * in {@code META-INF/services/org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedProvider} <b>and</b> define
+ * a {@code provides} entry in its {@code module-info.java}inside the jar that provides the implementation.
  * </p>
  * <p>
  * For detailed requirements, see <a href="https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-05-firebird-embedded-locator-service-provider.md">jdp-2020-05:
@@ -60,7 +60,7 @@ public interface FirebirdEmbeddedProvider {
      * Firebird instance installed on the system.
      * </p>
      * <p>
-     * If the provider has to perform initialization before the embedded library is usable (eg copy resources from the
+     * If the provider has to perform initialization before the embedded library is usable (e.g. copy resources from the
      * classpath to a temporary location), this must be done in this method.
      * </p>
      * <p>

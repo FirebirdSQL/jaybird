@@ -264,9 +264,9 @@ public final class EncodingFactory implements IEncodingFactory {
                 // Normal encoding definition
                 return encodingDefinition;
             } else if (charset != null) {
-                /* Construct non-standard combination of Firebird encoding + Java character set
-                 * This allows for special purpose combinations like Firebird ISO8859_3 with Java ISO-8859-1
-                 * But is mostly intended for using Firebird NONE with a specific java character set
+                /* Construct non-standard combination of Firebird encoding + Java character set. This allows for special
+                 * purpose combinations like Firebird ISO8859_3 with Java ISO-8859-1. It is mostly intended for using
+                 * Firebird NONE with a specific java character set.
                  */
                 return new DefaultEncodingDefinition(encodingDefinition.getFirebirdEncodingName(), charset, encodingDefinition.getMaxBytesPerChar(),
                         encodingDefinition.getFirebirdCharacterSetId(), false);
@@ -283,12 +283,6 @@ public final class EncodingFactory implements IEncodingFactory {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This implementation returns an instance of {@link ConnectionEncodingFactory}.
-     * </p>
-     */
     @Override
     public IEncodingFactory withDefaultEncodingDefinition(@Nullable EncodingDefinition encodingDefinition) {
         EncodingDefinition resolvedEncodingDefinition =
@@ -299,12 +293,6 @@ public final class EncodingFactory implements IEncodingFactory {
                 def -> new ConnectionEncodingFactory(this, def));
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This implementation returns an instance of {@link ConnectionEncodingFactory}.
-     * </p>
-     */
     @Override
     public IEncodingFactory withDefaultEncodingDefinition(Charset charset) {
         return withDefaultEncodingDefinition(getEncodingDefinitionByCharset(charset));

@@ -23,18 +23,20 @@ import java.util.function.Function;
 public interface IEncodingFactory {
 
     /**
-     * @return The {@link Encoding} for {@link java.nio.charset.Charset#defaultCharset()}.
+     * @return The {@link Encoding} for {@link java.nio.charset.Charset#defaultCharset()} <em>or</em> the connection
+     * character set.
      */
     Encoding getDefaultEncoding();
 
     /**
-     * Returns the {@link EncodingDefinition} for the default platform character set.
+     * Returns the {@link EncodingDefinition} for {@link #getDefaultEncoding()}.
      * <p>
      * If the default character set is not supported by Jaybird, an instance of EncodingDefinition should be returned
      * with Firebird encoding name {@code "NONE"}.
      * </p>
      *
-     * @return The {@link EncodingDefinition} for {@link java.nio.charset.Charset#defaultCharset()}.
+     * @return The {@link EncodingDefinition} for {@link java.nio.charset.Charset#defaultCharset()} <em>or</em>
+     * the connection character set.
      */
     EncodingDefinition getDefaultEncodingDefinition();
 

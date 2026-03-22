@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2020-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jna.embedded.spi;
 
@@ -7,7 +7,7 @@ import java.nio.file.Path;
 /**
  * Identifies a Firebird Embedded library that Jaybird can use.
  * <p>
- * It is recommend to implement {@link DisposableFirebirdEmbeddedLibrary} for implementations that require additional
+ * It is recommended to implement {@link DisposableFirebirdEmbeddedLibrary} for implementations that require additional
  * cleanup on exit.
  * </p>
  *

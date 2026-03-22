@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2013-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.encodings;
 
@@ -9,9 +9,10 @@ import java.util.List;
  * <p>
  * Jaybird uses the {@link java.util.ServiceLoader} mechanism to load the EncodingSet. An implementation must
  * provide a no-arg constructor, and it must be listed in {@code META-INF/services/org.firebirdsql.encodings.EncodingSet}
+ * <b>and</b> define a {@code provides} entry in {@code module-info.java}.
  * </p>
  * <p>
- * Providing an EncodingSet in general is not necessary, as Jaybird provides a default. However if Jaybird does not
+ * Providing an EncodingSet in general is not necessary, as Jaybird provides a default. However, if Jaybird does not
  * include an encoding, or the current mapping from Firebird to Java (or reverse) doesn't match your requirements, then
  * you can use this mechanism to override it.
  * </p>

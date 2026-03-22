@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds;
 
@@ -25,7 +25,7 @@ public final class VaxEncoding {
     /**
      * Reads Vax style integers from {@code buf}, starting at {@code off} and reading for {@code len} bytes.
      * <p>
-     * This method is useful for lengths up to 4 bytes (i.e. normal Java integers ({@code int}). For larger lengths it
+     * This method is useful for lengths up to 4 bytes (i.e. normal Java integers ({@code int})). For larger lengths it
      * will return {@code 0}. Use {@link #iscVaxLong(byte[], int, int)} for reading values with length up to 8 bytes.
      * For decoding 2 byte integers, use {@link #iscVaxInteger2(byte[], int)} for optimal performance.
      * </p>
