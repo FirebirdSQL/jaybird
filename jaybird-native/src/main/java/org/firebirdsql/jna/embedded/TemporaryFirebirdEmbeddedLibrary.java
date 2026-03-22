@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2020-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2020-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jna.embedded;
 
@@ -12,6 +12,7 @@ import java.nio.file.Path;
  * @author Mark Rotteveel
  * @since 5
  */
+@SuppressWarnings("unused")
 public final class TemporaryFirebirdEmbeddedLibrary implements FirebirdEmbeddedLibrary {
 
     private final Path entryPointPath;
