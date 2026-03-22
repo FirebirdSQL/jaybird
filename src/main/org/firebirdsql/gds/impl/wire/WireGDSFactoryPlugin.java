@@ -17,7 +17,7 @@ public final class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     private static final List<String> TYPE_ALIASES = List.of("TYPE4");
     private static final String DEFAULT_PROTOCOL = "jdbc:firebirdsql:";
     private static final List<String> JDBC_PROTOCOLS = List.of(
-            "jdbc:firebirdsql:java:", "jdbc:firebird:java:", "jdbc:firebird:", DEFAULT_PROTOCOL);
+            "jdbc:firebirdsql:java:", DEFAULT_PROTOCOL, "jdbc:firebird:java:", "jdbc:firebird:");
 
     @Override
     public String getPluginName() {
