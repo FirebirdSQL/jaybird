@@ -29,11 +29,6 @@ public final class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     }
 
     @Override
-    public List<String> getTypeAliasList() {
-        return List.of();
-    }
-
-    @Override
     public List<String> getSupportedProtocolList() {
         return JDBC_PROTOCOLS;
     }

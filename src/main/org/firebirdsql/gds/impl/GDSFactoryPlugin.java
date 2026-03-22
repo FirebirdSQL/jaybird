@@ -3,8 +3,11 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.gds.impl;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.util.InternalApi;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
@@ -39,15 +42,20 @@ public interface GDSFactoryPlugin {
     String getTypeName();
 
     /**
-     * List of type aliases (in addition to {@link #getTypeName()}), for example the PURE_JAVA type has alias TYPE4.
+     * List of type aliases (in addition to {@link #getTypeName()}). For example, the PURE_JAVA type has alias TYPE4.
      * <p>
      * In general, we recommend not to define aliases for types, but instead only have a {@code typeName}.
+     * </p>
+     * <p>
+     * The default implementation returns an empty list ({@code List.of()}).
      * </p>
      *
      * @return list of type aliases (empty list if there are no aliases)
      * @since 6
      */
-    List<String> getTypeAliasList();
+    default List<String> getTypeAliasList() {
+        return List.of();
+    }
 
     /**
      * Class used for connection.
@@ -56,10 +64,15 @@ public interface GDSFactoryPlugin {
      * Currently, the Jaybird implementation also requires that the class is {@link org.firebirdsql.jdbc.FBConnection}
      * or a subclass. This may change in the future.
      * </p>
+     * <p>
+     * The default implementation returns {@code FBConnection.class}.
+     * </p>
      *
      * @return class for connection
      */
-    Class<?> getConnectionClass();
+    default Class<?> getConnectionClass() {
+        return FBConnection.class;
+    }
 
     /**
      * The default protocol prefix for this type (for example, for PURE_JAVA, it's {@code "jdbc:firebirdsql:"}).
@@ -78,8 +91,13 @@ public interface GDSFactoryPlugin {
      * In general, one protocol should suffice. An exception can be made if the default is
      * {@code "jdbc:firebirdsql:subtype:"} to also define {@code "jdbc:firebird:subtype:"} (or vice versa).
      * </p>
+     * <p>
+     * If a protocol is a prefix of another protocol, it should be listed after that protocol. This is not enforced,
+     * but failure to do so will result in the default implementation of {@link #getDatabasePath(String)} to produce
+     * the wrong value.
+     * </p>
      *
-     * @return list of type aliases (must include the value of {@link #getDefaultProtocol()})
+     * @return list of JDBC protocol prefixes (must include the value of {@link #getDefaultProtocol()})
      * @since 6
      */
     List<String> getSupportedProtocolList();
@@ -101,5 +119,33 @@ public interface GDSFactoryPlugin {
                 portNumber != PropertyConstants.DEFAULT_PORT ? portNumber : null, dbAttachInfo.attachObjectName());
     }
 
-    String getDatabasePath(String jdbcUrl) throws SQLException;
+    /**
+     * Extracts the database <em>path</em> from a JDBC URL.
+     * <p>
+     * The default implementation returns the URL without the JDBC protocol prefix. This default implementation relies
+     * on order of protocols returned by {@link #getSupportedProtocolList()}.
+     * </p>
+     * <p>
+     * Implementations are free to return what they want, as long as their connection creation can handle it
+     * appropriately. However, we recommend to just return the remainder of the JDBC URL without the protocol prefix.
+     * </p>
+     *
+     * @param jdbcUrl
+     *         JDBC URL <em>without</em> connection properties
+     * @return database path
+     * @throws SQLException
+     *         if the offered JDBC URL is not supported by this plugin
+     */
+    default String getDatabasePath(String jdbcUrl) throws SQLException {
+        for (String protocol : getSupportedProtocolList()) {
+            if (jdbcUrl.startsWith(protocol)) {
+                return jdbcUrl.substring(protocol.length());
+            }
+        }
+
+        throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                .messageParameter(jdbcUrl, "JDBC URL not supported by protocol: " + getTypeName())
+                .toSQLException();
+    }
+
 }

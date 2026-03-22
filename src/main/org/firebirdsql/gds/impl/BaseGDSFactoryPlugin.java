@@ -6,7 +6,6 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.jdbc.FBConnection;
 import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 
@@ -24,26 +23,8 @@ import java.sql.SQLException;
 public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
 
     @Override
-    public Class<?> getConnectionClass() {
-        return FBConnection.class;
-    }
-
-    @Override
     public String getDefaultProtocol() {
         return getSupportedProtocolList().get(0);
-    }
-
-    @Override
-    public String getDatabasePath(String jdbcUrl) throws SQLException {
-        for (String protocol : getSupportedProtocolList()) {
-            if (jdbcUrl.startsWith(protocol)) {
-                return jdbcUrl.substring(protocol.length());
-            }
-        }
-
-        throw FbExceptionBuilder.forNonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                .messageParameter(jdbcUrl, "JDBC URL not supported by protocol: " + getTypeName())
-                .toSQLException();
     }
 
     /**
@@ -64,15 +45,15 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
 
     @Override
     @NullUnmarked
-    public String getDatabasePath(@Nullable String server, @Nullable Integer port, String path)
-            throws SQLException {
+    public String getDatabasePath(@Nullable String server, @Nullable Integer port, String path) throws SQLException {
         requirePath(path);
 
         if (server == null) {
             return path;
         }
 
-        var sb = new StringBuilder();
+        // 9: length of //:12345/
+        var sb = new StringBuilder(9 + server.length() + path.length());
         sb.append("//").append(server);
         if (port != null) {
             sb.append(':').append(port.intValue());
