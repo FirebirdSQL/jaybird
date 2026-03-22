@@ -26,6 +26,7 @@ public final class TransactionHelper {
      *         transaction to check
      * @throws SQLException
      *         when {@code transaction} is {@code null}, or its state is not active
+     * @see #requireActiveTransaction(FbTransaction)
      */
     public static void checkTransactionActive(@Nullable FbTransaction transaction) throws SQLException {
         checkTransactionActive(transaction, JaybirdErrorCodes.jb_noActiveTransaction);
@@ -40,11 +41,45 @@ public final class TransactionHelper {
      *         Firebird error code to use for generating the exception message
      * @throws SQLException
      *         when {@code transaction} is {@code null}, or its state is not active
+     * @see #requireActiveTransaction(FbTransaction, int)
      */
-    public static void checkTransactionActive(@Nullable FbTransaction transaction, final int fbErrorCode) throws SQLException {
+    public static void checkTransactionActive(@Nullable FbTransaction transaction, int fbErrorCode)
+            throws SQLException {
         if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
             throw FbExceptionBuilder.toNonTransientException(fbErrorCode);
         }
+    }
+
+    /**
+     * Checks if the transaction is {@link TransactionState#ACTIVE} and returns it.
+     *
+     * @param transaction
+     *         transaction to check
+     * @return {@code transaction} if it's active
+     * @throws SQLException
+     *         when {@code transaction} is {@code null}, or its state is not active
+     * @see #checkTransactionActive(FbTransaction)
+     */
+    public static <T extends FbTransaction> T requireActiveTransaction(@Nullable T transaction) throws SQLException {
+        return requireActiveTransaction(transaction, JaybirdErrorCodes.jb_noActiveTransaction);
+    }
+
+    /**
+     * Checks if the transaction is {@link TransactionState#ACTIVE} and returns it.
+     *
+     * @param transaction
+     *         transaction to check
+     * @param fbErrorCode
+     *         Firebird error code to use for generating the exception message
+     * @return {@code transaction} if it's active
+     * @throws SQLException
+     *         when {@code transaction} is {@code null}, or its state is not active
+     * @see #checkTransactionActive(FbTransaction, int)
+     */
+    public static <T extends FbTransaction> T requireActiveTransaction(@Nullable T transaction, int fbErrorCode)
+            throws SQLException {
+        checkTransactionActive(transaction, fbErrorCode);
+        return transaction;
     }
 
     /**

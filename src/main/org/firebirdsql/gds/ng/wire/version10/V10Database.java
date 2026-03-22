@@ -22,6 +22,7 @@ import java.sql.SQLFeatureNotSupportedException;
 
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_executeImmediateRequiresTransactionAttached;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidTransactionHandleType;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
@@ -415,6 +416,10 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             if (isAttached()) {
                 if (transaction == null) {
                     throw FbExceptionBuilder.toException(jb_executeImmediateRequiresTransactionAttached);
+                } else if (!(transaction instanceof FbWireTransaction)) {
+                    throw FbExceptionBuilder.forNonTransientException(jb_invalidTransactionHandleType)
+                            .messageParameter(transaction.getClass())
+                            .toSQLException();
                 }
                 checkTransactionActive(transaction);
             } else if (transaction != null) {

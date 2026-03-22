@@ -761,9 +761,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @since 7
      */
     protected FbTransaction requireActiveTransaction() throws SQLException {
-        FbTransaction transaction = getTransaction();
-        TransactionHelper.checkTransactionActive(transaction);
-        return transaction;
+        return TransactionHelper.requireActiveTransaction(getTransaction());
     }
 
     /**

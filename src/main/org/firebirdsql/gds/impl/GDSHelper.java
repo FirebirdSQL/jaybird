@@ -16,6 +16,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static java.util.Objects.requireNonNull;
+import static org.firebirdsql.gds.ISCConstants.isc_segstr_no_trans;
 import static org.firebirdsql.jaybird.props.PropertyConstants.SESSION_TIME_ZONE_SERVER;
 
 /**
@@ -41,6 +42,11 @@ public final class GDSHelper {
         try (LockCloseable ignored = withLock()) {
             return transaction;
         }
+    }
+
+    private FbTransaction requireActiveTransaction(@SuppressWarnings("SameParameterValue") int errorCode)
+            throws SQLException {
+        return TransactionHelper.requireActiveTransaction(getCurrentTransaction(), errorCode);
     }
 
     public void clearCurrentTransaction() {
@@ -118,7 +124,7 @@ public final class GDSHelper {
      */
     @SuppressWarnings("java:S2095")
     public FbBlob openBlob(long blobId, BlobConfig blobConfig) throws SQLException {
-        FbBlob blob = database.createBlobForInput(getCurrentTransaction(), blobConfig, blobId);
+        FbBlob blob = database.createBlobForInput(requireActiveTransaction(isc_segstr_no_trans), blobConfig, blobId);
         blob.open();
         return blob;
     }
@@ -133,7 +139,7 @@ public final class GDSHelper {
      */
     @SuppressWarnings("java:S2095")
     public FbBlob createBlob(BlobConfig blobConfig) throws SQLException {
-        FbBlob blob = database.createBlobForOutput(getCurrentTransaction(), blobConfig);
+        FbBlob blob = database.createBlobForOutput(requireActiveTransaction(isc_segstr_no_trans), blobConfig);
         blob.open();
         return blob;
     }

@@ -428,9 +428,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      * @since 7
      */
     protected FbTransaction requireActiveTransaction() throws SQLException {
-        FbTransaction transaction = getTransaction();
-        TransactionHelper.checkTransactionActive(transaction, ISCConstants.isc_segstr_no_trans);
-        return transaction;
+        return TransactionHelper.requireActiveTransaction(getTransaction(), ISCConstants.isc_segstr_no_trans);
     }
 
     protected final void clearTransaction() {

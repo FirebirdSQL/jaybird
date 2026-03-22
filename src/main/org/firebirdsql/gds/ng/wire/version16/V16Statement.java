@@ -11,7 +11,6 @@ import org.firebirdsql.gds.ng.BatchCompletion;
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.FbBatchConfig;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
@@ -21,6 +20,7 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.BatchCompletionResponse;
 import org.firebirdsql.gds.ng.wire.DeferredAction;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
+import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.firebirdsql.gds.ng.wire.Response;
 import org.firebirdsql.gds.ng.wire.version13.V13Statement;
 import org.firebirdsql.jaybird.util.CollectionUtils;
@@ -37,7 +37,6 @@ import java.util.function.Function;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_batch_cancel;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_batch_rls;
-import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
  * @author Mark Rotteveel
@@ -271,9 +270,7 @@ public class V16Statement extends V13Statement {
     public BatchCompletion batchExecute() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkStatementValid();
-            FbTransaction transaction = getTransaction();
-            checkTransactionActive(transaction);
-            sendBatchExec(transaction);
+            sendBatchExec(requireActiveTransaction());
             return receiveBatchExecResponse();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -281,7 +278,7 @@ public class V16Statement extends V13Statement {
         }
     }
 
-    private void sendBatchExec(FbTransaction transaction) throws SQLException {
+    private void sendBatchExec(FbWireTransaction transaction) throws SQLException {
         try {
             withTransmitLock(xdrOut -> {
                 sendBatchExecMsg(xdrOut, transaction);
@@ -307,7 +304,7 @@ public class V16Statement extends V13Statement {
      *         for errors writing to the output stream
      * @since 7
      */
-    protected void sendBatchExecMsg(XdrOutputStream xdrOut, FbTransaction transaction) throws IOException {
+    protected void sendBatchExecMsg(XdrOutputStream xdrOut, FbWireTransaction transaction) throws IOException {
         xdrOut.writeInt(WireProtocolConstants.op_batch_exec);
         xdrOut.writeInt(getHandle());
         xdrOut.writeInt(transaction.getHandle());
