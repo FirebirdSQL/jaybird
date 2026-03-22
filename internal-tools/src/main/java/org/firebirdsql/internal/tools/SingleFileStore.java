@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.internal.tools;
 
@@ -12,8 +12,10 @@ import static org.firebirdsql.internal.tools.MessageConverter.toJaybirdMessageFo
 /**
  * Uses a single file for error messages, and a single file for SQLstates.
  * <p>
- * This is the format used by Jaybird.
+ * This is the format used by Jaybird 5 and older.
  * </p>
+ *
+ * @since 5
  */
 class SingleFileStore extends MessageStore {
 

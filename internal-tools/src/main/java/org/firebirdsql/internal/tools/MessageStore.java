@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2004-2008 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2018-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2018-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.internal.tools;
 
@@ -14,6 +14,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * API for storing messages.
+ *
+ * @since 5
  */
 abstract class MessageStore implements FirebirdErrorStore {
 
@@ -43,21 +45,6 @@ abstract class MessageStore implements FirebirdErrorStore {
     abstract void addMessage(Facility facility, int number, String message);
 
     /**
-     * Add a message.
-     *
-     * @param code
-     *         code of the facility
-     * @param number
-     *         error number within the facility
-     * @param message
-     *         message
-     */
-    final void addMessage(int code, int number, String message) {
-        Facility facility = Facility.of(code);
-        addMessage(facility, number, message);
-    }
-
-    /**
      * Add a SQLSTATE.
      *
      * @param facility
@@ -68,21 +55,6 @@ abstract class MessageStore implements FirebirdErrorStore {
      *         SQLSTATE
      */
     abstract void addSqlState(Facility facility, int number, String sqlState);
-
-    /**
-     * Add a SQLSTATE.
-     *
-     * @param code
-     *         facility
-     * @param number
-     *         error number within the facility
-     * @param sqlState
-     *         SQLSTATE
-     */
-    final void addSqlState(int code, int number, String sqlState) {
-        Facility facility = Facility.of(code);
-        addSqlState(facility, number, sqlState);
-    }
 
     /**
      * Adds a symbol name (constant) for an error code.

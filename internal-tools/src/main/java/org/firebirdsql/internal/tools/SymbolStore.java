@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2022-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.internal.tools;
 
@@ -9,10 +9,11 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Common implementation for associating symbol names and their error code and writing it out suitable for copy/past
+ * Common implementation for associating symbol names and their error code and writing it out suitable for copy/paste
  * into ISCConstants.java.
  *
  * @author Mark Rotteveel
+ * @since 5
  */
 final class SymbolStore {
 

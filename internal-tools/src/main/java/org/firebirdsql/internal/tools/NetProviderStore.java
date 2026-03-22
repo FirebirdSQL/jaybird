@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.internal.tools;
 
@@ -45,7 +45,7 @@ class NetProviderStore implements FirebirdErrorStore {
         }
     }
 
-    private void writeError(Writer out, FirebirdError error) throws IOException {
+    private static void writeError(Writer out, FirebirdError error) throws IOException {
         out.append("\t{")
                 .append(String.valueOf(error.errorCode())).append(", ")
                 .append(enquoteCsharpString(toNetProviderMessageFormat(error.message())))
@@ -56,7 +56,7 @@ class NetProviderStore implements FirebirdErrorStore {
         out.append("\n");
     }
 
-    private String enquoteCsharpString(String message) {
+    private static String enquoteCsharpString(String message) {
         var builder = new StringBuilder(2 + (int) (message.length() * 1.1f));
         builder.append('"');
         for (char c : message.toCharArray()) {
