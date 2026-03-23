@@ -11,10 +11,10 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
 
 plugins {
     id 'java-library'
-    id 'nu.studer.credentials' version '3.0'
+    alias(libs.plugins.credentials)
     id 'maven-publish'
     id 'signing'
-    id 'org.asciidoctor.jvm.convert' version '4.0.5'
+    alias(libs.plugins.asciidoctor.jvm.convert)
 }
 
 defaultTasks 'clean', 'build'

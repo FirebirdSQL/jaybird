@@ -9,31 +9,8 @@ dependencyResolutionManagement {
     }
 
     versionCatalogs {
-        libs {
-            library('jna', 'net.java.dev.jna', 'jna-jpms').version('5.18.1')
-            library('jakarta.servlet-api', 'jakarta.servlet', 'jakarta.servlet-api').version('5.0.0')
-            library('bcprov-jdk18on', 'org.bouncycastle', 'bcprov-jdk18on').version('1.83')
-            library('jspecify', 'org.jspecify', 'jspecify').version('1.0.0')
-        }
-
         testLibs {
-            version('junit', '6.0.3')
-            version('mockito', '5.23.0')
-
-            library('junit-bom', 'org.junit', 'junit-bom').versionRef('junit')
-            library('junit-jupiter', 'org.junit.jupiter', 'junit-jupiter').withoutVersion()
-            library('junit-platform-launcher', 'org.junit.platform', 'junit-platform-launcher').withoutVersion()
-            library('hamcrest', 'org.hamcrest', 'hamcrest').version('3.0')
-            library('hamcrest-optional', 'com.spotify', 'hamcrest-optional').version('1.3.2')
-            library('assertj-core', 'org.assertj', 'assertj-core').version('3.27.7')
-            library('mockito-bom', 'org.mockito', 'mockito-bom').versionRef('mockito')
-            library('mockito-core', 'org.mockito', 'mockito-core').withoutVersion()
-            library('mockito-junit-jupiter', 'org.mockito', 'mockito-junit-jupiter').withoutVersion()
-            library('awaitility', 'org.awaitility', 'awaitility').version('4.3.0')
-
-            bundle('junit', ['junit-jupiter'])
-            bundle('hamcrest', ['hamcrest', 'hamcrest-optional'])
-            bundle('mockito', ['mockito-core', 'mockito-junit-jupiter'])
+            from(files('gradle/test-libs.versions.toml'))
         }
     }
 }
