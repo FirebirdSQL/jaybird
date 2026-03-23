@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: Copyright 2026 Mark Rotteveel
+# SPDX-License-Identifier: LGPL-2.1-or-later
+[versions]
+jna = "5.18.1"
+jakarta-servlet = "5.0.0"
+bouncy-castle = "1.83"
+jspecify = "1.0.0"
+credentials = "3.0"
+asciidoctor-jvm = "4.0.5"
+
+[libraries]
+jna = { module = "net.java.dev.jna:jna-jpms", version.ref = "jna" }
+jakarta-servlet-api  = { module = "jakarta.servlet:jakarta.servlet-api", version.ref = "jakarta-servlet" }
+bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncy-castle" }
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
+
+[plugins]
+credentials = { id = "nu.studer.credentials", version.ref = "credentials" }
+asciidoctor-jvm-convert = { id = "org.asciidoctor.jvm.convert", version.ref = "asciidoctor-jvm" }
