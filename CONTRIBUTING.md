@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2012-2023 Mark Rotteveel
+SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 SPDX-License-Identifier: LicenseRef-PDL-1.0
 -->
 Contributing
@@ -32,6 +32,13 @@ including databases and sourcecode to reproduce the problem. Patches to fix bugs
 are also appreciated. Make sure the patch is against a recent master version of
 the code. You can also fork the jaybird repository and create pull requests.
 
+No AI
+=====
+
+Jaybird has a strict "No AI" policy. AI generated contributions will not be
+accepted due to the inherent copyright, licensing, and attribution issues of AI
+generated content.
+
 License Notice
 ==============
 
@@ -41,7 +48,7 @@ comply with the terms of this License. A copy of the License is available at
 <https://firebirdsql.org/en/public-documentation-license/>.
 
 The Original Documentation is "Contributing" (CONTRIBUTING.md). The Initial 
-Writer of the Original Documentation is Mark Rotteveel, Copyright © 2012-2023.
+Writer of the Original Documentation is Mark Rotteveel, Copyright © 2012-2026.
 All Rights Reserved. (Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
 
 <!--
