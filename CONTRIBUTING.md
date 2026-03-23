@@ -27,3 +27,10 @@ When reporting bugs, please provide a minimal, but complete reproduction,
 including databases and sourcecode to reproduce the problem. Patches to fix bugs
 are also appreciated. Make sure the patch is against a recent master version of
 the code. You can also fork the jaybird repository and create pull requests.
+
+No AI
+=====
+
+Jaybird has a strict "No AI" policy. AI generated contributions will not be
+accepted due to the inherent copyright, licensing, and attribution issues of AI
+generated content.
