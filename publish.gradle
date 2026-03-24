@@ -187,7 +187,7 @@ publishing {
 allprojects {
     tasks.withType(PublishToMavenRepository).each {
         it.onlyIf('Only publish Java 17 builds') {
-            project.buildProfile == 17
+            project.buildJava == 17
         }
         it.doFirst {
             if (findProperty('centralUsername') == null || findProperty('centralPassword') == null) {

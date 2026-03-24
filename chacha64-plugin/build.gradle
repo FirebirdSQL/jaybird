@@ -37,10 +37,9 @@ test {
 jar {
     manifest {
         attributes(
-                'Created-By': "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
                 'Implementation-Title': 'Jaybird ChaCha64 wire encryption',
                 'Implementation-Url': project.'implementation.url',
-                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'})",
+                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'} java=${project.buildJava})",
                 'Implementation-Vendor': project.'implementation.vendor',
                 'Implementation-Vendor-Id': project.'implementation.vendor.id',
                 'Bundle-License': 'LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause',

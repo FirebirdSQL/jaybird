@@ -44,21 +44,20 @@ version = project.'version.maven'
 allprojects {
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
-        int buildProfile = project.buildProfile
-        options.release = buildProfile
+        options.release = project.buildJava
         javaCompiler = javaToolchains.compilerFor {
-            languageVersion = JavaLanguageVersion.of((int) buildProfile)
+            languageVersion = JavaLanguageVersion.of((int) project.buildJava)
         }
     }
     tasks.withType(Test).configureEach {
         systemProperty 'file.encoding', 'UTF-8'
         javaLauncher = javaToolchains.launcherFor {
-            languageVersion = JavaLanguageVersion.of((int) project.testProfile)
+            languageVersion = JavaLanguageVersion.of((int) project.testJava)
         }
     }
     tasks.withType(Javadoc).configureEach {
         javadocTool = javaToolchains.javadocToolFor {
-            languageVersion = JavaLanguageVersion.of((int) project.testProfile)
+            languageVersion = JavaLanguageVersion.of((int) project.buildJava)
         }
     }
 }
@@ -68,7 +67,7 @@ base {
 }
 
 java {
-    def javaVersion = JavaLanguageVersion.of((int) project.buildProfile)
+    def javaVersion = JavaLanguageVersion.of((int) project.buildJava)
     sourceCompatibility = javaVersion
     targetCompatibility = javaVersion
     withJavadocJar()
@@ -195,7 +194,7 @@ jar {
                 'Specification-Vendor': project.'specification.vendor',
                 'Implementation-Title': project.'implementation.title',
                 'Implementation-Url': project.'implementation.url',
-                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'} profile=${project.buildProfile})",
+                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'} profile=${project.buildJava})",
                 'Implementation-Vendor': project.'implementation.vendor',
                 'Implementation-Vendor-Id': project.'implementation.vendor.id',
                 'Bundle-License': 'LGPL-2.1-or-later OR LGPL-2.1-or-later AND BSD-3-Clause',
