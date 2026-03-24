@@ -10,15 +10,23 @@ please contribute using a pull request, or ask on [firebird-java](https://groups
 ## Running the build
 
 The build uses Gradle wrapper, which is included in the repository. The current
-minimum version is Java 17.
+minimum version is Java 17. The build target (buildProfile) defaults to Java 17,
+independent of the Java version running Gradle.
+
+The target Java version is determined by passing `-PbuildProfile=NN`, where `NN`
+is the desired Java version. The default is `17`. Versions other than `17` are
+not published to Maven.
+
+By default, tests are run with that `buildProfile` version. This can be
+overridden with `-PtestProfile=NN`. For historic reasons, `javaNN` is also
+accepted by both properties.
 
 To run with a specific Java version, we suggest creating a Java-specific launch
 script. For example, for Windows create a batch file with:
 
 ```
 @echo off
-set JAVA_HOME=C:\Program Files\Java\jdk-19
-call gradlew.bat %*
+call gradlew.bat -PbuildProfile=21 %*
 ```
 
 ### Default build
