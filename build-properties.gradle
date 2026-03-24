@@ -20,9 +20,23 @@ def buildTime = new Date()
 ext.'build.id' = buildTime.format('yyyyMMddHHmm')
 ext.YEAR = buildTime.format("yyyy")
 
-// Build profile
-ext.'maven.jdkversion' = 'java17'
+// Build profile (target Java version)
+def buildProfileProp = findProperty('buildProfile') as String
+def buildMatcher = buildProfileProp =~ /^(?:java)?(\d+)$/
+ext.buildJava = buildMatcher ? buildMatcher.group(1) as Integer : 17
+println "Build profile: Java ${ext.buildJava}"
+if (ext.buildJava != 17) {
+    println "WARNING: Java target version ${ext.buildJava} (buildProfile) is not a baseline version and will not be published to Maven."
+}
+
+// As we only publish the Java 17 version, we don't do further mapping for higher JDBC versions
 ext.'specification.version' = '4.3'
+
+// Test profile (test Java version)
+def testProfileProp = findProperty('testProfile') as String
+def testMatcher =  testProfileProp =~ /^(?:java)?(\d+)$/
+ext.testJava = testMatcher ? testMatcher.group(1) as Integer : ext.buildJava
+println "Test profile: Java ${ext.testJava}"
 
 ext.'version.simple' = "${project.'version.major'}.${project.'version.minor'}.${project.'version.revision'}".toString()
 ext.'version.maven' = "${project.'version.simple'}${project.'version.tag'}".toString()

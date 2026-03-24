@@ -173,6 +173,9 @@ publishing {
 
 allprojects {
     tasks.withType(PublishToMavenRepository).each {
+        it.onlyIf('Only publish Java 17 builds') {
+            project.buildJava == 17
+        }
         it.doFirst {
             if (findProperty('centralUsername') == null || findProperty('centralPassword') == null) {
                 throw new RuntimeException('No credentials for publishing, make sure to specify the properties ' +

@@ -4,6 +4,21 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
 /*
   Gradle build script for Jaybird - Firebird JDBC driver.
 
+  Define target Java version:
+  - -PbuildProfile=17              : Java 17 (supported)
+    or not specified
+  - -PbuildProfile=NN              : Java NN (not publishable)
+    with NN > 17
+
+  Build profiles other than 17 will not be published to Maven.
+
+  Define (other) Java version to test:
+  - -PtestProfile=NN with NN >= 17
+
+  If not specified, the test profile is the same as buildProfile.
+
+  For historic reasons, both buildProfile and testProfile also accept javaNN.
+
   Uploading archives:
 
   publish -PcredentialsPassphrase=<credentials password>
@@ -27,9 +42,21 @@ version = project.'version.maven'
 allprojects {
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
+        options.release = project.buildJava
+        javaCompiler = javaToolchains.compilerFor {
+            languageVersion = JavaLanguageVersion.of((int) project.buildJava)
+        }
     }
     tasks.withType(Test).configureEach {
         systemProperty 'file.encoding', 'UTF-8'
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of((int) project.testJava)
+        }
+    }
+    tasks.withType(Javadoc).configureEach {
+        javadocTool = javaToolchains.javadocToolFor {
+            languageVersion = JavaLanguageVersion.of((int) project.buildJava)
+        }
     }
 }
 
@@ -38,8 +65,9 @@ base {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    def javaVersion = JavaLanguageVersion.of((int) project.buildJava)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
     withJavadocJar()
     withSourcesJar()
 }
@@ -158,13 +186,12 @@ tasks.named('assemble') {
 jar {
     manifest {
         attributes(
-                'Created-By': "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
                 'Specification-Title': project.'specification.title',
                 'Specification-Version': project.'specification.version',
                 'Specification-Vendor': project.'specification.vendor',
                 'Implementation-Title': project.'implementation.title',
                 'Implementation-Url': project.'implementation.url',
-                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'})",
+                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'} java=${project.buildJava})",
                 'Implementation-Vendor': project.'implementation.vendor',
                 'Implementation-Vendor-Id': project.'implementation.vendor.id'
         )
