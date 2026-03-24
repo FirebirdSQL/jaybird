@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'nu.studer.credentials' version '3.0'
+    alias(libs.plugins.credentials)
     id 'maven-publish'
     id 'signing'
 }
