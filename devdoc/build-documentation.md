@@ -6,24 +6,26 @@ list.
 
 ## Running the build
 
-The build uses Gradle wrapper, which is included in the repository. The Java
-version running the build restricts the build output (e.g. Java 8 can't target
-Java 11).
+The build uses Gradle wrapper, which is included in the repository. The build
+target (buildProfile) defaults to Java 11, independent of the Java version
+running Gradle.
 
-The target Java version is determined by passing the `-PbuildProfile=javaXX`,
-where `javaXX` is the desired Java version (`java8`, `java11`, etc). The default
-is `java8`.
+The target Java version is determined by passing `-PbuildProfile=NN`, where `NN`
+is the desired Java version. The default is `11`. Versions other than `8` or
+`11` are not published to Maven.  
 
-The build configuration in `build-properties.gradle` restricts the target Java
-versions, and unsupported versions will fall back to `java8`.
+By default, tests are run with that `buildProfile` version. This can be
+overridden with `-PtestProfile=NN`. For historic reasons, `javaNN` is also
+accepted by both properties. Running tests with `buildProfile` set to Java 8 and
+`testProfile` to Java 11 or higher may fail due to absence of ChaCha support. 
 
 To run with a specific Java version, we suggest creating a Java-specific launch
-script. For example, for windows create a batch file with:
+script. For example, for Windows create a batch file with:
 
 ```
 @echo off
 set JAVA_HOME=C:\Program Files\Java\jdk1.8.0
-call gradlew.bat %*
+call gradlew.bat -PbuildProfile=8 %*
 ```
 
 ### Default build
@@ -81,8 +83,8 @@ Less important properties, but relevant for testing remotely:
 - `test.db.port` - the port of Firebird (defaults to `3050`)
 - `test.db.dir` - the path to use for databases (defaults to `${module.output}/db`)
 
-Be aware that change the `test.db.host` can result in test failures as some
-tests perform verifications against the local filesystem.
+Be aware that changing `test.db.host` can result in test failures as some tests
+perform verifications against the local filesystem.
 
 Properties for varying the type of connection tested:
 
@@ -96,6 +98,8 @@ Other test properties:
 - `test.db.lc_ctype` - connection character set
 - `test.use_firebird_autocommit` - run tests with the experimental Firebird
 auto-commit instead of Jaybird-managed auto-commit. 
+- `test.dbondocker` - test runs on Docker/GitHub, meaning some tests are skipped
+due to checking local paths and absence of event port mapping
 
 ## Version information
 

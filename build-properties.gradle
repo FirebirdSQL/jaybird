@@ -20,21 +20,26 @@ def buildTime = new Date()
 ext.'build.id' = buildTime.format('yyyyMMddHHmm')
 ext.YEAR = buildTime.format("yyyy")
 
-// Build profile (Java version specific)
-if (findProperty('buildProfile') == 'java17') {
-    println 'Build profile: Java 17'
-    ext.'maven.jdkversion' = 'java17'
-    ext.'specification.version' = '4.3'
-} else if (findProperty('buildProfile') == 'java8') {
-    println 'Build profile: Java 8'
-    ext.buildProfile = 'java8'
-    ext.'maven.jdkversion' = 'java8'
-    ext.'specification.version' = '4.2'
-} else {
-    // Default to Java 11
-    println 'Build profile: Java 11'
-    ext.'maven.jdkversion' = 'java11'
-    ext.'specification.version' = '4.3'
+// Build profile (target Java version)
+def buildProfileProp = findProperty('buildProfile') as String
+def buildMatcher = buildProfileProp =~ /^(?:java)?(\d+)$/
+ext.buildJava = buildMatcher ? buildMatcher.group(1) as Integer : 11
+ext.'maven.jdkversion' = "java${ext.buildJava}"
+println "Build profile: Java ${ext.buildJava}"
+if (!(ext.buildJava in [8, 11])) {
+    println "WARNING: Java target version ${ext.buildJava} (buildProfile) is not a baseline version and will not be published to Maven."
+}
+
+// As we only publish the Java 8 and Java 11 versions, we don't do further mapping for higher JDBC versions
+ext.'specification.version' = ext.buildJava == 8 ? '4.2' : '4.3'
+
+// Test profile (test Java version)
+def testProfileProp = findProperty('testProfile') as String
+def testMatcher =  testProfileProp =~ /^(?:java)?(\d+)$/
+ext.testJava = testMatcher ? testMatcher.group(1) as Integer : ext.buildJava
+println "Test profile: Java ${ext.testJava}"
+if (ext.buildJava == 8 && ext.testJava != ext.buildJava) {
+    println "WARNING: Testing Java 8 build with Java ${ext.testJava} (testProfile) may result in test failures."
 }
 
 ext.'version.simple' = "${project.'version.major'}.${project.'version.minor'}.${project.'version.revision'}".toString()

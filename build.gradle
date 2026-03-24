@@ -5,10 +5,21 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
   Gradle build script for Jaybird - Firebird JDBC driver.
 
   Define target Java version:
-  - -PbuildProfile=java8           : Java 8  (supported)
-  - -PbuildProfile=java11 or
-    not specified or unknown value : Java 11 (supported)
-  - -PbuildProfile=java17          : Java 17 (for compatibility testing only)
+  - -PbuildProfile=8               : Java 8  (supported)
+  - -PbuildProfile=11              : Java 11 (supported)
+    or not specified
+  - -PbuildProfile=NN              : Java NN (not publishable)
+
+  Build profiles other than 8 and 11 will not be published to Maven.
+
+  Define (other) Java version to test:
+  - -PtestProfile=NN with NN >= 8
+
+  If not specified, the test profile is the same as buildProfile. Testing Java 8
+  with Java 11 or higher can produce test failures due to absence of ChaCha
+  support.
+
+  For historic reasons, both buildProfile and testProfile also accept javaNN.
 
   Uploading archives:
 
@@ -33,9 +44,25 @@ version = project.'version.maven'
 allprojects {
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
+        int buildJava = project.buildJava
+        if (buildJava > 8) {
+            // --release not supported on Java 8
+            options.release = buildJava
+        }
+        javaCompiler = javaToolchains.compilerFor {
+            languageVersion = JavaLanguageVersion.of((int) buildJava)
+        }
     }
     tasks.withType(Test).configureEach {
         systemProperty 'file.encoding', 'UTF-8'
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of((int) project.testJava)
+        }
+    }
+    tasks.withType(Javadoc).configureEach {
+        javadocTool = javaToolchains.javadocToolFor {
+            languageVersion = JavaLanguageVersion.of((int) project.buildJava)
+        }
     }
 }
 
@@ -48,12 +75,7 @@ base {
 }
 
 java {
-    def javaVersion = JavaVersion.VERSION_11
-    if (project.'maven.jdkversion' == 'java17') {
-        javaVersion = JavaVersion.VERSION_17
-    } else if (project.'maven.jdkversion' == 'java8') {
-        javaVersion = JavaVersion.VERSION_1_8
-    }
+    def javaVersion = JavaLanguageVersion.of((int) project.buildJava)
     sourceCompatibility = javaVersion
     targetCompatibility = javaVersion
     withJavadocJar()
@@ -69,7 +91,7 @@ ext {
     hamcrest = '3.0'
     assertj = '3.27.7'
     // Mockito 5 requires Java 11 or higher
-    mockito = findProperty('buildProfile') == 'java8' ? '4.11.0' : '5.23.0'
+    mockito = project.testJava == 8 ? '4.11.0' : '5.23.0'
 }
 
 dependencies {
@@ -90,7 +112,7 @@ dependencies {
     testImplementation "org.assertj:assertj-core:$assertj"
 
     testImplementation "org.mockito:mockito-core:$mockito"
-    if (findProperty('buildProfile') == 'java8') {
+    if (project.testJava == 8) {
         testImplementation "org.mockito:mockito-inline:$mockito"
     }
     testImplementation "org.mockito:mockito-junit-jupiter:$mockito"
@@ -99,7 +121,7 @@ dependencies {
 sourceSets {
     main {
         java {
-            srcDirs = findProperty('buildProfile') == 'java8'
+            srcDirs = project.buildJava == 8
                     ? ['src/main', 'src/extern', 'src/jna-client', 'src/openoffice']
                     : ['src/main', 'src/extern', 'src/jna-client', 'src/openoffice', 'src/chacha_j11']
         }
@@ -192,13 +214,12 @@ tasks.register('dist', Zip) {
 jar {
     manifest {
         attributes(
-                'Created-By': "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
                 'Specification-Title': project.'specification.title',
                 'Specification-Version': project.'specification.version',
                 'Specification-Vendor': project.'specification.vendor',
                 'Implementation-Title': project.'implementation.title',
                 'Implementation-Url': project.'implementation.url',
-                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'})",
+                'Implementation-Version': "$project.version (build: variant=$project.mavenName tag=${project.'version.svntag'} date=${project.'build.id'} java=${project.buildJava})",
                 'Implementation-Vendor': project.'implementation.vendor',
                 'Implementation-Vendor-Id': project.'implementation.vendor.id',
                 'Automatic-Module-Name': 'org.firebirdsql.jaybird'
@@ -211,7 +232,7 @@ javadoc {
     options.windowTitle = "$project.capitalizedName ${project.'version.maven'} API"
     options.docTitle = "$project.capitalizedName ${project.'version.maven'}"
     options.bottom = "Copyright &copy; 2001-${project.YEAR} Jaybird (Firebird JDBC) team. All rights reserved."
-    def currentJavaVersion = JavaVersion.current()
+    def currentJavaVersion = JavaVersion.toVersion(project.buildJava)
     if (currentJavaVersion.isJava9Compatible()) {
         options.addBooleanOption('html5', true)
 

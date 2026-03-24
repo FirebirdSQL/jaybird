@@ -172,6 +172,9 @@ publishing {
 }
 
 tasks.withType(PublishToMavenRepository).each {
+    it.onlyIf('Only publish Java 8 and Java 11 builds') {
+        project.buildJava in [8, 11]
+    }
     it.doFirst {
         if (findProperty('centralUsername') == null || findProperty('centralPassword') == null) {
             throw new RuntimeException('No credentials for publishing, make sure to specify the properties ' +
