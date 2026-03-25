@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2019-2023 Mark Rotteveel
+SPDX-FileCopyrightText: Copyright 2019-2026 Mark Rotteveel
 SPDX-License-Identifier: LicenseRef-PDL-1.0
 -->
 # Jaybird build documentation
@@ -113,7 +113,7 @@ comply with the terms of this License. A copy of the License is available at
 
 The Original Documentation is "Jaybird build documentation".
 The Initial Writer of the Original Documentation is Mark Rotteveel,
-Copyright © 2019-2023. All Rights Reserved. (Initial Writer contact(s):
+Copyright © 2019-2026. All Rights Reserved. (Initial Writer contact(s):
 mark (at) lawinegevaar (dot) nl).
 
 <!--
