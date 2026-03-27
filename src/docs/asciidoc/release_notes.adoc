@@ -37,9 +37,9 @@ For known issues, consult <<known-issues>>.
 
 The following was fixed or changed since Jaybird 6.0.4:
 
-* JDBC 4.5 support: `JaybirdTypeCodes.DECFLOAT` and `JaybirdType.DECFLOAT` now use value `2015` instead of `-6001` (https://github.com/FirebirdSQL/jaybird/issues/906[#906])
+* JDBC 4.5 support: `JaybirdTypeCodes.DECFLOAT` and `JaybirdType.DECFLOAT` now use type code `2015` instead of `-6001` (https://github.com/FirebirdSQL/jaybird/issues/906[#906])
 +
-Applications referencing this constant may need to be recompiled to function correctly with Jaybird 6.0.5 and higher.
+Applications referencing these constants may need to be recompiled to function correctly with Jaybird 6.0.5 and higher.
 If you use Java 26 or higher, we recommend using `java.sql.Type.DECFLOAT` and `java.sql.JDBCType.DECFLOAT` instead.
 * JDBC 4.5 support: implemented methods `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier` on `FBConnection`, and added them to interface `FirebirdConnection` for access in older Java versions (https://github.com/FirebirdSQL/jaybird/issues/908[#908])
 +
@@ -178,7 +178,7 @@ Possible workarounds:
 --
 +
 This is caused by https://github.com/FirebirdSQL/firebird/issues/4971[firebird#4971]
-* In Java 24 (and higher), the mapping of some named `WITH TIME ZONE` values changed as Java's mapping of short IDs changed.
+* In Java 24 and higher, the mapping of some named `WITH TIME ZONE` values changed as Java's mapping of short IDs changed.
 This should only affect cases where you explicitly obtain `ZonedDateTime` or `ZonedTime` instances with these named zones.
 +
 --
@@ -191,8 +191,6 @@ maps to -07:00 in older Java versions
 --
 +
 This is informational only, and not something that we can fix or change in a later Jaybird release.
-* Jaybird 6 is not yet fully compatible with the upcoming JDBC 4.5 Specification to be introduced with Java 26.
-See <<jdbc45-compat>> for more information.
 
 [#general-notes]
 == General Notes
@@ -260,11 +258,11 @@ This driver does not support InterBase.
 [#supported-java-versions]
 === Supported Java versions
 
-Jaybird 6 supports Java 17 and higher (JDBC 4.3/JDBC 4.4).
+Jaybird 6 supports Java 17 and higher (JDBC 4.3/JDBC 4.4/JDBC 4.5).
 Support for earlier Java versions has been dropped.
 
 We limit support to Java LTS releases starting with Java 17, and the latest Java release.
-For Jaybird {version_wo_target} that means we support Java 17, Java 21, and Java 25.
+For Jaybird {version_wo_target} that means we support Java 17, Java 21, Java 25, and Java 26.
 
 [NOTE]
 ====
@@ -312,7 +310,7 @@ Jaybird supports the following specifications:
 ==== Compatibility with the JDBC 4.5 Specification
 
 Java 26 (March 2026) introduced https://jcp.org/aboutJava/communityprocess/maintenance/jsr221/index5.html[JDBC 4.5^] (link to draft).
-Since Jaybird 6.0.5 (and Jaybird 5.0.12), Jaybird is compatible with the specified changes.
+Since Jaybird 6.0.5 (and Jaybird 5.0.12), Jaybird is compatible with the specified changes and new features.
 
 [#support]
 == Support
@@ -428,7 +426,7 @@ To enable the "`ChaCha64`" wire encryption support for pure Java connections, al
 
 See also <<maven>>.
 
-Examples:
+Equivalent declarations for Gradle:
 
 .Main Jaybird artifact
 [source,groovy,subs="verbatim,attributes"]
