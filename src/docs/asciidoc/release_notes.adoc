@@ -10,7 +10,7 @@
 :sectnums:
 :bc-version: 1.83
 :jna-version: 5.18.1
-:jaybird-fbclient-version: 5.0.2.0
+:jaybird-fbclient-version: 5.0.3.0
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
@@ -141,6 +141,9 @@ Jaybird supports the following specifications:
 
 |===
 |Specification |Notes
+
+|JDBC 4.5
+|All JDBC 4.5 methods for features supported by Firebird.
 
 |JDBC 4.4
 |If a security manager is available, the driver still performs `SQLPermission` checks.
