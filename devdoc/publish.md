@@ -8,7 +8,7 @@ Publishing
 To publish to Maven use
 
 ```
-./gradlew clean dist assemble publish -PbuildProfile={java8|java11} -PcredentialsPassphrase=<credentials password>
+./gradlew clean dist assemble publish -PbuildProfile={8|11} -PcredentialsPassphrase=<credentials password>
 ```
 Where `<credentials password>` is the password used to add the credentials (see
 also below).
