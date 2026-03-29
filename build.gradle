@@ -85,6 +85,12 @@ java {
     }
 }
 
+configurations {
+    if (project.testJava > 8) {
+        mockitoAgent
+    }
+}
+
 ext {
     // Do not upgrade to JUnit 6 as it requires Java 17
     junit_jupiter = '5.14.3'
@@ -114,6 +120,10 @@ dependencies {
     testImplementation "org.mockito:mockito-core:$mockito"
     if (project.testJava == 8) {
         testImplementation "org.mockito:mockito-inline:$mockito"
+    } else {
+        mockitoAgent("org.mockito:mockito-core:$mockito") {
+            transitive = false
+        }
     }
     testImplementation "org.mockito:mockito-junit-jupiter:$mockito"
 }
@@ -249,6 +259,13 @@ test {
     println "Running tests for type ${project.'test.gds_type'}"
     // Use junit platform for unit tests
     useJUnitPlatform()
+    if (project.testJava > 8) {
+        jvmArgumentProviders.add(
+                objects.newInstance(JavaAgentProvider).tap {
+                    agent = configurations.mockitoAgent.asPath
+                }
+        )
+    }
 
     // Test configuration, defaults specified in gradle.properties (modify through ext, or use -P<prop>=<value>)
     systemProperties(
