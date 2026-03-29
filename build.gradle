@@ -74,6 +74,7 @@ java {
 
 configurations {
     asciidoctorExt
+    mockitoAgent
 }
 
 dependencies {
@@ -89,6 +90,10 @@ dependencies {
 
     testImplementation platform(testLibs.mockito.bom)
     testImplementation testLibs.bundles.mockito
+    mockitoAgent platform(testLibs.mockito.bom)
+    mockitoAgent(testLibs.mockito.core) {
+        transitive = false
+    }
 
     testImplementation testLibs.awaitility
     // A lot (if not all) tests for jaybird-native are in the main project given dependencies on test infrastructure
@@ -212,6 +217,11 @@ test {
     println "Running tests for type ${project.'test.gds_type'}"
     // Use junit platform for unit tests
     useJUnitPlatform()
+    jvmArgumentProviders.add(
+            objects.newInstance(JavaAgentProvider).tap {
+                agent = configurations.mockitoAgent.asPath
+            }
+    )
 
     // Test configuration, defaults specified in gradle.properties (modify through ext, or use -P<prop>=<value>)
     systemProperties(
