@@ -25,6 +25,9 @@ package org.firebirdsql.gds.ng.wire.auth.legacy;
 
 /* ------------------------------------------------------------ */
 
+import org.firebirdsql.logging.LoggerFactory;
+
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -34,6 +37,7 @@ import java.nio.charset.StandardCharsets;
  * @author Greg Wilkins (gregw)
  * @deprecated will be removed in Jaybird 6, and replaced by {@code LegacyHash} which will be introduced in Jaybird 6
  */
+@SuppressWarnings("DeprecatedIsStillUsed")
 @Deprecated
 public class UnixCrypt {
 
@@ -426,24 +430,31 @@ public class UnixCrypt {
     }
 
     /**
-     * Encrypts String into crypt (Unix) code.
-     * @param key the key to be encrypted
-     * @param setting the salt to be used
+     * Encrypts String into UnixCrypt code.
+     *
+     * @param key
+     *         the key to be encrypted
+     * @param setting
+     *         the salt to be used
+     * @param charsetName
+     *         character set to convert {@code key} to bytes
      * @return the encrypted String
+     * @since 5.0.13
      */
-    public static String crypt(String key, String setting)
-    {
+    public static String crypt(String key, String setting, String charsetName) {
+        if (key == null || setting == null) {
+            // will NOT match under ANY circumstances!
+            return "*";
+        }
         long constdatablock = 0L;		/* encryption constant */
         byte[] cryptresult = new byte[13];	/* encrypted result */
         long keyword = 0L;
-        /* invalid parameters! */
-        if(key==null||setting==null) 
-            return "*"; // will NOT match under ANY circumstances!
 
-        int keylen = key.length();
+        byte[] keyBytes = key.getBytes(toCharset(charsetName));
+        int keylen = keyBytes.length;
 
-        for (int i=0; i<8 ; i++) {
-            keyword = (keyword << 8) | ((i < keylen)? 2*key.charAt(i): 0);
+        for (int i = 0; i < 8; i++) {
+            keyword = (keyword << 8) | ((i < keylen) ? 2 * (keyBytes[i] & 0xFF) : 0);
         }
 
         long[] KS = des_setkey(keyword);
@@ -465,6 +476,16 @@ public class UnixCrypt {
         }
 
         return new String(cryptresult, 0, 13, StandardCharsets.US_ASCII);
+    }
+
+    private static Charset toCharset(String charsetName) {
+        try {
+            return Charset.forName(charsetName);
+        } catch (IllegalArgumentException e) {
+            LoggerFactory.getLogger(UnixCrypt.class)
+                    .warnfe("Invalid character set %s, falling back to UTF-8", charsetName, e);
+            return StandardCharsets.UTF_8;
+        }
     }
 
 }

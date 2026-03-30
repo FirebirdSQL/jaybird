@@ -449,6 +449,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     }
 
     @Override
+    public String getLegacyAuthCharset() {
+        return FirebirdConnectionProperties.super.getLegacyAuthCharset();
+    }
+
+    @Override
+    public void setLegacyAuthCharset(String legacyAuthCharset) {
+        FirebirdConnectionProperties.super.setLegacyAuthCharset(legacyAuthCharset);
+    }
+
+    @Override
     public boolean isExtendedMetadata() {
         return FirebirdConnectionProperties.super.isExtendedMetadata();
     }

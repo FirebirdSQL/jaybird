@@ -90,7 +90,7 @@ public class DatabaseUserExtension implements AfterEachCallback {
             createUserSql.append(" USING PLUGIN ").append(plugin);
         }
 
-        try (Connection connection = getConnectionViaDriverManager();
+        try (Connection connection = getConnectionViaDriverManager("lc_ctype", "UTF8");
              Statement statement = connection.createStatement()) {
             statement.execute(createUserSql.toString());
         }
@@ -103,7 +103,7 @@ public class DatabaseUserExtension implements AfterEachCallback {
         if (createdUsers.isEmpty()) {
             return;
         }
-        try (Connection connection = getConnectionViaDriverManager()) {
+        try (Connection connection = getConnectionViaDriverManager("lc_ctype", "UTF8")) {
             connection.setAutoCommit(false);
             try (Statement statement = connection.createStatement()) {
                 for (User user : createdUsers) {

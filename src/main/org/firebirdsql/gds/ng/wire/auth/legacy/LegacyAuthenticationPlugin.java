@@ -46,12 +46,15 @@ class LegacyAuthenticationPlugin implements AuthenticationPlugin {
         return LegacyAuthenticationPluginSpi.LEGACY_AUTH_NAME;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public AuthStatus authenticate(ClientAuthBlock clientAuthBlock) throws SQLException {
         if (clientAuthBlock.getLogin() == null || clientAuthBlock.getPassword() == null) {
             return AuthStatus.AUTH_CONTINUE;
         }
-        clientData = UnixCrypt.crypt(clientAuthBlock.getPassword(), LEGACY_PASSWORD_SALT).substring(2, 13)
+        clientData = UnixCrypt
+                .crypt(clientAuthBlock.getPassword(), LEGACY_PASSWORD_SALT, clientAuthBlock.getLegacyAuthCharset())
+                .substring(2, 13)
                 .getBytes(StandardCharsets.US_ASCII);
         return AuthStatus.AUTH_SUCCESS;
     }

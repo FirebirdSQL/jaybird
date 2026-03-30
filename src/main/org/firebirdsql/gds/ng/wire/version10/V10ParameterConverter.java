@@ -39,6 +39,7 @@ public class V10ParameterConverter extends AbstractParameterConverter<WireDataba
 
     private static final String LEGACY_PASSWORD_SALT = "9z";
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void populateAuthenticationProperties(final AbstractConnection<?, ?> connection,
             final ConnectionParameterBuffer pb) throws SQLException {
@@ -48,8 +49,9 @@ public class V10ParameterConverter extends AbstractParameterConverter<WireDataba
             pb.addArgument(tagMapping.getUserNameTag(), props.getUser());
         }
         if (props.getPassword() != null) {
-            pb.addArgument(tagMapping.getEncryptedPasswordTag(), UnixCrypt.crypt(props.getPassword(),
-                    LEGACY_PASSWORD_SALT).substring(2, 13));
+            pb.addArgument(tagMapping.getEncryptedPasswordTag(),
+                    UnixCrypt.crypt(props.getPassword(), LEGACY_PASSWORD_SALT, props.getLegacyAuthCharset())
+                            .substring(2, 13));
         }
     }
 

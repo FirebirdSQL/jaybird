@@ -60,6 +60,7 @@ public final class PropertyNames {
     public static final String authPlugins = "authPlugins";
     public static final String wireCompression = "wireCompression";
     public static final String parallelWorkers = "parallelWorkers";
+    public static final String legacyAuthCharset = "legacyAuthCharset";
 
     // database connection
     public static final String sqlDialect = "sqlDialect";

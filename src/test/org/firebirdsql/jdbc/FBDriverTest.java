@@ -509,5 +509,23 @@ class FBDriverTest {
         }
     }
 
+    /**
+     * Test for <a href="https://github.com/FirebirdSQL/jaybird/issues/858">jaybird#858</a>.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = { "pwd€", "123456€", "1234567€", "èêëæ" })
+    void testNonAsciiLegacyAuth(String password) throws Exception {
+        databaseUser.createUser("TEST_USER", password,
+                getDefaultSupportInfo().isVersionEqualOrAbove(3, 0) ? "Legacy_UserManager" : null);
+
+        try (var connection = getConnectionViaDriverManager(Map.of(
+                "user", "TEST_USER",
+                "password", password,
+                "lc_ctype", "UTF8",
+                "authPlugins", "Legacy_Auth"))) {
+            assertTrue(connection.isValid(0));
+        }
+    }
+
 }
 

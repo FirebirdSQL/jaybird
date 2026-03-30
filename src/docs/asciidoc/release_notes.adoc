@@ -35,6 +35,20 @@ For known issues, consult <<known-issues>>.
 Future maintenance releases of Jaybird 5 may stop expanding Java support to include newly released Java versions.
 If you use Java 17 or higher, we recommend upgrading to https://firebirdsql.org/en/jdbc-driver/#jaybird6[Jaybird 6].
 
+[#jaybird-5-0-13-changelog]
+=== Jaybird 5.0.13
+
+The following has been changed or fixed since Jaybird 5.0.12:
+
+* Fixed: Legacy authentication fails with non-ASCII characters in password (https://github.com/FirebirdSQL/jaybird/issues/931[#931])
++
+This fix was backported from Jaybird 6.0.6.
++
+The hash that is sent instead of the actual password -- for authentication plugin `Legacy_Auth` or on Firebird 2.5 or older -- was incorrectly generated based on the `char` (UTF-16) value.
+We now use UTF-8 bytes instead.
++
+See also <<compat-legacy-auth>>.
+
 [#jaybird-5-0-12-changelog]
 === Jaybird 5.0.12
 
@@ -1859,3 +1873,15 @@ For more information about this library, see https://github.com/mrotteveel/jaybi
 
 In Jaybird 6 we will move the Type 2 support to a separate library.
 In the future we may provide JARs with the embedded libraries of a specific Firebird version.
+
+[#compat-legacy-auth]
+=== Legacy authentication in Jaybird 6.0.6 and higher
+
+Since Jaybird 5.0.13 (and Jaybird 6.0.6), legacy authentication -- Firebird 2.5 or older, or using authentication plugin `Legacy_Auth` -- uses UTF-8 to derive the bytes for calculating the hash of the password to send to the server.
+It is possible UTF-8 is not the right character set on Firebird 2.5 and older.
+This possibly also applies for Firebird 3.0 and higher, if the password was set using connection encoding NONE on (Windows) systems where windows-1252 or similar is the default encoding.
+
+You can use connection property `legacyAuthCharset` to specify a different Java character set name (for pure Java connections only).
+
+If authentication against Firebird 2.5 or older starts to fail for you, then likely you need to specify `legacyAuthCharset=iso-8859-1`.
+Resetting your password, using https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref25/fblangref25-security.html#fblangref25-security-auth-alter-user[`ALTER USER`] with connection encoding UTF8, might also resolve such failures.
