@@ -44,7 +44,7 @@ final class LegacyAuthenticationPlugin implements AuthenticationPlugin {
         if (clientAuthBlock.getLogin() == null || clientAuthBlock.getPassword() == null) {
             return AuthStatus.AUTH_CONTINUE;
         }
-        clientData = LegacyHash.fbCrypt(clientAuthBlock.getPassword());
+        clientData = LegacyHash.fbCrypt(clientAuthBlock.getPassword(), clientAuthBlock.getLegacyAuthCharset());
         return AuthStatus.AUTH_SUCCESS;
     }
 

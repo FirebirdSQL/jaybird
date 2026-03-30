@@ -63,6 +63,7 @@ public final class PropertyNames {
     public static final String enableProtocol = "enableProtocol";
     public static final String parallelWorkers = "parallelWorkers";
     public static final String socketFactory = "socketFactory";
+    public static final String legacyAuthCharset = "legacyAuthCharset";
 
     // database connection
     public static final String sqlDialect = "sqlDialect";

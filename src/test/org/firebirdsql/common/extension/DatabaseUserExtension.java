@@ -66,7 +66,7 @@ public class DatabaseUserExtension implements AfterEachCallback {
      *         for errors creating the user
      */
     public void createUser(String username, String password, String plugin) throws SQLException {
-        try (var connection = getConnectionViaDriverManager();
+        try (var connection = getConnectionViaDriverManager("lc_ctype", "UTF8");
              var statement = connection.createStatement()) {
             var createUserSql = new StringBuilder("CREATE USER ").append(statement.enquoteIdentifier(username, false))
                     .append(" PASSWORD ").append(statement.enquoteLiteral(password));
@@ -84,7 +84,7 @@ public class DatabaseUserExtension implements AfterEachCallback {
         if (createdUsers.isEmpty()) {
             return;
         }
-        try (var connection = getConnectionViaDriverManager()) {
+        try (var connection = getConnectionViaDriverManager("lc_ctype", "UTF8")) {
             connection.setAutoCommit(false);
             try (var statement = connection.createStatement()) {
                 for (User user : createdUsers) {

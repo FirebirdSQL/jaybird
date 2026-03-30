@@ -46,7 +46,8 @@ public class V10ParameterConverter extends AbstractParameterConverter<WireDataba
             pb.addArgument(tagMapping.getUserNameTag(), props.getUser());
         }
         if (props.getPassword() != null) {
-            pb.addArgument(tagMapping.getEncryptedPasswordTag(), LegacyHash.fbCrypt(props.getPassword()));
+            pb.addArgument(tagMapping.getEncryptedPasswordTag(),
+                    LegacyHash.fbCrypt(props.getPassword(), props.getLegacyAuthCharset()));
         }
     }
 
