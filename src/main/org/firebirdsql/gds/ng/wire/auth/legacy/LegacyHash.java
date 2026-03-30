@@ -11,6 +11,9 @@ package org.firebirdsql.gds.ng.wire.auth.legacy;
 
 import org.jspecify.annotations.Nullable;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 /**
  * Implements the one way password hash used by the legacy authentication of Firebird.
  * <p>
@@ -363,21 +366,25 @@ public final class LegacyHash {
     }
 
     /**
-     * Encrypts String into crypt (Unix) code as used by Firebird.
+     * Encrypts {@code key} into UnixCrypt hash as used by Firebird Legacy_Auth.
      *
      * @param key
      *         the key to be encrypted
+     * @param charsetName
+     *         character set to convert {@code key} to bytes
      * @return the encrypted String
+     * @since 7
      */
-    public static byte[] fbCrypt(@Nullable String key) {
+    public static byte[] fbCrypt(@Nullable String key, String charsetName) {
         if (key == null) {
-            return new byte[] { '*' }; // will NOT match under ANY circumstances!
+            // will NOT match under ANY circumstances!
+            return new byte[] { '*' };
         }
-
-        final int keyLen = key.length();
+        byte[] keyBytes = key.getBytes(toCharset(charsetName));
+        final int keyLen = keyBytes.length;
         long keyword = 0L;
         for (int i = 0; i < 8; i++) {
-            keyword = keyword << 8 | ((i < keyLen) ? 2 * key.charAt(i) : 0);
+            keyword = keyword << 8 | ((i < keyLen) ? 2 * (keyBytes[i] & 0xFF) : 0);
         }
 
         long rsltblock = desCipher(desSetKey(keyword));
@@ -391,6 +398,16 @@ public final class LegacyHash {
         }
 
         return cryptResult;
+    }
+
+    private static Charset toCharset(String charsetName) {
+        try {
+            return Charset.forName(charsetName);
+        } catch (IllegalArgumentException e) {
+            System.getLogger(LegacyHash.class.getName()).log(System.Logger.Level.WARNING,
+                    () -> "Invalid character set %s, falling back to UTF-8".formatted(charsetName), e);
+            return StandardCharsets.UTF_8;
+        }
     }
 
 }

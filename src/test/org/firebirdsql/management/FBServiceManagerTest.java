@@ -217,17 +217,18 @@ class FBServiceManagerTest {
 
     private static Object generateTestValue(PropertyDescriptor beanProperty, Object originalValue) {
         String propertyName = beanProperty.getName();
-        if ("wireCrypt".equals(propertyName)) {
-            return "ENABLED".equals(originalValue) ? "DISABLED" : "ENABLED";
-        }
-        return switch (beanProperty.getPropertyType().getName()) {
-            case "java.lang.String" -> "testValue " + propertyName;
-            case "boolean", "java.lang.Boolean" -> originalValue == null || !((boolean) originalValue);
-            case "int", "java.lang.Integer" -> originalValue == null ? 1 : ((int) originalValue) + 1;
-            case "org.firebirdsql.gds.ng.WireCrypt" ->
-                    originalValue == WireCrypt.ENABLED ? WireCrypt.DISABLED : WireCrypt.ENABLED;
-            default -> throw new IllegalStateException("Property: %s has unsupported type: %s"
-                    .formatted(propertyName, beanProperty.getPropertyType()));
+        return switch (propertyName) {
+            case PropertyNames.wireCrypt -> "ENABLED".equals(originalValue) ? "DISABLED" : "ENABLED";
+            case PropertyNames.legacyAuthCharset -> "UTF-8".equals(originalValue) ? "windows-1252" : "UTF-8";
+            default -> switch (beanProperty.getPropertyType().getName()) {
+                case "java.lang.String" -> "testValue " + propertyName;
+                case "boolean", "java.lang.Boolean" -> originalValue == null || !((boolean) originalValue);
+                case "int", "java.lang.Integer" -> originalValue == null ? 1 : ((int) originalValue) + 1;
+                case "org.firebirdsql.gds.ng.WireCrypt" ->
+                        originalValue == WireCrypt.ENABLED ? WireCrypt.DISABLED : WireCrypt.ENABLED;
+                default -> throw new IllegalStateException("Property: %s has unsupported type: %s"
+                        .formatted(propertyName, beanProperty.getPropertyType()));
+            };
         };
     }
 

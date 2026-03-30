@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2014-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
@@ -30,7 +30,8 @@ public class V10ParameterConverter extends AbstractParameterConverter<WireDataba
             pb.addArgument(tagMapping.getUserNameTag(), props.getUser());
         }
         if (props.getPassword() != null) {
-            pb.addArgument(tagMapping.getEncryptedPasswordTag(), LegacyHash.fbCrypt(props.getPassword()));
+            pb.addArgument(tagMapping.getEncryptedPasswordTag(),
+                    LegacyHash.fbCrypt(props.getPassword(), props.getLegacyAuthCharset()));
         }
     }
 

@@ -6,6 +6,8 @@ import org.firebirdsql.gds.ng.FbAttachment;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.jspecify.annotations.Nullable;
 
+import java.nio.charset.Charset;
+
 import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_WIRE_COMPRESSION;
 
 /**
@@ -475,6 +477,42 @@ public interface AttachmentProperties extends BaseProperties {
      */
     default void setSocketFactory(@Nullable String socketFactory) {
         setProperty(PropertyNames.socketFactory, socketFactory);
+    }
+
+    /**
+     * The Java character set to use when processing a password for Legacy_Auth in the pure Java protocol.
+     * <p>
+     * In general, this should be {@code UTF-8} (the default). Using a different character set may be needed when
+     * connecting to Firebird 2.5 and older when using passwords with non-ASCII characters.
+     * </p>
+     *
+     * @return Java character set name (default {@code UTF-8})
+     * @since 7
+     */
+    default String getLegacyAuthCharset() {
+        return getProperty(PropertyNames.legacyAuthCharset, PropertyConstants.DEFAULT_LEGACY_AUTH_CHARSET);
+    }
+
+    /**
+     * Sets the Java character set to use when processing a password for Legacy_Auth in the pure Java protocol.
+     * <p>
+     * In general, this should be {@code UTF-8} (the default). Using a different character set may be needed when
+     * connecting to Firebird 2.5 and older when using passwords with non-ASCII characters.
+     * </p>
+     *
+     * @param legacyAuthCharset
+     *         Java character set name (use {@code null} to reset to the default, {@code UTF-8})
+     * @throws java.nio.charset.IllegalCharsetNameException
+     *         if {@code legacyAuthCharset} is an illegal character set name
+     * @throws java.nio.charset.UnsupportedCharsetException
+     *         if {@code legacyAuth} is not supported
+     * @since 7
+     */
+    default void setLegacyAuthCharset(@Nullable String legacyAuthCharset) {
+        if (legacyAuthCharset != null) {
+            Charset.forName(legacyAuthCharset);
+        }
+        setProperty(PropertyNames.legacyAuthCharset, legacyAuthCharset);
     }
 
 }

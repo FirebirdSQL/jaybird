@@ -66,6 +66,10 @@ public final class ClientAuthBlock {
         return attachProperties.getPassword();
     }
 
+    public String getLegacyAuthCharset() {
+        return attachProperties.getLegacyAuthCharset();
+    }
+
     public boolean isAuthComplete() {
         return authComplete;
     }
