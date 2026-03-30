@@ -517,12 +517,12 @@ class FBDriverTest {
     void testNonAsciiLegacyAuth(String password) throws Exception {
         databaseUser.createUser("TEST_USER", password,
                 getDefaultSupportInfo().isVersionEqualOrAbove(3, 0) ? "Legacy_UserManager" : null);
-
-        try (var connection = getConnectionViaDriverManager(Map.of(
-                "user", "TEST_USER",
-                "password", password,
-                "lc_ctype", "UTF8",
-                "authPlugins", "Legacy_Auth"))) {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("user", "TEST_USER");
+        props.setProperty("password", password);
+        props.setProperty("lc_ctype", "UTF8");
+        props.setProperty("authPlugins", "Legacy_Auth");
+        try (Connection connection = getConnectionViaDriverManager(props)) {
             assertTrue(connection.isValid(0));
         }
     }
