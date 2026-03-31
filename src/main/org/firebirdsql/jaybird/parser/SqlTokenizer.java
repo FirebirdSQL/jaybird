@@ -164,8 +164,16 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
         }
         case '+',
                 '%', // Firebird 6.0 scope specifier
-                '*', // Can also signify 'all' (as in select * or select alias.*)
-                '=' -> new OperatorToken(start, src, start, pos);
+                '*' // Can also signify 'all' (as in select * or select alias.*)
+                    -> new OperatorToken(start, src, start, pos);
+        case '=' -> {
+            int cNext = read();
+            // Handling for Firebird 6.0 => (named parameter operator)
+            if (cNext != '>') {
+                unread(cNext);
+            }
+            yield new OperatorToken(start, src, start, pos);
+        }
         case '-' -> {
             if (peek() == '-') {
                 yield readLineComment(start);

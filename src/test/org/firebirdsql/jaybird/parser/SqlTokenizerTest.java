@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -71,6 +71,8 @@ class SqlTokenizerTest {
                 arguments("^>", new OperatorToken(0, "^>")),
                 arguments("^<", new OperatorToken(0, "^<")),
                 arguments("||", new OperatorToken(0, "||")),
+                arguments("%", new OperatorToken(0, "%")),
+                arguments("=>", new OperatorToken(0, "=>")),
                 arguments(":", new ColonToken(0)),
                 arguments("?", new PositionalParameterToken(0)),
                 arguments("and", new OperatorToken(0, "and")),
@@ -252,6 +254,38 @@ class SqlTokenizerTest {
                 new GenericToken(26, "some_table")
         );
 
+    }
+
+    @Test
+    void namedArgumentsList() {
+        String statementText = "select function_name(parameter2 => 'Two', parameter1 => 1) from rdb$database";
+
+        var tokenizer = SqlTokenizer.withReservedWords(FirebirdReservedWords.latest())
+                .of(statementText);
+
+        assertThat(tokenizer).toIterable().containsExactly(
+                new ReservedToken(0, "select"),
+                new WhitespaceToken(6, " "),
+                new GenericToken(7, "function_name"),
+                new ParenthesisOpen(20),
+                new GenericToken(21, "parameter2"),
+                new WhitespaceToken(31, " "),
+                new OperatorToken(32, "=>"),
+                new WhitespaceToken(34, " "),
+                new StringLiteralToken(35, "'Two'"),
+                new CommaToken(40),
+                new WhitespaceToken(41, " "),
+                new GenericToken(42, "parameter1"),
+                new WhitespaceToken(52, " "),
+                new OperatorToken(53, "=>"),
+                new WhitespaceToken(55, " "),
+                new NumericLiteralToken(56, "1"),
+                new ParenthesisClose(57),
+                new WhitespaceToken(58, " "),
+                new ReservedToken(59, "from"),
+                new WhitespaceToken(63, " "),
+                new GenericToken(64, "rdb$database")
+        );
     }
 
     private static void expectSingleToken(String input, Token expectedToken) {

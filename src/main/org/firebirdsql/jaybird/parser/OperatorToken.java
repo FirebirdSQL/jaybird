@@ -8,7 +8,7 @@ package org.firebirdsql.jaybird.parser;
  * The term operator is taken very broadly, and includes mathematical operators ({@code + - / *}, boolean operators
  * ({@code and or is not} and comparison operators ({@code = <> > < >= <= != ~= ^= !< ~< ^< !> ~> ^>} and the prefix of
  * those operators ({@code ! ~ ^} if they appear individually in the statement (which is a syntax error in Firebird),
- * and the scope specifier ({@code %}).
+ * the scope specifier ({@code %}), and the named parameter operator ({@code =>}).
  * </p>
  *
  * @author Mark Rotteveel
