@@ -234,8 +234,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             Socket socket = this.socket;
             assert socket != null;
             try {
-                final int soTimeout = attachProperties.getSoTimeout();
-                final int desiredTimeout = soTimeout != -1 ? soTimeout : 0;
+                final int desiredTimeout = Math.max(0, attachProperties.getSoTimeout());
                 if (socket.getSoTimeout() != desiredTimeout) {
                     socket.setSoTimeout(desiredTimeout);
                 }
@@ -257,7 +256,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
      */
     public final void socketConnect() throws SQLException {
         try {
-            socket = createSocket();
+            Socket socket = this.socket = createSocket();
             socket.setTcpNoDelay(true);
             final int connectTimeout = attachProperties.getConnectTimeout();
             // connectTimeout is in seconds, need milliseconds, lower bound 0 (indefinite, for overflow or not set)
@@ -267,7 +266,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 socket.setSoTimeout(socketConnectTimeout);
             } else {
                 // Blocking timeout to normal socket timeout, 0 if not set
-                socket.setSoTimeout(Math.max(attachProperties.getSoTimeout(), 0));
+                socket.setSoTimeout(Math.max(0, attachProperties.getSoTimeout()));
             }
 
             final int socketBufferSize = attachProperties.getSocketBufferSize();
