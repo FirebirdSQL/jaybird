@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -136,13 +136,15 @@ class StatementDetectorTest {
                         LocalStatementType.UPDATE_OR_INSERT, new GenericToken(22, "sometable"), false),
 
                 // merge
-                detectReturning("merge into sometable as somealias using othertable on somealias.x = othertable.y"
-                                + "when matched then update set somealias.y = othertable.x"
-                                + "when not matched then insert (x,y) values (othertable.x, othertable.y)",
+                detectReturning("""
+                        merge into sometable as somealias using othertable on somealias.x = othertable.y
+                          when matched then update set somealias.y = othertable.x
+                          when not matched then insert (x,y) values (othertable.x, othertable.y)""",
                         LocalStatementType.MERGE, new GenericToken(11, "sometable"), false, true),
-                noDetect("merge into sometable as somealias using othertable on somealias.x = othertable.y"
-                                + "when matched then update set somealias.y = othertable.x"
-                                + "when not matched then insert (x,y) values (othertable.x, othertable.y)",
+                noDetect("""
+                        merge into sometable as somealias using othertable on somealias.x = othertable.y
+                          when matched then update set somealias.y = othertable.x
+                          when not matched then insert (x,y) values (othertable.x, othertable.y)""",
                         LocalStatementType.MERGE, new GenericToken(11, "sometable"), false),
 
                 // hairy examples with returning token elsewhere
@@ -200,6 +202,60 @@ class StatementDetectorTest {
                 noDetect("savepoint 'XYZ'", LocalStatementType.OTHER, false),
                 noDetect("release savepoint 'XYZ'", LocalStatementType.OTHER, false),
                 noDetect("release savepoint 'XYZ' only", LocalStatementType.OTHER, false),
+
+                // USING ... DO <statement>
+                noDetect("""
+                        using (p1 integer = ?, p2 integer = ?)
+                          declare function subfunc (i1 integer) returns integer
+                          as
+                          begin
+                            return i1;
+                          end
+                        
+                          declare procedure subproc (i1 integer) returns (o1 integer)
+                          as
+                          begin
+                            for select case status when 'found' then 1 else 0 end from some_table where i1 = :i1
+                              into o1 do
+                            begin
+                              suspend;
+                            end
+                          end
+                        do
+                        -- The main query
+                        select subfunc(:p1) + o1 from subproc(:p2 + ?)""",
+                        LocalStatementType.SELECT, false),
+                detectReturning("""
+                        using (val integer = ?)
+                        do insert into generic_table (col_a, col_b) values (:val, :val);""",
+                        LocalStatementType.INSERT, new GenericToken(39, "generic_table"), false, true),
+                detectReturning("""
+                        using (val integer = ?)
+                        do insert into generic_table (col_a, col_b) values (:val, :val) returning id""",
+                        LocalStatementType.INSERT, new GenericToken(39, "generic_table"), true, true),
+                // Annoyingly, DO is not a reserved word
+                noDetect("""
+                        using (DO integer = ?)
+                          -- forward declared
+                          declare function sub_func(DO integer) returns integer;
+                          declare function sub_func2(i1 integer) returns integer
+                          as
+                            declare variable DO integer = 5;
+                          begin
+                            return sub_func(i1 + DO);
+                          end
+                          declare function sub_func(DO integer) returns integer
+                          as
+                          begin
+                            return DO * 2;
+                          end
+                        do update "sometable" set column1 = sub_func(1), column2 = column2 + 1 where x = do""",
+                        LocalStatementType.UPDATE, new QuotedIdentifierToken(349, "\"sometable\""), false),
+                detectReturning("""
+                        using
+                          declare DO integer = 1;
+                        do delete from "sometable" where x = do returning id""",
+                        LocalStatementType.DELETE, new QuotedIdentifierToken(47, "\"sometable\""), true, true),
 
                 // invalid syntax
                 detectReturning("update or invalid", LocalStatementType.OTHER, true),

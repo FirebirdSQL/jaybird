@@ -48,6 +48,8 @@ public final class StatementDetector implements TokenVisitor {
         nextAfterStart.put("ROLLBACK",
                 new StateAfterStart(ParserState.COMMIT_ROLLBACK, LocalStatementType.HARD_ROLLBACK));
         nextAfterStart.put("SET", new StateAfterStart(ParserState.SET, LocalStatementType.OTHER));
+        // Firebird 6.0+ USING ... DO; need to find end of the USING clause to detect actual statement type
+        nextAfterStart.put("USING", new StateAfterStart(ParserState.FIND_USING_END, LocalStatementType.OTHER));
         NEXT_AFTER_START = unmodifiableMap(nextAfterStart);
     }
 
@@ -103,20 +105,29 @@ public final class StatementDetector implements TokenVisitor {
         if (token.isWhitespaceOrComment()) return;
         parserState = parserState.next(token, this);
         if (parserState.isFinalState()) {
-            // We're not interested anymore
+            // We're not interested any more
             visitorRegistrar.removeVisitor(this);
-        } else if (parserState == ParserState.FIND_RETURNING
-                || parserState == ParserState.FIND_SCHEMA_SEPARATOR_OR_RETURNING) {
-            if (parserState == ParserState.FIND_RETURNING) {
-                // We're not interested anymore
+        } else {
+            switch (parserState) {
+            case FIND_RETURNING:
+                // We're not interested any more
                 visitorRegistrar.removeVisitor(this);
-            }
-            if (detectReturning && returningClauseDetector == null) {
-                // Use ReturningClauseDetector to handle detection
-                returningClauseDetector = new ReturningClauseDetector();
-                visitorRegistrar.addVisitor(returningClauseDetector);
-                // Forward current token; if the current token is RETURNING, it is correctly detected
-                returningClauseDetector.visitToken(token, visitorRegistrar);
+                // intentional fallthrough
+            case FIND_SCHEMA_SEPARATOR_OR_RETURNING:
+                if (detectReturning && returningClauseDetector == null) {
+                    // Use ReturningClauseDetector to handle detection
+                    returningClauseDetector = new ReturningClauseDetector();
+                    visitorRegistrar.addVisitor(returningClauseDetector);
+                    // Forward current token; if the current token is RETURNING, it is correctly detected
+                    returningClauseDetector.visitToken(token, visitorRegistrar);
+                }
+                break;
+            case FIND_USING_END:
+                // Find end of USING ... DO
+                visitorRegistrar.addVisitor(new SkipUsingClause(this));
+                // When it has been found, the SkipUsingClause will register us again
+                visitorRegistrar.removeVisitor(this);
+                break;
             }
         }
     }
@@ -377,6 +388,13 @@ public final class StatementDetector implements TokenVisitor {
             }
         },
         SET_TRANSACTION(true),
+        FIND_USING_END {
+            @Override
+            ParserState next(Token token, StatementDetector detector) {
+                // This is invoked after the end of USING ... DO has been found
+                return START.next(token, detector);
+            }
+        },
         OTHER(true);
 
         private final boolean finalState;
