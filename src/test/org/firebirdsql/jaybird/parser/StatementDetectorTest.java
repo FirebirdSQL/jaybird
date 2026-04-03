@@ -49,13 +49,20 @@ class StatementDetectorTest {
                 // SELECT
                 detectReturning("select * from RDB$DATABASE", LocalStatementType.SELECT, false),
                 noDetect("select * from RDB$DATABASE", LocalStatementType.SELECT, false),
-                detectReturning("/* a comment */ select * from RDB$DATABASE", LocalStatementType.SELECT, false),
+                                detectReturning("/* a comment */ select * from RDB$DATABASE", LocalStatementType.SELECT, false),
                 // Presence of select as first keyword is sufficient
                 detectReturning("select", LocalStatementType.SELECT, true),
                 detectReturning("with a as (select 1 as col from rdb$database) select * from a",
                         LocalStatementType.SELECT, false),
                 // Presence of with as first keyword is sufficient
                 detectReturning("with", LocalStatementType.SELECT, true),
+                detectReturning("(select * from RDB$DATABASE)", LocalStatementType.SELECT, false),
+
+                // SELECT: Parenthesized query expressions
+                noDetect("(select * from RDB$DATABASE)", LocalStatementType.SELECT, false),
+                noDetect("((select * from RDB$DATABASE))", LocalStatementType.SELECT, false),
+                // Presence of only the open parenthesis is sufficient
+                detectReturning("(", LocalStatementType.SELECT, true),
 
                 // EXECUTE PROCEDURE
                 detectReturning("execute procedure test 'value1', 'value2'",

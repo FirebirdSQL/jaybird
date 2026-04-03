@@ -666,6 +666,7 @@ The change also lead to incompatible changes to protected methods in the various
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-01-additional-locking-for-sending-in-wire-protocol.adoc[jdp-2026-01: Additional locking for sending in wire protocol].
 * Upgraded `org.firebirdsql.extern.decimal` to https://github.com/FirebirdSQL/decimal-java[decimal-java 2.0.1^]
 * Support `USING` clause in generated keys detection (https://github.com/FirebirdSQL/jaybird/issues/932[#932])
+* Add support for parenthesized queries to `StatementDetector` (https://github.com/FirebirdSQL/jaybird/issues/933[#933])
 * ...
 
 [#compatibility-changes]

@@ -48,6 +48,10 @@ public final class StatementDetector implements TokenVisitor {
         nextAfterStart.put("ROLLBACK",
                 new StateAfterStart(ParserState.COMMIT_ROLLBACK, LocalStatementType.HARD_ROLLBACK));
         nextAfterStart.put("SET", new StateAfterStart(ParserState.SET, LocalStatementType.OTHER));
+        // Firebird 5.0+ parenthesized query expression
+        // NOTE: This is a shortcut, if parenthesis at the top-level are ever allowed for anything other than SELECT (or
+        // SELECT-like statements), this needs to be reworked
+        nextAfterStart.put("(", new StateAfterStart(ParserState.SELECT, LocalStatementType.SELECT));
         // Firebird 6.0+ USING ... DO; need to find end of the USING clause to detect actual statement type
         nextAfterStart.put("USING", new StateAfterStart(ParserState.FIND_USING_END, LocalStatementType.OTHER));
         NEXT_AFTER_START = unmodifiableMap(nextAfterStart);
@@ -176,7 +180,7 @@ public final class StatementDetector implements TokenVisitor {
         START {
             @Override
             ParserState next(Token token, StatementDetector detector) {
-                if (!(token instanceof ReservedToken)) {
+                if (!(token instanceof ReservedToken || token instanceof ParenthesisOpen)) {
                     return forceOther(detector);
                 }
                 StateAfterStart stateAfterStart =
