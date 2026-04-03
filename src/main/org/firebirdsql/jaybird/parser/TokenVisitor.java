@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -28,10 +28,15 @@ public interface TokenVisitor {
 
     /**
      * Signals that the last token was produced and the statement text was fully parsed.
+     * <p>
+     * The default implementation does nothing.
+     * </p>
      *
      * @param visitorRegistrar
      *         Visitor registrar (can be used to remove itself, or add other visitors)
      */
-    void complete(VisitorRegistrar visitorRegistrar);
+    default void complete(VisitorRegistrar visitorRegistrar) {
+        // do nothing
+    }
 
 }

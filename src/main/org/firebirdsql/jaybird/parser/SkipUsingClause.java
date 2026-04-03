@@ -47,11 +47,6 @@ class SkipUsingClause implements TokenVisitor {
         }
     }
 
-    @Override
-    public void complete(VisitorRegistrar visitorRegistrar) {
-        // do nothing
-    }
-
     private void pushParserState(ParserState parserState) {
         preservedState.addFirst(parserState);
     }

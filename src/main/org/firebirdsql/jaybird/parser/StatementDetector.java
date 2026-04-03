@@ -132,11 +132,6 @@ public final class StatementDetector implements TokenVisitor {
         }
     }
 
-    @Override
-    public void complete(VisitorRegistrar visitorRegistrar) {
-        // do nothing
-    }
-
     public StatementIdentification toStatementIdentification() {
         return new StatementIdentification(statementType, schemaToken, tableNameToken, returningClauseDetected());
     }

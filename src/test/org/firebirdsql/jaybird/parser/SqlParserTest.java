@@ -226,10 +226,6 @@ class SqlParserTest {
             }
         }
 
-        @Override
-        public void complete(VisitorRegistrar visitorRegistrar) {
-            // do nothing
-        }
     }
 
 }
