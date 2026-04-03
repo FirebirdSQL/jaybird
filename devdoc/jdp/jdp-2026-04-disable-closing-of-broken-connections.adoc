@@ -1,0 +1,70 @@
+= jdp-2026-04: Disable closing of broken connections
+
+// SPDX-FileCopyrightText: Copyright 2026 Mark Rotteveel
+// SPDX-License-Identifier: LicenseRef-PDL-1.0
+
+== Status
+
+* Draft
+* Proposed for: Jaybird 5.0.13, Jaybird 6.0.6, Jaybird 7
+
+== Type
+
+* Feature-Specification
+
+== Context
+
+Currently, Jaybird will forcibly close connections if errors occur that it considers fatal.
+Specifically, if `FatalErrorHelper#isFatal(SQLException)` returns true for exceptions that reach `FBManagedConnection#errorOccurred`.
+This close then happens in method `connectionErrorOccurred` in `FBStandAloneConnectionManager` (used for most connections created in Jaybird), and `FBXADataSource.XAConnectionManager` (used for connections created by `FBXADataSource`).
+
+We have received requests to not do this and leave closing to the connection pool they're using or user code.
+There have also been problems with wrong classification because Firebird used the wrong SQLSTATE for some errors, and thus Jaybird unnecessarily killing the connection.
+
+== Decision
+
+Although we think that forcibly closing the connection in these cases is the cleanest and correct solution, we recognize that Jaybird might sometimes be wrong in its decision, or that users want more control over this.
+
+As such we'll add Boolean *system* properties to control the behaviour of `FBStandAloneConnectionManager` and `XAConnectionManager`.
+These system properties will be checked _dynamically_ (i.e. each time their `connectionErrorOccurred` is invoked), so they can be changed at run time.
+
+We think this should only be used for debugging or workarounds.
+Correct behaviour of a connection after such an error is ignored is not guaranteed.
+
+== Consequences
+
+Jaybird will add two Boolean system properties:
+
+`org.firebirdsql.jdbc.connection.forceCloseOnFatal`::
+Configures behaviour of "`normal`" JDBC connections (i.e. created with `org.firebirdsql.jaybird.xca.FBStandAloneConnectionManager`);
+defaults to `true`.
++
+We use prefix `org.firebirdsql.jdbc.connection.` because XCA is internal API, and this affects most JDBC connections (except those from `FBXADataSource`, or those created with a custom `XcaConnectionManager`).
+
+`org.firebirdsql.ds.xa.connection.forceCloseOnFatal`::
+Configures behaviour of (XA) connections created by `org.firebirdsql.ds.FBXADataSource`;
+defaults to `true`.
+
+If the force close is disabled, this will be logged together with the error.
+
+[appendix]
+== License Notice
+
+The contents of this Documentation are subject to the Public Documentation License Version 1.0 (the “License”);
+you may only use this Documentation if you comply with the terms of this License.
+A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
+
+The Original Documentation is "`jdp-2026-04: Disable closing of broken connections`".
+The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2026.
+All Rights Reserved.
+(Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
+
+////
+Contributor(s): ______________________________________.
+Portions created by ______ are Copyright © _________ [Insert year(s)].
+All Rights Reserved.
+(Contributor contact(s): ________________ [Insert hyperlink/alias]).
+////
+
+The exact file history is recorded in our Git repository;
+see https://github.com/FirebirdSQL/jaybird
