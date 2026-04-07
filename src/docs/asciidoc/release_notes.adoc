@@ -37,6 +37,9 @@ For known issues, consult <<known-issues>>.
 
 The following was fixed or changed since Jaybird 6.0.6:
 
+* Two system properties were added to disable forced close of a connection after fatal errors (https://github.com/FirebirdSQL/jaybird/issues/893[#893])
++
+See also <<disable-force-close-on-fatal>>.
 * Fixed: Legacy authentication fails with non-ASCII characters in password (https://github.com/FirebirdSQL/jaybird/issues/858[#858])
 +
 The hash that is sent instead of the actual password -- for authentication plugin `Legacy_Auth` or on Firebird 2.5 or older -- was incorrectly generated based on the `char` (UTF-16) value.
@@ -1458,6 +1461,29 @@ select {\{\}fn EXP(2){\}\} from SOME_TABLE
 -- Sent to server (results in a syntax error)
 select {fn EXP(2)} from SOME_TABLE
 ----
+
+[#disable-force-close-on-fatal]
+=== System properties to disable force close of connections
+
+Since Jaybird 6.0.6 (and Jaybird 5.0.13), Jaybird supports two new Boolean system properties.
+These properties control if Jaybird closes a connection on fatal errors.
+
+`org.firebirdsql.jdbc.connection.forceCloseOnFatal`::
+Configures force close behaviour of "`normal`" JDBC connections (i.e. created with `org.firebirdsql.jaybird.xca.FBStandAloneConnectionManager`);
+defaults to `true`.
++
+We use prefix `org.firebirdsql.jdbc.connection.` because XCA is internal API, and this affects most JDBC connections (except those from `FBXADataSource`, or those created with a custom `XcaConnectionManager`).
+
+`org.firebirdsql.ds.xa.connection.forceCloseOnFatal`::
+Configures force close behaviour of (XA) connections created by `org.firebirdsql.ds.FBXADataSource`;
+defaults to `true`.
+
+These system properties are checked _dynamically_, so they can be changed at run time.
+
+These properties should only be used for debugging or workarounds.
+Correct behaviour of a connection after a fatal error is ignored is not guaranteed.
+
+See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-04-disable-closing-of-broken-connections.adoc[jdp-2026-04: Disable closing of broken connections].
 
 [#other-fixes-and-changes]
 === Other fixes and changes

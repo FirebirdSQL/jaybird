@@ -51,6 +51,8 @@ public final class JaybirdSystemProperties {
     public static final String WIRE_DECRYPT_BUFFER_SIZE = WIRE_PREFIX + "decryptBufferSize";
     public static final String WIRE_INPUT_BUFFER_SIZE = WIRE_PREFIX + "inputBufferSize";
     public static final String WIRE_OUTPUT_BUFFER_SIZE = WIRE_PREFIX + "outputBufferSize";
+    public static final String JDBC_CONNECTION_FORCE_CLOSE_FATAL = JDBC_PREFIX + "connection.forceCloseOnFatal";
+    public static final String XA_CONNECTION_FORCE_CLOSE_FATAL = COMMON_PREFIX + "ds.xa.connection.forceCloseOnFatal";
 
     private JaybirdSystemProperties() {
         // no instances
@@ -115,7 +117,7 @@ public final class JaybirdSystemProperties {
     public static Boolean getDefaultAsyncFetch() {
         String asyncFetch = getSystemPropertyPrivileged(DEFAULT_ASYNC_FETCH);
         if (asyncFetch == null) return null;
-        // Special handling for empty string to be equal to true
+        // Special handling for blank string -> true
         return asyncFetch.isBlank() || Boolean.parseBoolean(asyncFetch);
     }
 
@@ -127,9 +129,24 @@ public final class JaybirdSystemProperties {
         return getIntegerSystemPropertyPrivileged(DEFAULT_MAX_BLOB_CACHE_SIZE);
     }
 
+    public static boolean isJdbcConnectionForceCloseOnFatal() {
+        return getBooleanWithDefault(JDBC_CONNECTION_FORCE_CLOSE_FATAL, true);
+    }
+
+    public static boolean isXaConnectionForceCloseOnFatal() {
+        return getBooleanWithDefault(XA_CONNECTION_FORCE_CLOSE_FATAL, true);
+    }
+
     private static int getWithDefault(String propertyName, int defaultValue) {
         Integer value = getIntegerSystemPropertyPrivileged(propertyName);
         return value != null ? value : defaultValue;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static boolean getBooleanWithDefault(String propertyName, boolean defaultValue) {
+        String stringValue = getSystemPropertyPrivileged(propertyName);
+        // Special handling for null -> default, and blank string -> true
+        return stringValue == null ? defaultValue : (stringValue.isBlank() || Boolean.parseBoolean(stringValue));
     }
 
     private static String getSystemPropertyPrivileged(final String propertyName) {

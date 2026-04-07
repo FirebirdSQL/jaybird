@@ -26,11 +26,13 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.ng.AbstractFbAttachment;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.gds.ng.WireCrypt;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.jspecify.annotations.NullMarked;
@@ -47,6 +49,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.List;
@@ -70,6 +73,7 @@ import static org.firebirdsql.gds.ISCConstants.isc_net_read_err;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidConnectionEncoding;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidIdentifierLength;
 import static org.firebirdsql.gds.JaybirdSystemProperties.DEFAULT_CONNECTION_ENCODING_PROPERTY;
+import static org.firebirdsql.gds.JaybirdSystemProperties.JDBC_CONNECTION_FORCE_CLOSE_FATAL;
 import static org.firebirdsql.gds.JaybirdSystemProperties.PROCESS_ID_PROP;
 import static org.firebirdsql.gds.JaybirdSystemProperties.PROCESS_NAME_PROP;
 import static org.firebirdsql.gds.JaybirdSystemProperties.REQUIRE_CONNECTION_ENCODING_PROPERTY;
@@ -1169,6 +1173,35 @@ class FBConnectionTest {
     void isSimpleIdentifier(String identifier, boolean expectedIsSimple) throws Exception {
         try (var connection = getConnectionViaDriverManager()) {
             assertEquals(expectedIsSimple, connection.isSimpleIdentifier(identifier), "isSimpleIdentifier");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = { "NIL" }, textBlock = """
+            propertyValue, expectForceClose
+            NIL,           true
+            true,          true
+            '',            true
+            false,         false
+            garbage,       false
+            """)
+    void systemPropertyJdbcConnectionForceCloseOnFatal(@Nullable String propertyValue, boolean expectForceClose)
+            throws Exception {
+        var lookup = MethodHandles.privateLookupIn(AbstractFbAttachment.class, MethodHandles.lookup())
+                .findVarHandle(AbstractFbAttachment.class, "exceptionListenerDispatcher", ExceptionListenerDispatcher.class);
+        try (var ignored = withTemporarySystemProperty(JDBC_CONNECTION_FORCE_CLOSE_FATAL, propertyValue);
+             var connection = getConnectionViaDriverManager()) {
+            AbstractFbAttachment<?> db = (AbstractFbAttachment<?>) connection.getFbDatabase();
+            ExceptionListenerDispatcher eld = (ExceptionListenerDispatcher) lookup.get(db);
+
+            assertFalse(connection.isClosed(), "Expected open connection before sending fatal exception");
+
+            eld.errorOccurred(new SQLException("Test fatal exception", SQLStateConstants.SQL_STATE_CONNECTION_FAILURE));
+
+            assertEquals(expectForceClose, connection.isClosed(),
+                    "Unexpected Connection#isClosed() value after sending fatal exception");
+            assertEquals(!expectForceClose, db.isAttached(),
+                    "Unexpected FbDatabase#isAttached() value after sending fatal exception");
         }
     }
 

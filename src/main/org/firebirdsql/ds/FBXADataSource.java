@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.ds;
 
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -33,6 +34,7 @@ import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 import java.io.Serial;
 import java.io.Serializable;
+import java.lang.System.Logger.Level;
 import java.sql.SQLException;
 
 /**
@@ -107,7 +109,12 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
 
         @Override
         public void connectionErrorOccurred(XcaConnectionEvent ce) {
-            destroyConnection(ce);
+            boolean forceCloseOnFatal = JaybirdSystemProperties.isXaConnectionForceCloseOnFatal();
+            LOG.log(Level.TRACE, () -> "ConnectionErrorOccurred (forceCloseOnFatal=%b)".formatted(forceCloseOnFatal),
+                    ce.getException());
+            if (forceCloseOnFatal) {
+                destroyConnection(ce);
+            }
         }
 
         private void destroyConnection(XcaConnectionEvent ce) {
@@ -115,7 +122,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
             try {
                 mc.destroy(ce);
             } catch (SQLException e) {
-                LOG.log(System.Logger.Level.WARNING, "Ignored exception closing unmanaged connection", e);
+                LOG.log(Level.WARNING, "Ignored exception closing unmanaged connection", e);
             } finally {
                 mc.removeConnectionEventListener(this);
             }
