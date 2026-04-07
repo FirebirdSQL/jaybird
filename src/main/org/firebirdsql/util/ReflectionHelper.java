@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.util;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashSet;
@@ -33,13 +34,13 @@ import java.util.Set;
 public final class ReflectionHelper {
     
     private ReflectionHelper() {}
-    
+
     /**
      * Get all implemented interfaces by the class.
-     * 
-     * @param clazz class to inspect.
-     * 
-     * @return array of all implemented interfaces.
+     *
+     * @param clazz
+     *         class to inspect
+     * @return array of all implemented interfaces
      */
     public static Class<?>[] getAllInterfaces(Class<?> clazz) {
         Set<Class<?>> result = new HashSet<>();
@@ -51,23 +52,42 @@ public final class ReflectionHelper {
     }
     
     /**
-     * Helper function to find specified method in a specified class.
+     * Helper function to find a method in a class.
      * 
      * @param clazz
-     *            class in which we look for a specified method.
+     *            class in which to look for the method
      * @param name
-     *            name of the method.
+     *            name of the method
      * @param args
-     *            types of method params.
+     *            types of method params
      * 
-     * @return instance of {@link Method} corresponding to specified name and
-     *         param types.
+     * @return instance of {@link Method} corresponding to {@code name} and {@code args}
      */
     public static Method findMethod(Class<?> clazz, String name, Class<?>[] args) {
         try {
             return clazz.getMethod(name, args);
         } catch (NoSuchMethodException nmex) {
             return null;
+        }
+    }
+
+    /**
+     * Helper function to find a declared field in a class.
+     *
+     * @param clazz
+     *         class in which to look for the field
+     * @param name
+     *         name of the field
+     * @return instance of {@link Field} corresponding to {@code name}
+     * @throws IllegalArgumentException
+     *         if no field was found
+     * @since 5.0.13
+     */
+    public static Field findField(Class<?> clazz, String name) {
+        try {
+            return clazz.getDeclaredField(name);
+        } catch (NoSuchFieldException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 

@@ -22,21 +22,25 @@ import org.firebirdsql.common.ConfigHelper;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.DatabaseUserExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.common.function.UncheckedCloseable;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
+import org.firebirdsql.gds.ng.AbstractFbAttachment;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.gds.ng.WireCrypt;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
+import org.firebirdsql.util.ReflectionHelper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -45,14 +49,16 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.*;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.SystemPropertyHelper.withTemporarySystemProperty;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
@@ -64,6 +70,7 @@ import static org.firebirdsql.gds.ISCConstants.fb_info_wire_crypt;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.ISCConstants.isc_net_read_err;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_invalidIdentifierLength;
+import static org.firebirdsql.gds.JaybirdSystemProperties.JDBC_CONNECTION_FORCE_CLOSE_FATAL;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -1087,6 +1094,35 @@ class FBConnectionTest {
     void isSimpleIdentifier(String identifier, boolean expectedIsSimple) throws Exception {
         try (FirebirdConnection connection = getConnectionViaDriverManager()) {
             assertEquals(expectedIsSimple, connection.isSimpleIdentifier(identifier), "isSimpleIdentifier");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = { "NIL" }, value = {
+            "propertyValue, expectForceClose",
+            "NIL,           true",
+            "true,          true",
+            "'',            true",
+            "false,         false",
+            "garbage,       false",
+    })
+    void systemPropertyJdbcConnectionForceCloseOnFatal(String propertyValue, boolean expectForceClose)
+            throws Exception {
+        Field eldField = ReflectionHelper.findField(AbstractFbAttachment.class, "exceptionListenerDispatcher");
+        eldField.setAccessible(true);
+        try (UncheckedCloseable ignored = withTemporarySystemProperty(JDBC_CONNECTION_FORCE_CLOSE_FATAL, propertyValue);
+             FirebirdConnection connection = getConnectionViaDriverManager()) {
+            AbstractFbAttachment<?> db = (AbstractFbAttachment<?>) connection.getFbDatabase();
+            ExceptionListenerDispatcher eld = (ExceptionListenerDispatcher) eldField.get(db);
+
+            assertFalse(connection.isClosed(), "Expected open connection before sending fatal exception");
+
+            eld.errorOccurred(new SQLException("Test fatal exception", SQLStateConstants.SQL_STATE_CONNECTION_FAILURE));
+
+            assertEquals(expectForceClose, connection.isClosed(),
+                    "Unexpected Connection#isClosed() value after sending fatal exception");
+            assertEquals(!expectForceClose, db.isAttached(),
+                    "Unexpected FbDatabase#isAttached() value after sending fatal exception");
         }
     }
 

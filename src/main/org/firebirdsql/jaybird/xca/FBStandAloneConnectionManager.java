@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jaybird.xca;
 
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -37,6 +38,7 @@ public final class FBStandAloneConnectionManager implements XcaConnectionManager
 
     private static final long serialVersionUID = 1L;
 
+    @SuppressWarnings("deprecation")
     private static final Logger log = LoggerFactory.getLogger(FBStandAloneConnectionManager.class);
 
     FBStandAloneConnectionManager() {
@@ -62,11 +64,14 @@ public final class FBStandAloneConnectionManager implements XcaConnectionManager
 
     @Override
     public void connectionErrorOccurred(XcaConnectionEvent ce) {
-        log.debug("ConnectionErrorOccurred, ", ce.getException());
-        try {
-            ce.getSource().destroy(ce);
-        } catch (SQLException e) {
-            log.debug("further problems destroying connection: ", e);
+        boolean forceCloseOnFatal = JaybirdSystemProperties.isJdbcConnectionForceCloseOnFatal();
+        log.tracefe("ConnectionErrorOccurred (forceCloseOnFatal=%b)", forceCloseOnFatal, ce.getException());
+        if (forceCloseOnFatal) {
+            try {
+                ce.getSource().destroy(ce);
+            } catch (SQLException e) {
+                log.debug("further problems destroying connection: ", e);
+            }
         }
     }
 }

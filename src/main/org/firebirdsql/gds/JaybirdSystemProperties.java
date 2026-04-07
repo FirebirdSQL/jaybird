@@ -57,6 +57,8 @@ public final class JaybirdSystemProperties {
     public static final String DEFAULT_MAX_BLOB_CACHE_SIZE = JDBC_PREFIX + "defaultMaxBlobCacheSize";
     public static final String DATATYPE_CODER_CACHE_SIZE = COMMON_PREFIX + "datatypeCoderCacheSize";
     public static final String NATIVE_LIBRARY_SHUTDOWN_DISABLED = COMMON_PREFIX + "nativeResourceShutdownDisabled";
+    public static final String JDBC_CONNECTION_FORCE_CLOSE_FATAL = JDBC_PREFIX + "connection.forceCloseOnFatal";
+    public static final String XA_CONNECTION_FORCE_CLOSE_FATAL = COMMON_PREFIX + "ds.xa.connection.forceCloseOnFatal";
 
     private JaybirdSystemProperties() {
         // no instances
@@ -121,6 +123,21 @@ public final class JaybirdSystemProperties {
 
     public static Integer getDefaultMaxBlobCacheSize() {
         return getIntegerSystemPropertyPrivileged(DEFAULT_MAX_BLOB_CACHE_SIZE);
+    }
+
+    public static boolean isJdbcConnectionForceCloseOnFatal() {
+        return getBooleanWithDefault(JDBC_CONNECTION_FORCE_CLOSE_FATAL, true);
+    }
+
+    public static boolean isXaConnectionForceCloseOnFatal() {
+        return getBooleanWithDefault(XA_CONNECTION_FORCE_CLOSE_FATAL, true);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static boolean getBooleanWithDefault(String propertyName, boolean defaultValue) {
+        String stringValue = getSystemPropertyPrivileged(propertyName);
+        // Special handling for null -> default, and blank string -> true
+        return stringValue == null ? defaultValue : (stringValue.isBlank() || Boolean.parseBoolean(stringValue));
     }
 
     private static String getSystemPropertyPrivileged(final String propertyName) {

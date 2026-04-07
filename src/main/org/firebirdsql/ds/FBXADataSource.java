@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.ds;
 
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.LockCloseable;
@@ -46,6 +47,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
 
     // TODO Implement in terms of FBManagedConnectionFactory
 
+    @SuppressWarnings("deprecation")
     private static final Logger LOG = LoggerFactory.getLogger(FBXADataSource.class);
 
     private volatile FBDataSource internalDs;
@@ -110,10 +112,14 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
 
         @Override
         public void connectionErrorOccurred(XcaConnectionEvent ce) {
-            try {
-                ce.getSource().destroy(ce);
-            } catch (SQLException e) {
-                LOG.warn("Exception closing unmanaged connection", e);
+            boolean forceCloseOnFatal = JaybirdSystemProperties.isXaConnectionForceCloseOnFatal();
+            LOG.tracefe("ConnectionErrorOccurred (forceCloseOnFatal=%b)", forceCloseOnFatal, ce.getException());
+            if (forceCloseOnFatal) {
+                try {
+                    ce.getSource().destroy(ce);
+                } catch (SQLException e) {
+                    LOG.warn("Exception closing unmanaged connection", e);
+                }
             }
         }
     }
