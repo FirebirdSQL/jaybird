@@ -5,25 +5,33 @@ package org.firebirdsql.ds;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.ng.AbstractFbAttachment;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.jaybird.xca.XidImpl;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
+import java.lang.invoke.MethodHandles;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.SystemPropertyHelper.withTemporarySystemProperty;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
+import static org.firebirdsql.gds.JaybirdSystemProperties.XA_CONNECTION_FORCE_CLOSE_FATAL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -263,6 +271,36 @@ class FBXADataSourceTest {
             assertTrue(serverVersion.isWireCompressionUsed(), "expected wire compression in use");
         } finally {
             xaConnection.close();
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, nullValues = { "NIL" }, textBlock = """
+            propertyValue, expectForceClose
+            NIL,           true
+            true,          true
+            '',            true
+            false,         false
+            garbage,       false
+            """)
+    void systemPropertyXaConnectionForceCloseOnFatal(@Nullable String propertyValue, boolean expectForceClose)
+            throws Exception {
+        var lookup = MethodHandles.privateLookupIn(AbstractFbAttachment.class, MethodHandles.lookup())
+                .findVarHandle(AbstractFbAttachment.class, "exceptionListenerDispatcher", ExceptionListenerDispatcher.class);
+        XAConnection xaConnection = getXAConnection();
+        try (var ignored = withTemporarySystemProperty(XA_CONNECTION_FORCE_CLOSE_FATAL, propertyValue);
+             var connection = xaConnection.getConnection().unwrap(FirebirdConnection.class)) {
+            AbstractFbAttachment<?> db = (AbstractFbAttachment<?>) connection.getFbDatabase();
+            ExceptionListenerDispatcher eld = (ExceptionListenerDispatcher) lookup.get(db);
+
+            assertFalse(connection.isClosed(), "Expected open connection before sending fatal exception");
+
+            eld.errorOccurred(new SQLException("Test fatal exception", SQLStateConstants.SQL_STATE_CONNECTION_FAILURE));
+
+            assertEquals(expectForceClose, connection.isClosed(),
+                    "Unexpected Connection#isClosed() value after sending fatal exception");
+            assertEquals(!expectForceClose, db.isAttached(),
+                    "Unexpected FbDatabase#isAttached() value after sending fatal exception");
         }
     }
 
