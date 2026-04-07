@@ -137,7 +137,7 @@ public final class JaybirdSystemProperties {
     private static boolean getBooleanWithDefault(String propertyName, boolean defaultValue) {
         String stringValue = getSystemPropertyPrivileged(propertyName);
         // Special handling for null -> default, and blank string -> true
-        return stringValue == null ? defaultValue : (stringValue.isBlank() || Boolean.parseBoolean(stringValue));
+        return stringValue == null ? defaultValue : (stringValue.trim().isEmpty() || Boolean.parseBoolean(stringValue));
     }
 
     private static String getSystemPropertyPrivileged(final String propertyName) {
