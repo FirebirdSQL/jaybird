@@ -35,13 +35,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.invoke.MethodHandles;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.*;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.SystemPropertyHelper.withTemporarySystemProperty;
@@ -215,7 +220,8 @@ class FBConnectionTest {
              Statement stmt = connection.createStatement()) {
             executeCreateTable(connection, "CREATE TABLE test_lock(col1 INTEGER)");
 
-            TransactionParameterBuffer tpb = connection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
+            TransactionParameterBuffer tpb = requireNonNull(
+                    connection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED));
 
             if (tpb.hasArgument(isc_tpb_wait)) {
                 tpb.removeArgument(isc_tpb_wait);
@@ -519,8 +525,20 @@ class FBConnectionTest {
     void testIPv6AddressHandling() throws Exception {
         assumeThat("Test only works in pure java", GDS_TYPE, isPureJavaType());
         assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(3, 0), "Firebird 3 or higher required for IPv6 testing");
-        try (Connection connection = DriverManager.getConnection(
-                "jdbc:firebirdsql://[::1]/" + getDatabasePath() + "?charSet=utf-8", DB_USER, DB_PASSWORD)) {
+        String ipv6;
+        if (isLocalhost()) {
+            ipv6 = "::1";
+        } else {
+            Optional<String> optIpv6 = Arrays.stream(InetAddress.getAllByName(DB_SERVER_URL))
+                    .filter(a -> a instanceof Inet6Address)
+                    .map(InetAddress::getHostAddress)
+                    .findAny();
+            assumeTrue(optIpv6.isPresent(), "Test assumes %s resolves to an IPv6 address".formatted(DB_SERVER_URL));
+            ipv6 = optIpv6.get();
+        }
+        try (var connection = DriverManager.getConnection(
+                "jdbc:firebirdsql://[%s]:%d/%s?charSet=utf-8".formatted(ipv6, DB_SERVER_PORT, getDatabasePath()),
+                DB_USER, DB_PASSWORD)) {
             assertTrue(connection.isValid(0));
         }
     }

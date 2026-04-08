@@ -7,7 +7,6 @@ import org.firebirdsql.common.extension.DatabaseUserExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.WireCrypt;
-import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,6 +31,7 @@ import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
 import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
 import static org.firebirdsql.common.FBTestProperties.configureServiceManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.isDefaultPort;
 import static org.firebirdsql.common.FBTestProperties.isLocalhost;
 import static org.firebirdsql.common.FBTestProperties.supportsNativeModernUrls;
 import static org.firebirdsql.common.FbAssumptions.assumeFeature;
@@ -110,7 +110,7 @@ class FBServiceManagerTest {
                 urlFormats.add("//%1$s:%2$d/");
             }
             urlFormats.add("//%1$s:%2$d/%3$s");
-            if (DB_SERVER_PORT == PropertyConstants.DEFAULT_PORT) {
+            if (isDefaultPort()) {
                 urlFormats.add("%1$s:%3$s");
                 if (supportsNamelessServiceManager) {
                     urlFormats.add("%1$s:");

@@ -18,6 +18,7 @@ import org.firebirdsql.gds.ng.jna.FbClientFeatureAccess;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
+import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
 import org.firebirdsql.jaybird.util.BasicVersion;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
@@ -97,6 +98,10 @@ public final class FBTestProperties {
 
     public static boolean isLocalhost() {
         return "localhost".equals(DB_SERVER_URL) || "127.0.0.1".equals(DB_SERVER_URL);
+    }
+
+    public static boolean isDefaultPort() {
+        return DB_SERVER_PORT == PropertyConstants.DEFAULT_PORT;
     }
 
     public static String getDatabasePath() {

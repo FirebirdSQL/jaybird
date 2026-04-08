@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -6,7 +6,6 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.ds.FBSimpleDataSource;
 import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.*;
@@ -47,7 +45,7 @@ class DatabaseUrlFormatsTest {
     @SuppressWarnings("unused")
     static Stream<Arguments> testConnectionWithDriverManager() {
         final List<String> urlPrefixes = GDSFactory.getPlugin(FBTestProperties.getGdsType()).getSupportedProtocolList();
-        final List<String> urls = urlsWithoutProtocolPrefix();
+        final List<String> urls = urlsWithoutProtocolPrefix().toList();
 
         return urlPrefixes.stream()
                 .flatMap(urlPrefix -> urls.stream()
@@ -62,9 +60,12 @@ class DatabaseUrlFormatsTest {
     @MethodSource
     void testConnectionWithEmptyUrl(String url) throws Exception {
         Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
-        properties.put(PropertyNames.databaseName, getDatabasePath());
+        String databaseName = isEmbeddedType().matches(GDS_TYPE) || (isLocalhost() && isDefaultPort())
+                ? getDatabasePath()
+                : getdbpath(DB_NAME);
+        properties.put(PropertyNames.databaseName, databaseName);
 
-        try (Connection connection = DriverManager.getConnection(url, properties)) {
+        try (var connection = DriverManager.getConnection(url, properties)) {
             assertTrue(connection.isValid(1000));
         }
     }
@@ -97,19 +98,18 @@ class DatabaseUrlFormatsTest {
     @SuppressWarnings("unused")
     static Stream<Arguments> testConnectionWithSimpleDataSource() {
         return Stream.concat(
-                urlsWithoutProtocolPrefix().stream()
+                urlsWithoutProtocolPrefix()
                         // URLS with a question mark are only for JDBC url test
                         .filter(url -> url.indexOf('?') == -1)
                         .map(url -> Arguments.of(null, null, url)),
                 Stream.of(Arguments.of(DB_SERVER_URL, DB_SERVER_PORT, FBTestProperties.getDatabasePath())));
     }
 
-    private static List<String> urlsWithoutProtocolPrefix() {
+    private static Stream<String> urlsWithoutProtocolPrefix() {
         final String databasePath = getDatabasePath();
         final String serverName = DB_SERVER_URL;
         final boolean localhost = isLocalhost();
         final String ipv6SafeServerName = serverName.indexOf(':') != -1 ? '[' + serverName + ']' : serverName;
-        final int portNumber = DB_SERVER_PORT;
         final String gdsTypeName = GDS_TYPE;
         final List<String> urlFormats = new ArrayList<>();
         if (isEmbeddedType().matches(gdsTypeName)) {
@@ -117,15 +117,15 @@ class DatabaseUrlFormatsTest {
             urlFormats.add("%3$s");
             urlFormats.add("nopath?databaseName=%3$s");
         } else {
-            urlFormats.add("///%3$s");
             urlFormats.add("%1$s/%2$d:%3$s");
             urlFormats.add("//%1$s:%2$d/%3$s");
-            if (portNumber == PropertyConstants.DEFAULT_PORT) {
+            if (isDefaultPort()) {
                 urlFormats.add("%1$s:%3$s");
                 urlFormats.add("//%1$s/%3$s");
                 if (localhost) {
                     // no hostname + port:
                     urlFormats.add("%3$s");
+                    urlFormats.add("///%3$s");
                 }
             }
 
@@ -167,8 +167,8 @@ class DatabaseUrlFormatsTest {
         }
 
         return urlFormats.stream()
-                .map(urlFormat -> String.format(urlFormat, ipv6SafeServerName, portNumber, databasePath, serverName))
-                .collect(Collectors.toList());
+                .map(urlFormat ->
+                        urlFormat.formatted(ipv6SafeServerName, DB_SERVER_PORT, databasePath, serverName));
     }
 
     private static boolean isWindowsSystem() {
