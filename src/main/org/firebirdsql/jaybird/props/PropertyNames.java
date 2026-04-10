@@ -72,6 +72,8 @@ public final class PropertyNames {
     public static final String maxBlobCacheSize = "maxBlobCacheSize";
     public static final String searchPath = "searchPath";
     public static final String escapeProcessing = "escapeProcessing";
+    // TODO Maybe use a shorter name or add a shorter alias?
+    public static final String callableImplementation = "callableImplementation";
 
     // service connection
     public static final String expectedDb = "expectedDb";
