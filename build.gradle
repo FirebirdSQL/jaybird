@@ -235,6 +235,7 @@ test {
             'test.user': project.'test.user',
             'test.password': project.'test.password',
             'test.db.dir': project.'test.db.dir',
+            'test.db.mapped': project.findProperty('test.db.mapped'),
             'test.db.host': project.'test.db.host',
             'test.db.port': project.'test.db.port',
             'test.db.lc_ctype': project.'test.db.lc_ctype',
@@ -242,6 +243,7 @@ test {
             'test.use_firebird_autocommit': project.'test.use.firebird.autocommit',
             'jdk.net.useFastTcpLoopback': project.findProperty('jdk.net.useFastTcpLoopback') ?: 'false',
             'test.db_on_docker': project.findProperty('test.dbondocker') ?: 'false',
+            'test.event.available': project.findProperty('test.event.available'),
             'test.enableProtocol': project.'test.enableProtocol'
     )
     if (project.hasProperty('test.jna.library.path')) {

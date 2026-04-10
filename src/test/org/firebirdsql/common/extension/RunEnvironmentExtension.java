@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common.extension;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -9,8 +10,9 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import java.util.EnumSet;
 import java.util.List;
 
-import static org.firebirdsql.common.FBTestProperties.DB_ON_DOCKER;
-import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
+import static org.firebirdsql.common.FBTestProperties.hasMappedDatabaseDirectory;
+import static org.firebirdsql.common.FBTestProperties.isEventPortAvailable;
+import static org.firebirdsql.common.FBTestProperties.isSameHostServer;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
@@ -45,11 +47,44 @@ public class RunEnvironmentExtension implements BeforeAllCallback {
 
         private final EnumSet<EnvironmentRequirement> aspects = EnumSet.noneOf(EnvironmentRequirement.class);
 
+        /**
+         * Requires that Firebird accesses files directly on the filesystem of this host.
+         * <p>
+         * Use of {@link #requiresDbLocallyMapped()} is preferred whenever possible.
+         * </p>
+         *
+         * @return this builder
+         */
+        @SuppressWarnings("unused")
         public Builder requiresDbOnLocalFileSystem() {
             aspects.add(EnvironmentRequirement.DB_LOCAL_FS);
             return this;
         }
 
+        /**
+         * Requires that tests can access files of the Firebird server in a directory (mounted or directly) on the
+         * local filesystem.
+         *
+         * @return this builder
+         */
+        public Builder requiresDbLocallyMapped() {
+            aspects.add(EnvironmentRequirement.DB_LOCALLY_MAPPED);
+            return this;
+        }
+
+        /**
+         * Requires that the event port is available.
+         * <p>
+         * Currently this requirement is considered not met if
+         * </p>
+         * <ol>
+         * <li>Property {@code test.event.available} is {@code false}</li>
+         * <li>Property {@code test.dbondocker} is {@code true} and {@code test.event.available} is not set, or is
+         * not {@code true}</li>
+         * </ol>
+         *
+         * @return this builder
+         */
         public Builder requiresEventPortAvailable() {
             aspects.add(EnvironmentRequirement.EVENT_PORT_AVAILABLE);
             return this;
@@ -61,21 +96,37 @@ public class RunEnvironmentExtension implements BeforeAllCallback {
     }
 
     public enum EnvironmentRequirement {
+        /**
+         * Firebird server has direct local filesystem access.
+         *
+         * @see FBTestProperties#isSameHostServer()
+         */
         DB_LOCAL_FS {
             @Override
             public boolean isMet() {
-                if ("localhost".equals(DB_SERVER_URL) || "127.0.0.1".equals(DB_SERVER_URL)) {
-                    return !DB_ON_DOCKER;
-                }
-                return false;
+                return isSameHostServer();
             }
         },
+        /**
+         * Database files are, if placed in {@code test.db.dir}, available on the local filesystem.
+         *
+         * @see FBTestProperties#hasMappedDatabaseDirectory()
+         */
+        DB_LOCALLY_MAPPED {
+            @Override
+            public boolean isMet() {
+                return hasMappedDatabaseDirectory();
+            }
+        },
+        /**
+         * The events port is available.
+         *
+         * @see FBTestProperties#isEventPortAvailable()
+         */
         EVENT_PORT_AVAILABLE {
             @Override
             public boolean isMet() {
-                // NOTE: We're assuming that the AUX (event) port is (only) not available on Docker.
-                // Otherwise, we need to check if we can actually establish an event connection.
-                return !DB_ON_DOCKER;
+                return isEventPortAvailable();
             }
         },
         ALL_SRP_PLUGINS {

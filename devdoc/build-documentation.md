@@ -80,13 +80,27 @@ have privileges to create databases and users
 
 Less important properties, but relevant for testing remotely:
  
-- `test.db.host` - the hostname of Firebird (defaults to `localhost`)
+- `test.db.host` - the hostname of Firebird (defaults to `localhost`).
+  Be aware that changing the `test.db.host` can result in test failures or
+  ignored tests as some tests perform verifications against the local
+  filesystem. Some of those tests can be disabled by using the `test.dbondocker`
+  property set to true, or use `test.db.mapped` so these tests can read
+  the files locally.
 - `test.db.port` - the port of Firebird (defaults to `3050`)
-- `test.db.dir` - the path to use for databases (defaults to `${module.output}/db`)
-
-Be aware that changing the `test.db.host` can result in test failures as some
-tests perform verifications against the local filesystem. Some of those tests
-can be disabled by using the `test.dbondocker` property set to true.
+- `test.db.dir` - the server-side path to use for databases (defaults to `${module.output}/db`)
+- `test.db.mapped` - (optional) the test-local path that corresponds to
+  the server-side path (`test.db.dir`). Some tests verify existence of
+  server-side files or delete them (e.g. backups). Specify the host directory
+  backing the Docker volume, or mounting the remote database directory.
+  Tests need access to read, create, and delete files and directories.
+- `test.dbondocker` - Make tests aware the server is in a Docker container
+  (defaults to `false`). This avoids assumptions that `test.db.dir` is directly
+  accessible to the tests if `test.db.host` is localhost. Use `test.db.mapped`
+  to specify the volume mount. When `true`, tests default to assuming the event
+  port is not available. Use `test.event.available` to override. 
+- `test.event.available` - Explicitly mark events as available (`true`) or
+  unavailable (`false`) (defaults to not set). When this property is not set,
+  tests assume the event port is available, unless `test.dbondocker` is `true`.
 
 Properties for varying the type of connection tested:
 

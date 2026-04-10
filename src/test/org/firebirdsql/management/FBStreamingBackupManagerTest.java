@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.MappedPath;
+import org.firebirdsql.common.MappedTempDirFactory;
 import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
@@ -16,7 +18,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -34,13 +35,13 @@ class FBStreamingBackupManagerTest {
 
     @RegisterExtension
     static final RunEnvironmentExtension runEnvironment = RunEnvironmentExtension.builder()
-            .requiresDbOnLocalFileSystem()
+            .requiresDbLocallyMapped()
             .build();
 
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.noDatabase();
 
-    @TempDir
+    @TempDir(factory = MappedTempDirFactory.class)
     Path tempFolder;
     private FBStreamingBackupManager backupManager;
 
@@ -61,22 +62,24 @@ class FBStreamingBackupManagerTest {
     @Test
     void testStreamingBackupAndRestore() throws Exception {
         usesDatabase.createDefaultDatabase();
-        Path backupPath = tempFolder.resolve("testbackup.fbk");
-        try (OutputStream backupOutputStream = new FileOutputStream(backupPath.toFile())) {
+        MappedPath backupPath = getTempPath("testbackup.fbk");
+        try (var backupOutputStream = Files.newOutputStream(backupPath.local())) {
             backupManager.setBackupOutputStream(backupOutputStream);
             backupManager.backupDatabase();
         }
-        assertTrue(Files.exists(backupPath), () -> format("Expected backup file %s to exist", backupPath));
+        assertTrue(Files.isRegularFile(backupPath.local()),
+                () -> "Expected backup file %s to exist".formatted(backupPath));
 
-        Path restorePath = tempFolder.resolve("testrestore.fdb");
+        MappedPath restorePath = getTempPath("testrestore.fdb");
         backupManager.clearRestorePaths();
-        usesDatabase.addDatabase(restorePath.toString());
-        backupManager.setDatabase(restorePath.toString());
-        try (InputStream restoreInputStream = new FileInputStream(backupPath.toFile())) {
+        usesDatabase.addDatabase(restorePath.toServerPath());
+        backupManager.setDatabase(restorePath.toServerPath());
+        try (var restoreInputStream = Files.newInputStream(backupPath.local())) {
             backupManager.setRestoreInputStream(restoreInputStream);
             backupManager.restoreDatabase();
         }
-        assertTrue(Files.exists(backupPath), () -> format("Expected database file %s to exist", backupPath));
+        assertTrue(Files.isRegularFile(restorePath.local()),
+                () -> "Expected database file %s to exist".formatted(backupPath));
     }
 
     @Test
@@ -135,4 +138,11 @@ class FBStreamingBackupManagerTest {
     void setBackupBufferSize_invalidSizes(int bufferSize) {
         assertThrows(IllegalArgumentException.class, () -> backupManager.setBackupBufferSize(bufferSize));
     }
+
+    private MappedPath getTempPath(String name) {
+        Path localPath = tempFolder.resolve(name);
+        Path serverPath = transformMappedToDatabasePath(localPath).orElseThrow();
+        return new MappedPath(localPath, serverPath);
+    }
+
 }

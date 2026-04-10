@@ -1,7 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.MappedPath;
+import org.firebirdsql.common.MappedTempDirFactory;
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
@@ -14,10 +16,8 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.regex.Matcher;
@@ -33,14 +33,14 @@ class FBNBackupManagerTest {
 
     private static final Pattern DATABASE_GUID_PATTERN = Pattern.compile("Database GUID:\\s+(\\{[^}]+})");
 
-    @TempDir
-    Path tempDir;
-
     @RegisterExtension
     @Order(1)
     static RunEnvironmentExtension runEnvironmentExtension = RunEnvironmentExtension.builder()
-            .requiresDbOnLocalFileSystem()
+            .requiresDbLocallyMapped()
             .build();
+
+    @TempDir(factory = MappedTempDirFactory.class)
+    Path tempDir;
 
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase(
@@ -52,21 +52,21 @@ class FBNBackupManagerTest {
 
     @AfterEach
     void cleanupDeltaFile() throws Exception {
-        Files.deleteIfExists(Paths.get(getDatabasePath() + ".delta"));
+        Files.deleteIfExists(getMappedDatabasePath(DB_NAME + ".delta").orElseThrow());
     }
 
     @Test
     void backupWithGuid() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsNBackupWithGuid(), "Requires NBackup GUID backup support");
-        String backup1 = tempDir.resolve("backup1.nbk").toString();
-        manager.setBackupFile(backup1);
+        MappedPath backup1 = getTempPath("backup1.nbk");
+        manager.setBackupFile(backup1.toServerPath());
         manager.setDatabase(getDatabasePath());
         manager.backupDatabase();
 
         String guid;
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement statement = connection.createStatement()) {
-            try (ResultSet rs = statement.executeQuery(
+        try (var connection = getConnectionViaDriverManager();
+             var statement = connection.createStatement()) {
+            try (var rs = statement.executeQuery(
                     "select first 1 RDB$GUID from RDB$BACKUP_HISTORY order by RDB$TIMESTAMP desc")) {
                 assertTrue(rs.next(), "expected a row");
                 guid = rs.getString(1);
@@ -75,22 +75,22 @@ class FBNBackupManagerTest {
         }
 
         manager.clearBackupFiles();
-        String backup2 = tempDir.resolve("backup2.nbk").toString();
-        manager.setBackupFile(backup2);
+        MappedPath backup2 = getTempPath("backup2.nbk");
+        manager.setBackupFile(backup2.toServerPath());
         manager.setBackupGuid(guid);
         manager.backupDatabase();
 
         manager.clearBackupFiles();
-        String restoredDb = tempDir.resolve("restored.fdb").toString();
-        manager.setDatabase(restoredDb);
-        manager.addBackupFile(backup1);
-        manager.addBackupFile(backup2);
+        MappedPath restoredDb = getTempPath("restored.fdb");
+        manager.setDatabase(restoredDb.toServerPath());
+        manager.addBackupFile(backup1.toServerPath());
+        manager.addBackupFile(backup2.toServerPath());
         manager.restoreDatabase();
-        usesDatabase.addDatabase(restoredDb);
+        usesDatabase.addDatabase(restoredDb.toServerPath());
 
-        try (Connection connection = DriverManager.getConnection(getUrl(restoredDb), getDefaultPropertiesForConnection());
-             Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery("select val from data order by id")) {
+        try (var connection = DriverManager.getConnection(getUrl(restoredDb), getDefaultPropertiesForConnection());
+             var stmt = connection.createStatement();
+             var rs = stmt.executeQuery("select val from data order by id")) {
             assertTrue(rs.next(), "expected first row");
             assertEquals("first", rs.getString(1), "first row");
             assertTrue(rs.next(), "expected second row");
@@ -104,15 +104,15 @@ class FBNBackupManagerTest {
         assumeTrue(getDefaultSupportInfo().supportsNBackupWithGuid()
                 && getDefaultSupportInfo().supportsNBackupInPlaceRestore(),
                 "Requires NBackup GUID backup support and in-place restore support");
-        String backup1 = tempDir.resolve("backup1.nbk").toString();
-        manager.setBackupFile(backup1);
+        MappedPath backup1 = getTempPath("backup1.nbk");
+        manager.setBackupFile(backup1.toServerPath());
         manager.setDatabase(getDatabasePath());
         manager.backupDatabase();
 
         String guid;
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement statement = connection.createStatement()) {
-            try (ResultSet rs = statement.executeQuery(
+        try (var connection = getConnectionViaDriverManager();
+             var statement = connection.createStatement()) {
+            try (var rs = statement.executeQuery(
                     "select first 1 RDB$GUID from RDB$BACKUP_HISTORY order by RDB$TIMESTAMP desc")) {
                 assertTrue(rs.next(), "expected a row");
                 guid = rs.getString(1);
@@ -121,21 +121,21 @@ class FBNBackupManagerTest {
         }
 
         manager.clearBackupFiles();
-        String backup2 = tempDir.resolve("backup2.nbk").toString();
-        manager.setBackupFile(backup2);
+        MappedPath backup2 = getTempPath("backup2.nbk");
+        manager.setBackupFile(backup2.toServerPath());
         manager.setBackupGuid(guid);
         manager.backupDatabase();
 
         manager.clearBackupFiles();
-        String restoredDb = tempDir.resolve("restored.fdb").toString();
-        manager.setDatabase(restoredDb);
-        manager.addBackupFile(backup1);
+        MappedPath restoredDb = getTempPath("restored.fdb");
+        manager.setDatabase(restoredDb.toServerPath());
+        manager.addBackupFile(backup1.toServerPath());
         manager.restoreDatabase();
-        usesDatabase.addDatabase(restoredDb);
+        usesDatabase.addDatabase(restoredDb.toServerPath());
 
-        try (Connection connection = DriverManager.getConnection(getUrl(restoredDb), getDefaultPropertiesForConnection());
-             Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery("select val from data order by id")) {
+        try (var connection = DriverManager.getConnection(getUrl(restoredDb), getDefaultPropertiesForConnection());
+             var stmt = connection.createStatement();
+             var rs = stmt.executeQuery("select val from data order by id")) {
             assertTrue(rs.next(), "expected first row");
             assertEquals("first", rs.getString(1), "first row");
             assertFalse(rs.next(), "expected no more rows");
@@ -143,12 +143,12 @@ class FBNBackupManagerTest {
 
         manager.clearBackupFiles();
         manager.setInPlaceRestore(true);
-        manager.addBackupFile(backup2);
+        manager.addBackupFile(backup2.toServerPath());
         manager.restoreDatabase();
 
-        try (Connection connection = DriverManager.getConnection(getUrl(restoredDb), getDefaultPropertiesForConnection());
-             Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery("select val from data order by id")) {
+        try (var connection = DriverManager.getConnection(getUrl(restoredDb), getDefaultPropertiesForConnection());
+             var stmt = connection.createStatement();
+             var rs = stmt.executeQuery("select val from data order by id")) {
             assertTrue(rs.next(), "expected first row");
             assertEquals("first", rs.getString(1), "first row");
             assertTrue(rs.next(), "expected second row");
@@ -204,20 +204,20 @@ class FBNBackupManagerTest {
         final String initialDbGuid = getCurrentDbGuid();
         assertNotNull(initialDbGuid, "Initial database GUID not found");
 
-        String backup1 = tempDir.resolve("backup1.nbk").toString();
-        manager.setBackupFile(backup1);
+        MappedPath backup1 = getTempPath("backup1.nbk");
+        manager.setBackupFile(backup1.toServerPath());
         manager.setDatabase(getDatabasePath());
         manager.backupDatabase();
 
         manager.clearBackupFiles();
-        String restoredDb = tempDir.resolve("restored.fdb").toString();
-        manager.setDatabase(restoredDb);
-        manager.addBackupFile(backup1);
+        MappedPath restoredDb = getTempPath("restored.fdb");
+        manager.setDatabase(restoredDb.toServerPath());
+        manager.addBackupFile(backup1.toServerPath());
         manager.setPreserveSequence(true);
         manager.restoreDatabase();
-        usesDatabase.addDatabase(restoredDb);
+        usesDatabase.addDatabase(restoredDb.toServerPath());
 
-        final String afterFixupDbGuid = getCurrentDbGuid(restoredDb);
+        final String afterFixupDbGuid = getCurrentDbGuid(restoredDb.toServerPath());
         assertEquals(initialDbGuid, afterFixupDbGuid,
                 "Restore with preserve sequence should retain original database GUID");
     }
@@ -228,8 +228,8 @@ class FBNBackupManagerTest {
         manager.setCleanHistory(true);
         manager.setKeepDays(5);
 
-        String backup1 = tempDir.resolve("backup1.nbk").toString();
-        manager.setBackupFile(backup1);
+        MappedPath backup1 = getTempPath("backup1.nbk");
+        manager.setBackupFile(backup1.toServerPath());
         manager.setDatabase(getDatabasePath());
         assertDoesNotThrow(manager::backupDatabase);
 
@@ -242,8 +242,8 @@ class FBNBackupManagerTest {
         manager.setCleanHistory(true);
         manager.setKeepRows(5);
 
-        String backup1 = tempDir.resolve("backup1.nbk").toString();
-        manager.setBackupFile(backup1);
+        MappedPath backup1 = getTempPath("backup1.nbk");
+        manager.setBackupFile(backup1.toServerPath());
         manager.setDatabase(getDatabasePath());
         assertDoesNotThrow(manager::backupDatabase);
 
@@ -255,8 +255,8 @@ class FBNBackupManagerTest {
         assumeTrue(getDefaultSupportInfo().supportsNBackupCleanHistory(), "Requires NBackup clean history support");
         manager.setCleanHistory(true);
 
-        String backup1 = tempDir.resolve("backup1.nbk").toString();
-        manager.setBackupFile(backup1);
+        MappedPath backup1 = getTempPath("backup1.nbk");
+        manager.setBackupFile(backup1.toServerPath());
         manager.setDatabase(getDatabasePath());
         SQLException exception = assertThrows(SQLException.class, manager::backupDatabase);
         assertThat(exception, fbMessageStartsWith(
@@ -270,8 +270,8 @@ class FBNBackupManagerTest {
         manager.setKeepDays(5);
         manager.setKeepRows(5);
 
-        String backup1 = tempDir.resolve("backup1.nbk").toString();
-        manager.setBackupFile(backup1);
+        MappedPath backup1 = getTempPath("backup1.nbk");
+        manager.setBackupFile(backup1.toServerPath());
         manager.setDatabase(getDatabasePath());
         SQLException exception = assertThrows(SQLException.class, manager::backupDatabase);
         assertThat(exception, fbMessageStartsWith(
@@ -283,15 +283,21 @@ class FBNBackupManagerTest {
     }
 
     private String getCurrentDbGuid(String databasePath) throws SQLException {
-        FBStatisticsManager statsMan = new FBStatisticsManager(getGdsType());
+        var statsMan = new FBStatisticsManager(getGdsType());
         configureServiceManager(statsMan);
         statsMan.setDatabase(databasePath);
-        ByteArrayOutputStream loggingStream = new ByteArrayOutputStream();
+        var loggingStream = new ByteArrayOutputStream();
         statsMan.setLogger(loggingStream);
         statsMan.getHeaderPage();
         String headerPage = loggingStream.toString();
         Matcher matcher = DATABASE_GUID_PATTERN.matcher(headerPage);
         return matcher.find() ? matcher.group(1) : null;
+    }
+
+    private MappedPath getTempPath(String name) {
+        Path localPath = tempDir.resolve(name);
+        Path serverPath = transformMappedToDatabasePath(localPath).orElseThrow();
+        return new MappedPath(localPath, serverPath);
     }
 
 }

@@ -2,17 +2,18 @@
  SPDX-FileCopyrightText: Copyright 2004-2006 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2004-2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
- SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.management;
 
 import org.firebirdsql.common.ConfigHelper;
+import org.firebirdsql.common.MappedTempDirFactory;
+import org.firebirdsql.common.MappedPath;
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.util.FirebirdSupportInfo;
@@ -32,7 +33,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
@@ -50,14 +50,14 @@ class FBBackupManagerTest {
 
     @RegisterExtension
     static final RunEnvironmentExtension runEnvironment = RunEnvironmentExtension.builder()
-            .requiresDbOnLocalFileSystem()
+            .requiresDbLocallyMapped()
             .build();
 
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.noDatabase();
 
     private BackupManager backupManager;
-    @TempDir
+    @TempDir(factory = MappedTempDirFactory.class)
     Path tempFolder;
 
     private static final String TEST_TABLE = "CREATE TABLE TEST (A INT)";
@@ -65,11 +65,8 @@ class FBBackupManagerTest {
     @BeforeEach
     void setUp() {
         backupManager = configureDefaultServiceProperties(new FBBackupManager(getGdsType()));
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            assumeTrue(isLocalHost(DB_SERVER_URL), "Test needs to run on localhost for proper clean up");
-        }
         backupManager.setDatabase(getDatabasePath());
-        backupManager.setBackupPath(getBackupPath());
+        backupManager.setBackupPath(getTempPath("testbackup.fbk").toServerPath());
         /* NOTE:
          1) Setting parallel workers unconditionally, but actual support was introduced in Firebird 5.0;
          2) It is only possible to verify for restore if it was set (if a too high value was used), we're more testing
@@ -78,11 +75,6 @@ class FBBackupManagerTest {
         backupManager.setParallelWorkers(2);
         backupManager.setLogger(System.out);
         backupManager.setVerbose(true);
-    }
-
-    private String getBackupPath() {
-        final Path backupPath = tempFolder.resolve("testbackup.fbk");
-        return backupPath.toString();
     }
 
     private void createTestTable() throws SQLException {
@@ -97,14 +89,15 @@ class FBBackupManagerTest {
         usesDatabase.createDefaultDatabase();
         backupManager.backupDatabase();
 
-        final Path restorePath = tempFolder.resolve("testrestore.fdb");
+        MappedPath restorePath = getTempPath("testrestore.fdb");
 
         backupManager.clearRestorePaths();
-        usesDatabase.addDatabase(restorePath.toString());
-        backupManager.setDatabase(restorePath.toString());
+        String restorePathString = restorePath.toServerPath();
+        usesDatabase.addDatabase(restorePathString);
+        backupManager.setDatabase(restorePathString);
         backupManager.restoreDatabase();
 
-        try (var c = DriverManager.getConnection(getUrl(restorePath), getDefaultPropertiesForConnection())) {
+        try (var c = DriverManager.getConnection(getUrl(restorePathString), getDefaultPropertiesForConnection())) {
             assertTrue(c.isValid(0));
         }
     }
@@ -141,14 +134,15 @@ class FBBackupManagerTest {
         }
 
         backupManager.backupDatabase();
-        final Path restorePath1 = tempFolder.resolve("testrestore1.fdb");
+        MappedPath restorePath1 = getTempPath("testrestore1.fdb");
         backupManager.clearRestorePaths();
-        usesDatabase.addDatabase(restorePath1.toString());
-        backupManager.setDatabase(restorePath1.toString());
+        String serverRestorePath1 = restorePath1.toServerPath();
+        usesDatabase.addDatabase(serverRestorePath1);
+        backupManager.setDatabase(serverRestorePath1);
         backupManager.setRestoreReadOnly(true);
         backupManager.restoreDatabase();
 
-        try (var conn = DriverManager.getConnection(getUrl(restorePath1), getDefaultPropertiesForConnection());
+        try (var conn = DriverManager.getConnection(getUrl(serverRestorePath1), getDefaultPropertiesForConnection());
              Statement stmt = conn.createStatement()) {
             SQLException exception = assertThrows(SQLException.class,
                     () -> stmt.executeUpdate("INSERT INTO TEST VALUES (2)"),
@@ -156,15 +150,16 @@ class FBBackupManagerTest {
             assertThat(exception, errorCodeEquals(ISCConstants.isc_read_only_database));
         }
 
-        final Path restorePath2 = tempFolder.resolve("testrestore2.fdb");
+        MappedPath restorePath2 = getTempPath("testrestore2.fdb");
         backupManager.clearRestorePaths();
-        usesDatabase.addDatabase(restorePath2.toString());
-        backupManager.setDatabase(restorePath2.toString());
+        String serverRestorePath2 = restorePath2.toServerPath();
+        usesDatabase.addDatabase(serverRestorePath2);
+        backupManager.setDatabase(serverRestorePath2);
         backupManager.setRestoreReadOnly(false);
         backupManager.setRestoreReplace(true);
         backupManager.restoreDatabase();
 
-        try (var conn = DriverManager.getConnection(getUrl(restorePath2), getDefaultPropertiesForConnection());
+        try (var conn = DriverManager.getConnection(getUrl(serverRestorePath2), getDefaultPropertiesForConnection());
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("INSERT INTO TEST VALUES (3)");
         }
@@ -239,37 +234,37 @@ class FBBackupManagerTest {
         backupManager.clearBackupPaths();
         backupManager.clearRestorePaths();
 
-        final Path backupPath1Path = tempFolder.resolve("testbackup1.fbk");
-        String backupPath1 = backupPath1Path.toString();
-        final Path backupPath2Path = tempFolder.resolve("testbackup2.fbk");
-        String backupPath2 = backupPath2Path.toString();
+        MappedPath backupPath1 = getTempPath("testbackup1.fbk");
+        String serverBackupPath1 = backupPath1.toServerPath();
+        MappedPath backupPath2 = getTempPath("testbackup2.fbk");
+        String serverBackupPath2 = backupPath2.toServerPath();
 
-        backupManager.addBackupPath(backupPath1, 2048);
-        backupManager.addBackupPath(backupPath2);
+        backupManager.addBackupPath(serverBackupPath1, 2048);
+        backupManager.addBackupPath(serverBackupPath2);
 
         backupManager.backupDatabase();
 
-        assertTrue(Files.exists(backupPath1Path), () -> format("File %s should exist", backupPath1));
-        assertTrue(Files.exists(backupPath2Path), () -> format("File %s should exist", backupPath2));
+        assertTrue(Files.exists(backupPath1.local()), () -> "File %s should exist".formatted(backupPath1));
+        assertTrue(Files.exists(backupPath2.local()), () -> "File %s should exist".formatted(backupPath2));
 
         backupManager.clearBackupPaths();
 
-        backupManager.addBackupPath(backupPath1);
-        backupManager.addBackupPath(backupPath2);
+        backupManager.addBackupPath(serverBackupPath1);
+        backupManager.addBackupPath(serverBackupPath2);
 
-        final Path restorePath1Path = tempFolder.resolve("testrestore1.fdb");
-        String restorePath1 = restorePath1Path.toString();
-        final Path restorePath2Path = tempFolder.resolve("testrestore2.fdb");
-        String restorePath2 = restorePath2Path.toString();
+        MappedPath restorePath1 = getTempPath("testrestore1.fdb");
+        String serverRestorePath1 = restorePath1.toServerPath();
+        MappedPath restorePath2 = getTempPath("testrestore2.fdb");
+        String serverRestorePath2 = restorePath2.toServerPath();
 
-        backupManager.addRestorePath(restorePath1, 10);
-        backupManager.addRestorePath(restorePath2, 100);
+        backupManager.addRestorePath(serverRestorePath1, 10);
+        backupManager.addRestorePath(serverRestorePath2, 100);
 
         backupManager.restoreDatabase();
 
         //Remove test files from filesystem.
-        assertTrue(Files.exists(restorePath1Path), () -> format("File %s should exist", restorePath1));
-        assertTrue(Files.exists(restorePath2Path), () -> format("File %s should exist.", restorePath2));
+        assertTrue(Files.exists(restorePath1.local()), () -> "File %s should exist".formatted(restorePath1));
+        assertTrue(Files.exists(restorePath2.local()), () -> "File %s should exist".formatted(restorePath2));
     }
 
     /*
@@ -338,10 +333,10 @@ class FBBackupManagerTest {
         System.out.println(logOutput);
     }
 
-    private static boolean isLocalHost(String hostName) {
-        return "localhost".equalsIgnoreCase(hostName)
-               || "::1".equals(hostName)
-               // Ignoring other 127.* possibilities
-               || "127.0.0.1".equals(hostName);
+    private MappedPath getTempPath(String name) {
+        Path localPath = tempFolder.resolve(name);
+        Path serverPath = transformMappedToDatabasePath(localPath).orElseThrow();
+        return new MappedPath(localPath, serverPath);
     }
+
 }

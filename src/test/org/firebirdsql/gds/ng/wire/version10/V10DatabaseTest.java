@@ -1,8 +1,7 @@
-// SPDX-FileCopyrightText: Copyright 2013-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2013-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.gds.ng.wire.version10;
 
-import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.common.extension.RunEnvironmentExtension.EnvironmentRequirement;
@@ -22,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
@@ -29,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FBTestProperties.getMappedDatabasePath;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
@@ -173,13 +175,13 @@ public class V10DatabaseTest {
      */
     @Test
     public void testBasicCreateAndDrop() throws Exception {
-        assumeTrue(EnvironmentRequirement.DB_LOCAL_FS.isMet(), "Requires DB on local file system");
+        assumeTrue(EnvironmentRequirement.DB_LOCALLY_MAPPED.isMet(), "Requires DB mapped to local file system");
         IConnectionProperties connectionProperties = getConnectionInfo();
         connectionProperties.setSqlDialect(3);
 
-        File dbFile = new File(connectionProperties.getAttachObjectName());
-        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionProperties,
-                EncodingFactory.getPlatformDefault(), getProtocolCollection())) {
+        Path mappedDb = getMappedDatabasePath().orElseThrow();
+        try (var gdsConnection = new WireDatabaseConnection(connectionProperties, EncodingFactory.getPlatformDefault(),
+                getProtocolCollection())) {
             gdsConnection.socketConnect();
             FbWireDatabase db = gdsConnection.identify();
             assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
@@ -187,17 +189,13 @@ public class V10DatabaseTest {
             db.createDatabase();
             assertTrue(db.isAttached(), "Database should be attached after create");
             assertTrue(gdsConnection.isConnected(), "Connection should be connected after create");
-            assertTrue(dbFile.exists() || !FBTestProperties.DB_SERVER_URL.equalsIgnoreCase("localhost"),
-                    "Expected database file to exist (NOTE: only works on localhost)");
+            assertTrue(Files.isRegularFile(mappedDb), "Expected database file to exist");
 
             db.dropDatabase();
             assertFalse(gdsConnection.isConnected());
-            assertFalse(dbFile.exists());
+            assertFalse(Files.isRegularFile(mappedDb));
         } finally {
-            if (dbFile.exists()) {
-                //noinspection ResultOfMethodCallIgnored
-                dbFile.delete();
-            }
+            Files.deleteIfExists(mappedDb);
         }
     }
 

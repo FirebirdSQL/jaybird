@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
 // SPDX-FileCopyrightText: Copyright 2003-2010 Roman Rokytskyy
-// SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.common;
 
@@ -37,9 +37,12 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.MissingResourceException;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.ResourceBundle;
 
+import static java.util.Objects.requireNonNullElse;
+import static org.firebirdsql.common.PathUtils.posixPathString;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
@@ -47,7 +50,7 @@ import static org.firebirdsql.jaybird.util.StringUtils.trimToNull;
 import static org.hamcrest.Matchers.not;
 
 /**
- * Helper class for test properties (database user, password, paths etc)
+ * Helper class for test properties (database user, password, paths etc).
  */
 public final class FBTestProperties {
 
@@ -83,10 +86,15 @@ public final class FBTestProperties {
     public static final String DB_USER = getProperty("test.user", "sysdba");
     public static final String DB_PASSWORD = getProperty("test.password", "masterkey");
     public static final String DB_PATH = getProperty("test.db.dir", "");
+    private static final Path DB_DIR_PATH;
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private static final Optional<Path> DB_MAPPED_LOCAL_PATH =
+            Optional.ofNullable(trimToNull(getProperty("test.db.mapped"))).map(Path::of);
     public static final String DB_SERVER_URL = getProperty("test.db.host", "localhost");
     public static final int DB_SERVER_PORT = Integer.parseInt(getProperty("test.db.port", "3050"));
     public static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
     public static final boolean DB_ON_DOCKER = Boolean.parseBoolean(getProperty("test.db_on_docker", "false"));
+    private static final @Nullable Boolean EVENTS_AVAILABLE;
     public static final String GDS_TYPE = getProperty("test.gds_type", "PURE_JAVA");
     public static final boolean USE_FIREBIRD_AUTOCOMMIT =
             Boolean.parseBoolean(getProperty("test.use_firebird_autocommit", "false"));
@@ -96,12 +104,33 @@ public final class FBTestProperties {
             Boolean.parseBoolean(getProperty("test.native_legacy_auth_compat", "false"));
     private static final String NATIVE_LEGACY_AUTH_COMPAT_AUTH_PLUGINS = "Legacy_Auth";
 
+    static {
+        var dbDirPath = Path.of(DB_PATH.isEmpty() ? "." : DB_PATH);
+        if (isSameHostServer()) {
+            dbDirPath = dbDirPath.toAbsolutePath();
+        }
+        DB_DIR_PATH = dbDirPath;
+
+        String eventsAvailable = trimToNull(getProperty("test.event.available"));
+        EVENTS_AVAILABLE = eventsAvailable != null ? Boolean.valueOf(eventsAvailable) : null;
+    }
+
     public static boolean isLocalhost() {
-        return "localhost".equals(DB_SERVER_URL) || "127.0.0.1".equals(DB_SERVER_URL);
+        return "localhost".equalsIgnoreCase(DB_SERVER_URL)
+                || "127.0.0.1".equals(DB_SERVER_URL)
+                || "::1".equals(DB_SERVER_URL);
+    }
+
+    public static boolean isDbOnDocker() {
+        return DB_ON_DOCKER;
     }
 
     public static boolean isDefaultPort() {
         return DB_SERVER_PORT == PropertyConstants.DEFAULT_PORT;
+    }
+
+    public static boolean isEventPortAvailable() {
+        return requireNonNullElse(EVENTS_AVAILABLE, !DB_ON_DOCKER);
     }
 
     public static String getDatabasePath() {
@@ -109,24 +138,113 @@ public final class FBTestProperties {
     }
 
     public static String getDatabasePath(String name) {
-        if (not(isEmbeddedType()).matches(GDS_TYPE) && (!isLocalhost() || DB_ON_DOCKER)) {
-            return DB_PATH + "/" + name;
-        }
-        return Path.of(DB_PATH, name).toAbsolutePath().toString();
+        return getDatabasePath(Path.of(DB_PATH, name));
+    }
+
+    public static String getDatabasePath(Path path) {
+        return isSameHostServer() ? path.toString() : posixPathString(path);
+    }
+
+    /**
+     * Check if database paths and Firebird server (or embedded) is truly local.
+     * <p>
+     * Specifically, it means that the server accesses paths on the local filesystem of this machine and that the return
+     * values of {@link #getDatabasePath()} and {@link #getDatabasePath(String)} are local to this machine.
+     * </p>
+     *
+     * @return {@code true} if server has direct access to the filesystem of this host
+     * @see #hasMappedDatabaseDirectory()
+     */
+    public static boolean isSameHostServer() {
+        return isEmbeddedType().matches(GDS_TYPE) || (isLocalhost() && !isDbOnDocker());
+    }
+
+    /**
+     * Check if database files are locally accessible to the tests.
+     * <p>
+     * Specifically, it means that either the server has direct filesystem access (i.e. {@link #isSameHostServer()}
+     * returns {@code true}), or the directory specified in system property {@code test.db.dir} is mapped (e.g. as a
+     * volume, or network share) in the directory specified in system property {@code test.db.mapped}, and
+     * {@link #getMappedDatabaseDirectory()}, {@link #getMappedDatabasePath()} and {@link #getMappedDatabasePath(String)} return
+     * non-empty.
+     * </p>
+     * <p>
+     * Contrary to {@link #isSameHostServer()}, this method returning {@code true} does not necessarily mean that the
+     * Firebird server has direct filesystem access to this machine, nor that it would recognize paths as returned by
+     * the {@code getLocalDatabase...} methods.
+     * </p>
+     *
+     * @return {@code true} if database files are locally accessible
+     */
+    public static boolean hasMappedDatabaseDirectory() {
+        return isSameHostServer() || DB_MAPPED_LOCAL_PATH.isPresent();
     }
 
     /**
      * Builds a firebird database connection string for the supplied database file.
-     * 
-     * @param name Database name
+     *
+     * @param name
+     *         Database name
      * @return URL or path for the gds type.
      */
     public static String getdbpath(String name) {
+        String databasePath = getDatabasePath(name);
         if (isEmbeddedType().matches(GDS_TYPE)) {
-            return Path.of(DB_PATH, name).toAbsolutePath().toString();
+            return databasePath;
         } else {
-            return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + getDatabasePath(name);
+            return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + databasePath;
         }
+    }
+
+    /**
+     * The mapped database directory.
+     * <p>
+     * For local databases, this is the normal database directory ({@code test.db.dir}). For remote databases, or
+     * databases on Docker, this can be configured using the {@code test.db.mapped} system property. For remote
+     * databases, this can be the local mount of a network share, or for databases on Docker, the host directory backing
+     * the volume.
+     * </p>
+     *
+     * @return mapped database directory, or empty
+     */
+    public static Optional<Path> getMappedDatabaseDirectory() {
+        return isSameHostServer() ? Optional.of(DB_DIR_PATH) : DB_MAPPED_LOCAL_PATH;
+    }
+
+    /**
+     * The database name {@code name} resolved against {@link #getMappedDatabaseDirectory()}.
+     * <p>
+     * The {@code name} expects a relative path; absolute paths will likely not work unless {@link #isSameHostServer()}
+     * is {@code true}).
+     * </p>
+     *
+     * @param name
+     *         database name (or other file)
+     * @return mapped database file path, or empty ({@link #hasMappedDatabaseDirectory()} returns {@code false})
+     */
+    public static Optional<Path> getMappedDatabasePath(String name) {
+        return getMappedDatabaseDirectory().map(p -> p.resolve(name));
+    }
+
+    /**
+     * The database name of the default test database.
+     *
+     * @return mapped database file path, or empty ({@link #hasMappedDatabaseDirectory()} returns {@code false})
+     */
+    public static Optional<Path> getMappedDatabasePath() {
+        return getMappedDatabasePath(DB_NAME);
+    }
+
+    /**
+     * Transforms (remaps) the mapped database path to the server-side database path.
+     *
+     * @param mappedPath
+     *         mapped path (i.e. relative to {@link #getMappedDatabaseDirectory()})
+     * @return database file path
+     */
+    public static Optional<Path> transformMappedToDatabasePath(Path mappedPath) {
+        return getMappedDatabaseDirectory()
+                .map(mappedDir -> DB_DIR_PATH.resolve(mappedDir.relativize(mappedPath)));
     }
 
     /**
@@ -293,14 +411,25 @@ public final class FBTestProperties {
     }
 
     /**
-     * Convenience method equivalent to {@code getUrl(dbPath.toAbsolutePath().toString())}.
+     * Convenience method equivalent to {@code getUrl(getDatabasePath(dbPath))}.
      *
      * @param dbPath
      *         path of the database
      * @return JDBC URL (without parameters) for this test run
      */
     public static String getUrl(Path dbPath) {
-        return getUrl(dbPath.toAbsolutePath().toString());
+        return getUrl(getDatabasePath(dbPath));
+    }
+
+    /**
+     * Convenience method equivalent to {@code getUrl(mappedPath.toServerPath())}.
+     *
+     * @param mappedPath
+     *         path of the database
+     * @return JDBC URL (without parameters) for this test run
+     */
+    public static String getUrl(MappedPath mappedPath) {
+        return getUrl(mappedPath.toServerPath());
     }
 
     // FACTORY METHODS
