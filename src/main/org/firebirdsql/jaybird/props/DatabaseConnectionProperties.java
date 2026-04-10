@@ -893,4 +893,42 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
         setBooleanProperty(PropertyNames.escapeProcessing, escapeProcessing);
     }
 
+    /**
+     * @return the callable statement implementation version
+     * @see #setCallableImplementation(String)
+     * @since 7
+     */
+    default String getCallableImplementation() {
+        return getProperty(PropertyNames.callableImplementation, PropertyConstants.DEFAULT_CALLABLE_IMPLEMENTATION);
+    }
+
+    /**
+     * Configures the callable statement version.
+     * <p>
+     * Currently supported callable statement versions are:
+     * </p>
+     * <ul>
+     * <li>{@code V1} &mdash; the first (original) callable statement implementation (default), basically
+     * the implementation available since Jaybird 1 (with some evolution since then)</li>
+     * <li>{@code V2} &mdash; the second callable statement implementation, introduced in Jaybird 7 (currently
+     * experimental)</li>
+     * </ul>
+     * <p>
+     * In Jaybird 7, the {@code V2} implementation is experimental. It can be enabled for evaluation/testing. A future
+     * point release of Jaybird 7 may declare it stable. V2 is expected to become the default in Jaybird 8. Once V2 is
+     * the default, we will likely remove V1 support in Jaybird 9 or later (or at minimum, at least one version after V2
+     * becomes the default).
+     * </p>
+     * <p>
+     * For more information also see (TODO Add link the JDP and Jaybird manual)
+     * </p>
+     *
+     * @param callableImplementation
+     *         callable statement version, {@code V1} (default) or {@code v2} (experimental) (case-insensitive)
+     * @since 7
+     */
+    default void setCallableImplementation(String callableImplementation) {
+        setProperty(PropertyNames.callableImplementation, callableImplementation);
+    }
+
 }

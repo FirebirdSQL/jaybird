@@ -551,6 +551,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setEscapeProcessing(escapeProcessing);
     }
 
+    @Override
+    public String getCallableImplementation() {
+        return FirebirdConnectionProperties.super.getCallableImplementation();
+    }
+
+    @Override
+    public void setCallableImplementation(String callableImplementation) {
+        FirebirdConnectionProperties.super.setCallableImplementation(callableImplementation);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated(since = "5")
     @Override
