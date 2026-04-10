@@ -1,4 +1,4 @@
-= work-in-progress: Experimental reimplementation of CallableStatement
+= jdp-2026-05: Experimental reimplementation of CallableStatement
 
 // SPDX-FileCopyrightText: Copyright 2024-2026 Mark Rotteveel
 // SPDX-License-Identifier: LicenseRef-PDL-1.0
