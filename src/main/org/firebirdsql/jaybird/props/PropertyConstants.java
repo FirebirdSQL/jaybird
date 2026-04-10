@@ -73,6 +73,10 @@ public final class PropertyConstants {
     public static final String DEFAULT_AUTH_PLUGINS = "Srp256,Srp";
     static final String DEFAULT_LEGACY_AUTH_CHARSET = "UTF-8";
 
+    public static final String CALLABLE_IMPLEMENTATION_V1 = "V1";
+    public static final String CALLABLE_IMPLEMENTATION_V2 = "V2";
+    static final String DEFAULT_CALLABLE_IMPLEMENTATION = CALLABLE_IMPLEMENTATION_V1;
+
     private PropertyConstants() {
         // no instances
     }

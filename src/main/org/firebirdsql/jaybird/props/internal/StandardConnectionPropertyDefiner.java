@@ -108,6 +108,8 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                         .dpbItem(isc_dpb_max_blob_cache_size),
                 builder(searchPath).aliases("search_path", "isc_dpb_search_path").dpbItem(isc_dpb_search_path),
                 builder(escapeProcessing).type(BOOLEAN),
+                // TODO Maybe use a shorter name or add a shorter alias?
+                builder(callableImplementation).choices(CALLABLE_IMPLEMENTATION_V1, CALLABLE_IMPLEMENTATION_V2),
 
                 // TODO Consider removing this property, otherwise formally add it to PropertyNames
                 builder("filename_charset"),
