@@ -40,7 +40,6 @@ jobs:
           firebird_root_password: 'masterkey'
           firebird_conf: 'WireCrypt=Enabled,AuthServer=Srp256;Srp;Legacy_Auth;Srp224;Srp384;Srp512,UserManager=Srp;Legacy_UserManager'
           event_port: 3051
-          volumes: '${{ github.workspace }}/db-data:/var/lib/firebird/data'
       - uses: actions/checkout@v6
       - name: Set up Java ${{ matrix.java.version }}
         uses: actions/setup-java@v5
@@ -53,7 +52,7 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/master' }}
       - name: Build with Gradle
-        run: ./gradlew test -PbuildProfile=${{ matrix.java.buildProfile }} -PtestProfile=${{ matrix.java.testProfile }} -Ptest.dbondocker=true -Ptest.db.dir=/var/lib/firebird/data -Ptest.event.available=true -Ptest.db.mapped=${{ github.workspace }}/db-data
+        run: ./gradlew test -PbuildProfile=${{ matrix.java.buildProfile }} -PtestProfile=${{ matrix.java.testProfile }} -Ptest.dbondocker=true -Ptest.db.dir=/var/lib/firebird/data -Ptest.event.available=true
       - name: Store Report Artifact
         uses: actions/upload-artifact@v7
         if: always()
