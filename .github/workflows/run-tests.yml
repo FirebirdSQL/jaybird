@@ -53,7 +53,7 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/master' }}
       - name: Build with Gradle
-        run: ./gradlew test -PbuildProfile=${{ matrix.java.buildProfile }} -PtestProfile=${{ matrix.java.testProfile }} -Ptest.dbondocker=true -Ptest.db.dir=/var/lib/firebird/data -Ptest.event.available=true -Ptest.db.mapped=$GITHUB_WORKSPACE/db-data
+        run: ./gradlew test -PbuildProfile=${{ matrix.java.buildProfile }} -PtestProfile=${{ matrix.java.testProfile }} -Ptest.dbondocker=true -Ptest.db.dir=/var/lib/firebird/data -Ptest.event.available=true -Ptest.db.mapped=${{ github.workspace }}/db-data
       - name: Store Report Artifact
         uses: actions/upload-artifact@v7
         if: always()
