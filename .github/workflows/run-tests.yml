@@ -40,7 +40,7 @@ jobs:
           firebird_root_password: 'masterkey'
           firebird_conf: 'WireCrypt=Enabled,AuthServer=Srp256;Srp;Legacy_Auth;Srp224;Srp384;Srp512,UserManager=Srp;Legacy_UserManager'
           event_port: 3051
-          volumes: '{{ github.workspace }}/db-data:/var/lib/firebird/data'
+          volumes: '${{ github.workspace }}/db-data:/var/lib/firebird/data'
       - uses: actions/checkout@v6
       - name: Set up Java ${{ matrix.java.version }}
         uses: actions/setup-java@v5
