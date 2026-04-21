@@ -66,7 +66,7 @@ public final class PropertyConstants {
     public static final String SCROLLABLE_CURSOR_SERVER = "SERVER";
     public static final String DEFAULT_SCROLLABLE_CURSOR = SCROLLABLE_CURSOR_EMULATED;
 
-    public static final int DEFAULT_MAX_INLINE_BLOB_SIZE = 64 * 1024;
+    public static final int DEFAULT_MAX_INLINE_BLOB_SIZE = 65535;
     public static final int DEFAULT_MAX_BLOB_CACHE_SIZE = 10 * 1024 * 1024;
 
     public static final int TIMEOUT_NOT_SET = -1;

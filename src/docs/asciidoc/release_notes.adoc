@@ -53,6 +53,9 @@ See also <<compat-legacy-auth>>.
 See also <<disable-force-close-on-fatal>>.
 +
 This change was backported from Jaybird 6.0.6.
+* Fixed: Off-by-one error in default value for `maxInlineBlobSize` (https://github.com/FirebirdSQL/jaybird/issues/939[#939])
++
+Fix was contributed by Artyom Abakumov, and backport from Jaybird 6.0.6.
 
 [#jaybird-5-0-12-changelog]
 === Jaybird 5.0.12

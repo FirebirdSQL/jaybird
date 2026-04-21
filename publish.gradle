@@ -117,6 +117,10 @@ publishing {
                         name = 'Julien Nabet'
                         url = 'https://github.com/serval2412'
                     }
+                    contributor {
+                        name = 'Artyom Abakumov'
+                        url = 'https://github.com/Noremos'
+                    }
                 }
 
                 mailingLists {
