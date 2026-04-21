@@ -120,6 +120,10 @@ publishing {
                         url = 'https://github.com/serval2412'
                     }
                     contributor {
+                        name = 'Artyom Abakumov'
+                        url = 'https://github.com/Noremos'
+                    }
+                    contributor {
                         name = 'Tobias Weimer'
                     }
                     contributor {
