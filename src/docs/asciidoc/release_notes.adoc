@@ -46,6 +46,9 @@ The hash that is sent instead of the actual password -- for authentication plugi
 We now use UTF-8 bytes instead.
 +
 See also <<compat-legacy-auth>>.
+* Fixed: Off-by-one error in default value for `maxInlineBlobSize` (should be 65535, not 65536) (https://github.com/FirebirdSQL/jaybird/issues/937[#937])
++
+Fix was contributed by Artyom Abakumov.
 
 === Jaybird 6.0.5
 
