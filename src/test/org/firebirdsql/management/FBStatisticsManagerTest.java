@@ -122,7 +122,7 @@ class FBStatisticsManagerTest {
     void testGetDatabaseTransactionInfo_usingServiceConfig() throws SQLException {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         int oldest = getExpectedOldest(supportInfo);
-        int expectedNextOffset = supportInfo.isVersionEqualOrAbove(3) ? 1 : 2;
+        int expectedNextOffset = supportInfo.isVersionEqualOrAbove(3) && supportInfo.isVersionBelow(6) ? 1 : 2;
         createTestTable();
         
         try (Connection conn = getConnectionViaDriverManager()) {
@@ -204,7 +204,9 @@ class FBStatisticsManagerTest {
     }
 
     private int getExpectedOldest(FirebirdSupportInfo supportInfo) {
-        if (supportInfo.isVersionEqualOrAbove(4, 0, 2)) {
+        if (supportInfo.isVersionEqualOrAbove(6)) {
+            return 5;
+        } else if (supportInfo.isVersionEqualOrAbove(4, 0, 2)) {
             return isEmbeddedType().matches(GDS_TYPE) ? 1 : 2;
         } else if (supportInfo.isVersionEqualOrAbove(4, 0)) {
             return 1;
@@ -228,7 +230,7 @@ class FBStatisticsManagerTest {
     void testGetDatabaseTransactionInfo_usingConnection() throws SQLException {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         int oldest = getExpectedOldest(supportInfo);
-        int expectedNextOffset = supportInfo.isVersionEqualOrAbove(2, 5) && supportInfo.isVersionBelow(3) ? 2 : 1;
+        int expectedNextOffset = supportInfo.isVersionEqualOrAbove(3) ? 1 : 2;
         createTestTable();
 
         try (Connection conn = getConnectionViaDriverManager()) {
