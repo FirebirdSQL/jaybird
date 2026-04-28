@@ -1599,6 +1599,26 @@ class FBPreparedStatementTest {
         }
     }
 
+    @Test
+    void callEscapeHandling_withParameters() throws Exception {
+        try (var connection = getConnectionViaDriverManager()) {
+            executeDDL(connection, """
+                    recreate procedure EXEC_TEST(P1 integer, P2 integer) returns (OUT1 integer, OUT2 integer)
+                    as
+                    begin
+                      OUT1 = P1 + P2;
+                      OUT2 = P1 - P2;
+                    end""");
+            try (var pstmt = connection.prepareStatement("{call EXEC_TEST(?, ?)}")) {
+                pstmt.setInt(1, 5);
+                pstmt.setInt(2, 4);
+                var rs = pstmt.executeQuery();
+                assertNextRow(rs);
+                assertRowEquals(rs, 9, 1);
+            }
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);
         try (var pstmt = con.prepareStatement(INSERT_DATA)) {

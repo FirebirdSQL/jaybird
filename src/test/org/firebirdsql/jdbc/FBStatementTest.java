@@ -30,8 +30,10 @@ import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverMana
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertResultSetClosed;
 import static org.firebirdsql.common.assertions.ResultSetAssertions.assertResultSetOpen;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertRowEquals;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementClosed;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
@@ -1194,6 +1196,24 @@ class FBStatementTest {
             statement.addWarning(new SQLWarning("test"));
 
             assertNull(statement.getWarnings(), "Expected warning to be ignored");
+        }
+    }
+
+    @Test
+    void callEscapeHandling() throws Exception {
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            executeDDL(stmt, """
+                    recreate procedure EXEC_TEST(P1 integer, P2 integer) returns (OUT1 integer, OUT2 integer)
+                    as
+                    begin
+                      OUT1 = P1 + P2;
+                      OUT2 = P1 - P2;
+                    end""");
+
+            var rs = stmt.executeQuery("{call EXEC_TEST(5, 4)}");
+            assertNextRow(rs);
+            assertRowEquals(rs, 9, 1);
         }
     }
 
