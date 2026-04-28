@@ -162,7 +162,7 @@ public final class ResultSetAssertions {
      * @param absoluteRow
      *         absolute row position
      */
-    public static void assertNpAbsoluteRow(ResultSet rs, int absoluteRow) {
+    public static void assertNoAbsoluteRow(ResultSet rs, int absoluteRow) {
         assertNoAbsoluteRow(rs, absoluteRow, "Expected no row at absolute " + absoluteRow);
     }
 
