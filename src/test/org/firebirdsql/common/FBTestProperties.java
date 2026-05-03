@@ -101,7 +101,7 @@ public final class FBTestProperties {
     public static final String GDS_TYPE = getProperty("test.gds_type", "PURE_JAVA");
     public static final boolean USE_FIREBIRD_AUTOCOMMIT =
             Boolean.parseBoolean(getProperty("test.use_firebird_autocommit", "false"));
-    public static final String ENABLE_PROTOCOL = trimToNull(getProperty("test.enableProtocol", "*"));
+    public static final String ENABLE_PROTOCOL = trimToNull(getProperty("test.enableProtocol", ""));
     // Allows running native tests against Firebird 2.5 or older with a Firebird 3.0 or newer fbclient.
     private static final boolean NATIVE_LEGACY_AUTH_COMPAT =
             Boolean.parseBoolean(getProperty("test.native_legacy_auth_compat", "false"));
