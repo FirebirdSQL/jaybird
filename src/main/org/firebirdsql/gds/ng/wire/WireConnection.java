@@ -39,6 +39,7 @@ import java.sql.SQLTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -617,10 +618,9 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     }
 
     private AbstractWireOperations getDefaultWireOperations() {
-        // NOTE: If we ever get rid of the protocol 10 implementation, use the lowest available version
-        ProtocolDescriptor protocolDescriptor = requireNonNull(
-                protocols.getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10),
-                "WireOperations of protocol 10 must exist");
+        // Use minimum available protocol version (previously we always used version 10)
+        ProtocolDescriptor protocolDescriptor = protocols.stream()
+                .min(Comparator.comparingInt(ProtocolDescriptor::getVersion)).orElseThrow();
         return (AbstractWireOperations) protocolDescriptor.createWireOperations(this, NOOP_WARNING_MESSAGE_CALLBACK);
     }
 

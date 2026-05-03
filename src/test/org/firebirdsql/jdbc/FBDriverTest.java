@@ -18,6 +18,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.wire.auth.legacy.LegacyAuthenticationPluginSpi;
 import org.firebirdsql.gds.ng.wire.auth.srp.*;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -519,6 +520,26 @@ class FBDriverTest {
                 "authPlugins", "Legacy_Auth"))) {
             assertTrue(connection.isValid(0));
         }
+    }
+
+    /**
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/940">jaybird#940</a>.
+     * <p>
+     * NOTE: The original problem (throwing a {@code NullPointerException}) this test checks for was only reproduced
+     * with {@code AuthServer = Srp256} <em>if</em> {@code enableProtocol} is not set or does not enable protocol 10.
+     * Having multiple authentication plugins configured server-side will make it work because then authentication will
+     * only fail after the <em>identify</em> phase. In other words, in our regular test setup, this test will not
+     * reproduce this error if it ever regresses.
+     * </p>
+     */
+    @Test
+    void testUserDoesNotExist_enableProtocolNotSet() {
+        var props = new Properties();
+        props.setProperty(PropertyNames.user, "doesnotexist");
+        props.setProperty(PropertyNames.password, "password");
+
+        assertThrows(SQLInvalidAuthorizationSpecException.class,
+                () -> DriverManager.getConnection(getUrl(), props));
     }
 
 }
