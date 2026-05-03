@@ -26,7 +26,12 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.wire.auth.legacy.LegacyAuthenticationPluginSpi;
-import org.firebirdsql.gds.ng.wire.auth.srp.*;
+import org.firebirdsql.gds.ng.wire.auth.srp.Srp224AuthenticationPluginSpi;
+import org.firebirdsql.gds.ng.wire.auth.srp.Srp256AuthenticationPluginSpi;
+import org.firebirdsql.gds.ng.wire.auth.srp.Srp384AuthenticationPluginSpi;
+import org.firebirdsql.gds.ng.wire.auth.srp.Srp512AuthenticationPluginSpi;
+import org.firebirdsql.gds.ng.wire.auth.srp.SrpAuthenticationPluginSpi;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -37,18 +42,38 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
-import java.util.*;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TimeZone;
 import java.util.stream.Stream;
 
-import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.FbAssumptions.assumeFeature;
 import static org.firebirdsql.common.assertions.CustomAssertions.assertThrowsForAutoCloseable;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
-import static org.hamcrest.CoreMatchers.*;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.getFbMessage;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlState;
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.isc_tpb_no_rec_version;
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.isc_tpb_nowait;
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.isc_tpb_read_committed;
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.isc_tpb_write;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.isA;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -528,6 +553,26 @@ class FBDriverTest {
                 "authPlugins", "Legacy_Auth"))) {
             assertTrue(connection.isValid(0));
         }
+    }
+
+    /**
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/940">jaybird#940</a>.
+     * <p>
+     * NOTE: The original problem (throwing a {@code NullPointerException}) this test checks for was only reproduced
+     * with {@code AuthServer = Srp256} <em>if</em> {@code enableProtocol} is not set or does not enable protocol 10.
+     * Having multiple authentication plugins configured server-side will make it work because then authentication will
+     * only fail after the <em>identify</em> phase. In other words, in our regular test setup, this test will not
+     * reproduce this error if it ever regresses.
+     * </p>
+     */
+    @Test
+    void testUserDoesNotExist_enableProtocolNotSet() {
+        var props = new Properties();
+        props.setProperty(PropertyNames.user, "doesnotexist");
+        props.setProperty(PropertyNames.password, "password");
+
+        assertThrows(SQLInvalidAuthorizationSpecException.class,
+                () -> DriverManager.getConnection(getUrl(), props));
     }
 
 }

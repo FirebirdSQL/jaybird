@@ -49,6 +49,7 @@ See also <<compat-legacy-auth>>.
 * Fixed: Off-by-one error in default value for `maxInlineBlobSize` (https://github.com/FirebirdSQL/jaybird/issues/937[#937])
 +
 Fix was contributed by Artyom Abakumov.
+* Fixed: `NullPointerException` on authentication failure with non-existent user and single plugin in `AuthServer` (https://github.com/FirebirdSQL/jaybird/issues/940[#940])
 
 === Jaybird 6.0.5
 
