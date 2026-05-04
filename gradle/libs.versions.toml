@@ -3,7 +3,7 @@
 [versions]
 jna = "5.18.1"
 jakarta-servlet = "5.0.0"
-bouncy-castle = "1.83"
+bouncy-castle = "1.84"
 jspecify = "1.0.0"
 credentials = "3.0"
 asciidoctor-jvm = "4.0.5"
