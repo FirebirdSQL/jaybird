@@ -86,6 +86,7 @@ java {
 }
 
 configurations {
+    asciidoctorExt
     if (project.testJava > 8) {
         mockitoAgent
     }
@@ -126,6 +127,8 @@ dependencies {
         }
     }
     testImplementation "org.mockito:mockito-junit-jupiter:$mockito"
+
+    asciidoctorExt 'org.firebirdsql.asciidoctor:canonical-link:1.0'
 }
 
 sourceSets {
@@ -170,14 +173,11 @@ processResources {
 //apply from: 'documentation.gradle'
 
 asciidoctorj {
-    // NOTE: Don't upgrade to v 3.0.0, as it requires Java 11
-    version = '2.5.13'
-
-    // NOTE: We can't use org.firebirdsql.asciidoctor:canonical-link:1.0 as it requires AsciidoctorJ 3.0.x and Java 17
-    docExtensions file('doc-extension.groovy')
+    version = '3.0.1'
 }
 
 tasks.named('asciidoctor', AsciidoctorTask).configure {
+    configurations 'asciidoctorExt'
     executionMode = OUT_OF_PROCESS
     attributes 'version_simple': project.'version.simple',
             'version_wo_target': "${project.'version.simple'}${project.'version.tag'}",

@@ -4,11 +4,18 @@ NOTE: This document doesn't all aspects of the build. If you miss something,
 please contribute using a pull request, or ask on the firebird-java mailing
 list.
 
+These instructions apply to Branch_5_0 (Jaybird 5.0.x).
+
 ## Running the build
 
-The build uses Gradle wrapper, which is included in the repository. The build
-target (buildProfile) defaults to Java 11, independent of the Java version
-running Gradle.
+The build uses Gradle wrapper, which is included in the repository. The Gradle
+wrapper version itself requires Java 17 minimum. However, the build uses
+toolchains to compile and test on a specific Java version, which will also need
+to be installed. The build script intentionally does not use solutions to
+automatically download Java versions required by the selected toolchain(s).
+
+The build target (`buildProfile`) defaults to Java 11, independent of the Java
+version running Gradle.
 
 The target Java version is determined by passing `-PbuildProfile=NN`, where `NN`
 is the desired Java version. The default is `11`. Versions other than `8` or
@@ -18,15 +25,6 @@ By default, tests are run with that `buildProfile` version. This can be
 overridden with `-PtestProfile=NN`. For historic reasons, `javaNN` is also
 accepted by both properties. Running tests with `buildProfile` set to Java 8 and
 `testProfile` to Java 11 or higher may fail due to absence of ChaCha support. 
-
-To run with a specific Java version, we suggest creating a Java-specific launch
-script. For example, for Windows create a batch file with:
-
-```
-@echo off
-set JAVA_HOME=C:\Program Files\Java\jdk1.8.0
-call gradlew.bat -PbuildProfile=8 %*
-```
 
 ### Default build
 

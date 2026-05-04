@@ -12,11 +12,13 @@ jobs:
           - version: 8
             javaInstall: |
               8
-              11
+              17
             buildProfile: 8
             testProfile: 8
           - version: 11
-            javaInstall: 11
+            javaInstall: |
+              11
+              17
             buildProfile: 11
             testProfile: 11
           - version: 11-test-17
