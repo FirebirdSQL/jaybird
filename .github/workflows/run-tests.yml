@@ -10,15 +10,21 @@ jobs:
   build:
     strategy:
       matrix:
-        buildProfile: [ 17 ]
+        buildProfile: [ 17, 25 ]
         testProfile: [ 17, 21, 25 ]
         firebird: [ '5.0.4' ]
         canFail: [ false ]
         include:
+          # Test with Firebird 6 snapshot
           - buildProfile: 17
             testProfile: 17
             firebird: '6-snapshot'
             canFail: true
+        exclude:
+          - buildProfile: 25
+            testProfile: 17
+          - buildProfile: 25
+            testProfile: 21
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.canFail }}
     steps:
@@ -40,9 +46,10 @@ jobs:
       - name: Set up Java ${{ matrix.buildProfile }} (build) and ${{ matrix.testProfile }} (test)
         uses: actions/setup-java@v5
         with:
+          # NOTE: buildProfile last, so that is also the version used to run Gradle (not required, but nice to have)
           java-version: |
-            ${{ matrix.buildProfile }}
             ${{ matrix.testProfile }}
+            ${{ matrix.buildProfile }}
           distribution: 'temurin'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
