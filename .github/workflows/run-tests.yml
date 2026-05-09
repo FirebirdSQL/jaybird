@@ -10,7 +10,9 @@ jobs:
       matrix:
         java:
           - version: 17
-            javaInstall: 17
+            javaInstall: |
+              17
+              17
             buildProfile: 17
             testProfile: 17
           - version: 17-test-21
