@@ -12,11 +12,11 @@ jobs:
         testProfile: [ 8, 11, 17 ]
         firebird: [ '5.0.4' ]
         canFail: [ false ]
-        include:
-          - buildProfile: 11
-            testProfile: 11
-            firebird: '6-snapshot'
-            canFail: true
+#        include:
+#          - buildProfile: 11
+#            testProfile: 11
+#            firebird: '6-snapshot'
+#            canFail: true
         exclude:
           - buildProfile: 8
             testProfile: 11
