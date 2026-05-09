@@ -8,54 +8,59 @@ jobs:
   build:
     strategy:
       matrix:
-        java:
-          - version: 8
-            javaInstall: |
-              8
-              17
-            buildProfile: 8
-            testProfile: 8
-          - version: 11
-            javaInstall: |
-              11
-              17
-            buildProfile: 11
+        buildProfile: [ 8, 11 ]
+        testProfile: [ 8, 11, 17 ]
+        firebird: [ '5.0.4' ]
+        canFail: [ false ]
+        include:
+          - buildProfile: 11
             testProfile: 11
-          - version: 11-test-17
-            javaInstall: |
-              11
-              17
-            buildProfile: 11
+            firebird: '6-snapshot'
+            canFail: true
+        exclude:
+          - buildProfile: 8
+            testProfile: 11
+          - buildProfile: 8
             testProfile: 17
+          - buildProfile: 11
+            testProfile: 8
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.canFail }}
     steps:
       - name: Login to Docker Hub
+        # PRs from forks don't have access to the secrets, skip Docker login and hope we don't hit the rate limit
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: juarezr/firebirdsql-github-action@v2.3.0
+      - name: Setup Firebird ${{ matrix.firebird }}
+        uses: juarezr/firebirdsql-github-action@v2.3.0
         with:
-          version: '5.0.4'
+          version: ${{ matrix.firebird }}
           firebird_root_password: 'masterkey'
           firebird_conf: 'WireCrypt=Enabled,AuthServer=Srp256;Srp;Legacy_Auth;Srp224;Srp384;Srp512,UserManager=Srp;Legacy_UserManager'
       - uses: actions/checkout@v6
-      - name: Set up Java ${{ matrix.java.version }}
+      - name: Set up Java ${{ matrix.buildProfile }} (build) and ${{ matrix.testProfile }} (test)
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ matrix.java.javaInstall }}
+          # NOTE: The last version (17) is the default; it's used to run Gradle
+          java-version: |
+            ${{ matrix.buildProfile }}
+            ${{ matrix.testProfile }}
+            17
           distribution: 'temurin'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/Branch_5_0' }}
       - name: Build with Gradle
-        run: ./gradlew test -PbuildProfile=${{ matrix.java.buildProfile }} -PtestProfile=${{ matrix.java.testProfile }} -Ptest.dbondocker=true -Ptest.db.dir=/var/lib/firebird/data
+        run: ./gradlew test -PbuildProfile=${{ matrix.buildProfile }} -PtestProfile=${{ matrix.testProfile }} -Ptest.dbondocker=true -Ptest.db.dir=/var/lib/firebird/data
       - name: Store Report Artifact
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: report-artifacts-${{ matrix.java.version }}
+          name: report-artifacts-${{ matrix.buildProfile }}-${{ matrix.testProfile }}-${{ matrix.firebird }}
           path: build/reports
           compression-level: 9
           retention-days: 7
