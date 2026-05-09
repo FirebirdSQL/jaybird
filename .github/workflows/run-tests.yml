@@ -54,7 +54,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: report-artifacts-${{ matrix.buildProfile }}-${{ matrix.testProfile }}
+          name: report-artifacts-${{ matrix.buildProfile }}-${{ matrix.testProfile }}-${{ matrix.firebird }}
           path: build/reports
           compression-level: 9
           retention-days: 7
