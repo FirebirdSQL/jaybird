@@ -10,10 +10,10 @@ jobs:
   build:
     strategy:
       matrix:
-        buildProfile: [17]
-        testProfile: [17, 21, 25]
-        firebird: ['5.0.4']
-        canFail: [false]
+        buildProfile: [ 17 ]
+        testProfile: [ 17, 21, 25 ]
+        firebird: [ '5.0.4' ]
+        canFail: [ false ]
         include:
           - buildProfile: 17
             testProfile: 17
