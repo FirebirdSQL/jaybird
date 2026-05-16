@@ -1,6 +1,5 @@
 plugins {
     id 'java-library'
-    alias(libs.plugins.credentials)
     id 'maven-publish'
     id 'signing'
 }
@@ -133,6 +132,7 @@ publishing {
 }
 
 signing {
+    useGpgCmd()
     required = { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
     sign publishing.publications.chacha64
 }

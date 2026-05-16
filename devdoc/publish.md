@@ -8,10 +8,11 @@ Publishing
 To publish to Maven use
 
 ```
-./gradlew clean assemble publish -PcredentialsPassphrase=<credentials password>
+./gradlew clean assemble publish -PcentralPassword=<value>
 ```
-Where `<credentials password>` is the password used to add the credentials (see
-also below).
+
+This command will prompt for you GPG key password if it's not already cached in
+your current session.
 
 The `assemble` task is not strictly necessary, but will also generate the `dist`
 zip and sign it.
@@ -27,23 +28,21 @@ To be able to deploy, you need the following:
 a `<homedir>/.gradle/gradle.properties` with the following properties:
 
 ```
-signing.keyId=<gpg key id>
-signing.secretKeyRingFile=<path to your secring.gpg> 
+signing.gnupg.keyName=<short keyid>
 
 centralUsername=<Central Portal usertoken name>
+# Only needed if you don't want to specify -PcentralPassword=... on commandline
+centralPassword=<your Central Portal usertoken password>
 ```
+
+(It's possible `signing.gnupg.keyName` also accepts long key-ids, we haven't checked.)
+
+Make sure the file is only readable and writable by you (chmod 600). If the
+password contains backslashes, make sure to escape them by doubling. If the
+password contains characters not in ISO 8859-1, make sure to use a Java Unicode
+escape.
 
 See also [Gradle: The Signing Plugin](https://docs.gradle.org/current/userguide/signing_plugin.html).
-
-In addition, you need to set the following credentials
-
-```
-./gradlew addCredentials --key signing.password --value <your secret key password> -PcredentialsPassphrase=<credentials password> 
-./gradlew addCredentials --key centralPassword --value <your Central Portal usertoken password> -PcredentialsPassphrase=<credentials password> 
-```
-
-See https://github.com/etiennestuder/gradle-credentials-plugin for details on
-credentials.
 
 ## License Notice
 

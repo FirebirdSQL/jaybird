@@ -26,7 +26,6 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
 
 plugins {
     id 'java-library'
-    alias(libs.plugins.credentials)
     id 'maven-publish'
     id 'signing'
     alias(libs.plugins.asciidoctor.jvm.convert)

@@ -41,9 +41,6 @@ println "Test profile: Java ${ext.testJava}"
 ext.'version.simple' = "${project.'version.major'}.${project.'version.minor'}.${project.'version.revision'}".toString()
 ext.'version.maven' = "${project.'version.simple'}${project.'version.tag'}".toString()
 
-ext.'signing.password' = credentials.forKey('signing.password')
-ext.centralPassword = credentials.forKey('centralPassword')
-
 ext.isReleaseVersion = provider {
     !version.endsWith("SNAPSHOT")
 }
