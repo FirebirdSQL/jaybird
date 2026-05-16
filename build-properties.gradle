@@ -45,9 +45,6 @@ if (ext.buildJava == 8 && ext.testJava != ext.buildJava) {
 ext.'version.simple' = "${project.'version.major'}.${project.'version.minor'}.${project.'version.revision'}".toString()
 ext.'version.maven' = "${project.'version.simple'}.${project.'maven.jdkversion'}${project.'version.tag'}".toString()
 
-ext.'signing.password' = credentials.forKey('signing.password')
-ext.centralPassword = credentials.forKey('centralPassword')
-
 ext.isReleaseVersion = provider {
     !version.endsWith("SNAPSHOT")
 }

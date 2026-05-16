@@ -188,6 +188,7 @@ tasks.withType(PublishToMavenRepository).each {
 }
 
 signing {
+    useGpgCmd()
     required = { isReleaseVersion && gradle.taskGraph.hasTask(':publish') }
     sign publishing.publications.mavenJava
     sign dist
