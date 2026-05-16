@@ -5,7 +5,6 @@ jna = "5.18.1"
 jakarta-servlet = "5.0.0"
 bouncy-castle = "1.84"
 jspecify = "1.0.0"
-credentials = "3.0"
 asciidoctor-jvm = "4.0.5"
 
 [libraries]
@@ -15,5 +14,4 @@ bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bo
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 
 [plugins]
-credentials = { id = "nu.studer.credentials", version.ref = "credentials" }
 asciidoctor-jvm-convert = { id = "org.asciidoctor.jvm.convert", version.ref = "asciidoctor-jvm" }
