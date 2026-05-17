@@ -11,6 +11,8 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.FBConnection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import javax.sql.DataSource;
 import javax.transaction.xa.XAResource;
@@ -364,8 +366,10 @@ class FBResultSetTest {
     private static final String CREATE_PROCEDURE =
             "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN result = number; END";
 
-    @Test
-    void testExecutableProcedure() throws Exception {
+    @ParameterizedTest
+    @MethodSource("org.firebirdsql.jdbc.ImplementationVariantSources#callableImplementations")
+    void testExecutableProcedure(String callableImplementation) throws Exception {
+        mcf.setCallableImplementation(callableImplementation);
         DataSource ds = mcf.createConnectionFactory();
         try (FBConnection c = (FBConnection) ds.getConnection();
              Statement s = c.createStatement()) {

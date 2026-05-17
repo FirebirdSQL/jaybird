@@ -15,12 +15,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.OutputStream;
 import java.sql.*;
+import java.util.Map;
 import java.util.Properties;
 
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.junit.jupiter.api.Assertions.*;
@@ -267,11 +271,15 @@ class FBBlobStreamTest {
         }
     }
 
-    @Test
-    void testStreamForLongVarChar() throws Exception {
+    @ParameterizedTest
+    @MethodSource("org.firebirdsql.jdbc.ImplementationVariantSources#callableImplementations")
+    void testStreamForLongVarChar(String callableImplementation) throws Exception {
         byte[] data = DataGenerator.createRandomBytes(generateRandomLength());
-        try (PreparedStatement ps = connection.prepareCall("{call test_procedure(?, ?)}")) {
-            ByteArrayInputStream in = new ByteArrayInputStream(data);
+        try (var connection = getConnectionViaDriverManager(Map.of(
+                PropertyNames.useStreamBlobs, "",
+                PropertyNames.callableImplementation, callableImplementation));
+             var ps = connection.prepareCall("{call test_procedure(?, ?)}")) {
+            var in = new ByteArrayInputStream(data);
 
             ps.setInt(1, 1);
             ps.setBinaryStream(2, in, data.length);

@@ -3,14 +3,16 @@
  SPDX-FileCopyrightText: Copyright 2002-2003 Blas Rodriguez Somoza
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2003 Nikolay Samofatov
- SPDX-FileCopyrightText: Copyright 2012-2022 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.junit.jupiter.api.Test;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.*;
 import java.util.Properties;
@@ -45,10 +47,12 @@ class FBParameterMetaDataTest {
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase(
             CREATE_EXECUTABLE_SP);
 
-    @Test
-    void testParameterMetaData_callableStatement() throws SQLException {
+    @ParameterizedTest
+    @MethodSource("org.firebirdsql.jdbc.ImplementationVariantSources#callableImplementations")
+    void testParameterMetaData_callableStatement(String callableImplementation) throws SQLException {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
+        props.put(PropertyNames.callableImplementation, callableImplementation);
         props.put("lc_ctype", "UNICODE_FSS");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props);
