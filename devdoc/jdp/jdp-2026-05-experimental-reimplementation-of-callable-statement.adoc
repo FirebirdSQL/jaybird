@@ -30,11 +30,14 @@ Previous attempts to address some of these issues, uncovered other problems or c
 == Decision
 
 We'll reimplement `java.sql.CallableStatement`.
-This reimplementation will live next to the old implementation, and can be enabled with a connection property (see <<consequences>>) in Jaybird 7 for evaluation.
-In Jaybird 8, or possibly later, it'll become the default, but the old implementation can still be enabled.
-Eventually, the old implementation may be removed (at least one version after the new one becomes the default).
+This second implementation will live next to the old implementation, and can be enabled with a connection property (see <<consequences>>) in Jaybird 7 for evaluation.
+The second implementation will initially be experimental in Jaybird 7, but could be declared stable in a later maintenance release of Jaybird 7.
 
-The exact feature set of the new implementation will be subject to further JDPs, but at least the following will be done:
+In Jaybird 8, or possibly later, it'll become the default, but the old implementation can still be enabled.
+Eventually, the old implementation may be removed.
+This will happen at least one version after the new one becomes the default.
+
+The exact feature set of the new implementation may be subject to further JDPs, but at least the following will be done:
 
 * Only the JDBC call-escape will be transformed to selectable (`SELECT ... FROM <some-procedure>`) or executable procedure (`EXECUTE PROCEDURE <some-procedure>`).
 ** `SELECT ... FROM <some-procedure>` will *never* be transformed to `EXECUTE PROCEDURE <some-procedure>` or `CALL <some-procedure>`.
@@ -70,18 +73,18 @@ The original implementation, `FBCallableStatement` will remain the default in Ja
 A new connection property `callableImplementation` will be added with the following values (case-insensitive):
 
 [horizontal.compact]
-`v1`::
+`V1`::
 Use original implementation, `FBCallableStatement`
-`v2`::
+`V2`::
 Use new -- experimental -- implementation, `FBCallableStatementV2`, and other associated changes (like `DatabaseMetaData` information)
 
 A system property, `org.firebirdsql.jdbc.callableImplementation` will be added to configure a global default.
 This will be checked at time of configuration creation.
 
-* With Jaybird 7, the default is `v1`.
-* With Jaybird 8, the default will change to `v2`;
+* With Jaybird 7, the default is `V1`.
+* With Jaybird 8, the default will change to `V2`;
 it will then no longer be experimental
-* With Jaybird 9 at the earliest, `v1` will be removed.
+* With Jaybird 9 at the earliest, `V1` will be removed.
 
 [appendix]
 == License Notice
@@ -90,7 +93,7 @@ The contents of this Documentation are subject to the Public Documentation Licen
 you may only use this Documentation if you comply with the terms of this License.
 A copy of the License is available at https://firebirdsql.org/en/public-documentation-license/.
 
-The Original Documentation is "`work-in-progress: Experimental reimplementation of CallableStatement`".
+The Original Documentation is "`jdp-2026-05: Experimental reimplementation of CallableStatement`".
 The Initial Writer of the Original Documentation is Mark Rotteveel, Copyright © 2024-2026.
 All Rights Reserved.
 (Initial Writer contact(s): mark (at) lawinegevaar (dot) nl).
