@@ -28,6 +28,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -40,6 +41,10 @@ import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThr
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.firebirdsql.jaybird.props.PropertyConstants.CALLABLE_IMPLEMENTATION_V1;
+import static org.firebirdsql.jaybird.props.PropertyNames.callableImplementation;
+import static org.firebirdsql.jaybird.props.PropertyNames.escapeProcessing;
+import static org.firebirdsql.jaybird.props.PropertyNames.scrollableCursor;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -55,6 +60,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * @author Mark Rotteveel
  */
 class FBCallableStatementTest {
+
+    // TODO Refactor tests and move common tests for V1 and V2 elsewhere (or to a common superclass)
 
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
@@ -200,7 +207,8 @@ class FBCallableStatementTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        con = getConnectionViaDriverManager().unwrap(FBConnection.class);
+        con = getConnectionViaDriverManager(callableImplementation, CALLABLE_IMPLEMENTATION_V1)
+                .unwrap(FBConnection.class);
     }
 
     @AfterEach
@@ -990,6 +998,7 @@ class FBCallableStatementTest {
 
         // Then check with ignoreProcedureType = true
         Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(callableImplementation, CALLABLE_IMPLEMENTATION_V1);
         props.setProperty("ignoreProcedureType", "true");
         try (Connection conn2 = DriverManager.getConnection(getUrl(), props);
              CallableStatement cstmt = conn2.prepareCall("{call get_emp_proj(?)}")) {
@@ -1040,7 +1049,7 @@ class FBCallableStatementTest {
      */
     @Test
     void executeProcedureOnSelectableDefault_noDataToReturn_636() throws Exception {
-        try (Connection conn = getConnectionViaDriverManager()) {
+        try (var conn = getConnectionViaDriverManager(callableImplementation, CALLABLE_IMPLEMENTATION_V1)) {
             conn.setAutoCommit(false);
             try (var stmt = con.createStatement()) {
                 stmt.execute("""
@@ -1072,6 +1081,7 @@ class FBCallableStatementTest {
     @Test
     void executeProcedureOnSelectable_ignoreProcedureType_null_636() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(callableImplementation, CALLABLE_IMPLEMENTATION_V1);
         props.setProperty(PropertyNames.ignoreProcedureType, "true");
         try (var conn = DriverManager.getConnection(getUrl(), props)) {
             conn.setAutoCommit(false);
@@ -1283,7 +1293,7 @@ class FBCallableStatementTest {
      */
     @Test
     void escapeProcessing_default() throws Exception {
-        try (var connection = getConnectionViaDriverManager()) {
+        try (var connection = getConnectionViaDriverManager(callableImplementation, CALLABLE_IMPLEMENTATION_V1)) {
             executeDDL(connection,
                     "create procedure test_simple(in_val double precision) as begin /* does nothing */ end");
 
@@ -1299,7 +1309,9 @@ class FBCallableStatementTest {
 
     @Test
     void escapeProcessing_disabled() throws Exception {
-        try (var connection = getConnectionViaDriverManager(PropertyNames.escapeProcessing, "false")) {
+        try (var connection = getConnectionViaDriverManager(Map.of(
+                escapeProcessing, "false",
+                callableImplementation, CALLABLE_IMPLEMENTATION_V1))) {
             executeDDL(connection,
                     "create procedure test_simple(in_val double precision) as begin /* does nothing */ end");
             try (var cstmt = connection.prepareCall("execute procedure test_simple({fn EXP(2)})")) {
@@ -1316,7 +1328,9 @@ class FBCallableStatementTest {
      */
     @Test
     void escapeProcessing_disabled_callEscapeWorks() throws Exception {
-        try (var connection = getConnectionViaDriverManager(PropertyNames.escapeProcessing, "false")) {
+        try (var connection = getConnectionViaDriverManager(Map.of(
+                escapeProcessing, "false",
+                callableImplementation, CALLABLE_IMPLEMENTATION_V1))) {
             executeDDL(connection,
                     "create procedure test_simple(in_val double precision) as begin /* does nothing */ end");
             try (var cstmt = connection.prepareCall("{call test_simple(EXP(2))}")) {
@@ -1349,7 +1363,8 @@ class FBCallableStatementTest {
 
     private static Connection createConnection(String scrollableCursorPropertyValue) throws SQLException {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty(PropertyNames.scrollableCursor, scrollableCursorPropertyValue);
+        props.setProperty(callableImplementation, CALLABLE_IMPLEMENTATION_V1);
+        props.setProperty(scrollableCursor, scrollableCursorPropertyValue);
         return DriverManager.getConnection(getUrl(), props);
     }
 }
