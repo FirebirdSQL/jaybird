@@ -31,6 +31,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'org.asciidoctor.jvm.convert' version '4.0.5'
+    id 'com.ryandens.javaagent-test' version '0.12.2'
 }
 
 defaultTasks 'clean', 'build'
@@ -86,9 +87,6 @@ java {
 
 configurations {
     asciidoctorExt
-    if (project.testJava > 8) {
-        mockitoAgent
-    }
 }
 
 ext {
@@ -121,9 +119,7 @@ dependencies {
     if (project.testJava == 8) {
         testImplementation "org.mockito:mockito-inline:$mockito"
     } else {
-        mockitoAgent("org.mockito:mockito-core:$mockito") {
-            transitive = false
-        }
+        testJavaagent("org.mockito:mockito-core:$mockito")
     }
     testImplementation "org.mockito:mockito-junit-jupiter:$mockito"
 
@@ -258,13 +254,6 @@ test {
     println "Running tests for type ${project.'test.gds_type'}"
     // Use junit platform for unit tests
     useJUnitPlatform()
-    if (project.testJava > 8) {
-        jvmArgumentProviders.add(
-                objects.newInstance(JavaAgentProvider).tap {
-                    agent = configurations.mockitoAgent.asPath
-                }
-        )
-    }
 
     // Test configuration, defaults specified in gradle.properties (modify through ext, or use -P<prop>=<value>)
     systemProperties(
