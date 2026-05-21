@@ -32,7 +32,7 @@ plugins {
     alias(libs.plugins.javaagent.test)
 }
 
-defaultTasks 'clean', 'build'
+defaultTasks 'clean', 'check'
 
 apply from: 'build-properties.gradle'
 
