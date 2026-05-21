@@ -34,7 +34,7 @@ plugins {
     id 'com.ryandens.javaagent-test' version '0.12.2'
 }
 
-defaultTasks 'clean', 'build'
+defaultTasks 'clean', 'check'
 
 apply from: 'build-properties.gradle'
 
