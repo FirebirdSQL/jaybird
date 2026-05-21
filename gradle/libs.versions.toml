@@ -6,6 +6,7 @@ jakarta-servlet = "5.0.0"
 bouncy-castle = "1.84"
 jspecify = "1.0.0"
 asciidoctor-jvm = "4.0.5"
+javaagent-gradle-plugin = "0.12.2"
 
 [libraries]
 jna = { module = "net.java.dev.jna:jna-jpms", version.ref = "jna" }
@@ -15,3 +16,4 @@ jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 
 [plugins]
 asciidoctor-jvm-convert = { id = "org.asciidoctor.jvm.convert", version.ref = "asciidoctor-jvm" }
+javaagent-test = { id = "com.ryandens.javaagent-test", version.ref = "javaagent-gradle-plugin" }
