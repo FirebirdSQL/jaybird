@@ -517,12 +517,12 @@ public class FBConnection implements FirebirdConnection {
         try (LockCloseable ignored = withLock()) {
             try {
                 if (metaData != null) metaData.close();
-                firstWarning = null; //This prevents from sneaky memory leaks
                 freeStatements();
             } catch (SQLException e) {
                 chainBuilder.append(e);
             } finally {
                 metaData = null;
+                firstWarning = null;
                 closeMc(chainBuilder);
             }
         }
