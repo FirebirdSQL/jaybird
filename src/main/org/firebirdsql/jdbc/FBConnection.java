@@ -522,6 +522,7 @@ public class FBConnection implements FirebirdConnection {
                 chainBuilder.append(e);
             } finally {
                 metaData = null;
+                firstWarning = null;
                 closeMc(chainBuilder);
             }
         }
