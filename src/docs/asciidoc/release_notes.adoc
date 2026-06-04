@@ -667,6 +667,9 @@ See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-
 * Upgraded `org.firebirdsql.extern.decimal` to https://github.com/FirebirdSQL/decimal-java[decimal-java 2.0.1^]
 * Support `USING` clause in generated keys detection (https://github.com/FirebirdSQL/jaybird/issues/932[#932])
 * Add support for parenthesized queries to `StatementDetector` (https://github.com/FirebirdSQL/jaybird/issues/933[#933])
+* Improvement: Clear warnings on connection close (https://github.com/FirebirdSQL/jaybird/pull/943[#943])
++
+This change was contributed by https://github.com/FuriousFourier[FuriousFourier^]
 * ...
 
 [#compatibility-changes]
