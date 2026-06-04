@@ -133,6 +133,10 @@ publishing {
                         name = 'Adriano dos Santos Fernandes'
                         url = 'https://github.com/asfernandes'
                     }
+                    contributor {
+                        name = 'FuriousFourier'
+                        url = 'https://github.com/FuriousFourier'
+                    }
                 }
 
                 mailingLists {
