@@ -1,6 +1,8 @@
-// SPDX-FileCopyrightText: Copyright 2022-2023 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2022-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.util;
+
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +65,34 @@ public final class Primitives {
             result.add((long) intValues[i]);
         }
         return result;
+    }
+
+    public static boolean orFalse(@Nullable Boolean x) {
+        return Boolean.TRUE.equals(x);
+    }
+
+    public static byte orZero(@Nullable Byte x) {
+        return x != null ? x : 0;
+    }
+
+    public static short orZero(@Nullable Short x) {
+        return x != null ? x : 0;
+    }
+
+    public static int orZero(@Nullable Integer x) {
+        return x != null ? x : 0;
+    }
+
+    public static long orZero(@Nullable Long x) {
+        return x != null ? x : 0L;
+    }
+
+    public static float orZero(@Nullable Float x) {
+        return x != null ? x : 0f;
+    }
+
+    public static double orZero(@Nullable Double x) {
+        return x != null ? x : 0d;
     }
 
 }
