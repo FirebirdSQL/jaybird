@@ -406,7 +406,7 @@ class FBBackupManagerTest {
             ,                     SCHEM\\_B,               ,
             ,                     ,                        ,                      SCHEM\\_B
             """)
-    void testSkipSchemaData(String backupSkipSchemaData, String backupIncludeSchemaData, String restoreSkipSchemaData,
+    void testIncludeAndSkipSchemaData(String backupSkipSchemaData, String backupIncludeSchemaData, String restoreSkipSchemaData,
             String restoreIncludeSchemaData) throws Exception {
         assumeSchemaSupport();
         setupSkipOrIncludeSchemaDataTest();
