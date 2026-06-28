@@ -649,6 +649,24 @@ This non-standard behaviour may change before Jaybird 7.0.0 release, or in a lat
 // TODO Revise above, depending on https://github.com/FirebirdSQL/jaybird/issues/343 or maybe https://github.com/FirebirdSQL/jaybird/issues/833
 ====
 
+[#backup-skip-include-data]
+=== Support for including and excluding table data in `BackupManager`
+
+The backup manager API was extended with support for including and excluding table data for backup or restore.
+
+Four properties were added to `org.firebirdsql.management.BackupManager` and its implementations:
+
+[horizontal.compact]
+`skipData`::
+SQL regular expression for table names to skip
+`skipSchemaData`::
+(Firebird 6+) SQL regular expression for schema names to skip
+`includeData`::
+SQL regular expression for table names to include
+`includeSchemaData`::
+(Firebird 6+) SQL regular expression for schema names to include
+
+For more information, refer to https://firebirdsql.org/file/documentation/html/en/firebirddocs/gbak/firebird-gbak.html[Firebird's gbak Backup and Restore Utility].
 
 // TODO add major changes
 

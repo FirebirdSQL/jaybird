@@ -1,5 +1,5 @@
 /*
- SPDX-FileCopyrightText: 2000-2025 Firebird development team and individual contributors
+ SPDX-FileCopyrightText: Copyright 2000-2026 Firebird development team and individual contributors
  SPDX-FileCopyrightText: Copyright 2001 Boix i Oltra, S.L.
  SPDX-FileContributor: Alejandro Alberola (Boix i Oltra, S.L.)
  SPDX-FileCopyrightText: Copyright 2001-2002 David Jencks
@@ -9,7 +9,7 @@
  SPDX-FileCopyrightText: Copyright 2003 Ryan Baldwin
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
  SPDX-FileCopyrightText: Copyright 2009 Thomas Steinmaurer
- SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-FileCopyrightText: Copyright 2015 Hajime Nakagami
  SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
  SPDX-FileComment: The constants listed here were obtained from the Firebird sources, which are licensed under the IPL (InterBase Public License) and/or IDPL (Initial Developer Public License), both are variants of the Mozilla Public License version 1.1
@@ -178,6 +178,8 @@ public interface ISCConstants {
     int isc_spb_bkp_crypt              =  18;
     int isc_spb_bkp_include_data       =  19;
     int isc_spb_bkp_parallel_workers   =  21;
+    int isc_spb_bkp_skip_schema_data    = 22;
+    int isc_spb_bkp_include_schema_data = 23;
     int isc_spb_bkp_ignore_checksums   =  0x01;
     int isc_spb_bkp_ignore_limbo       =  0x02;
     int isc_spb_bkp_metadata_only      =  0x04;
@@ -288,6 +290,8 @@ public interface ISCConstants {
     int isc_spb_res_access_mode		=	12;
     int isc_spb_res_fix_fss_data	=	13;
     int isc_spb_res_fix_fss_metadata =  14;
+    int isc_spb_res_skip_schema_data    = isc_spb_bkp_skip_schema_data;
+    int isc_spb_res_include_schema_data = isc_spb_bkp_include_schema_data;
     int isc_spb_res_keyholder       =   isc_spb_bkp_keyholder;
     int isc_spb_res_keyname         =   isc_spb_bkp_keyname;
     int isc_spb_res_crypt           =   isc_spb_bkp_crypt;

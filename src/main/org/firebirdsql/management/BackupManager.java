@@ -8,6 +8,7 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.SQLException;
 
@@ -243,6 +244,124 @@ public interface BackupManager extends ServiceManager {
     void setRestoreReadOnly(boolean readOnly);
 
     /**
+     * SQL regular expression for the tables to exclude from the backup or restore.
+     * <p>
+     * Metadata of excluded tables is included, but their data is not included in the backup, or not written on restore.
+     * </p>
+     * <p>
+     * See also <a href="https://firebirdsql.org/file/documentation/html/en/firebirddocs/gbak/firebird-gbak.html#gbak-cmdline-skip-data">-SKIP_D[ATA]</a>
+     * in <em>Firebird's gbak Backup and Restore Utility</em>, and <a href="https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-commons-predicates.html#fblangref50-commons-syntaxregex">Syntax: SQL Regular Expressions</a>
+     * in the <em>Firebird 5.0 Language Reference</em>.
+     * </p>
+     *
+     * @param sqlRegex
+     *         SQL regular expression for tables to exclude, {@code null} to clear
+     * @see #getSkipData()
+     * @see #setSkipSchemaData(String)
+     * @see #setIncludeData(String)
+     * @see #setIncludeSchemaData(String)
+     * @since 7
+     */
+    void setSkipData(@Nullable String sqlRegex);
+
+    /**
+     * @return SQL regular expression for tables to exclude, {@code null} for no filtering
+     * @see #setSkipData(String)
+     * @since 7
+     */
+    @Nullable String getSkipData();
+
+    /**
+     * SQL regular expression for the schemas to exclude from the backup or restore.
+     * <p>
+     * Metadata of excluded schemas and tables is included, but their data is not included in the backup, or not written
+     * on restore.
+     * </p>
+     * <p>
+     * Ignored on Firebird 5.0 and older.
+     * </p>
+     * <p>
+     * See also <a href="https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-commons-predicates.html#fblangref50-commons-syntaxregex">Syntax: SQL Regular Expressions</a>
+     * in the <em>Firebird 5.0 Language Reference</em>.
+     * </p>
+     *
+     * @param sqlRegex
+     *         SQL regular expression for schemas to exclude, {@code null} to clear
+     * @see #getSkipSchemaData()
+     * @see #setSkipData(String)
+     * @see #setIncludeData(String)
+     * @see #setIncludeSchemaData(String)
+     * @since 7
+     */
+    void setSkipSchemaData(@Nullable String sqlRegex);
+
+    /**
+     * @return SQL regular expression for schemas to exclude, {@code null} for no filtering
+     * @see #setSkipSchemaData(String)
+     * @since 7
+     */
+    @Nullable String getSkipSchemaData();
+
+    /**
+     * SQL regular expression for the tables to include in the backup or restore.
+     * <p>
+     * Metadata of excluded tables is included, but their data is not included in the backup, or not written on restore.
+     * </p>
+     * <p>
+     * See also <a href="https://firebirdsql.org/file/documentation/html/en/firebirddocs/gbak/firebird-gbak.html#gbak-cmdline-include-data">-INCLUDE[_DATA]</a>
+     * in <em>Firebird's gbak Backup and Restore Utility</em>, and <a href="https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-commons-predicates.html#fblangref50-commons-syntaxregex">Syntax: SQL Regular Expressions</a>
+     * in the <em>Firebird 5.0 Language Reference</em>.
+     * </p>
+     *
+     * @param sqlRegex
+     *         SQL regular expression for tables to include, {@code null} to clear
+     * @see #getIncludeData()
+     * @see #setSkipData(String)
+     * @see #setSkipSchemaData(String)
+     * @see #setIncludeSchemaData(String)
+     * @since 7
+     */
+    void setIncludeData(@Nullable String sqlRegex);
+
+    /**
+     * @return SQL regular expression for tables to include, {@code null} for no filtering
+     * @see #setIncludeData(String)
+     * @since 7
+     */
+    @Nullable String getIncludeData();
+
+    /**
+     * SQL regular expression for the schemas to include in the backup or restore.
+     * <p>
+     * Metadata of excluded schemas and tables is included, but their data is not included in the backup, or not written
+     * on restore.
+     * </p>
+     * <p>
+     * Ignored on Firebird 5.0 and older.
+     * </p>
+     * <p>
+     * See also <a href="https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref50/fblangref50-commons-predicates.html#fblangref50-commons-syntaxregex">Syntax: SQL Regular Expressions</a>
+     * in the <em>Firebird 5.0 Language Reference</em>.
+     * </p>
+     *
+     * @param sqlRegex
+     *         SQL regular expression for schemas to include, {@code null} to clear
+     * @see #getIncludeSchemaData()
+     * @see #setSkipData(String)
+     * @see #setSkipSchemaData(String)
+     * @see #setIncludeData(String)
+     * @since 7
+     */
+    void setIncludeSchemaData(@Nullable String sqlRegex);
+
+    /**
+     * @return SQL regular expression for schemas to include, {@code null} for no filtering
+     * @see #setIncludeSchemaData(String)
+     * @since 7
+     */
+    @Nullable String getIncludeSchemaData();
+
+    /**
      * Perform the restore operation.
      *
      * @throws SQLException
@@ -259,4 +378,5 @@ public interface BackupManager extends ServiceManager {
      *         if a database error occurs during the restore
      */
     void restoreDatabase(int options) throws SQLException;
+
 }

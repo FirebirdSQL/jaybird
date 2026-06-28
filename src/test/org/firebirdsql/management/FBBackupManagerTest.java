@@ -15,13 +15,17 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.jaybird.util.Identifier;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayOutputStream;
@@ -32,9 +36,19 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toMap;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.FbAssumptions.assumeFeature;
+import static org.firebirdsql.common.FbAssumptions.assumeSchemaSupport;
+import static org.firebirdsql.common.assertions.ResultSetAssertions.assertNextRow;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
@@ -44,7 +58,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * This test assumes it is run against localhost
+ * This test assumes it is run against localhost.
  */
 class FBBackupManagerTest {
 
@@ -305,7 +319,7 @@ class FBBackupManagerTest {
 
     @Test
     void testBackupRestore_parallel() throws Exception {
-        assumeTrue(getDefaultSupportInfo().supportsParallelWorkers(), "test requires support for parallel workers");
+        assumeTrue(getDefaultSupportInfo().supportsParallelWorkers(), "Test requires support for parallel workers");
         usesDatabase.createDefaultDatabase();
         final int maxParallelWorkers;
         try (var connection = getConnectionViaDriverManager()) {
@@ -332,6 +346,174 @@ class FBBackupManagerTest {
                         .formatted(maxParallelWorkers + 1, maxParallelWorkers)));
         System.out.println(logOutput);
     }
+
+    private static final List<Identifier> SKIP_OR_INCLUDE_TEST_TABLES =
+            Stream.of("TAB_1_A", "TAB_1_B", "TAB_2_A", "TAB_2_B").map(ObjectReference::of).toList();
+
+    private static final List<Identifier> SKIP_OR_INCLUDE_TEST_SCHEMAS =
+            Stream.of("SCHEM_A", "SCHEM_B").map(ObjectReference::of).toList();
+
+    private static final List<ObjectReference> SKIP_OR_INCLUDE_TEST_SCHEMA_TABLES =
+            SKIP_OR_INCLUDE_TEST_SCHEMAS.stream()
+                    .flatMap(schemaRef -> SKIP_OR_INCLUDE_TEST_TABLES.stream()
+                            .map(tableRef -> ObjectReference.ofIdentifiers(schemaRef, tableRef)))
+                    .toList();
+
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            backupSkipData, backupIncludeData, restoreSkipData, restoreIncludeData
+            TAB\\_1\\_%,    ,                  ,
+            ,               ,                  TAB\\_1\\_%,
+            TAB\\_1\\_A,    ,                  TAB\\_1\\_B,
+            ,               TAB\\_2\\_%,       ,
+            ,               TAB\\_2\\_%,       TAB\\_1\\_%,
+            ,               ,                  ,                TAB\\_2\\_%
+            TAB\\_1\\_A,    ,                  ,                TAB\\_2\\_%
+            """)
+    void testIncludeAndSkipData(String backupSkipData, String backupIncludeData, String restoreSkipData,
+            String restoreIncludeData) throws Exception {
+        setupSkipOrIncludeDataTest();
+        // Fixed expectation that the parameters are expected to fulfill
+        var expectedHasData = Stream.of("TAB_2_A", "TAB_2_B").map(ObjectReference::of).toList();
+        var expectedNoData = Stream.of("TAB_1_A", "TAB_1_B").map(ObjectReference::of).toList();
+
+        backupManager.setSkipData(backupSkipData);
+        assertEquals(backupSkipData, backupManager.getSkipData());
+        backupManager.setIncludeData(backupIncludeData);
+        assertEquals(backupIncludeData, backupManager.getIncludeData());
+
+        backupManager.backupDatabase();
+
+        backupManager.setSkipData(restoreSkipData);
+        assertEquals(restoreSkipData, backupManager.getSkipData());
+        backupManager.setIncludeData(restoreIncludeData);
+        assertEquals(restoreIncludeData, backupManager.getIncludeData());
+
+        backupManager.setRestoreReplace(true);
+        backupManager.restoreDatabase();
+
+        try (var connection = getConnectionViaDriverManager()) {
+            assertSkipOrIncludeData(connection, expectedHasData, expectedNoData);
+        }
+    }
+
+    @Disabled("Awaiting fix https://github.com/FirebirdSQL/firebird/issues/9077")
+    @ParameterizedTest
+    @CsvSource(useHeadersInDisplayName = true, textBlock = """
+            backupSkipSchemaData, backupIncludeSchemaData, restoreSkipSchemaData, restoreIncludeSchemaData
+            SCHEM\\_A,            ,                        ,
+            ,                     ,                        SCHEM\\_A,
+            ,                     SCHEM\\_B,               ,
+            ,                     ,                        ,                      SCHEM\\_B
+            """)
+    void testSkipSchemaData(String backupSkipSchemaData, String backupIncludeSchemaData, String restoreSkipSchemaData,
+            String restoreIncludeSchemaData) throws Exception {
+        assumeSchemaSupport();
+        setupSkipOrIncludeSchemaDataTest();
+        // Fixed expectation that the parameters are expected to fulfill
+        var expectedHasData = SKIP_OR_INCLUDE_TEST_SCHEMA_TABLES.stream().filter(hasSchema("SCHEM_B")).toList();
+        var expectedNoData = SKIP_OR_INCLUDE_TEST_SCHEMA_TABLES.stream().filter(hasSchema("SCHEM_A")).toList();
+
+        backupManager.setSkipSchemaData(backupSkipSchemaData);
+        assertEquals(backupSkipSchemaData, backupManager.getSkipSchemaData());
+        backupManager.setIncludeSchemaData(backupIncludeSchemaData);
+        assertEquals(backupIncludeSchemaData, backupManager.getIncludeSchemaData());
+
+        backupManager.backupDatabase();
+
+        backupManager.setSkipSchemaData(restoreSkipSchemaData);
+        assertEquals(restoreSkipSchemaData, backupManager.getSkipSchemaData());
+        backupManager.setIncludeSchemaData(restoreIncludeSchemaData);
+        assertEquals(restoreIncludeSchemaData, backupManager.getIncludeSchemaData());
+
+        backupManager.setRestoreReplace(true);
+        backupManager.restoreDatabase();
+
+        try (var connection = getConnectionViaDriverManager()) {
+            assertSkipOrIncludeData(connection, expectedHasData, expectedNoData);
+        }
+    }
+
+    private void setupSkipOrIncludeDataTest() throws Exception {
+        setupSkipOrIncludeTables(SKIP_OR_INCLUDE_TEST_TABLES);
+    }
+
+    private void setupSkipOrIncludeSchemaDataTest() throws Exception {
+        setupSkipOrIncludeTables(SKIP_OR_INCLUDE_TEST_SCHEMA_TABLES);
+    }
+
+    private void setupSkipOrIncludeTables(List<? extends ObjectReference> testTables) throws Exception {
+        usesDatabase.createDefaultDatabase();
+        try (var connection = getConnectionViaDriverManager();
+             var stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            for (Identifier schemaRef : (Iterable<Identifier>) () -> testTables.stream()
+                    .filter(ref -> ref.size() == 2)
+                    .map(ObjectReference::first)
+                    .distinct().iterator()) {
+                createSkipIncludeTestSchema(stmt, schemaRef);
+            }
+            for (ObjectReference tableRef : testTables) {
+                createSkipIncludeTestTable(stmt, tableRef);
+            }
+
+            connection.commit();
+            for (ObjectReference tableRef : testTables) {
+                populateSkipIncludeTestTable(stmt, tableRef);
+            }
+            connection.commit();
+        }
+    }
+
+    private void assertSkipOrIncludeData(Connection connection, List<? extends ObjectReference> expectedHasData,
+            List<? extends ObjectReference> expectedNoData) throws SQLException {
+        Map<ObjectReference, Integer> expectedDataCount = Stream.concat(
+                expectedHasData.stream().map(tableRef -> Map.entry(tableRef, 1)),
+                expectedNoData.stream().map(tableRef -> Map.entry(tableRef, 0)))
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        boolean originalAutoCommit = connection.getAutoCommit();
+        connection.setAutoCommit(false);
+        try (var statement = connection.createStatement()) {
+            Map<ObjectReference, Integer> dataCount = expectedDataCount.keySet().stream()
+                    .collect(toMap(Function.identity(), tableRef -> getRowCount(tableRef, statement)));
+
+            assertEquals(expectedDataCount, dataCount, "Unexpected data counts");
+        } finally {
+            connection.setAutoCommit(originalAutoCommit);
+        }
+    }
+
+    private static int getRowCount(ObjectReference tableRef, Statement statement) {
+        try (var rs = statement.executeQuery("select count(*) from %s".formatted(tableRef))) {
+            assertNextRow(rs);
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            System.getLogger(FBBackupManagerTest.class.getName())
+                    .log(System.Logger.Level.WARNING, "Could not query data count for table {0}", tableRef);
+            return -1;
+        }
+    }
+
+    private void createSkipIncludeTestSchema(Statement statement, ObjectReference schema) throws SQLException {
+        statement.execute("create schema %s".formatted(schema));
+    }
+
+    private void createSkipIncludeTestTable(Statement statement, ObjectReference table) throws SQLException {
+        statement.execute("""
+                create table %s (
+                  ID integer
+                )""".formatted(table));
+    }
+
+    private void populateSkipIncludeTestTable(Statement statement, ObjectReference table) throws SQLException {
+        statement.execute("insert into %s (ID) values (1)".formatted(table));
+    }
+
+    private static <T extends ObjectReference> Predicate<T> hasSchema(String schemaName) {
+        return (T ref) -> ref.size() >= 2 && ref.first().name().equals(schemaName);
+    }
+
 
     private MappedPath getTempPath(String name) {
         Path localPath = tempFolder.resolve(name);

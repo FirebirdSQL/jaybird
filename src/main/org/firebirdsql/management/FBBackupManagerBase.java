@@ -83,6 +83,10 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
     private int restorePageSize = -1;
     private boolean restoreReadOnly;
     private boolean restoreReplace;
+    private @Nullable String skipData;
+    private @Nullable String skipSchemaData;
+    private @Nullable String includeData;
+    private @Nullable String includeSchemaData;
 
     private static final int RESTORE_REPLACE = isc_spb_res_replace;
     private static final int RESTORE_CREATE = isc_spb_res_create;
@@ -169,13 +173,34 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
             backupSPB.addArgument(SpbItems.isc_spb_verbose);
         }
 
-        if (getParallelWorkers() > 0 && supportInfoFor(service).supportsParallelWorkers())  {
-            backupSPB.addArgument(isc_spb_bkp_parallel_workers, getParallelWorkers());
-        }
+        setCommonServiceRequestOptions(CommonOptions.BACKUP, service, backupSPB);
 
         backupSPB.addArgument(SpbItems.isc_spb_options, options);
 
         return backupSPB;
+    }
+
+    private void setCommonServiceRequestOptions(CommonOptions commonOptions, FbService service,
+            ServiceRequestBuffer srb) {
+        if (getParallelWorkers() > 0 && supportInfoFor(service).supportsParallelWorkers())  {
+            srb.addArgument(commonOptions.parallelWorkers(), getParallelWorkers());
+        }
+
+        if (getSkipData() != null) {
+            srb.addArgument(commonOptions.skipData(), getSkipData());
+        }
+
+        if (getSkipSchemaData() != null && supportInfoFor(service).supportsSchemas()) {
+            srb.addArgument(commonOptions.skipSchemaData(), getSkipSchemaData());
+        }
+
+        if (getIncludeData() != null) {
+            srb.addArgument(commonOptions.includeData(), getIncludeData());
+        }
+
+        if (getIncludeSchemaData() != null && supportInfoFor(service).supportsSchemas()) {
+            srb.addArgument(commonOptions.includeSchemaData(), getIncludeSchemaData());
+        }
     }
 
     @Override
@@ -248,6 +273,46 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
         this.restoreReadOnly = readOnly;
     }
 
+    @Override
+    public void setSkipData(@Nullable String skipData) {
+        this.skipData = skipData;
+    }
+
+    @Override
+    public @Nullable String getSkipData() {
+        return skipData;
+    }
+
+    @Override
+    public void setSkipSchemaData(@Nullable String skipSchemaData) {
+        this.skipSchemaData = skipSchemaData;
+    }
+
+    @Override
+    public @Nullable String getSkipSchemaData() {
+        return skipSchemaData;
+    }
+
+    @Override
+    public void setIncludeData(@Nullable String includeData) {
+        this.includeData = includeData;
+    }
+
+    @Override
+    public @Nullable String getIncludeData() {
+        return includeData;
+    }
+
+    @Override
+    public void setIncludeSchemaData(@Nullable String includeSchemaData) {
+        this.includeSchemaData = includeSchemaData;
+    }
+
+    @Override
+    public @Nullable String getIncludeSchemaData() {
+        return includeSchemaData;
+    }
+
     /**
      * Creates and returns the "restore" service request buffer for the Service Manager.
      *
@@ -294,9 +359,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
             restoreSPB.addArgument(SpbItems.isc_spb_verbose);
         }
 
-        if (getParallelWorkers() > 0 && supportInfoFor(service).supportsParallelWorkers())  {
-            restoreSPB.addArgument(isc_spb_res_parallel_workers, getParallelWorkers());
-        }
+        setCommonServiceRequestOptions(CommonOptions.RESTORE, service, restoreSPB);
 
         if ((options & RESTORE_CREATE) != RESTORE_CREATE
                 && (options & RESTORE_REPLACE) != RESTORE_REPLACE) {
@@ -329,4 +392,76 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      */
     protected abstract boolean verboseBackup();
 
+    /**
+     * Options shared between backup and restore
+     */
+    private enum CommonOptions {
+
+        // We could do without this enum. as these options have the same value for both isc_spb_bkp_* and isc_spb_res_*.
+        // However, we consider this cleaner.
+
+        BACKUP {
+            @Override
+            int parallelWorkers() {
+                return isc_spb_bkp_parallel_workers;
+            }
+
+            @Override
+            int skipData() {
+                return isc_spb_bkp_skip_data;
+            }
+
+            @Override
+            int skipSchemaData() {
+                return isc_spb_bkp_skip_schema_data;
+            }
+
+            @Override
+            int includeData() {
+                return isc_spb_bkp_include_data;
+            }
+
+            @Override
+            int includeSchemaData() {
+                return isc_spb_bkp_include_schema_data;
+            }
+        },
+        RESTORE {
+            @Override
+            int parallelWorkers() {
+                return isc_spb_res_parallel_workers;
+            }
+
+            @Override
+            int skipData() {
+                return isc_spb_res_skip_data;
+            }
+
+            @Override
+            int skipSchemaData() {
+                return isc_spb_res_skip_schema_data;
+            }
+
+            @Override
+            int includeData() {
+                return isc_spb_res_include_data;
+            }
+
+            @Override
+            int includeSchemaData() {
+                return isc_spb_res_include_schema_data;
+            }
+        };
+
+        abstract int parallelWorkers();
+
+        abstract int skipData();
+
+        abstract int skipSchemaData();
+
+        abstract int includeData();
+
+        abstract int includeSchemaData();
+
+    }
 }
