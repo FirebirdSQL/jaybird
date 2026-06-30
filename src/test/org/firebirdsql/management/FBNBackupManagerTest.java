@@ -22,6 +22,7 @@ import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -70,6 +71,12 @@ class FBNBackupManagerTest {
             "insert into data (id, val) values (1, 'first')");
 
     private final FBNBackupManager manager = configureServiceManager(new FBNBackupManager(getGdsType()));
+    private final GetServiceRequestContext getServiceRequestContext = new GetServiceRequestContext();
+
+    @BeforeEach
+    void registerGetServiceRequestContext() {
+        manager.setServiceRequestCustomizer(getServiceRequestContext);
+    }
 
     @AfterEach
     void cleanupDeltaFile() throws Exception {
@@ -83,6 +90,7 @@ class FBNBackupManagerTest {
         manager.setBackupFile(backup1);
         manager.setDatabase(getDatabasePath());
         manager.backupDatabase();
+        getServiceRequestContext.assertLastOperation("backupDatabase");
 
         String guid;
         try (Connection connection = getConnectionViaDriverManager();
@@ -118,6 +126,7 @@ class FBNBackupManagerTest {
             assertEquals("second", rs.getString(1), "second row");
             assertFalse(rs.next(), "expected no more rows");
         }
+        getServiceRequestContext.assertLastOperation("restoreDatabase");
     }
 
     @Test
@@ -194,6 +203,7 @@ class FBNBackupManagerTest {
 
         final String afterFixupDbGuid = getCurrentDbGuid();
         assertNotEquals(initialDbGuid, afterFixupDbGuid, "Normal fixup should change database GUID");
+        getServiceRequestContext.assertLastOperation("fixupDatabase");
     }
 
     @Test

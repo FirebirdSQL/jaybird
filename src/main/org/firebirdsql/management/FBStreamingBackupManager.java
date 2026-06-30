@@ -185,7 +185,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
 
     private void executeServiceBackupOperation(FbService service, ServiceRequestBuffer srb) throws SQLException {
         try {
-            service.startServiceAction(srb);
+            service.startServiceAction(customize(srb));
 
             ServiceRequestBuffer infoSRB = service.createServiceRequestBuffer();
             infoSRB.addArgument(isc_info_svc_to_eof);
@@ -220,7 +220,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
 
     private void executeServiceRestoreOperation(FbService service, ServiceRequestBuffer srb) throws SQLException {
         try {
-            service.startServiceAction(srb);
+            service.startServiceAction(customize(srb));
 
             OutputStream currentLogger = getLogger();
             ServiceRequestBuffer infoSRB = service.createServiceRequestBuffer();

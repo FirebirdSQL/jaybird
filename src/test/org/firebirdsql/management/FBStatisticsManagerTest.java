@@ -46,6 +46,7 @@ class FBStatisticsManagerTest {
 
     private FBStatisticsManager statManager;
     private OutputStream loggingStream;
+    private final GetServiceRequestContext getServiceRequestContext = new GetServiceRequestContext();
 
     private static final String DEFAULT_TABLE = ""
         + "CREATE TABLE TEST ("
@@ -59,6 +60,7 @@ class FBStatisticsManagerTest {
         statManager = configureServiceManager(new FBStatisticsManager(getGdsType()));
         statManager.setDatabase(getDatabasePath());
         statManager.setLogger(loggingStream);
+        statManager.setServiceRequestCustomizer(getServiceRequestContext);
     }
 
     private void createTestTable() throws SQLException {
@@ -79,6 +81,7 @@ class FBStatisticsManagerTest {
                 .describedAs("The header page must include 'Database header page information'")
                 .contains("Database header page information")
                 .describedAs("The statistics must not include data table info").doesNotContain("Data pages");
+        getServiceRequestContext.assertLastOperation("getHeaderPage");
     }
 
     @Test
@@ -90,6 +93,7 @@ class FBStatisticsManagerTest {
         assertThat(statistics)
                 .describedAs("The database page analysis must be in the statistics").contains("Data pages")
                 .describedAs("System table information must not be in basic statistics").doesNotContain("RDB$DATABASE");
+        getServiceRequestContext.assertLastOperation("getDatabaseStatistics");
     }
 
     @Test
@@ -121,6 +125,7 @@ class FBStatisticsManagerTest {
         assertThat(statistics)
                 .describedAs("The database page analysis must be in the statistics").contains("Data pages")
                 .describedAs("The table name must be in the statistics").contains("TEST");
+        getServiceRequestContext.assertLastOperation("getTableStatistics");
     }
 
     @Test
@@ -142,6 +147,8 @@ class FBStatisticsManagerTest {
             assertEquals(oldest + 1, databaseTransactionInfo.getOldestSnapshotTransaction(), "oldest snapshot");
             assertEquals(oldest + expectedNextOffset, databaseTransactionInfo.getNextTransaction(), "next");
             assertEquals(1, databaseTransactionInfo.getActiveTransactionCount(), "active");
+            // getDatabaseTransactionInfo is not a service request, so it won't call into getServiceRequestContext
+            getServiceRequestContext.assertLastOperation(null);
         }
     }
 

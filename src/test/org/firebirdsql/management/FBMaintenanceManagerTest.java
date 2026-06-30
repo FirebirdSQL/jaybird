@@ -73,6 +73,7 @@ class FBMaintenanceManagerTest {
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
     private FBMaintenanceManager maintenanceManager;
+    private final GetServiceRequestContext getServiceRequestContext = new GetServiceRequestContext();
 
     //@formatter:off
     private static final String DEFAULT_TABLE =
@@ -98,6 +99,7 @@ class FBMaintenanceManagerTest {
         */
         maintenanceManager.setParallelWorkers(2);
         maintenanceManager.setLogger(System.out);
+        maintenanceManager.setServiceRequestCustomizer(getServiceRequestContext);
     }
 
     private void createTestTable() throws SQLException {
@@ -123,6 +125,7 @@ class FBMaintenanceManagerTest {
 
         // Try read-only mode
         maintenanceManager.setDatabaseAccessMode(MaintenanceManager.ACCESS_MODE_READ_ONLY);
+        getServiceRequestContext.assertLastOperation("setDatabaseAccessMode");
 
         try (Connection conn = getConnectionViaDriverManager()) {
             Statement stmt = conn.createStatement();
@@ -164,6 +167,7 @@ class FBMaintenanceManagerTest {
     void testSetDialectOne() throws Exception {
         createTestTable();
         maintenanceManager.setDatabaseDialect(1);
+        getServiceRequestContext.assertLastOperation("setDatabaseDialect");
 
         SQLException exception = assertThrows(SQLException.class, () -> createTestTable(DIALECT3_TABLE));
         assertThat(exception, errorCodeEquals(ISCConstants.isc_sql_db_dialect_dtype_unsupport));
@@ -202,6 +206,7 @@ class FBMaintenanceManagerTest {
                 String sql = "SELECT * FROM TEST";
                 stmt.executeQuery(sql);
                 maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_FORCE, 0);
+                getServiceRequestContext.assertLastOperation("shutdownDatabase");
 
                 SQLException exception = assertThrows(SQLException.class, () -> stmt.executeQuery(sql));
                 assertThat(exception, anyOf(
@@ -230,9 +235,11 @@ class FBMaintenanceManagerTest {
 
         // Shutting down when no transactions are active should work
         maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0);
-        Thread.sleep(100);
+        getServiceRequestContext.assertLastOperation("shutdownDatabase");
+        Thread.yield();
         maintenanceManager.bringDatabaseOnline();
-        Thread.sleep(100);
+        getServiceRequestContext.assertLastOperation("bringDatabaseOnline");
+        Thread.yield();
         
         try (Connection conn = getConnectionViaDriverManager()) {
             conn.setAutoCommit(false);
@@ -295,6 +302,7 @@ class FBMaintenanceManagerTest {
 
         final int bufferSize = 50;
         maintenanceManager.setDefaultCacheBuffer(bufferSize);
+        getServiceRequestContext.assertLastOperation("setDefaultCacheBuffer");
 
         assertBufferSize(bufferSize);
     }
@@ -332,6 +340,7 @@ class FBMaintenanceManagerTest {
     void testSetForcedWrites() throws Exception {
         // No test we can really do other than make sure it doesn't just fail
         maintenanceManager.setForcedWrites(true);
+        getServiceRequestContext.assertLastOperation("setForcedWrites");
         maintenanceManager.setForcedWrites(false);
     }
 
@@ -359,6 +368,7 @@ class FBMaintenanceManagerTest {
     void testSetPageFill() throws Exception {
         // Just make sure it runs without an exception
         maintenanceManager.setPageFill(MaintenanceManager.PAGE_FILL_FULL);
+        getServiceRequestContext.assertLastOperation("setPageFill");
         maintenanceManager.setPageFill(MaintenanceManager.PAGE_FILL_RESERVE);
     }
 
@@ -366,12 +376,14 @@ class FBMaintenanceManagerTest {
     void testMarkCorruptRecords() throws Exception {
         // Just make sure it runs without an exception
         maintenanceManager.markCorruptRecords();
+        getServiceRequestContext.assertLastOperation("markCorruptRecords");
     }
 
     @Test
     void testValidateDatabase() throws Exception {
         // Just make sure it runs without an exception
         maintenanceManager.validateDatabase();
+        getServiceRequestContext.assertLastOperation("validateDatabase");
     }
 
     /**
@@ -415,6 +427,7 @@ class FBMaintenanceManagerTest {
     void testValidateDatabaseFull() throws Exception {
         // Just run to make sure it doesn't fail
         maintenanceManager.validateDatabase(MaintenanceManager.VALIDATE_FULL);
+        getServiceRequestContext.assertLastOperation("validateDatabase");
     }
 
     /**
@@ -429,6 +442,7 @@ class FBMaintenanceManagerTest {
     void testSetSweepThreshold() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.setSweepThreshold(0);
+        getServiceRequestContext.assertLastOperation("setSweepThreshold");
         maintenanceManager.setSweepThreshold(2000);
     }
 
@@ -436,18 +450,21 @@ class FBMaintenanceManagerTest {
     void testSweepDatabase() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.sweepDatabase();
+        getServiceRequestContext.assertLastOperation("sweepDatabase");
     }
 
     @Test
     void testActivateShadowFile() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.activateShadowFile();
+        getServiceRequestContext.assertLastOperation("activateShadowFile");
     }
 
     @Test
     void testKillUnavailableShadows() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.killUnavailableShadows();
+        getServiceRequestContext.assertLastOperation("killUnavailableShadows");
     }
 
     @Test
@@ -456,12 +473,14 @@ class FBMaintenanceManagerTest {
         createLimboTransaction(COUNT_LIMBO);
         long[] limboTransactions = maintenanceManager.getLimboTransactions();
         assertEquals(COUNT_LIMBO, limboTransactions.length);
+        getServiceRequestContext.assertLastOperation("getLimboTransactions");
     }
 
     @Test
     void testRollbackLimboTransaction() throws Exception {
         List<Long> limboTransactions = maintenanceManager.limboTransactionsAsList();
         assertEquals(0, limboTransactions.size());
+        getServiceRequestContext.assertLastOperation("limboTransactionsAsList");
 
         createLimboTransaction(3);
 
@@ -470,6 +489,7 @@ class FBMaintenanceManagerTest {
 
         long trId = limboTransactions.get(0);
         maintenanceManager.rollbackTransaction(trId);
+        getServiceRequestContext.assertLastOperation("rollbackTransaction");
 
         limboTransactions = maintenanceManager.limboTransactionsAsList();
         assertEquals(2, limboTransactions.size());
@@ -479,6 +499,7 @@ class FBMaintenanceManagerTest {
     void testRollbackLimboTransactionAsInt() throws Exception {
         long[] limboTransactions = maintenanceManager.getLimboTransactions();
         assertEquals(0, limboTransactions.length);
+        getServiceRequestContext.assertLastOperation("getLimboTransactions");
 
         createLimboTransaction(3);
 
@@ -487,6 +508,7 @@ class FBMaintenanceManagerTest {
 
         int trId = (int) limboTransactions[0];
         maintenanceManager.rollbackTransaction(trId);
+        getServiceRequestContext.assertLastOperation("rollbackTransaction");
 
         limboTransactions = maintenanceManager.getLimboTransactions();
         assertEquals(2, limboTransactions.length);
@@ -496,6 +518,7 @@ class FBMaintenanceManagerTest {
     void testCommitLimboTransaction() throws Exception {
         List<Long> limboTransactions = maintenanceManager.limboTransactionsAsList();
         assertEquals(0, limboTransactions.size());
+        getServiceRequestContext.assertLastOperation("limboTransactionsAsList");
 
         createLimboTransaction(3);
 
@@ -504,6 +527,7 @@ class FBMaintenanceManagerTest {
 
         long trId = limboTransactions.get(0);
         maintenanceManager.commitTransaction(trId);
+        getServiceRequestContext.assertLastOperation("commitTransaction");
 
         limboTransactions = maintenanceManager.limboTransactionsAsList();
         assertEquals(2, limboTransactions.size());
@@ -513,6 +537,7 @@ class FBMaintenanceManagerTest {
     void testCommitLimboTransactionAsInt() throws Exception {
         long[] limboTransactions = maintenanceManager.getLimboTransactions();
         assertEquals(0, limboTransactions.length);
+        getServiceRequestContext.assertLastOperation("getLimboTransactions");
 
         createLimboTransaction(3);
 
@@ -521,6 +546,7 @@ class FBMaintenanceManagerTest {
 
         int trId = (int)limboTransactions[0];
         maintenanceManager.commitTransaction(trId);
+        getServiceRequestContext.assertLastOperation("commitTransaction");
 
         limboTransactions = maintenanceManager.getLimboTransactions();
         assertEquals(2, limboTransactions.length);
@@ -543,6 +569,7 @@ class FBMaintenanceManagerTest {
     void testUpgradeOds() {
         assumeTrue(getDefaultSupportInfo().supportsUpgradeOds(), "test requires upgrade ODS support");
         assertDoesNotThrow(() -> maintenanceManager.upgradeOds());
+        getServiceRequestContext.assertLastOperation("upgradeOds");
     }
 
     /**
@@ -594,6 +621,7 @@ class FBMaintenanceManagerTest {
     void testFixIcu() throws Exception {
         assumeTrue(getDefaultSupportInfo().supportsFixIcu(), "test requires fix ICU support");
         maintenanceManager.fixIcu();
+        getServiceRequestContext.assertLastOperation("fixIcu");
     }
 
 }

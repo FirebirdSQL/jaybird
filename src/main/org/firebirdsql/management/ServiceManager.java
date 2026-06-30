@@ -133,6 +133,31 @@ public interface ServiceManager extends ServiceConnectionProperties {
     void setLogger(OutputStream logger);
 
     /**
+     * Sets a service request customizer on this service manager. This replaces any previously set customizer.
+     * <p>
+     * The customizer is called just before the request is sent to the server, allowing users to modify the request.
+     * </p>
+     * <p>
+     * If you set a customizer to access a feature not implemented by Jaybird, please consider creating an improvement
+     * ticket on <a href="https://github.com/FirebirdSQL/jaybird/issues">the Jaybird GitHub repository</a> as well.
+     * </p>
+     *
+     * @param customizer
+     *         service request customizer, {@code null} to remove a previous customizer
+     * @see #getServiceRequestCustomizer()
+     * @see ServiceRequestCustomizer
+     * @since 5.0.13
+     */
+    void setServiceRequestCustomizer(ServiceRequestCustomizer customizer);
+
+    /**
+     * @return service request customizer, {@code null} if none set
+     * @see #setServiceRequestCustomizer(ServiceRequestCustomizer)
+     * @since 5.0.13
+     */
+    ServiceRequestCustomizer getServiceRequestCustomizer();
+
+    /**
      * Obtains the server version through a service call.
      *
      * @return Parsed server version, or {@link org.firebirdsql.gds.impl.GDSServerVersion#INVALID_VERSION} if parsing

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.management;
 
+import jdk.jfr.StackTrace;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.GDSFactory;
@@ -31,14 +32,15 @@ import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Map;
 
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.ISCConstants.isc_info_svc_to_eof;
 import static org.firebirdsql.gds.ISCConstants.isc_info_truncated;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
 import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_options;
-import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 
 /**
  * An implementation of the basic Firebird Service API functionality.
@@ -52,6 +54,7 @@ public class FBServiceManager implements ServiceManager {
     private final FbDatabaseFactory dbFactory;
     private String database;
     private OutputStream logger;
+    private ServiceRequestCustomizer serviceRequestCustomizer;
 
     public final static int BUFFER_SIZE = 1024; //1K
 
@@ -305,6 +308,16 @@ public class FBServiceManager implements ServiceManager {
         this.logger = logger;
     }
 
+    @Override
+    public void setServiceRequestCustomizer(ServiceRequestCustomizer serviceRequestCustomizer) {
+        this.serviceRequestCustomizer = serviceRequestCustomizer;
+    }
+
+    @Override
+    public ServiceRequestCustomizer getServiceRequestCustomizer() {
+        return serviceRequestCustomizer;
+    }
+
     public FbService attachServiceManager() throws SQLException {
         FbService fbService = dbFactory.serviceConnect(serviceProperties);
         fbService.attach();
@@ -410,20 +423,79 @@ public class FBServiceManager implements ServiceManager {
     @Deprecated
     protected void executeServicesOperation(ServiceRequestBuffer srb) throws SQLException {
         try (FbService service = attachServiceManager()) {
-            service.startServiceAction(srb);
+            executeServicesOperation(service, srb);
+        }
+    }
+
+    protected final void executeServicesOperation(FbService service, ServiceRequestBuffer srb) throws SQLException {
+        try {
+            service.startServiceAction(customize(srb));
             queueService(service);
         } catch (IOException ioe) {
             throw new SQLException(ioe);
         }
     }
 
-    protected final void executeServicesOperation(FbService service, ServiceRequestBuffer srb) throws SQLException {
-        try {
-            service.startServiceAction(srb);
-            queueService(service);
-        } catch (IOException ioe) {
-            throw new SQLException(ioe);
+    /**
+     * Customizes the service request buffer, if a customizer was set.
+     *
+     * @param srb
+     *         service request buffer
+     * @return {@code srb}, possibly modified
+     * @throws SQLException
+     *         for exceptions thrown by the service request customizer
+     * @see #setServiceRequestCustomizer(ServiceRequestCustomizer)
+     * @since 7
+     */
+    protected final ServiceRequestBuffer customize(ServiceRequestBuffer srb) throws SQLException {
+        ServiceRequestCustomizer customizer = serviceRequestCustomizer;
+        if (customizer != null) {
+            ServiceRequestContext context = new ServiceRequestContext(determineOperation());
+            try {
+                customizer.customize(srb, context);
+            } catch (RuntimeException e) {
+                throw new SQLException("Service request terminated by ServiceRequestCustomizer", e);
+            }
         }
+        return srb;
+    }
+
+    /**
+     * Determines the service operation in this call chain.
+     *
+     * @return service operation
+     */
+    private String determineOperation() {
+        class StackFrame {
+            final Class<?> clazz;
+            final String methodName;
+
+            StackFrame(String className, String methodName) {
+                Class<?> tempClass;
+                try {
+                    tempClass = Class.forName(className);
+                } catch (ClassNotFoundException e) {
+                    // Shouldn't happen, and if it does, it is likely a class we're not interested in
+                    tempClass = Object.class;
+                }
+                clazz = tempClass;
+                this.methodName = methodName;
+            }
+        }
+        Class<?> serviceManagerClass = getClass();
+        StackFrame lastFrame = null;
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        // Start at 3 to skip getStackTrace, determineOperation and customize
+        for (int idx = 3; idx < stackTrace.length; idx++) {
+            StackTraceElement currentElement = stackTrace[idx];
+            StackFrame currentFrame = new StackFrame(currentElement.getClassName(), currentElement.getMethodName());
+            if (!currentFrame.clazz.isAssignableFrom(serviceManagerClass)
+                    || !ServiceManager.class.isAssignableFrom(currentFrame.clazz)) {
+                break;
+            }
+            lastFrame = currentFrame;
+        }
+        return lastFrame != null ? lastFrame.methodName : "unknown";
     }
 
     protected ServiceRequestBuffer createRequestBuffer(FbService service, int operation, int options) {

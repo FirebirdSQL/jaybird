@@ -67,6 +67,7 @@ class FBBackupManagerTest {
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.noDatabase();
 
     private BackupManager backupManager;
+    private final GetServiceRequestContext getServiceRequestContext = new GetServiceRequestContext();
     @TempDir
     Path tempFolder;
 
@@ -88,6 +89,7 @@ class FBBackupManagerTest {
         backupManager.setParallelWorkers(2);
         backupManager.setLogger(System.out);
         backupManager.setVerbose(true);
+        backupManager.setServiceRequestCustomizer(getServiceRequestContext);
     }
 
     private String getBackupPath() {
@@ -107,16 +109,30 @@ class FBBackupManagerTest {
         usesDatabase.createDefaultDatabase();
         backupManager.backupDatabase();
 
-        final Path restorePath = tempFolder.resolve("testrestore.fdb");
+        getServiceRequestContext.assertLastOperation("backupDatabase");
 
         backupManager.clearRestorePaths();
+        final Path restorePath = tempFolder.resolve("testrestore.fdb");
         usesDatabase.addDatabase(restorePath.toString());
         backupManager.setDatabase(restorePath.toString());
         backupManager.restoreDatabase();
 
+        getServiceRequestContext.assertLastOperation("restoreDatabase");
         try (Connection c = DriverManager.getConnection(getUrl(restorePath.toString()), getDefaultPropertiesForConnection())) {
             assertTrue(c.isValid(0));
         }
+    }
+
+    @Test
+    void testBackupMetadata() throws Exception {
+        usesDatabase.createDefaultDatabase();
+        backupManager.clearBackupPaths();
+        final Path backupPath = tempFolder.resolve("testmetadatabackup.fbk");
+        backupManager.setBackupPath(backupPath.toString());
+        backupManager.backupMetadata();
+
+        assertTrue(Files.isRegularFile(backupPath), "Expected file to exist");
+        getServiceRequestContext.assertLastOperation("backupMetadata");
     }
 
     @Test

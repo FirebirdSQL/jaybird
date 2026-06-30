@@ -71,6 +71,8 @@ class FBUserManagerTest {
     void testUsers() throws Exception {
         // Initialize the UserManager.
         UserManager userManager = configureServiceManager(new FBUserManager(getGdsType()));
+        GetServiceRequestContext getServiceRequestContext = new GetServiceRequestContext();
+        userManager.setServiceRequestCustomizer(getServiceRequestContext);
 
         // Add a user.
         User user1 = new FBUser();
@@ -85,9 +87,11 @@ class FBUserManagerTest {
         user1.setGroupId(supportsUserAndGroupId ? 222 : 0);
 
         userManager.add(user1);
+        getServiceRequestContext.assertLastOperation("add");
         
         // Check to make sure the user was added.
         User user2 = userManager.getUsers().get(user1.getUserName());
+        getServiceRequestContext.assertLastOperation("getUsers");
 
         assertNotNull(user2, "User 2 should not be null");
         assertEquals(user1, user2, "user1 should equal user2");
@@ -100,12 +104,14 @@ class FBUserManagerTest {
         user1.setGroupId(supportsUserAndGroupId ? 111 : 0);
 
         userManager.update(user1);
+        getServiceRequestContext.assertLastOperation("update");
 
         user2 = userManager.getUsers().get(user1.getUserName());
 
         assertEquals(user1, user2, "user1 should equal user2");
 
         userManager.delete(user1);
+        getServiceRequestContext.assertLastOperation("delete");
 
         user2 = userManager.getUsers().get(user1.getUserName());
 
