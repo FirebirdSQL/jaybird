@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2004-2005 Steven Jardine
  SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
  SPDX-FileCopyrightText: Copyright 2005-2006 Roman Rokytskyy
- SPDX-FileCopyrightText: Copyright 2012-2023 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.management;
@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 
  * @author Steven Jardine
  */
+@SuppressWarnings("deprecation")
 class FBUserManagerTest {
 
     @RegisterExtension
@@ -60,6 +61,8 @@ class FBUserManagerTest {
     void testUsers() throws Exception {
         // Initialize the UserManager.
         UserManager userManager = configureDefaultServiceProperties(new FBUserManager(getGdsType()));
+        var getServiceRequestContext = new GetServiceRequestContext();
+        userManager.setServiceRequestCustomizer(getServiceRequestContext);
 
         // Add a user.
         User user1 = new FBUser();
@@ -74,9 +77,11 @@ class FBUserManagerTest {
         user1.setGroupId(supportsUserAndGroupId ? 222 : 0);
 
         userManager.add(user1);
+        getServiceRequestContext.assertLastOperation("add");
         
         // Check to make sure the user was added.
         User user2 = userManager.getUsers().get(user1.getUserName());
+        getServiceRequestContext.assertLastOperation("getUsers");
 
         assertNotNull(user2, "User 2 should not be null");
         assertEquals(user1, user2, "user1 should equal user2");
@@ -89,12 +94,14 @@ class FBUserManagerTest {
         user1.setGroupId(supportsUserAndGroupId ? 111 : 0);
 
         userManager.update(user1);
+        getServiceRequestContext.assertLastOperation("update");
 
         user2 = userManager.getUsers().get(user1.getUserName());
 
         assertEquals(user1, user2, "user1 should equal user2");
 
         userManager.delete(user1);
+        getServiceRequestContext.assertLastOperation("delete");
 
         user2 = userManager.getUsers().get(user1.getUserName());
 

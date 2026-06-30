@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Copyright 2009 Thomas Steinmaurer
-// SPDX-FileCopyrightText: Copyright 2012-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.management;
 
@@ -168,10 +168,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      */
     public void stopTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
-            service.startServiceAction(getTraceSPB(service, isc_action_svc_trace_stop, traceSessionId));
-            queueService(service);
-        }  catch (IOException ioe) {
-            throw new SQLException(ioe);
+            executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_stop, traceSessionId));
         }
     }
 
@@ -183,10 +180,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      */
     public void suspendTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
-            service.startServiceAction(getTraceSPB(service, isc_action_svc_trace_suspend, traceSessionId));
-            queueService(service);
-        }  catch (IOException ioe) {
-            throw new SQLException(ioe);
+            executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_suspend, traceSessionId));
         }
     }
 
@@ -198,10 +192,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      */
     public void resumeTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
-            service.startServiceAction(getTraceSPB(service, isc_action_svc_trace_resume, traceSessionId));
-            queueService(service);
-        }  catch (IOException ioe) {
-            throw new SQLException(ioe);
+            executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_resume, traceSessionId));
         }
     }
 
@@ -210,10 +201,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      */
     public void listTraceSessions() throws SQLException {
         try (FbService service = attachServiceManager()) {
-            service.startServiceAction(getTraceSPB(service, isc_action_svc_trace_list));
-            queueService(service);
-        }  catch (IOException ioe) {
-            throw new SQLException(ioe);
+            executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_list));
         }
     }
 

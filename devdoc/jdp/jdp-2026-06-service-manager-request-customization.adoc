@@ -5,8 +5,8 @@
 
 == Status
 
-* Draft
-* Proposed for: Jaybird 5.0.13, Jaybird 6.0.6, Jaybird 7
+* Published: 2026-06-30
+* Implemented in: Jaybird 5.0.13, Jaybird 6.0.6, Jaybird 7
 
 == Type
 
@@ -32,7 +32,7 @@ Exceptions to this are:
 * `FBStreamingBackupManager#restoreDatabase`
 * Various operations in `FBTraceManager`
 
-(Some might be rewritten to call `executeServicesOperation` instead.)
+(Some can be rewritten to call `executeServicesOperation` instead.)
 
 == Decision
 
@@ -53,16 +53,18 @@ Initially, we'll only add one accessor:
 `String operation()`:::
 The operation name.
 
+The use of the `ServiceRequestContext` object instead of passing the operation name directly allows for future extension without changing the method signature.
+
 `ServiceManager` receives a property for the `ServiceRequestCustomizer`, and implementations call the customizer before starting the service action.
 Implementations that previously did not call `executeServicesOperation` are either rewritten to call it, or are changed to call the customizer themselves.
 
 The operation name is generally the name of the API method initiating the operation.
-For example, it reports the method name of the caller of `executeServicesOperation`.
-Bar bugs, like deeper callstacks than assumed, the operation names are stable as these are the methods defined in the API of the various service manager interfaces.
+For example, it reports the entry point method name into the service manager (i.e. the first method called on the service manager by user code).
+For example, calling `BackupManager.backupDatabase()` or `backupDatabase(int)` reports `backupDatabase`, while calling `backupMetadata()` reports operation `backupMetadata` (even though that method calls `backupDatabase(int)`).
+
+Bar bugs, the operation names are stable as these are the methods defined in the API of the various service manager interfaces.
 
 Alternatively, a customizer can look at the first argument in the service request buffer (the action), or use solutions like `java.lang.StackWalker` to look at the callstack.
-
-The use of the `ServiceRequestContext` object instead of passing the operation name directly allows for future extension without changing the method signature.
 
 For example, the gbak `-INCLUDE_DATA` support added to Jaybird 7 by https://github.com/FirebirdSQL/jaybird/issues/944[#944] can also be realized with:
 
@@ -78,17 +80,16 @@ backupManager.setServiceRequestCustomizer((request, context) -> {
 });
 ----
 
-(Above example is tentative, and might differ from actual implementation.)
-
 == Consequences
 
-The addition of `ServiceRequestCustomizer` will provide users with an escape hatch for missing features.
+The addition of `ServiceRequestCustomizer` provides users with an escape hatch for missing features.
 As we consider this a feature of last resort, it is only documented in the API docs, and receives minimal coverage in the release notes.
 It will not be documented in the Jaybird manual.
 This decision may be revisited in the future.
 
 The customizer gives full control over the service request buffer.
-This means that users can change the action performed or make other additions or changes that can can result in errors from the server if wrong information is put in the request buffer.
+This means that users can also change the action performed or make other additions or changes.
+This can can result in errors from the server if wrong information is put in the request buffer.
 Jaybird may also produce errors if the changes result in different service output than expected by the implementation in Jaybird.
 
 Providing this customization feature may result in users implementing their own workarounds, and never reporting an improvement request.

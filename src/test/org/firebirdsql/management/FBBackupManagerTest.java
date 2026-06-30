@@ -36,12 +36,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
@@ -71,6 +69,7 @@ class FBBackupManagerTest {
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.noDatabase();
 
     private BackupManager backupManager;
+    private final GetServiceRequestContext getServiceRequestContext = new GetServiceRequestContext();
     @TempDir(factory = MappedTempDirFactory.class)
     Path tempFolder;
 
@@ -89,6 +88,7 @@ class FBBackupManagerTest {
         backupManager.setParallelWorkers(2);
         backupManager.setLogger(System.out);
         backupManager.setVerbose(true);
+        backupManager.setServiceRequestCustomizer(getServiceRequestContext);
     }
 
     private void createTestTable() throws SQLException {
@@ -103,17 +103,31 @@ class FBBackupManagerTest {
         usesDatabase.createDefaultDatabase();
         backupManager.backupDatabase();
 
-        MappedPath restorePath = getTempPath("testrestore.fdb");
+        getServiceRequestContext.assertLastOperation("backupDatabase");
 
         backupManager.clearRestorePaths();
+        MappedPath restorePath = getTempPath("testrestore.fdb");
         String restorePathString = restorePath.toServerPath();
         usesDatabase.addDatabase(restorePathString);
         backupManager.setDatabase(restorePathString);
         backupManager.restoreDatabase();
 
+        getServiceRequestContext.assertLastOperation("restoreDatabase");
         try (var c = DriverManager.getConnection(getUrl(restorePathString), getDefaultPropertiesForConnection())) {
             assertTrue(c.isValid(0));
         }
+    }
+
+    @Test
+    void testBackupMetadata() throws Exception {
+        usesDatabase.createDefaultDatabase();
+        backupManager.clearBackupPaths();
+        MappedPath backupPath = getTempPath("testmetadatabackup.fbk");
+        backupManager.setBackupPath(backupPath.toServerPath());
+        backupManager.backupMetadata();
+
+        assertTrue(Files.isRegularFile(backupPath.local()), "Expected local file to exist");
+        getServiceRequestContext.assertLastOperation("backupMetadata");
     }
 
     @Test
@@ -513,7 +527,6 @@ class FBBackupManagerTest {
     private static <T extends ObjectReference> Predicate<T> hasSchema(String schemaName) {
         return (T ref) -> ref.size() >= 2 && ref.first().name().equals(schemaName);
     }
-
 
     private MappedPath getTempPath(String name) {
         Path localPath = tempFolder.resolve(name);

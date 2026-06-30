@@ -44,6 +44,7 @@ class FBStreamingBackupManagerTest {
     @TempDir(factory = MappedTempDirFactory.class)
     Path tempFolder;
     private FBStreamingBackupManager backupManager;
+    private final GetServiceRequestContext getServiceRequestContext = new GetServiceRequestContext();
 
     @BeforeEach
     void setUp() {
@@ -57,6 +58,7 @@ class FBStreamingBackupManagerTest {
         backupManager.setParallelWorkers(2);
         backupManager.setLogger(System.out);
         backupManager.setVerbose(true);
+        backupManager.setServiceRequestCustomizer(getServiceRequestContext);
     }
 
     @Test
@@ -69,6 +71,7 @@ class FBStreamingBackupManagerTest {
         }
         assertTrue(Files.isRegularFile(backupPath.local()),
                 () -> "Expected backup file %s to exist".formatted(backupPath));
+        getServiceRequestContext.assertLastOperation("backupDatabase");
 
         MappedPath restorePath = getTempPath("testrestore.fdb");
         backupManager.clearRestorePaths();
@@ -80,6 +83,7 @@ class FBStreamingBackupManagerTest {
         }
         assertTrue(Files.isRegularFile(restorePath.local()),
                 () -> "Expected database file %s to exist".formatted(backupPath));
+        getServiceRequestContext.assertLastOperation("restoreDatabase");
     }
 
     @Test

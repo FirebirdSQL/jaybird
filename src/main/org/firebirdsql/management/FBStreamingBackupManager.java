@@ -178,7 +178,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
     private void executeServiceBackupOperation(FbService service, ServiceRequestBuffer srb,
             OutputStream backupOutputStream) throws SQLException {
         try {
-            service.startServiceAction(srb);
+            service.startServiceAction(customize(srb));
 
             ServiceRequestBuffer infoSRB = service.createServiceRequestBuffer();
             infoSRB.addArgument(isc_info_svc_to_eof);
@@ -218,7 +218,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
             throw new SQLException("Verbose mode was requested but there is no logger provided.");
         }
         try {
-            service.startServiceAction(srb);
+            service.startServiceAction(customize(srb));
 
             ServiceRequestBuffer infoSRB = service.createServiceRequestBuffer();
             infoSRB.addArgument(isc_info_svc_stdin);

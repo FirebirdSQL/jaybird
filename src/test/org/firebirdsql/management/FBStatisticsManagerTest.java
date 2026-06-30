@@ -2,7 +2,7 @@
  SPDX-FileCopyrightText: Copyright 2004-2005 Gabriel Reid
  SPDX-FileCopyrightText: Copyright 2005-2006 Roman Rokytskyy
  SPDX-FileCopyrightText: Copyright 2005 Steven Jardine
- SPDX-FileCopyrightText: Copyright 2012-2025 Mark Rotteveel
+ SPDX-FileCopyrightText: Copyright 2012-2026 Mark Rotteveel
  SPDX-License-Identifier: LGPL-2.1-or-later
 */
 package org.firebirdsql.management;
@@ -41,6 +41,7 @@ class FBStatisticsManagerTest {
 
     private FBStatisticsManager statManager;
     private OutputStream loggingStream;
+    private final GetServiceRequestContext getServiceRequestContext = new GetServiceRequestContext();
 
     private static final String DEFAULT_TABLE = """
             create table TEST (
@@ -53,6 +54,7 @@ class FBStatisticsManagerTest {
         statManager = configureDefaultServiceProperties(new FBStatisticsManager(getGdsType()));
         statManager.setDatabase(getDatabasePath());
         statManager.setLogger(loggingStream);
+        statManager.setServiceRequestCustomizer(getServiceRequestContext);
     }
 
     private void createTestTable() throws SQLException {
@@ -73,6 +75,7 @@ class FBStatisticsManagerTest {
                 .describedAs("The header page must include 'Database header page information'")
                 .contains("Database header page information")
                 .describedAs("The statistics must not include data table info").doesNotContain("Data pages");
+        getServiceRequestContext.assertLastOperation("getHeaderPage");
     }
 
     @Test
@@ -84,6 +87,7 @@ class FBStatisticsManagerTest {
         assertThat(statistics)
                 .describedAs("The database page analysis must be in the statistics").contains("Data pages")
                 .describedAs("System table information must not be in basic statistics").doesNotContain("RDB$DATABASE");
+        getServiceRequestContext.assertLastOperation("getDatabaseStatistics");
     }
 
     @Test
@@ -116,6 +120,7 @@ class FBStatisticsManagerTest {
                 .describedAs("The database page analysis must be in the statistics").contains("Data pages")
                 .describedAs("The table name must be in the statistics").contains("TEST")
                 .describedAs("The (primary key) index must be in the statistics").contains("PK_TEST");
+        getServiceRequestContext.assertLastOperation("getTableStatistics");
     }
 
     @Test
@@ -137,6 +142,8 @@ class FBStatisticsManagerTest {
             assertEquals(oldest + 1, databaseTransactionInfo.getOldestSnapshotTransaction(), "oldest snapshot");
             assertEquals(oldest + expectedNextOffset, databaseTransactionInfo.getNextTransaction(), "next");
             assertEquals(1, databaseTransactionInfo.getActiveTransactionCount(), "active");
+            // getDatabaseTransactionInfo is not a service request, so it won't call into getServiceRequestContext
+            getServiceRequestContext.assertLastOperation(null);
         }
     }
 
