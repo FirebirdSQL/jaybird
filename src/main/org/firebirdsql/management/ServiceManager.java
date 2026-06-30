@@ -28,6 +28,7 @@ import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
+import org.jspecify.annotations.Nullable;
 
 import java.io.OutputStream;
 import java.sql.SQLException;
@@ -131,6 +132,32 @@ public interface ServiceManager extends ServiceConnectionProperties {
      *         for the connection to the service manager.
      */
     void setLogger(OutputStream logger);
+
+    /**
+     * Sets a service request customizer on this service manager. This replaces any previously set customizer.
+     * <p>
+     * The customizer is called just before the request is sent to the server, allowing users to modify the request.
+     * </p>
+     * <p>
+     * If you set a customizer to access a feature not implemented by Jaybird, please consider creating an improvement
+     * ticket on <a href="https://github.com/FirebirdSQL/jaybird/issues">the Jaybird GitHub repository</a> as well.
+     * </p>
+     *
+     * @param customizer
+     *         service request customizer, {@code null} to remove a previous customizer
+     * @see #getServiceRequestCustomizer()
+     * @see ServiceRequestCustomizer
+     * @since 6.0.5
+     */
+    void setServiceRequestCustomizer(@Nullable ServiceRequestCustomizer customizer);
+
+    /**
+     * @return service request customizer, {@code null} if none set
+     * @see #setServiceRequestCustomizer(ServiceRequestCustomizer)
+     * @since 6.0.5
+     */
+    @Nullable ServiceRequestCustomizer getServiceRequestCustomizer();
+
 
     /**
      * Obtains the server version through a service call.

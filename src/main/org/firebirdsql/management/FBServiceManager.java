@@ -27,6 +27,7 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,9 +38,9 @@ import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.ISCConstants.isc_info_svc_to_eof;
 import static org.firebirdsql.gds.ISCConstants.isc_info_truncated;
 import static org.firebirdsql.gds.ISCConstants.isc_infunk;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
 import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_options;
-import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 
 /**
  * An implementation of the basic Firebird Service API functionality.
@@ -53,6 +54,7 @@ public class FBServiceManager implements ServiceManager {
     private final FbDatabaseFactory dbFactory;
     private String database;
     private OutputStream logger;
+    private @Nullable ServiceRequestCustomizer serviceRequestCustomizer;
 
     public static final int BUFFER_SIZE = 1024; //1K
 
@@ -310,6 +312,16 @@ public class FBServiceManager implements ServiceManager {
         this.logger = logger;
     }
 
+    @Override
+    public void setServiceRequestCustomizer(@Nullable ServiceRequestCustomizer serviceRequestCustomizer) {
+        this.serviceRequestCustomizer = serviceRequestCustomizer;
+    }
+
+    @Override
+    public @Nullable ServiceRequestCustomizer getServiceRequestCustomizer() {
+        return serviceRequestCustomizer;
+    }
+
     public FbService attachServiceManager() throws SQLException {
         FbService fbService = dbFactory.serviceConnect(serviceProperties);
         fbService.attach();
@@ -403,11 +415,55 @@ public class FBServiceManager implements ServiceManager {
      */
     protected final void executeServicesOperation(FbService service, ServiceRequestBuffer srb) throws SQLException {
         try {
-            service.startServiceAction(srb);
+            service.startServiceAction(customize(srb));
             queueService(service);
         } catch (IOException ioe) {
             throw new SQLException(ioe);
         }
+    }
+
+    /**
+     * Customizes the service request buffer, if a customizer was set.
+     *
+     * @param srb
+     *         service request buffer
+     * @return {@code srb}, possibly modified
+     * @throws SQLException
+     *         for exceptions thrown by the service request customizer
+     * @see #setServiceRequestCustomizer(ServiceRequestCustomizer)
+     * @since 6.0.5
+     */
+    protected final ServiceRequestBuffer customize(ServiceRequestBuffer srb) throws SQLException {
+        ServiceRequestCustomizer customizer = serviceRequestCustomizer;
+        if (customizer != null) {
+            var context = new ServiceRequestContext(determineOperation());
+            try {
+                customizer.customize(srb, context);
+            } catch (RuntimeException e) {
+                throw new SQLException("Service request terminated by ServiceRequestCustomizer", e);
+            }
+        }
+        return srb;
+    }
+
+    /**
+     * Determines the service operation in this call chain.
+     *
+     * @return service operation
+     */
+    private String determineOperation() {
+        Class<?> serviceManagerClass = getClass();
+        return StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+                .walk(frames -> frames
+                        // Skip determineOperation and customize
+                        .skip(2)
+                        // Determine method calls within this service manager
+                        .takeWhile(f -> f.getDeclaringClass().isAssignableFrom(serviceManagerClass)
+                                && ServiceManager.class.isAssignableFrom(f.getDeclaringClass()))
+                        // Obtain the last stack frame in the stream, which is the initiating operation
+                        .reduce((first, second) -> second)
+                        .map(StackWalker.StackFrame::getMethodName)
+                        .orElse("unknown"));
     }
 
     protected ServiceRequestBuffer createRequestBuffer(FbService service, int operation, int options) {

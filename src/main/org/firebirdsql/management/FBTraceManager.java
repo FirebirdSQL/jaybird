@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.jaybird.util.StringUtils.isNullOrEmpty;
 
 /**
  * Implements the Trace/Audit API available new in Firebird 2.5
@@ -148,7 +149,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      *         Firebird installation
      */
     public void startTraceSession(String traceSessionName, String configuration) throws SQLException {
-        if (configuration == null || configuration.equals("")) {
+        if (isNullOrEmpty(configuration)) {
             throw new SQLException("No configuration provided");
         }
         if (traceSessionName == null) {
@@ -179,10 +180,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      */
     public void stopTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
-            service.startServiceAction(getTraceSPB(service, isc_action_svc_trace_stop, traceSessionId));
-            queueService(service);
-        }  catch (IOException ioe) {
-            throw new SQLException(ioe);
+            executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_stop, traceSessionId));
         }
     }
 
@@ -194,10 +192,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      */
     public void suspendTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
-            service.startServiceAction(getTraceSPB(service, isc_action_svc_trace_suspend, traceSessionId));
-            queueService(service);
-        }  catch (IOException ioe) {
-            throw new SQLException(ioe);
+            executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_suspend, traceSessionId));
         }
     }
 
@@ -209,10 +204,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      */
     public void resumeTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
-            service.startServiceAction(getTraceSPB(service, isc_action_svc_trace_resume, traceSessionId));
-            queueService(service);
-        }  catch (IOException ioe) {
-            throw new SQLException(ioe);
+            executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_resume, traceSessionId));
         }
     }
 
@@ -221,10 +213,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      */
     public void listTraceSessions() throws SQLException {
         try (FbService service = attachServiceManager()) {
-            service.startServiceAction(getTraceSPB(service, isc_action_svc_trace_list));
-            queueService(service);
-        }  catch (IOException ioe) {
-            throw new SQLException(ioe);
+            executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_list));
         }
     }
 

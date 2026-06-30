@@ -51,6 +51,7 @@ See also <<compat-legacy-auth>>.
 Fix was contributed by Artyom Abakumov.
 * Fixed: `NullPointerException` on authentication failure with non-existent user and single plugin in `AuthServer` (https://github.com/FirebirdSQL/jaybird/issues/940[#940])
 * Dependency update: updated `org.bouncycastle:bcprov-jdk18on` from 1.83 to 1.84 (used by `chacha64-plugin`) (https://github.com/FirebirdSQL/jaybird/issues/941[#941])
+* Improvement: Support customization of service requests in service managers (https://github.com/FirebirdSQL/jaybird/issues/946[#946])
 
 === Jaybird 6.0.5
 
