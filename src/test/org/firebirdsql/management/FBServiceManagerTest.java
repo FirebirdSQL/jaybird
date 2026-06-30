@@ -226,6 +226,7 @@ class FBServiceManagerTest {
                 case "int", "java.lang.Integer" -> originalValue == null ? 1 : ((int) originalValue) + 1;
                 case "org.firebirdsql.gds.ng.WireCrypt" ->
                         originalValue == WireCrypt.ENABLED ? WireCrypt.DISABLED : WireCrypt.ENABLED;
+                case "org.firebirdsql.management.ServiceRequestCustomizer" -> new GetServiceRequestContext();
                 default -> throw new IllegalStateException("Property: %s has unsupported type: %s"
                         .formatted(propertyName, beanProperty.getPropertyType()));
             };
