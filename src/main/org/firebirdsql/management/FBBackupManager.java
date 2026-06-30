@@ -64,11 +64,13 @@ public class FBBackupManager extends FBBackupManagerBase implements BackupManage
         super(gdsType);
     }
 
+    @Override
     public void setBackupPath(String backupPath) {
         addBackupPath(backupPath, -1);
         noLimitBackup = true;
     }
 
+    @Override
     public void addBackupPath(String path, int size) {
         if (noLimitBackup) {
             throw new IllegalArgumentException(
@@ -77,29 +79,27 @@ public class FBBackupManager extends FBBackupManagerBase implements BackupManage
         backupPaths.add(new PathSizeStruct(path, size));
     }
 
+    @Override
     public void clearBackupPaths() {
         backupPaths.clear();
         noLimitBackup = false;
     }
 
+    @Override
     public void backupDatabase(int options) throws SQLException {
         try (FbService service = attachServiceManager()) {
             executeServicesOperation(service, getBackupSRB(service, options));
         }
     }
 
+    @Override
     public void restoreDatabase(int options) throws SQLException {
         try (FbService service = attachServiceManager()) {
             executeServicesOperation(service, getRestoreSRB(service, options));
         }
     }
 
-    /**
-     * Adds the currentDatabase as a source for the backup operation
-     *
-     * @param backupSPB
-     *        The buffer to be used during the backup operation
-     */
+    @Override
     protected void addBackupsToBackupRequestBuffer(FbService service, ServiceRequestBuffer backupSPB)
             throws SQLException {
         for (Iterator<PathSizeStruct> iter = backupPaths.iterator(); iter.hasNext();) {
@@ -116,12 +116,7 @@ public class FBBackupManager extends FBBackupManagerBase implements BackupManage
         }
     }
 
-    /**
-     * Adds the list of backups to be used for the restore operation
-     *
-     * @param restoreSPB
-     *        The buffer to be used during the restore operation
-     */
+    @Override
     protected void addBackupsToRestoreRequestBuffer(FbService service, ServiceRequestBuffer restoreSPB) {
         for (PathSizeStruct pathSize : backupPaths) {
             restoreSPB.addArgument(isc_spb_bkp_file, pathSize.path());

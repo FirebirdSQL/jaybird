@@ -377,13 +377,16 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * Adds the backup source for the backup operation, depending on the manager used
      *
      * @param backupSPB
-     *         The buffer to be used during the backup operation
+     *         buffer to be used during the backup operation
      */
     protected abstract void addBackupsToBackupRequestBuffer(FbService service, ServiceRequestBuffer backupSPB)
             throws SQLException;
 
     /**
      * Adds the backup files to be used during restore
+     *
+     * @param restoreSPB
+     *         buffer to be used during the restore operation
      */
     protected abstract void addBackupsToRestoreRequestBuffer(FbService service, ServiceRequestBuffer restoreSPB);
 

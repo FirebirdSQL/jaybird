@@ -85,10 +85,12 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
         super(gdsType);
     }
 
+    @Override
     public void setBackupPath(String backupPath) {
         throw new IllegalArgumentException("You cannot use setBackupPath(String) for Streaming backups.");
     }
 
+    @Override
     public void addBackupPath(String path, int size) {
         throw new IllegalArgumentException("You cannot use setBackupPath(String) for Streaming backups.");
     }
@@ -103,10 +105,12 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
                 : new BufferedInputStream(restoreStream, 128 * MAX_RESTORE_CHUNK);
     }
 
+    @Override
     public void clearBackupPaths() {
         backupOutputStream = null;
     }
 
+    @Override
     public void backupDatabase(int options) throws SQLException {
         final OutputStream backupOutputStream = this.backupOutputStream;
         if (backupOutputStream == null) {
@@ -118,6 +122,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
         }
     }
 
+    @Override
     public void restoreDatabase(int options) throws SQLException {
         final InputStream restoreInputStream = this.restoreInputStream;
         if (restoreInputStream == null) {
@@ -131,6 +136,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
     /**
      * Streaming backups are currently not capable of verbose output
      */
+    @Override
     protected boolean verboseBackup() {
         return false;
     }
@@ -155,22 +161,12 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
         super.setRestorePageSize(pageSize);
     }
 
-    /**
-     * Adds stdout as a source for the backup operation
-     *
-     * @param backupSPB
-     *        The buffer to be used during the backup operation
-     */
+    @Override
     protected void addBackupsToBackupRequestBuffer(FbService service, ServiceRequestBuffer backupSPB) {
         backupSPB.addArgument(isc_spb_bkp_file, "stdout");
     }
 
-    /**
-     * Adds stdin as a source for the restore operation
-     *
-     * @param restoreSPB
-     *        The buffer to be used during the restore operation
-     */
+    @Override
     protected void addBackupsToRestoreRequestBuffer(FbService service, ServiceRequestBuffer restoreSPB) {
         restoreSPB.addArgument(isc_spb_bkp_file, "stdin");
     }

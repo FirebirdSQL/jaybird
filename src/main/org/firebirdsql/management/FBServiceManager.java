@@ -273,17 +273,12 @@ public class FBServiceManager implements ServiceManager {
         return serviceProperties.connectionPropertyValues();
     }
 
-    /**
-     * @return Returns the out.
-     */
+    @Override
     public synchronized @Nullable OutputStream getLogger() {
         return logger;
     }
 
-    /**
-     * @param logger
-     *         The out to set.
-     */
+    @Override
     public synchronized void setLogger(@Nullable OutputStream logger) {
         this.logger = logger;
     }

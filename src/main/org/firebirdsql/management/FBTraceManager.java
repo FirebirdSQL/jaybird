@@ -129,15 +129,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
         return traceSPB;
     }
 
-    /**
-     * Starts a trace session with an optional trace session name and configuration
-     *
-     * @param traceSessionName
-     *         The trace session name (optional)
-     * @param configuration
-     *         The trace configuration. For an example, look into fbtrace.conf in the root directory of your
-     *         Firebird installation
-     */
+    @Override
     public void startTraceSession(@Nullable String traceSessionName, String configuration) throws SQLException {
         if (isNullOrEmpty(configuration)) {
             throw new SQLException("No configuration provided");
@@ -160,64 +152,35 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
         }
     }
 
-    /**
-     * Stops a trace session with the given trace session ID
-     *
-     * @param traceSessionId
-     *         The trace session ID
-     */
+    @Override
     public void stopTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
             executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_stop, traceSessionId));
         }
     }
 
-    /**
-     * Suspends a trace session with the given trace session ID
-     *
-     * @param traceSessionId
-     *         The trace session ID
-     */
+    @Override
     public void suspendTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
             executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_suspend, traceSessionId));
         }
     }
 
-    /**
-     * Resumes a trace session with the given trace session ID
-     *
-     * @param traceSessionId
-     *         The trace session ID
-     */
+    @Override
     public void resumeTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
             executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_resume, traceSessionId));
         }
     }
 
-    /**
-     * List all currently registered trace sessions
-     */
+    @Override
     public void listTraceSessions() throws SQLException {
         try (FbService service = attachServiceManager()) {
             executeServicesOperation(service, getTraceSPB(service, isc_action_svc_trace_list));
         }
     }
 
-    /**
-     * Gets the sessionId for the given name.
-     * <p>
-     * Returns null if the sessionName does not exist or hasn't been initialized yet.
-     * </p>
-     * <p>
-     * If multiple sessions are started with the same name, the last one is returned.
-     * </p>
-     *
-     * @param sessionName
-     *         Name of the session
-     * @return Id of the session or null otherwise
-     */
+    @Override
     public @Nullable Integer getSessionId(String sessionName) {
         return traceSessions.get(sessionName);
     }

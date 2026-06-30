@@ -75,6 +75,7 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
         super(gdsType);
     }
 
+    @Override
     public void getHeaderPage() throws SQLException {
         try (FbService service = attachServiceManager()) {
             ServiceRequestBuffer srb = createStatsSRB(service, isc_spb_sts_hdr_pages);
@@ -82,6 +83,7 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
         }
     }
 
+    @Override
     public void getDatabaseStatistics() throws SQLException {
         try (FbService service = attachServiceManager()) {
             ServiceRequestBuffer srb = createDefaultStatsSRB(service);
@@ -89,6 +91,7 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
         }
     }
 
+    @Override
     public void getDatabaseStatistics(int options) throws SQLException {
         if (options != 0 && (options | POSSIBLE_STATISTICS) != POSSIBLE_STATISTICS) {
             throw new IllegalArgumentException("options must be 0 or a "
