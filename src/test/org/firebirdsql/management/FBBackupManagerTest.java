@@ -20,7 +20,6 @@ import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
@@ -411,7 +410,6 @@ class FBBackupManagerTest {
         }
     }
 
-    @Disabled("Awaiting fix https://github.com/FirebirdSQL/firebird/issues/9077")
     @ParameterizedTest
     @CsvSource(useHeadersInDisplayName = true, textBlock = """
             backupSkipSchemaData, backupIncludeSchemaData, restoreSkipSchemaData, restoreIncludeSchemaData
