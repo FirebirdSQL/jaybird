@@ -102,12 +102,27 @@ public interface NBackupManager extends ServiceManager {
     void fixupDatabase() throws SQLException;
 
     /**
-     * Sets the backup level (0 = full, 1..n = incremental)
+     * Sets the backup level (0 = full, 1..n = incremental, -1 = not set).
+     * <p>
+     * This setting is mutually exclusive with {@link #setBackupGuid(String)} (unless set to {@code -1}). Values are not
+     * validated client-side, only server-side.
+     * </p>
      *
      * @param level
-     *         backup level (e.g. 0 = full backup, 1 = level 1 incremental backup based on level 0 backup
+     *         backup level (e.g. 0 = full backup, 1 = level 1 incremental backup based on level 0 backup, etc.); use
+     *         {@code -1} to clear
+     * @see #getBackupLevel()
+     * @see #setBackupGuid(String)
      */
     void setBackupLevel(int level);
+
+    /**
+     * @return backup level (e.g. 0 = full backup, 1 = level 1 incremental backup based on level 0 backup, etc.),
+     * {@code -1} means the backup level is not set (it will either use {@code 0} or the backup GUID)
+     * @see #setBackupLevel(int)
+     * @since 7
+     */
+    int getBackupLevel();
 
     /**
      * Sets the backup GUID (Firebird 4 and higher only).
@@ -116,31 +131,57 @@ public interface NBackupManager extends ServiceManager {
      * the pages modified since that backup.
      * </p>
      * <p>
-     * This setting is mutually exclusive with {@link #setBackupLevel(int)}, but this is only checked server-side.
+     * This setting is mutually exclusive with {@link #setBackupLevel(int)} (unless set to {@code null}). Values are not
+     * validated client-side, only server-side.
      * </p>
      *
      * @param guid
-     *         A GUID string of a previous backup, enclosed in braces.
+     *         GUID string of a previous backup, enclosed in braces
+     * @see #getBackupGuid()
+     * @see #setBackupLevel(int)
      * @since 4.0.4
      */
     void setBackupGuid(@Nullable String guid);
 
     /**
+     * @return GUID string of a previous backup, enclosed in braces
+     * @see #setBackupGuid(String)
+     * @since 7
+     */
+    @Nullable String getBackupGuid();
+
+    /**
      * Sets the option no database triggers when connecting at backup or in-place restore.
      *
      * @param noDBTriggers
-     *         {@code true} disable db triggers during backup or in-place restore.
+     *         {@code true} disable db triggers during backup or in-place restore
+     * @see #isNoDBTriggers()
      */
     void setNoDBTriggers(boolean noDBTriggers);
+
+    /**
+     * @return {@code true} db triggers during backup or in-place restore are disabled
+     * @see #setNoDBTriggers(boolean)
+     * @since 7
+     */
+    boolean isNoDBTriggers();
 
     /**
      * Enables in-place restore.
      *
      * @param inPlaceRestore
      *         {@code true} to enable in-place restore
+     * @see #isInPlaceRestore()
      * @since 4.0.4
      */
     void setInPlaceRestore(boolean inPlaceRestore);
+
+    /**
+     * @return {@code true} in-place restore enabled
+     * @see #setInPlaceRestore(boolean)
+     * @since 7
+     */
+    boolean isInPlaceRestore();
 
     /**
      * Enables preserve sequence (for fixup or restore).
@@ -150,21 +191,39 @@ public interface NBackupManager extends ServiceManager {
      *
      * @param preserveSequence
      *         {@code true} to enable preserve sequence
+     * @see #isPreserveSequence()
      * @since 5
      */
     void setPreserveSequence(boolean preserveSequence);
 
     /**
+     * @return {@code true} preserve sequence enabled
+     * @see #setPreserveSequence(boolean)
+     * @since 7
+     */
+    boolean isPreserveSequence();
+
+    /**
      * Enables clean history on backup.
      * <p>
-     * The backup will fail if {@link #setKeepDays(int)} or {@link #setKeepRows(int)} has not been called.
+     * The backup will fail if {@link #setKeepDays(int)} or {@link #setKeepRows(int)} have not been set.
      * </p>
      *
      * @param cleanHistory
      *         {@code true} to enable clean history
+     * @see #isCleanHistory()
+     * @see #setKeepDays(int)
+     * @see #setKeepRows(int)
      * @since 4.0.7
      */
     void setCleanHistory(boolean cleanHistory);
+
+    /**
+     * @return {@code true} clean history enabled
+     * @see #setCleanHistory(boolean)
+     * @since 7
+     */
+    boolean isCleanHistory();
 
     /**
      * Sets the number of days of backup history to keep.
@@ -178,11 +237,19 @@ public interface NBackupManager extends ServiceManager {
      *
      * @param days
      *         number of days to keep history when cleaning, or {@code -1} to clear current value
+     * @see #getKeepDays()
      * @see #setCleanHistory(boolean)
      * @see #setKeepRows(int)
      * @since 4.0.7
      */
     void setKeepDays(int days);
+
+    /**
+     * @return number of days to keep history when cleaning, or {@code -1} if not set
+     * @see #setKeepDays(int)
+     * @since 7
+     */
+    int getKeepDays();
 
     /**
      * Sets the number of rows of backup history to keep (this includes the row created by the backup).
@@ -196,10 +263,18 @@ public interface NBackupManager extends ServiceManager {
      *
      * @param rows
      *         number of rows to keep history when cleaning, or {@code -1} to clear current value
+     * @see #getKeepRows()
      * @see #setCleanHistory(boolean)
      * @see #setKeepDays(int)
      * @since 4.0.7
      */
     void setKeepRows(int rows);
-    
+
+    /**
+     * @return number of rows to keep history when cleaning, or {@code -1} if not set
+     * @see #setKeepRows(int)
+     * @since 7
+     */
+    int getKeepRows();
+
 }

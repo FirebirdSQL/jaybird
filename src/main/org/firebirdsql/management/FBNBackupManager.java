@@ -212,8 +212,18 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     }
 
     @Override
+    public int getBackupLevel() {
+        return backupLevel;
+    }
+
+    @Override
     public void setBackupGuid(@Nullable String guid) {
         backupGuid = guid;
+    }
+
+    @Override
+    public @Nullable String getBackupGuid() {
+        return backupGuid;
     }
 
     @Override
@@ -222,8 +232,18 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     }
 
     @Override
+    public boolean isNoDBTriggers() {
+        return noDBTriggers;
+    }
+
+    @Override
     public void setInPlaceRestore(boolean inPlaceRestore) {
         this.inPlaceRestore = inPlaceRestore;
+    }
+
+    @Override
+    public boolean isInPlaceRestore() {
+        return inPlaceRestore;
     }
 
     @Override
@@ -232,8 +252,18 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     }
 
     @Override
+    public boolean isPreserveSequence() {
+        return preserveSequence;
+    }
+
+    @Override
     public void setCleanHistory(boolean cleanHistory) {
         this.cleanHistory = cleanHistory;
+    }
+
+    @Override
+    public boolean isCleanHistory() {
+        return cleanHistory;
     }
 
     @Override
@@ -242,8 +272,18 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     }
 
     @Override
+    public int getKeepDays() {
+        return keepDays;
+    }
+
+    @Override
     public void setKeepRows(int rows) {
         keepRows = rows;
+    }
+
+    @Override
+    public int getKeepRows() {
+        return keepRows;
     }
 
 }

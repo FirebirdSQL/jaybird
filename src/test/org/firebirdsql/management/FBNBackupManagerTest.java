@@ -86,6 +86,7 @@ class FBNBackupManagerTest {
         MappedPath backup2 = getTempPath("backup2.nbk");
         manager.setBackupFile(backup2.toServerPath());
         manager.setBackupGuid(guid);
+        assertEquals(guid, manager.getBackupGuid(), "backupGuid");
         manager.backupDatabase();
 
         manager.clearBackupFiles();
@@ -151,7 +152,9 @@ class FBNBackupManagerTest {
         }
 
         manager.clearBackupFiles();
+        assertFalse(manager.isInPlaceRestore(), "inPlaceRestore");
         manager.setInPlaceRestore(true);
+        assertTrue(manager.isInPlaceRestore(), "inPlaceRestore");
         manager.addBackupFile(backup2.toServerPath());
         manager.restoreDatabase();
 
@@ -199,7 +202,9 @@ class FBNBackupManagerTest {
         }
 
         manager.setDatabase(getDatabasePath());
+        assertFalse(manager.isPreserveSequence(), "preserveSequence");
         manager.setPreserveSequence(true);
+        assertTrue(manager.isPreserveSequence(), "preserveSequence");
         manager.fixupDatabase();
 
         final String afterFixupDbGuid = getCurrentDbGuid();
@@ -235,8 +240,12 @@ class FBNBackupManagerTest {
     @Test
     void backupCleanHistoryWithKeepDays() {
         assumeTrue(getDefaultSupportInfo().supportsNBackupCleanHistory(), "Requires NBackup clean history support");
+        assertFalse(manager.isCleanHistory(), "cleanHistory");
         manager.setCleanHistory(true);
+        assertTrue(manager.isCleanHistory(), "cleanHistory");
+        assertEquals(-1, manager.getKeepDays(), "keepDays");
         manager.setKeepDays(5);
+        assertEquals(5, manager.getKeepDays(), "keepDays");
 
         MappedPath backup1 = getTempPath("backup1.nbk");
         manager.setBackupFile(backup1.toServerPath());
@@ -249,8 +258,12 @@ class FBNBackupManagerTest {
     @Test
     void backupCleanHistoryWithKeepRows() {
         assumeTrue(getDefaultSupportInfo().supportsNBackupCleanHistory(), "Requires NBackup clean history support");
+        assertFalse(manager.isCleanHistory(), "cleanHistory");
         manager.setCleanHistory(true);
+        assertTrue(manager.isCleanHistory(), "cleanHistory");
+        assertEquals(-1, manager.getKeepRows(), "keepRows");
         manager.setKeepRows(5);
+        assertEquals(5, manager.getKeepRows(), "keepRows");
 
         MappedPath backup1 = getTempPath("backup1.nbk");
         manager.setBackupFile(backup1.toServerPath());
