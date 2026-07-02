@@ -14,7 +14,7 @@
  * <li>{@code gfix} equivalent ({@link org.firebirdsql.management.FBMaintenanceManager})</li>
  * <li>{@code fbtracemgr} equivalent ({@link org.firebirdsql.management.FBTraceManager}</li>
  * <li>{@code gsec} equivalent ({@link org.firebirdsql.management.FBUserManager}) &mdash; NOTE: this has been deprecated
- * in Firebird 3.0, and it is recommend to use SQL statements for user management instead</li>
+ * in Firebird 3.0, and it is recommended to use SQL statements for user management instead</li>
  * <li>Obtaining connection-specific table statistics ({@link org.firebirdsql.management.FBTableStatisticsManager})</li>
  * </ul>
  */

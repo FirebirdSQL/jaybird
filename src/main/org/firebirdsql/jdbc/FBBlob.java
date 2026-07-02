@@ -34,7 +34,6 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jdbc.FBObjectListener.BlobListener;
 import org.firebirdsql.util.InternalApi;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.io.*;

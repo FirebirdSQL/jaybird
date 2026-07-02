@@ -426,6 +426,7 @@ public final class FirebirdSupportInfo {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public boolean supportsPageSize(int pageSize) {
         return switch (pageSize) {
             case PageSizeConstants.SIZE_1K, PageSizeConstants.SIZE_2K -> !isVersionEqualOrAbove(2, 1);
