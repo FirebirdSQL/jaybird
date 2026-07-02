@@ -265,7 +265,9 @@ public class FBManager implements FBManagerMBean {
 
     @Override
     public void setPageSize(int pageSize) {
-        this.pageSize = PageSizeConstants.requireValidPageSize(pageSize);
+        this.pageSize = pageSize != PageSizeConstants.USE_DEFAULT
+                ? PageSizeConstants.requireValidPageSize(pageSize)
+                : PageSizeConstants.USE_DEFAULT;
     }
 
     @Override

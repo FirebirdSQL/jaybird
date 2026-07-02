@@ -111,13 +111,14 @@ class FBManagerTest {
         assertThrows(IllegalArgumentException.class, () -> m.setPageSize(4000));
     }
 
-    @SuppressWarnings("resource")
+    @SuppressWarnings({ "resource", "deprecation" })
     @ParameterizedTest
-    @ValueSource(ints = { SIZE_1K, SIZE_2K, SIZE_4K, SIZE_8K, SIZE_16K, SIZE_32K })
+    @ValueSource(ints = { USE_DEFAULT, SIZE_1K, SIZE_2K, SIZE_4K, SIZE_8K, SIZE_16K, SIZE_32K })
     void testSetPageSize_ValidValues(int pageSize) {
         FBManager m = FBTestProperties.createFBManager();
 
         assertDoesNotThrow(() -> m.setPageSize(pageSize));
+        assertEquals(pageSize, m.getPageSize(), "pageSize");
     }
 
     @Test

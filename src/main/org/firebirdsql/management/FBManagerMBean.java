@@ -195,8 +195,8 @@ public interface FBManagerMBean extends AttachmentProperties, AutoCloseable {
     /**
      * Set the page size to use when creating a new database.
      * <p>
-     * The value for {@code pageSize} must be one of {@link PageSizeConstants}. The default value depends on the
-     * Firebird version.
+     * The value for {@code pageSize} must be one of {@link PageSizeConstants}. Use
+     * {@link PageSizeConstants#USE_DEFAULT} ({@code -1}) for the default size of the Firebird server.
      * </p>
      * <p>
      * Some values are not valid on all Firebird versions.
