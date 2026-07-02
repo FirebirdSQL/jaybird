@@ -100,7 +100,8 @@ dependencies {
         testRuntimeOnly project('chacha64-plugin')
     }
 
-    asciidoctorExt 'org.firebirdsql.asciidoctor:canonical-link:1.0'
+    asciidoctorExt libs.canonical.link
+    asciidoctorExt libs.issue.macro
 }
 
 sourceSets {

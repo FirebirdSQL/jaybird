@@ -15,6 +15,7 @@
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/7.0.x/release_notes.html
+:fb-issue-repo: FirebirdSQL/jaybird
 
 ////
 SPDX-FileCopyrightText: Copyright 2021-2026 Firebird development team and individual contributors
@@ -675,7 +676,7 @@ For more information, refer to https://firebirdsql.org/file/documentation/html/e
 
 * Changed the documentation of `FirebirdDatabaseMetaData` methods `getProcedureSourceCode`, `getTriggerSourceCode` and `getViewSourceCode` that the object not being found is reported by a `null` value, not a `SQLException`.
 With this change, the documentation reflects the actual behaviour.
-* Fixed: race condition during cancellation (https://github.com/FirebirdSQL/jaybird/issues/903[#903])
+* Fixed: race condition during cancellation (issue:[903])
 +
 This change introduce an additional lock during transmit (sending to the server).
 Maintainers of Jaybird forks, or implementers of custom wire protocol implementations subclassing classes in `org.firebirdsql.gds.ng.wire` and related packages will need to take out this transmit lock when sending to the server.
@@ -683,14 +684,14 @@ The change also lead to incompatible changes to protected methods in the various
 +
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-01-additional-locking-for-sending-in-wire-protocol.adoc[jdp-2026-01: Additional locking for sending in wire protocol].
 * Upgraded `org.firebirdsql.extern.decimal` to https://github.com/FirebirdSQL/decimal-java[decimal-java 2.0.1^]
-* Support `USING` clause in generated keys detection (https://github.com/FirebirdSQL/jaybird/issues/932[#932])
-* Add support for parenthesized queries to `StatementDetector` (https://github.com/FirebirdSQL/jaybird/issues/933[#933])
+* Support `USING` clause in generated keys detection (issue:[932])
+* Add support for parenthesized queries to `StatementDetector` (issue:[933])
 * Improvement: Clear warnings on connection close (https://github.com/FirebirdSQL/jaybird/pull/943[#943])
 +
 This change was contributed by https://github.com/FuriousFourier[FuriousFourier^]
-* Improvement: Add getters to `BackupManager` and allow "`use default`" to be set (https://github.com/FirebirdSQL/jaybird/issues/948[#948])
-* Improvement: Allow "`use default`" (`-1`) on `FBManager#setPageSize` (https://github.com/FirebirdSQL/jaybird/issues/949[#949])
-* Improvement: Add getters to `NBackupManager` (https://github.com/FirebirdSQL/jaybird/issues/950[#950])
+* Improvement: Add getters to `BackupManager` and allow "`use default`" to be set (issue:[948])
+* Improvement: Allow "`use default`" (`-1`) on `FBManager#setPageSize` (issue:[949])
+* Improvement: Add getters to `NBackupManager` (issue:[950])
 * ...
 
 [#compatibility-changes]
