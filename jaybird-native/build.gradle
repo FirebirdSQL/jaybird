@@ -193,7 +193,7 @@ publishing {
                         unsubscribe = 'firebird-java+unsubscribe@googlegroups.com'
                         post = 'firebird-java@googlegroups.com'
                         archive = 'https://groups.google.com/g/firebird-java'
-                        otherArchives = ['http://fb-list-archive.s3-website-eu-west-1.amazonaws.com/firebird-java/index.html']
+                        otherArchives = ['https://fb-list-archive.lawinegevaar.nl/firebird-java/index.html']
                     }
                 }
 
