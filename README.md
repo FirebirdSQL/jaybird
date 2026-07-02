@@ -26,8 +26,9 @@ For bugs or improvement, go to our [Issue tracker](https://github.com/FirebirdSQ
 
 ## License
 
-Jaybird is licensed under LGPL 2.1 or later, with extension interfaces licensed
-under the BSD 3-clause. See source headers for the specific license.
+Jaybird is licensed under LGPL 2.1 or later, with extension interfaces *also*
+licensed under the BSD 3-clause. See source headers for the specific license of
+a file (if SPDX information is absent, consult [`REUSE.toml`](REUSE.toml)).
 
 <!-- REUSE-IgnoreStart -->
 
