@@ -46,13 +46,23 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
      * </p>
      *
      * @param bufferSize
-     *        The buffer size to be used, a positive value
+     *        buffer size to be used, a positive value
+     * @see #getBackupBufferSize()
      */
     public void setBackupBufferSize(int bufferSize) {
         if (bufferSize <= 0) {
             throw new IllegalArgumentException("Buffer size must be positive");
         }
         this.backupBufferSize = bufferSize;
+    }
+
+    /**
+     * @return buffer size to be used for backup
+     * @see #setBackupBufferSize(int)
+     * @since 7
+     */
+    public int getBackupBufferSize() {
+        return backupBufferSize;
     }
 
     /**
@@ -154,7 +164,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
      */
     @Override
     public void setRestorePageSize(int pageSize) {
-        if (pageSize < PageSizeConstants.SIZE_4K) {
+        if (pageSize != PageSizeConstants.USE_DEFAULT && pageSize < PageSizeConstants.SIZE_4K) {
             throw new IllegalArgumentException(
                     "FirebirdSQL versions with streaming restore support don't support pages below 4096");
         }

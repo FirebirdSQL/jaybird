@@ -13,10 +13,22 @@ import java.util.Arrays;
  * @author Mark Rotteveel
  * @since 3.0
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unused", "DeprecatedIsStillUsed" })
 public final class PageSizeConstants {
 
+    /**
+     * Value to signal use of a (server determined) default value.
+     */
+    public static final int USE_DEFAULT = -1;
+    /**
+     * @deprecated deprecated in Firebird 2.1, and not supported in Firebird 2.5 and higher
+     */
+    @Deprecated
     public static final int SIZE_1K = 1024;
+    /**
+     * @deprecated deprecated in Firebird 2.1, and not supported in Firebird 2.5 and higher
+     */
+    @Deprecated
     public static final int SIZE_2K = 2 * SIZE_1K;
     public static final int SIZE_4K = 4 * SIZE_1K;
     public static final int SIZE_8K = 8 * SIZE_1K;
@@ -37,6 +49,9 @@ public final class PageSizeConstants {
      * <p>
      * Actual support of a page size depends on the Firebird version, even if a page size is valid according to this
      * method, it can still be invalid for the actual Firebird version used.
+     * </p>
+     * <p>
+     * This method does not consider {@link #USE_DEFAULT} ({@code -1}) a valid page size.
      * </p>
      *
      * @param pageSize

@@ -20,6 +20,7 @@ import java.nio.file.Path;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -88,33 +89,36 @@ class FBStreamingBackupManagerTest {
 
     @Test
     void testSetBadBufferCount() {
-        assertThrows(IllegalArgumentException.class, () -> backupManager.setRestorePageBufferCount(-1),
-                "Page buffer count must be a positive value");
+        assertThrows(IllegalArgumentException.class, () -> backupManager.setRestorePageBufferCount(-2),
+                "Page buffer count must be a positive value or -1");
     }
 
     @Test
     void testSetBadPageSize() {
         assertThrows(IllegalArgumentException.class, () -> backupManager.setRestorePageSize(4000),
-                "Page size must be one of 4196, 8192 or 16384)");
+                "Page size must be one of 4096, 8192 or 16384)");
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     void testSetBadPageSize_1K_notSupported() {
         assertThrows(IllegalArgumentException.class, () -> backupManager.setRestorePageSize(PageSizeConstants.SIZE_1K),
-                "Page size must be one of 4196, 8192 or 16384)");
+                "Page size must be one of 4096, 8192 or 16384)");
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     void testSetBadPageSize_2K_notSupported() {
         assertThrows(IllegalArgumentException.class, () -> backupManager.setRestorePageSize(PageSizeConstants.SIZE_2K),
-                "Page size must be one of 4196, 8192 or 16384)");
+                "Page size must be one of 4096, 8192 or 16384)");
     }
 
     /**
      * Tests the valid page sizes expected to be accepted by the BackupManager
      */
     @ParameterizedTest
-    @ValueSource(ints = { PageSizeConstants.SIZE_4K, PageSizeConstants.SIZE_8K, PageSizeConstants.SIZE_16K })
+    @ValueSource(ints = { PageSizeConstants.USE_DEFAULT, PageSizeConstants.SIZE_4K, PageSizeConstants.SIZE_8K,
+            PageSizeConstants.SIZE_16K })
     void testValidPageSizes(int pageSize) {
         assertDoesNotThrow(() -> backupManager.setRestorePageSize(pageSize));
     }
@@ -135,6 +139,7 @@ class FBStreamingBackupManagerTest {
     @ValueSource(ints = { 1, 1024, 30 * 1024, 512 * 1024, Integer.MAX_VALUE })
     void setBackupBufferSize_validSizes(int bufferSize) {
         assertDoesNotThrow(() -> backupManager.setBackupBufferSize(bufferSize));
+        assertEquals(bufferSize, backupManager.getBackupBufferSize(), "backupBufferSize");
     }
 
     @ParameterizedTest

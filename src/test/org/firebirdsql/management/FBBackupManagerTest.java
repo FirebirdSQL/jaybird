@@ -131,24 +131,27 @@ class FBBackupManagerTest {
 
     @Test
     void testSetBadBufferCount() {
-        assertThrows(IllegalArgumentException.class, () -> backupManager.setRestorePageBufferCount(-1),
+        assertThrows(IllegalArgumentException.class, () -> backupManager.setRestorePageBufferCount(-2),
                 "Page buffer count must be a positive value");
     }
 
     @Test
     void testSetBadPageSize() {
         assertThrows(IllegalArgumentException.class, () -> backupManager.setRestorePageSize(4000),
-                "Page size must be one of 1024, 2048, 4196, 8192, 16384 or 32768)");
+                "Page size must be one of 1024, 2048, 4096, 8192, 16384 or 32768)");
     }
 
     /**
      * Tests the valid page sizes expected to be accepted by the BackupManager
      */
+    @SuppressWarnings("deprecation")
     @ParameterizedTest
-    @ValueSource(ints = { PageSizeConstants.SIZE_1K, PageSizeConstants.SIZE_2K, PageSizeConstants.SIZE_4K,
-            PageSizeConstants.SIZE_8K, PageSizeConstants.SIZE_16K, PageSizeConstants.SIZE_32K })
+    @ValueSource(ints = { PageSizeConstants.USE_DEFAULT, PageSizeConstants.SIZE_1K, PageSizeConstants.SIZE_2K,
+            PageSizeConstants.SIZE_4K, PageSizeConstants.SIZE_8K, PageSizeConstants.SIZE_16K,
+            PageSizeConstants.SIZE_32K })
     void testValidPageSizes(int pageSize) {
-        assertDoesNotThrow(() -> backupManager.setRestorePageSize(pageSize));
+        assertDoesNotThrow(() -> backupManager.setRestorePageSize(pageSize), "restorePageSize");
+        assertEquals(pageSize, backupManager.getRestorePageSize(), "restorePageSize");
     }
 
     @Test
@@ -167,6 +170,7 @@ class FBBackupManagerTest {
         usesDatabase.addDatabase(serverRestorePath1);
         backupManager.setDatabase(serverRestorePath1);
         backupManager.setRestoreReadOnly(true);
+        assertTrue(backupManager.isRestoreReadOnly(), "restoreReadOnly");
         backupManager.restoreDatabase();
 
         try (var conn = DriverManager.getConnection(getUrl(serverRestorePath1), getDefaultPropertiesForConnection());
@@ -183,7 +187,9 @@ class FBBackupManagerTest {
         usesDatabase.addDatabase(serverRestorePath2);
         backupManager.setDatabase(serverRestorePath2);
         backupManager.setRestoreReadOnly(false);
+        assertFalse(backupManager.isRestoreReadOnly(), "restoreReadOnly");
         backupManager.setRestoreReplace(true);
+        assertTrue(backupManager.isRestoreReplace(), "restoreReplace");
         backupManager.restoreDatabase();
 
         try (var conn = DriverManager.getConnection(getUrl(serverRestorePath2), getDefaultPropertiesForConnection());
@@ -200,6 +206,7 @@ class FBBackupManagerTest {
         assertThrows(SQLException.class, backupManager::restoreDatabase, "Can't restore-create an existing database");
 
         backupManager.setRestoreReplace(true);
+        assertTrue(backupManager.isRestoreReplace(), "restoreReplace");
         backupManager.restoreDatabase();
     }
 

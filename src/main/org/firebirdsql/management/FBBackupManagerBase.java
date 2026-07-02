@@ -24,7 +24,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
- * Implements the common functionality between regular and streaming backup/restore
+ * Implements the common functionality between regular and streaming backup/restore.
  *
  * @author Roman Rokytskyy
  * @author Mark Rotteveel
@@ -79,8 +79,8 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
 
     protected boolean verbose;
 
-    private int restoreBufferCount = -1;
-    private int restorePageSize = -1;
+    private int restorePageBufferCount = -1;
+    private int restorePageSize = PageSizeConstants.USE_DEFAULT;
     private boolean restoreReadOnly;
     private boolean restoreReplace;
     private @Nullable String skipData;
@@ -92,13 +92,13 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
     private static final int RESTORE_CREATE = isc_spb_res_create;
 
     /**
-     * Create a new instance of <code>FBBackupManagerBase</code> based on the default GDSType.
+     * Create a new instance of {@code FBBackupManagerBase} based on the default GDSType.
      */
     protected FBBackupManagerBase() {
     }
 
     /**
-     * Create a new instance of <code>FBBackupManagerBase</code> based on a given GDSType.
+     * Create a new instance of {@code FBBackupManagerBase} based on a given GDSType.
      *
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
@@ -108,7 +108,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
     }
 
     /**
-     * Create a new instance of <code>FBBackupManagerBase</code> based on a given GDSType.
+     * Create a new instance of {@code FBBackupManagerBase} based on a given GDSType.
      *
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
@@ -208,69 +208,59 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
         restoreDatabase(0);
     }
 
-    /**
-     * Set whether the operations of this {@code BackupManager} will result in verbose logging to the configured logger.
-     *
-     * @param verbose
-     *         If <code>true</code>, operations will be logged verbosely, otherwise they will not be logged verbosely
-     */
     @Override
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
     }
 
-    /**
-     * Set the default number of pages to be buffered (cached) by default in a restored database.
-     *
-     * @param bufferCount
-     *         The page-buffer size to be used, a positive value
-     */
+    @Override
+    public boolean isVerbose() {
+        return verbose;
+    }
+
     @Override
     public void setRestorePageBufferCount(int bufferCount) {
-        if (bufferCount < 0) {
-            throw new IllegalArgumentException("Buffer count must be positive");
+        if (bufferCount < -1) {
+            throw new IllegalArgumentException("Buffer count must be positive or -1");
         }
-        this.restoreBufferCount = bufferCount;
+        this.restorePageBufferCount = bufferCount;
     }
 
-    /**
-     * Set the page size that will be used for a restored database. The value for {@code pageSize} must be
-     * one of {@link PageSizeConstants}. The default value depends on the Firebird version.
-     * <p>
-     * Be aware that not all page sizes are supported by all Firebird versions.
-     * </p>
-     *
-     * @param pageSize
-     *         The page size to be used in a restored database, see {@link PageSizeConstants}
-     * @see PageSizeConstants
-     */
+    @Override
+    public int getRestorePageBufferCount() {
+        return restorePageBufferCount;
+    }
+
     @Override
     public void setRestorePageSize(int pageSize) {
-        this.restorePageSize = PageSizeConstants.requireValidPageSize(pageSize);
+        this.restorePageSize = pageSize != PageSizeConstants.USE_DEFAULT
+                ? PageSizeConstants.requireValidPageSize(pageSize)
+                : PageSizeConstants.USE_DEFAULT;
     }
 
-    /**
-     * Set the restore operation to create a new database, as opposed to overwriting an existing database. This is true
-     * by default.
-     *
-     * @param replace
-     *         If <code>true</code>, the restore operation will attempt to create a new database, otherwise the restore
-     *         operation will overwrite an existing database
-     */
+    @Override
+    public int getRestorePageSize() {
+        return restorePageSize;
+    }
+
     @Override
     public void setRestoreReplace(boolean replace) {
         this.restoreReplace = replace;
     }
 
-    /**
-     * Set the read-only attribute on a restored database.
-     *
-     * @param readOnly
-     *         If <code>true</code>, a restored database will be read-only, otherwise it will be read-write.
-     */
+    @Override
+    public boolean isRestoreReplace() {
+        return restoreReplace;
+    }
+
     @Override
     public void setRestoreReadOnly(boolean readOnly) {
         this.restoreReadOnly = readOnly;
+    }
+
+    @Override
+    public boolean isRestoreReadOnly() {
+        return restoreReadOnly;
     }
 
     @Override
@@ -342,8 +332,8 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
 
         addBackupsToRestoreRequestBuffer(service, restoreSPB);
 
-        if (restoreBufferCount != -1) {
-            restoreSPB.addArgument(isc_spb_res_buffers, restoreBufferCount);
+        if (restorePageBufferCount != -1) {
+            restoreSPB.addArgument(isc_spb_res_buffers, restorePageBufferCount);
         }
 
         if (restorePageSize != -1) {

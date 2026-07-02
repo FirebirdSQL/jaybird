@@ -17,7 +17,9 @@ import java.sql.SQLException;
  *
  * @author Roman Rokytskyy
  * @author Steven Jardine
+ * @author Mark Rotteveel
  */
+@SuppressWarnings("unused")
 public interface BackupManager extends ServiceManager {
 
     /**
@@ -85,7 +87,6 @@ public interface BackupManager extends ServiceManager {
      * read-only databases.
      */
     int RESTORE_USE_ALL_SPACE = ISCConstants.isc_spb_res_use_all_space;
-
 
     /**
      * Sets the location of the backup file. This method is used to set the
@@ -200,48 +201,87 @@ public interface BackupManager extends ServiceManager {
      * Set whether the operations of this {@code BackupManager} will result in verbose logging to the configured logger.
      *
      * @param verbose
-     *         If {@code true}, operations will be logged verbosely, otherwise they will not be logged verbosely
+     *         {@code true}, operations will be logged verbosely, otherwise they will not be logged verbosely
+     * @see #isVerbose()
      */
     void setVerbose(boolean verbose);
 
     /**
-     * Set the default number of pages to be buffered (cached) by default in a
-     * restored database.
+     * @return {@code true}, operations will be logged verbosely, otherwise they will not be logged verbosely
+     * @see #setVerbose(boolean)
+     * @since 7
+     */
+    boolean isVerbose();
+
+    /**
+     * Set the default number of pages to be buffered (cached) by default in a restored database.
      *
      * @param bufferCount
-     *         The page-buffer size to be used, a positive value
+     *         page-buffer size to be used, a positive value, or {@code -1} for the value recorded in the backup
+     * @see #getRestorePageBufferCount()
      */
     void setRestorePageBufferCount(int bufferCount);
 
     /**
-     * Set the page size that will be used for a restored database. The value for {@code pageSize} must be one
-     * of: 1024, 2048, 4096, 8192 or 16384. The default value depends on the Firebird version.
+     * @return page-buffer size to be used, or {@code -1} for the value recorded in the backup
+     * @see #setRestorePageBufferCount(int)
+     * @since 7
+     */
+    int getRestorePageBufferCount();
+
+    /**
+     * Set the page size that will be used for a restored database. The value for {@code pageSize} must be
+     * one of {@link PageSizeConstants}. Use {@link PageSizeConstants#USE_DEFAULT} ({@code -1}) for the value recorded
+     * in the backup.
+     * <p>
+     * Be aware that not all page sizes are supported by all Firebird versions.
+     * </p>
      *
      * @param pageSize
-     *         The page size to be used in a restored database, one of 1024, 2048, 4196, 8192 or 16384
+     *         page size to be used in a restored database, see {@link PageSizeConstants}
+     * @see #getRestorePageSize()
      * @see PageSizeConstants
      */
     void setRestorePageSize(int pageSize);
 
     /**
-     * Set the restore operation to create a new database, as opposed to
-     * overwriting an existing database.
+     * @return page size to be used, or {@code -1} for the value recorded in the backup
+     * @see #setRestorePageSize(int)
+     * @since 7
+     */
+    int getRestorePageSize();
+
+    /**
+     * Set the restore operation to create a new database, as opposed to overwriting an existing database.
      *
      * @param replace
-     *         If {@code true}, the restore operation will attempt to create a new database if it does not exit or
-     *         overwrite an existing one when it exists, {@code false} when restore should fail if database already
-     *         exist (if it doesn't, a database will be successfully created).
+     *         {@code true} drop existing database and overwrite, {@code false} fail if database exists
+     * @see #isRestoreReplace()
      */
     void setRestoreReplace(boolean replace);
+
+    /**
+     * @return {@code true} drop existing database and overwrite, {@code false} fail if database exists
+     * @see #setRestoreReplace(boolean)
+     * @since 7
+     */
+    boolean isRestoreReplace();
 
     /**
      * Set the read-only attribute on a restored database.
      *
      * @param readOnly
-     *         If {@code true}, a restored database will be
-     *         read-only, otherwise it will be read-write.
+     *         {@code true} restored database is marked read-only, otherwise it will be read-write
+     * @see #isRestoreReadOnly()
      */
     void setRestoreReadOnly(boolean readOnly);
+
+    /**
+     * @return {@code true} restored database is marked read-only, otherwise it will be read-write
+     * @see #setRestoreReadOnly(boolean)
+     * @since 7
+     */
+    boolean isRestoreReadOnly();
 
     /**
      * SQL regular expression for the tables to exclude from the backup or restore.
