@@ -51,7 +51,7 @@ jobs:
             17
           distribution: 'temurin'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/Branch_5_0' }}
       - name: Build with Gradle
