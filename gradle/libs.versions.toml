@@ -7,12 +7,15 @@ bouncy-castle = "1.84"
 jspecify = "1.0.0"
 asciidoctor-jvm = "4.0.5"
 javaagent-gradle-plugin = "0.12.2"
+fb-asciidoc-ext = "1.1"
 
 [libraries]
 jna = { module = "net.java.dev.jna:jna-jpms", version.ref = "jna" }
 jakarta-servlet-api  = { module = "jakarta.servlet:jakarta.servlet-api", version.ref = "jakarta-servlet" }
 bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncy-castle" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
+canonical-link = { module = "org.firebirdsql.asciidoctor:canonical-link", version.ref = "fb-asciidoc-ext" }
+issue-macro = { module = "org.firebirdsql.asciidoctor:issue-macro", version.ref = "fb-asciidoc-ext" }
 
 [plugins]
 asciidoctor-jvm-convert = { id = "org.asciidoctor.jvm.convert", version.ref = "asciidoctor-jvm" }
