@@ -97,6 +97,8 @@ dependencies {
     if (findProperty('test.chacha64') != 'disabled') {
         testRuntimeOnly project('chacha64-plugin')
     }
+    // Uncomment to be able to run tests with type NATIVE without fbclient on your system (does not work for EMBEDDED)
+    //testRuntimeOnly testLibs.fbclient
 
     asciidoctorExt 'org.firebirdsql.asciidoctor:canonical-link:1.0'
 }

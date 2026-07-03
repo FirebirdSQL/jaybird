@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright 2026 Mark Rotteveel
 # SPDX-License-Identifier: LGPL-2.1-or-later
 [versions]
-jna = "5.18.1"
+jna = "5.19.1"
 jakarta-servlet = "5.0.0"
 bouncy-castle = "1.84"
 jspecify = "1.0.0"

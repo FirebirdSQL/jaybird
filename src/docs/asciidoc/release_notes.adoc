@@ -9,8 +9,8 @@
 :icons: font
 :sectnums:
 :bc-version: 1.84
-:jna-version: 5.18.1
-:jaybird-fbclient-version: 5.0.3.0
+:jna-version: 5.19.1
+:jaybird-fbclient-version: 5.0.4.0
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
@@ -52,6 +52,7 @@ Fix was contributed by Artyom Abakumov.
 * Fixed: `NullPointerException` on authentication failure with non-existent user and single plugin in `AuthServer` (https://github.com/FirebirdSQL/jaybird/issues/940[#940])
 * Dependency update: updated `org.bouncycastle:bcprov-jdk18on` from 1.83 to 1.84 (used by `chacha64-plugin`) (https://github.com/FirebirdSQL/jaybird/issues/941[#941])
 * Improvement: Support customization of service requests in service managers (https://github.com/FirebirdSQL/jaybird/issues/946[#946])
+* Dependency update: updated `net.java.dev.jna:jna-jpms` from 5.18.1 to 5.19.1 (used by `jaybird-native`) (https://github.com/FirebirdSQL/jaybird/issues/951[#951])
 
 === Jaybird 6.0.5
 
