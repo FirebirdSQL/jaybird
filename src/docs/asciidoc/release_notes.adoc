@@ -8,8 +8,8 @@
 :toc: left
 :icons: font
 :sectnums:
-:jaybird-fbclient-version: 5.0.3.0
-:jna-version: 5.18.1
+:jaybird-fbclient-version: 5.0.4.0
+:jna-version: 5.19.1
 :firebird-java: https://groups.google.com/g/firebird-java
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
@@ -57,6 +57,7 @@ This change was backported from Jaybird 6.0.6.
 +
 Fix was contributed by Artyom Abakumov, and backport from Jaybird 6.0.6.
 * Improvement: Support customization of service requests in service managers (https://github.com/FirebirdSQL/jaybird/issues/947[#947])
+* Dependency update: updated `net.java.dev.jna:jna` from 5.18.1 to 5.19.1 (used by `jaybird-native`) (https://github.com/FirebirdSQL/jaybird/issues/952[#952])
 
 [#jaybird-5-0-12-changelog]
 === Jaybird 5.0.12
