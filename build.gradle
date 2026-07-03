@@ -125,7 +125,8 @@ dependencies {
     // Uncomment to be able to run tests with type NATIVE without fbclient on your system (does not work for Embedded)
     //testRuntimeOnly 'org.firebirdsql.jdbc:fbclient:5.0.4.0'
 
-    asciidoctorExt 'org.firebirdsql.asciidoctor:canonical-link:1.0'
+    asciidoctorExt 'org.firebirdsql.asciidoctor:canonical-link:1.1'
+    asciidoctorExt 'org.firebirdsql.asciidoctor:issue-macro:1.1'
 }
 
 sourceSets {

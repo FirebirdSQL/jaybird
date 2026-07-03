@@ -14,6 +14,7 @@
 :issues: https://github.com/FirebirdSQL/jaybird/issues
 :jaybird-repo: https://github.com/FirebirdSQL/jaybird
 :fb-canonical-html: https://firebirdsql.org/docs/drivers/java/5.0.x/release_notes.html
+:fb-issue-repo: FirebirdSQL/jaybird
 
 ifeval::["{version_tag}" != ""]
 [WARNING]
@@ -40,7 +41,7 @@ If you use Java 17 or higher, we recommend upgrading to https://firebirdsql.org/
 
 The following has been changed or fixed since Jaybird 5.0.12:
 
-* Fixed: Legacy authentication fails with non-ASCII characters in password (https://github.com/FirebirdSQL/jaybird/issues/931[#931])
+* Fixed: Legacy authentication fails with non-ASCII characters in password (issue:[931])
 +
 This fix was backported from Jaybird 6.0.6.
 +
@@ -48,41 +49,41 @@ The hash that is sent instead of the actual password -- for authentication plugi
 We now use UTF-8 bytes instead.
 +
 See also <<compat-legacy-auth>>.
-* Two system properties were added to disable forced close of a connection after fatal errors (https://github.com/FirebirdSQL/jaybird/issues/934[#934])
+* Two system properties were added to disable forced close of a connection after fatal errors (issue:[934])
 +
 See also <<disable-force-close-on-fatal>>.
 +
 This change was backported from Jaybird 6.0.6.
-* Fixed: Off-by-one error in default value for `maxInlineBlobSize` (https://github.com/FirebirdSQL/jaybird/issues/939[#939])
+* Fixed: Off-by-one error in default value for `maxInlineBlobSize` (issue:[939])
 +
 Fix was contributed by Artyom Abakumov, and backport from Jaybird 6.0.6.
-* Improvement: Support customization of service requests in service managers (https://github.com/FirebirdSQL/jaybird/issues/947[#947])
-* Dependency update: updated `net.java.dev.jna:jna` from 5.18.1 to 5.19.1 (used by `jaybird-native`) (https://github.com/FirebirdSQL/jaybird/issues/952[#952])
+* Improvement: Support customization of service requests in service managers (issue:[947])
+* Dependency update: updated `net.java.dev.jna:jna` from 5.18.1 to 5.19.1 (used by `jaybird-native`) (issue:[952])
 
 [#jaybird-5-0-12-changelog]
 === Jaybird 5.0.12
 
 The following has been changed or fixed since Jaybird 5.0.11:
 
-* JDBC 4.5 support: `JaybirdTypeCodes.DECFLOAT` and `JaybirdType.DECFLOAT` now use type code `2015` instead of `-6001` (https://github.com/FirebirdSQL/jaybird/issues/917[#917])
+* JDBC 4.5 support: `JaybirdTypeCodes.DECFLOAT` and `JaybirdType.DECFLOAT` now use type code `2015` instead of `-6001` (issue:[917])
 +
 Applications referencing these constants may need to be recompiled to function correctly with Jaybird 5.0.12 and higher.
 If you use Java 26 or higher, we recommend using `java.sql.Type.DECFLOAT` and `java.sql.JDBCType.DECFLOAT` instead.
-* JDBC 4.5 support: implemented methods `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier` on `FBConnection`, and added them to interface `FirebirdConnection` for access in older Java versions (https://github.com/FirebirdSQL/jaybird/issues/918[#918])
+* JDBC 4.5 support: implemented methods `enquoteIdentifier`, `enquoteLiteral`, `enquoteNCharLiteral`, and `isSimpleIdentifier` on `FBConnection`, and added them to interface `FirebirdConnection` for access in older Java versions (issue:[918])
 +
 The methods of the same name in the `java.sql.Statement` implementations now call the methods on the connection.
 This results in two minor breaking changes:
 +
 ** Reserved words are no longer considered simple identifiers by `enquoteIdentifier` and `isSimpleIdentifier` and will be quoted (or -- for dialect 1 -- result in a `SQLFeatureNotSupportedException`)
 ** Presence of the NUL character (U+0000) in an identifier passed to `enquoteIdentifier` will result in a `SQLSyntaxErrorException`
-* JDBC 4.5 support: implemented "`disable escape processing`" JDBC escape (`++{\...\}++`) (https://github.com/FirebirdSQL/jaybird/issues/920[#920])
+* JDBC 4.5 support: implemented "`disable escape processing`" JDBC escape (`++{\...\}++`) (issue:[920])
 +
 See also <<jdbc-escape-disable-proc>>.
-* Fixed: JDBC escapes should not be parsed inside dialect 3 delimited identifiers or dialect 1 string literals (https://github.com/FirebirdSQL/jaybird/issues/922[#922])
-* Fixed: `IndexOutOfBoundsException` in `FBCachedBlob.getBytes(long, int)` for position or length beyond end of data (https://github.com/FirebirdSQL/jaybird/issues/924[#924])
-* Fixed: Using native client, password is limited to 255 bytes (https://github.com/FirebirdSQL/jaybird/issues/926[#926])
-* Fixed: Infinite loop in `FBPooledConnection#fireConnectionError(SQLException)` if the exception has a chained exception and neither is fatal (https://github.com/FirebirdSQL/jaybird/issues/928[#928])
-* JDBC 4.5 support: `FBDatabaseMetaData.getJDBCMinorVersion()` should report 5 (for JDBC 4.5) on Java 26 and higher (https://github.com/FirebirdSQL/jaybird/issues/929[#929])
+* Fixed: JDBC escapes should not be parsed inside dialect 3 delimited identifiers or dialect 1 string literals (issue:[922])
+* Fixed: `IndexOutOfBoundsException` in `FBCachedBlob.getBytes(long, int)` for position or length beyond end of data (issue:[924])
+* Fixed: Using native client, password is limited to 255 bytes (issue:[926])
+* Fixed: Infinite loop in `FBPooledConnection#fireConnectionError(SQLException)` if the exception has a chained exception and neither is fatal (issue:[928])
+* JDBC 4.5 support: `FBDatabaseMetaData.getJDBCMinorVersion()` should report 5 (for JDBC 4.5) on Java 26 and higher (issue:[929])
 
 [#jaybird-5-0-11-changelog]
 === Jaybird 5.0.11
@@ -92,29 +93,29 @@ For JDBC 4.5 support, upgrade to Jaybird 5.0.12 or higher, or Jaybird 6.0.5 or h
 
 The following has been changed or fixed since Jaybird 5.0.10:
 
-* Backported fatal error detection improvements for `FBPooledConnection` from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/899[#899])
-* Fixed: `FBServiceManager.getAuthPlugins()` reported the `dbCryptConfig` value (https://github.com/FirebirdSQL/jaybird/issues/902[#902])
+* Backported fatal error detection improvements for `FBPooledConnection` from Jaybird 6 (issue:[899])
+* Fixed: `FBServiceManager.getAuthPlugins()` reported the `dbCryptConfig` value (issue:[902])
 +
 This fix was backported from Jaybird 6.0.4.
-* Fixed: `Statement.cancel()` causes lockup (https://github.com/FirebirdSQL/jaybird/issues/904[#904])
+* Fixed: `Statement.cancel()` causes lockup (issue:[904])
 +
 This is a partial backport from Jaybird 7.
 See also <<breaking-changes-internal-api-5-0-11>>.
-* Fixed: Incomplete detection of fatal connection errors for deferred actions (https://github.com/FirebirdSQL/jaybird/issues/905[#905])
+* Fixed: Incomplete detection of fatal connection errors for deferred actions (issue:[905])
 +
 This change also fixes a `NullPointerException` when the connection was terminated due to a fatal connection error.
 A minor breaking change was made in the internal GDS-ng wire API, which should only be relevant to maintainers of Jaybird forks, see <<breaking-changes-internal-api-5-0-11>>.
 +
 This fix was backported from Jaybird 6.0.4.
-* Dependency update: updated `net.java.dev.jna:jna` from 5.17.0 to 5.18.1 (used by native and embedded protocols) (https://github.com/FirebirdSQL/jaybird/issues/911[#911])
-* Fixed: `FBDatabaseMetaData.getJDBCMinorVersion()` should report 4 (for JDBC 4.4) on Java 24 and higher (https://github.com/FirebirdSQL/jaybird/issues/914[#914])
+* Dependency update: updated `net.java.dev.jna:jna` from 5.17.0 to 5.18.1 (used by native and embedded protocols) (issue:[911])
+* Fixed: `FBDatabaseMetaData.getJDBCMinorVersion()` should report 4 (for JDBC 4.4) on Java 24 and higher (issue:[914])
 
 [#jaybird-5-0-10-changelog]
 === Jaybird 5.0.10
 
 The following has been changed or fixed since Jaybird 5.0.9:
 
-* Fixed: Negative buffer size on Firebird 2.5 if information response is 32KiB or greater (https://github.com/FirebirdSQL/jaybird/issues/894[#894])
+* Fixed: Negative buffer size on Firebird 2.5 if information response is 32KiB or greater (issue:[894])
 +
 The error occurs when preparing or executing statements with a lot of columns, especially select statements with columns that have long names and/or aliases for columns, tables and table owners.
 Symptoms include unexpected closed connections, and errors like "`__Unsupported or unexpected operation code <number> in processOperation__`" (with varying numbers) and "`__java.lang.NegativeArraySizeException: -1__`" (and other negative numbers).
@@ -126,17 +127,17 @@ Only Firebird 2.5 is affected.
 
 The following has been changed or fixed since Jaybird 5.0.8:
 
-* Fixed: `ResultSet` move incorrectly closes input `Clob` (https://github.com/FirebirdSQL/jaybird/issues/881[#881])
+* Fixed: `ResultSet` move incorrectly closes input `Clob` (issue:[881])
 
 [#jaybird-5-0-8-changelog]
 === Jaybird 5.0.8
 
 The following has been changed or fixed since Jaybird 5.0.7:
 
-* Improvement: added `authPlugins` property on `FBManager` (https://github.com/FirebirdSQL/jaybird/issues/865[#865])
+* Improvement: added `authPlugins` property on `FBManager` (issue:[865])
 +
 As part of this change, the interface `FBManagerMBean` now extends `AttachmentProperties`, so that all attachment properties are accessible.
-* Improvement: increased default and maximum SQL info sizes used for retrieving statement information like columns, parameters and plan information (https://github.com/FirebirdSQL/jaybird/issues/868[#868])
+* Improvement: increased default and maximum SQL info sizes used for retrieving statement information like columns, parameters and plan information (issue:[868])
 +
 --
 * For pure Java connections:
@@ -148,10 +149,10 @@ As part of this change, the interface `FBManagerMBean` now extends `AttachmentPr
 +
 This change improves the performance of preparing statements with a lot of columns and parameters by reducing the number of round-trips needed to retrieve the information.
 It may also prevent (or reduce occurrences of) truncation of "`explained plans`" for statements with complex or extensive plans.
-* Improvement: backported inline blob support (Firebird 5.0.3 and higher) from Jaybird 7 (https://github.com/FirebirdSQL/jaybird/issues/871[#871])
+* Improvement: backported inline blob support (Firebird 5.0.3 and higher) from Jaybird 7 (issue:[871])
 +
 See also <<blob-performance-inline-blob>>.
-* Improvement: The time zone mapping was updated (https://github.com/FirebirdSQL/jaybird/issues/875[#875])
+* Improvement: The time zone mapping was updated (issue:[875])
 ** The following time zone ids were added: `64901` => `Pacific/Kanton`, `64900` => `Europe/Kyiv`, `64899` => `America/Ciudad_Juarez`, `64898` => `GMT-03:00` (should be `America/Coyhaique`, but that zone name is not yet known in Java)
 ** Time zone id `64903` is now mapped to `America/Nuuk`;
 previously it was mapped to `America/Godthab` as older versions of Java did not know `America/Nuuk`.
@@ -161,20 +162,20 @@ previously it was mapped to `America/Godthab` as older versions of Java did not 
 
 The following has been changed or fixed since Jaybird 5.0.6:
 
-* Improvement: backported deferred blob open optimization from Jaybird 7 (https://github.com/FirebirdSQL/jaybird/issues/841[#841])
+* Improvement: backported deferred blob open optimization from Jaybird 7 (issue:[841])
 +
 See also <<blob-performance-defer-open>>.
-* Fixed: `NullPointerException` in `getGeneratedKeys()` with blob columns after (auto)commit (https://github.com/FirebirdSQL/jaybird/issues/846[#846])
+* Fixed: `NullPointerException` in `getGeneratedKeys()` with blob columns after (auto)commit (issue:[846])
 +
 As part of this fix, there was an incompatible change in the internal GDS-ng API.
 Various methods and constructors involved in blob handle creation now throw a `SQLException` if the database is not attached or the transaction is null or not active.
 See also <<breaking-changes-internal-api-5-0-7>>.
 +
 This fix was backported from Jaybird 6.0.1.
-* Fixed: Fetch response with status=0 (FETCH_OK) and count=0 was logged on DEBUG as an unexpected response (https://github.com/FirebirdSQL/jaybird/issues/848[#848])
+* Fixed: Fetch response with status=0 (FETCH_OK) and count=0 was logged on DEBUG as an unexpected response (issue:[848])
 +
 This fix was backported from Jaybird 6.0.1.
-* Improvement: backported performance improvements for blob reading and writing from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/850[#850])
+* Improvement: backported performance improvements for blob reading and writing from Jaybird 6 (issue:[850])
 +
 For details see:
 +
@@ -186,35 +187,35 @@ For details see:
 * <<blob-buffer-size>>
 * <<blob-put-segment-limit>>
 --
-* Improvement: backported fetching all known blob info items on open from Jaybird 7 (https://github.com/FirebirdSQL/jaybird/issues/852[#852])
+* Improvement: backported fetching all known blob info items on open from Jaybird 7 (issue:[852])
 +
 See also <<blob-performance-info-items>>.
-* Dependency update: updated `net.java.dev.jna:jna` from 5.15.0 to 5.17.0 (used by native and embedded protocols) (https://github.com/FirebirdSQL/jaybird/issues/855[#855])
+* Dependency update: updated `net.java.dev.jna:jna` from 5.15.0 to 5.17.0 (used by native and embedded protocols) (issue:[855])
 
 [#jaybird-5-0-6-changelog]
 === Jaybird 5.0.6
 
 The following has been changed or fixed since Jaybird 5.0.5:
 
-* Fixed: Exceptions during statement execution did not always complete the statement, which could delay transaction commit in auto-commit mode (https://github.com/FirebirdSQL/jaybird/issues/806[#806])
+* Fixed: Exceptions during statement execution did not always complete the statement, which could delay transaction commit in auto-commit mode (issue:[806])
 +
 This fix was backported from Jaybird 6.
-* Fixed: Closing a connection when the database was shutdown, or the connection was otherwise broken, could result in a `NullPointerException` (https://github.com/FirebirdSQL/jaybird/issues/812[#812])
+* Fixed: Closing a connection when the database was shutdown, or the connection was otherwise broken, could result in a `NullPointerException` (issue:[812])
 +
 This fix was backported from Jaybird 6.
-* Fixed: Error "`Column unknown; IND.RDB$CONDITION_SOURCE`" when calling `DatabaseMetaData.getIndexInfo` on Firebird 5.0 with a Firebird 4.0 (ODS 13.0) database (https://github.com/FirebirdSQL/jaybird/issues/813[#813])
+* Fixed: Error "`Column unknown; IND.RDB$CONDITION_SOURCE`" when calling `DatabaseMetaData.getIndexInfo` on Firebird 5.0 with a Firebird 4.0 (ODS 13.0) database (issue:[813])
 +
 The partial index metadata support introduced in Jaybird 5.0.5 did not take into account that Firebird 5.0 could also open a Firebird 4.0 database.
-* Fixed: Calling `ResultSet.wasNull()` when on the insert-row throws a `SQLException` instead of reporting the null-state of the last retrieved column (https://github.com/FirebirdSQL/jaybird/issues/816[#816])
+* Fixed: Calling `ResultSet.wasNull()` when on the insert-row throws a `SQLException` instead of reporting the null-state of the last retrieved column (issue:[816])
 +
 As part of this fix, we no longer check if `wasNull()` is called on a row, or after getting a column value, as the JDBC API does not require such check.
 Instead, `false` is reported if not currently on a row, or if no column value was retrieved, and an exception is thrown if the result set is closed.
 The value reported by `wasNull()` is reset to `false` on each cursor move (e.g. `next()`), and modified by each `get__XXX__` call.
-* Fixed: Inserting a row into a result set backed by a server-side scrollable cursor could include the inserted row twice (https://github.com/FirebirdSQL/jaybird/issues/819[#819])
+* Fixed: Inserting a row into a result set backed by a server-side scrollable cursor could include the inserted row twice (issue:[819])
 +
 This could happen if the insert was performed when the server-side cursor was not fully materialized (e.g. by inserting the row immediately after execute).
 As the server-side cursor is only fully materialized on certain operations like requesting the cursor size, the inserted row could be included in the server-side cursor, as well as the local inserted rows collection.
-* Improvement: Updated JNA dependency to version 5.15.0 (https://github.com/FirebirdSQL/jaybird/issues/823[#823])
+* Improvement: Updated JNA dependency to version 5.15.0 (issue:[823])
 +
 If you use native or embedded connections, make sure the upgrade the JNA dependency to JNA 5.15.0 by replacing the JAR or updating the JNA (`net.java.dev.jna:jna`) version number in your build configuration.
 In practice, Jaybird should still be able to work with JNA 5.12.1 (used in Jaybird 5.0.0 -- 5.0.4), and JNA 5.14.0 (used in Jaybird 5.0.5).
@@ -224,34 +225,34 @@ In practice, Jaybird should still be able to work with JNA 5.12.1 (used in Jaybi
 
 The following has been changed or fixed since Jaybird 5.0.4:
 
-* Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DECIMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (https://github.com/FirebirdSQL/jaybird/issues/731[#731])
+* Fixed: `FBResultSetMetaData.getPrecision` would always estimate the precision of `NUMERIC` or `DECIMAL` columns instead of obtaining the actual precision if the column position was 71 or higher (issue:[731])
 +
 This fix was backported from Jaybird 6.
-* Optimized the query to retrieve extended field info for `ResultSetMetaData.getPrecision` to only retrieve columns of type `NUMERIC` or `DECIMAL` (https://github.com/FirebirdSQL/jaybird/issues/732[#732])
+* Optimized the query to retrieve extended field info for `ResultSetMetaData.getPrecision` to only retrieve columns of type `NUMERIC` or `DECIMAL` (issue:[732])
 +
 This improvement was backported from Jaybird 6.
-* Fixed: `PreparedStatement.executeBatch()` of statement without parameters throws "`Statement used in batch must have parameters [SQLState:07001, ISC error code:335545186]`" on Firebird 4.0 or higher (https://github.com/FirebirdSQL/jaybird/issues/788[#788])
+* Fixed: `PreparedStatement.executeBatch()` of statement without parameters throws "`Statement used in batch must have parameters [SQLState:07001, ISC error code:335545186]`" on Firebird 4.0 or higher (issue:[788])
 +
 Given the Firebird server-side batch facility doesn't support executing parameterless statements, the implementation now falls back to emulated batch execution for this case.
-* New feature: `ResultSetMetaData.isAutoIncrement(int)` reports `true` for identity columns *if* Jaybird can identify the underlying table and column (https://github.com/FirebirdSQL/jaybird/issues/793[#793])
+* New feature: `ResultSetMetaData.isAutoIncrement(int)` reports `true` for identity columns *if* Jaybird can identify the underlying table and column (issue:[793])
 +
 This feature was backported from Jaybird 6.
-* New feature: Boolean connection property `extendedMetadata` (default `true`) to disable querying of extended metadata for `getPrecision(int)` and `isAutoIncrement(int)` of `ResultSetMetaData` (https://github.com/FirebirdSQL/jaybird/issues/795[#795])
+* New feature: Boolean connection property `extendedMetadata` (default `true`) to disable querying of extended metadata for `getPrecision(int)` and `isAutoIncrement(int)` of `ResultSetMetaData` (issue:[795])
 +
 Disabling extended metadata may improve performance of these `ResultSetMetaData` methods in exchange for estimated precision information of `NUMERIC` and `DECIMAL` columns, and not being able to determine the auto-increment status of `INTEGER`, `BIGINT` or `SMALLINT` columns.
 +
 This feature was backported from Jaybird 6.
-* Improvement: The `FILTER_CONDITION` of `DatabaseMetaData.getIndexInfo` is populated for Firebird 5.0 partial indices (https://github.com/FirebirdSQL/jaybird/issues/797[#797])
+* Improvement: The `FILTER_CONDITION` of `DatabaseMetaData.getIndexInfo` is populated for Firebird 5.0 partial indices (issue:[797])
 +
 This improvement was backported from Jaybird 6.
-* Fixed: `ResultSet.isBeforeFirst()` and `ResultSet.isAfterLast()` should always report `false` for an empty result set (https://github.com/FirebirdSQL/jaybird/issues/807[#807])
-* Improvement: `Statement.getResultSet` no longer throws a `SQLException` with message "`Only one result set at a time/statement`" if the current result set has already been returned by `executeQuery` or a previous call to `getResultSet` (https://github.com/FirebirdSQL/jaybird/issues/762[#762])
+* Fixed: `ResultSet.isBeforeFirst()` and `ResultSet.isAfterLast()` should always report `false` for an empty result set (issue:[807])
+* Improvement: `Statement.getResultSet` no longer throws a `SQLException` with message "`Only one result set at a time/statement`" if the current result set has already been returned by `executeQuery` or a previous call to `getResultSet` (issue:[762])
 +
 Repeated calls to `getResultSet` will now return the current result set.
 As part of this change implementations of `FirebirdStatement.getCurrentResultSet` now simply return `getResultSet`, and the `getCurrentResultSet` method has been deprecated for removal in Jaybird 7.
 +
 This improvement was backported from Jaybird 6.
-* Improvement: Updated JNA dependency to version 5.14.0 (https://github.com/FirebirdSQL/jaybird/issues/810[#810])
+* Improvement: Updated JNA dependency to version 5.14.0 (issue:[810])
 +
 If you use native or embedded connections, make sure the upgrade the JNA dependency to JNA 5.14.0 by replacing the JAR or updating the JNA (`net.java.dev.jna:jna`) version number in your build configuration.
 In practice, Jaybird should still be able to work with JNA 5.12.1 (the version used in Jaybird 5.0.0 -- 5.0.4).
@@ -262,32 +263,32 @@ In practice, Jaybird should still be able to work with JNA 5.12.1 (the version u
 The following has been changed or fixed since Jaybird 5.0.3:
 
 * Firebird 5.0 is now formally supported
-* Fixed: Potential NPE when `warningMessageCallback` is `null` while reading operations or consuming packets (https://github.com/FirebirdSQL/jaybird/issues/778[#778])
+* Fixed: Potential NPE when `warningMessageCallback` is `null` while reading operations or consuming packets (issue:[778])
 +
 As part of this change, the constructor `AbstractWireOperations` now explicitly requires the `connection` and `defaultWarningMessageCallback` to be non-``null`` and throws a `NullPointerException` otherwise.
 This may affect custom protocol implementations extending `AbstractWireOperations` and/or calling `ProtocolDescriptor#createWireOperations(WireConnection, WarningMessageCallback)`: make sure you don't pass `null`.
-* Fixed: FBRowUpdater incorrectly considers result set with only partial PK updatable -- backported from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/780[#780])
+* Fixed: FBRowUpdater incorrectly considers result set with only partial PK updatable -- backported from Jaybird 6 (issue:[780])
 +
 This change also improves performance of `updateRow()`, `insertRow()`, `deleteRow()` and `refreshRow()`.
 The best row identifier or `RDB$DB_KEY` were detected _each time_ when calling `updateRow()`, `insertRow()`, `deleteRow()`, or `refreshRow()`.
 This has been improved so this detection is done once, and in a way that non-updatable result sets can now be downgraded to `CONCUR_READ_ONLY` instead of throwing an exception when performing the modification.
-* Fixed: Use of offset timezone names (e.g. `+05:00`) for `sessionTimeZone` would result in a warning being logged, and an incorrect conversion applied (in UTC instead of the offset) when using the legacy time types -- backported from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/787[#787])
+* Fixed: Use of offset timezone names (e.g. `+05:00`) for `sessionTimeZone` would result in a warning being logged, and an incorrect conversion applied (in UTC instead of the offset) when using the legacy time types -- backported from Jaybird 6 (issue:[787])
 
 [#jaybird-5-0-3-changelog]
 === Jaybird 5.0.3
 
 The following has been changed or fixed since Jaybird 5.0.2:
 
-* Improvement: Do not reject attempts to read blob id 0 -- backported from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/765[#765])
+* Improvement: Do not reject attempts to read blob id 0 -- backported from Jaybird 6 (issue:[765])
 +
 Previously, Jaybird rejected attempts to read blobs with blob id `0` (not on all code paths, for some only when assertions are enabled).
 Formally, blob id `0` is not a valid blob id, but in practice they can occur (e.g. due to bugs, or access components/drivers explicitly setting a blob column to id `0`).
 Other drivers and tools simply send the requests for blob id `0` to the server, which then treats it as an empty blob.
 For consistency, we decided to let Jaybird handle it the same.
-* Fixed: on `CHAR` fields, a too short value could be returned if the string contained one or more codepoints represented by surrogate pairs and the string length in `char` exceeded the maximum string length -- backported from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/770[#770])
+* Fixed: on `CHAR` fields, a too short value could be returned if the string contained one or more codepoints represented by surrogate pairs and the string length in `char` exceeded the maximum string length -- backported from Jaybird 6 (issue:[770])
 +
 We now truncate the returned string if the codepoint count exceeds the maximum string length.
-* Fixed: `CallableStatement.getXXX(String)` could return value from wrong column -- backported from Jaybird 6 (https://github.com/FirebirdSQL/jaybird/issues/772[#772])
+* Fixed: `CallableStatement.getXXX(String)` could return value from wrong column -- backported from Jaybird 6 (issue:[772])
 * Updated: error messages updated from Firebird 5.0.0.1272
 
 [#jaybird-5-0-2-changelog]
@@ -295,16 +296,16 @@ We now truncate the returned string if the codepoint count exceeds the maximum s
 
 The following has been changed or fixed since Jaybird 5.0.1:
 
-* Fixed: Reconnect transaction with a transaction id exceeding 0x7FFF_FFFF did not work (https://github.com/FirebirdSQL/jaybird/issues/734[#734])
-* New feature: add connection property `parallelWorkers` to set Firebird 5.0 `isc_dpb_parallel_workers` (https://github.com/FirebirdSQL/jaybird/issues/737[#737])
-* New feature: add `MaintenanceManager.upgradeOds()` for the Firebird 5.0 gfix/service repair action to perform a minor ODS upgrade of a database (https://github.com/FirebirdSQL/jaybird/issues/738[#738])
-* New feature: add parallel workers support for `BackupManager` (https://github.com/FirebirdSQL/jaybird/issues/739[#739])
-* New feature: add parallel workers support for _sweep_ in `MaintenanceManager` (https://github.com/FirebirdSQL/jaybird/issues/740[#740])
-* Fixed: `DatabaseConnectionProperties.setServerBatchBufferSize(int)` ignored provided value and always set default (`0`, or "`use server-side maximum`") (https://github.com/FirebirdSQL/jaybird/issues/741[#741])
+* Fixed: Reconnect transaction with a transaction id exceeding 0x7FFF_FFFF did not work (issue:[734])
+* New feature: add connection property `parallelWorkers` to set Firebird 5.0 `isc_dpb_parallel_workers` (issue:[737])
+* New feature: add `MaintenanceManager.upgradeOds()` for the Firebird 5.0 gfix/service repair action to perform a minor ODS upgrade of a database (issue:[738])
+* New feature: add parallel workers support for `BackupManager` (issue:[739])
+* New feature: add parallel workers support for _sweep_ in `MaintenanceManager` (issue:[740])
+* Fixed: `DatabaseConnectionProperties.setServerBatchBufferSize(int)` ignored provided value and always set default (`0`, or "`use server-side maximum`") (issue:[741])
 +
 This bug did not affect connection property `serverBatchBufferSize` set through the JDBC URL or provided in a `Properties` object to `DriverManager`, it only affected the property set through implementations of `DatabaseConnectionProperties` (e.g. data sources from `org.firebirdsql.ds`).
-* New feature: add `MaintenanceManager.fixIcu()` for the Firebird 3.0 gfix/service repair action "`ICU`" to update or rebuild collations and indexes when the ICU version changed (https://github.com/FirebirdSQL/jaybird/issues/744[#744])
-* Fixed: The first call to `getTableStatistics()` of a `FBTableStatisticsManager` instance returned only a few or even no tables; if no tables were returned, subsequent calls would also return no tables (https://github.com/FirebirdSQL/jaybird/issues/747[#747])
+* New feature: add `MaintenanceManager.fixIcu()` for the Firebird 3.0 gfix/service repair action "`ICU`" to update or rebuild collations and indexes when the ICU version changed (issue:[744])
+* Fixed: The first call to `getTableStatistics()` of a `FBTableStatisticsManager` instance returned only a few or even no tables; if no tables were returned, subsequent calls would also return no tables (issue:[747])
 +
 Truncation of the information response will now result in three retries (so, four attempts), increasing the buffer size for each retry.
 If after three retries, the buffer is still truncated, an `InfoTruncatedException` exception is thrown.
@@ -315,9 +316,9 @@ Subsequent attempts to call `getTableStatistics()` may succeed as that will furt
 
 The following has been changed or fixed since Jaybird 5.0.0:
 
-* Fixed: Executing DML with a RETURNING clause containing a blob column would return the blob-id instead of the blob value (https://github.com/FirebirdSQL/jaybird/issues/728[#728])
-* Fixed: `CallableStatement.getString` and `CallableStatement.getObject` would incorrectly trim string values (https://github.com/FirebirdSQL/jaybird/issues/729[#729])
-* Fixed: `ResultSetMetaData.getPrecision(int)` of a connectionless result set could throw a `NullPointerException` if the column was of type `FLOAT` or `DOUBLE PRECISION` (https://github.com/FirebirdSQL/jaybird/issues/730[#730])
+* Fixed: Executing DML with a RETURNING clause containing a blob column would return the blob-id instead of the blob value (issue:[728])
+* Fixed: `CallableStatement.getString` and `CallableStatement.getObject` would incorrectly trim string values (issue:[729])
+* Fixed: `ResultSetMetaData.getPrecision(int)` of a connectionless result set could throw a `NullPointerException` if the column was of type `FLOAT` or `DOUBLE PRECISION` (issue:[730])
 
 [#jaybird-5-0-0-changelog]
 === Jaybird 5.0.0
@@ -1298,71 +1299,71 @@ See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2026-
 [#other-fixes-and-changes]
 === Other fixes and changes
 
-* Fixed: changes to the transaction configuration (transaction parameter buffer configuration) of one connection are no longer propagated to other connections with the same connection properties (https://github.com/FirebirdSQL/jaybird/issues/428[#428])
+* Fixed: changes to the transaction configuration (transaction parameter buffer configuration) of one connection are no longer propagated to other connections with the same connection properties (issue:[428])
 +
 Backported to Jaybird 3.0.9 and 4.0.1.
-* Changed: build migrated from Ant to Gradle (https://github.com/FirebirdSQL/jaybird/issues/461[#461])
-* Changed: removed debug logging in `AbstractFbStatement.ensureClosedCursor` (https://github.com/FirebirdSQL/jaybird/issues/604[#604])
+* Changed: build migrated from Ant to Gradle (issue:[461])
+* Changed: removed debug logging in `AbstractFbStatement.ensureClosedCursor` (issue:[604])
 +
 The solution for not closing the cursor on all code paths -- introduced in Jaybird 3.0.6 -- is no longer considered a stopgap measure.
-* Improvement: Optimization of `ResultSet.next()` (https://github.com/FirebirdSQL/jaybird/issues/663[#663])
+* Improvement: Optimization of `ResultSet.next()` (issue:[663])
 +
 This change was contributed by https://github.com/vasiliy-yashkov[Vasiliy Yashkov].
-* Improvement: add `setForceWrite`/`getForceWrite` to `FBManager` to allow disabling force write on database creation (https://github.com/FirebirdSQL/jaybird/issues/671[#671])
-* Improvement: Attempts to connect without username and password with the pure Java protocol will now result in error `isc_login` ("`Your user name and password are not defined. Ask your database administrator to set up a Firebird login.`") instead of `isc_connect_reject` ("`connection rejected by remote interface`") (https://github.com/FirebirdSQL/jaybird/issues/583[#583])
-* Improvement: Don't send cursor close to server when closing `ResultSet` in response to `Statement` close (https://github.com/FirebirdSQL/jaybird/issues/669[#669])
+* Improvement: add `setForceWrite`/`getForceWrite` to `FBManager` to allow disabling force write on database creation (issue:[671])
+* Improvement: Attempts to connect without username and password with the pure Java protocol will now result in error `isc_login` ("`Your user name and password are not defined. Ask your database administrator to set up a Firebird login.`") instead of `isc_connect_reject` ("`connection rejected by remote interface`") (issue:[583])
+* Improvement: Don't send cursor close to server when closing `ResultSet` in response to `Statement` close (issue:[669])
 +
 This provides a small performance increase in cases where a result set was not already closed (e.g. no explicit `ResultSet.close()` or result set not fully read) before the statement close.
-* New feature: Support for NBackup GUID-based backup and in-place restore (https://github.com/FirebirdSQL/jaybird/issues/672[#672])
+* New feature: Support for NBackup GUID-based backup and in-place restore (issue:[672])
 +
 The `org.firebirdsql.management.NBackupManager` interface has two new methods: `setBackupGuid(String)` expecting the brace-enclosed GUID of a previous backup to use as the starting point for this backup, and `setInPlaceRestore(boolean)` to enable (or disable) in-place restore.
 These options require Firebird 4.0 or higher.
 +
 This feature was also backported to Jaybird 4.0.4.
-* New feature: Support for NBackup fixup and preserve sequence (https://github.com/FirebirdSQL/jaybird/issues/673[#673])
+* New feature: Support for NBackup fixup and preserve sequence (issue:[673])
 +
 The `org.firebirdsql.management.NBackupManager` interface has two new methods: `fixupDatabase()` to "`fixup`" a database (switch back to 'normal' state without merging the delta file), and `setPreserveSequence(boolean)` to preserve the current database GUID and replication sequence on fixup or restore.
 These options require Firebird 4.0 or higher.
 * Improvement: The `charSet` connection property now also has an alias `charset` (URL property, not as get/set pair).
-* Improvement: The `dbCryptConfig` connection property now supports _base64url_ (the "`URL and Filename safe`" Base 64 Alphabet) with the `base64url:` prefix (https://github.com/FirebirdSQL/jaybird/issues/677[#677])
-* Fix: `FBStatement` allowed retrieval of update count after error, while `FBPreparedStatement` -- correctly -- did not (https://github.com/FirebirdSQL/jaybird/issues/681[#681])
+* Improvement: The `dbCryptConfig` connection property now supports _base64url_ (the "`URL and Filename safe`" Base 64 Alphabet) with the `base64url:` prefix (issue:[677])
+* Fix: `FBStatement` allowed retrieval of update count after error, while `FBPreparedStatement` -- correctly -- did not (issue:[681])
 +
 Now, after an exception, attempting to retrieve the update count with `getUpdateCount()` will return `-1`.
-* Improvement: Renamed `NativeResourceUnloadWebListener` to `NativeResourceUnloadWebListenerJavaX` and added its twin `NativeResourceUnloadWebListenerJakarta` using the `jakarta.servlet` namespace to support native resource unloading on Jakarta EE 9 and higher (https://github.com/FirebirdSQL/jaybird/issues/684[#684])
-* Improvement: `Connection.isValid(int)` now asynchronously checks validity of connections, allowing the timeout to also be honoured for native connections (https://github.com/FirebirdSQL/jaybird/issues/685[#685])
-* New feature: Support for `isc_spb_expected_db` on service manager (https://github.com/FirebirdSQL/jaybird/issues/691[#691])
+* Improvement: Renamed `NativeResourceUnloadWebListener` to `NativeResourceUnloadWebListenerJavaX` and added its twin `NativeResourceUnloadWebListenerJakarta` using the `jakarta.servlet` namespace to support native resource unloading on Jakarta EE 9 and higher (issue:[684])
+* Improvement: `Connection.isValid(int)` now asynchronously checks validity of connections, allowing the timeout to also be honoured for native connections (issue:[685])
+* New feature: Support for `isc_spb_expected_db` on service manager (issue:[691])
 +
 With Firebird 3.0 and higher, this is used by Firebird to find the non-default security database to use when authenticating.
 +
 The `setDatabase` method of a service manager will also set the `expectedDb` property.
-* Change: Removed finalization from `FBConnection` and `FBStatement` (https://github.com/FirebirdSQL/jaybird/issues/699[#699])
-* Fix: XAResource checked at most 10 records for forget or recovery operations (https://github.com/FirebirdSQL/jaybird/issues/701[#701])
+* Change: Removed finalization from `FBConnection` and `FBStatement` (issue:[699])
+* Fix: XAResource checked at most 10 records for forget or recovery operations (issue:[701])
 +
 As part of this change, -- for Firebird 3.0 and higher -- queries were changed to convert the `RDB$TRANSACTION_DESCRIPTION` to an octets varchar field (to avoid additional roundtrips for blob fields), and -- when applicable, for Firebird 2.5 and higher -- only query transactions that have a transaction description written by Jaybird
-* Change: Stop reporting `0` update count with `getUpdateCount()` for statement types that never produce an update count (https://github.com/FirebirdSQL/jaybird/issues/703[#703])
+* Change: Stop reporting `0` update count with `getUpdateCount()` for statement types that never produce an update count (issue:[703])
 +
 `getUpdateCount()` will no longer report an update count of `0` for statements that never have a non-zero update count (e.g. `select`, `execute procedure`, DDL, management statements).
 Now, it will immediately report `-1` (which it previously only did after another call to `getMoreResults()`).
 +
 The `executeUpdate` and `executeLargeUpdate` methods will continue to report an update count of `0`, as required by the JDBC API documentation.
 For consistency with server-side batch execution, emulated batch execution will also report update counts of `0` where `getUpdateCount()` would report `-1`.
-* New feature: Support for role name on FBManager (https://github.com/FirebirdSQL/jaybird/issues/705[#705])
-* New feature: Support for NBackup "`clean history`" option (https://github.com/FirebirdSQL/jaybird/issues/706[#706])
+* New feature: Support for role name on FBManager (issue:[705])
+* New feature: Support for NBackup "`clean history`" option (issue:[706])
 +
 The `org.firebirdsql.management.NBackupManager` interface has three new methods: `setCleanHistory(boolean)` to enable (or disable) cleaning of history during backup, and `setKeepDays(int)` and `setKeepRows(int)` to specify the number of days or rows to keep history.
 These options require Firebird 4.0.3 or higher.
 +
 This feature was also backported to Jaybird 4.0.7.
-* Improvement: Allow statements longer than 64KB with native and embedded connections (https://github.com/FirebirdSQL/jaybird/issues/713[#713])
+* Improvement: Allow statements longer than 64KB with native and embedded connections (issue:[713])
 +
 This requires Firebird 3.0 or higher server and a Firebird 3.0 or higher fbclient.
 Long statement texts were already supported for pure Java connections.
-* Fixed: `DatabaseMetaData.getIdentifierQuoteString()` should return `" "` (space) for connection dialect 1 (https://github.com/FirebirdSQL/jaybird/issues/714[#714])
+* Fixed: `DatabaseMetaData.getIdentifierQuoteString()` should return `" "` (space) for connection dialect 1 (issue:[714])
 * Improvement: A column `JB_GRANTEE_TYPE` was added to `getColumnPrivileges` and `getTablePrivileges` in `DatabaseMetaData`.
 It returns the object type of the grantee (e.g. `USER`, `ROLE`).
 This is a Jaybird specific extension, we recommend retrieving it by name only.
-* Improvement: Populate `COLUMN_DEF` of `DatabaseMetaData.getProcedureColumns` with the default of the parameter (https://github.com/FirebirdSQL/jaybird/issues/715[#715])
-* Change: Jaybird no longer registers a `SQLWarning` nor logs a warning when connecting without an explicit connection character set (https://github.com/FirebirdSQL/jaybird/issues/717[#717])
+* Improvement: Populate `COLUMN_DEF` of `DatabaseMetaData.getProcedureColumns` with the default of the parameter (issue:[715])
+* Change: Jaybird no longer registers a `SQLWarning` nor logs a warning when connecting without an explicit connection character set (issue:[717])
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
