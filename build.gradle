@@ -100,7 +100,7 @@ dependencies {
         testRuntimeOnly project('chacha64-plugin')
     }
     // Uncomment to be able to run tests with type NATIVE without fbclient on your system (does not work for EMBEDDED)
-    testRuntimeOnly testLibs.fbclient
+    //testRuntimeOnly testLibs.fbclient
 
     asciidoctorExt libs.canonical.link
     asciidoctorExt libs.issue.macro
