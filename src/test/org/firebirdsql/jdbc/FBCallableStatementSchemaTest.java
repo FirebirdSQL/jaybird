@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2025-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jdbc;
 
@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
@@ -29,6 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * </p>
  */
 class FBCallableStatementSchemaTest {
+
+    // TODO Refactor tests and move common tests for V1 and V2 elsewhere (or to a common superclass), or rename if this can cover both V1 and V2
 
     // NOTE Names of schemas and packages overlap, that is intentional
     @RegisterExtension
@@ -68,9 +71,9 @@ class FBCallableStatementSchemaTest {
     @SuppressWarnings("SqlSourceToSinkFlow")
     @ParameterizedTest
     @MethodSource
-    void testProcedureResolution(String searchPath, String statement, ObjectReference expectedProcedure,
+    void testProcedureResolution(String callableImplementation, String searchPath, String statement, ObjectReference expectedProcedure,
             boolean selectable) throws Exception {
-        try (var connection = createConnection(searchPath);
+        try (var connection = createConnection(callableImplementation, searchPath);
              var cstmt = connection.prepareCall(statement).unwrap(FirebirdCallableStatement.class)) {
             assertEquals(selectable, cstmt.isSelectableProcedure(), "selectableProcedure");
             try (var rs = cstmt.executeQuery()) {
@@ -81,31 +84,42 @@ class FBCallableStatementSchemaTest {
     }
 
     static Stream<Arguments> testProcedureResolution() {
-        return Stream.of(
-                testCase("PUBLIC", "{call PROC1}", ObjectReference.of("PUBLIC", "PROC1"), true),
-                testCase("T1", "{call PUBLIC.PROC1}", ObjectReference.of("PUBLIC", "PROC1"), true),
-                testCase("PUBLIC", "{call PROC2}", ObjectReference.of("PUBLIC", "PROC2"), false),
-                testCase("PUBLIC", "{call T1.PROC1}", ObjectReference.of("T1", "PROC1"), false),
-                testCase("PUBLIC", "{call T2.PROC2}", ObjectReference.of("T2", "PROC2"), true),
-                testCase("PUBLIC", "{call T2.T2.PROC2}", ObjectReference.of("T2", "T2", "PROC2"), false),
-                testCase("PUBLIC", "{call T2%PACKAGE.PROC2}", ObjectReference.of("PUBLIC", "T2", "PROC2"), false),
-                testCase("T2,PUBLIC", "{call T2%PACKAGE.PROC2}", ObjectReference.of("T2", "T2", "PROC2"), false),
-                testCase("T1,T2,T3", "{call PROC1}", ObjectReference.of("T1", "PROC1"), false),
-                testCase("T2,T3,T1", "{call PROC1}", ObjectReference.of("T2", "PROC1"), true),
-                testCase("T3,T1,T2", "{call PROC1}", ObjectReference.of("T1", "PROC1"), false),
-                testCase("T1,T2,T3", "{call T3.PROC1}", ObjectReference.of("T1", "T3", "PROC1"), false),
-                testCase("T1,T2,T3", "{call T3.PROC2}", ObjectReference.of("T3", "PROC2"), false),
-                testCase("T1,T2,T3", "{call T3%SCHEMA.PROC2}", ObjectReference.of("T3", "PROC2"), false),
-                testCase("T1,T2,T3", "{call T3%PACKAGE.PROC2}", ObjectReference.of("T1", "T3", "PROC2"), true));
+        return ImplementationVariantSources.callableImplementations().flatMap(callableImplementation -> Stream.of(
+                testCase(callableImplementation, "PUBLIC", "{call PROC1}", ObjectReference.of("PUBLIC", "PROC1"), true),
+                testCase(callableImplementation, "T1", "{call PUBLIC.PROC1}", ObjectReference.of("PUBLIC", "PROC1"),
+                        true),
+                testCase(callableImplementation, "PUBLIC", "{call PROC2}", ObjectReference.of("PUBLIC", "PROC2"),
+                        false),
+                testCase(callableImplementation, "PUBLIC", "{call T1.PROC1}", ObjectReference.of("T1", "PROC1"), false),
+                testCase(callableImplementation, "PUBLIC", "{call T2.PROC2}", ObjectReference.of("T2", "PROC2"), true),
+                testCase(callableImplementation, "PUBLIC", "{call T2.T2.PROC2}",
+                        ObjectReference.of("T2", "T2", "PROC2"), false),
+                testCase(callableImplementation, "PUBLIC", "{call T2%PACKAGE.PROC2}",
+                        ObjectReference.of("PUBLIC", "T2", "PROC2"), false),
+                testCase(callableImplementation, "T2,PUBLIC", "{call T2%PACKAGE.PROC2}",
+                        ObjectReference.of("T2", "T2", "PROC2"), false),
+                testCase(callableImplementation, "T1,T2,T3", "{call PROC1}", ObjectReference.of("T1", "PROC1"), false),
+                testCase(callableImplementation, "T2,T3,T1", "{call PROC1}", ObjectReference.of("T2", "PROC1"), true),
+                testCase(callableImplementation, "T3,T1,T2", "{call PROC1}", ObjectReference.of("T1", "PROC1"), false),
+                testCase(callableImplementation, "T1,T2,T3", "{call T3.PROC1}", ObjectReference.of("T1", "T3", "PROC1"),
+                        false),
+                testCase(callableImplementation, "T1,T2,T3", "{call T3.PROC2}", ObjectReference.of("T3", "PROC2"),
+                        false),
+                testCase(callableImplementation, "T1,T2,T3", "{call T3%SCHEMA.PROC2}",
+                        ObjectReference.of("T3", "PROC2"), false),
+                testCase(callableImplementation, "T1,T2,T3", "{call T3%PACKAGE.PROC2}",
+                        ObjectReference.of("T1", "T3", "PROC2"), true)));
     }
 
-    private static Arguments testCase(String searchPath, String statement, ObjectReference expectedProcedure,
+    private static Arguments testCase(String callableImplementation, String searchPath, String statement, ObjectReference expectedProcedure,
             boolean selectable) {
-        return Arguments.of(searchPath, statement, expectedProcedure, selectable);
+        return Arguments.of(callableImplementation, searchPath, statement, expectedProcedure, selectable);
     }
 
-    private static Connection createConnection(String searchPath) throws SQLException {
-        return getConnectionViaDriverManager(PropertyNames.searchPath, searchPath);
+    private static Connection createConnection(String callableImplementation, String searchPath) throws SQLException {
+        return getConnectionViaDriverManager(Map.of(
+                PropertyNames.searchPath, searchPath,
+                PropertyNames.callableImplementation, callableImplementation));
     }
 
 

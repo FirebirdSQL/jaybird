@@ -19,6 +19,11 @@ final class DisabledEscapeParser implements JdbcEscapeParser {
         return sql;
     }
 
+    @Override
+    public JdbcEscapeParser with(CallEscapeHandling callEscapeHandling) {
+        return this;
+    }
+
     static JdbcEscapeParser getInstance() {
         return INSTANCE;
     }

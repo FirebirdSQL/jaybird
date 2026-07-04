@@ -897,7 +897,7 @@ public class FBStatement extends AbstractStatement implements FirebirdStatement 
                && fbStatement.supportsFetchScroll();
     }
 
-    final JdbcEscapeParser getEscapeParser() throws SQLException {
+    JdbcEscapeParser getEscapeParser() throws SQLException {
         return isEscapeProcessing() ? connection.getEscapeParser() : JdbcEscapeParser.noEscapeParser();
     }
 
