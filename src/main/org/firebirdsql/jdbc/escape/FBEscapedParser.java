@@ -60,14 +60,17 @@ public final class FBEscapedParser implements JdbcEscapeParser {
 
     private final AbstractVersion firebirdVersion;
     private final QuoteStrategy quoteStrategy;
+    private final CallEscapeHandling callEscapeHandling;
 
-    private FBEscapedParser(AbstractVersion firebirdVersion, QuoteStrategy quoteStrategy) {
+    private FBEscapedParser(AbstractVersion firebirdVersion, QuoteStrategy quoteStrategy,
+            CallEscapeHandling callEscapeHandling) {
         this.firebirdVersion = firebirdVersion;
         this.quoteStrategy = quoteStrategy;
+        this.callEscapeHandling = callEscapeHandling;
     }
 
     /**
-     * Get an instance of the escape parser for the specified Firebird version and quote strategy.
+     * Instance of the escape parser for the specified Firebird version and quote strategy, processing call escapes.
      *
      * @param firebirdVersion
      *         Firebird version
@@ -76,8 +79,32 @@ public final class FBEscapedParser implements JdbcEscapeParser {
      * @since 7
      */
     public static FBEscapedParser of(AbstractVersion firebirdVersion, QuoteStrategy quoteStrategy) {
-        assert !(firebirdVersion instanceof OdsVersion) : "Do not pass OdsVersion to FBEscapedParser.of(...)";
-        return new FBEscapedParser(firebirdVersion, quoteStrategy);
+        return of(firebirdVersion, quoteStrategy, CallEscapeHandling.TO_EXECUTE_PROCEDURE);
+    }
+
+    /**
+     * Instance of the escape parser for the specified Firebird version, quote strategy, and escape handling.
+     *
+     * @param firebirdVersion
+     *         Firebird version
+     * @param quoteStrategy
+     *         quote strategy
+     * @param callEscapeHandling
+     *         call escape handling
+     * @since 7
+     */
+    public static FBEscapedParser of(AbstractVersion firebirdVersion, QuoteStrategy quoteStrategy,
+            CallEscapeHandling callEscapeHandling) {
+        assert!(firebirdVersion instanceof OdsVersion) : "Do not pass OdsVersion to FBEscapedParser.of(...)";
+        return new FBEscapedParser(firebirdVersion, quoteStrategy, callEscapeHandling);
+    }
+
+    @Override
+    public FBEscapedParser with(CallEscapeHandling callEscapeHandling) {
+        if (this.callEscapeHandling == callEscapeHandling) {
+            return this;
+        }
+        return new FBEscapedParser(firebirdVersion, quoteStrategy, callEscapeHandling);
     }
 
     AbstractVersion firebirdVersion() {
@@ -89,6 +116,11 @@ public final class FBEscapedParser implements JdbcEscapeParser {
         return quoteStrategy;
     }
 
+    @SuppressWarnings("unused")
+    CallEscapeHandling callEscapeHandling() {
+        return callEscapeHandling;
+    }
+
     /**
      * Check if the target SQL contains at least one of the escaped syntax commands. This method performs a simple regex
      * match, so it may report that SQL contains escaped syntax when the <code>"&#123;"</code> is followed by
@@ -97,7 +129,7 @@ public final class FBEscapedParser implements JdbcEscapeParser {
      *
      * @param sql
      *         to test
-     * @return {@code true} if the {@code sql} is suspected to contain escaped syntax.
+     * @return {@code true} if the {@code sql} seems to contain escaped syntax
      */
     private static boolean checkForEscapes(String sql) {
         return CHECK_ESCAPE_PATTERN.matcher(sql).find();
@@ -281,14 +313,22 @@ public final class FBEscapedParser implements JdbcEscapeParser {
      * Converts the escaped procedure call syntax into the native procedure call.
      *
      * @param target
-     *         Target StringBuilder to append native procedure call to.
+     *         target StringBuilder to append native procedure call to
      * @param procedureCall
-     *         part of {call proc_name(...)} without curly braces and "call"
-     *         word.
+     *         part of {call proc_name(...)} including curly braces and "call" keyword
      */
-    private void convertProcedureCall(final StringBuilder target, final String procedureCall) throws SQLException {
+    private void convertProcedureCall(StringBuilder target, String procedureCall) throws SQLException {
+        if (callEscapeHandling == CallEscapeHandling.IGNORED) {
+            target.append(procedureCall);
+        } else {
+            convertProcedureCall0(target, procedureCall);
+        }
+    }
+
+    private void convertProcedureCall0(StringBuilder target, String procedureCall) throws SQLException {
         var tempParser = new FBEscapedCallParser(this);
         FBProcedureCall call = tempParser.parseCall(procedureCall);
+        // TODO Should this be called? It result in exceptions, see FBEscapedParserTest#testCallEscapeHandling
         call.checkParameters();
         target.append(call.getSQL(quoteStrategy));
     }

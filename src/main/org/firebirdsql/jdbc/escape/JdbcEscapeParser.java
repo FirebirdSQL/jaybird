@@ -17,6 +17,19 @@ public sealed interface JdbcEscapeParser permits DisabledEscapeParser, FBEscaped
 
     String toNative(String sql) throws SQLException;
 
+    /**
+     * Returns an instance with the appropriate call escape handling.
+     * <p>
+     * If call escape handling is already as configured, or if call escape handling is irrelevant, the same instance may
+     * be returned.
+     * </p>
+     *
+     * @param callEscapeHandling
+     *         desired call escape handling
+     * @return appropriate instance
+     */
+    JdbcEscapeParser with(CallEscapeHandling callEscapeHandling);
+
     static JdbcEscapeParser noEscapeParser() {
         return DisabledEscapeParser.getInstance();
     }

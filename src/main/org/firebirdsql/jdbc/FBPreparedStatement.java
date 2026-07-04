@@ -67,23 +67,26 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     private final boolean metaDataQuery;
     
     /**
-     * This flag is needed to guarantee the correct behavior in case when it 
-     * was created without controlling Connection object (in some metadata
-     * queries we have only GDSHelper instance)
+     * Marks the statement as a standalone statement.
+     * <p>
+     * This ensures correct behaviour when created without an owning Connection object (in some metadata queries we only
+     * have a GDSHelper instance).
+     * </p>
      */
     private final boolean standaloneStatement;
     
     /**
-     * This flag is needed to prevent throwing an exception for the case when
-     * result set is returned for INSERT statement and the statement should
-     * return the generated keys.
+     * Marks the statement as a generated keys statement.
+     * <p>
+     * This prevents throwing an exception when a result set is returned for statements with a {@code RETURNING} clause
+     * when executed with {@code executeUpdate}.
+     * </p>
      */
     private final boolean generatedKeys;
 
     private FBField[] fields = FIELDS_NOT_INITIALIZED;
 
-    // we need to handle procedure execution separately,
-    // because in this case we must send out_xsqlda to the server.
+    // We handle procedure execution separately, because we must send out_xsqlda to the server
     private boolean isExecuteProcedureStatement;
 
     private final FBObjectListener.BlobListener blobListener;
@@ -91,8 +94,11 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     private @Nullable Batch batch;
 
     /**
-     * Create instance of this class for the specified result set type and concurrency. This constructor is used only in
-     * {@link FBCallableStatement} since the statement is prepared right before the execution.
+     * Create instance of this class for the specified result set type and concurrency.
+     * <p>
+     * This constructor is for use in {@link FBCallableStatement} and {@link FBCallableStatementV2} only, since there
+     * the statement is prepared right before execution.
+     * </p>
      *
      * @param connection
      *         connection to be used
@@ -245,6 +251,24 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         /* JDBC explicitly says changing it has no effect for PreparedStatement and CallableStatement. However, we
            cannot guarantee that for FBCallableStatement if the connection property escapeProcessing=false. Ignoring
            change of escapeProcessing will ensure that we comply with the specified behaviour. */
+    }
+
+    /**
+     * Internal access to forcibly set escape processing.
+     * <p>
+     * The normal method {@link #setEscapeProcessing(boolean)} is a no-op, but {@link FBCallableStatementV2}, which
+     * wraps a {@code FBPreparedStatement}, needs to disable escape processing on the wrapped instance.
+     * </p>
+     *
+     * @param enable
+     *         {@code true} to enable escape processing; {@code false} to disable it
+     * @throws SQLException
+     *         if this method is called on a closed statement
+     * @see #setEscapeProcessing(boolean)
+     * @since 7
+     */
+    void forceEscapeProcessing(@SuppressWarnings("SameParameterValue") boolean enable) throws SQLException {
+        super.setEscapeProcessing(enable);
     }
 
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {

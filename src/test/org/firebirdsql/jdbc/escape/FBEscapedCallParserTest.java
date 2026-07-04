@@ -35,16 +35,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 class FBEscapedCallParserTest {
 
-    //TODO Why are CALL_TEST_1 - CALL_TEST_4 unused? Sign of missing test coverage?
-    private static final String CALL_TEST_1 = "{call my_proc(?, {d 01-12-11})}";
-    private static final String CALL_TEST_2 = "{?= call my_proc ?, {d 01-12-11}}";
-    private static final String CALL_TEST_3 = "EXECUTE PROCEDURE my_proc(?, {d 01-12-11})";
-    private static final String CALL_TEST_4 = "EXECUTE PROCEDURE my_proc(?, '11-dec-2001');";
-    private static final String CALL_TEST_5 =
+    static final String CALL_TEST_1 = "{call my_proc(?, {d '2001-12-11'})}";
+    static final String CALL_TEST_2 = "{?= call my_proc ?, {d '2001-12-11'}}";
+    static final String CALL_TEST_3 = "EXECUTE PROCEDURE my_proc(?, {d '2001-12-11'})";
+    static final String CALL_TEST_4 = "EXECUTE PROCEDURE my_proc(?, '11-dec-2001');";
+    static final String CALL_TEST_5 =
             "{? = call my_proc(UPPER(?), '11-dec-2001',out 'test string, with comma')}";
     private static final String CALL_TEST_5_1 =
             "{?=call my_proc(UPPER(?), '11-dec-2001',out 'test string, with comma')}";
-    private static final String CALL_TEST_6 =
+    static final String CALL_TEST_6 =
             "{call my_proc(?, {fn ucase(?)}, '11-dec-2001',out 'test string, with comma')}";
     private static final String CALL_TEST_7 = "EXECUTE PROCEDURE my_proc(UPPER(?), '11-dec-2001')";
     private static final String CALL_TEST_8 = "EXECUTE PROCEDURE my_proc (UPPER(?), '11-dec-2001')";

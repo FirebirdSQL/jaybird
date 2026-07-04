@@ -13,7 +13,11 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementType;
+import org.firebirdsql.jdbc.FBObjectListener.BlobListener;
+import org.firebirdsql.jdbc.FBObjectListener.StatementListener;
+import org.firebirdsql.jdbc.escape.CallEscapeHandling;
 import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
+import org.firebirdsql.jdbc.escape.JdbcEscapeParser;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConversionException;
 import org.firebirdsql.util.InternalApi;
@@ -31,7 +35,7 @@ import static java.util.Collections.emptyList;
 import static org.firebirdsql.jdbc.SQLStateConstants.SQL_STATE_NO_RESULT_SET;
 
 /**
- * Implementation of {@link java.sql.CallableStatement}.
+ * Implementation of {@link java.sql.CallableStatement} (the <em>V1</em> implementation).
  * <p>
  * This class is internal API of Jaybird. Future versions may radically change, move, or make inaccessible this type.
  * For the public API, refer to the {@link java.sql.CallableStatement} and {@link FirebirdCallableStatement} interfaces.
@@ -51,8 +55,8 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     protected FBProcedureCall procedureCall;
 
     protected FBCallableStatement(FBConnection connection, String sql, ResultSetBehavior rsBehavior,
-            StoredProcedureMetaData storedProcMetaData, FBObjectListener.StatementListener statementListener,
-            FBObjectListener.BlobListener blobListener) throws SQLException {
+            StoredProcedureMetaData storedProcMetaData, StatementListener statementListener, BlobListener blobListener)
+            throws SQLException {
         super(connection, rsBehavior, statementListener, blobListener);
         var parser = new FBEscapedCallParser(getEscapeParser(), connection.getServerVersion());
 
@@ -63,6 +67,12 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         // TODO nativeSQL call might be unnecessary now FBEscapedParser processes nested escapes
         procedureCall = parser.parseCall(nativeSQL(sql));
         storedProcMetaData.updateSelectability(procedureCall);
+    }
+
+    @Override
+    JdbcEscapeParser getEscapeParser() throws SQLException {
+        // This implementation handles the transformation of the call escape itself, so the escape parser shouldn't
+        return super.getEscapeParser().with(CallEscapeHandling.IGNORED);
     }
 
     @Override

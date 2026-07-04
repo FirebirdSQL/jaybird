@@ -28,6 +28,8 @@ import org.firebirdsql.jaybird.util.SQLExceptionChainBuilder;
 import org.firebirdsql.jaybird.util.SearchPathHelper;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
+import org.firebirdsql.jdbc.FBObjectListener.BlobListener;
+import org.firebirdsql.jdbc.FBObjectListener.StatementListener;
 import org.firebirdsql.jdbc.InternalTransactionCoordinator.MetaDataTransactionCoordinator;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.util.InternalApi;
@@ -821,8 +823,8 @@ public class FBConnection implements FirebirdConnection {
             Optional<PreparedStatement> txStmt = prepareIfTransactionStatement(sql, rsBehavior);
             if (txStmt.isPresent()) return txStmt.get();
 
-            FBObjectListener.StatementListener coordinator = txCoordinator;
-            FBObjectListener.BlobListener blobCoordinator = txCoordinator;
+            StatementListener coordinator = txCoordinator;
+            BlobListener blobCoordinator = txCoordinator;
             if (metaData) {
                 coordinator =  new MetaDataTransactionCoordinator(txCoordinator);
                 blobCoordinator = null;
@@ -927,11 +929,24 @@ public class FBConnection implements FirebirdConnection {
                 storedProcedureMetaData = StoredProcedureMetaDataFactory.getInstance(this);
             }
 
-            var stmt = new FBCallableStatement(this, sql, rsBehavior, storedProcedureMetaData, txCoordinator,
+            CallableStatement stmt = createCallableStatement(sql, rsBehavior, storedProcedureMetaData, txCoordinator,
                     txCoordinator);
             activeStatements.add(stmt);
             return stmt;
         }
+    }
+
+    final FirebirdCallableStatement createCallableStatement(String sql, ResultSetBehavior rsBehavior,
+            StoredProcedureMetaData storedProcedureMetaData, StatementListener statementListener,
+            BlobListener blobListener) throws SQLException {
+        return switch (getCallableImplementation().toUpperCase(Locale.ROOT)) {
+            case PropertyConstants.CALLABLE_IMPLEMENTATION_V1 -> new FBCallableStatement(this, sql, rsBehavior,
+                    storedProcedureMetaData, statementListener, blobListener);
+            case PropertyConstants.CALLABLE_IMPLEMENTATION_V2 -> throw new FBDriverNotCapableException(
+                    "Callable implementation V2 not yet available");
+            default -> throw new FBDriverNotCapableException(
+                    "Unknown callable implementation: %s".formatted(getCallableImplementation()));
+        };
     }
 
     @Override
@@ -1594,6 +1609,10 @@ public class FBConnection implements FirebirdConnection {
 
     final boolean isEscapeProcessing() {
         return connectionProperties().isEscapeProcessing();
+    }
+
+    final String getCallableImplementation() {
+        return connectionProperties().getCallableImplementation();
     }
 
     final GDSServerVersion getServerVersion() throws SQLException {

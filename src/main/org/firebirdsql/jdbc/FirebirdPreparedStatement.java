@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2003-2004 Roman Rokytskyy
 // SPDX-FileCopyrightText: Copyright 2005 Gabriel Reid
-// SPDX-FileCopyrightText: Copyright 2014-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2014-2026 Mark Rotteveel
 // SPDX-FileCopyrightText: Copyright 2019 Vasiliy Yashkov
 // SPDX-License-Identifier: LGPL-2.1-or-later OR BSD-3-Clause
 package org.firebirdsql.jdbc;
@@ -17,7 +17,14 @@ import org.firebirdsql.gds.ISCConstants;
  */
 @SuppressWarnings("unused")
 public interface FirebirdPreparedStatement extends FirebirdStatement, PreparedStatement {
- 
+
+    /**
+     * Statement type is not known, or no statement is prepared.
+     *
+     * @since 7
+     */
+    int TYPE_UNKNOWN = 0;
+
     /** A {@code SELECT} or multi-row DML with {@code RETURNING} statement. */
     int TYPE_SELECT = ISCConstants.isc_info_sql_stmt_select;
 

@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.util.stream.Stream;
 
 import static org.firebirdsql.jdbc.escape.EscapeFunctionAsserts.assertParseException;
+import static org.firebirdsql.jdbc.escape.FBEscapedCallParserTest.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -448,6 +449,36 @@ class FBEscapedParserTest {
     })
     void disableEscapeProcessing_failureCases(String input) {
         assertThrows(FBSQLParseException.class, () -> toNative(input), "Expected exception for input");
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testCallEscapeHandling(String input, CallEscapeHandling callEscapeHandling, String expected) throws Exception {
+        var parser = FBEscapedParser.of(
+                FBTestProperties.maximumVersionSupported(), QuoteStrategy.DIALECT_1, callEscapeHandling);
+        assertEquals(expected, parser.toNative(input));
+    }
+
+    static Stream<Arguments> testCallEscapeHandling() {
+        return Stream.of(
+                Arguments.of(CALL_TEST_1, CallEscapeHandling.TO_EXECUTE_PROCEDURE, "EXECUTE PROCEDURE MY_PROC(?,DATE '2001-12-11')"),
+                Arguments.of(CALL_TEST_1, CallEscapeHandling.IGNORED, "{call my_proc(?, DATE '2001-12-11')}"),
+                // TODO: The inclusion of the OUT parameter feels wrong (as does putting it first)
+                Arguments.of(CALL_TEST_2, CallEscapeHandling.TO_EXECUTE_PROCEDURE, "EXECUTE PROCEDURE MY_PROC(?,?,DATE '2001-12-11')"),
+                Arguments.of(CALL_TEST_2, CallEscapeHandling.IGNORED, "{?= call my_proc ?, DATE '2001-12-11'}"),
+                Arguments.of(CALL_TEST_3, CallEscapeHandling.TO_EXECUTE_PROCEDURE, "EXECUTE PROCEDURE my_proc(?, DATE '2001-12-11')"),
+                Arguments.of(CALL_TEST_3, CallEscapeHandling.IGNORED, "EXECUTE PROCEDURE my_proc(?, DATE '2001-12-11')"),
+                Arguments.of(CALL_TEST_4, CallEscapeHandling.TO_EXECUTE_PROCEDURE, CALL_TEST_4),
+                Arguments.of(CALL_TEST_4, CallEscapeHandling.IGNORED, CALL_TEST_4),
+                // TODO: Produces an exception, while the very similar case with CALL_TEST_2 doesn't...
+                //   Arguments.of(CALL_TEST_5, CallEscapeHandling.PROCESS,
+                //           "EXECUTE PROCEDURE MY_PROC(?,UPPER(?),'11-dec-2001')"),
+                Arguments.of(CALL_TEST_5, CallEscapeHandling.IGNORED,
+                        "{?= call my_proc(UPPER(?), '11-dec-2001',out 'test string, with comma')}"),
+                // TODO: Produces an exception, while the very similar case with CALL_TEST_2 doesn't...
+                //   Arguments.of(CALL_TEST_6, CallEscapeHandling.PROCESS, "EXECUTE PROCEDURE MY_PROC(?,UPPER(?),'11-dec-2001')"),
+                Arguments.of(CALL_TEST_6, CallEscapeHandling.IGNORED, "{call my_proc(?, UPPER(?), '11-dec-2001',out 'test string, with comma')}")
+        );
     }
 
 }
