@@ -128,7 +128,7 @@ public final class StatementDetector implements TokenVisitor {
                 break;
             case FIND_USING_END:
                 // Find end of USING ... DO
-                visitorRegistrar.addVisitor(new SkipUsingClause(this));
+                visitorRegistrar.addVisitor(new SkipUsingClause().onRemoveRegister(this));
                 // When it has been found, the SkipUsingClause will register us again
                 visitorRegistrar.removeVisitor(this);
                 break;
