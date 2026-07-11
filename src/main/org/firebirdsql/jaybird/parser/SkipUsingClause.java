@@ -3,38 +3,26 @@
 package org.firebirdsql.jaybird.parser;
 
 import java.util.ArrayDeque;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Token visitor that will look for the end of a Firebird 6+ {@code USING ... DO} clause.
+ * <p>
+ * This visitor does not look for the {@code USING} keyword. In common use, it should be added by a token visitor that
+ * read {@code USING} itself, or if it's otherwise known that the token stream starts with a {@code USING ... DO}
+ * clause.
+ * </p>
  *
  * @since 7
  */
 class SkipUsingClause implements TokenVisitor {
 
     private final ArrayDeque<ParserState> preservedState = new ArrayDeque<>();
-    private final Collection<TokenVisitor> registerOnFound;
     private ParserState parserState = ParserState.FIND_DO;
 
     /**
      * Creates instance to find the end of {@code USING ... DO}.
-     *
-     * @param registerOnFound
-     *         token visitors to register after the end of {@code USING ... DO} has been found
      */
-    SkipUsingClause(Collection<TokenVisitor> registerOnFound) {
-        this.registerOnFound = registerOnFound;
-    }
-
-    /**
-     * Creates instance to find the end of {@code USING ... DO}.
-     *
-     * @param registerOnFound
-     *         token visitor to register after the end of {@code USING ... DO} has been found
-     */
-    SkipUsingClause(TokenVisitor registerOnFound) {
-        this(List.of(registerOnFound));
+    SkipUsingClause() {
     }
 
     @Override
@@ -42,7 +30,6 @@ class SkipUsingClause implements TokenVisitor {
         if (token.isWhitespaceOrComment()) return;
         parserState = parserState.next(token, this);
         if (parserState == ParserState.DO_FOUND) {
-            registerOnFound.forEach(visitorRegistrar::addVisitor);
             visitorRegistrar.removeVisitor(this);
         }
     }
