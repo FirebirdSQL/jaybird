@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
  * @author Mark Rotteveel
  * @since 5
  */
-final class BooleanLiteralToken extends AbstractToken implements LiteralToken {
+public final class BooleanLiteralToken extends AbstractToken implements LiteralToken {
 
     private final BooleanType type;
 
@@ -57,7 +57,8 @@ final class BooleanLiteralToken extends AbstractToken implements LiteralToken {
         return new BooleanLiteralToken(BooleanType.TRUE, pos, src, start, end);
     }
 
-    public static BooleanLiteralToken trueToken(int pos, CharSequence tokenText) {
+    @SuppressWarnings("SameParameterValue")
+    static BooleanLiteralToken trueToken(int pos, CharSequence tokenText) {
         return new BooleanLiteralToken(BooleanType.TRUE, pos, tokenText);
     }
 
@@ -65,7 +66,8 @@ final class BooleanLiteralToken extends AbstractToken implements LiteralToken {
         return new BooleanLiteralToken(BooleanType.FALSE, pos, src, start, end);
     }
 
-    public static BooleanLiteralToken falseToken(int pos, CharSequence tokenText) {
+    @SuppressWarnings("SameParameterValue")
+    static BooleanLiteralToken falseToken(int pos, CharSequence tokenText) {
         return new BooleanLiteralToken(BooleanType.FALSE, pos, tokenText);
     }
 
@@ -73,7 +75,7 @@ final class BooleanLiteralToken extends AbstractToken implements LiteralToken {
         return new BooleanLiteralToken(BooleanType.UNKNOWN, pos, src, start, end);
     }
 
-    public static BooleanLiteralToken unknownToken(int pos, CharSequence tokenText) {
+    static BooleanLiteralToken unknownToken(int pos, CharSequence tokenText) {
         return new BooleanLiteralToken(BooleanType.UNKNOWN, pos, tokenText);
     }
 

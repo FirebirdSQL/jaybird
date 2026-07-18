@@ -14,7 +14,7 @@ import static java.util.Objects.requireNonNull;
  * @author Mark Rotteveel
  * @since 5
  */
-abstract class AbstractToken implements Token {
+public abstract class AbstractToken implements Token {
 
     private final int pos;
     private final CharSequence src;

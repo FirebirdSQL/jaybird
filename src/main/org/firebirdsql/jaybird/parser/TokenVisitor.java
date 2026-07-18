@@ -2,11 +2,8 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
-import org.firebirdsql.util.InternalApi;
-
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Visitor for tokens.
@@ -17,7 +14,6 @@ import java.util.Optional;
  * @author Mark Rotteveel
  * @since 5
  */
-@InternalApi
 public interface TokenVisitor {
 
     /**

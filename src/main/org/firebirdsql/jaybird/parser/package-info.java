@@ -6,7 +6,7 @@
  * <b>DO NOT USE!</b> This package is for driver-internal purposes only.
  * </p>
  * <p>
- * The parser in this package is not a full implementation of the Firebird SQL dialect. It only serves to obtain the
+ * The parser in this package is not a full implementation of the Firebird SQL dialect. It only serves to obtain
  * statement information necessary for internal purposes of Jaybird (like generated keys support).
  * </p>
  */

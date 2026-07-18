@@ -14,7 +14,7 @@ import java.util.ArrayDeque;
  *
  * @since 7
  */
-class SkipUsingClause implements TokenVisitor {
+public class SkipUsingClause implements TokenVisitor {
 
     private final ArrayDeque<ParserState> preservedState = new ArrayDeque<>();
     private ParserState parserState = ParserState.FIND_DO;
@@ -22,7 +22,7 @@ class SkipUsingClause implements TokenVisitor {
     /**
      * Creates instance to find the end of {@code USING ... DO}.
      */
-    SkipUsingClause() {
+    public SkipUsingClause() {
     }
 
     @Override

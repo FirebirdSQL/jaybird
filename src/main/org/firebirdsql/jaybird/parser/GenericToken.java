@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * @author Mark Rotteveel
  * @since 5
  */
-final class GenericToken extends AbstractToken {
+public final class GenericToken extends AbstractToken {
 
     private static final Pattern VALID_IDENTIFIER_PATTERN =
             Pattern.compile("[A-Z][A-Z0-9_$]*", Pattern.CASE_INSENSITIVE);
@@ -24,7 +24,7 @@ final class GenericToken extends AbstractToken {
         super(pos, src, start, end);
     }
 
-    public GenericToken(int pos, CharSequence tokenText) {
+    GenericToken(int pos, CharSequence tokenText) {
         super(pos, tokenText);
     }
 

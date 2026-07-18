@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2024 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -8,7 +8,8 @@ import static java.lang.String.format;
  * Signals a string literal in the token stream.
  * <p>
  * The literal can be a normal string literal, a binary string literal (possibly with syntactically invalid
- * content) or a Q-literal (alternative quote).
+ * content) or a Q-literal (alternative quote). A literal continuation (i.e. a literal broken up by whitespace or
+ * comment) is considered a new (plain) string literal, even if the original start was a binary string literal.
  * </p>
  * <p>
  * NOTE: Dialect 1 quoted identifiers are handled through {@link QuotedIdentifierToken}.
@@ -17,7 +18,7 @@ import static java.lang.String.format;
  * @author Mark Rotteveel
  * @since 5
  */
-final class StringLiteralToken extends AbstractToken implements LiteralToken {
+public final class StringLiteralToken extends AbstractToken implements LiteralToken {
 
     // <quote><quote>
     private static final int STRING_LITERAL_MIN_SIZE = 2;
@@ -30,7 +31,7 @@ final class StringLiteralToken extends AbstractToken implements LiteralToken {
         super(pos, src, start, end);
     }
 
-    public StringLiteralToken(int pos, CharSequence tokenText) {
+    StringLiteralToken(int pos, CharSequence tokenText) {
         super(pos, tokenText);
     }
 
