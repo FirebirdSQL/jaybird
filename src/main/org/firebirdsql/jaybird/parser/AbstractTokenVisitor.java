@@ -1,17 +1,17 @@
-// SPDX-FileCopyrightText: Copyright 2021-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
 /**
  * Simplified abstraction for token visitors that are not interested in the visitor registrar.
  * <p>
- * Implementations should override {@link #visitToken(Token)} and/or {@link #complete()}.
+ * Implementations should override {@link #visitToken(Token)} and/or {@link #complete()} as needed.
  * </p>
  *
  * @author Mark Rotteveel
  * @since 5
  */
-abstract class AbstractTokenVisitor implements TokenVisitor {
+public abstract class AbstractTokenVisitor implements TokenVisitor {
 
     @Override
     public final void visitToken(Token token, VisitorRegistrar visitorRegistrar) {

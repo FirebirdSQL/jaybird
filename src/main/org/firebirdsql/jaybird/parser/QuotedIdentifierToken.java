@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -8,13 +8,13 @@ package org.firebirdsql.jaybird.parser;
  * @author Mark Rotteveel
  * @since 5
  */
-final class QuotedIdentifierToken extends AbstractToken {
+public final class QuotedIdentifierToken extends AbstractToken {
 
     QuotedIdentifierToken(int pos, CharSequence src, int start, int end) {
         super(pos, src, start, end);
     }
 
-    public QuotedIdentifierToken(int pos, CharSequence tokenText) {
+    QuotedIdentifierToken(int pos, CharSequence tokenText) {
         super(pos, tokenText);
     }
 

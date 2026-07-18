@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2021-2022 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
@@ -14,13 +14,13 @@ package org.firebirdsql.jaybird.parser;
  * @author Mark Rotteveel
  * @since 5
  */
-final class NumericLiteralToken extends AbstractToken implements LiteralToken {
+public final class NumericLiteralToken extends AbstractToken implements LiteralToken {
 
     NumericLiteralToken(int pos, CharSequence src, int start, int end) {
         super(pos, src, start, end);
     }
 
-    public NumericLiteralToken(int pos, CharSequence tokenText) {
+    NumericLiteralToken(int pos, CharSequence tokenText) {
         super(pos, tokenText);
     }
 
