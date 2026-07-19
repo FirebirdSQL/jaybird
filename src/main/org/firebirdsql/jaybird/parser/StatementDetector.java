@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.firebirdsql.util.InternalApi;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import static java.util.Collections.unmodifiableMap;
@@ -60,8 +62,8 @@ public final class StatementDetector implements TokenVisitor {
     private final boolean detectReturning;
     private LocalStatementType statementType = LocalStatementType.UNKNOWN;
     private ParserState parserState = ParserState.START;
-    private @Nullable Token schemaToken;
-    private @Nullable Token tableNameToken;
+    private @Nullable ObjectReference targetObject;
+    private @Nullable ObjectReferenceExtractor targetObjectExtractor;
     private @Nullable ReturningClauseDetector returningClauseDetector;
 
     /**
@@ -113,11 +115,22 @@ public final class StatementDetector implements TokenVisitor {
             visitorRegistrar.removeVisitor(this);
         } else {
             switch (parserState) {
+            case INSERT_INTO:
+            case DML_TARGET:
+            case DML_TARGET_FORWARD_TOKEN: {
+                targetObjectExtractor = new ObjectReferenceExtractor();
+                TokenVisitor registeredVisitor = targetObjectExtractor.onRemoveRegister(this);
+                visitorRegistrar.addVisitor(registeredVisitor);
+                visitorRegistrar.removeVisitor(this);
+                if (parserState == ParserState.DML_TARGET_FORWARD_TOKEN) {
+                    parserState = ParserState.DML_TARGET;
+                    registeredVisitor.visitToken(token, visitorRegistrar);
+                }
+                break;
+            }
             case FIND_RETURNING:
                 // We're not interested any more
                 visitorRegistrar.removeVisitor(this);
-                // intentional fallthrough
-            case FIND_SCHEMA_SEPARATOR_OR_RETURNING:
                 if (detectReturning && returningClauseDetector == null) {
                     // Use ReturningClauseDetector to handle detection
                     returningClauseDetector = new ReturningClauseDetector();
@@ -136,8 +149,22 @@ public final class StatementDetector implements TokenVisitor {
         }
     }
 
+    @Override
+    public void complete(VisitorRegistrar visitorRegistrar) {
+        switch (parserState) {
+        case INSERT_INTO -> updateStatementType(LocalStatementType.OTHER);
+        case DML_TARGET -> {
+            // TODO Maybe remove complete(..) and instead have the parser post an EOF token?
+            // Handle DELETE FROM ... without WHERE
+            if (targetObject == null && !trySetTargetObject()) {
+                updateStatementType(LocalStatementType.OTHER);
+            }
+        }
+        }
+    }
+
     public StatementIdentification toStatementIdentification() {
-        return new StatementIdentification(statementType, schemaToken, tableNameToken, returningClauseDetected());
+        return new StatementIdentification(statementType, targetObject, returningClauseDetected());
     }
 
     boolean returningClauseDetected() {
@@ -151,29 +178,30 @@ public final class StatementDetector implements TokenVisitor {
         return statementType;
     }
 
-    @Nullable Token getSchemaToken() {
-        return schemaToken;
+    Optional<ObjectReference> getTargetObject() {
+        return Optional.ofNullable(targetObject);
     }
 
-    @Nullable Token getTableNameToken() {
-        return tableNameToken;
+    void setTargetObject(@Nullable ObjectReference targetObject) {
+        this.targetObject = targetObject;
+    }
+
+    boolean trySetTargetObject() {
+        if (targetObjectExtractor == null) return false;
+        try {
+            setTargetObject(targetObjectExtractor.toObjectReference());
+            return true;
+        } catch (IllegalStateException ignored) {
+            return false;
+        }
     }
 
     private void updateStatementType(LocalStatementType statementType) {
         this.statementType = statementType;
         if (statementType == LocalStatementType.OTHER) {
-            // clear any previously set schema and table name
-            setSchemaToken(null);
-            setTableNameToken(null);
+            // clear any previously set target object
+            setTargetObject(null);
         }
-    }
-
-    private void setSchemaToken(@Nullable Token schemaToken) {
-        this.schemaToken = schemaToken;
-    }
-
-    private void setTableNameToken(@Nullable Token tableNameToken) {
-        this.tableNameToken = tableNameToken;
     }
 
     private enum ParserState {
@@ -208,7 +236,7 @@ public final class StatementDetector implements TokenVisitor {
                     detector.updateStatementType(LocalStatementType.UNKNOWN);
                     return POSSIBLY_UPDATE_OR_INSERT;
                 } else {
-                    return DML_TARGET.next(token, detector);
+                    return DML_TARGET_FORWARD_TOKEN;
                 }
             }
         },
@@ -233,50 +261,18 @@ public final class StatementDetector implements TokenVisitor {
             }
         },
         // Shared by UPDATE, DELETE and MERGE
+        // Finding the DML target itself is offloaded to ObjectReferenceExtractor
         DML_TARGET {
             @Override
             ParserState next(Token token, StatementDetector detector) {
-                if (token.isValidIdentifier()) {
-                    detector.setTableNameToken(token);
-                    return DML_SCHEMA_SEPARATOR_OR_POSSIBLE_ALIAS;
+                if (detector.trySetTargetObject()) {
+                    return DML_POSSIBLE_ALIAS.next(token, detector);
                 }
                 return forceOther(detector);
             }
         },
-        // Shared by UPDATE, DELETE and MERGE
-        DML_SCHEMA_SEPARATOR_OR_POSSIBLE_ALIAS {
-            @Override
-            ParserState next(Token token, StatementDetector detector) {
-                if (token instanceof PeriodToken) {
-                    // What was detected as table, is actually the schema
-                    detector.setSchemaToken(detector.getTableNameToken());
-                    detector.setTableNameToken(null);
-                    return DML_SCHEMA_QUALIFIED_TABLE_NAME;
-                } else if (token.isValidIdentifier()) {
-                    // either alias or possibly returning clause
-                    return FIND_RETURNING;
-                } else if (token instanceof ReservedToken) {
-                    if (token.equalsIgnoreCase("AS")) {
-                        return DML_ALIAS;
-                    }
-                    return FIND_RETURNING;
-                }
-                // Unexpected or invalid token at this point
-                return forceOther(detector);
-            }
-        },
-        // Shared by UPDATE, DELETE and MERGE
-        DML_SCHEMA_QUALIFIED_TABLE_NAME {
-            @Override
-            ParserState next(Token token, StatementDetector detector) {
-                if (token.isValidIdentifier()) {
-                    detector.setTableNameToken(token);
-                    return DML_POSSIBLE_ALIAS;
-                }
-                // Unexpected or invalid token at this point
-                return forceOther(detector);
-            }
-        },
+        // For UPDATE to signal the current token must be forwarded to the object reference extractor
+        DML_TARGET_FORWARD_TOKEN,
         // Shared by UPDATE, DELETE and MERGE
         DML_POSSIBLE_ALIAS {
             @Override
@@ -316,11 +312,9 @@ public final class StatementDetector implements TokenVisitor {
         INSERT_INTO {
             @Override
             ParserState next(Token token, StatementDetector detector) {
-                if (token.isValidIdentifier()) {
-                    detector.setTableNameToken(token);
-                    return FIND_SCHEMA_SEPARATOR_OR_RETURNING;
+                if (detector.trySetTargetObject()) {
+                    return FIND_RETURNING;
                 }
-                // Syntax error
                 return forceOther(detector);
             }
         },
@@ -329,29 +323,6 @@ public final class StatementDetector implements TokenVisitor {
             ParserState next(Token token, StatementDetector detector) {
                 if (token instanceof ReservedToken && token.equalsIgnoreCase("INTO")) {
                     return DML_TARGET;
-                }
-                // Syntax error
-                return forceOther(detector);
-            }
-        },
-        FIND_SCHEMA_SEPARATOR_OR_RETURNING {
-            @Override
-            ParserState next(Token token, StatementDetector detector) {
-                if (token instanceof PeriodToken) {
-                    detector.setSchemaToken(detector.getTableNameToken());
-                    detector.setTableNameToken(null);
-                    return FIND_SCHEMA_QUALIFIED_TABLE_OR_RETURNING;
-                } else {
-                    return FIND_RETURNING;
-                }
-            }
-        },
-        FIND_SCHEMA_QUALIFIED_TABLE_OR_RETURNING {
-            @Override
-            ParserState next(Token token, StatementDetector detector) {
-                if (token.isValidIdentifier()) {
-                    detector.setTableNameToken(token);
-                    return FIND_RETURNING;
                 }
                 // Syntax error
                 return forceOther(detector);

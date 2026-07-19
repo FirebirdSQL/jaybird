@@ -1,7 +1,9 @@
-// SPDX-FileCopyrightText: Copyright 2021-2025 Mark Rotteveel
+// SPDX-FileCopyrightText: Copyright 2021-2026 Mark Rotteveel
 // SPDX-License-Identifier: LGPL-2.1-or-later
 package org.firebirdsql.jaybird.parser;
 
+import org.assertj.core.api.Assertions;
+import org.firebirdsql.jaybird.util.ObjectReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -9,16 +11,17 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
+import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue;
 import static org.firebirdsql.jaybird.parser.LocalStatementType.DELETE;
 import static org.firebirdsql.jaybird.parser.LocalStatementType.INSERT;
 import static org.firebirdsql.jaybird.parser.LocalStatementType.MERGE;
 import static org.firebirdsql.jaybird.parser.LocalStatementType.SELECT;
 import static org.firebirdsql.jaybird.parser.LocalStatementType.UPDATE;
 import static org.firebirdsql.jaybird.parser.LocalStatementType.UPDATE_OR_INSERT;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GrammarTest {
@@ -32,14 +35,15 @@ class GrammarTest {
         return statementDetector.toStatementIdentification();
     }
 
+    @SuppressWarnings("UnnecessaryUnicodeEscape")
     @Test
     void insert_values() {
         StatementIdentification statementModel = parseStatement(
                 "insert into someTable(a, \"\u0442\u0435\"\"\u0441\u0442\", aaa) values('a', -1.23, a(a,aa))");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName(), "Unexpected table name");
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should have no returning");
     }
 
@@ -49,8 +53,8 @@ class GrammarTest {
                 "insert into \"someTable\"(a, b, c) values('a', -1.23, a(a,aa))");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("someTable", statementModel.getTableName(), "Unexpected table name");
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("someTable")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should have no returning");
     }
 
@@ -60,8 +64,8 @@ class GrammarTest {
                 "insert into someTable(a, b, c) values('a', -1.23, a(a,aa)) returning id");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName(), "Unexpected table name");
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
 
@@ -71,8 +75,8 @@ class GrammarTest {
                 "insert into someTable(a, b, c) values('a', -1.23, a(a,aa)) returning id as \"ID\", b,c no_as");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName(), "Unexpected table name");
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
 
@@ -82,8 +86,8 @@ class GrammarTest {
                 "insert into someTable(a, b, c) values('a', -1.23, a(a,aa)) -- returning id");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName(), "Unexpected table name");
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -93,8 +97,8 @@ class GrammarTest {
                 "insert into someTable(a, b, c) values('a', -1.23, a(a,aa)) /* returning id */");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName(), "Unexpected table name");
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -103,8 +107,8 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement("Insert Into someTable Select * From anotherTable");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should have no returning");
     }
 
@@ -114,8 +118,8 @@ class GrammarTest {
                 parseStatement("Insert Into someTable Select * From anotherTable returning id");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
 
@@ -125,8 +129,8 @@ class GrammarTest {
                 "Insert Into someTable ( col1, col2) values((case when a = 1 Then 2 else 3 end), 2)");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should have no returning");
     }
 
@@ -136,8 +140,8 @@ class GrammarTest {
                 "Insert Into someTable ( col1, col2) values((case when a = 1 Then 2 else 3 end), 2) returning id");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
 
@@ -146,8 +150,8 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement("INSERT INTO someTable DEFAULT VALUES");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should have no returning");
     }
 
@@ -157,8 +161,8 @@ class GrammarTest {
                 parseStatement("INSERT INTO someTable DEFAULT VALUES RETURNING \"ID\"");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
 
@@ -168,8 +172,8 @@ class GrammarTest {
                 "Update someTable Set col1 = 25, col2 = 'abc' Where 1=0");
 
         assertEquals(UPDATE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -179,8 +183,8 @@ class GrammarTest {
                 "Update \"someTable\" Set col1 = 25, col2 = 'abc' Where 1=0");
 
         assertEquals(UPDATE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("someTable", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("someTable")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -190,8 +194,8 @@ class GrammarTest {
                 "Update \"some Table\" Set col1 = 25, col2 = 'abc' Where 1=0");
 
         assertEquals(UPDATE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("some Table", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("some Table")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -201,8 +205,8 @@ class GrammarTest {
                 "Update someTable Set col1 = 25, col2 = 'abc' Where 1=0 Returning col3");
 
         assertEquals(UPDATE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
 
@@ -212,8 +216,8 @@ class GrammarTest {
                 "DELETE FROM someTable Where 1=0");
 
         assertEquals(DELETE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -222,8 +226,8 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement("delete from \"someTable\"");
 
         assertEquals(DELETE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("someTable", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("someTable")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -232,8 +236,8 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement("Delete From someTable Returning col3");
 
         assertEquals(DELETE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
 
@@ -242,8 +246,8 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement("Delete From someTable where 1 = 1 Returning col3");
 
         assertEquals(DELETE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
 
@@ -252,8 +256,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement("select * from RDB$DATABASE");
 
         assertEquals(SELECT, statementModel.getStatementType(), "Expected SELECT statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertNull(statementModel.getTableName(), "Expected no table name");
+        assertThat("Unexpected target object", statementModel.getTargetObject(), emptyOptional());
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -262,8 +265,8 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement("insert into someTable values (Q'[a'bc]')");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -273,8 +276,8 @@ class GrammarTest {
                 parseStatement("insert into someTable values (Q'[a'bc]') returning id, \"ABC\"");
 
         assertEquals(INSERT, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("SOMETABLE", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("SOMETABLE")));
         assertTrue(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -299,7 +302,7 @@ class GrammarTest {
         Token token = SqlTokenizer.withReservedWords(FirebirdReservedWords.latest())
                 .of(input)
                 .next();
-        assertThat(token).isInstanceOf(StringLiteralToken.class);
+        Assertions.assertThat(token).isInstanceOf(StringLiteralToken.class);
         assertEquals(token.text(), input);
     }
 
@@ -315,8 +318,8 @@ class GrammarTest {
                     INSERT (title, desc, bought) values (p.title, p.desc, p.bought)""");
 
         assertEquals(MERGE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("BOOKS", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("BOOKS")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -332,8 +335,8 @@ class GrammarTest {
                     INSERT (title, desc, bought) values (p.title, p.desc, p.bought)""");
 
         assertEquals(MERGE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("books", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("books")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -349,8 +352,8 @@ class GrammarTest {
                     INSERT (title, desc, bought) values (p.title, p.desc, p.bought)""");
 
         assertEquals(MERGE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("more books", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("more books")));
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
 
@@ -368,8 +371,8 @@ class GrammarTest {
                 """);
 
         assertEquals(MERGE, statementModel.getStatementType(), "Unexpected statement type");
-        assertNull(statementModel.getSchema(), "Unexpected schema");
-        assertEquals("BOOKS", statementModel.getTableName());
+        assertThat("Unexpected target object",
+                statementModel.getTargetObject(), optionalWithValue(ObjectReference.of("BOOKS")));
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
 
@@ -383,8 +386,10 @@ class GrammarTest {
                 "returningClauseDetected for: " + statementText);
         assertEquals(expectedStatementType, statementIdentification.getStatementType(),
                 "statementType for: " + statementText);
-        assertEquals(expectedSchema, statementIdentification.getSchema(), "schema for: " + statementText);
-        assertEquals(expectedTableName, statementIdentification.getTableName(), "tableName for: " + statementText);
+        assertThat("Unexpected table for: " + statementText, statementIdentification.getTargetObject(),
+                expectedTableName == null
+                        ? emptyOptional()
+                        : optionalWithValue(ObjectReference.of(expectedSchema, expectedTableName)));
     }
 
     static Stream<Arguments> testData() {

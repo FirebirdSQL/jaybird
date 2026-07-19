@@ -13,6 +13,10 @@ import java.util.Collection;
  * ignore whitespace and comments, so this notified token is unlikely to be whitespace or a comment.
  * </p>
  * <p>
+ * If {@link #complete(VisitorRegistrar)} is notified, the completion is forwarded to the other token visitors, but
+ * those visitors are <em>not</em> registered (unless the decorated visitor removes itself on completion).
+ * </p>
+ * <p>
  * Recommended use is through {@link TokenVisitor#onRemoveRegister(Collection)} instead of creating this class directly.
  * </p>
  *
@@ -78,9 +82,16 @@ final class RegisterOnRemoveTokenVisitor<T extends TokenVisitor> implements Toke
 
     @Override
     public void complete(VisitorRegistrar visitorRegistrar) {
+        lastTokenSeen = DUMMY_NULL_TOKEN;
         currentRegistrar = visitorRegistrar;
         try {
             decoratedTokenVisitor.complete(this);
+            for (TokenVisitor visitor : registerOnRemove) {
+                try {
+                    visitor.complete(visitorRegistrar);
+                } catch (Exception ignored) {
+                }
+            }
         } finally {
             currentRegistrar = VisitorRegistrar.noActionRegistrar();
         }
@@ -103,8 +114,8 @@ final class RegisterOnRemoveTokenVisitor<T extends TokenVisitor> implements Toke
         // Remove this decorator instead of the decorated visitor
         currentRegistrar.removeVisitor(RegisterOnRemoveTokenVisitor.this);
         registerOnRemove.forEach(currentRegistrar::addVisitor);
-        if (notifyLastToken) {
-            for (TokenVisitor visitor : registerOnRemove) {
+        if (notifyLastToken && lastTokenSeen != DUMMY_NULL_TOKEN) {
+            registerOnRemove.forEach(visitor -> {
                 try {
                     // Notification is done with the real registrar
                     visitor.visitToken(lastTokenSeen, currentRegistrar);
@@ -112,7 +123,7 @@ final class RegisterOnRemoveTokenVisitor<T extends TokenVisitor> implements Toke
                     System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR,
                             "Ignored exception during token notification", e);
                 }
-            }
+            });
         }
     }
 
